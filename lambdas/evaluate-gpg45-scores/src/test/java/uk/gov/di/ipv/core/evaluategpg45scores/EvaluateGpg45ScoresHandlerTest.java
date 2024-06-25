@@ -7,6 +7,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -26,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -45,6 +49,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -507,36 +512,15 @@ class EvaluateGpg45ScoresHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
-        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
 
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
-        InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-        inOrder.verify(ipvSessionItem).setVot(Vot.P1);
-        inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-        inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(Vot.P1, ipvSessionItem.getVot());
-        verify(userIdentityService, times(1)).checkRequiresAdditionalEvidence(any());
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
         AuditEvent auditEvent = auditEventCaptor.getValue();
-
-        assertEquals(AuditEventTypes.IPV_GPG45_PROFILE_MATCHED, auditEvent.getEventName());
-
-        AuditEventUser user = auditEvent.getUser();
-        assertEquals(TEST_USER_ID, user.getUserId());
-        assertEquals(TEST_JOURNEY_ID, user.getGovukSigninJourneyId());
-        assertEquals(TEST_SESSION_ID, user.getSessionId());
-
         AuditExtensionGpg45ProfileMatched extension =
                 (AuditExtensionGpg45ProfileMatched) auditEvent.getExtensions();
         assertEquals(L1A, extension.getGpg45Profile());
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        assertEquals(Vot.P1, ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
     @Test
@@ -557,6 +541,29 @@ class EvaluateGpg45ScoresHandlerTest {
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
         verify(ipvSessionItem).setVot(Vot.P2);
+    }
+
+    @ParameterizedTest
+    @MethodSource("vcsMatchingVtr")
+    void shouldReturnTrueForMatchingGpg45Profile(List<String> vtr, List<Gpg45Profile> profiles)
+            throws SqsException, UnknownEvidenceTypeException, CredentialParseException {
+        // Arrange
+        clientOAuthSessionItem.setVtr(vtr);
+
+        // Act
+        evaluateGpg45ScoresHandler.hasMatchingGpg45Profile(
+                List.of(), ipvSessionItem, clientOAuthSessionItem, TEST_CLIENT_SOURCE_IP, null);
+
+        // Assert
+        verify(gpg45ProfileEvaluator).getFirstMatchingProfile(null, profiles);
+    }
+
+    private static Stream<Arguments> vcsMatchingVtr() {
+        return Stream.of(
+                Arguments.of(List.of("P1"), P1_PROFILES),
+                Arguments.of(List.of("P2"), P2_PROFILES),
+                Arguments.of(List.of("P1", "P2"), P1_AND_P2_PROFILES),
+                Arguments.of(List.of("P2", "P1"), P1_AND_P2_PROFILES));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

@@ -173,7 +173,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    private boolean hasMatchingGpg45Profile(
+    public boolean hasMatchingGpg45Profile(
             List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -181,7 +181,7 @@ public class EvaluateGpg45ScoresHandler
             String deviceInformation)
             throws UnknownEvidenceTypeException, SqsException, CredentialParseException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
-            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
+            var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
             var requestedVotsByStrength = clientOAuthSessionItem.getRequestedVotsByStrength();
             var supportedGpg45ProfilesByVotStrength =
