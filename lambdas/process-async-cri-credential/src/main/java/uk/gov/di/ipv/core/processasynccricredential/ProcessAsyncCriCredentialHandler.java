@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -185,7 +184,6 @@ public class ProcessAsyncCriCredentialHandler
                         successAsyncCriResponse.getUserId(),
                         successAsyncCriResponse.getCredentialIssuer(),
                         successAsyncCriResponse.getVerifiableCredentialJWTs(),
-                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
 

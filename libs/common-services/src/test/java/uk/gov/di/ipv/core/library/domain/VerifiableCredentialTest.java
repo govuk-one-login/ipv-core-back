@@ -3,21 +3,15 @@ package uk.gov.di.ipv.core.library.domain;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.VerifiableCredentialParser;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
-import uk.org.webcompere.systemstubs.jupiter.SystemStub;
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.text.ParseException;
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,14 +20,11 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 
-@ExtendWith(SystemStubsExtension.class)
 class VerifiableCredentialTest {
     private static final String USER_ID = "a-user-id";
     private static final String CRI_ID = "cri-id";
     private static final String SESSION_ID = "a-session-id";
     private VerifiableCredential vcFixture;
-
-    @SystemStub private EnvironmentVariables environmentVariables;
 
     @BeforeEach
     void setUp() {
@@ -58,23 +49,6 @@ class VerifiableCredentialTest {
                     .thenThrow(new CredentialParseException("Failed to parse VC"));
             assertThrows(
                     CredentialParseException.class,
-                    () ->
-                            VerifiableCredential.fromValidJwt(
-                                    vcFixture.getUserId(),
-                                    vcFixture.getCriId(),
-                                    vcFixture.getSignedJwt()));
-        }
-    }
-
-    @Test
-    void fromValidJwtShouldIgnoreVCParserExceptionsInProduction() {
-        environmentVariables.set(EnvironmentVariable.ENVIRONMENT, "production");
-        try (MockedStatic<VerifiableCredentialParser> mockVcParser =
-                mockStatic(VerifiableCredentialParser.class)) {
-            mockVcParser
-                    .when(() -> VerifiableCredentialParser.parseCredential(any()))
-                    .thenThrow(new CredentialParseException("Failed to parse VC"));
-            assertDoesNotThrow(
                     () ->
                             VerifiableCredential.fromValidJwt(
                                     vcFixture.getUserId(),

@@ -25,13 +25,19 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
@@ -86,9 +92,7 @@ public class VerifiableCredentialValidator {
 
             var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
 
-            if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-                validateCiCodes(identityCheckCredential);
-            }
+            validateCiCodes(vc);
 
             LOGGER.info(LogHelper.buildLogMessage("Verifiable Credential validated."));
 
@@ -203,21 +207,34 @@ public class VerifiableCredentialValidator {
         }
     }
 
-    private void validateCiCodes(IdentityCheckCredential identityCheckCredential)
+    private void validateCiCodes(VerifiableCredential credential)
             throws VerifiableCredentialException {
+        Stream<String> ciCodes;
+        if (credential.getCredential() instanceof IdentityCheckCredential icc) {
+            ciCodes =
+                    icc.getEvidence().stream()
+                            .map(IdentityCheck::getCi)
+                            .filter(Objects::nonNull)
+                            .flatMap(Collection::stream);
+        } else if (credential.getCredential() instanceof RiskAssessmentCredential rac) {
+            ciCodes =
+                    rac.getEvidence().stream()
+                            .map(RiskAssessment::getCi)
+                            .filter(Objects::nonNull)
+                            .flatMap(Collection::stream);
+        } else {
+            return;
+        }
+
         var ciConfig = configService.getContraIndicatorConfigMap();
 
-        for (var evidence : identityCheckCredential.getEvidence()) {
-            for (var ci : evidence.getCi()) {
-                if (!ciConfig.containsKey(ci)) {
-                    LOGGER.error(
-                            LogHelper.buildLogMessage(
-                                    "Verifiable credential contains unrecognised CI codes"));
-                    throw new VerifiableCredentialException(
-                            HTTPResponse.SC_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
-                }
-            }
+        if (!ciCodes.allMatch(ciConfig::containsKey)) {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Verifiable credential contains unrecognised CI codes"));
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
         }
     }
 }

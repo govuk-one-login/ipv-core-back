@@ -119,8 +119,7 @@ class TicfCriServiceTest {
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
-        when(mockVerifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any()))
+        when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(VC_ADDRESS));
 
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
@@ -247,7 +246,7 @@ class TicfCriServiceTest {
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(
-                        any(), any(), eq(List.of(someCredential)), any(), any(), any()))
+                        any(), any(), eq(List.of(someCredential)), any(), any()))
                 .thenThrow(
                         new VerifiableCredentialException(
                                 500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS));
