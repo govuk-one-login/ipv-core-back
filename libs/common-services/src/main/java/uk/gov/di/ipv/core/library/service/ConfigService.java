@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -20,10 +21,13 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.ssm.SsmAsyncClient;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
+import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import software.amazon.awssdk.services.ssm.paginators.GetParametersByPathPublisher;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
@@ -54,6 +58,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -82,6 +88,7 @@ public class ConfigService {
     private S3Client s3Client;
     private JsonNode coreConfig;
     private SsmClient ssmClient;
+    private SsmAsyncClient ssmAsyncClient;
     private Map<String, String> multipleGetMap;
 
     private List<String> featureSet;
@@ -106,10 +113,13 @@ public class ConfigService {
                                 getEnvironmentVariable(CONFIG_SERVICE_CACHE_DURATION_MINUTES));
 
         this.ssmClient = SsmClient.builder().httpClient(AwsCrtHttpClient.create()).build();
+        this.ssmAsyncClient =
+                SsmAsyncClient.builder()
+                        .region(Region.EU_WEST_2)
+                        .httpClient(AwsCrtAsyncHttpClient.create())
+                        .build();
         this.ssmProvider =
-                ParamManager.getSsmProvider(
-                                ssmClient)
-                        .defaultMaxAge(cacheDuration, MINUTES);
+                ParamManager.getSsmProvider(ssmClient).defaultMaxAge(cacheDuration, MINUTES);
 
         this.secretsProvider =
                 ParamManager.getSecretsProvider(
@@ -118,7 +128,11 @@ public class ConfigService {
                                         .build())
                         .defaultMaxAge(cacheDuration, MINUTES);
 
-        this.s3Client = S3Client.builder().region(Region.EU_WEST_2).httpClient(AwsCrtHttpClient.create()).build();
+        this.s3Client =
+                S3Client.builder()
+                        .region(Region.EU_WEST_2)
+                        .httpClient(AwsCrtHttpClient.create())
+                        .build();
     }
 
     public List<String> getFeatureSet() {
@@ -137,20 +151,62 @@ public class ConfigService {
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
 
-        return spikeGetMultiple(configurationVariable, pathProperties);
-//        return spikeGetAllFromS3(configurationVariable, pathProperties);
-//        return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
+        return spikeGetMultipleAsync(configurationVariable, pathProperties);
+        //        return spikeGetMultiple(configurationVariable, pathProperties);
+        //        return spikeGetAllFromS3(configurationVariable, pathProperties);
+        //        return getSsmParameterWithOverride(configurationVariable.getPath(),
+        // pathProperties);
     }
 
     @Tracing
-    private String spikeGetMultiple(ConfigurationVariable configurationVariable, String... pathProperties) {
-        multipleGetMap = multipleGetMap == null ? loadAllParamsFromSsmUsingByPath() : multipleGetMap;
+    private String spikeGetMultiple(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        multipleGetMap =
+                multipleGetMap == null ? loadAllParamsFromSsmUsingByPath() : multipleGetMap;
         return multipleGetMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
     }
 
     @Tracing
+    private String spikeGetMultipleAsync(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        if (multipleGetMap == null) {
+            loadAllParamsFromSsmUsingByPathAndAsync();
+        }
+        return multipleGetMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
+    }
+
+    @Tracing
+    private void loadAllParamsFromSsmUsingByPathAndAsync() {
+        var request =
+                GetParametersByPathRequest.builder()
+                        .recursive(true)
+                        .path("/dev-chrisw/core")
+                        .build();
+        GetParametersByPathPublisher parametersByPathPaginator1 =
+                ssmAsyncClient.getParametersByPathPaginator(request);
+        multipleGetMap = new HashMap<>();
+        CompletableFuture<Void> completableFuture =
+                parametersByPathPaginator1
+                        .flatMapIterable(GetParametersByPathResponse::parameters)
+                        .subscribe(
+                                parameter ->
+                                        multipleGetMap.put(parameter.name(), parameter.value()));
+        try {
+            completableFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            LOGGER.error("Failed to get all params async", e);
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Tracing
     private Map<String, String> loadAllParamsFromSsmUsingByPath() {
-        var request = GetParametersByPathRequest.builder().recursive(true).path("/dev-chrisw/core").build();
+        var request =
+                GetParametersByPathRequest.builder()
+                        .recursive(true)
+                        .path("/dev-chrisw/core")
+                        .build();
         var parametersByPathPaginator = ssmClient.getParametersByPathPaginator(request);
         return parametersByPathPaginator.stream()
                 .flatMap(page -> page.parameters().stream())
@@ -158,9 +214,11 @@ public class ConfigService {
     }
 
     @Tracing
-    private String spikeGetAllFromS3(ConfigurationVariable configurationVariable, String... pathProperties) {
+    private String spikeGetAllFromS3(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
         coreConfig = coreConfig == null ? getCoreConfig() : coreConfig;
-        var templatedPath = String.format(configurationVariable.getPath(), (Object[]) pathProperties);
+        var templatedPath =
+                String.format(configurationVariable.getPath(), (Object[]) pathProperties);
         var pathParts = new ArrayList<>(Arrays.asList(templatedPath.split("/")));
         var foundNode = coreConfig.path(pathParts.remove(0));
         if (!pathParts.isEmpty()) {
@@ -169,7 +227,8 @@ public class ConfigService {
             }
         }
         if (foundNode.isMissingNode()) {
-            throw new RuntimeException(String.format("Param not found: '%s'", configurationVariable.getPath()));
+            throw new RuntimeException(
+                    String.format("Param not found: '%s'", configurationVariable.getPath()));
         }
         return foundNode.asText();
     }
@@ -184,7 +243,11 @@ public class ConfigService {
 
     @Tracing
     private ResponseBytes<GetObjectResponse> getConfigFromS3() {
-        var configRequest = GetObjectRequest.builder().bucket("ipv-core-config-mgmt-dev01").key("configs/params/core.dev-chrisw-params.yaml").build();
+        var configRequest =
+                GetObjectRequest.builder()
+                        .bucket("ipv-core-config-mgmt-dev01")
+                        .key("configs/params/core.dev-chrisw-params.yaml")
+                        .build();
         return s3Client.getObjectAsBytes(configRequest);
     }
 
