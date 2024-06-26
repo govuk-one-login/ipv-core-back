@@ -3,7 +3,6 @@
 - This defines a suite of API tests, designed to test core's functionality without having to use the frontend.
 - They are written with TypeScript and orchestrated using Cucumber.
 - They can be run against a development environment or the build environment.
-- They will run in GHA as part of the pre-merge checks.
 
 ## Requirements
 
