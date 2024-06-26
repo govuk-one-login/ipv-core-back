@@ -275,7 +275,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldUseVcServiceWhenEvcsServiceEnabledAndReturnsEmpty() throws Exception {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(new HashMap<EvcsVCState, List<VerifiableCredential>>());
@@ -1366,7 +1365,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
