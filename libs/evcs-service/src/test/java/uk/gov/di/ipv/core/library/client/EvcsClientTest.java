@@ -55,7 +55,8 @@ class EvcsClientTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String EVCS_APPLICATION_URL = "http://localhost/v1";
     private static final String EVCS_APPLICATION_URL_WITH_V1_VCS = "http://localhost/v1/ver2";
-    private static final String EVCS_API_KEY = "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg";
+    private static final String EVCS_API_KEY =
+            "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg"; // pragma: allowlist secret
     private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static final String TEST_USER_ID = "urn:uuid:9bd7f130-4238-4532-83cd-01cb29584834";
     private static final EvcsGetUserVCsDto EVCS_GET_USER_VCS_DTO =
