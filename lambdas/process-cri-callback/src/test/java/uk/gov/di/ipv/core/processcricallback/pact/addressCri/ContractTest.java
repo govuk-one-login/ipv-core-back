@@ -546,7 +546,7 @@ class ContractTest {
                   "vc": {
                      "type": [
                        "VerifiableCredential",
-                       "IdentityCheckCredential"
+                       "AddressCredential"
                      ],
                      "credentialSubject": {
                        "name": [
@@ -588,7 +588,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "MY-0HSHHDSVZWFwzJrtCalS-jO8tFNwx1Oso6rbcfwQI69N7vRi_GEm4lQu-Da7Wn4bxkAMzxKM3R7PLu8yH_Q"; // pragma: allowlist secret
+            "JYSqzC1Ga54CmBAQtdLMA3-RBeiXBjF5I_LjozTuiIfD9gal7htp_HB1ErNEKI_zAZesFHBVhuOB1Klxta1uPg"; // pragma: allowlist secret
 
     private static final String VALID_ADDRESS_BODY =
             """
@@ -600,7 +600,7 @@ class ContractTest {
                   "vc": {
                      "type": [
                        "VerifiableCredential",
-                       "IdentityCheckCredential"
+                       "AddressCredential"
                      ],
                      "credentialSubject": {
                        "name": [
@@ -640,5 +640,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "EFfq4iMeJ9ekCYJDZS8MTqxK0semEH7HRMac9Tc69zILtxzlVmJxnrhsVSgjpMNi3osCBUhWlz3Zh-jEUB4izw"; // pragma: allowlist secret
+            "WyJwkhYzdfqGddOSEhFGuQdL_FWUj9A63TRsc8kTL0gHtt4HwuyMFAdwNW6AFmVYOVSCEi_gUEZcFUkrzll_ig"; // pragma: allowlist secret
 }
