@@ -12,6 +12,7 @@
     "@cucumber/cucumber": "^10.8.0",
     "@govuk-one-login/data-vocab": "^1.7.2",
     "@types/eslint__js": "^8.42.3",
+    "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "jose": "^5.4.1",
