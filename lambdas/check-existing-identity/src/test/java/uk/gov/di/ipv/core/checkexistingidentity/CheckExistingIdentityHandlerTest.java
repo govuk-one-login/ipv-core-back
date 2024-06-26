@@ -258,11 +258,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(gpg45Vc)));
 
             checkExistingIdentityHandler.handleRequest(event, context);
@@ -273,8 +269,7 @@ class CheckExistingIdentityHandlerTest {
                             TEST_USER_ID,
                             EVCS_TEST_TOKEN,
                             EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN,
-                            EvcsVCState.PENDING);
+                            EvcsVCState.PENDING_RETURN);
         }
 
         @Test
@@ -282,11 +277,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(new HashMap<EvcsVCState, List<VerifiableCredential>>());
 
             checkExistingIdentityHandler.handleRequest(event, context);
@@ -297,8 +288,7 @@ class CheckExistingIdentityHandlerTest {
                             TEST_USER_ID,
                             EVCS_TEST_TOKEN,
                             EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN,
-                            EvcsVCState.PENDING);
+                            EvcsVCState.PENDING_RETURN);
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
         }
 
@@ -356,11 +346,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(Map.of(PENDING_RETURN, List.of(vcF2fM1a())));
 
             when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
