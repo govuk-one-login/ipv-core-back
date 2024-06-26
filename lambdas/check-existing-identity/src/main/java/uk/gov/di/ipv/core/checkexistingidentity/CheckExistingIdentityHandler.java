@@ -466,7 +466,6 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
-                            clientOAuthSessionItem,
                             vcBundle,
                             auditEventUser,
                             deviceInformation));
@@ -530,13 +529,11 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             VerifiableCredentialBundle vcBundle,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
-        String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
                 && !hasCurrentFraudVc(vcBundle.credentials)) {
@@ -544,7 +541,7 @@ public class CheckExistingIdentityHandler
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
 
-            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
+            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -574,7 +571,7 @@ public class CheckExistingIdentityHandler
                 auditEventUser.getSessionId(),
                 false);
 
-        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
+        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
 
         return vcBundle.isPendingEvcsIdentity() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
@@ -582,12 +579,11 @@ public class CheckExistingIdentityHandler
     private void migrateCredentialsToEVCS(
             AuditEventUser auditEventUser,
             String deviceInformation,
-            VerifiableCredentialBundle vcBundle,
-            String evcsAccessToken)
+            VerifiableCredentialBundle vcBundle)
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(), vcBundle.credentials, evcsAccessToken);
+                    auditEventUser.getUserId(), vcBundle.credentials);
             sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
         }
     }

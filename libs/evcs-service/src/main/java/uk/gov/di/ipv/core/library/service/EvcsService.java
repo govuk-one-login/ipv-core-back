@@ -62,6 +62,17 @@ public class EvcsService {
     }
 
     @Tracing
+    public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
+            throws EvcsServiceException {
+        // If we are migrating, assume that there is no existing identity to mark as historic
+        evcsClient.storeUserVCs(
+                userId,
+                credentials.stream()
+                        .map(vc -> new EvcsCreateUserVCsDto(vc.getVcString(), CURRENT, null, null))
+                        .toList());
+    }
+
+    @Tracing
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {

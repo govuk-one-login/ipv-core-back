@@ -333,8 +333,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
             verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(
-                            TEST_USER_ID, List.of(gpg45Vc, hmrcMigrationVC), EVCS_TEST_TOKEN);
+                    .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc, hmrcMigrationVC));
         }
 
         @Test
@@ -361,7 +360,7 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
             // pending vcs should not be migrated
-            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any(), any());
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
         }
 
@@ -1067,7 +1066,7 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
-        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any(), any());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
     }
 
     @Test
@@ -1337,7 +1336,7 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         verify(ipvSessionService, never()).updateIpvSession(any());
-        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any(), any());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
     }
 
     @Test
@@ -1386,8 +1385,7 @@ class CheckExistingIdentityHandlerTest {
                 vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
         verify(mockSessionCredentialService)
                 .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
-        verify(mockEvcsMigrationService)
-                .migrateExistingIdentity(TEST_USER_ID, vcs, EVCS_TEST_TOKEN);
+        verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, vcs);
     }
 
     @Test
