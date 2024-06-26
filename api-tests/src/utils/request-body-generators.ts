@@ -99,15 +99,11 @@ const readJsonFile = async (
   scenario: string,
   jsonType: JsonType,
 ) => {
-  return JSON.stringify(
-    JSON.parse(
-      await fs.readFile(
-        path.join(
-          __dirname,
-          `../../data/cri-stub-requests/${criId}/${scenario}/${jsonType}.json`,
-        ),
-        "utf8",
-      ),
+  return await fs.readFile(
+    path.join(
+      __dirname,
+      `../../data/cri-stub-requests/${criId}/${scenario}/${jsonType}.json`,
     ),
+    "utf8",
   );
 };

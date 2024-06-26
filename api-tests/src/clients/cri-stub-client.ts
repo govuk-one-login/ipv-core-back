@@ -6,7 +6,7 @@ export const callHeadlessApi = async (
   body: CriStubRequest,
 ): Promise<CriStubResponse> => {
   const criStubResponse = await fetch(
-    new URL(redirectUrl).origin + "/api/authorize",
+    `${new URL(redirectUrl).origin}/api/authorize`,
     {
       method: "POST",
       body: JSON.stringify(body),
@@ -16,7 +16,7 @@ export const callHeadlessApi = async (
 
   if (!(criStubResponse.status === 302)) {
     throw new Error(
-      "callHeadlessApi request failed: " + criStubResponse.statusText,
+      `callHeadlessApi request failed: ${criStubResponse.statusText}`,
     );
   }
 

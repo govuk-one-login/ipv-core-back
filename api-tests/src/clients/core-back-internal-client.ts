@@ -11,7 +11,7 @@ export const initialiseIpvSession = async (
   requestBody: AuthRequestBody,
 ): Promise<string> => {
   const response = await fetch(
-    config.CORE_BACK_INTERNAL_API_URL + "/session/initialise",
+    `${config.CORE_BACK_INTERNAL_API_URL}/session/initialise`,
     {
       method: "POST",
       headers: internalApiHeaders,
@@ -21,7 +21,7 @@ export const initialiseIpvSession = async (
 
   if (!response.ok) {
     throw new Error(
-      "InitialiseIpvSession request failed: " + response.statusText,
+      `InitialiseIpvSession request failed: ${response.statusText}`,
     );
   }
   const responseBody = await response.json();
@@ -33,16 +33,14 @@ export const sendJourneyEvent = async (
   event: string,
   ipvSessionId: string,
 ): Promise<JourneyEngineResponse> => {
-  const url =
-    config.CORE_BACK_INTERNAL_API_URL +
-    (event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event);
+  const url = `${config.CORE_BACK_INTERNAL_API_URL}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
   const response = await fetch(url, {
     method: POST,
     headers: { ...internalApiHeaders, ...{ "ipv-session-id": ipvSessionId } },
   });
 
   if (!response.ok) {
-    throw new Error("sendJourneyEvent request failed: " + response.statusText);
+    throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
   }
 
   return (await response.json()) as JourneyEngineResponse;
@@ -53,7 +51,7 @@ export const processCriCallback = async (
   ipvSessionId: string,
 ): Promise<ProcessCriCallbackResponse> => {
   const response = await fetch(
-    config.CORE_BACK_INTERNAL_API_URL + "/cri/callback",
+    `${config.CORE_BACK_INTERNAL_API_URL}/cri/callback`,
     {
       method: POST,
       headers: { ...internalApiHeaders, ...{ "ipv-session-id": ipvSessionId } },
@@ -62,7 +60,7 @@ export const processCriCallback = async (
   );
 
   if (!response.ok) {
-    throw new Error("sendJourneyEvent request failed: " + response.statusText);
+    throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
   }
 
   return await response.json();
