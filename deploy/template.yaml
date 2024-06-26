@@ -69,6 +69,7 @@ Globals:
         - !Sub
           - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # or NODEJS_LAYER or PYTHON_LAYER
           - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+      - "arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:93"
 
 Parameters:
   Environment:
@@ -853,6 +854,14 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: appConfigLayerPerms
+              Effect: Allow
+              Action:
+                - 'appconfig:StartConfigurationSession'
+                - 'appconfig:GetLatestConfiguration'
+              Resource:
+                - !Sub arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/qgy83rj/environment/nhnfucp/configuration/vm9xafg
+
       Events:
         IPVCorePrivateAPI:
           Type: Api
