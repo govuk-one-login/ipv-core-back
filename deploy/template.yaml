@@ -3298,6 +3298,12 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  ####################################################################
+  #                                                                  #
+  # Monitoring & Alerts                                              #
+  #                                                                  #
+  ####################################################################
+
   CoreApiPrivateGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Condition: IsNotDevelopment
@@ -3363,6 +3369,92 @@ Resources:
                   Value: !Sub IPV Core External API Gateway ${Environment}
             Period: 300
             Stat: Sum
+
+  LatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-apiGWLatencyAlarm"
+      AlarmDescription: "There has been increased latency on backend api-gateway"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: []
+      Dimensions: []
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 2
+      Threshold: 2500
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: safeLatency
+          Label: safeLatency
+          ReturnData: true
+          Expression: IF(invocations<10,0,maxLatency)
+        - Id: invocations
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Count
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "${AWS::StackName} - Core API"
+            Period: 60
+            Stat: Sum
+        - Id: maxLatency
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: Latency
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub "${AWS::StackName} - Core API"
+            Period: 60
+            Stat: Maximum
+
+  LambdaThrottleAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Trigger the alarm if any lambda in the account throttles"
+      AlarmName: !Sub "${AWS::StackName}-LambdaThrottleAlarm"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      InsufficientDataActions: []
+      MetricName: Throttles
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      TreatMissingData: notBreaching
+      Period: 60 # This is the minimum value for the AWS Namespace
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+
+  LambdaDurationAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-LambdaDurationAlarm"
+      AlarmDescription: Alarm for Lambda functions running longer than 5 minutes
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 5
+      DatapointsToAlarm: 3
+      Threshold: 30000 #30k milliseconds = 30 seconds
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
