@@ -49,6 +49,20 @@ The value for `JAR_SIGNING_KEY` will probably be the same as for the build env.
 - Try to create parameterised steps where possible.
 - Don't create new steps unless you're sure one doesn't already exist that fits your need.
 
+## IDE integration
+
+It's a good idea to add the relevant plugins for your IDE or it will struggle to understand the structure of the project.
+
+- For intellij use [Cucumber.js][cucumberjs]
+- For VSCode use [Cucumber][cucumber]
+  - You might need to configure it with:
+    ```
+    "cucumber.glue": [
+        "api-tests/src/steps/**/*.ts"
+    ]
+    ```
+- Or use something else you like that works, you're a grown up.
+
 ### Prettying and linting
 
 The project is configured to use eslint for linting, and prettier for formatting. If you have pre-commit installed it will catch any issues. You can run the tests manually using:
@@ -66,3 +80,5 @@ npm run lint-fix
 [create-pat]: https://docs.github.com/en/enterprise-server@3.9/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token
 [dev02-config]: https://github.com/govuk-one-login/ipv-core-common-infra/blob/main/utils/config-mgmt/app/configs/core.dev01.params.yaml#L720
 [dotenv]: https://github.com/motdotla/dotenv#readme
+[cucumberjs]: https://plugins.jetbrains.com/plugin/7418-cucumber-js
+[cucumber]: https://marketplace.visualstudio.com/items?itemName=CucumberOpen.cucumber-official
