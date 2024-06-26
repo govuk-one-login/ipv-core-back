@@ -3371,6 +3371,7 @@ Resources:
             Stat: Sum
 
   LatencyAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub "${AWS::StackName}-apiGWLatencyAlarm"
@@ -3416,6 +3417,7 @@ Resources:
             Stat: Maximum
 
   LambdaThrottleAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmDescription: "Trigger the alarm if any lambda in the account throttles"
@@ -3437,6 +3439,7 @@ Resources:
       ComparisonOperator: GreaterThanThreshold
 
   LambdaDurationAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub "${AWS::StackName}-LambdaDurationAlarm"
