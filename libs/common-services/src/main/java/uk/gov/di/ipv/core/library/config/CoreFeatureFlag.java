@@ -9,7 +9,8 @@ public enum CoreFeatureFlag implements FeatureFlag {
     TICF_CRI_BETA("ticfCriBeta"),
     EVCS_WRITE_ENABLED("evcsWriteEnabled"),
     EVCS_READ_ENABLED("evcsReadEnabled"),
-    MFA_RESET("mfaResetEnabled");
+    MFA_RESET("mfaResetEnabled"),
+    P1_JOURNEYS_ENABLED("p1JourneysEnabled");
 
     private final String name;
 
