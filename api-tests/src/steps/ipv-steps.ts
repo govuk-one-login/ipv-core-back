@@ -12,6 +12,11 @@ import {
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
+import {
+  isClientResponse,
+  isCriResponse,
+  isPageResponse,
+} from "../utils/type-guards.js";
 
 When(
   "I start a new {string} journey",
@@ -30,6 +35,7 @@ When(
 Then(
   "I get a(n) {string} page response",
   function (this: World, expectedPage: string): void {
+    assert.ok(isPageResponse(this.lastJourneyEngineResponse));
     assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
   },
 );
@@ -47,6 +53,7 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
+    assert.ok(isCriResponse(this.lastJourneyEngineResponse));
     assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
   },
 );
@@ -54,6 +61,9 @@ Then(
 When(
   "I submit {string} details to the CRI stub",
   async function (this: World, scenario: string): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
     const criResponse = this.lastJourneyEngineResponse.cri;
     const criStubResponse = await criStubClient.callHeadlessApi(
       criResponse.redirectUrl,
@@ -75,6 +85,7 @@ When(
 );
 
 Then("I get a client Oauth response", function (this: World): void {
+  assert.ok(isClientResponse(this.lastJourneyEngineResponse));
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
     config.ORCHESTRATOR_REDIRECT_URL,
@@ -85,6 +96,9 @@ Then("I get a client Oauth response", function (this: World): void {
 When(
   "I use the Oauth response to get my identity",
   async function (this: World): Promise<void> {
+    if (!isClientResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a client response");
+    }
     const tokenResponse = await externalClient.exchangeCodeForToken(
       await generateTokenExchangeBody(
         this.lastJourneyEngineResponse.client.redirectUrl,

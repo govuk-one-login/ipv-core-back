@@ -1,5 +1,5 @@
-import { JourneyEngineResponse } from "./journey-engine-response.js";
 import { UserIdentity } from "./user-identity.js";
+import { JourneyEngineResponse } from "../types/journey-engine-response.js";
 
 export interface World {
   userId: string;
