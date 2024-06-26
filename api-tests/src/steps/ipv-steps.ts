@@ -92,7 +92,7 @@ When(
   },
 );
 
-Then("I get a client Oauth response", function (this: World): void {
+Then("I get an OAuth response", function (this: World): void {
   assert.ok(isClientResponse(this.lastJourneyEngineResponse));
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
@@ -102,7 +102,7 @@ Then("I get a client Oauth response", function (this: World): void {
 });
 
 When(
-  "I use the Oauth response to get my identity",
+  "I use the OAuth response to get my identity",
   async function (this: World): Promise<void> {
     if (!isClientResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a client response");
