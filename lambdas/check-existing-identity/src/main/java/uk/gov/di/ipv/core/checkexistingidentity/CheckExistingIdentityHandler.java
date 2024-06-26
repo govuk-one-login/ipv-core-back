@@ -285,14 +285,14 @@ public class CheckExistingIdentityHandler
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "resetIdentity flag is enabled, reset users identity."));
-
                 if (preferredNewIdentityLevel == Vot.P1) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
 
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Resetting P2 identity"));
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
