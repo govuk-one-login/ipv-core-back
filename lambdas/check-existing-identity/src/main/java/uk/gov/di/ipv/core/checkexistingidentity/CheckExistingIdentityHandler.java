@@ -70,7 +70,6 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -91,13 +90,11 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
@@ -115,8 +112,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH);
-    private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
-            new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
@@ -127,12 +122,10 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
-    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
-            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
-    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
-            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
-    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH_DESCENDING =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
+    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
+            List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -239,10 +232,7 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @SuppressWarnings({
-        "java:S3776", // Cognitive Complexity of methods should not be too high
-        "java:S6541" // "Brain method" PYIC-6901 should refactor this method
-    })
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Tracing
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
@@ -267,15 +257,6 @@ public class CheckExistingIdentityHandler
                             && hasF2fVc
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity);
-
-            // If we want to prove a full identity from scratch we want to go for the lowest
-            // strength that is acceptable to the caller.
-            var preferredNewIdentityLevel = Vot.P2;
-            if (configService.enabled(P1_JOURNEYS_ENABLED)
-                    && clientOAuthSessionItem.getVtr().contains(Vot.P1.name())) {
-                preferredNewIdentityLevel = Vot.P1;
-            }
-
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -288,12 +269,7 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 "resetIdentity flag is enabled, reset users identity."));
-
-                if (preferredNewIdentityLevel == Vot.P1) {
-                    return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
-                }
-
-                return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
+                return JOURNEY_REPROVE_IDENTITY;
             }
 
             if (ciScoringCheckResponse.isPresent()) {
@@ -330,7 +306,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             contraIndicators)
-                    : buildNoMatchResponse(contraIndicators, preferredNewIdentityLevel);
+                    : buildNoMatchResponse(contraIndicators);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -531,8 +507,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private JourneyResponse buildNoMatchResponse(
-            ContraIndicators contraIndicators, Vot preferredNewIdentityLevel)
+    private JourneyResponse buildNoMatchResponse(ContraIndicators contraIndicators)
             throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
@@ -546,13 +521,7 @@ public class CheckExistingIdentityHandler
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));
         }
-
-        if (preferredNewIdentityLevel == Vot.P1) {
-            LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-            return JOURNEY_IPV_GPG45_LOW;
-        }
-
-        LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
+        LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
         return JOURNEY_IPV_GPG45_MEDIUM;
     }
 
@@ -692,7 +661,7 @@ public class CheckExistingIdentityHandler
                     CredentialParseException {
 
         var requestedVotsByStrength =
-                SUPPORTED_VOTS_BY_STRENGTH_DESCENDING.stream()
+                SUPPORTED_VOTS_BY_STRENGTH.stream()
                         .filter(vot -> vtr.contains(vot.name()))
                         .toList();
 
