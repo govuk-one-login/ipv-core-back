@@ -2,6 +2,7 @@ import { JourneyEngineResponse } from "../types/journey-engine-response.js";
 import {
   ClientResponse,
   CriResponse,
+  JourneyResponse,
   PageResponse,
 } from "../interfaces/journey-engine-responses.js";
 
@@ -21,4 +22,10 @@ export const isClientResponse = (
   journeyEngineResponse: JourneyEngineResponse,
 ): journeyEngineResponse is ClientResponse => {
   return !!(journeyEngineResponse as ClientResponse).client?.redirectUrl;
+};
+
+export const isJourneyResponse = (
+  journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is JourneyResponse => {
+  return !!(journeyEngineResponse as JourneyResponse).journey;
 };

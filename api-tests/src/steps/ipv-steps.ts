@@ -15,6 +15,7 @@ import { getRandomString } from "../utils/random-string-generator.js";
 import {
   isClientResponse,
   isCriResponse,
+  isJourneyResponse,
   isPageResponse,
 } from "../utils/type-guards.js";
 
@@ -77,6 +78,13 @@ When(
       generateProcessCriCallbackBody(criStubResponse),
       this.ipvSessionId,
     );
+
+    if (!isJourneyResponse(journeyResponse)) {
+      throw new Error(
+        "response from process CRI callback is not a journey response",
+      );
+    }
+
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       journeyResponse.journey,
       this.ipvSessionId,

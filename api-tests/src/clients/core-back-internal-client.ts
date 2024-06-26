@@ -1,8 +1,11 @@
 import config from "../config/config.js";
 import { ProcessCriCallbackRequest } from "../interfaces/process-cri-callback-request.js";
-import { ProcessCriCallbackResponse } from "../interfaces/process-cri-callback-response.js";
 import { AuthRequestBody } from "../interfaces/auth-request-body.js";
 import { JourneyEngineResponse } from "../types/journey-engine-response.js";
+import {
+  JourneyResponse,
+  PageResponse,
+} from "../interfaces/journey-engine-responses.js";
 
 const JOURNEY_PREFIX = "/journey/";
 const POST = "POST";
@@ -49,7 +52,7 @@ export const sendJourneyEvent = async (
 export const processCriCallback = async (
   requestBody: ProcessCriCallbackRequest,
   ipvSessionId: string,
-): Promise<ProcessCriCallbackResponse> => {
+): Promise<JourneyResponse | PageResponse> => {
   const response = await fetch(
     `${config.CORE_BACK_INTERNAL_API_URL}/cri/callback`,
     {
