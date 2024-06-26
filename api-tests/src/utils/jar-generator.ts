@@ -1,6 +1,6 @@
 import * as jose from "jose";
 import config from "../config/config.js";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { getRandomString } from "./random-string-generator.js";
@@ -20,7 +20,7 @@ export const generateJar = async (
   journeyType: string,
 ): Promise<string> => {
   const payloadData = JSON.parse(
-    fs.readFileSync(
+    await fs.readFile(
       path.join(__dirname, `../../data/jar-requests/${journeyType}.json`),
       "utf8",
     ),

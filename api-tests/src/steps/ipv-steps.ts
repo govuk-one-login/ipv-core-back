@@ -57,7 +57,11 @@ When(
     const criResponse = this.lastJourneyEngineResponse.cri;
     const criStubResponse = await criStubClient.callHeadlessApi(
       criResponse.redirectUrl,
-      generateCriStubBody(criResponse.id, scenario, criResponse.redirectUrl),
+      await generateCriStubBody(
+        criResponse.id,
+        scenario,
+        criResponse.redirectUrl,
+      ),
     );
     const journeyResponse = await internalClient.processCriCallback(
       generateProcessCriCallbackBody(criStubResponse),

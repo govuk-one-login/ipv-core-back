@@ -5,7 +5,7 @@ import config from "../config/config.js";
 import { generateJar } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import { CriStubRequest } from "../interfaces/cri-stub-request.js";
 import { createSignedJwt } from "./jwt-signer.js";
 
@@ -48,17 +48,21 @@ export const generateProcessCriCallbackBody = (
   };
 };
 
-export const generateCriStubBody = (
+export const generateCriStubBody = async (
   criId: string,
   scenario: string,
   redirectUrl: string,
-): CriStubRequest => {
+): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
   return {
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
-    credentialSubjectJson: readJsonFile(criId, scenario, "credentialSubject"),
-    evidenceJson: readJsonFile(criId, scenario, "evidence"),
+    credentialSubjectJson: await readJsonFile(
+      criId,
+      scenario,
+      "credentialSubject",
+    ),
+    evidenceJson: await readJsonFile(criId, scenario, "evidence"),
   };
 };
 
@@ -80,10 +84,14 @@ export const generateTokenExchangeBody = async (
   );
 };
 
-const readJsonFile = (criId: string, scenario: string, jsonType: JsonType) => {
+const readJsonFile = async (
+  criId: string,
+  scenario: string,
+  jsonType: JsonType,
+) => {
   return JSON.stringify(
     JSON.parse(
-      fs.readFileSync(
+      await fs.readFile(
         path.join(
           __dirname,
           `../../data/cri-stub-requests/${criId}/${scenario}/${jsonType}.json`,
