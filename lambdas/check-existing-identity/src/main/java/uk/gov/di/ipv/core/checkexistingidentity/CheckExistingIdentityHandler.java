@@ -359,6 +359,11 @@ public class CheckExistingIdentityHandler
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
     }
 
+    private boolean hasPartiallyMigratedVcs(
+            List<VerifiableCredential> tacticalVcs, List<VerifiableCredential> evcsVcs) {
+        return false;
+    }
+
     @ExcludeFromGeneratedCoverageReport
     private void logIdentityMismatches(
             List<VerifiableCredential> tacticalVcs,
