@@ -30,11 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aWithCI;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
 
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialValidatorTest {
@@ -263,7 +265,7 @@ class VerifiableCredentialValidatorTest {
     }
 
     @Test
-    void throwsVerifiableCredentialExceptionWhenCiCodesAreNotRecognised() {
+    void throwsVerifiableCredentialExceptionWhenIdentityCheckCiCodesAreNotRecognised() {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("NO", new ContraIndicatorConfig()));
 
@@ -277,6 +279,30 @@ class VerifiableCredentialValidatorTest {
                                     vcPassportM1aWithCI().getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
+                                    false);
+                        });
+
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
+                exception.getErrorResponse());
+    }
+
+    @Test
+    void throwsVerifiableCredentialExceptionWhenRiskAssessmentCiCodesAreNotRecognised() {
+        when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(Map.of("NO", new ContraIndicatorConfig()));
+
+        var exception =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> {
+                            vcJwtValidator.parseAndValidate(
+                                    TEST_USER,
+                                    TICF.getId(),
+                                    vcTicfWithCi().getVcString(),
+                                    VALID_EC_SIGNING_KEY,
+                                    "https://ticf.stubs.account.gov.uk",
                                     false);
                         });
 

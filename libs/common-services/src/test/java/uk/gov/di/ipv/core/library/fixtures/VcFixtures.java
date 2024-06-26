@@ -791,6 +791,29 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704822570));
     }
 
+    static VerifiableCredential vcTicfWithCi() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                TICF.getId(),
+                TestVc.builder()
+                        .credentialSubject(null)
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
+                                                .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                                                .checkDetails(null)
+                                                .ci(List.of("test"))
+                                                .build()))
+                        .type(
+                                new String[] {
+                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
+                                })
+                        .build(),
+                "https://ticf.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1704822570));
+    }
+
     static VerifiableCredential vcVerificationM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
