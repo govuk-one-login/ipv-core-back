@@ -40,8 +40,7 @@ public class CiMitUtilityService {
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getUsersContraIndicators()) {
             if (isCiMitigatable(ci) && !isBreachingCiThresholdIfMitigated(ci, contraIndicators)) {
-                // Prevent new mitigation journey if there is already a mitigated CI that fixes the
-                // breach
+                // Prevent new mitigation journey if there is already a mitigated CI
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
                     return Optional.empty();
                 }

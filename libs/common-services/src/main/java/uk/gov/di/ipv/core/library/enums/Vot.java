@@ -12,7 +12,6 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 @ExcludeFromGeneratedCoverageReport
 public enum Vot {
     P0(List.of(), null, GPG45),
-    P1(List.of(Gpg45Profile.L1A), null, GPG45),
     P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), null, GPG45),
     PCL250(null, List.of(OperationalProfile.PCL250), OPERATIONAL_HMRC),
     PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200), OPERATIONAL_HMRC);
