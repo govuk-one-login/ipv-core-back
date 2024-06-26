@@ -131,8 +131,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
-    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH_DESCENDING =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
