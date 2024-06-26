@@ -272,7 +272,31 @@ Resources:
       QueueName: DeleteAccountSQSQueue
       RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\", \"maxReceiveCount\": \"5\" }"
 
-#Delete Account Queue
+#Delete Account Queue alarm for old messages
+  DeleteAccountSQSMessagesNotConsumedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-DeleteAccountSQSMessagesNotConsumedAlarm"
+      AlarmDescription: "Trigger an alarm when the age of the oldest message in the DeleteAccountSQSQueue is 5 or more minutes"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt DeleteAccountSQSQueue.QueueName
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 300
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+#IPV Delete Account Queue
   IPVDeleteAccountSQSQueue:
     DependsOn: DeleteAccountSNSDLQ
     Type: AWS::SQS::Queue
@@ -281,6 +305,30 @@ Resources:
       VisibilityTimeout: 60
       QueueName: IPVDeleteAccountSQSQueue
       RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\", \"maxReceiveCount\": \"5\" }"
+
+#IPV Delete Account Queue alarm for old messages
+  IPVDeleteAccountSQSMessagesNotConsumedAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-IPVDeleteAccountSQSMessagesNotConsumedAlarm"
+      AlarmDescription: "Trigger an alarm when the age of the oldest message in the IPVDeleteAccountSQSQueue is 5 or more minutes"
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      MetricName: ApproximateAgeOfOldestMessage
+      Namespace: AWS/SQS
+      Statistic: Maximum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt IPVDeleteAccountSQSQueue.QueueName
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 300
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
 #DLQ for SNS Subsciption
   DeleteAccountSNSDLQ:
