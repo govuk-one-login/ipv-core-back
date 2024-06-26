@@ -74,14 +74,24 @@ export const generateTokenExchangeBody = async (
     throw new Error("code not received in redirect URL");
   }
 
-  return (
-    `grant_type=authorization_code&` +
-    `code=${code}&` +
-    `redirect_uri=${encodeURI(config.ORCHESTRATOR_REDIRECT_URL)}&` +
-    `client_id=${ORCHESTRATOR_CLIENT_ID}&` +
-    `client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&` +
-    `client_assertion=${await createSignedJwt({ sub: ORCHESTRATOR_CLIENT_ID, iss: ORCHESTRATOR_CLIENT_ID })}`
+  const params = new URLSearchParams();
+  params.set("grant_type", "authorization_code");
+  params.set("code", code);
+  params.set("redirect_uri", config.ORCHESTRATOR_REDIRECT_URL);
+  params.set("client_id", ORCHESTRATOR_CLIENT_ID);
+  params.set(
+    "client_assertion_type",
+    "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
   );
+  params.set(
+    "client_assertion",
+    await createSignedJwt({
+      sub: ORCHESTRATOR_CLIENT_ID,
+      iss: ORCHESTRATOR_CLIENT_ID,
+    }),
+  );
+
+  return params.toString();
 };
 
 const readJsonFile = async (
