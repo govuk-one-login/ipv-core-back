@@ -91,7 +91,7 @@ public class ConfigService {
 
         this.ssmProvider =
                 ParamManager.getSsmProvider(
-                                SsmClient.builder().httpClient(AwsCrttttpClient.create()).build())
+                                SsmClient.builder().httpClient(AwsCrtHttpClient.create()).build())
                         .defaultMaxAge(cacheDuration, MINUTES);
 
         this.secretsProvider =
