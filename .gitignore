@@ -57,4 +57,3 @@ secrets.gradle
 api-tests/cucumber-report.html
 api-tests/.npmrc
 api-tests/.env
-api-tests/src/**/*.js
