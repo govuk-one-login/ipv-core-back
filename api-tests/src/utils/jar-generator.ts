@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { getRandomString } from "./random-string-generator.js";
-import { createSignedJwt } from "./jwt-signer.js";
+import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -34,6 +34,10 @@ export const generateJar = async (
       redirect_uri: config.ORCHESTRATOR_REDIRECT_URL,
     },
   };
+
+  payload.claims.userinfo[
+    "https://vocab.account.gov.uk/v1/storageAccessToken"
+  ].values = [await createEvcsAccessToken(subject)];
 
   return await new jose.CompactEncrypt(
     new TextEncoder().encode(await createSignedJwt(payload)),

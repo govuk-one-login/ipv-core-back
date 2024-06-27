@@ -21,3 +21,12 @@ export const createSignedJwt = async (
     .setJti(getRandomString(16))
     .sign(sigKey);
 };
+
+export const createEvcsAccessToken = async (
+  subject: string,
+): Promise<string> => {
+  return await new jose.SignJWT()
+    .setProtectedHeader({ alg: sigAlg })
+    .setSubject(subject)
+    .sign(sigKey);
+};
