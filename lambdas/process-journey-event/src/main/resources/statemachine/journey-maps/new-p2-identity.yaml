@@ -56,6 +56,9 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -681,6 +684,8 @@ states:
     events:
       next:
         targetState: EVALUATE_GPG45_SCORES
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
@@ -705,8 +710,10 @@ states:
     events:
       next:
         targetState: EVALUATE_GPG45_SCORES
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
       access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
         auditEvents:
@@ -769,7 +776,7 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_J7
+        targetState: CRI_DWP_KBV_M2B
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_M2B
@@ -777,7 +784,7 @@ states:
               hmrcKbv:
                 targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
       enhanced-verification:
-        targetState: CRI_DWP_KBV_J7
+        targetState: CRI_DWP_KBV_M2B
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_M2B
@@ -1182,13 +1189,13 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: MITIGATION_PP_CRI_DWP_KBV
+        targetState: MITIGATION_CRI_DWP_KBV
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
             checkIfDisabled:
               hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1270,13 +1277,13 @@ states:
         scoreThreshold: 2
     events:
       met:
-        targetState: MITIGATION_PP_CRI_DWP_KBV
+        targetState: MITIGATION_CRI_DWP_KBV
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
             checkIfDisabled:
               hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       unmet:
         targetJourney: FAILED
         targetState: FAILED
@@ -1292,15 +1299,6 @@ states:
         targetState: MITIGATION_CRI_HMRC_KBV
       fail-with-no-ci:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  MITIGATION_PP_CRI_DWP_KBV:
-    response:
-      type: cri
-      criId: dwpKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: MITIGATION_CRI_DWP_KBV
 
   MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:
     response:
@@ -1347,6 +1345,10 @@ states:
     events:
       next:
         targetState: EVALUATE_GPG45_SCORES
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED

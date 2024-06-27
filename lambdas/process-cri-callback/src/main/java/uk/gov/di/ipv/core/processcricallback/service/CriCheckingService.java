@@ -140,9 +140,7 @@ public class CriCheckingService {
         return (switch (errorCode) {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
             case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
-            case OAuth2Error
-                    .INVALID_REQUEST_CODE -> JOURNEY_INVALID_REQUEST; // Handle invalid_request
-                // error
+            case OAuth2Error.INVALID_REQUEST_CODE -> JOURNEY_INVALID_REQUEST;
             default -> JOURNEY_ERROR;
         });
     }
