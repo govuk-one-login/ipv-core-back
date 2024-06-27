@@ -23,8 +23,11 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestExcept
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmAsyncClient;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.GetParameterResponse;
 import software.amazon.awssdk.services.ssm.model.GetParametersByPathRequest;
 import software.amazon.awssdk.services.ssm.model.GetParametersByPathResponse;
+import software.amazon.awssdk.services.ssm.model.GetParametersResponse;
 import software.amazon.awssdk.services.ssm.model.Parameter;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.paginators.GetParametersByPathPublisher;
@@ -98,6 +101,7 @@ public class ConfigService {
     private HttpRequest appConfigClientRequest;
     private Instant appConfigLastPull;
     private Map<String, String> configMap;
+    private Instant lastRefresh;
 
     private List<String> featureSet;
 
@@ -143,8 +147,12 @@ public class ConfigService {
                         .build();
 
         httpClient = HttpClient.newHttpClient();
-        appConfigClientRequest = HttpRequest.newBuilder(URI.create("http://localhost:2772/applications/core-back-lambdas/environments/dev-chrisw-lambdas/configurations/PYIC-6854-AppConfigSpike")).GET().build();
-
+        appConfigClientRequest =
+                HttpRequest.newBuilder(
+                                URI.create(
+                                        "http://localhost:2772/applications/core-back-lambdas/environments/dev-chrisw-lambdas/configurations/PYIC-6854-AppConfigSpike"))
+                        .GET()
+                        .build();
     }
 
     public List<String> getFeatureSet() {
@@ -160,19 +168,81 @@ public class ConfigService {
     }
 
     @Tracing
+    public void primeConfigCache(List<ConfigVarWithPathProps> configToFetch) {
+        if (configMap == null || lastRefresh.isBefore(Instant.now().minusSeconds(30))) {
+            var fullParamNamesList = getFullParamNameList(configToFetch);
+            parseFuturesToMap(getParameters(fullParamNamesList));
+            lastRefresh = Instant.now();
+        }
+    }
+
+    @Tracing
+    private List<String> getFullParamNameList(List<ConfigVarWithPathProps> configToFetch) {
+        return configToFetch.stream()
+                .map(
+                        param ->
+                                resolvePath(
+                                        param.configVar().getPath(),
+                                        param.pathProps().toArray(new String[0])))
+                .toList();
+    }
+
+    @Tracing
+    private List<CompletableFuture<GetParameterResponse>> getParameters(
+            List<String> fullParamNamesList) {
+        var completableFutures =
+                fullParamNamesList.stream()
+                        .map(
+                                param ->
+                                        ssmAsyncClient.getParameter(
+                                                GetParameterRequest.builder().name(param).build()))
+                        .toList();
+        var allOf = CompletableFuture.allOf(completableFutures.toArray(new CompletableFuture[0]));
+        try {
+            allOf.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
+        return completableFutures;
+    }
+
+    @Tracing
+    private void parseFuturesToMap(
+            List<CompletableFuture<GetParameterResponse>> completableFutures) {
+        configMap = new HashMap<>();
+        completableFutures.forEach(
+                future -> {
+                    try {
+                        Parameter parameter = future.get().parameter();
+                        configMap.put(parameter.name(), parameter.value());
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    @Tracing
+    private Map<String, String> responseToMap(GetParametersResponse response) {
+        return response.parameters().stream()
+                .collect(Collectors.toMap(Parameter::name, Parameter::value));
+    }
+
+    @Tracing
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
-
-        return spikeAppConfig(configurationVariable, pathProperties);
-//        return spikeGetMultipleAsync(configurationVariable, pathProperties);
-        //        return spikeGetMultiple(configurationVariable, pathProperties);
+        return configMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
+        //        return spikeAppConfig(configurationVariable, pathProperties);
+        //        return spikeGetMultipleAsync(configurationVariable, pathProperties);
+        //                return spikeGetMultiple(configurationVariable, pathProperties);
         //        return spikeGetAllFromS3(configurationVariable, pathProperties);
         //        return getSsmParameterWithOverride(configurationVariable.getPath(),
         // pathProperties);
     }
 
     @Tracing
-    private String spikeAppConfig(ConfigurationVariable configurationVariable, String... pathProperties) {
+    private String spikeAppConfig(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
         if (coreConfig == null || appConfigLastPull.plusSeconds(30).isBefore(Instant.now())) {
             String fetchedConfig = callAppConfigClient();
             coreConfig = parseAppConfig(fetchedConfig);
@@ -183,7 +253,12 @@ public class ConfigService {
     @Tracing
     private JsonNode parseAppConfig(String appConfigYaml) {
         try {
-            return OBJECT_MAPPER.readTree(appConfigYaml).path("managed").path("ssm").path("dev-chrisw").path("core");
+            return OBJECT_MAPPER
+                    .readTree(appConfigYaml)
+                    .path("managed")
+                    .path("ssm")
+                    .path("dev-chrisw")
+                    .path("core");
         } catch (IOException e) {
             LOGGER.error("Error parsing config yaml", e);
             throw new RuntimeException();
@@ -191,7 +266,8 @@ public class ConfigService {
     }
 
     @Tracing
-    private String getValueFromJsonNode(ConfigurationVariable configurationVariable, String... pathProperties) {
+    private String getValueFromJsonNode(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
         var templatedPath =
                 String.format(configurationVariable.getPath(), (Object[]) pathProperties);
         var pathParts = new ArrayList<>(Arrays.asList(templatedPath.split("/")));
@@ -211,9 +287,13 @@ public class ConfigService {
     @Tracing
     private String callAppConfigClient() {
         try {
-            var response = httpClient.send(appConfigClientRequest, HttpResponse.BodyHandlers.ofString());
+            var response =
+                    httpClient.send(appConfigClientRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() > 299) {
-                throw new RuntimeException(String.format("Non 200 response from app config client: '%d'", response.statusCode()));
+                throw new RuntimeException(
+                        String.format(
+                                "Non 200 response from app config client: '%d'",
+                                response.statusCode()));
             }
             appConfigLastPull = Instant.now();
             return response.body();
@@ -227,8 +307,7 @@ public class ConfigService {
     @Tracing
     private String spikeGetMultiple(
             ConfigurationVariable configurationVariable, String... pathProperties) {
-        configMap =
-                configMap == null ? loadAllParamsFromSsmUsingByPath() : configMap;
+        configMap = configMap == null ? loadAllParamsFromSsmUsingByPath() : configMap;
         return configMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
     }
 
@@ -254,9 +333,7 @@ public class ConfigService {
         CompletableFuture<Void> completableFuture =
                 parametersByPathPaginator1
                         .flatMapIterable(GetParametersByPathResponse::parameters)
-                        .subscribe(
-                                parameter ->
-                                        configMap.put(parameter.name(), parameter.value()));
+                        .subscribe(parameter -> configMap.put(parameter.name(), parameter.value()));
         try {
             completableFuture.get();
         } catch (InterruptedException | ExecutionException e) {

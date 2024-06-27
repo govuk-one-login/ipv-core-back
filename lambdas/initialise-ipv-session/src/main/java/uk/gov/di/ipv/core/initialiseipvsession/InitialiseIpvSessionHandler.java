@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.ConfigVarWithPathProps;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -67,7 +68,15 @@ import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CL
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FEATURE_FLAGS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
@@ -143,6 +152,24 @@ public class InitialiseIpvSessionHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        configService.primeConfigCache(
+                List.of(
+                        new ConfigVarWithPathProps(CLIENT_ISSUER, List.of("orchestrator")),
+                        new ConfigVarWithPathProps(
+                                PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, List.of("orchestrator")),
+                        new ConfigVarWithPathProps(
+                                CLIENT_VALID_REDIRECT_URLS, List.of("orchestrator")),
+                        new ConfigVarWithPathProps(CLIENT_VALID_SCOPES, List.of("orchestrator")),
+                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsReadEnabled")),
+                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsWriteEnabled")),
+                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("inheritedIdentity")),
+                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("mfaResetEnabled")),
+                        new ConfigVarWithPathProps(
+                                FEATURE_FLAGS, List.of("reproveIdentityEnabled")),
+                        new ConfigVarWithPathProps(BACKEND_SESSION_TTL, List.of()),
+                        new ConfigVarWithPathProps(CIMIT_COMPONENT_ID, List.of()),
+                        new ConfigVarWithPathProps(JAR_KMS_ENCRYPTION_KEY_ID, List.of()),
+                        new ConfigVarWithPathProps(MAX_ALLOWED_AUTH_CLIENT_TTL, List.of())));
         LogHelper.attachComponentId(configService);
 
         try {
