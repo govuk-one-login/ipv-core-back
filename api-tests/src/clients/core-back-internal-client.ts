@@ -1,11 +1,11 @@
 import config from "../config/config.js";
-import { ProcessCriCallbackRequest } from "../interfaces/process-cri-callback-request.js";
-import { AuthRequestBody } from "../interfaces/auth-request-body.js";
-import { JourneyEngineResponse } from "../types/journey-engine-response.js";
 import {
+  AuthRequestBody,
+  JourneyEngineResponse,
   JourneyResponse,
   PageResponse,
-} from "../interfaces/journey-engine-responses.js";
+  ProcessCriCallbackRequest,
+} from "../types/internal-api.js";
 
 const JOURNEY_PREFIX = "/journey/";
 const POST = "POST";

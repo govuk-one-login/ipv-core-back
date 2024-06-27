@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import { Then, When } from "@cucumber/cucumber";
-import { World } from "../interfaces/world.js";
+import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
@@ -17,7 +17,7 @@ import {
   isCriResponse,
   isJourneyResponse,
   isPageResponse,
-} from "../utils/type-guards.js";
+} from "../types/internal-api.js";
 
 When(
   "I start a new {string} journey",

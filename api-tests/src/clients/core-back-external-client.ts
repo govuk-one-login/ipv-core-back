@@ -1,6 +1,5 @@
 import config from "../config/config.js";
-import { TokenResponse } from "../interfaces/token-response.js";
-import { UserIdentity } from "../interfaces/user-identity.js";
+import { TokenResponse, UserIdentity } from "../types/external-api.js";
 
 export const exchangeCodeForToken = async (
   tokenExchangeBody: string,

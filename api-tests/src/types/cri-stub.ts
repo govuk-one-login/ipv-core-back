@@ -4,3 +4,7 @@ export interface CriStubRequest {
   credentialSubjectJson: string;
   evidenceJson: string;
 }
+
+export interface CriStubResponse {
+  redirectUri: string;
+}

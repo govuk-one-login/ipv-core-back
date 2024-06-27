@@ -1,13 +1,14 @@
-import { ProcessCriCallbackRequest } from "../interfaces/process-cri-callback-request.js";
-import { CriStubResponse } from "../interfaces/cri-stub-response.js";
-import { AuthRequestBody } from "../interfaces/auth-request-body.js";
 import config from "../config/config.js";
 import { generateJar } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
-import { CriStubRequest } from "../interfaces/cri-stub-request.js";
 import { createSignedJwt } from "./jwt-signer.js";
+import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
+import {
+  AuthRequestBody,
+  ProcessCriCallbackRequest,
+} from "../types/internal-api.js";
 
 const ORCHESTRATOR_CLIENT_ID = "orchestrator";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

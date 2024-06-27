@@ -1,5 +1,4 @@
-import { CriStubResponse } from "../interfaces/cri-stub-response.js";
-import { CriStubRequest } from "../interfaces/cri-stub-request.js";
+import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
 
 export const callHeadlessApi = async (
   redirectUrl: string,

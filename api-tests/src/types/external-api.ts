@@ -6,7 +6,13 @@ import {
   PostalAddressClass,
   SocialSecurityRecordDetailsClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
-import { ReturnCode } from "./return-code.js";
+
+export interface TokenResponse {
+  access_token: string;
+  scope: string;
+  token_type: string;
+  expires_in: number;
+}
 
 export interface UserIdentity {
   sub: string;
@@ -19,4 +25,8 @@ export interface UserIdentity {
   "https://vocab.account.gov.uk/v1/drivingPermit": DrivingPermitDetailsClass[];
   "https://vocab.account.gov.uk/v1/socialSecurityRecord": SocialSecurityRecordDetailsClass[];
   "https://vocab.account.gov.uk/v1/returnCode": ReturnCode[];
+}
+
+interface ReturnCode {
+  code: string;
 }
