@@ -362,6 +362,7 @@ public class CheckExistingIdentityHandler
                     if (vcBundle.isPendingEvcsIdentity()) {
                         hasPartiallyMigratedVcs = hasPartiallyMigratedVcs(tacticalVcs, vcBundle);
                     }
+                    // only use these vcs if they have been fully migrated
                     if (!hasPartiallyMigratedVcs) {
                         return vcBundle;
                     }
@@ -622,7 +623,8 @@ public class CheckExistingIdentityHandler
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(), vcBundle.credentials);
+                    auditEventUser.getUserId(),
+                    vcBundle.credentials.stream().filter(vc -> vc.getMigrated() == null).toList());
             sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
         }
     }
