@@ -342,17 +342,28 @@ public class CheckExistingIdentityHandler
                     evcsService.getVerifiableCredentialsByState(
                             userId, evcsAccessToken, CURRENT, PENDING_RETURN, PENDING);
 
-            logIdentityMismatches(tacticalVcs, vcs);
-
             if (configService.enabled(EVCS_READ_ENABLED)) {
-                var pendingReturnVcs = vcs.get(PENDING_RETURN);
-                // use pending return vcs to determine identity if available
-                if (!isNullOrEmpty(pendingReturnVcs)) {
-                    return new VerifiableCredentialBundle(pendingReturnVcs, true, true);
-                }
-                var currentVcs = vcs.get(CURRENT);
-                if (!isNullOrEmpty(currentVcs)) {
-                    return new VerifiableCredentialBundle(currentVcs, true, false);
+                var hasPartiallyMigratedVcs = false;
+                try {
+                    var pendingReturnVcs = vcs.get(PENDING_RETURN);
+                    // use pending return vcs to determine identity if available (unless only
+                    // partially migrated)
+                    if (!isNullOrEmpty(pendingReturnVcs)) {
+                        var vcBundle = new VerifiableCredentialBundle(pendingReturnVcs, true, true);
+                        hasPartiallyMigratedVcs = hasPartiallyMigratedVcs(tacticalVcs, vcBundle);
+                        if (!hasPartiallyMigratedVcs) {
+                            return vcBundle;
+                        }
+                    } else {
+                        var currentVcs = vcs.get(CURRENT);
+                        if (!isNullOrEmpty(currentVcs)) {
+                            return new VerifiableCredentialBundle(currentVcs, true, false);
+                        }
+                    }
+                } finally {
+                    if (!hasPartiallyMigratedVcs) {
+                        logIdentityMismatches(tacticalVcs, vcs);
+                    }
                 }
             }
         }
@@ -360,8 +371,28 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean hasPartiallyMigratedVcs(
-            List<VerifiableCredential> tacticalVcs, List<VerifiableCredential> evcsVcs) {
-        return false;
+            List<VerifiableCredential> tacticalVcs, VerifiableCredentialBundle evcsVcs) {
+
+        // EVCS contains only a pending F2F VC
+        if (evcsVcs.credentials.size() == 1 && evcsVcs.isF2fIdentity()) {
+            return true;
+        }
+        // Tactical contains the same as pending EVCS, with one extra F2F VC
+        var extraF2fVcs =
+                tacticalVcs.stream()
+                        .filter(
+                                credential ->
+                                        F2F.getId().equals(credential.getCriId())
+                                                && evcsVcs.credentials.stream()
+                                                        .noneMatch(
+                                                                evcsVC ->
+                                                                        evcsVC.getVcString()
+                                                                                .equals(
+                                                                                        credential
+                                                                                                .getVcString())))
+                        .toList();
+
+        return extraF2fVcs.size() == 1;
     }
 
     @ExcludeFromGeneratedCoverageReport
