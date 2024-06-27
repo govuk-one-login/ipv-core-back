@@ -195,7 +195,7 @@ public class CheckExistingIdentityHandler
 
     private record VerifiableCredentialBundle(
             List<VerifiableCredential> credentials,
-            boolean isEvcsIdentity,
+            boolean hasEvcsIdentity,
             boolean isPendingEvcsIdentity) {
         private boolean isF2fIdentity() {
             return credentials.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
@@ -255,7 +255,7 @@ public class CheckExistingIdentityHandler
                     !Objects.isNull(f2fRequest)
                             && hasF2fVc
                             && (!configService.enabled(EVCS_READ_ENABLED)
-                                    || vcs.isPendingEvcsIdentity);
+                                    || vcs.isPendingEvcsIdentity());
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -337,22 +337,25 @@ public class CheckExistingIdentityHandler
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
         if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
-            var vcs =
+            var evcsVcs =
                     evcsService.getVerifiableCredentialsByState(
                             userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-            logIdentityMismatches(tacticalVcs, vcs);
+            logIdentityMismatches(tacticalVcs, evcsVcs);
 
-            if (configService.enabled(EVCS_READ_ENABLED)) {
-                var pendingReturnVcs = vcs.get(PENDING_RETURN);
-                // use pending return vcs to determine identity if available
-                if (!isNullOrEmpty(pendingReturnVcs)) {
-                    return new VerifiableCredentialBundle(pendingReturnVcs, true, true);
-                }
-                var currentVcs = vcs.get(CURRENT);
-                if (!isNullOrEmpty(currentVcs)) {
-                    return new VerifiableCredentialBundle(currentVcs, true, false);
-                }
+            // Use pending return vcs to determine identity if available
+            var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
+            var isPendingEvcs = true;
+            if (isNullOrEmpty(evcsIdentityVcs)) {
+                evcsIdentityVcs = evcsVcs.get(CURRENT);
+                isPendingEvcs = false;
+            }
+
+            if (!isNullOrEmpty(evcsIdentityVcs)) {
+                return new VerifiableCredentialBundle(
+                        configService.enabled(EVCS_READ_ENABLED) ? evcsIdentityVcs : tacticalVcs,
+                        true,
+                        isPendingEvcs);
             }
         }
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
@@ -463,7 +466,6 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
-                            clientOAuthSessionItem,
                             vcBundle,
                             auditEventUser,
                             deviceInformation));
@@ -527,13 +529,11 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             VerifiableCredentialBundle vcBundle,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws SqsException, VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
-        String evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
                 && !hasCurrentFraudVc(vcBundle.credentials)) {
@@ -541,7 +541,7 @@ public class CheckExistingIdentityHandler
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
 
-            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
+            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -571,25 +571,20 @@ public class CheckExistingIdentityHandler
                 auditEventUser.getSessionId(),
                 false);
 
-        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle, evcsAccessToken);
+        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
 
-        return vcBundle.isPendingEvcsIdentity ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+        return vcBundle.isPendingEvcsIdentity() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private void migrateCredentialsToEVCS(
             AuditEventUser auditEventUser,
             String deviceInformation,
-            VerifiableCredentialBundle vcBundle,
-            String evcsAccessToken)
+            VerifiableCredentialBundle vcBundle)
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
-        if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.isEvcsIdentity) {
+        if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(), vcBundle.credentials, evcsAccessToken);
-            sendVCsMigratedAuditEvent(
-                    AuditEventTypes.IPV_VCS_MIGRATED,
-                    auditEventUser,
-                    vcBundle.credentials,
-                    deviceInformation);
+                    auditEventUser.getUserId(), vcBundle.credentials);
+            sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
         }
     }
 
@@ -624,14 +619,13 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private void sendVCsMigratedAuditEvent(
-            AuditEventTypes auditEventTypes,
             AuditEventUser auditEventUser,
             List<VerifiableCredential> credentials,
             String deviceInformation)
             throws SqsException {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
-                        auditEventTypes,
+                        AuditEventTypes.IPV_VCS_MIGRATED,
                         configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionsEvcsMigration(
