@@ -183,8 +183,7 @@ public class BuildClientOauthResponseHandler
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
             var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
-            if (Boolean.TRUE.equals(isReproveIdentity)
-                    && List.of(Vot.P0, Vot.P2).contains(ipvSessionItem.getVot())) {
+            if (Boolean.TRUE.equals(isReproveIdentity)) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
