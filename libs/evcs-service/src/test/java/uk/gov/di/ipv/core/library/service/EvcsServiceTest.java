@@ -34,6 +34,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -124,6 +126,7 @@ class EvcsServiceTest {
                         .count()));
         assertFalse(
                 userVCsForEvcs.stream().anyMatch(dto -> !dto.state().equals(EvcsVCState.CURRENT)));
+        assertFalse(userVCsForEvcs.stream().anyMatch(dto -> !dto.provenance().equals(ONLINE)));
     }
 
     @Test
@@ -190,7 +193,7 @@ class EvcsServiceTest {
     @Test
     void testStoreCompleteIdentity_whenAllVCsExistInEvcs_withCurrentState() throws Exception {
         // Arrange
-        EvcsGetUserVCsDto EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO =
+        EvcsGetUserVCsDto evcsGetUserVcsWithCurrentStateAllExistingDto =
                 new EvcsGetUserVCsDto(
                         List.of(
                                 new EvcsGetUserVCDto(
@@ -207,7 +210,7 @@ class EvcsServiceTest {
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
-                .thenReturn(EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO);
+                .thenReturn(evcsGetUserVcsWithCurrentStateAllExistingDto);
         // Act
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
@@ -224,7 +227,7 @@ class EvcsServiceTest {
     void testStoreCompleteIdentity_whenAllVCsExistInEvcs_inSession_withPendingReturnState()
             throws Exception {
         // Arrange
-        EvcsGetUserVCsDto EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO =
+        EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
                 new EvcsGetUserVCsDto(
                         List.of(
                                 new EvcsGetUserVCDto(
@@ -241,7 +244,7 @@ class EvcsServiceTest {
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
-                .thenReturn(EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO);
+                .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
         // Act
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
@@ -266,7 +269,7 @@ class EvcsServiceTest {
     void testStoreCompleteIdentity_whenAllVCsExistInEvcs_notInSession_withPendingReturnState()
             throws Exception {
         // Arrange
-        EvcsGetUserVCsDto EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO =
+        EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
                 new EvcsGetUserVCsDto(
                         List.of(
                                 new EvcsGetUserVCDto(
@@ -283,7 +286,7 @@ class EvcsServiceTest {
                                         Map.of("reason", "testing"))));
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
-                .thenReturn(EVCS_GET_USER_VCS_WITH_ALL_EXISTING_DTO);
+                .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
         // Act
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, Collections.emptyList(), TEST_EVCS_ACCESS_TOKEN);
@@ -316,6 +319,7 @@ class EvcsServiceTest {
         assertEquals(
                 VC_ADDRESS_TEST.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
         assertEquals(CURRENT, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
+        assertEquals(ONLINE, evcsCreateUserVCsDtosCaptor.getValue().get(0).provenance());
     }
 
     @Test
@@ -330,6 +334,7 @@ class EvcsServiceTest {
         assertEquals(
                 VC_ADDRESS_TEST.getVcString(), evcsCreateUserVCsDtosCaptor.getValue().get(0).vc());
         assertEquals(PENDING_RETURN, evcsCreateUserVCsDtosCaptor.getValue().get(0).state());
+        assertEquals(OFFLINE, evcsCreateUserVCsDtosCaptor.getValue().get(0).provenance());
     }
 
     @Test
@@ -392,9 +397,8 @@ class EvcsServiceTest {
         // Act/Assert
         assertThrows(
                 CredentialParseException.class,
-                () -> {
-                    evcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT);
-                });
+                () ->
+                        evcsService.getVerifiableCredentials(
+                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT));
     }
 }
