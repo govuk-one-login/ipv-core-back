@@ -258,11 +258,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(gpg45Vc)));
 
             checkExistingIdentityHandler.handleRequest(event, context);
@@ -273,20 +269,14 @@ class CheckExistingIdentityHandlerTest {
                             TEST_USER_ID,
                             EVCS_TEST_TOKEN,
                             EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN,
-                            EvcsVCState.PENDING);
+                            EvcsVCState.PENDING_RETURN);
         }
 
         @Test
         void shouldUseVcServiceWhenEvcsServiceEnabledAndReturnsEmpty() throws Exception {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(new HashMap<EvcsVCState, List<VerifiableCredential>>());
 
             checkExistingIdentityHandler.handleRequest(event, context);
@@ -297,8 +287,7 @@ class CheckExistingIdentityHandlerTest {
                             TEST_USER_ID,
                             EVCS_TEST_TOKEN,
                             EvcsVCState.CURRENT,
-                            EvcsVCState.PENDING_RETURN,
-                            EvcsVCState.PENDING);
+                            EvcsVCState.PENDING_RETURN);
             verify(mockVerifiableCredentialService, times(1)).getVcs(TEST_USER_ID);
         }
 
@@ -344,8 +333,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
             verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(
-                            TEST_USER_ID, List.of(gpg45Vc, hmrcMigrationVC), EVCS_TEST_TOKEN);
+                    .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc, hmrcMigrationVC));
         }
 
         @Test
@@ -356,11 +344,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
             when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(),
-                            any(),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class),
-                            any(EvcsVCState.class)))
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
                     .thenReturn(Map.of(PENDING_RETURN, List.of(vcF2fM1a())));
 
             when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
@@ -376,7 +360,7 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
             // pending vcs should not be migrated
-            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any(), any());
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
             assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
         }
 
@@ -1082,7 +1066,7 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
-        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any(), any());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
     }
 
     @Test
@@ -1352,7 +1336,7 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         verify(ipvSessionService, never()).updateIpvSession(any());
-        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any(), any());
+        verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
     }
 
     @Test
@@ -1380,7 +1364,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1402,8 +1385,7 @@ class CheckExistingIdentityHandlerTest {
                 vcs.stream().filter(vc -> vc != EXPIRED_M1A_EXPERIAN_FRAUD_VC).toList();
         verify(mockSessionCredentialService)
                 .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
-        verify(mockEvcsMigrationService)
-                .migrateExistingIdentity(TEST_USER_ID, vcs, EVCS_TEST_TOKEN);
+        verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, vcs);
     }
 
     @Test
