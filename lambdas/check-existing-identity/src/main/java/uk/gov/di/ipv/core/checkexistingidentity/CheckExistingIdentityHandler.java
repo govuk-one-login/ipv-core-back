@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -622,7 +621,7 @@ public class CheckExistingIdentityHandler
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && !hasCurrentFraudVc(vcBundle.credentials)) {
+                && allFraudVcsAreExpired(vcBundle.credentials)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
@@ -679,16 +678,10 @@ public class CheckExistingIdentityHandler
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
     }
 
-    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
-        var fraudVCs =
-                VcHelper.filterVCBasedOnEvidenceType(
-                        vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
-        for (var vc : fraudVCs) {
-            if (!VcHelper.isExpiredFraudVc(vc)) {
-                return true;
-            }
-        }
-        return false;
+    private boolean allFraudVcsAreExpired(List<VerifiableCredential> vcs) {
+        return vcs.stream()
+                .filter(vc -> EXPERIAN_FRAUD.getId().equals(vc.getCriId()))
+                .allMatch(VcHelper::isExpiredFraudVc);
     }
 
     private void sendAuditEvent(

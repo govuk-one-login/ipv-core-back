@@ -12,7 +12,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
@@ -101,45 +100,6 @@ public class VcHelper {
                     .filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCri().getId())))
                     .toList();
         }
-    }
-
-    public static List<VerifiableCredential> filterVCBasedOnEvidenceType(
-            List<VerifiableCredential> vcs, EvidenceType... evidenceType) {
-
-        return vcs.stream()
-                .filter(vc -> matchesEvidenceType(vc, Arrays.asList(evidenceType)))
-                .toList();
-    }
-
-    public static boolean matchesEvidenceType(
-            VerifiableCredential vc, List<EvidenceType> evidenceTypes) {
-        var evidenceArray =
-                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
-        if (evidenceArray == null || evidenceArray.isEmpty()) {
-            return false;
-        }
-
-        try {
-            List<CredentialEvidenceItem> credentialEvidenceList =
-                    OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE);
-            return credentialEvidenceList.stream()
-                    .anyMatch(
-                            credentialEvidenceItem -> {
-                                try {
-                                    return evidenceTypes.contains(
-                                            credentialEvidenceItem.getEvidenceType());
-                                } catch (UnknownEvidenceTypeException e) {
-                                    LOGGER.error(
-                                            "Unknown evidence type found in VC: {}",
-                                            vc.getVcString());
-                                    return false;
-                                }
-                            });
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to parse evidence array for VC: {}", vc.getVcString());
-        }
-
-        return false;
     }
 
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
