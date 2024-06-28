@@ -210,7 +210,8 @@ public class VerifiableCredentialValidator {
     private void validateCiCodes(VerifiableCredential credential)
             throws VerifiableCredentialException {
         Stream<String> ciCodes;
-        if (credential.getCredential() instanceof IdentityCheckCredential icc) {
+        if (credential.getCredential() instanceof IdentityCheckCredential icc
+                && icc.getEvidence() != null) {
             ciCodes =
                     icc.getEvidence().stream()
                             .map(IdentityCheck::getCi)
