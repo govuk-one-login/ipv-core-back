@@ -37,7 +37,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
@@ -209,33 +208,37 @@ public class VerifiableCredentialValidator {
 
     private void validateCiCodes(VerifiableCredential credential)
             throws VerifiableCredentialException {
-        Stream<String> ciCodes;
+        List<String> ciCodes;
         if (credential.getCredential() instanceof IdentityCheckCredential icc
                 && icc.getEvidence() != null) {
             ciCodes =
                     icc.getEvidence().stream()
                             .map(IdentityCheck::getCi)
                             .filter(Objects::nonNull)
-                            .flatMap(Collection::stream);
+                            .flatMap(Collection::stream)
+                            .toList();
         } else if (credential.getCredential() instanceof RiskAssessmentCredential rac) {
             ciCodes =
                     rac.getEvidence().stream()
                             .map(RiskAssessment::getCi)
                             .filter(Objects::nonNull)
-                            .flatMap(Collection::stream);
+                            .flatMap(Collection::stream)
+                            .toList();
         } else {
             return;
         }
 
-        var ciConfig = configService.getContraIndicatorConfigMap();
+        if (!ciCodes.isEmpty()) {
+            var ciConfig = configService.getContraIndicatorConfigMap();
 
-        if (!ciCodes.allMatch(ciConfig::containsKey)) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            "Verifiable credential contains unrecognised CI codes"));
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+            if (!ciCodes.stream().allMatch(ciConfig::containsKey)) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Verifiable credential contains unrecognised CI codes"));
+                throw new VerifiableCredentialException(
+                        HTTPResponse.SC_SERVER_ERROR,
+                        ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+            }
         }
     }
 }
