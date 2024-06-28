@@ -193,26 +193,12 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
-            String evcsAccessToken = null;
-            try {
-                evcsAccessToken =
-                        validateEvcsAccessToken(
-                                getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
-                                claimsSet);
-            } catch (RecoverableJarValidationException | ParseException e) {
-                if (configService.enabled(EVCS_WRITE_ENABLED)
-                        || configService.enabled(EVCS_READ_ENABLED)) {
-                    throw e;
-                } else {
-                    LOGGER.warn("Failed to get evcs access token");
-                }
-            }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
                             clientOAuthSessionId,
                             claimsSet,
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
-                            evcsAccessToken);
+                            getEvcsAccessToken(claimsSet));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -376,6 +362,23 @@ public class InitialiseIpvSessionHandler
                     e);
         } catch (JarValidationException e) {
             throw new RecoverableJarValidationException(e.getErrorObject(), claimsSet, e);
+        }
+    }
+
+    @Tracing
+    private String getEvcsAccessToken(JWTClaimsSet claimsSet)
+            throws RecoverableJarValidationException, ParseException {
+        try {
+            return validateEvcsAccessToken(
+                    getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken), claimsSet);
+        } catch (RecoverableJarValidationException | ParseException e) {
+            if (configService.enabled(EVCS_WRITE_ENABLED)
+                    || configService.enabled(EVCS_READ_ENABLED)) {
+                throw e;
+            } else {
+                LOGGER.warn("Failed to get evcs access token");
+                return null;
+            }
         }
     }
 
