@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -139,8 +138,6 @@ class ContractTest {
                                                 TEST_USER,
                                                 HMRC_MIGRATION.getId(),
                                                 credential,
-                                                VerifiableCredentialConstants
-                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
@@ -234,8 +231,6 @@ class ContractTest {
                                                 TEST_USER,
                                                 HMRC_MIGRATION.getId(),
                                                 credential,
-                                                VerifiableCredentialConstants
-                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);
@@ -399,8 +394,6 @@ class ContractTest {
                                                 TEST_USER,
                                                 HMRC_MIGRATION.getId(),
                                                 credential,
-                                                VerifiableCredentialConstants
-                                                        .IDENTITY_CHECK_CREDENTIAL_TYPE,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
                                                 false);

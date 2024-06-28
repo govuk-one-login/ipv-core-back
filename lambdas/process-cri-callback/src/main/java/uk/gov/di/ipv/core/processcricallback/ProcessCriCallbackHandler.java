@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -324,7 +323,6 @@ public class ProcessCriCallbackHandler
                             clientOAuthSessionItem.getUserId(),
                             callbackRequest.getCredentialIssuerId(),
                             vcResponse.getVerifiableCredentials(),
-                            VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                             criConfig.getSigningKey(),
                             criConfig.getComponentId());
 

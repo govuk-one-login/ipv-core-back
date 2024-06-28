@@ -38,7 +38,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -438,7 +437,6 @@ public class InitialiseIpvSessionHandler
                         userId,
                         HMRC_MIGRATION.getId(),
                         inheritedIdentityJwtList.get(0),
-                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         inheritedIdentityCriConfig.getSigningKey(),
                         inheritedIdentityCriConfig.getComponentId(),
                         true);

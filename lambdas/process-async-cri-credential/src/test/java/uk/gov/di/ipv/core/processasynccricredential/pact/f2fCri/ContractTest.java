@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
@@ -129,7 +128,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 criConfig.getSigningKey(),
                                 criConfig.getComponentId())
                         .forEach(
@@ -257,7 +255,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -403,7 +400,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -548,7 +544,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -690,7 +685,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -827,7 +821,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(
@@ -956,7 +949,6 @@ public class ContractTest {
                                 TEST_USER,
                                 F2F.getId(),
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
-                                VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
                         .forEach(

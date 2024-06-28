@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -119,7 +118,6 @@ public class TicfCriService {
                     clientOAuthSessionItem.getUserId(),
                     TICF.getId(),
                     ticfCriResponse.credentials(),
-                    VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                     ticfCriConfig.getSigningKey(),
                     ticfCriConfig.getComponentId());
         } catch (VerifiableCredentialException | JsonProcessingException e) {

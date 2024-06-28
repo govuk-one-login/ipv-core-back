@@ -91,8 +91,7 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchVerifiableCredential(
                         bearerToken, TEST_CRI_ID, criOAuthSessionItem))
                 .thenReturn(vcResponse);
-        when(mockVerifiableCredentialValidator.parseAndValidate(
-                        any(), any(), any(), any(), any(), any()))
+        when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
         when(mockCriCheckingService.checkVcResponse(
                         any(),

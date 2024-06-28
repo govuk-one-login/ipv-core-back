@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
@@ -222,13 +221,7 @@ public class CiMitService {
                     LogHelper.buildLogMessage(
                             "Validating ContraIndicators Verifiable Credential."));
             return verifiableCredentialValidator.parseAndValidate(
-                    userId,
-                    null,
-                    contraIndicatorsVC,
-                    VerifiableCredentialConstants.SECURITY_CHECK_CREDENTIAL_TYPE,
-                    cimitSigningKey,
-                    cimitComponentId,
-                    false);
+                    userId, null, contraIndicatorsVC, cimitSigningKey, cimitComponentId, false);
         } catch (VerifiableCredentialException vcEx) {
             LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
             throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
