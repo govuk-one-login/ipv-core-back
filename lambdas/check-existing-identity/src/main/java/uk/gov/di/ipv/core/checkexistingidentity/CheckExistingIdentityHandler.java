@@ -345,34 +345,31 @@ public class CheckExistingIdentityHandler
             var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
             var isPendingEvcs = true;
             var hasPartiallyMigratedVcs = false;
-            try {
-                if (isNullOrEmpty(evcsIdentityVcs)) {
-                    evcsIdentityVcs = evcsVcs.get(CURRENT);
-                    isPendingEvcs = false;
-                }
-                if (!isNullOrEmpty(evcsIdentityVcs)) {
-                    var vcBundle =
-                            new VerifiableCredentialBundle(
-                                    configService.enabled(EVCS_READ_ENABLED)
-                                            ? evcsIdentityVcs
-                                            : tacticalVcs,
-                                    true,
-                                    isPendingEvcs);
+            VerifiableCredentialBundle vcBundle = null;
+            if (isNullOrEmpty(evcsIdentityVcs)) {
+                evcsIdentityVcs = evcsVcs.get(CURRENT);
+                isPendingEvcs = false;
+            }
+            if (!isNullOrEmpty(evcsIdentityVcs)) {
+                vcBundle =
+                        new VerifiableCredentialBundle(
+                                configService.enabled(EVCS_READ_ENABLED)
+                                        ? evcsIdentityVcs
+                                        : tacticalVcs,
+                                true,
+                                isPendingEvcs);
 
-                    if (vcBundle.isPendingEvcsIdentity()) {
-                        hasPartiallyMigratedVcs = hasPartiallyMigratedVcs(tacticalVcs, vcBundle);
-                    }
-                    // only use these vcs if they have been fully migrated
-                    if (!hasPartiallyMigratedVcs) {
-                        return vcBundle;
-                    }
-                }
-            } finally {
-                if (!hasPartiallyMigratedVcs) {
-                    logIdentityMismatches(tacticalVcs, evcsVcs);
+                if (vcBundle.isPendingEvcsIdentity()) {
+                    hasPartiallyMigratedVcs = hasPartiallyMigratedVcs(tacticalVcs, vcBundle);
                 }
             }
+            // only use these evcs vcs if they exist and have been fully migrated
+            if (vcBundle != null && !hasPartiallyMigratedVcs) {
+                return vcBundle;
+            }
+            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
         }
+
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
     }
 
@@ -404,8 +401,12 @@ public class CheckExistingIdentityHandler
     @ExcludeFromGeneratedCoverageReport
     private void logIdentityMismatches(
             List<VerifiableCredential> tacticalVcs,
-            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs) {
+            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs,
+            boolean hasPartiallyMigratedVcs) {
 
+        if (hasPartiallyMigratedVcs) {
+            return;
+        }
         var migratedTacticalVcStrings =
                 tacticalVcs.stream()
                         .filter(vc -> vc.getMigrated() != null)

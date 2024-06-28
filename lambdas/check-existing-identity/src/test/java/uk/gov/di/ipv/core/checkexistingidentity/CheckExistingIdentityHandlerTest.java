@@ -137,7 +137,13 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
-    private static List<VerifiableCredential> VCS_FROM_STORE;
+    private static final List<VerifiableCredential> VCS_FROM_STORE =
+            List.of(
+                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                    M1A_ADDRESS_VC,
+                    M1A_EXPERIAN_FRAUD_VC,
+                    vcVerificationM1a(),
+                    M1B_DCMAW_VC);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
@@ -184,13 +190,6 @@ class CheckExistingIdentityHandlerTest {
         jwtSigner = createJwtSigner();
         pcl200Vc = createOperationalProfileVc(Vot.PCL200);
         pcl250Vc = createOperationalProfileVc(Vot.PCL250);
-        VCS_FROM_STORE =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        vcVerificationM1a(),
-                        M1B_DCMAW_VC);
     }
 
     @BeforeEach
