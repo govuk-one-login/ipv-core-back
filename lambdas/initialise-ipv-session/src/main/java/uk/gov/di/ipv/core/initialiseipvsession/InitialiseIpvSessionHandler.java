@@ -194,12 +194,18 @@ public class InitialiseIpvSessionHandler
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
             String evcsAccessToken = null;
-            if (configService.enabled(EVCS_READ_ENABLED)
-                    || configService.enabled(EVCS_WRITE_ENABLED)) {
+            try {
                 evcsAccessToken =
                         validateEvcsAccessToken(
                                 getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
                                 claimsSet);
+            } catch (RecoverableJarValidationException | ParseException e) {
+                if (configService.enabled(EVCS_WRITE_ENABLED)
+                        || configService.enabled(EVCS_READ_ENABLED)) {
+                    throw e;
+                } else {
+                    LOGGER.warn("Failed to get evcs access token");
+                }
             }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(

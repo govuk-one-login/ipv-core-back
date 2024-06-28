@@ -278,6 +278,15 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
+
+        var evcsAccessTokenClaims =
+                Map.of(
+                        USER_INFO,
+                        Map.of(
+                                INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                Map.of(VALUES, List.of(PCL200_MIGRATION_VC.getVcString())),
+                                EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                                Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN))));
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
@@ -285,9 +294,8 @@ class InitialiseIpvSessionHandlerTest {
                         any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(signedJWT.getJWTClaimsSet());
+                .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -311,7 +319,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @ParameterizedTest
     @MethodSource("getEvcsAccessTokenClaimValuesAndMsg")
-    void shouldRecoverIfEvcsIsEnabled_butClaimsHasMultipleTokenValues(
+    void shouldRecoverIfEvcsAccessClaimsHasMultipleTokenValues(
             Map<String, Map<String, Map<String, List<String>>>> evcsAccessTokenClaims,
             String expectedMessage)
             throws Exception {
@@ -319,7 +327,7 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
 
@@ -586,8 +594,6 @@ class InitialiseIpvSessionHandlerTest {
         void setUp() throws Exception {
             when(mockConfigService.enabled(CoreFeatureFlag.INHERITED_IDENTITY))
                     .thenReturn(true); // Mock enabled inherited identity feature flag
-            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                     .thenReturn(ipvSessionItem);
             when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
@@ -600,6 +606,8 @@ class InitialiseIpvSessionHandlerTest {
                 throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -613,12 +621,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL250_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -662,6 +665,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldValidateAndStoreAnyInheritedIdentityWhenNoExistingIdentity() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -675,12 +680,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -721,6 +721,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldSendAuditEventForIpvInheritedIdentityVcReceived() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -734,12 +736,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -796,6 +793,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldNotStoreInheritedIdentityWhenVotWeakerThanExisting() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -809,12 +808,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -874,13 +868,9 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
+
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
@@ -892,6 +882,8 @@ class InitialiseIpvSessionHandlerTest {
                             true))
                     .thenReturn(PCL200_MIGRATION_VC);
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response;
@@ -930,6 +922,8 @@ class InitialiseIpvSessionHandlerTest {
                                     .claim(CLAIMS, Map.of(USER_INFO, Map.of()))
                                     .build());
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -952,6 +946,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldRecoverIfClaimsClaimCanNotBeConverted() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -992,6 +988,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldRecoverIfInheritedIdentityJwtHasMultipleValues() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1007,12 +1005,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL200_MIGRATION_VC
                                                                                     .getVcString(),
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
 
             // Act
@@ -1050,6 +1043,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldRecoverIfInheritedIdentityJwtHasNullValue() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1059,12 +1054,7 @@ class InitialiseIpvSessionHandlerTest {
                                                     USER_INFO,
                                                     Map.of(
                                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                            Map.of(),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                            Map.of())))
                                     .build());
 
             // Act
@@ -1102,6 +1092,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldRecoverIfInheritedIdentityJwtFailsToParseAndValidate() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1111,12 +1103,7 @@ class InitialiseIpvSessionHandlerTest {
                                                     USER_INFO,
                                                     Map.of(
                                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                            Map.of(VALUES, List.of("🌭")),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                            Map.of(VALUES, List.of("🌭")))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -1167,6 +1154,8 @@ class InitialiseIpvSessionHandlerTest {
         void shouldRecoverIfInheritedIdentityJwtFailsToPersist() throws Exception {
             // Arrange
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1180,12 +1169,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                     VALUES,
                                                                     List.of(
                                                                             PCL200_MIGRATION_VC
-                                                                                    .getVcString())),
-                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                            Map.of(
-                                                                    VALUES,
-                                                                    List.of(
-                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                                                                    .getVcString())))))
                                     .build());
             when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
                     .thenReturn(TEST_CRI_CONFIG);
@@ -1277,8 +1261,6 @@ class InitialiseIpvSessionHandlerTest {
                                         new Essential(true),
                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                         Map.of(VALUES, List.of()),
-                                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                        Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN)),
                                         PASSPORT_CLAIM_NAME,
                                         new Essential(true))));
     }
