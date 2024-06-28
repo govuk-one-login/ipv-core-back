@@ -53,7 +53,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_INVALID_REQUEST_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
@@ -129,28 +128,6 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_ACCESS_DENIED_PATH), journeyResponse);
-    }
-
-    @Test
-    void handleCallbackErrorShouldReturnJourneyInvalidRequestIfInCallbackRequest()
-            throws SqsException {
-        // Arrange
-        var callbackRequest =
-                CriCallbackRequest.builder()
-                        .credentialIssuerId(TEST_CRI_ID)
-                        .error(OAuth2Error.INVALID_REQUEST_CODE)
-                        .errorDescription(TEST_ERROR_DESCRIPTION)
-                        .build();
-        var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
-                .thenReturn(TEST_COMPONENT_ID);
-
-        // Act
-        var journeyResponse =
-                criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
-
-        // Assert
-        assertEquals(new JourneyResponse(JOURNEY_INVALID_REQUEST_PATH), journeyResponse);
     }
 
     @Test
