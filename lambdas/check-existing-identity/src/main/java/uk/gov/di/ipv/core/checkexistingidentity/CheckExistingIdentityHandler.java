@@ -359,25 +359,33 @@ public class CheckExistingIdentityHandler
                                 true,
                                 isPendingEvcs);
 
-                if (vcBundle.isPendingEvcsIdentity()) {
-                    hasPartiallyMigratedVcs = hasPartiallyMigratedVcs(tacticalVcs, vcBundle);
-                }
+                hasPartiallyMigratedVcs =
+                        hasPartiallyMigratedVcs(
+                                tacticalVcs,
+                                evcsIdentityVcs,
+                                isPendingEvcs,
+                                vcBundle.isF2fIdentity());
             }
+            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
             // only use these evcs vcs if they exist and have been fully migrated
             if (vcBundle != null && !hasPartiallyMigratedVcs) {
                 return vcBundle;
             }
-            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
         }
-
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
     }
 
     private boolean hasPartiallyMigratedVcs(
-            List<VerifiableCredential> tacticalVcs, VerifiableCredentialBundle evcsVcs) {
+            List<VerifiableCredential> tacticalVcs,
+            List<VerifiableCredential> evcsVcs,
+            boolean isPending,
+            boolean isF2f) {
 
+        if (!isPending) {
+            return false;
+        }
         // EVCS contains only a pending F2F VC
-        if (evcsVcs.credentials.size() == 1 && evcsVcs.isF2fIdentity()) {
+        if (isF2f && evcsVcs.size() == 1) {
             return true;
         }
         // Tactical contains the same as pending EVCS, with one extra F2F VC
@@ -386,7 +394,7 @@ public class CheckExistingIdentityHandler
                         .filter(
                                 credential ->
                                         F2F.getId().equals(credential.getCriId())
-                                                && evcsVcs.credentials.stream()
+                                                && evcsVcs.stream()
                                                         .noneMatch(
                                                                 evcsVC ->
                                                                         evcsVC.getVcString()

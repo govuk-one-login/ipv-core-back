@@ -108,6 +108,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
@@ -364,7 +366,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyReuseResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
+        void shouldReturnJourneyReuseResponseIfVcIsF2fAndHasPartiallyMigratedSingleVc()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
@@ -391,6 +393,39 @@ class CheckExistingIdentityHandlerTest {
             // non-migrated vc should be migrated
             verify(mockEvcsMigrationService)
                     .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc));
+        }
+
+        @Test
+        void shouldReturnJourneyReuseResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
+                throws CredentialParseException, EvcsServiceException,
+                        HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+            var f2fVc1 = vcF2fM1a();
+            f2fVc1.setMigrated(Instant.now());
+            var f2fVc2 = vcF2fBrp();
+            f2fVc2.setMigrated(Instant.now());
+            var f2fVc3 = vcF2fIdCard();
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(f2fVc1, f2fVc2, f2fVc3));
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
+                    .thenReturn(Map.of(PENDING_RETURN, List.of(f2fVc1, f2fVc2)));
+
+            when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+            // non-migrated vc should be migrated
+            verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, List.of(f2fVc3));
         }
 
         @Test
