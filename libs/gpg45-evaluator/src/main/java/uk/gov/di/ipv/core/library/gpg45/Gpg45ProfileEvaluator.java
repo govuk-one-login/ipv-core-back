@@ -4,9 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -46,8 +44,7 @@ public class Gpg45ProfileEvaluator {
                 .findFirst();
     }
 
-    public Gpg45Scores buildScore(List<VerifiableCredential> vcs)
-            throws UnknownEvidenceTypeException, CredentialParseException {
+    public Gpg45Scores buildScore(List<VerifiableCredential> vcs) {
 
         var identityChecks =
                 vcs.stream()

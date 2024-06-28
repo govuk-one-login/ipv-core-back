@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
@@ -69,7 +68,6 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
@@ -236,12 +234,6 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_SEND_AUDIT_EVENT);
-        } catch (CredentialParseException e) {
-            return buildJourneyErrorResponse(
-                    "Failed to get credentials to build request",
-                    e,
-                    SC_BAD_REQUEST,
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (ParseException | JOSEException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse encryption public JWK",
@@ -254,12 +246,6 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_CONSTRUCT_REDIRECT_URI);
-        } catch (UnknownEvidenceTypeException e) {
-            return buildJourneyErrorResponse(
-                    "Unable to determine type of credential",
-                    e,
-                    SC_INTERNAL_SERVER_ERROR,
-                    FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (JsonProcessingException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse evidenceRequest.",
@@ -309,7 +295,6 @@ public class BuildCriOauthRequestHandler
             String context,
             EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
-                    UnknownEvidenceTypeException, CredentialParseException,
                     VerifiableCredentialException {
 
         var vcs =
@@ -337,8 +322,7 @@ public class BuildCriOauthRequestHandler
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
-    private EvidenceRequest getEvidenceRequestForF2F(List<VerifiableCredential> vcs)
-            throws UnknownEvidenceTypeException, CredentialParseException {
+    private EvidenceRequest getEvidenceRequestForF2F(List<VerifiableCredential> vcs) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(

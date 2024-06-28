@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -333,8 +332,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (ParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
-        } catch (UnknownEvidenceTypeException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
         } catch (SqsException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, e);
         } catch (CredentialParseException e) {
@@ -527,8 +524,8 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated)
-            throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
+            throws ParseException, SqsException, VerifiableCredentialException,
+                    EvcsServiceException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -680,7 +677,7 @@ public class CheckExistingIdentityHandler
 
     private boolean allFraudVcsAreExpired(List<VerifiableCredential> vcs) {
         return vcs.stream()
-                .filter(vc -> EXPERIAN_FRAUD.getId().equals(vc.getCriId()))
+                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
                 .allMatch(VcHelper::isExpiredFraudVc);
     }
 
@@ -730,8 +727,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             boolean areGpg45VcsCorrelated)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    CredentialParseException {
+            throws ParseException, SqsException {
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
@@ -759,8 +755,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    CredentialParseException {
+            throws ParseException, SqsException {
 
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
