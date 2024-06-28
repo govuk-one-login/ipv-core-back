@@ -101,7 +101,6 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String ADDRESS_CRI = ADDRESS.getId();
     private static final String CLAIMED_IDENTITY_CRI = CLAIMED_IDENTITY.getId();
     private static final String DCMAW_CRI = DCMAW.getId();
     private static final String F2F_CRI = F2F.getId();
@@ -321,7 +320,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -329,12 +328,12 @@ class BuildCriOauthRequestHandlerTest {
                 List.of(
                         generateVerifiableCredential(
                                 TEST_USER_ID,
-                                ADDRESS_CRI,
+                                ADDRESS,
                                 vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                 IPV_ISSUER),
                         generateVerifiableCredential(
                                 TEST_USER_ID,
-                                ADDRESS_CRI,
+                                ADDRESS,
                                 vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                 IPV_ISSUER));
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID)).thenReturn(vcs);
@@ -412,12 +411,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
 
@@ -488,7 +487,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -497,12 +496,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -571,7 +570,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -580,12 +579,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -653,7 +652,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(dcmawOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -662,12 +661,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -825,7 +824,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -834,12 +833,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -891,7 +890,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -900,12 +899,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -955,7 +954,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -964,12 +963,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_4),
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1038,7 +1037,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -1047,17 +1046,17 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1109,7 +1108,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, false);
@@ -1118,12 +1117,12 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1178,7 +1177,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn("name,birthDate,address,emailAddress");
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         ipvSessionItem.setEmailAddress(null);
@@ -1188,17 +1187,17 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1250,7 +1249,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(f2FOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(configService.getAllowedSharedAttributes(F2F_CRI))
                 .thenReturn("name,birthDate,address,emailAddress");
@@ -1261,17 +1260,17 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1325,7 +1324,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(hmrcKbvOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS_CRI))
+        when(configService.getComponentId(ADDRESS.getId()))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(configService.getAllowedSharedAttributes(HMRC_KBV_CRI))
                 .thenReturn("name,birthDate,address,socialSecurityRecord");
@@ -1336,17 +1335,17 @@ class BuildCriOauthRequestHandlerTest {
                         List.of(
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2),
                                         IPV_ISSUER),
                                 generateVerifiableCredential(
                                         TEST_USER_ID,
-                                        ADDRESS_CRI,
+                                        ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))

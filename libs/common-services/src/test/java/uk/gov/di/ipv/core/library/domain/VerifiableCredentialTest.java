@@ -21,8 +21,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 
 class VerifiableCredentialTest {
+    private static final Cri CRI = Cri.ADDRESS;
     private static final String USER_ID = "a-user-id";
-    private static final String CRI_ID = "cri-id";
+    private static final String CRI_ID = CRI.getId();
     private static final String SESSION_ID = "a-session-id";
     private VerifiableCredential vcFixture;
 
@@ -35,7 +36,7 @@ class VerifiableCredentialTest {
     void fromValidJwtShouldCreateVerifiableCredential() throws Exception {
         var verifiableCredential =
                 VerifiableCredential.fromValidJwt(
-                        vcFixture.getUserId(), vcFixture.getCriId(), vcFixture.getSignedJwt());
+                        vcFixture.getUserId(), vcFixture.getCri(), vcFixture.getSignedJwt());
 
         assertEquals(vcFixture, verifiableCredential);
     }
@@ -52,7 +53,7 @@ class VerifiableCredentialTest {
                     () ->
                             VerifiableCredential.fromValidJwt(
                                     vcFixture.getUserId(),
-                                    vcFixture.getCriId(),
+                                    vcFixture.getCri(),
                                     vcFixture.getSignedJwt()));
         }
     }
@@ -64,7 +65,7 @@ class VerifiableCredentialTest {
 
         assertThrows(
                 CredentialParseException.class,
-                () -> VerifiableCredential.fromValidJwt(USER_ID, CRI_ID, mockJwt));
+                () -> VerifiableCredential.fromValidJwt(USER_ID, CRI, mockJwt));
     }
 
     @Test
@@ -82,7 +83,7 @@ class VerifiableCredentialTest {
         var verifiableCredential = VerifiableCredential.fromVcStoreItem(vcStoreItem);
 
         assertEquals(USER_ID, verifiableCredential.getUserId());
-        assertEquals(CRI_ID, verifiableCredential.getCriId());
+        assertEquals(CRI, verifiableCredential.getCri());
         assertEquals(vcFixture.getVcString(), verifiableCredential.getVcString());
         assertEquals(vcFixture.getClaimsSet(), verifiableCredential.getClaimsSet());
         assertEquals(
@@ -138,7 +139,7 @@ class VerifiableCredentialTest {
         var expectedVcStoreItem =
                 VcStoreItem.builder()
                         .userId(vcFixture.getUserId())
-                        .credentialIssuer(vcFixture.getCriId())
+                        .credentialIssuer(vcFixture.getCri().getId())
                         .credential(vcFixture.getVcString())
                         .dateCreated(vcStoreItem.getDateCreated())
                         .expirationTime(null)
@@ -157,7 +158,7 @@ class VerifiableCredentialTest {
                 VerifiableCredential.fromSessionCredentialItem(sessionCredentialItem, USER_ID);
 
         assertEquals(USER_ID, generatedVc.getUserId());
-        assertEquals(CRI_ID, generatedVc.getCriId());
+        assertEquals(Cri.ADDRESS, generatedVc.getCri());
         assertEquals(vcFixture.getVcString(), generatedVc.getVcString());
         assertEquals(vcFixture.getClaimsSet(), generatedVc.getClaimsSet());
         assertEquals(vcFixture.getSignedJwt().serialize(), generatedVc.getSignedJwt().serialize());

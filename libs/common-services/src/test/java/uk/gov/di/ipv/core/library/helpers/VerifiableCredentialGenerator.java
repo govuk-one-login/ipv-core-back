@@ -9,6 +9,7 @@ import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 
 import java.security.KeyFactory;
@@ -44,26 +45,25 @@ public class VerifiableCredentialGenerator {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, Map<String, Object> vcClaim) throws Exception {
-        return generateVerifiableCredential(userId, criId, vcClaim, KeyType.EC);
+            String userId, Cri cri, Map<String, Object> vcClaim) throws Exception {
+        return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, Map<String, Object> vcClaim, KeyType signingKeyType)
+            String userId, Cri cri, Map<String, Object> vcClaim, KeyType signingKeyType)
             throws Exception {
         return generateVerifiableCredential(
-                userId, criId, vcClaim, "https://subject.example.com", signingKeyType);
+                userId, cri, vcClaim, "https://subject.example.com", signingKeyType);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, Map<String, Object> vcClaim, String issuer)
-            throws Exception {
-        return generateVerifiableCredential(userId, criId, vcClaim, issuer, KeyType.EC);
+            String userId, Cri cri, Map<String, Object> vcClaim, String issuer) throws Exception {
+        return generateVerifiableCredential(userId, cri, vcClaim, issuer, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
-            String criId,
+            Cri cri,
             Map<String, Object> vcClaim,
             String issuer,
             KeyType signingKeyType)
@@ -76,17 +76,17 @@ public class VerifiableCredentialGenerator {
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
                         .build();
-        return signTestVc(userId, criId, claimsSet, signingKeyType);
+        return signTestVc(userId, cri, claimsSet, signingKeyType);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, TestVc vcClaim, String issuer, Instant nbf) {
-        return generateVerifiableCredential(userId, criId, vcClaim, issuer, nbf, KeyType.EC);
+            String userId, Cri cri, TestVc vcClaim, String issuer, Instant nbf) {
+        return generateVerifiableCredential(userId, cri, vcClaim, issuer, nbf, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
-            String criId,
+            Cri cri,
             TestVc vcClaim,
             String issuer,
             Instant nbf,
@@ -99,22 +99,22 @@ public class VerifiableCredentialGenerator {
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
                             .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
                             .build();
-            return signTestVc(userId, criId, claimsSet, signingKeyType);
+            return signTestVc(userId, cri, claimsSet, signingKeyType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, TestVc vcClaim) {
-        return generateVerifiableCredential(userId, criId, vcClaim, KeyType.EC);
+            String userId, Cri cri, TestVc vcClaim) {
+        return generateVerifiableCredential(userId, cri, vcClaim, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, TestVc vcClaim, KeyType signingKeyType) {
+            String userId, Cri cri, TestVc vcClaim, KeyType signingKeyType) {
         try {
             return generateVerifiableCredential(
-                    userId, criId, vcClaim, null, Instant.now(), signingKeyType);
+                    userId, cri, vcClaim, null, Instant.now(), signingKeyType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -122,7 +122,7 @@ public class VerifiableCredentialGenerator {
 
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
-            String criId,
+            Cri cri,
             TestVc vcClaim,
             String issuer,
             String vot,
@@ -130,13 +130,13 @@ public class VerifiableCredentialGenerator {
             String vtm)
             throws Exception {
         return generateVerifiableCredential(
-                userId, criId, vcClaim, issuer, vot, jti, vtm, KeyType.EC);
+                userId, cri, vcClaim, issuer, vot, jti, vtm, KeyType.EC);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static VerifiableCredential generateVerifiableCredential(
             String userId,
-            String criId,
+            Cri cri,
             TestVc vcClaim,
             String issuer,
             String vot,
@@ -155,16 +155,16 @@ public class VerifiableCredentialGenerator {
                         .claim(JWT_ID, jti)
                         .claim(VC_VTM, vtm)
                         .build();
-        return signTestVc(userId, criId, claimsSet, signingKeyType);
+        return signTestVc(userId, cri, claimsSet, signingKeyType);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, TestVc vcClaim, Instant nbf) {
-        return generateVerifiableCredential(userId, criId, vcClaim, nbf, KeyType.EC);
+            String userId, Cri cri, TestVc vcClaim, Instant nbf) {
+        return generateVerifiableCredential(userId, cri, vcClaim, nbf, KeyType.EC);
     }
 
     public static VerifiableCredential generateVerifiableCredential(
-            String userId, String criId, TestVc vcClaim, Instant nbf, KeyType signingKeyType) {
+            String userId, Cri cri, TestVc vcClaim, Instant nbf, KeyType signingKeyType) {
         try {
             JWTClaimsSet claimsSet =
                     new JWTClaimsSet.Builder()
@@ -173,21 +173,21 @@ public class VerifiableCredentialGenerator {
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
                             .claim(VC_CLAIM, vcClaim)
                             .build();
-            return signTestVc(userId, criId, claimsSet, signingKeyType);
+            return signTestVc(userId, cri, claimsSet, signingKeyType);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     private static VerifiableCredential signTestVc(
-            String userId, String criId, JWTClaimsSet claimsSet, KeyType signingKeyType)
+            String userId, Cri cri, JWTClaimsSet claimsSet, KeyType signingKeyType)
             throws Exception {
         if (EC.equals(signingKeyType)) {
-            return signTestVcWithEc(userId, criId, claimsSet);
+            return signTestVcWithEc(userId, cri, claimsSet);
         }
 
         if (RSA.equals(signingKeyType)) {
-            return signTestVcWithRSA(userId, criId, claimsSet);
+            return signTestVcWithRSA(userId, cri, claimsSet);
         }
 
         throw new RuntimeException("Signing key type is not EC or RSA");
@@ -196,7 +196,7 @@ public class VerifiableCredentialGenerator {
     // TODO: PYIC-5171 Replace this method
     // Same comments for signTestVcWithRSA
     private static VerifiableCredential signTestVcWithEc(
-            String userId, String criId, JWTClaimsSet claimsSet) throws Exception {
+            String userId, Cri cri, JWTClaimsSet claimsSet) throws Exception {
         var kf = KeyFactory.getInstance(KeyType.EC.getValue());
 
         var privateKeySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(EC_PRIVATE_KEY));
@@ -210,11 +210,11 @@ public class VerifiableCredentialGenerator {
         // Parsing and serialising here allows us to cast like before.
         // The casting will be replaced in PYIC-5171 and so should this.
         return VerifiableCredential.fromValidJwt(
-                userId, criId, SignedJWT.parse(signedJWT.serialize()));
+                userId, cri, SignedJWT.parse(signedJWT.serialize()));
     }
 
     private static VerifiableCredential signTestVcWithRSA(
-            String userId, String criId, JWTClaimsSet claimsSet) throws Exception {
+            String userId, Cri cri, JWTClaimsSet claimsSet) throws Exception {
         var kf = KeyFactory.getInstance(KeyType.RSA.getValue());
 
         var privateKeySpec =
@@ -227,7 +227,7 @@ public class VerifiableCredentialGenerator {
         signedJWT.sign(signer);
 
         return VerifiableCredential.fromValidJwt(
-                userId, criId, SignedJWT.parse(signedJWT.serialize()));
+                userId, cri, SignedJWT.parse(signedJWT.serialize()));
     }
 
     public static Map<String, Object> vcClaim(Map<String, Object> attributes) {

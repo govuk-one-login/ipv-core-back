@@ -553,7 +553,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV.getId(),
+                                                EXPERIAN_KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -689,7 +689,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV.getId(),
+                                                EXPERIAN_KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -870,7 +870,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_KBV.getId(),
+                                                EXPERIAN_KBV,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,

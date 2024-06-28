@@ -129,7 +129,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE.getId(),
+                                                DRIVING_LICENCE,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -236,7 +236,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE.getId(),
+                                                DRIVING_LICENCE,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -348,7 +348,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE.getId(),
+                                                DRIVING_LICENCE,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -455,7 +455,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                DRIVING_LICENCE.getId(),
+                                                DRIVING_LICENCE,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,

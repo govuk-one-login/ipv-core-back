@@ -33,7 +33,7 @@ class EvcsMigrationServiceTest {
     void testMigrateExistingIdentity() throws Exception {
         VCS.forEach(
                 credential -> {
-                    if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                    if (credential.getCri().equals(EXPERIAN_FRAUD)) {
                         credential.setMigrated(null);
                     } else {
                         credential.setMigrated(Instant.now());

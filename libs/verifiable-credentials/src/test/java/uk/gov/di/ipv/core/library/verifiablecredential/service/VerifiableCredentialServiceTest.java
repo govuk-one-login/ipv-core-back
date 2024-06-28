@@ -57,7 +57,8 @@ class VerifiableCredentialServiceTest {
 
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(), vcStoreItem.getUserId());
         assertEquals(
-                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId(), vcStoreItem.getCredentialIssuer());
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri().getId(),
+                vcStoreItem.getCredentialIssuer());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vcStoreItem.getCredential());
     }
 
@@ -81,7 +82,7 @@ class VerifiableCredentialServiceTest {
     void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId()
             throws CredentialParseException {
         var userId = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId();
-        var testCredentialIssuer = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId();
+        var testCredentialIssuer = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri();
         var credentialItem = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toVcStoreItem());
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
@@ -90,24 +91,23 @@ class VerifiableCredentialServiceTest {
 
         assertTrue(
                 vcs.stream()
-                        .map(VerifiableCredential::getCriId)
+                        .map(VerifiableCredential::getCri)
                         .anyMatch(testCredentialIssuer::equals));
     }
 
     @Test
     void shouldReturnCredentialFromDataStoreForSpecificCri() throws CredentialParseException {
         var ipvSessionId = "ipvSessionId";
-        var criId = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId();
+        var cri = PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri();
 
-        when(mockDataStore.getItem(ipvSessionId, criId))
+        when(mockDataStore.getItem(ipvSessionId, cri.getId()))
                 .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toVcStoreItem());
 
-        var retrievedCredentialItem = verifiableCredentialService.getVc(ipvSessionId, criId);
+        var retrievedCredentialItem = verifiableCredentialService.getVc(ipvSessionId, cri.getId());
 
         assertEquals(
                 PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(), retrievedCredentialItem.getUserId());
-        assertEquals(
-                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId(), retrievedCredentialItem.getCriId());
+        assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri(), retrievedCredentialItem.getCri());
         assertEquals(
                 PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                 retrievedCredentialItem.getVcString());
@@ -124,9 +124,9 @@ class VerifiableCredentialServiceTest {
         verify(mockDataStore)
                 .delete(
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(),
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCriId());
-        verify(mockDataStore).delete(experianVc1.getUserId(), experianVc1.getCriId());
-        verify(mockDataStore).delete(experianVc2.getUserId(), experianVc2.getCriId());
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri().getId());
+        verify(mockDataStore).delete(experianVc1.getUserId(), experianVc1.getCri().getId());
+        verify(mockDataStore).delete(experianVc2.getUserId(), experianVc2.getCri().getId());
     }
 
     @Test
@@ -145,7 +145,7 @@ class VerifiableCredentialServiceTest {
 
         // Assert
         verify(mockDataStore, times(1))
-                .delete(inheritedIdentityVc.getUserId(), inheritedIdentityVc.getCriId());
+                .delete(inheritedIdentityVc.getUserId(), inheritedIdentityVc.getCri().getId());
     }
 
     @Test

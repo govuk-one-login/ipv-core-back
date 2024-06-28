@@ -164,7 +164,7 @@ public class UserIdentityService {
             var filterValidVCs = filterValidVCs(vcs);
             if (filterValidVCs.size() == 1) {
                 return configService
-                        .getOauthCriActiveConnectionConfig(filterValidVCs.get(0).getCriId())
+                        .getOauthCriActiveConnectionConfig(filterValidVCs.get(0).getCri().getId())
                         .isRequiresAdditionalEvidence();
             }
         }
@@ -376,7 +376,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             String missingNames = getMissingNames(identityClaim.getName());
             if (!missingNames.isBlank()) {
-                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(vc.getCriId())) {
+                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(vc.getCri().getId())) {
                     continue;
                 }
                 addLogMessage(vc, "Names missing from VC: " + missingNames);
@@ -395,7 +395,7 @@ public class UserIdentityService {
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCriId())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCri().getId())) {
                     continue;
                 }
                 addLogMessage(vc, "Birthdate property is missing from VC");
@@ -615,7 +615,7 @@ public class UserIdentityService {
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Nino property is missing from VC")
-                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCriId());
+                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
 
             return Optional.empty();
@@ -646,7 +646,7 @@ public class UserIdentityService {
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Passport property is missing from VC")
-                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCriId());
+                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
 
             return Optional.empty();
@@ -678,7 +678,9 @@ public class UserIdentityService {
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Driving Permit property is missing from VC")
-                            .with(LOG_CRI_ISSUER.getFieldName(), drivingPermitVc.get().getCriId());
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    drivingPermitVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
 
             return Optional.empty();
@@ -693,13 +695,15 @@ public class UserIdentityService {
     }
 
     private Optional<VerifiableCredential> findVc(String criName, List<VerifiableCredential> vcs) {
-        return vcs.stream().filter(credential -> credential.getCriId().equals(criName)).findFirst();
+        return vcs.stream()
+                .filter(credential -> credential.getCri().getId().equals(criName))
+                .findFirst();
     }
 
     private Optional<VerifiableCredential> findVc(
             List<String> criNames, List<VerifiableCredential> vcs) {
         return vcs.stream()
-                .filter(credential -> criNames.contains(credential.getCriId()))
+                .filter(credential -> criNames.contains(credential.getCri().getId()))
                 .findFirst();
     }
 
@@ -766,7 +770,7 @@ public class UserIdentityService {
         StringMapMessage logMessage =
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), error)
-                        .with(LOG_CRI_ISSUER.getFieldName(), vc.getCriId());
+                        .with(LOG_CRI_ISSUER.getFieldName(), vc.getCri().getId());
         LOGGER.warn(logMessage);
     }
 }

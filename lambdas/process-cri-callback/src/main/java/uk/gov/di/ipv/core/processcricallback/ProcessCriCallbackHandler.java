@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -321,7 +322,7 @@ public class ProcessCriCallbackHandler
             var vcs =
                     verifiableCredentialValidator.parseAndValidate(
                             clientOAuthSessionItem.getUserId(),
-                            callbackRequest.getCredentialIssuerId(),
+                            Cri.fromId(callbackRequest.getCredentialIssuerId()),
                             vcResponse.getVerifiableCredentials(),
                             criConfig.getSigningKey(),
                             criConfig.getComponentId());

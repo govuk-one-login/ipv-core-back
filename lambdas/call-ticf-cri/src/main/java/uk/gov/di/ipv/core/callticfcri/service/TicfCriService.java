@@ -116,7 +116,7 @@ public class TicfCriService {
 
             return jwtValidator.parseAndValidate(
                     clientOAuthSessionItem.getUserId(),
-                    TICF.getId(),
+                    TICF,
                     ticfCriResponse.credentials(),
                     ticfCriConfig.getSigningKey(),
                     ticfCriConfig.getComponentId());

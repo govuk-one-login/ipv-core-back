@@ -126,7 +126,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 criConfig.getSigningKey(),
                                 criConfig.getComponentId())
@@ -253,7 +253,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
@@ -398,7 +398,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
@@ -542,7 +542,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
@@ -683,7 +683,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
@@ -819,7 +819,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())
@@ -947,7 +947,7 @@ public class ContractTest {
                 verifiableCredentialValidator
                         .parseAndValidate(
                                 TEST_USER,
-                                F2F.getId(),
+                                F2F,
                                 asyncCriResponse.getVerifiableCredentialJWTs(),
                                 credentialIssuerConfig.getSigningKey(),
                                 credentialIssuerConfig.getComponentId())

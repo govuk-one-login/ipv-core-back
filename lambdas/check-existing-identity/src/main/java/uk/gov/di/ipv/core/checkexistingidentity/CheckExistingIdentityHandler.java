@@ -198,7 +198,7 @@ public class CheckExistingIdentityHandler
             boolean hasEvcsIdentity,
             boolean isPendingEvcsIdentity) {
         private boolean isF2fIdentity() {
-            return credentials.stream().anyMatch(vc -> vc.getCriId().equals(F2F.getId()));
+            return credentials.stream().anyMatch(vc -> vc.getCri().equals(F2F));
         }
     }
 
@@ -589,7 +589,7 @@ public class CheckExistingIdentityHandler
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
-        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.getId().equals(vc.getCriId())).toList();
+        return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
     }
 
     private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {

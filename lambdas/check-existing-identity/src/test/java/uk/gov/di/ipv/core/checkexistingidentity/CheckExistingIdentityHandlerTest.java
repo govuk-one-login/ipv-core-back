@@ -1479,7 +1479,7 @@ class CheckExistingIdentityHandlerTest {
                                 .build());
         jwt.sign(jwtSigner);
         return VerifiableCredential.fromValidJwt(
-                TEST_USER_ID, HMRC_MIGRATION.getId(), SignedJWT.parse(jwt.serialize()));
+                TEST_USER_ID, HMRC_MIGRATION, SignedJWT.parse(jwt.serialize()));
     }
 
     private static ECDSASigner createJwtSigner() throws Exception {

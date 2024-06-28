@@ -38,6 +38,15 @@ public enum Cri {
         this.isNonEvidenceCri = isNonEvidence;
     }
 
+    public static Cri fromId(String id) {
+        for (var cri : values()) {
+            if (cri.getId().equals(id)) {
+                return cri;
+            }
+        }
+        throw new IllegalArgumentException("no cri found with ID " + id);
+    }
+
     public static final List<String> getOperationalCriIds() {
         return Arrays.stream(Cri.values())
                 .filter(criId -> criId.isOperationalCri())

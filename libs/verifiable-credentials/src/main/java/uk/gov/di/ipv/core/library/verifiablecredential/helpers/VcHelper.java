@@ -93,9 +93,13 @@ public class VcHelper {
     public static List<VerifiableCredential> filterVCBasedOnProfileType(
             List<VerifiableCredential> vcs, ProfileType profileType) {
         if (profileType.equals(ProfileType.GPG45)) {
-            return vcs.stream().filter(vc -> !OPERATIONAL_CRIS.contains(vc.getCriId())).toList();
+            return vcs.stream()
+                    .filter(vc -> !OPERATIONAL_CRIS.contains(vc.getCri().getId()))
+                    .toList();
         } else {
-            return vcs.stream().filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCriId()))).toList();
+            return vcs.stream()
+                    .filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCri().getId())))
+                    .toList();
         }
     }
 

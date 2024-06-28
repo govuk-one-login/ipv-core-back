@@ -369,8 +369,8 @@ class EvcsServiceTest {
                 (vcs.stream()
                         .filter(
                                 vc ->
-                                        vc.getCriId().equals(Cri.ADDRESS.getId())
-                                                || vc.getCriId().equals(Cri.DCMAW.getId()))
+                                        vc.getCri().equals(Cri.ADDRESS)
+                                                || vc.getCri().equals(Cri.DCMAW))
                         .count()));
     }
 
