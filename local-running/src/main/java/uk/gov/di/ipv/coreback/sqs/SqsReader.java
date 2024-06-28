@@ -5,7 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -27,7 +27,7 @@ public class SqsReader implements Runnable {
         this.sqs =
                 SqsClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(AwsCrtHttpClient.builder())
+                        .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
         this.queueUrl =
                 String.format(

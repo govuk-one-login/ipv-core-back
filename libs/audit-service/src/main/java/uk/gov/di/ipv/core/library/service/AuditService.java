@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -31,7 +31,7 @@ public class AuditService {
     public static SqsClient getSqsClient() {
         return SqsClient.builder()
                 .region(EU_WEST_2)
-                .httpClientBuilder(AwsCrtHttpClient.builder())
+                .httpClientBuilder(UrlConnectionHttpClient.builder())
                 .build();
     }
 
