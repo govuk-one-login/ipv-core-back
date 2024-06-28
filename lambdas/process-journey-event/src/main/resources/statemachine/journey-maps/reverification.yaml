@@ -34,9 +34,6 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED
-      invalid-request:
-        targetJourney: FAILED
-        targetState: FAILED
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
