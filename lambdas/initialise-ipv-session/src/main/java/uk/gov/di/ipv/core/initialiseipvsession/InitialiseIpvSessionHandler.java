@@ -376,7 +376,6 @@ public class InitialiseIpvSessionHandler
                     || configService.enabled(EVCS_READ_ENABLED)) {
                 throw e;
             } else {
-                LOGGER.warn("Failed to get evcs access token");
                 return null;
             }
         }
