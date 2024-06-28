@@ -275,6 +275,43 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
+    void shouldRecoverIfEvcsEnabledButMissingEvcsAccesToken() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        verify(mockClientOAuthSessionDetailsService)
+                .generateErrorClientSessionDetails(
+                        any(String.class),
+                        eq("https://example.com"),
+                        eq("test-client"),
+                        eq("test-state"),
+                        eq(null));
+
+        verify(mockIpvSessionService, times(2))
+                .generateIpvSession(
+                        anyString(), errorObjectArgumentCaptor.capture(), isNull(), anyBoolean());
+        var capturedErrorObject = errorObjectArgumentCaptor.getAllValues().get(1);
+        assertEquals(INVALID_EVCS_ACCESS_TOKEN, capturedErrorObject.getCode());
+        assertEquals(
+                "Evcs access token jwt claim not received", capturedErrorObject.getDescription());
+    }
+
+    @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
