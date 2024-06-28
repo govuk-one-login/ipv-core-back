@@ -48,7 +48,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -73,7 +73,8 @@ class ProcessAsyncCriCredentialHandlerTest {
                     TEST_OAUTH_STATE,
                     null,
                     CriResponseService.STATUS_PENDING,
-                    0);
+                    0,
+                    List.of(EVCS_ASYNC_WRITE_ENABLED.getName()));
 
     private static final String TEST_ASYNC_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
@@ -108,7 +109,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully(boolean evcsWrites)
+    void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully(boolean evcsAsyncWrites)
             throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
@@ -118,7 +119,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
-        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(evcsWrites);
+        when(configService.enabled(EVCS_ASYNC_WRITE_ENABLED)).thenReturn(evcsAsyncWrites);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -127,8 +128,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyVerifiableCredentialJwtValidator();
         verifyCiStorageServicePutContraIndicators();
         verifyCiStorageServicePostMitigations();
-        verifyVerifiableCredentialService(evcsWrites);
-        verify(evcsService, times(evcsWrites ? 1 : 0)).storePendingVc(F2F_VC);
+        verifyVerifiableCredentialService(evcsAsyncWrites);
+        verify(evcsService, times(evcsAsyncWrites ? 1 : 0)).storePendingVc(F2F_VC);
         verifyAuditService();
     }
 

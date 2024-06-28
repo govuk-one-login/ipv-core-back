@@ -82,7 +82,8 @@ class CriStoringServiceTest {
                         criIdCaptor.capture(),
                         vcResponseCaptor.capture(),
                         criOAuthSessionIdCaptor.capture(),
-                        eq(CriResponseService.STATUS_PENDING));
+                        eq(CriResponseService.STATUS_PENDING),
+                        eq(callbackRequest.getFeatureSet()));
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
@@ -167,7 +168,6 @@ class CriStoringServiceTest {
     void storeVcsShouldNotSubmitVcsToCiMitServiceWhenOnReverificationJourney() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
 
@@ -176,7 +176,7 @@ class CriStoringServiceTest {
                 callbackRequest.getCredentialIssuerId(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
-                List.of(vc),
+                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                 clientOAuthSessionItem,
                 mockIpvSessionItem);
 

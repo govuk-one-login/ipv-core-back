@@ -79,6 +79,7 @@ public class CriStoringService {
                 journeyRequest.getIpvSessionId(),
                 journeyRequest.getIpAddress(),
                 journeyRequest.getDeviceInformation(),
+                null,
                 clientOAuthSessionItem);
     }
 
@@ -92,6 +93,7 @@ public class CriStoringService {
                 callbackRequest.getIpvSessionId(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
+                callbackRequest.getFeatureSet(),
                 clientOAuthSessionItem);
     }
 
@@ -101,6 +103,7 @@ public class CriStoringService {
             String ipvSessionId,
             String ipAddress,
             String deviceInformation,
+            List<String> featureSet,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws JsonProcessingException, SqsException {
         var userId = clientOAuthSessionItem.getUserId();
@@ -123,7 +126,8 @@ public class CriStoringService {
                 criId,
                 OBJECT_MAPPER.writeValueAsString(vcResponseDto),
                 criOAuthSessionId,
-                CriResponseService.STATUS_PENDING);
+                CriResponseService.STATUS_PENDING,
+                featureSet);
 
         sendAuditEventForProcessedVcResponse(
                 CriResourceRetrievedType.PENDING.getType(),
