@@ -417,7 +417,7 @@ public class CheckExistingIdentityHandler
             boolean hasPartiallyMigratedVcs) {
 
         if (hasPartiallyMigratedVcs) {
-            LOGGER.info("found partially migrated vcs");
+            LOGGER.info(LogHelper.buildLogMessage("found partially migrated vcs"));
             return;
         }
         var migratedTacticalVcStrings =
@@ -446,18 +446,23 @@ public class CheckExistingIdentityHandler
 
         // check if we have unmigrated credentials alongside migrated ones
         if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
-            LOGGER.warn("Unmigrated tactical credentials found alongside migrated credentials");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Unmigrated tactical credentials found alongside migrated credentials"));
         }
 
         // check all the tactical vcs are in the selected evcs vcs
         if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
             LOGGER.warn(
-                    "Failed to find corresponding evcs credential for migrated tactical credential");
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding evcs credential for migrated tactical credential"));
         }
 
         // check all the evcs vcs are in the tactical store
         if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
-            LOGGER.warn("Failed to find corresponding tactical credential for evcs credential");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding tactical credential for evcs credential"));
         }
     }
 
