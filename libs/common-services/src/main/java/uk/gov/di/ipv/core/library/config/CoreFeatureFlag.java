@@ -8,6 +8,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
     TICF_CRI_BETA("ticfCriBeta"),
     EVCS_WRITE_ENABLED("evcsWriteEnabled"),
+    EVCS_ASYNC_WRITE_ENABLED("evcsAsyncWriteEnabled"),
     EVCS_READ_ENABLED("evcsReadEnabled"),
     MFA_RESET("mfaResetEnabled"),
     P1_JOURNEYS_ENABLED("p1JourneysEnabled");
