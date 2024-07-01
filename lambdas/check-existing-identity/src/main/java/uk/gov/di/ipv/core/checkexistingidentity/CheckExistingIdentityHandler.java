@@ -417,7 +417,7 @@ public class CheckExistingIdentityHandler
                     tacticalVcs.stream()
                             .filter(
                                     credential ->
-                                            F2F.getId().equals(credential.getCriId())
+                                            F2F.equals(credential.getCri())
                                                     && evcsVcs.stream()
                                                             .noneMatch(
                                                                     evcsVC ->
