@@ -277,9 +277,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -399,9 +397,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -518,9 +514,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -640,9 +634,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -763,9 +755,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -888,9 +878,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1010,9 +998,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1125,9 +1111,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1240,9 +1224,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1357,9 +1339,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1469,9 +1449,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1584,9 +1562,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1703,9 +1679,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        DCMAW.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), DCMAW, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -1809,7 +1783,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        DCMAW.getId(),
+                                        DCMAW,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -1823,7 +1797,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                DCMAW.getId(),
+                DCMAW,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmaw",
                 "dummyState",

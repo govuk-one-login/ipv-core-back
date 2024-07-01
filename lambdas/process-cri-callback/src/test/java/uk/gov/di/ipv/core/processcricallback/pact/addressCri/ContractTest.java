@@ -272,9 +272,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -380,9 +378,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -472,7 +468,7 @@ class ContractTest {
                         () -> {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
-                                    ADDRESS.getId(),
+                                    ADDRESS,
                                     CRI_OAUTH_SESSION_ITEM);
                         });
 
@@ -485,7 +481,7 @@ class ContractTest {
     private static CriCallbackRequest getCriCallbackRequest(String dummyAuthCode) {
         return new CriCallbackRequest(
                 dummyAuthCode,
-                ADDRESS.getId(),
+                ADDRESS,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=address",
                 "dummyState",

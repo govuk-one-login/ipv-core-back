@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInfor
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -68,13 +69,13 @@ public class CriStoringService {
 
     public void recordCriResponse(
             JourneyRequest journeyRequest,
-            String criId,
+            Cri cri,
             String criOAuthSessionId,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws SqsException, JsonProcessingException {
 
         recordCriResponse(
-                criId,
+                cri,
                 criOAuthSessionId,
                 journeyRequest.getIpvSessionId(),
                 journeyRequest.getIpAddress(),
@@ -87,7 +88,7 @@ public class CriStoringService {
             throws SqsException, JsonProcessingException {
 
         recordCriResponse(
-                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getCredentialIssuer(),
                 callbackRequest.getState(),
                 callbackRequest.getIpvSessionId(),
                 callbackRequest.getIpAddress(),
@@ -96,7 +97,7 @@ public class CriStoringService {
     }
 
     private void recordCriResponse(
-            String criId,
+            Cri cri,
             String criOAuthSessionId,
             String ipvSessionId,
             String ipAddress,
@@ -120,20 +121,17 @@ public class CriStoringService {
 
         criResponseService.persistCriResponse(
                 userId,
-                criId,
+                cri,
                 OBJECT_MAPPER.writeValueAsString(vcResponseDto),
                 criOAuthSessionId,
                 CriResponseService.STATUS_PENDING);
 
         sendAuditEventForProcessedVcResponse(
-                CriResourceRetrievedType.PENDING.getType(),
-                criId,
-                auditEventUser,
-                deviceInformation);
+                CriResourceRetrievedType.PENDING.getType(), cri, auditEventUser, deviceInformation);
     }
 
     public void storeVcs(
-            String criId,
+            Cri cri,
             String ipAddress,
             String deviceInformation,
             List<VerifiableCredential> vcs,
@@ -164,10 +162,10 @@ public class CriStoringService {
                 ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
             }
 
-            if (criId.equals(TICF.getId())) {
+            if (cri.equals(TICF)) {
                 ipvSessionItem.setRiskAssessmentCredential(vc.getVcString());
             } else {
-                if (criId.equals(ADDRESS.getId())) {
+                if (cri.equals(ADDRESS)) {
                     // Remove any existing address VC from session credentials - for 6MFC
                     sessionCredentialsService.deleteSessionCredentialsForCri(
                             ipvSessionItem.getIpvSessionId(), ADDRESS.getId());
@@ -181,17 +179,19 @@ public class CriStoringService {
                 vcs.isEmpty()
                         ? CriResourceRetrievedType.EMPTY.getType()
                         : CriResourceRetrievedType.VC.getType(),
-                criId,
+                cri,
                 auditEventUser,
                 deviceInformation);
     }
 
     private void sendAuditEventForProcessedVcResponse(
             String criResourceRetrievedType,
-            String criId,
+            Cri cri,
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws SqsException {
+
+        var criId = cri.getId();
         LOGGER.info(
                 new StringMapMessage()
                         .with(

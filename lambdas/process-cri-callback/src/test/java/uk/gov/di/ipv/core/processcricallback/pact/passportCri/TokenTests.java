@@ -211,7 +211,7 @@ class TokenTests {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                PASSPORT.getId(),
+                PASSPORT,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=ukPassport",
                 "dummyState",

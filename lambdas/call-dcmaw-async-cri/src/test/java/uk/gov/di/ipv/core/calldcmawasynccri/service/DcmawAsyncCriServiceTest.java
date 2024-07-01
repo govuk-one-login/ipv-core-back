@@ -100,7 +100,7 @@ class DcmawAsyncCriServiceTest {
                         .build();
         when(mockCriApiService.fetchVerifiableCredential(
                         argThat(bat -> ACCESS_TOKEN.equals(bat.getValue())),
-                        eq(DCMAW_ASYNC.getId()),
+                        eq(DCMAW_ASYNC),
                         eq(criOAuthSessionItem),
                         argThat(
                                 crbd ->

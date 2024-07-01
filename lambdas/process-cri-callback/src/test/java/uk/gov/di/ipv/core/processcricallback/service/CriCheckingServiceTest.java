@@ -48,6 +48,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -59,7 +60,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_VCS_NOT
 
 @ExtendWith(MockitoExtension.class)
 class CriCheckingServiceTest {
-    private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_ERROR_DESCRIPTION = "test_error_description";
@@ -92,7 +92,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
-                        .credentialIssuerId(TEST_CRI_ID)
+                        .credentialIssuer(F2F)
                         .error(TEST_ERROR)
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
@@ -114,7 +114,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
-                        .credentialIssuerId(TEST_CRI_ID)
+                        .credentialIssuer(F2F)
                         .error(OAuth2Error.ACCESS_DENIED_CODE)
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
@@ -136,7 +136,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
-                        .credentialIssuerId(TEST_CRI_ID)
+                        .credentialIssuer(F2F)
                         .error(OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE)
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
@@ -157,7 +157,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
-                        .credentialIssuerId(TEST_CRI_ID)
+                        .credentialIssuer(F2F)
                         .error(TEST_ERROR)
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .ipvSessionId(TEST_IPV_SESSION_ID)
@@ -289,7 +289,7 @@ class CriCheckingServiceTest {
     void validateCallbackRequestShouldThrowExceptionWhenCredentialIssuerIdIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setCredentialIssuerId(StringUtils.EMPTY);
+        callbackRequest.setCredentialIssuer(null);
 
         // Act & Assert
         assertThrows(
@@ -572,14 +572,14 @@ class CriCheckingServiceTest {
     private CriCallbackRequest buildValidCallbackRequest() {
         return CriCallbackRequest.builder()
                 .ipvSessionId(TEST_IPV_SESSION_ID)
-                .credentialIssuerId(TEST_CRI_ID)
+                .credentialIssuer(F2F)
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .state(TEST_CRI_OAUTH_SESSION_ID)
                 .build();
     }
 
     private CriOAuthSessionItem buildValidCriOAuthSessionItem(String state) {
-        return CriOAuthSessionItem.builder().criId(TEST_CRI_ID).criOAuthSessionId(state).build();
+        return CriOAuthSessionItem.builder().criId(F2F.getId()).criOAuthSessionId(state).build();
     }
 
     private IpvSessionItem buildValidIpvSessionItem() {

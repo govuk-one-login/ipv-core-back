@@ -137,7 +137,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(CIC_ACCESS_TOKEN),
-                        CLAIMED_IDENTITY.getId(),
+                        CLAIMED_IDENTITY,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -217,7 +217,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        CLAIMED_IDENTITY.getId(),
+                                        CLAIMED_IDENTITY,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -409,7 +409,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                CLAIMED_IDENTITY.getId(),
+                CLAIMED_IDENTITY,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=claimedIdentity",
                 "dummyState",

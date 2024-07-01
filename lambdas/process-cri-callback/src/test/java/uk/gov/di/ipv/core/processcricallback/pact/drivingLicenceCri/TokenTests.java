@@ -207,7 +207,7 @@ class TokenTests {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=drivingLicence",
                 "dummyState",

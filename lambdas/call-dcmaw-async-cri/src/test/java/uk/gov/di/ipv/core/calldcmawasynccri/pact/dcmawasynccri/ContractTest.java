@@ -216,7 +216,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_ASYNC.getId(),
+                        DCMAW_ASYNC,
                         CRI_OAUTH_SESSION_ITEM,
                         getCredentialRequestBody(SUBJECT_ID));
 
@@ -268,7 +268,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("badAccessToken"),
-                                        DCMAW_ASYNC.getId(),
+                                        DCMAW_ASYNC,
                                         CRI_OAUTH_SESSION_ITEM,
                                         getCredentialRequestBody(SUBJECT_ID)));
 

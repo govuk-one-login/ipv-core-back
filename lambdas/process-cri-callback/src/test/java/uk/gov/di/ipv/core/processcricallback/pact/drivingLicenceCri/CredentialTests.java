@@ -116,7 +116,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE.getId(),
+                        DRIVING_LICENCE,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -223,7 +223,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE.getId(),
+                        DRIVING_LICENCE,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -335,7 +335,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE.getId(),
+                        DRIVING_LICENCE,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -442,7 +442,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DRIVING_LICENCE.getId(),
+                        DRIVING_LICENCE,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -547,7 +547,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        DRIVING_LICENCE.getId(),
+                                        DRIVING_LICENCE,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

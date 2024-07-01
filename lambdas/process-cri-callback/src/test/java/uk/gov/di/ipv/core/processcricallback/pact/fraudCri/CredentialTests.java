@@ -119,7 +119,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_FRAUD.getId(),
+                        EXPERIAN_FRAUD,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -233,7 +233,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_FRAUD.getId(),
+                        EXPERIAN_FRAUD,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -344,7 +344,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_FRAUD.getId(),
+                        EXPERIAN_FRAUD,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -447,7 +447,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        EXPERIAN_FRAUD.getId(),
+                                        EXPERIAN_FRAUD,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

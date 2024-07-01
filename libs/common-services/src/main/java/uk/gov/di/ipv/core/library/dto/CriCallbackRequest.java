@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ import java.util.List;
 @Builder
 public class CriCallbackRequest {
     private String authorizationCode;
-    private String credentialIssuerId;
+    private Cri credentialIssuer;
     private String ipvSessionId;
     private String redirectUri;
     private String state;

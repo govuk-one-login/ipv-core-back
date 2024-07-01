@@ -146,9 +146,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken(VALID_ACCESS_TOKEN),
-                        BAV.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken(VALID_ACCESS_TOKEN), BAV, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -263,7 +261,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(VALID_ACCESS_TOKEN_FOR_CI),
-                        BAV.getId(),
+                        BAV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -356,7 +354,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        BAV.getId(),
+                                        BAV,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -512,7 +510,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                BAV.getId(),
+                BAV,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=bav",
                 "dummyState",

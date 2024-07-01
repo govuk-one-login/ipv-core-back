@@ -109,7 +109,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        PASSPORT.getId(),
+                        PASSPORT,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -201,7 +201,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        PASSPORT.getId(),
+                        PASSPORT,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -301,7 +301,7 @@ class CredentialTests {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        PASSPORT.getId(),
+                        PASSPORT,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -407,7 +407,7 @@ class CredentialTests {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        PASSPORT.getId(),
+                                        PASSPORT,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert

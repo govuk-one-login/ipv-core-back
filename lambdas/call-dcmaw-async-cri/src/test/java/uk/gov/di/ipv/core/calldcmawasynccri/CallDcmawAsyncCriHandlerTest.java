@@ -84,10 +84,7 @@ class CallDcmawAsyncCriHandlerTest {
         // Assert
         verify(mockCriStoringService)
                 .recordCriResponse(
-                        eq(input),
-                        eq(DCMAW_ASYNC.getId()),
-                        any(String.class),
-                        eq(clientOAuthSessionItem));
+                        eq(input), eq(DCMAW_ASYNC), any(String.class), eq(clientOAuthSessionItem));
 
         verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
 

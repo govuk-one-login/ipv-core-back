@@ -116,7 +116,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(DUMMY_ACCESS_TOKEN),
-                        F2F.getId(),
+                        F2F,
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
@@ -201,7 +201,7 @@ class ContractTest {
                 underTest.fetchAccessToken(
                         new CriCallbackRequest(
                                 "0328ba66-a1b5-4314-acf8-f4673f1f05a2",
-                                credentialIssuerConfig.getClientId(),
+                                F2F,
                                 "dummySessionId",
                                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
                                 "dummyState",
@@ -288,7 +288,7 @@ class ContractTest {
                             underTest.fetchAccessToken(
                                     new CriCallbackRequest(
                                             "dummyInvalidAuthCode",
-                                            credentialIssuerConfig.getClientId(),
+                                            F2F,
                                             "dummySessionId",
                                             "https://identity.staging.account.gov.uk/credential-issuer/callback?id=f2f",
                                             "dummyState",

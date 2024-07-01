@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
@@ -45,7 +47,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
 class CriStoringServiceTest {
-    private static final String TEST_CRI_ID = "test_cri_id";
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_Session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
@@ -58,7 +59,7 @@ class CriStoringServiceTest {
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
     @Captor private ArgumentCaptor<String> userIdCaptor;
-    @Captor private ArgumentCaptor<String> criIdCaptor;
+    @Captor private ArgumentCaptor<Cri> criCaptor;
     @Captor private ArgumentCaptor<String> vcResponseCaptor;
     @Captor private ArgumentCaptor<String> criOAuthSessionIdCaptor;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
@@ -79,7 +80,7 @@ class CriStoringServiceTest {
         verify(mockCriResponseService)
                 .persistCriResponse(
                         userIdCaptor.capture(),
-                        criIdCaptor.capture(),
+                        criCaptor.capture(),
                         vcResponseCaptor.capture(),
                         criOAuthSessionIdCaptor.capture(),
                         eq(CriResponseService.STATUS_PENDING));
@@ -87,7 +88,7 @@ class CriStoringServiceTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
         // Assert
-        assertEquals(callbackRequest.getCredentialIssuerId(), criIdCaptor.getValue());
+        assertEquals(callbackRequest.getCredentialIssuer(), criCaptor.getValue());
         assertEquals(callbackRequest.getState(), criOAuthSessionIdCaptor.getValue());
         assertEquals(clientOAuthSessionItem.getUserId(), userIdCaptor.getValue());
         var expectedVcResponseDto =
@@ -125,7 +126,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getCredentialIssuer(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
@@ -173,7 +174,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getCredentialIssuer(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
@@ -195,7 +196,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                ADDRESS.getId(),
+                ADDRESS,
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
@@ -220,7 +221,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                TICF.getId(),
+                TICF,
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
@@ -265,7 +266,7 @@ class CriStoringServiceTest {
 
         // Act
         criStoringService.storeVcs(
-                callbackRequest.getCredentialIssuerId(),
+                callbackRequest.getCredentialIssuer(),
                 callbackRequest.getIpAddress(),
                 callbackRequest.getDeviceInformation(),
                 List.of(),
@@ -292,7 +293,7 @@ class CriStoringServiceTest {
                 CiPutException.class,
                 () ->
                         criStoringService.storeVcs(
-                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
@@ -315,7 +316,7 @@ class CriStoringServiceTest {
                 CiPostMitigationsException.class,
                 () ->
                         criStoringService.storeVcs(
-                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
@@ -335,7 +336,7 @@ class CriStoringServiceTest {
                 SqsException.class,
                 () ->
                         criStoringService.storeVcs(
-                                callbackRequest.getCredentialIssuerId(),
+                                callbackRequest.getCredentialIssuer(),
                                 callbackRequest.getIpAddress(),
                                 callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
@@ -346,7 +347,7 @@ class CriStoringServiceTest {
     private CriCallbackRequest buildValidCallbackRequest() {
         return CriCallbackRequest.builder()
                 .ipvSessionId(TEST_IPV_SESSION_ID)
-                .credentialIssuerId(TEST_CRI_ID)
+                .credentialIssuer(F2F)
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .state(TEST_CRI_OAUTH_SESSION_ID)
                 .build();

@@ -123,7 +123,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -216,7 +216,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -320,7 +320,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        HMRC_KBV.getId(),
+                                        HMRC_KBV,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -379,7 +379,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -616,7 +616,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                HMRC_KBV.getId(),
+                HMRC_KBV,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=hmrcKbv",
                 "dummyState",

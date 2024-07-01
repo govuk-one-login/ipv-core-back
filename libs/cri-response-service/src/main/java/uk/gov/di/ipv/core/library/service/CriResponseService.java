@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
@@ -29,20 +30,20 @@ public class CriResponseService {
         this.dataStore = dataStore;
     }
 
-    public CriResponseItem getCriResponseItem(String userId, String criId) {
-        return dataStore.getItem(userId, criId);
+    public CriResponseItem getCriResponseItem(String userId, Cri cri) {
+        return dataStore.getItem(userId, cri.getId());
     }
 
     public void persistCriResponse(
             String userId,
-            String credentialIssuer,
+            Cri credentialIssuer,
             String issuerResponse,
             String oauthState,
             String status) {
         CriResponseItem criResponseItem =
                 CriResponseItem.builder()
                         .userId(userId)
-                        .credentialIssuer(credentialIssuer)
+                        .credentialIssuer(credentialIssuer.getId())
                         .issuerResponse(issuerResponse)
                         .oauthState(oauthState)
                         .dateCreated(Instant.now())
@@ -55,8 +56,8 @@ public class CriResponseService {
         return dataStore.getItem(userId, "f2f");
     }
 
-    public void deleteCriResponseItem(String userId, String credentialIssuer) {
-        dataStore.delete(userId, credentialIssuer);
+    public void deleteCriResponseItem(String userId, Cri credentialIssuer) {
+        dataStore.delete(userId, credentialIssuer.getId());
     }
 
     public void updateCriResponseItem(CriResponseItem responseItem) {
