@@ -86,7 +86,7 @@ class AuthorizationRequestHelperTest {
             new SharedClaimsResponse(
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
-                    Set.of(new Address()),
+                    Set.of(Address.builder().build()),
                     TEST_EMAIL_ADDRESS,
                     Set.of(new SocialSecurityRecord()));
 

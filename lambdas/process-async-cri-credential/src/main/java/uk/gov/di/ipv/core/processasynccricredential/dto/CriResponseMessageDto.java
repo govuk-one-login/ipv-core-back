@@ -15,8 +15,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CriResponseMessageDto {
-    @JsonProperty("iss")
-    private String credentialIssuer;
 
     @JsonProperty("sub")
     private String userId;

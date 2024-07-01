@@ -650,6 +650,10 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   CRI_HMRC_KBV_M2B:
     response:
@@ -674,6 +678,10 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # DWP KBV journey (J7)
   CRI_DWP_KBV_J7:
@@ -1336,6 +1344,10 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   MITIGATION_CRI_DWP_KBV:
     response:

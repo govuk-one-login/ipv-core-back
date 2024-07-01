@@ -64,7 +64,11 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    DCMAW_ASYNC.getId(),
+                    "dummyConnection",
+                    900);
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
@@ -216,7 +220,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        DCMAW_ASYNC.getId(),
+                        DCMAW_ASYNC,
                         CRI_OAUTH_SESSION_ITEM,
                         getCredentialRequestBody(SUBJECT_ID));
 
@@ -268,7 +272,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("badAccessToken"),
-                                        DCMAW_ASYNC.getId(),
+                                        DCMAW_ASYNC,
                                         CRI_OAUTH_SESSION_ITEM,
                                         getCredentialRequestBody(SUBJECT_ID)));
 

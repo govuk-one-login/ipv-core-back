@@ -26,14 +26,11 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -46,6 +43,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -56,6 +54,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -88,6 +93,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildUserIdentityHandlerTest {
@@ -152,17 +159,26 @@ class BuildUserIdentityHandlerTest {
 
         List<Name> names =
                 Collections.singletonList(
-                        new Name(Collections.singletonList(new NameParts("GivenName", "Daniel"))));
-        List<BirthDate> birthDates = Collections.singletonList(new BirthDate("1990-02-10"));
+                        createName(
+                                Collections.singletonList(
+                                        createNamePart(
+                                                "Daniel", NamePart.NamePartType.GIVEN_NAME))));
+
+        List<BirthDate> birthDates =
+                Collections.singletonList(BirthDateGenerator.createBirthDate("1990-02-10"));
 
         userIdentity =
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
-                        OBJECT_MAPPER.readTree(ADDRESS_JSON_1),
-                        OBJECT_MAPPER.readTree(PASSPORT_JSON_1),
-                        OBJECT_MAPPER.readTree(DRIVING_PERMIT_JSON_1),
-                        OBJECT_MAPPER.readTree(NINO_JSON_1),
+                        List.of(OBJECT_MAPPER.readValue(ADDRESS_JSON_1, PostalAddress.class)),
+                        List.of(OBJECT_MAPPER.readValue(PASSPORT_JSON_1, PassportDetails.class)),
+                        List.of(
+                                OBJECT_MAPPER.readValue(
+                                        DRIVING_PERMIT_JSON_1, DrivingPermitDetails.class)),
+                        List.of(
+                                OBJECT_MAPPER.readValue(
+                                        NINO_JSON_1, SocialSecurityRecordDetails.class)),
                         "test-sub",
                         Vot.P2,
                         VTM,

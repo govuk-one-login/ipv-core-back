@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_2;
 
 class SharedClaimsResponseTest {
@@ -23,7 +23,7 @@ class SharedClaimsResponseTest {
         nameSet.add(new Name(List.of(new NameParts("Paul", "GivenName"))));
 
         Set<Address> addressSet = new HashSet<>();
-        addressSet.add(objectMapper.readValue(ADDRESS_JSON_1, Address.class));
+        addressSet.add(ADDRESS_1);
 
         Set<BirthDate> birthDaySet = new HashSet<>();
         birthDaySet.add(new BirthDate("2020-02-03"));

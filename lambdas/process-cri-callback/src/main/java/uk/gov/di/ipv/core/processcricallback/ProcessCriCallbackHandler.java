@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -159,6 +158,7 @@ public class ProcessCriCallbackHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (ParseCriCallbackRequestException e) {
+
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_BAD_REQUEST,
@@ -217,7 +217,7 @@ public class ProcessCriCallbackHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         } catch (CriApiException e) {
-            if (DCMAW.getId().equals(callbackRequest.getCredentialIssuerId())
+            if (DCMAW.equals(callbackRequest.getCredentialIssuer())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -273,7 +273,7 @@ public class ProcessCriCallbackHandler
                 clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
-        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
+        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer().getId());
         LogHelper.attachComponentId(configService);
 
         // Validate callback request
@@ -288,7 +288,7 @@ public class ProcessCriCallbackHandler
         var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
         var vcResponse =
                 criApiService.fetchVerifiableCredential(
-                        accessToken, callbackRequest.getCredentialIssuerId(), criOAuthSessionItem);
+                        accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
         var vcs =
                 validateAndStoreResponse(
                         callbackRequest,
@@ -327,13 +327,13 @@ public class ProcessCriCallbackHandler
             var vcs =
                     verifiableCredentialValidator.parseAndValidate(
                             clientOAuthSessionItem.getUserId(),
-                            Cri.fromId(callbackRequest.getCredentialIssuerId()),
+                            callbackRequest.getCredentialIssuer(),
                             vcResponse.getVerifiableCredentials(),
                             criConfig.getSigningKey(),
                             criConfig.getComponentId());
 
             criStoringService.storeVcs(
-                    callbackRequest.getCredentialIssuerId(),
+                    callbackRequest.getCredentialIssuer(),
                     callbackRequest.getIpAddress(),
                     callbackRequest.getDeviceInformation(),
                     vcs,

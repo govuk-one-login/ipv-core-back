@@ -146,9 +146,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken(VALID_ACCESS_TOKEN),
-                        BAV.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken(VALID_ACCESS_TOKEN), BAV, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -263,7 +261,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(VALID_ACCESS_TOKEN_FOR_CI),
-                        BAV.getId(),
+                        BAV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -356,7 +354,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        BAV.getId(),
+                                        BAV,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -580,7 +578,7 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId", "dummyOAuthSessionId", BAV.getId(), "dummyConnection", 900);
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =

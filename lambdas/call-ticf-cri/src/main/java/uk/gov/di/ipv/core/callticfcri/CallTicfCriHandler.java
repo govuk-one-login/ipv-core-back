@@ -161,7 +161,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
 
         criStoringService.storeVcs(
-                TICF.getId(),
+                TICF,
                 request.getIpAddress(),
                 request.getDeviceInformation(),
                 ticfVcs,

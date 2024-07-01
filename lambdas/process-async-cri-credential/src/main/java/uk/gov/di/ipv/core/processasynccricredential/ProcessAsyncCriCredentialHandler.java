@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -191,12 +190,12 @@ public class ProcessAsyncCriCredentialHandler
 
         var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
-                        successAsyncCriResponse.getCredentialIssuer());
+                        successAsyncCriResponse.getCredentialIssuer().getId());
 
         var vcs =
                 verifiableCredentialValidator.parseAndValidate(
                         successAsyncCriResponse.getUserId(),
-                        Cri.fromId(successAsyncCriResponse.getCredentialIssuer()),
+                        successAsyncCriResponse.getCredentialIssuer(),
                         successAsyncCriResponse.getVerifiableCredentialJWTs(),
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
