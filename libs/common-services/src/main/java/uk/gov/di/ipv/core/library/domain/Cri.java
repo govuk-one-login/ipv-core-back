@@ -22,7 +22,8 @@ public enum Cri {
     TICF("ticf"),
     HMRC_MIGRATION("hmrcMigration", true, false),
     HMRC_KBV("hmrcKbv"),
-    BAV("bav");
+    BAV("bav"),
+    CIMIT("cimit");
 
     private final String id;
     private final boolean isOperationalCri;
