@@ -11,6 +11,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     EVCS_READ_ENABLED("evcsReadEnabled"),
     EVCS_TOKEN_READ_ENABLED("evcsTokenReadEnabled"),
     MFA_RESET("mfaResetEnabled");
+    P1_JOURNEYS_ENABLED("p1JourneysEnabled");
 
     private final String name;
 

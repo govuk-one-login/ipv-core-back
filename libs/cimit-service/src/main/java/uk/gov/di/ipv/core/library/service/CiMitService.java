@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
@@ -59,7 +59,7 @@ public class CiMitService {
         this.lambdaClient =
                 LambdaClient.builder()
                         .region(EU_WEST_2)
-                        .httpClientBuilder(AwsCrtHttpClient.builder())
+                        .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
         this.configService = configService;
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
