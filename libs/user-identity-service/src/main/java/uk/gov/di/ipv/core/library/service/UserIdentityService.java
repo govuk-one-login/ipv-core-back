@@ -36,7 +36,6 @@ import uk.gov.di.model.IdentityCheckCredential;
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -522,25 +521,28 @@ public class UserIdentityService {
         }
     }
 
+    private List<NameParts> getNamePartsFromCredentialSubjectName(uk.gov.di.model.Name name) {
+        return name.getNameParts().stream()
+                .map(
+                        np -> {
+                            return new NameParts(np.getValue(), np.getType().toString());
+                        })
+                .toList();
+    }
+
     private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
+
         var credentialSubject =
                 ((IdentityCheckCredential) vc.getCredential()).getCredentialSubject();
 
-        var nameParts =
-                credentialSubject.getName().stream()
-                        .map(
-                                name ->
-                                        name.getNameParts().stream()
-                                                .map(
-                                                        np ->
-                                                                new NameParts(
-                                                                        np.getValue(),
-                                                                        np.getType().toString()))
-                                                .toList())
-                        .flatMap(Collection::stream)
-                        .toList();
+        if (credentialSubject.getName() == null || credentialSubject.getBirthDate() == null) {
+            return new IdentityClaim(List.of(), List.of());
+        }
 
-        var names = List.of(new Name(nameParts));
+        var names =
+                credentialSubject.getName().stream()
+                        .map(name -> new Name(getNamePartsFromCredentialSubjectName(name)))
+                        .toList();
 
         var birthDates =
                 credentialSubject.getBirthDate().stream()
