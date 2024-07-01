@@ -388,6 +388,10 @@ public class CheckExistingIdentityHandler
         if (isF2f && evcsVcs.size() == 1) {
             return true;
         }
+        // Tactical contains an extra non-F2F VC
+        if (tacticalVcs.size() == evcsVcs.size() + 1) {
+            return true;
+        }
         // Tactical contains the same as pending EVCS, with one extra F2F VC
         var extraF2fVcs =
                 tacticalVcs.stream()
@@ -413,6 +417,7 @@ public class CheckExistingIdentityHandler
             boolean hasPartiallyMigratedVcs) {
 
         if (hasPartiallyMigratedVcs) {
+            LOGGER.info("found partially migrated vcs");
             return;
         }
         var migratedTacticalVcStrings =
