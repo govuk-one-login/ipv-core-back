@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -32,10 +31,12 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -521,38 +522,30 @@ public class UserIdentityService {
         }
     }
 
-    private <T> T getJsonProperty(JsonNode jsonNode, String propertyName, CollectionType valueType)
-            throws HttpResponseExceptionWithErrorBody {
-        JsonNode propertyNode = jsonNode.path(propertyName);
-        if (propertyNode.isMissingNode()) {
-            return OBJECT_MAPPER.convertValue(List.of(), valueType);
-        }
-        try {
-            return OBJECT_MAPPER.treeToValue(propertyNode, valueType);
-        } catch (JsonProcessingException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse VC JWT", e));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-        }
-    }
+    private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
+        var credentialSubject =
+                ((IdentityCheckCredential) vc.getCredential()).getCredentialSubject();
 
-    private IdentityClaim getIdentityClaim(VerifiableCredential vc)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        JsonNode vcClaimNode = getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT);
-        List<Name> names =
-                getJsonProperty(
-                        vcClaimNode,
-                        NAME_PROPERTY_NAME,
-                        OBJECT_MAPPER
-                                .getTypeFactory()
-                                .constructCollectionType(List.class, Name.class));
-        List<BirthDate> birthDates =
-                getJsonProperty(
-                        vcClaimNode,
-                        BIRTH_DATE_PROPERTY_NAME,
-                        OBJECT_MAPPER
-                                .getTypeFactory()
-                                .constructCollectionType(List.class, BirthDate.class));
+        var nameParts =
+                credentialSubject.getName().stream()
+                        .map(
+                                name ->
+                                        name.getNameParts().stream()
+                                                .map(
+                                                        np ->
+                                                                new NameParts(
+                                                                        np.getValue(),
+                                                                        np.getType().toString()))
+                                                .toList())
+                        .flatMap(Collection::stream)
+                        .toList();
+
+        var names = List.of(new Name(nameParts));
+
+        var birthDates =
+                credentialSubject.getBirthDate().stream()
+                        .map(bd -> new BirthDate(bd.getValue()))
+                        .toList();
 
         return new IdentityClaim(names, birthDates);
     }
