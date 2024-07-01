@@ -231,8 +231,8 @@ public class ConfigService {
     @Tracing
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
-        return configMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
-        //        return spikeAppConfig(configurationVariable, pathProperties);
+//        return configMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
+                return spikeAppConfig(configurationVariable, pathProperties);
         //        return spikeGetMultipleAsync(configurationVariable, pathProperties);
         //                return spikeGetMultiple(configurationVariable, pathProperties);
         //        return spikeGetAllFromS3(configurationVariable, pathProperties);

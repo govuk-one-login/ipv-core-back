@@ -170,6 +170,7 @@ public class InitialiseIpvSessionHandler
                         new ConfigVarWithPathProps(CIMIT_COMPONENT_ID, List.of()),
                         new ConfigVarWithPathProps(JAR_KMS_ENCRYPTION_KEY_ID, List.of()),
                         new ConfigVarWithPathProps(MAX_ALLOWED_AUTH_CLIENT_TTL, List.of())));
+
         LogHelper.attachComponentId(configService);
 
         try {
