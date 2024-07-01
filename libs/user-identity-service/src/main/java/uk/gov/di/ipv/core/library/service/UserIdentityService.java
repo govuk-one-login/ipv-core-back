@@ -535,19 +535,19 @@ public class UserIdentityService {
         var credentialSubject =
                 ((IdentityCheckCredential) vc.getCredential()).getCredentialSubject();
 
-        if (credentialSubject.getName() == null || credentialSubject.getBirthDate() == null) {
-            return new IdentityClaim(List.of(), List.of());
-        }
-
         var names =
-                credentialSubject.getName().stream()
-                        .map(name -> new Name(getNamePartsFromCredentialSubjectName(name)))
-                        .toList();
+                credentialSubject.getName() != null
+                        ? credentialSubject.getName().stream()
+                                .map(name -> new Name(getNamePartsFromCredentialSubjectName(name)))
+                                .toList()
+                        : new ArrayList<Name>();
 
         var birthDates =
-                credentialSubject.getBirthDate().stream()
-                        .map(bd -> new BirthDate(bd.getValue()))
-                        .toList();
+                credentialSubject.getBirthDate() != null
+                        ? credentialSubject.getBirthDate().stream()
+                                .map(bd -> new BirthDate(bd.getValue()))
+                                .toList()
+                        : new ArrayList<BirthDate>();
 
         return new IdentityClaim(names, birthDates);
     }
@@ -707,6 +707,7 @@ public class UserIdentityService {
             String errorLog,
             ErrorResponse errorResponse)
             throws HttpResponseExceptionWithErrorBody {
+        var credentialSubject = vc.getCredential().getCredentialSubject();
         try {
             return getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT).path(detailName);
         } catch (CredentialParseException e) {
