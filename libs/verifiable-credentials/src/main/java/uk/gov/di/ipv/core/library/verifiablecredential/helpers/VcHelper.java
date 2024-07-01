@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -11,15 +9,10 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45DcmawValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45EvidenceValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45F2fValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45FraudValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45NinoValidator;
-import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45VerificationValidator;
+import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -29,9 +22,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
@@ -45,20 +37,16 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
-    private static final CollectionType CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE =
-            OBJECT_MAPPER
-                    .getTypeFactory()
-                    .constructCollectionType(List.class, CredentialEvidenceItem.class);
     private static ConfigService configService;
     private static final int ONLY = 0;
     private static final List<String> OPERATIONAL_CRIS = Cri.getOperationalCriIds();
-    private static final List<String> NON_EVIDENCE_CRI_TYPES = Cri.getNonEvidenceCriIds();
 
     private VcHelper() {}
 
@@ -67,26 +55,24 @@ public class VcHelper {
     }
 
     public static boolean isSuccessfulVc(VerifiableCredential vc) throws CredentialParseException {
-        var evidenceArray =
-                OBJECT_MAPPER.valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM)).path(VC_EVIDENCE);
-
-        var excludedCredentialIssuers = getNonEvidenceCredentialIssuers();
-
-        if (evidenceArray.isMissingNode() || evidenceArray.isEmpty()) {
-            String vcIssuer = vc.getClaimsSet().getIssuer();
-            if (excludedCredentialIssuers.contains(vcIssuer)) {
-                return true;
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var evidence = identityCheckCredential.getEvidence();
+            if (isNullOrEmpty(evidence)) {
+                LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vc.getClaimsSet().getIssuer());
+                return false;
             }
-            LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIssuer);
-            return false;
+            Cri cri;
+            try {
+                cri = Cri.valueOf(vc.getCriId());
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn(LogHelper
+                        .buildLogMessage("Unknown CRI")
+                        .with(LOG_CRI_ID.getFieldName(), vc.getCriId()));
+                return false;
+            }
+            return evidence.stream().anyMatch(check -> Gpg45IdentityCheckValidator.isSuccessful(check, cri));
         }
-
-        try {
-            return isValidEvidence(
-                    OBJECT_MAPPER.treeToValue(evidenceArray, CREDENTIAL_EVIDENCE_ITEM_LIST_TYPE));
-        } catch (JsonProcessingException e) {
-            throw new CredentialParseException("Unable to create credential evidence list", e);
-        }
+        return true;
     }
 
     public static List<VerifiableCredential> filterVCBasedOnProfileType(
@@ -162,43 +148,6 @@ public class VcHelper {
         var vot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
         return vot != null
                 && Vot.valueOf(vot).getProfileType().equals(ProfileType.OPERATIONAL_HMRC);
-    }
-
-    private static Set<String> getNonEvidenceCredentialIssuers() {
-        return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
-                .collect(Collectors.toSet());
-    }
-
-    private static boolean isValidEvidence(List<CredentialEvidenceItem> credentialEvidenceList) {
-        try {
-            for (CredentialEvidenceItem item : credentialEvidenceList) {
-                switch (item.getEvidenceType()) {
-                    case EVIDENCE -> {
-                        return Gpg45EvidenceValidator.isSuccessful(item);
-                    }
-                    case IDENTITY_FRAUD, FRAUD_WITH_ACTIVITY -> {
-                        return Gpg45FraudValidator.isSuccessful(item);
-                    }
-                    case VERIFICATION -> {
-                        return Gpg45VerificationValidator.isSuccessful(item);
-                    }
-                    case DCMAW -> {
-                        return Gpg45DcmawValidator.isSuccessful(item);
-                    }
-                    case F2F -> {
-                        return Gpg45F2fValidator.isSuccessful(item);
-                    }
-                    case NINO -> {
-                        return Gpg45NinoValidator.isSuccessful(item);
-                    }
-                    default -> LOGGER.info("Unexpected evidence type: {}", item.getEvidenceType());
-                }
-            }
-            return false;
-        } catch (UnknownEvidenceTypeException e) {
-            return false;
-        }
     }
 
     private static Integer getAge(String dobValue) {

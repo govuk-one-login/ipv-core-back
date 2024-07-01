@@ -44,6 +44,7 @@ import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,6 @@ class UserIdentityServiceTest {
                     RETURN_CODES_NON_CI_BREACHING_P0,
                     "🐧");
 
-    private static List<String> NON_EVIDENCE_CRI_TYPES = Cri.getNonEvidenceCriIds();
     public static OauthCriConfig claimedIdentityConfig;
 
     @Mock private ConfigService mockConfigService;
@@ -1878,10 +1878,10 @@ class UserIdentityServiceTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        NON_EVIDENCE_CRI_TYPES.forEach(
+        Arrays.stream(Cri.values()).forEach(
                 credentialIssuer ->
-                        when(mockConfigService.getComponentId(credentialIssuer))
-                                .thenReturn(credentialIssuer));
+                        when(mockConfigService.getComponentId(credentialIssuer.getId()))
+                                .thenReturn(credentialIssuer.getId()));
     }
 
     private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
