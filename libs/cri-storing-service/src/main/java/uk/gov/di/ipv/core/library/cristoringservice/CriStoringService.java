@@ -70,7 +70,8 @@ public class CriStoringService {
             JourneyRequest journeyRequest,
             String criId,
             String criOAuthSessionId,
-            ClientOAuthSessionItem clientOAuthSessionItem)
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            List<String> featureSets)
             throws SqsException, JsonProcessingException {
 
         recordCriResponse(
@@ -79,7 +80,7 @@ public class CriStoringService {
                 journeyRequest.getIpvSessionId(),
                 journeyRequest.getIpAddress(),
                 journeyRequest.getDeviceInformation(),
-                null,
+                featureSets,
                 clientOAuthSessionItem);
     }
 

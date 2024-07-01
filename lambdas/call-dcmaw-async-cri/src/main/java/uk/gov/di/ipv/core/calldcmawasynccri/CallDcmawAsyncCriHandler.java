@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -86,7 +87,8 @@ public class CallDcmawAsyncCriHandler
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(DCMAW_ASYNC.getId());
-        configService.setFeatureSet(RequestHelper.getFeatureSet(request));
+        List<String> featureSets = RequestHelper.getFeatureSet(request);
+        configService.setFeatureSet(featureSets);
 
         IpvSessionItem ipvSessionItem = null;
         try {
@@ -113,7 +115,7 @@ public class CallDcmawAsyncCriHandler
 
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.recordCriResponse(
-                    request, DCMAW_ASYNC.getId(), oauthState, clientOAuthSessionItem);
+                    request, DCMAW_ASYNC.getId(), oauthState, clientOAuthSessionItem, featureSets);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

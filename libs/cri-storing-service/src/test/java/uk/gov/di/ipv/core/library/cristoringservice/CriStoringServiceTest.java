@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -75,7 +76,35 @@ class CriStoringServiceTest {
         // Act
         criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem);
 
-        // Assert
+        verifyAndAssert(callbackRequest.getFeatureSet(), clientOAuthSessionItem);
+    }
+
+    @Test
+    void storeCriResponseShouldStoreResponseAndSendAuditEvent_forJourneyReq()
+            throws SqsException, JsonProcessingException {
+        // Arrange
+        var journeyRequest = new JourneyRequest();
+        journeyRequest.setIpvSessionId(TEST_IPV_SESSION_ID);
+        journeyRequest.setIpAddress("testAdd");
+        journeyRequest.setDeviceInformation("testDeviceInfo");
+        var featureSets = List.of("eWrite", "eRead");
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+
+        // Act
+        criStoringService.recordCriResponse(
+                journeyRequest,
+                TEST_CRI_ID,
+                TEST_CRI_OAUTH_SESSION_ID,
+                clientOAuthSessionItem,
+                featureSets);
+
+        verifyAndAssert(featureSets, clientOAuthSessionItem);
+    }
+
+    private void verifyAndAssert(
+            List<String> featureSets, ClientOAuthSessionItem clientOAuthSessionItem)
+            throws SqsException, JsonProcessingException {
+        // verify
         verify(mockCriResponseService)
                 .persistCriResponse(
                         userIdCaptor.capture(),
@@ -83,13 +112,13 @@ class CriStoringServiceTest {
                         vcResponseCaptor.capture(),
                         criOAuthSessionIdCaptor.capture(),
                         eq(CriResponseService.STATUS_PENDING),
-                        eq(callbackRequest.getFeatureSet()));
+                        eq(featureSets));
 
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
 
         // Assert
-        assertEquals(callbackRequest.getCredentialIssuerId(), criIdCaptor.getValue());
-        assertEquals(callbackRequest.getState(), criOAuthSessionIdCaptor.getValue());
+        assertEquals(TEST_CRI_ID, criIdCaptor.getValue());
+        assertEquals(TEST_CRI_OAUTH_SESSION_ID, criOAuthSessionIdCaptor.getValue());
         assertEquals(clientOAuthSessionItem.getUserId(), userIdCaptor.getValue());
         var expectedVcResponseDto =
                 VerifiableCredentialResponseDto.builder()
