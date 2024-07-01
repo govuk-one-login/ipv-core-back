@@ -363,31 +363,85 @@ public class CheckExistingIdentityHandler
                     evcsService.getVerifiableCredentialsByState(
                             userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-            logIdentityMismatches(tacticalVcs, evcsVcs);
-
             // Use pending return vcs to determine identity if available
             var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
             var isPendingEvcs = true;
+            var hasPartiallyMigratedVcs = false;
+            VerifiableCredentialBundle vcBundle = null;
             if (isNullOrEmpty(evcsIdentityVcs)) {
                 evcsIdentityVcs = evcsVcs.get(CURRENT);
                 isPendingEvcs = false;
             }
-
             if (!isNullOrEmpty(evcsIdentityVcs)) {
-                return new VerifiableCredentialBundle(
-                        configService.enabled(EVCS_READ_ENABLED) ? evcsIdentityVcs : tacticalVcs,
-                        true,
-                        isPendingEvcs);
+                vcBundle =
+                        new VerifiableCredentialBundle(
+                                configService.enabled(EVCS_READ_ENABLED)
+                                        ? evcsIdentityVcs
+                                        : tacticalVcs,
+                                true,
+                                isPendingEvcs);
+
+                hasPartiallyMigratedVcs =
+                        hasPartiallyMigratedVcs(
+                                tacticalVcs,
+                                evcsIdentityVcs,
+                                isPendingEvcs,
+                                vcBundle.isF2fIdentity());
+            }
+            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
+            // only use these evcs vcs if they exist and have been fully migrated
+            if (vcBundle != null && !hasPartiallyMigratedVcs) {
+                return vcBundle;
             }
         }
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
     }
 
+    private boolean hasPartiallyMigratedVcs(
+            List<VerifiableCredential> tacticalVcs,
+            List<VerifiableCredential> evcsVcs,
+            boolean isPending,
+            boolean isF2f) {
+
+        if (!isPending) {
+            return false;
+        }
+        // EVCS contains only a pending F2F VC
+        if (isF2f && evcsVcs.size() == 1) {
+            return true;
+        }
+        // Tactical contains the same as pending EVCS, with one extra F2F VC
+        if (tacticalVcs.size() == evcsVcs.size() + 1) {
+
+            var extraF2fVcs =
+                    tacticalVcs.stream()
+                            .filter(
+                                    credential ->
+                                            F2F.getId().equals(credential.getCriId())
+                                                    && evcsVcs.stream()
+                                                            .noneMatch(
+                                                                    evcsVC ->
+                                                                            evcsVC.getVcString()
+                                                                                    .equals(
+                                                                                            credential
+                                                                                                    .getVcString())))
+                            .toList();
+
+            return extraF2fVcs.size() == 1;
+        }
+        return false;
+    }
+
     @ExcludeFromGeneratedCoverageReport
     private void logIdentityMismatches(
             List<VerifiableCredential> tacticalVcs,
-            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs) {
+            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs,
+            boolean hasPartiallyMigratedVcs) {
 
+        if (hasPartiallyMigratedVcs) {
+            LOGGER.info(LogHelper.buildLogMessage("found partially migrated vcs"));
+            return;
+        }
         var migratedTacticalVcStrings =
                 tacticalVcs.stream()
                         .filter(vc -> vc.getMigrated() != null)
@@ -414,18 +468,23 @@ public class CheckExistingIdentityHandler
 
         // check if we have unmigrated credentials alongside migrated ones
         if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
-            LOGGER.warn("Unmigrated tactical credentials found alongside migrated credentials");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Unmigrated tactical credentials found alongside migrated credentials"));
         }
 
         // check all the tactical vcs are in the selected evcs vcs
         if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
             LOGGER.warn(
-                    "Failed to find corresponding evcs credential for migrated tactical credential");
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding evcs credential for migrated tactical credential"));
         }
 
         // check all the evcs vcs are in the tactical store
         if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
-            LOGGER.warn("Failed to find corresponding tactical credential for evcs credential");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding tactical credential for evcs credential"));
         }
     }
 
@@ -612,7 +671,8 @@ public class CheckExistingIdentityHandler
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(), vcBundle.credentials);
+                    auditEventUser.getUserId(),
+                    vcBundle.credentials.stream().filter(vc -> vc.getMigrated() == null).toList());
             sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
         }
     }
