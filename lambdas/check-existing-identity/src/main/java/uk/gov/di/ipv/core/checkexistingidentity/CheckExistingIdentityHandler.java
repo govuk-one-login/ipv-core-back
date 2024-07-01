@@ -70,6 +70,7 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -89,11 +90,13 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
@@ -111,6 +114,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH);
+    private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
+            new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
@@ -121,10 +126,12 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
-    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY =
-            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_PATH);
-    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
+    private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
+            new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
+    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH_DESCENDING =
+            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -231,7 +238,10 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
+    @SuppressWarnings({
+        "java:S3776", // Cognitive Complexity of methods should not be too high
+        "java:S6541" // "Brain method" PYIC-6901 should refactor this method
+    })
     @Tracing
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
@@ -256,6 +266,15 @@ public class CheckExistingIdentityHandler
                             && hasF2fVc
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity());
+
+            // If we want to prove a full identity from scratch we want to go for the lowest
+            // strength that is acceptable to the caller.
+            var preferredNewIdentityLevel = Vot.P2;
+            if (configService.enabled(P1_JOURNEYS_ENABLED)
+                    && clientOAuthSessionItem.getVtr().contains(Vot.P1.name())) {
+                preferredNewIdentityLevel = Vot.P1;
+            }
+
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -265,10 +284,13 @@ public class CheckExistingIdentityHandler
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "resetIdentity flag is enabled, reset users identity."));
-                return JOURNEY_REPROVE_IDENTITY;
+                if (preferredNewIdentityLevel == Vot.P1) {
+                    LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
+                    return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
+                }
+
+                LOGGER.info(LogHelper.buildLogMessage("Resetting P2 identity"));
+                return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
             if (ciScoringCheckResponse.isPresent()) {
@@ -305,7 +327,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             contraIndicators)
-                    : buildNoMatchResponse(contraIndicators);
+                    : buildNoMatchResponse(contraIndicators, preferredNewIdentityLevel);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -341,31 +363,85 @@ public class CheckExistingIdentityHandler
                     evcsService.getVerifiableCredentialsByState(
                             userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-            logIdentityMismatches(tacticalVcs, evcsVcs);
-
             // Use pending return vcs to determine identity if available
             var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
             var isPendingEvcs = true;
+            var hasPartiallyMigratedVcs = false;
+            VerifiableCredentialBundle vcBundle = null;
             if (isNullOrEmpty(evcsIdentityVcs)) {
                 evcsIdentityVcs = evcsVcs.get(CURRENT);
                 isPendingEvcs = false;
             }
-
             if (!isNullOrEmpty(evcsIdentityVcs)) {
-                return new VerifiableCredentialBundle(
-                        configService.enabled(EVCS_READ_ENABLED) ? evcsIdentityVcs : tacticalVcs,
-                        true,
-                        isPendingEvcs);
+                vcBundle =
+                        new VerifiableCredentialBundle(
+                                configService.enabled(EVCS_READ_ENABLED)
+                                        ? evcsIdentityVcs
+                                        : tacticalVcs,
+                                true,
+                                isPendingEvcs);
+
+                hasPartiallyMigratedVcs =
+                        hasPartiallyMigratedVcs(
+                                tacticalVcs,
+                                evcsIdentityVcs,
+                                isPendingEvcs,
+                                vcBundle.isF2fIdentity());
+            }
+            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
+            // only use these evcs vcs if they exist and have been fully migrated
+            if (vcBundle != null && !hasPartiallyMigratedVcs) {
+                return vcBundle;
             }
         }
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
     }
 
+    private boolean hasPartiallyMigratedVcs(
+            List<VerifiableCredential> tacticalVcs,
+            List<VerifiableCredential> evcsVcs,
+            boolean isPending,
+            boolean isF2f) {
+
+        if (!isPending) {
+            return false;
+        }
+        // EVCS contains only a pending F2F VC
+        if (isF2f && evcsVcs.size() == 1) {
+            return true;
+        }
+        // Tactical contains the same as pending EVCS, with one extra F2F VC
+        if (tacticalVcs.size() == evcsVcs.size() + 1) {
+
+            var extraF2fVcs =
+                    tacticalVcs.stream()
+                            .filter(
+                                    credential ->
+                                            F2F.getId().equals(credential.getCriId())
+                                                    && evcsVcs.stream()
+                                                            .noneMatch(
+                                                                    evcsVC ->
+                                                                            evcsVC.getVcString()
+                                                                                    .equals(
+                                                                                            credential
+                                                                                                    .getVcString())))
+                            .toList();
+
+            return extraF2fVcs.size() == 1;
+        }
+        return false;
+    }
+
     @ExcludeFromGeneratedCoverageReport
     private void logIdentityMismatches(
             List<VerifiableCredential> tacticalVcs,
-            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs) {
+            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs,
+            boolean hasPartiallyMigratedVcs) {
 
+        if (hasPartiallyMigratedVcs) {
+            LOGGER.info(LogHelper.buildLogMessage("found partially migrated vcs"));
+            return;
+        }
         var migratedTacticalVcStrings =
                 tacticalVcs.stream()
                         .filter(vc -> vc.getMigrated() != null)
@@ -392,18 +468,23 @@ public class CheckExistingIdentityHandler
 
         // check if we have unmigrated credentials alongside migrated ones
         if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
-            LOGGER.warn("Unmigrated tactical credentials found alongside migrated credentials");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Unmigrated tactical credentials found alongside migrated credentials"));
         }
 
         // check all the tactical vcs are in the selected evcs vcs
         if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
             LOGGER.warn(
-                    "Failed to find corresponding evcs credential for migrated tactical credential");
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding evcs credential for migrated tactical credential"));
         }
 
         // check all the evcs vcs are in the tactical store
         if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
-            LOGGER.warn("Failed to find corresponding tactical credential for evcs credential");
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "Failed to find corresponding tactical credential for evcs credential"));
         }
     }
 
@@ -508,7 +589,8 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private JourneyResponse buildNoMatchResponse(ContraIndicators contraIndicators)
+    private JourneyResponse buildNoMatchResponse(
+            ContraIndicators contraIndicators, Vot preferredNewIdentityLevel)
             throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
@@ -522,7 +604,13 @@ public class CheckExistingIdentityHandler
                                                     "Empty mitigation route for mitigated CI: %s",
                                                     mitigatedCI.get())));
         }
-        LOGGER.info(LogHelper.buildLogMessage("New IPV journey required"));
+
+        if (preferredNewIdentityLevel == Vot.P1) {
+            LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
+            return JOURNEY_IPV_GPG45_LOW;
+        }
+
+        LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
         return JOURNEY_IPV_GPG45_MEDIUM;
     }
 
@@ -583,7 +671,8 @@ public class CheckExistingIdentityHandler
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(), vcBundle.credentials);
+                    auditEventUser.getUserId(),
+                    vcBundle.credentials.stream().filter(vc -> vc.getMigrated() == null).toList());
             sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
         }
     }
@@ -654,7 +743,7 @@ public class CheckExistingIdentityHandler
                     CredentialParseException {
 
         var requestedVotsByStrength =
-                SUPPORTED_VOTS_BY_STRENGTH.stream()
+                SUPPORTED_VOTS_BY_STRENGTH_DESCENDING.stream()
                         .filter(vot -> vtr.contains(vot.name()))
                         .toList();
 
