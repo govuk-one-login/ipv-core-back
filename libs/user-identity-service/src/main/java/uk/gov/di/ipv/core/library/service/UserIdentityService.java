@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -31,9 +32,11 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.text.Normalizer;
 import java.text.ParseException;
@@ -57,9 +60,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -338,7 +338,8 @@ public class UserIdentityService {
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
-        Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVcs, profileType);
+        Optional<List<SocialSecurityRecord>> ninoClaim =
+                generateNinoClaim(successfulVcs, profileType);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
@@ -614,7 +615,7 @@ public class UserIdentityService {
                 .build();
     }
 
-    private Optional<JsonNode> generateNinoClaim(
+    private Optional<List<SocialSecurityRecord>> generateNinoClaim(
             List<VerifiableCredential> vcs, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
         String criToExtractFrom =
@@ -629,14 +630,18 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var ninoNode =
-                extractSubjectDetailFromVc(
-                        NINO_PROPERTY_NAME,
-                        ninoVc.get(),
-                        "Error while parsing Nino CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
+        var credentialSubject =
+                ((IdentityCheckCredential) ninoVc.get().getCredential()).getCredentialSubject();
 
-        if (ninoNode.isMissingNode()) {
+        if (credentialSubject == null) {
+            LOGGER.error(LogHelper.buildLogMessage("Credential subject missing from VC"));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+        }
+
+        var nino = credentialSubject.getSocialSecurityRecord();
+
+        if (nino == null || nino.isEmpty()) {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
@@ -647,8 +652,13 @@ public class UserIdentityService {
 
             return Optional.empty();
         }
+        var mappedNino = nino.stream().map(this::mapNinoToSocialSecurityRecord).toList();
 
-        return Optional.of(ninoNode);
+        return Optional.of(mappedNino);
+    }
+
+    private SocialSecurityRecord mapNinoToSocialSecurityRecord(SocialSecurityRecordDetails nino) {
+        return new SocialSecurityRecord(nino.getPersonalNumber());
     }
 
     private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs) {
@@ -765,18 +775,23 @@ public class UserIdentityService {
     }
 
     private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
-        JsonNode vcEvidenceNode = getVcClaimNode(vc.getVcString(), VC_EVIDENCE);
-        for (JsonNode evidence : vcEvidenceNode) {
-            if (isNonZeroInt(evidence.path(VC_EVIDENCE_VALIDITY))
-                    && isNonZeroInt(evidence.path(VC_EVIDENCE_STRENGTH))) {
+        var vcEvidence = ((IdentityCheckCredential) vc.getCredential()).getEvidence();
+        if (vcEvidence == null) {
+            return false;
+        }
+
+        for (IdentityCheck evidence : vcEvidence) {
+            if (isNonZeroInt(evidence.getValidityScore())
+                    && isNonZeroInt(evidence.getStrengthScore())) {
                 return true;
             }
         }
+
         return false;
     }
 
-    private boolean isNonZeroInt(JsonNode node) {
-        return node.isInt() && node.asInt() != 0;
+    private boolean isNonZeroInt(Integer value) {
+        return value != null && value != 0;
     }
 
     private List<VerifiableCredential> filterValidVCs(List<VerifiableCredential> vcs) {

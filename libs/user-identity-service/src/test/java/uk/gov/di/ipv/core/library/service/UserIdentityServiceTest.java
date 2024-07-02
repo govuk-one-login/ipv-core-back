@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -32,6 +31,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
@@ -1225,8 +1225,8 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode ninoClaim = credentials.getNinoClaim();
-        assertEquals("AA000003D", ninoClaim.get(0).get("personalNumber").asText());
+        SocialSecurityRecord ninoClaim = credentials.getNinoClaim().get(0);
+        assertEquals("AA000003D", ninoClaim.getPersonalNumber());
     }
 
     @Test
