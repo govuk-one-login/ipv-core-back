@@ -69,6 +69,7 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_TOKEN_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -193,20 +194,12 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId, null, emailAddress, isReverification);
 
-            String evcsAccessToken = null;
-            if (configService.enabled(EVCS_READ_ENABLED)
-                    || configService.enabled(EVCS_WRITE_ENABLED)) {
-                evcsAccessToken =
-                        validateEvcsAccessToken(
-                                getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
-                                claimsSet);
-            }
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
                             clientOAuthSessionId,
                             claimsSet,
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
-                            evcsAccessToken);
+                            getEvcsAccessToken(claimsSet));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -370,6 +363,27 @@ public class InitialiseIpvSessionHandler
                     e);
         } catch (JarValidationException e) {
             throw new RecoverableJarValidationException(e.getErrorObject(), claimsSet, e);
+        }
+    }
+
+    @Tracing
+    private String getEvcsAccessToken(JWTClaimsSet claimsSet)
+            throws RecoverableJarValidationException, ParseException {
+
+        var writeEnabled = configService.enabled(EVCS_WRITE_ENABLED);
+        var readEnabled = configService.enabled(EVCS_READ_ENABLED);
+        if (!configService.enabled(EVCS_TOKEN_READ_ENABLED) && !writeEnabled && !readEnabled) {
+            return null;
+        }
+        try {
+            return validateEvcsAccessToken(
+                    getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken), claimsSet);
+        } catch (RecoverableJarValidationException | ParseException e) {
+            if (writeEnabled || readEnabled) {
+                throw e;
+            } else {
+                return null;
+            }
         }
     }
 
