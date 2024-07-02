@@ -93,7 +93,9 @@ public class CriApiService {
                         criOAuthSessionItem);
 
         return fetchAccessToken(
-                callbackRequest.getCredentialIssuer(), criOAuthSessionItem, accessTokenRequest);
+                callbackRequest.getCredentialIssuer().getId(),
+                criOAuthSessionItem,
+                accessTokenRequest);
     }
 
     public BearerAccessToken fetchAccessToken(
@@ -105,12 +107,11 @@ public class CriApiService {
                 buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
                         basicAuthClientId, basicAuthClientSecret, criOAuthSessionItem);
 
-        return fetchAccessToken(
-                Cri.fromId(criOAuthSessionItem.getCriId()), criOAuthSessionItem, httpRequest);
+        return fetchAccessToken(criOAuthSessionItem.getCriId(), criOAuthSessionItem, httpRequest);
     }
 
     private BearerAccessToken fetchAccessToken(
-            Cri cri, CriOAuthSessionItem criOAuthSessionItem, HTTPRequest accessTokenRequest)
+            String criId, CriOAuthSessionItem criOAuthSessionItem, HTTPRequest accessTokenRequest)
             throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
 
@@ -126,7 +127,7 @@ public class CriApiService {
                                 new ErrorObject("unknown", "unknown"));
                 LOGGER.error(
                         "Failed to exchange token with credential issuer with ID '{}' at '{}'. Code: '{}', Description: {}, HttpStatus code: {}",
-                        cri.getId(),
+                        criId,
                         criConfig.getTokenUrl(),
                         errorObject.getCode(),
                         errorObject.getDescription(),
