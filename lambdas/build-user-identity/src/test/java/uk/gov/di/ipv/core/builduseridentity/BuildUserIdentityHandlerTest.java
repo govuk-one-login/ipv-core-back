@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.AddressClaim;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -160,7 +159,7 @@ class BuildUserIdentityHandlerTest {
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
-                        new AddressClaim(List.of(ADDRESS_1)),
+                        List.of(ADDRESS_1),
                         OBJECT_MAPPER.readTree(PASSPORT_JSON_1),
                         OBJECT_MAPPER.readTree(DRIVING_PERMIT_JSON_1),
                         OBJECT_MAPPER.readTree(NINO_JSON_1),

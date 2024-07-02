@@ -452,6 +452,18 @@ public interface VcFixtures {
             generateAddressVc(
                     TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build());
 
+    static VerifiableCredential vcAddressNone() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of(ALICE_PARKER_NAME))
+                        .address(List.of())
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.ADDRESS.getId(),
+                TestVc.builder().credentialSubject(credentialSubject).build());
+    }
+
     static VerifiableCredential vcAddressTwo() {
         return generateAddressVc(
                 TestVc.TestCredentialSubject.builder()
