@@ -42,6 +42,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
 
 import java.net.URI;
@@ -1446,11 +1447,11 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
 
-        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
-        assertEquals("123456", drivingPermitClaim.get(0).get("issueNumber").asText());
-        assertEquals("2042-10-01", drivingPermitClaim.get(0).get("expiryDate").asText());
+        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.getPersonalNumber());
+        assertEquals("123456", drivingPermitClaim.getIssueNumber());
+        assertEquals("2042-10-01", drivingPermitClaim.getExpiryDate());
     }
 
     @Test
@@ -1466,7 +1467,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P0, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
@@ -1490,7 +1491,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
@@ -1515,13 +1516,13 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingDrivingPermitProperty() throws Exception {
+    void shouldReturnNullWhenMissingDrivingPermitProperty() throws Exception {
         // Arrange
         var vcs = List.of(vcDrivingPermitMissingDrivingPermit());
 
@@ -1534,7 +1535,24 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertTrue(credentials.getDrivingPermitClaim().isNull());
+        assertNull(credentials.getDrivingPermitClaim());
+    }
+
+    @Test
+    void shouldReturnNullWhenEmptyDrivingPermitProperty() throws Exception {
+        // Arrange
+        var vcs = List.of(vcDrivingPermitEmptyDrivingPermit());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getDrivingPermitClaim());
     }
 
     @Test

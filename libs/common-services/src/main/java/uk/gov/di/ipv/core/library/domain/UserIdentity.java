@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class UserIdentity {
     private List<PassportDetails> passportClaim;
 
     @JsonProperty(DRIVING_PERMIT_CLAIM_NAME)
-    private JsonNode drivingPermitClaim;
+    private List<DrivingPermitDetails> drivingPermitClaim;
 
     @JsonProperty(NINO_CLAIM_NAME)
     private JsonNode ninoClaim;
@@ -61,7 +62,8 @@ public class UserIdentity {
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
             @JsonProperty(value = ADDRESS_CLAIM_NAME) List<Address> addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
-            @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
+            @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME)
+                    List<DrivingPermitDetails> drivingPermitClaim,
             @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
