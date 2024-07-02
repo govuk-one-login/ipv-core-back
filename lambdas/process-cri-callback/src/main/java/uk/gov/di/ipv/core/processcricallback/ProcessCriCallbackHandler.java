@@ -155,6 +155,7 @@ public class ProcessCriCallbackHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (ParseCriCallbackRequestException e) {
+
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_BAD_REQUEST,
@@ -229,7 +230,8 @@ public class ProcessCriCallbackHandler
     private CriCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
             throws ParseCriCallbackRequestException {
         try {
-            var callbackRequest = objectMapper.readValue(input.getBody(), CriCallbackRequest.class);
+            var body = input.getBody();
+            var callbackRequest = objectMapper.readValue(body, CriCallbackRequest.class);
             callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
             callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
             callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));

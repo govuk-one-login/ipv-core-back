@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -8,6 +10,8 @@ import java.util.List;
 
 @Getter
 @ExcludeFromGeneratedCoverageReport
+@JsonSerialize(using = CriSerializer.class)
+@JsonDeserialize(using = CriDeserializer.class)
 public enum Cri {
     PASSPORT("ukPassport"),
     DRIVING_LICENCE("drivingLicence"),
