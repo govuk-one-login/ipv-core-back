@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -83,7 +84,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 
@@ -1336,15 +1336,14 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode userIdentityJsonNode =
-                objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
-        JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
+        // There is one address in the claims set
+        Address address = userIdentity.getAddressClaim().get(0);
 
-        assertEquals("221B", address.get("buildingName").asText());
-        assertEquals("MILTON ROAD", address.get("streetName").asText());
-        assertEquals("Milton Keynes", address.get("addressLocality").asText());
-        assertEquals("MK15 5BX", address.get("postalCode").asText());
-        assertEquals("2024-01-01", address.get("validFrom").asText());
+        assertEquals("221B", address.getBuildingName());
+        assertEquals("MILTON ROAD", address.getStreetName());
+        assertEquals("Milton Keynes", address.getAddressLocality());
+        assertEquals("MK15 5BX", address.getPostalCode());
+        assertEquals("2024-01-01", address.getValidFrom());
     }
 
     @Test
@@ -1356,6 +1355,32 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo(),
                         vcMissingCredentialSubject());
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfNoAddressesInAddressVC() {
+        // Arrange
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressNone());
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
