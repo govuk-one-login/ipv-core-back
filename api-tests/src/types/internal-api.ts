@@ -1,0 +1,62 @@
+export interface AuthRequestBody {
+  responseType: string;
+  clientId: string;
+  redirectUri: string;
+  state: string;
+  scope: string;
+  request: string;
+}
+
+export type JourneyEngineResponse =
+  | JourneyResponse
+  | PageResponse
+  | CriResponse
+  | ClientResponse;
+
+export interface JourneyResponse {
+  journey: string;
+}
+
+export const isJourneyResponse = (
+  journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is JourneyResponse => {
+  return !!(journeyEngineResponse as JourneyResponse).journey;
+};
+
+export interface PageResponse {
+  page: string;
+  statusCode?: string;
+}
+
+export const isPageResponse = (
+  journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is PageResponse =>
+  !!(journeyEngineResponse as PageResponse).page;
+
+export interface CriResponse {
+  cri: { id: string; redirectUrl: string };
+}
+
+export const isCriResponse = (
+  journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is CriResponse => {
+  const maybeCriResponse = journeyEngineResponse as CriResponse;
+  return !!maybeCriResponse.cri?.id && !!maybeCriResponse.cri?.redirectUrl;
+};
+
+export interface ClientResponse {
+  client: { redirectUrl: string };
+}
+
+export const isClientResponse = (
+  journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is ClientResponse => {
+  return !!(journeyEngineResponse as ClientResponse).client?.redirectUrl;
+};
+
+export interface ProcessCriCallbackRequest {
+  authorizationCode: string;
+  credentialIssuerId: string;
+  redirectUri: string;
+  state: string;
+}
