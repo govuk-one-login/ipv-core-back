@@ -19,6 +19,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -66,11 +67,11 @@ public class VerifiableCredentialValidator {
     }
 
     public List<VerifiableCredential> parseAndValidate(
-            String userId, String criId, List<String> vcs, String signingKey, String componentId)
+            String userId, Cri cri, List<String> vcs, String signingKey, String componentId)
             throws VerifiableCredentialException {
         var validVcs = new ArrayList<VerifiableCredential>();
         for (String vc : vcs) {
-            validVcs.add(parseAndValidate(userId, criId, vc, signingKey, componentId, false));
+            validVcs.add(parseAndValidate(userId, cri, vc, signingKey, componentId, false));
         }
         return validVcs;
     }
@@ -78,7 +79,7 @@ public class VerifiableCredentialValidator {
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public VerifiableCredential parseAndValidate(
             String userId,
-            String criId,
+            Cri cri,
             String vcString,
             String signingKey,
             String componentId,
@@ -89,7 +90,7 @@ public class VerifiableCredentialValidator {
             validateSignature(vcJwt, signingKey);
             validateClaimsSet(vcJwt, componentId, userId, skipSubjectCheck);
 
-            var vc = VerifiableCredential.fromValidJwt(userId, criId, vcJwt);
+            var vc = VerifiableCredential.fromValidJwt(userId, cri, vcJwt);
 
             validateCiCodes(vc);
 

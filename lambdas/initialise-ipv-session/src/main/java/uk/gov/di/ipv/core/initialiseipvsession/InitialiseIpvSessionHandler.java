@@ -435,7 +435,7 @@ public class InitialiseIpvSessionHandler
         var inheritedIdentityVc =
                 verifiableCredentialValidator.parseAndValidate(
                         userId,
-                        HMRC_MIGRATION.getId(),
+                        HMRC_MIGRATION,
                         inheritedIdentityJwtList.get(0),
                         inheritedIdentityCriConfig.getSigningKey(),
                         inheritedIdentityCriConfig.getComponentId(),

@@ -72,14 +72,14 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT.getId(),
+                        PASSPORT,
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT.getId(), vc.getCriId());
+        assertEquals(PASSPORT, vc.getCri());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vc.getVcString());
     }
 
@@ -88,14 +88,14 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        Cri.PASSPORT.getId(),
+                        Cri.PASSPORT,
                         PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC.getVcString(),
                         VALID_RSA_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(Cri.PASSPORT.getId(), vc.getCriId());
+        assertEquals(Cri.PASSPORT, vc.getCri());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC.getVcString(), vc.getVcString());
     }
 
@@ -107,14 +107,14 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT.getId(),
+                        PASSPORT,
                         vcString,
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT.getId(), vc.getCriId());
+        assertEquals(PASSPORT, vc.getCri());
         assertEquals(vcString, vc.getVcString());
     }
 
@@ -123,13 +123,13 @@ class VerifiableCredentialValidatorTest {
         var vcs =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT.getId(),
+                        PASSPORT,
                         List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString()),
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID);
 
         assertEquals(TEST_USER, vcs.get(0).getUserId());
-        assertEquals(PASSPORT.getId(), vcs.get(0).getCriId());
+        assertEquals(PASSPORT, vcs.get(0).getCri());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vcs.get(0).getVcString());
     }
 
@@ -139,13 +139,13 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         "not the user",
-                        PASSPORT.getId(),
+                        PASSPORT,
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         true);
 
-        assertEquals(PASSPORT.getId(), vc.getCriId());
+        assertEquals(PASSPORT, vc.getCri());
         assertEquals(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(), vc.getVcString());
     }
 
@@ -157,7 +157,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     "not the user",
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
@@ -177,7 +177,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     "not the component id",
@@ -197,7 +197,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
                                     INVALID_EC_SIGNING_KEY, // intentionally not valid
                                     TEST_COMPONENT_ID,
@@ -223,14 +223,14 @@ class VerifiableCredentialValidatorTest {
         var vc =
                 vcJwtValidator.parseAndValidate(
                         TEST_USER,
-                        PASSPORT.getId(),
+                        PASSPORT,
                         verifiableCredentialsWithDerSignature.serialize(),
                         VALID_EC_SIGNING_KEY,
                         TEST_COMPONENT_ID,
                         false);
 
         assertEquals(TEST_USER, vc.getUserId());
-        assertEquals(PASSPORT.getId(), vc.getCriId());
+        assertEquals(PASSPORT, vc.getCri());
         assertEquals(verifiableCredentialsWithDerSignature.serialize(), vc.getVcString());
     }
 
@@ -252,7 +252,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     verifiableCredentialsWithDerSignature.serialize(),
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
@@ -275,7 +275,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     vcPassportM1aWithCI().getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
@@ -299,7 +299,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    TICF.getId(),
+                                    TICF,
                                     vcTicfWithCi().getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     "https://ticf.stubs.account.gov.uk",
@@ -329,7 +329,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             underTest.parseAndValidate(
                                     TEST_USER,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     vcPassportM1aWithCI().getVcString(),
                                     VALID_EC_SIGNING_KEY,
                                     TEST_COMPONENT_ID,
@@ -350,7 +350,7 @@ class VerifiableCredentialValidatorTest {
                         () -> {
                             vcJwtValidator.parseAndValidate(
                                     TEST_USER,
-                                    Cri.PASSPORT.getId(),
+                                    Cri.PASSPORT,
                                     vcPassportM1aWithCI().getVcString(),
                                     "not a valid signing key",
                                     TEST_COMPONENT_ID,

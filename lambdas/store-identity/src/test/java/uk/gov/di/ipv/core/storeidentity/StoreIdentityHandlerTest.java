@@ -138,7 +138,7 @@ class StoreIdentityHandlerTest {
         reset(mockSessionCredentialService);
         VCS.forEach(
                 credential -> {
-                    if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                    if (credential.getCri().equals(EXPERIAN_FRAUD)) {
                         credential.setMigrated(null);
                     } else {
                         credential.setMigrated(Instant.now());
@@ -164,7 +164,7 @@ class StoreIdentityHandlerTest {
         VCS.stream()
                 .map(
                         credential -> {
-                            if (credential.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                            if (credential.getCri().equals(EXPERIAN_FRAUD)) {
                                 credential.setMigrated(null);
                             } else {
                                 credential.setMigrated(Instant.now());
@@ -194,7 +194,7 @@ class StoreIdentityHandlerTest {
                 .getValue()
                 .forEach(
                         vc -> {
-                            if (vc.getCriId().equals(EXPERIAN_FRAUD.getId())) {
+                            if (vc.getCri().equals(EXPERIAN_FRAUD)) {
                                 assertNull(vc.getMigrated());
                             } else {
                                 assertNotNull(vc.getMigrated());

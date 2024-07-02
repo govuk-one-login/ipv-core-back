@@ -95,7 +95,7 @@ public class EvcsService {
             try {
                 var jwt = SignedJWT.parse(vc.vc());
                 var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
-                var credential = VerifiableCredential.fromValidJwt(userId, cri.getId(), jwt);
+                var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
                 if (!credentials.containsKey(vc.state())) {
                     credentials.put(vc.state(), new ArrayList<>());
                 }

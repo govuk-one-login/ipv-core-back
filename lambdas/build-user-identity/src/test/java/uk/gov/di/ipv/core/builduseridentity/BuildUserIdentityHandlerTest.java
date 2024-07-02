@@ -75,6 +75,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
+import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -188,9 +189,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
@@ -257,9 +256,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
@@ -340,9 +337,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -419,9 +414,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
@@ -497,9 +490,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(true);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
@@ -676,9 +667,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
 
@@ -913,15 +902,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                "test-cri-id",
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                                TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);

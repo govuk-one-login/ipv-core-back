@@ -132,7 +132,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_FRAUD.getId(),
+                                                EXPERIAN_FRAUD,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -246,7 +246,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_FRAUD.getId(),
+                                                EXPERIAN_FRAUD,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,
@@ -357,7 +357,7 @@ class CredentialTests {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                EXPERIAN_FRAUD.getId(),
+                                                EXPERIAN_FRAUD,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,

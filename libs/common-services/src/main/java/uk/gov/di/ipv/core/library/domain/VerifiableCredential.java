@@ -17,18 +17,18 @@ import java.util.Date;
 @EqualsAndHashCode(exclude = "signedJwt")
 public class VerifiableCredential {
     private final String userId;
-    private final String criId;
+    private final Cri cri;
     private final String vcString;
     private final JWTClaimsSet claimsSet;
     private final SignedJWT signedJwt;
     private Instant migrated;
     private final uk.gov.di.model.VerifiableCredential credential;
 
-    private VerifiableCredential(String userId, String criId, SignedJWT signedJwt, Instant migrated)
+    private VerifiableCredential(String userId, Cri cri, SignedJWT signedJwt, Instant migrated)
             throws CredentialParseException {
         try {
             this.userId = userId;
-            this.criId = criId;
+            this.cri = cri;
             this.vcString = signedJwt.serialize();
             this.claimsSet = signedJwt.getJWTClaimsSet();
             this.signedJwt = signedJwt;
@@ -40,9 +40,9 @@ public class VerifiableCredential {
         }
     }
 
-    public static VerifiableCredential fromValidJwt(String userId, String criId, SignedJWT jwt)
+    public static VerifiableCredential fromValidJwt(String userId, Cri cri, SignedJWT jwt)
             throws CredentialParseException {
-        return new VerifiableCredential(userId, criId, jwt, null);
+        return new VerifiableCredential(userId, cri, jwt, null);
     }
 
     public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
@@ -56,7 +56,7 @@ public class VerifiableCredential {
             var jwt = SignedJWT.parse(vcStoreItem.getCredential());
             return new VerifiableCredential(
                     vcStoreItem.getUserId(),
-                    vcStoreItem.getCredentialIssuer(),
+                    Cri.fromId(vcStoreItem.getCredentialIssuer()),
                     jwt,
                     vcStoreItem.getMigrated());
         } catch (ParseException e) {
@@ -68,7 +68,7 @@ public class VerifiableCredential {
         VcStoreItem vcStoreItem =
                 VcStoreItem.builder()
                         .userId(userId)
-                        .credentialIssuer(criId)
+                        .credentialIssuer(cri.getId())
                         .dateCreated(Instant.now())
                         .credential(vcString)
                         .migrated(migrated)
@@ -87,7 +87,7 @@ public class VerifiableCredential {
         try {
             return new VerifiableCredential(
                     userId,
-                    sessionCredentialItem.getCriId(),
+                    Cri.fromId(sessionCredentialItem.getCriId()),
                     SignedJWT.parse(sessionCredentialItem.getCredential()),
                     sessionCredentialItem.getMigrated());
         } catch (ParseException e) {
@@ -99,6 +99,6 @@ public class VerifiableCredential {
     public SessionCredentialItem toSessionCredentialItem(
             String ipvSessionId, boolean receivedThisSession) {
         return new SessionCredentialItem(
-                ipvSessionId, criId, signedJwt, receivedThisSession, migrated);
+                ipvSessionId, cri.getId(), signedJwt, receivedThisSession, migrated);
     }
 }

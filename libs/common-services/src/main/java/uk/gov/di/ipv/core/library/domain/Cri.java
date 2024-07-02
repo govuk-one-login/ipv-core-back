@@ -22,7 +22,8 @@ public enum Cri {
     TICF("ticf"),
     HMRC_MIGRATION("hmrcMigration", true, false),
     HMRC_KBV("hmrcKbv"),
-    BAV("bav");
+    BAV("bav"),
+    CIMIT("cimit");
 
     private final String id;
     private final boolean isOperationalCri;
@@ -36,6 +37,15 @@ public enum Cri {
         this.id = id;
         this.isOperationalCri = isOperational;
         this.isNonEvidenceCri = isNonEvidence;
+    }
+
+    public static Cri fromId(String id) {
+        for (var cri : values()) {
+            if (cri.getId().equals(id)) {
+                return cri;
+            }
+        }
+        throw new IllegalArgumentException("no cri found with ID " + id);
     }
 
     public static final List<String> getOperationalCriIds() {

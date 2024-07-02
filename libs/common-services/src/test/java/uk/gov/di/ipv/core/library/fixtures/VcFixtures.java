@@ -314,7 +314,7 @@ public interface VcFixtures {
     VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.PASSPORT.getId(),
+                    Cri.PASSPORT,
                     TestVc.builder()
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
@@ -327,7 +327,7 @@ public interface VcFixtures {
     VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.PASSPORT.getId(),
+                    Cri.PASSPORT,
                     TestVc.builder()
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
@@ -343,7 +343,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(UNSUCCESSFUL_EVIDENCE)
@@ -356,7 +356,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(TEST_CI_EVIDENCE)
@@ -369,7 +369,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().passport(PASSPORT_DETAILS).build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(Collections.emptyList())
@@ -385,7 +385,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(SUCCESSFUL_EVIDENCE)
@@ -400,7 +400,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(SUCCESSFUL_EVIDENCE)
@@ -415,7 +415,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(SUCCESSFUL_EVIDENCE)
@@ -427,7 +427,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().passport(Collections.emptyList()).build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.PASSPORT.getId(),
+                Cri.PASSPORT,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(SUCCESSFUL_EVIDENCE)
@@ -437,7 +437,7 @@ public interface VcFixtures {
     VerifiableCredential VC_ADDRESS =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.ADDRESS.getId(),
+                    Cri.ADDRESS,
                     TestVc.builder()
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
@@ -453,14 +453,14 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().credentialSubject(credentialSubject).build());
     }
 
     VerifiableCredential M1A_ADDRESS_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.ADDRESS.getId(),
+                    Cri.ADDRESS,
                     TestVc.builder()
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
@@ -480,7 +480,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
                 TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
@@ -494,7 +494,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
                 TEST_ISSUER_INTEGRATION,
                 Instant.ofEpochSecond(1658829720));
@@ -503,7 +503,7 @@ public interface VcFixtures {
     VerifiableCredential M1A_EXPERIAN_FRAUD_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.EXPERIAN_FRAUD.getId(),
+                    Cri.EXPERIAN_FRAUD,
                     TestVc.builder()
                             .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                             .credentialSubject(
@@ -518,7 +518,7 @@ public interface VcFixtures {
     VerifiableCredential EXPIRED_M1A_EXPERIAN_FRAUD_VC =
             generateVerifiableCredential(
                     TEST_SUBJECT,
-                    Cri.EXPERIAN_FRAUD.getId(),
+                    Cri.EXPERIAN_FRAUD,
                     TestVc.builder()
                             .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                             .credentialSubject(
@@ -538,7 +538,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_FAILED_EVIDENCE)
                         .credentialSubject(credentialSubject)
@@ -552,7 +552,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_3)).build();
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_WITH_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -569,7 +569,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                EXPERIAN_KBV.getId(),
+                EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -589,7 +589,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -611,7 +611,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "user-id",
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
                         .credentialSubject(credentialSubject)
@@ -628,7 +628,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
                         .credentialSubject(credentialSubject)
@@ -645,7 +645,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 TestVc.builder()
                         .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
@@ -658,7 +658,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_4)).build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 TestVc.builder()
                         .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
@@ -674,7 +674,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 TestVc.builder()
                         .evidence(DCMAW_FAILED_EVIDENCE)
                         .credentialSubject(credentialSubject)
@@ -692,7 +692,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 TestVc.builder()
                         .evidence(DCMAW_EVIDENCE_DATA_CHECK)
                         .credentialSubject(credentialSubject)
@@ -711,7 +711,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
-                NINO.getId(),
+                NINO,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -736,7 +736,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
-                NINO.getId(),
+                NINO,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -760,7 +760,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
-                NINO.getId(),
+                NINO,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -778,7 +778,7 @@ public interface VcFixtures {
     static VerifiableCredential vcTicf() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                TICF.getId(),
+                TICF,
                 TestVc.builder()
                         .credentialSubject(null)
                         .evidence(TICF_EVIDENCE)
@@ -794,7 +794,7 @@ public interface VcFixtures {
     static VerifiableCredential vcTicfWithCi() {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                TICF.getId(),
+                TICF,
                 TestVc.builder()
                         .credentialSubject(null)
                         .evidence(
@@ -823,7 +823,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.EXPERIAN_KBV.getId(),
+                Cri.EXPERIAN_KBV,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -840,7 +840,7 @@ public interface VcFixtures {
     VerifiableCredential M1B_DCMAW_VC =
             generateVerifiableCredential(
                     "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                    DCMAW.getId(),
+                    DCMAW,
                     TestVc.builder()
                             .evidence(
                                     List.of(
@@ -887,7 +887,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                F2F.getId(),
+                F2F,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -941,7 +941,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                F2F.getId(),
+                F2F,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -977,7 +977,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                F2F.getId(),
+                F2F,
                 TestVc.builder()
                         .evidence(
                                 List.of(
@@ -993,14 +993,14 @@ public interface VcFixtures {
     static VerifiableCredential vcMissingCredentialSubject() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().credentialSubject(null).build());
     }
 
     static VerifiableCredential vcEmptyEvidence() {
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().evidence(Collections.emptyList()).build());
     }
 
@@ -1023,7 +1023,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION.getId(),
+                HMRC_MIGRATION,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(List.of(evidence))
@@ -1045,7 +1045,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION.getId(),
+                HMRC_MIGRATION,
                 TestVc.builder().evidence(null).credentialSubject(credentialSubject).build(),
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL250.toString(),
@@ -1073,7 +1073,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION.getId(),
+                HMRC_MIGRATION,
                 TestVc.builder()
                         .credentialSubject(credentialSubject)
                         .evidence(List.of(evidence))
@@ -1096,7 +1096,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION.getId(),
+                HMRC_MIGRATION,
                 TestVc.builder()
                         .evidence(Collections.emptyList())
                         .credentialSubject(credentialSubject)

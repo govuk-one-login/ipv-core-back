@@ -127,7 +127,7 @@ class CriResponseServiceTest {
             VerifiableCredential vc, Instant dateCreated) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(vc.getUserId());
-        criResponseItem.setCredentialIssuer(vc.getCriId());
+        criResponseItem.setCredentialIssuer(vc.getCri().getId());
         criResponseItem.setIssuerResponse(vc.getVcString());
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);

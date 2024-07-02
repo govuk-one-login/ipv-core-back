@@ -185,9 +185,9 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (var vc : vcs) {
-            if (vc.getCriId().equals(ADDRESS.getId())
+            if (vc.getCri().equals(ADDRESS)
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, configService.getComponentId(vc.getCriId()))) {
+                            currentVcStatuses, configService.getComponentId(vc.getCri().getId()))) {
                 JsonNode addressNode =
                         mapper.readTree(SignedJWT.parse(vc.getVcString()).getPayload().toString())
                                 .path(VC_CLAIM)

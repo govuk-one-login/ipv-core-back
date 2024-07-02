@@ -67,8 +67,8 @@ public class VerifiableCredentialService {
 
     public void deleteHmrcInheritedIdentityIfPresent(List<VerifiableCredential> vcs) {
         for (var vc : vcs) {
-            if (HMRC_MIGRATION.getId().equals(vc.getCriId())) {
-                deleteVcStoreItem(vc.getUserId(), vc.getCriId());
+            if (HMRC_MIGRATION.equals(vc.getCri())) {
+                deleteVcStoreItem(vc.getUserId(), vc.getCri().getId());
             }
         }
     }
@@ -89,7 +89,7 @@ public class VerifiableCredentialService {
             LOGGER.info(message);
         }
         for (var vc : vcs) {
-            deleteVcStoreItem(vc.getUserId(), vc.getCriId());
+            deleteVcStoreItem(vc.getUserId(), vc.getCri().getId());
         }
     }
 

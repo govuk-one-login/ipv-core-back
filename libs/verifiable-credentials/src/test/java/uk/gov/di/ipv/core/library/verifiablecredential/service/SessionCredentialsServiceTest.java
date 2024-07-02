@@ -54,9 +54,6 @@ class SessionCredentialsServiceTest {
     private static final VerifiableCredential CREDENTIAL_2 = vcVerificationM1a();
     private static final VerifiableCredential CREDENTIAL_3 = vcNinoSuccessful();
     private static final String USER_ID = "userId";
-    private static final String CRI_ID_1 = "criId1";
-    private static final String CRI_ID_2 = "criId2";
-    private static final String CRI_ID_3 = "criId3";
     @Captor private ArgumentCaptor<SessionCredentialItem> sessionCredentialItemArgumentCaptor;
     @Captor private ArgumentCaptor<String> ipvSessionIdArgumentCaptor;
     @Mock private DataStore<SessionCredentialItem> mockDataStore;
@@ -107,17 +104,25 @@ class SessionCredentialsServiceTest {
             var now = Instant.now();
             var item1 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false, now);
+                            SESSION_ID,
+                            CREDENTIAL_1.getCri().getId(),
+                            CREDENTIAL_1.getSignedJwt(),
+                            false,
+                            now);
             var item2 =
                     new SessionCredentialItem(
                             SESSION_ID,
-                            CRI_ID_2,
+                            CREDENTIAL_2.getCri().getId(),
                             CREDENTIAL_2.getSignedJwt(),
                             false,
                             now.plusSeconds(10));
             var item3 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_3, CREDENTIAL_3.getSignedJwt(), true, null);
+                            SESSION_ID,
+                            CREDENTIAL_3.getCri().getId(),
+                            CREDENTIAL_3.getSignedJwt(),
+                            true,
+                            null);
 
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(item1, item2, item3));
 
@@ -138,7 +143,11 @@ class SessionCredentialsServiceTest {
         void getCredentialsShouldAllowFilteringByReceivedThisSession() throws Exception {
             var item1 =
                     new SessionCredentialItem(
-                            SESSION_ID, CRI_ID_1, CREDENTIAL_1.getSignedJwt(), false, null);
+                            SESSION_ID,
+                            CREDENTIAL_1.getCri().getId(),
+                            CREDENTIAL_1.getSignedJwt(),
+                            false,
+                            null);
 
             when(mockDataStore.getItemsWithBooleanAttribute(
                             SESSION_ID, "receivedThisSession", true))
@@ -158,7 +167,8 @@ class SessionCredentialsServiceTest {
             when(mockSignedJwt.serialize()).thenReturn("🫠");
 
             var sessionCredentialItem =
-                    new SessionCredentialItem(SESSION_ID, CRI_ID_1, mockSignedJwt, false, null);
+                    new SessionCredentialItem(
+                            SESSION_ID, CREDENTIAL_1.getCri().getId(), mockSignedJwt, false, null);
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(sessionCredentialItem));
 
             var caughtException =
@@ -214,23 +224,22 @@ class SessionCredentialsServiceTest {
         void deleteSessionCredentialsForCriShouldDeleteAllCredentialsFromCriForSession()
                 throws Exception {
             var sessionCredentialItem = new SessionCredentialItem();
-            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1))
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
                     .thenReturn(List.of(sessionCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForCri(SESSION_ID, CRI_ID_1);
+            sessionCredentialService.deleteSessionCredentialsForCri(
+                    SESSION_ID, CREDENTIAL_1.getCri().getId());
 
-            verify(mockDataStore).getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1);
+            verify(mockDataStore)
+                    .getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId());
             verify(mockDataStore).delete(List.of(sessionCredentialItem));
         }
 
         @Test
         void deleteSessionCredentialsForResetTypeShouldPersistAddressVcForNameChange()
                 throws Exception {
-            var addressVc =
-                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
-            var fraudVc =
-                    generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
+            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
+            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -248,16 +257,12 @@ class SessionCredentialsServiceTest {
         @Test
         void deleteSessionCredentialsForResetTypeShouldDeleteAddressAndFraudForAddressChange()
                 throws Exception {
-            var addressVc =
-                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
-            var fraudVc =
-                    generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
+            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
+            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW.getId(), vcClaim(Map.of()));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
 
-            var hmrcKbvVc =
-                    generateVerifiableCredential("userId", HMRC_KBV.getId(), vcClaim(Map.of()));
+            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -282,16 +287,12 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialsForResetTypeShouldDeleteAllVcsForAll() throws Exception {
-            var addressVc =
-                    generateVerifiableCredential("userId", ADDRESS.getId(), vcClaim(Map.of()));
-            var fraudVc =
-                    generateVerifiableCredential(
-                            "userId", EXPERIAN_FRAUD.getId(), vcClaim(Map.of()));
+            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
+            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
 
-            var dcmawVc = generateVerifiableCredential("userId", DCMAW.getId(), vcClaim(Map.of()));
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
 
-            var hmrcKbvVc =
-                    generateVerifiableCredential("userId", HMRC_KBV.getId(), vcClaim(Map.of()));
+            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
 
             var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
             var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
@@ -320,7 +321,7 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialsForCriShouldThrowIfProblemGetting() {
-            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1))
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
                     .thenThrow(new IllegalStateException());
 
             var verifiableCredentialException =
@@ -328,7 +329,7 @@ class SessionCredentialsServiceTest {
                             VerifiableCredentialException.class,
                             () ->
                                     sessionCredentialService.deleteSessionCredentialsForCri(
-                                            SESSION_ID, CRI_ID_1));
+                                            SESSION_ID, CREDENTIAL_1.getCri().getId()));
 
             assertEquals(
                     HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
@@ -338,7 +339,8 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialsForCriShouldThrowIfProblemDeleting() {
-            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CRI_ID_1)).thenReturn(List.of());
+            when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
+                    .thenReturn(List.of());
             when(mockDataStore.delete(any())).thenThrow(new IllegalStateException());
 
             var verifiableCredentialException =
@@ -346,7 +348,7 @@ class SessionCredentialsServiceTest {
                             VerifiableCredentialException.class,
                             () ->
                                     sessionCredentialService.deleteSessionCredentialsForCri(
-                                            SESSION_ID, CRI_ID_1));
+                                            SESSION_ID, CREDENTIAL_1.getCri().getId()));
 
             assertEquals(
                     HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());

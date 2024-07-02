@@ -150,7 +150,7 @@ class ContractTest {
                                 var vc =
                                         verifiableCredentialJwtValidator.parseAndValidate(
                                                 TEST_USER,
-                                                CLAIMED_IDENTITY.getId(),
+                                                CLAIMED_IDENTITY,
                                                 credential,
                                                 EC_PRIVATE_KEY_JWK,
                                                 TEST_ISSUER,

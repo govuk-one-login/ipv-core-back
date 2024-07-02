@@ -114,7 +114,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(verifiableCredentialValidator.parseAndValidate(
-                        eq(TEST_USER_ID), eq(TEST_CREDENTIAL_ISSUER_ID), anyList(), any(), any()))
+                        eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -204,7 +204,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(verifiableCredentialValidator.parseAndValidate(
-                        eq(TEST_USER_ID), eq(TEST_CREDENTIAL_ISSUER_ID), anyList(), any(), any()))
+                        eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -235,7 +235,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(verifiableCredentialValidator.parseAndValidate(
-                        eq(TEST_USER_ID), eq(TEST_CREDENTIAL_ISSUER_ID), anyList(), any(), any()))
+                        eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
