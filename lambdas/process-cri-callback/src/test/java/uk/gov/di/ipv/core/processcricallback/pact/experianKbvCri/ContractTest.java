@@ -978,7 +978,11 @@ class ContractTest {
     @NotNull
     private static CriOAuthSessionItem getCriOAuthSessionItem() {
         return new CriOAuthSessionItem(
-                "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                "dummySessionId",
+                "dummyOAuthSessionId",
+                EXPERIAN_KBV.getId(),
+                "dummyConnection",
+                900);
     }
 
     @NotNull

@@ -120,7 +120,7 @@ class ContractTest {
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
-                                "dummyCriId",
+                                F2F.getId(),
                                 "dummyConnection",
                                 900));
 
@@ -213,7 +213,7 @@ class ContractTest {
                         new CriOAuthSessionItem(
                                 "dummySessionId",
                                 "dummyOAuthSessionId",
-                                "dummyCriId",
+                                F2F.getId(),
                                 "dummyConnection",
                                 900));
         // Assert
@@ -300,7 +300,7 @@ class ContractTest {
                                     new CriOAuthSessionItem(
                                             "dummySessionId",
                                             "dummyOAuthSessionId",
-                                            "dummyCriId",
+                                            F2F.getId(),
                                             "dummyConnection",
                                             900));
                         });

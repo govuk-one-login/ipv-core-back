@@ -610,7 +610,11 @@ class CredentialTests {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    DRIVING_LICENCE.getId(),
+                    "dummyConnection",
+                    900);
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team
