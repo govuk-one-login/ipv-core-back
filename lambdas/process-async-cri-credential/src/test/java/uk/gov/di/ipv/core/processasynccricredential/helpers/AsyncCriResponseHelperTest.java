@@ -40,7 +40,8 @@ class AsyncCriResponseHelperTest {
         assertTrue(isSuccessAsyncCriResponse(response));
         var successAsyncCriResponse = (SuccessAsyncCriResponse) response;
         assertEquals(TEST_USER, successAsyncCriResponse.getUserId());
-        assertEquals(DEFAULT_CREDENTIAL_ISSUER, successAsyncCriResponse.getCredentialIssuer());
+        assertEquals(
+                DEFAULT_CREDENTIAL_ISSUER, successAsyncCriResponse.getCredentialIssuer().getId());
         assertEquals(1, successAsyncCriResponse.getVerifiableCredentialJWTs().size());
         assertEquals(TEST_JWT, successAsyncCriResponse.getVerifiableCredentialJWTs().get(0));
     }
@@ -51,7 +52,8 @@ class AsyncCriResponseHelperTest {
         assertFalse(isSuccessAsyncCriResponse(response));
         var errorAsyncCriResponse = (ErrorAsyncCriResponse) response;
         assertEquals(TEST_USER, errorAsyncCriResponse.getUserId());
-        assertEquals(DEFAULT_CREDENTIAL_ISSUER, errorAsyncCriResponse.getCredentialIssuer());
+        assertEquals(
+                DEFAULT_CREDENTIAL_ISSUER, errorAsyncCriResponse.getCredentialIssuer().getId());
         assertEquals(TEST_ERROR, errorAsyncCriResponse.getError());
         assertEquals(TEST_ERROR_DESCRIPTION, errorAsyncCriResponse.getErrorDescription());
     }

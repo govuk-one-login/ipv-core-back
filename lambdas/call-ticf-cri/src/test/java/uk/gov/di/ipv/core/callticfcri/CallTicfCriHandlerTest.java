@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -92,7 +93,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockCriStoringService)
                 .storeVcs(
-                        TICF.getId(),
+                        TICF,
                         "an-ip-address",
                         "device-information",
                         List.of(mockVerifiableCredential),
@@ -240,7 +241,7 @@ class CallTicfCriHandlerTest {
                         CriStoringService.class
                                 .getMethod(
                                         "storeVcs",
-                                        String.class,
+                                        Cri.class,
                                         String.class,
                                         String.class,
                                         List.class,

@@ -540,7 +540,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV.getId(),
+                        EXPERIAN_KBV,
                         getCriOAuthSessionItem());
 
         // Assert
@@ -676,7 +676,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV.getId(),
+                        EXPERIAN_KBV,
                         getCriOAuthSessionItem());
 
         // Assert
@@ -785,7 +785,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        EXPERIAN_KBV.getId(),
+                                        EXPERIAN_KBV,
                                         getCriOAuthSessionItem()));
 
         // Assert
@@ -857,7 +857,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        EXPERIAN_KBV.getId(),
+                        EXPERIAN_KBV,
                         getCriOAuthSessionItem());
 
         // Assert
@@ -978,14 +978,18 @@ class ContractTest {
     @NotNull
     private static CriOAuthSessionItem getCriOAuthSessionItem() {
         return new CriOAuthSessionItem(
-                "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                "dummySessionId",
+                "dummyOAuthSessionId",
+                EXPERIAN_KBV.getId(),
+                "dummyConnection",
+                900);
     }
 
     @NotNull
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                EXPERIAN_KBV.getId(),
+                EXPERIAN_KBV,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=kbv",
                 "dummyState",

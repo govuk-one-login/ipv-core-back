@@ -126,9 +126,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        NINO.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -236,9 +234,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        NINO.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -341,9 +337,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        NINO.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -438,9 +432,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        NINO.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -535,7 +527,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        NINO.getId(),
+                                        NINO,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -691,7 +683,7 @@ class ContractTest {
     private static CriCallbackRequest getCallbackRequest(String authCode) {
         return new CriCallbackRequest(
                 authCode,
-                NINO.getId(),
+                NINO,
                 "dummySessionId",
                 "https://identity.staging.account.gov.uk/credential-issuer/callback?id=nino",
                 "dummyState",
@@ -755,7 +747,7 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId", "dummyOAuthSessionId", NINO.getId(), "dummyConnection", 900);
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =

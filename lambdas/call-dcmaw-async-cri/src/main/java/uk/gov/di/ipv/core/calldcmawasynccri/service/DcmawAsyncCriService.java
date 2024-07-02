@@ -83,6 +83,6 @@ public class DcmawAsyncCriService {
                         criConfig.getClientCallbackUrl().toString());
 
         return criApiService.fetchVerifiableCredential(
-                accessToken, criId, criOAuthSessionItem, credentialRequestBody);
+                accessToken, DCMAW_ASYNC, criOAuthSessionItem, credentialRequestBody);
     }
 }

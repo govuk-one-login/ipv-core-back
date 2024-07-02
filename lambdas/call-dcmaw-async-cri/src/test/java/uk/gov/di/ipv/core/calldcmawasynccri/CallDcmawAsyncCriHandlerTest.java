@@ -86,7 +86,7 @@ class CallDcmawAsyncCriHandlerTest {
         verify(mockCriStoringService)
                 .recordCriResponse(
                         eq(input),
-                        eq(DCMAW_ASYNC.getId()),
+                        eq(DCMAW_ASYNC),
                         any(String.class),
                         eq(clientOAuthSessionItem),
                         eq(Collections.emptyList()));
