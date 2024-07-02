@@ -27,6 +27,9 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

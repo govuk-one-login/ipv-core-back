@@ -10,6 +10,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.time.Instant;
+import java.util.List;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -25,6 +26,7 @@ public class CriResponseItem implements DynamodbItem {
     private Instant dateCreated;
     private String status;
     private long ttl;
+    private List<String> featureSet;
 
     @DynamoDbPartitionKey
     public String getUserId() {

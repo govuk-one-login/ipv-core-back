@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -20,6 +21,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -61,12 +64,15 @@ class CriResponseServiceTest {
 
     @Test
     void shouldPersistCriResponse() {
+        List<String> featureSet =
+                List.of(EVCS_WRITE_ENABLED.getName(), EVCS_READ_ENABLED.getName());
         criResponseService.persistCriResponse(
                 TEST_USER_ID,
                 F2F,
                 TEST_ISSUER_RESPONSE,
                 TEST_OAUTH_STATE,
-                CriResponseService.STATUS_PENDING);
+                CriResponseService.STATUS_PENDING,
+                featureSet);
 
         ArgumentCaptor<CriResponseItem> persistedCriResponseItemCaptor =
                 ArgumentCaptor.forClass(CriResponseItem.class);
@@ -78,6 +84,7 @@ class CriResponseServiceTest {
         assertEquals(F2F.getId(), persistedCriResponseItem.getCredentialIssuer());
         assertEquals(TEST_ISSUER_RESPONSE, persistedCriResponseItem.getIssuerResponse());
         assertEquals(TEST_OAUTH_STATE, persistedCriResponseItem.getOauthState());
+        assertEquals(featureSet, persistedCriResponseItem.getFeatureSet());
     }
 
     @Test

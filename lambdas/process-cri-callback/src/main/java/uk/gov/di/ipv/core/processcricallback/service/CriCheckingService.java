@@ -64,6 +64,9 @@ public class CriCheckingService {
     private static final JourneyResponse JOURNEY_TEMPORARILY_UNAVAILABLE =
             new JourneyResponse(JOURNEY_TEMPORARILY_UNAVAILABLE_PATH);
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
+    private static final JourneyResponse JOURNEY_INVALID_REQUEST =
+            new JourneyResponse(JourneyUris.JOURNEY_INVALID_REQUEST_PATH);
+
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -137,6 +140,7 @@ public class CriCheckingService {
         return (switch (errorCode) {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
             case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
+            case OAuth2Error.INVALID_REQUEST_CODE -> JOURNEY_INVALID_REQUEST;
             default -> JOURNEY_ERROR;
         });
     }

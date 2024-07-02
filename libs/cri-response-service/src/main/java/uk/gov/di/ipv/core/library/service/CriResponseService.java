@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
+import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
@@ -39,7 +40,8 @@ public class CriResponseService {
             Cri credentialIssuer,
             String issuerResponse,
             String oauthState,
-            String status) {
+            String status,
+            List<String> featureSet) {
         CriResponseItem criResponseItem =
                 CriResponseItem.builder()
                         .userId(userId)
@@ -48,6 +50,7 @@ public class CriResponseService {
                         .oauthState(oauthState)
                         .dateCreated(Instant.now())
                         .status(status)
+                        .featureSet(featureSet)
                         .build();
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
