@@ -12,6 +12,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.crt.AwsCrtHttpClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.appconfigdata.AppConfigDataClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -71,6 +72,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
@@ -102,6 +104,8 @@ public class ConfigService {
     private Instant appConfigLastPull;
     private Map<String, String> configMap;
     private Instant lastRefresh;
+    private AppConfigDataClient appConfigDataClient;
+    private AppConfigProvider appConfigProvider;
 
     private List<String> featureSet;
 
@@ -146,6 +150,19 @@ public class ConfigService {
                         .httpClient(AwsCrtHttpClient.create())
                         .build();
 
+        this.appConfigDataClient = AppConfigDataClient.builder()
+                .region(Region.EU_WEST_2)
+                .httpClient(AwsCrtHttpClient.create())
+                .build();
+
+        this.appConfigProvider = AppConfigProvider.builder()
+                .withClient(appConfigDataClient)
+                .withCacheManager(ParamManager.getCacheManager())
+                .withEnvironment("dev-chrisw-lambdas")
+                .withApplication("core-back-lambdas")
+                .withConfigProfile("vm9xafg")
+                .build();
+
         httpClient = HttpClient.newHttpClient();
         appConfigClientRequest =
                 HttpRequest.newBuilder(
@@ -165,6 +182,11 @@ public class ConfigService {
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
+    }
+
+    @Tracing
+    public String getParamFromAppConfigDirectly(String param) {
+        return appConfigProvider.getValue(param);
     }
 
     @Tracing
@@ -231,8 +253,9 @@ public class ConfigService {
     @Tracing
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
+        return getParamFromAppConfigDirectly(resolvePath(configurationVariable.getPath(), pathProperties));
 //        return configMap.get(resolvePath(configurationVariable.getPath(), pathProperties));
-                return spikeAppConfig(configurationVariable, pathProperties);
+//                return spikeAppConfig(configurationVariable, pathProperties);
         //        return spikeGetMultipleAsync(configurationVariable, pathProperties);
         //                return spikeGetMultiple(configurationVariable, pathProperties);
         //        return spikeGetAllFromS3(configurationVariable, pathProperties);

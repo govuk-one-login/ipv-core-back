@@ -152,24 +152,24 @@ public class InitialiseIpvSessionHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        configService.primeConfigCache(
-                List.of(
-                        new ConfigVarWithPathProps(CLIENT_ISSUER, List.of("orchestrator")),
-                        new ConfigVarWithPathProps(
-                                PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, List.of("orchestrator")),
-                        new ConfigVarWithPathProps(
-                                CLIENT_VALID_REDIRECT_URLS, List.of("orchestrator")),
-                        new ConfigVarWithPathProps(CLIENT_VALID_SCOPES, List.of("orchestrator")),
-                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsReadEnabled")),
-                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsWriteEnabled")),
-                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("inheritedIdentity")),
-                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("mfaResetEnabled")),
-                        new ConfigVarWithPathProps(
-                                FEATURE_FLAGS, List.of("reproveIdentityEnabled")),
-                        new ConfigVarWithPathProps(BACKEND_SESSION_TTL, List.of()),
-                        new ConfigVarWithPathProps(CIMIT_COMPONENT_ID, List.of()),
-                        new ConfigVarWithPathProps(JAR_KMS_ENCRYPTION_KEY_ID, List.of()),
-                        new ConfigVarWithPathProps(MAX_ALLOWED_AUTH_CLIENT_TTL, List.of())));
+//        configService.primeConfigCache(
+//                List.of(
+//                        new ConfigVarWithPathProps(CLIENT_ISSUER, List.of("orchestrator")),
+//                        new ConfigVarWithPathProps(
+//                                PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, List.of("orchestrator")),
+//                        new ConfigVarWithPathProps(
+//                                CLIENT_VALID_REDIRECT_URLS, List.of("orchestrator")),
+//                        new ConfigVarWithPathProps(CLIENT_VALID_SCOPES, List.of("orchestrator")),
+//                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsReadEnabled")),
+//                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("evcsWriteEnabled")),
+//                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("inheritedIdentity")),
+//                        new ConfigVarWithPathProps(FEATURE_FLAGS, List.of("mfaResetEnabled")),
+//                        new ConfigVarWithPathProps(
+//                                FEATURE_FLAGS, List.of("reproveIdentityEnabled")),
+//                        new ConfigVarWithPathProps(BACKEND_SESSION_TTL, List.of()),
+//                        new ConfigVarWithPathProps(CIMIT_COMPONENT_ID, List.of()),
+//                        new ConfigVarWithPathProps(JAR_KMS_ENCRYPTION_KEY_ID, List.of()),
+//                        new ConfigVarWithPathProps(MAX_ALLOWED_AUTH_CLIENT_TTL, List.of())));
 
         LogHelper.attachComponentId(configService);
 

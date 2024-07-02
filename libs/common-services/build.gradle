@@ -10,6 +10,7 @@ dependencies {
 	api libs.nimbusdsOauth2OidcSdk
 	implementation platform(libs.awsSdkBom),
 			libs.awsLambdaJavaEvents,
+			libs.awsSdkAppConfigData,
 			libs.awsSdkCrtClient,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,

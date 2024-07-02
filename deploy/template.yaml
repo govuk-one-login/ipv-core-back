@@ -207,79 +207,79 @@ Mappings:
 
 Resources:
 
-  AppConfigApplication:
-    Type: AWS::AppConfig::Application
-    Properties:
-      Name: !Sub "core-back-${Environment}"
-
-  AppConfigEnvironment:
-    Type: AWS::AppConfig::Environment
-    Properties:
-      ApplicationId: !Ref AppConfigApplication
-      Name: !Sub "lambdas-${Environment}"
-
-  AppConfigConfigurationProfile:
-    Type: AWS::AppConfig::ConfigurationProfile
-    Properties:
-      ApplicationId: !Ref AppConfigApplication
-      LocationUri: !Sub "s3://ipv-core-config-mgmt-dev01/configs/params/core.${Environment}.params.yaml"
-      Name: !Sub "config-bucket-yaml"
-      RetrievalRoleArn: !GetAtt AppConfigServiceRole.Arn
-      Type: AWS.Freeform
-
-  AppConfigDeployment:
-    Type: AWS::AppConfig::Deployment
-    Properties:
-      ApplicationId: !Ref AppConfigApplication
-      ConfigurationProfileId: !Ref AppConfigConfigurationProfile
-      ConfigurationVersion: _NHbBUmhbF5YyAAcqsFQ7AoUs8WKh2fj
-      DeploymentStrategyId: !Ref AppConfigDeploymentStrategy
-      EnvironmentId: !Ref AppConfigEnvironment
-
-  AppConfigDeploymentStrategy:
-    Type: AWS::AppConfig::DeploymentStrategy
-    Properties:
-      DeploymentDurationInMinutes: 5
-      GrowthType: LINEAR
-      Name: !Sub "core-back-lambdas-${Environment}"
-      ReplicateTo: NONE
-
-  AppConfigServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: appconfig.amazonaws.com
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: AccessS3ConfigReadOnly
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - "s3:GetObject"
-                  - "s3:GetObjectVersion"
-                Resource:
-                  - !Sub "arn:aws:s3:::ipv-core-config-mgmt-dev01/configs/params/core.${Environment}.params.yaml"
-              - Effect: Allow
-                Action:
-                  - "s3:GetBucketVersioning"
-                  - "s3:GetBucketLocation"
-                  - "s3:ListBucketVersions"
-                  - "s3:ListBucket"
-                Resource:
-                  - "arn:aws:s3:::ipv-core-config-mgmt-dev01"
-              - Effect: Allow
-                Action: "s3:ListAllMyBuckets"
-                Resource: "*"
-      PermissionsBoundary: !If
-        - UsePermissionsBoundary
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
+#  AppConfigApplication:
+#    Type: AWS::AppConfig::Application
+#    Properties:
+#      Name: !Sub "core-back-${Environment}"
+#
+#  AppConfigEnvironment:
+#    Type: AWS::AppConfig::Environment
+#    Properties:
+#      ApplicationId: !Ref AppConfigApplication
+#      Name: !Sub "lambdas-${Environment}"
+#
+#  AppConfigConfigurationProfile:
+#    Type: AWS::AppConfig::ConfigurationProfile
+#    Properties:
+#      ApplicationId: !Ref AppConfigApplication
+#      LocationUri: !Sub "s3://ipv-core-config-mgmt-dev01/configs/params/core.${Environment}.params.yaml"
+#      Name: !Sub "config-bucket-yaml"
+#      RetrievalRoleArn: !GetAtt AppConfigServiceRole.Arn
+#      Type: AWS.Freeform
+#
+#  AppConfigDeployment:
+#    Type: AWS::AppConfig::Deployment
+#    Properties:
+#      ApplicationId: !Ref AppConfigApplication
+#      ConfigurationProfileId: !Ref AppConfigConfigurationProfile
+#      ConfigurationVersion: _NHbBUmhbF5YyAAcqsFQ7AoUs8WKh2fj
+#      DeploymentStrategyId: !Ref AppConfigDeploymentStrategy
+#      EnvironmentId: !Ref AppConfigEnvironment
+#
+#  AppConfigDeploymentStrategy:
+#    Type: AWS::AppConfig::DeploymentStrategy
+#    Properties:
+#      DeploymentDurationInMinutes: 5
+#      GrowthType: LINEAR
+#      Name: !Sub "core-back-lambdas-${Environment}"
+#      ReplicateTo: NONE
+#
+#  AppConfigServiceRole:
+#    Type: AWS::IAM::Role
+#    Properties:
+#      AssumeRolePolicyDocument:
+#        Version: 2012-10-17
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              Service: appconfig.amazonaws.com
+#            Action: "sts:AssumeRole"
+#      Policies:
+#        - PolicyName: AccessS3ConfigReadOnly
+#          PolicyDocument:
+#            Version: 2012-10-17
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  - "s3:GetObject"
+#                  - "s3:GetObjectVersion"
+#                Resource:
+#                  - !Sub "arn:aws:s3:::ipv-core-config-mgmt-dev01/configs/params/core.${Environment}.params.yaml"
+#              - Effect: Allow
+#                Action:
+#                  - "s3:GetBucketVersioning"
+#                  - "s3:GetBucketLocation"
+#                  - "s3:ListBucketVersions"
+#                  - "s3:ListBucket"
+#                Resource:
+#                  - "arn:aws:s3:::ipv-core-config-mgmt-dev01"
+#              - Effect: Allow
+#                Action: "s3:ListAllMyBuckets"
+#                Resource: "*"
+#      PermissionsBoundary: !If
+#        - UsePermissionsBoundary
+#        - !Ref PermissionsBoundary
+#        - !Ref AWS::NoValue
 
   # ssl cert
   DevSSLCert:
