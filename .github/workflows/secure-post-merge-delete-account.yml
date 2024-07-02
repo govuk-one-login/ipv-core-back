@@ -74,9 +74,9 @@ jobs:
         run: sam build
 
       - name: Deploy SAM app
-        uses: alphagov/di-devplatform-upload-action@v3
+        uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
             artifact-bucket-name: ${{ secrets.DELETE_ACCOUNT_ARTIFACT_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
             working-directory: ./deploy-delete-user-data
-            template-file: template.yaml
+            template-file: .aws-sam/build/template.yaml
