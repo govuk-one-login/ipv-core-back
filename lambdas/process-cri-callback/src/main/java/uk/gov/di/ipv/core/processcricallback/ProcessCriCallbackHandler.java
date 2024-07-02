@@ -223,6 +223,9 @@ public class ProcessCriCallbackHandler
                         HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
             }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+        } catch (IllegalArgumentException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.INVALID_CRI_ID);
         }
     }
 

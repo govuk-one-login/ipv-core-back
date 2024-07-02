@@ -23,6 +23,7 @@ public enum Cri {
     HMRC_MIGRATION("hmrcMigration", true, false),
     HMRC_KBV("hmrcKbv"),
     BAV("bav"),
+    DWP_KBV("dwpKbv"),
     CIMIT("cimit");
 
     private final String id;
