@@ -186,6 +186,7 @@ public class EvaluateGpg45ScoresHandler
             var requestedVotsByStrength = clientOAuthSessionItem.getRequestedVotsByStrength();
             var supportedGpg45ProfilesByVotStrength =
                     requestedVotsByStrength.stream()
+                            .filter(vot -> vot.getSupportedGpg45Profiles() != null)
                             .flatMap(vot -> vot.getSupportedGpg45Profiles().stream())
                             .toList();
             var matchedProfile =

@@ -538,6 +538,27 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(ipvSessionItem).setVot(Vot.P2);
     }
 
+    @Test
+    void shouldReturnJourneyMetForMeetingMediumConfidencesWhenVtrIncludesVotWithNoGpg45Profiles()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        clientOAuthSessionItem.setVtr(List.of("P1", "P2", "PCL200"));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_AND_P2_PROFILES)))
+                .thenReturn(Optional.of(M1A));
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+
+        JourneyResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
+        verify(ipvSessionItem).setVot(Vot.P2);
+    }
+
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
