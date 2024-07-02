@@ -226,7 +226,6 @@ const resolveAllPossibleEventTargets = (eventDefinition) => [
 
 const calcOrphanStates = (journeyMap) => {
     const targetedStates = [
-        ...initialStates,
         ...Object.values(journeyMap).flatMap((stateDefinition) => [
             ...Object.values(stateDefinition.events || {}).flatMap(resolveAllPossibleEventTargets),
             ...Object.values(stateDefinition.exitEvents || {}).flatMap(resolveAllPossibleEventTargets)

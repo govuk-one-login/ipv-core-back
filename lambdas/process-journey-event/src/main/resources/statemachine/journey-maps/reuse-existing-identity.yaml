@@ -15,8 +15,6 @@ states:
             targetState: CRI_TICF_BEFORE_REUSE
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
-          coiEnabled:
-            targetState: IDENTITY_REUSE_PAGE_COI
 
   UPDATE_DETAILS_START:
     events:
@@ -60,8 +58,6 @@ states:
         checkFeatureFlag:
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
-          coiEnabled:
-            targetState: IDENTITY_REUSE_PAGE_COI
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
@@ -85,15 +81,6 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-
-  IDENTITY_REUSE_PAGE_COI:
-    response:
-      type: page
-      pageId: page-ipv-reuse
-      context: coi
-    events:
-      next:
-        targetState: RETURN_TO_RP
       update-details:
         targetState: UPDATE_DETAILS_PAGE
         auditEvents:
@@ -106,6 +93,9 @@ states:
     events:
       next:
         targetState: NEW_DETAILS_PAGE
+      update-details:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   NEW_DETAILS_PAGE:
     response:
@@ -116,9 +106,6 @@ states:
         targetState: CONFIRM_DELETE_DETAILS_PAGE
       end:
         targetState: IDENTITY_REUSE_PAGE
-        checkFeatureFlag:
-          coiEnabled:
-            targetState: IDENTITY_REUSE_PAGE_COI
 
   RESET_SESSION_IDENTITY:
     response:
@@ -139,9 +126,6 @@ states:
         targetState: RESET_SESSION_IDENTITY
       end:
         targetState: IDENTITY_REUSE_PAGE
-        checkFeatureFlag:
-          coiEnabled:
-            targetState: IDENTITY_REUSE_PAGE_COI
 
   UPDATE_DETAILS_PAGE:
     response:
@@ -263,7 +247,7 @@ states:
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
       back:
-        targetState: IDENTITY_REUSE_PAGE_COI
+        targetState: IDENTITY_REUSE_PAGE
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
 
@@ -280,7 +264,6 @@ states:
     response:
       type: page
       pageId: update-name-date-birth
-      context: coi
     events:
       end:
         targetState: UPDATE_DETAILS_PAGE
