@@ -32,11 +32,10 @@ public class EvcsMigrationService {
     }
 
     @Tracing
-    public void migrateExistingIdentity(
-            String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
+    public void migrateExistingIdentity(String userId, List<VerifiableCredential> credentials)
             throws EvcsServiceException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("Migrating existing user VCs to Evcs."));
-        evcsService.storeCompletedIdentity(userId, credentials, evcsAccessToken);
+        evcsService.storeMigratedIdentity(userId, credentials);
         credentials.forEach(credential -> credential.setMigrated(Instant.now()));
         verifiableCredentialService.updateIdentity(credentials);
         LOGGER.info(LogHelper.buildLogMessage("Migrated existing user VCs to Evcs."));

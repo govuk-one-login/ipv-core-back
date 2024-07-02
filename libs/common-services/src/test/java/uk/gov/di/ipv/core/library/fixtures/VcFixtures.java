@@ -791,6 +791,29 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1704822570));
     }
 
+    static VerifiableCredential vcTicfWithCi() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                TICF.getId(),
+                TestVc.builder()
+                        .credentialSubject(null)
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .type(RISK_ASSESSMENT_EVIDENCE_TYPE)
+                                                .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
+                                                .checkDetails(null)
+                                                .ci(List.of("test"))
+                                                .build()))
+                        .type(
+                                new String[] {
+                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
+                                })
+                        .build(),
+                "https://ticf.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1704822570));
+    }
+
     static VerifiableCredential vcVerificationM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
@@ -984,7 +1007,11 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigration() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
                 TestVc.TestEvidence.builder()
@@ -1010,7 +1037,11 @@ public interface VcFixtures {
     static VerifiableCredential vcHmrcMigrationNoEvidence() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -1026,7 +1057,11 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
                 TestVc.TestEvidence.builder()
@@ -1053,7 +1088,11 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AB123456C")))
+                        .socialSecurityRecord(
+                                List.of(
+                                        Map.of(
+                                                "personalNumber",
+                                                "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",

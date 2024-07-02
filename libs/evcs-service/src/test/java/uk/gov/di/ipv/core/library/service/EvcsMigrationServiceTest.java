@@ -22,7 +22,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 @ExtendWith(MockitoExtension.class)
 class EvcsMigrationServiceTest {
     private static final String TEST_USER_ID = "a-user-id";
-    private static final String EVCS_TEST_TOKEN = "evcsTestToken";
     private static final List<VerifiableCredential> VCS =
             List.of(vcDrivingPermit(), VC_ADDRESS, M1A_EXPERIAN_FRAUD_VC);
 
@@ -43,9 +42,9 @@ class EvcsMigrationServiceTest {
         ArgumentCaptor<List<VerifiableCredential>> vcsToUpdateCaptor =
                 ArgumentCaptor.forClass(List.class);
 
-        evcsMigrationService.migrateExistingIdentity(TEST_USER_ID, VCS, EVCS_TEST_TOKEN);
+        evcsMigrationService.migrateExistingIdentity(TEST_USER_ID, VCS);
 
-        verify(mockEvcsService).storeCompletedIdentity(TEST_USER_ID, VCS, EVCS_TEST_TOKEN);
+        verify(mockEvcsService).storeMigratedIdentity(TEST_USER_ID, VCS);
         verify(mockVerifiableCredentialService).updateIdentity(vcsToUpdateCaptor.capture());
         vcsToUpdateCaptor.getValue().forEach(vc -> assertNotNull(vc.getMigrated()));
     }

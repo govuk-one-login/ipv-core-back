@@ -9,7 +9,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkKms,
-			libs.awsSdkCrtClient,
+			libs.awsSdkUrlConnectionClient,
 			libs.commonsCodec,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,

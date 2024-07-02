@@ -274,6 +274,7 @@ Resources:
 
 #Delete Account Queue alarm for old messages
   DeleteAccountSQSMessagesNotConsumedAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub "${AWS::StackName}-DeleteAccountSQSMessagesNotConsumedAlarm"
@@ -308,6 +309,7 @@ Resources:
 
 #IPV Delete Account Queue alarm for old messages
   IPVDeleteAccountSQSMessagesNotConsumedAlarm:
+    Condition: IsNotDevelopment
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName: !Sub "${AWS::StackName}-IPVDeleteAccountSQSMessagesNotConsumedAlarm"

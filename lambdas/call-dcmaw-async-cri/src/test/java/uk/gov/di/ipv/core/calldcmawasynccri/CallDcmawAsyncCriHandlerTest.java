@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
+import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -87,7 +88,8 @@ class CallDcmawAsyncCriHandlerTest {
                         eq(input),
                         eq(DCMAW_ASYNC.getId()),
                         any(String.class),
-                        eq(clientOAuthSessionItem));
+                        eq(clientOAuthSessionItem),
+                        eq(Collections.emptyList()));
 
         verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
 

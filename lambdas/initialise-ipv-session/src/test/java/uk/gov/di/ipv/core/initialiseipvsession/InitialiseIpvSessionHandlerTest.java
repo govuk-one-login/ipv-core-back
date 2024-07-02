@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
@@ -84,6 +85,7 @@ import static com.nimbusds.oauth2.sdk.OAuth2Error.INVALID_REQUEST_OBJECT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -94,12 +96,13 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPROVE_IDENTITY_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.CORE_IDENTITY_JWT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.EVCS_ACCESS_TOKEN_CLAIM_NAME;
@@ -221,6 +224,50 @@ class InitialiseIpvSessionHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
+        assertNull(evcsAccessTokenCaptor.getValue());
+    }
+
+    @Test
+    void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
+        // Arrange
+        when(mockConfigService.enabled(REPROVE_IDENTITY_ENABLED)).thenReturn(true);
+        when(mockConfigService.enabled(not(eq(REPROVE_IDENTITY_ENABLED)))).thenReturn(false);
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
+                        any(), any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(getValidClaimsBuilder().claim(REPROVE_IDENTITY_KEY, true).build());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedValues = auditEventCaptor.getAllValues();
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, capturedValues.get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                capturedValues.get(1).getEventName());
+
+        AuditExtensionAccountIntervention extensions =
+                (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
+        assertEquals("reprove_identity", extensions.getType());
+        assertNull(extensions.getSuccess());
 
         verify(mockClientOAuthSessionDetailsService)
                 .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
@@ -579,7 +626,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL250_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -599,7 +645,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(TEST_USER_ID),
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
-                            eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -643,7 +688,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -660,7 +704,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(TEST_USER_ID),
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
-                            eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -704,7 +747,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -780,7 +822,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -800,7 +841,6 @@ class InitialiseIpvSessionHandlerTest {
                             eq(TEST_USER_ID),
                             eq(HMRC_MIGRATION.getId()),
                             stringArgumentCaptor.capture(),
-                            eq(IDENTITY_CHECK_CREDENTIAL_TYPE),
                             eq(TEST_SIGNING_KEY),
                             eq(TEST_COMPONENT_ID),
                             eq(true));
@@ -847,7 +887,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))
@@ -1085,7 +1124,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             "🌭",
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_CRI_CONFIG.getSigningKey(),
                             TEST_CRI_CONFIG.getComponentId(),
                             true))
@@ -1155,7 +1193,6 @@ class InitialiseIpvSessionHandlerTest {
                             TEST_USER_ID,
                             HMRC_MIGRATION.getId(),
                             PCL200_MIGRATION_VC.getVcString(),
-                            IDENTITY_CHECK_CREDENTIAL_TYPE,
                             TEST_SIGNING_KEY,
                             TEST_COMPONENT_ID,
                             true))

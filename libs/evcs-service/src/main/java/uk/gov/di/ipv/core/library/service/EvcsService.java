@@ -22,6 +22,8 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
 
 public class EvcsService {
     private final EvcsClient evcsClient;
@@ -59,6 +61,20 @@ public class EvcsService {
                 credentials,
                 getUserVCs(userId, evcsAccessToken, CURRENT, PENDING_RETURN),
                 true);
+    }
+
+    @Tracing
+    public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
+            throws EvcsServiceException {
+        // If we are migrating, assume that there is no existing identity to mark as historic
+        evcsClient.storeUserVCs(
+                userId,
+                credentials.stream()
+                        .map(
+                                vc ->
+                                        new EvcsCreateUserVCsDto(
+                                                vc.getVcString(), CURRENT, null, ONLINE))
+                        .toList());
     }
 
     @Tracing
@@ -101,7 +117,7 @@ public class EvcsService {
                 credential.getUserId(),
                 List.of(
                         new EvcsCreateUserVCsDto(
-                                credential.getVcString(), PENDING_RETURN, null, null)));
+                                credential.getVcString(), PENDING_RETURN, null, OFFLINE)));
     }
 
     private List<EvcsGetUserVCDto> getUserVCs(
@@ -133,7 +149,7 @@ public class EvcsService {
                                                 vc.getVcString(),
                                                 isPendingIdentity ? PENDING_RETURN : CURRENT,
                                                 null,
-                                                null))
+                                                ONLINE))
                         .toList();
 
         if (!CollectionUtils.isEmpty(existingEvcsUserVCs))
@@ -147,7 +163,6 @@ public class EvcsService {
             List<EvcsGetUserVCDto> existingEvcsUserVCs,
             boolean isPendingIdentity)
             throws EvcsServiceException {
-        var vcsToUpdates = new ArrayList<EvcsUpdateUserVCsDto>();
         var existingPendingReturnUserVcsNotInSessionToUpdate =
                 existingEvcsUserVCs.stream()
                         .filter(vc -> vc.state().equals(PENDING_RETURN))
@@ -164,7 +179,7 @@ public class EvcsService {
                                         new EvcsUpdateUserVCsDto(
                                                 getVcSignature(vc), EvcsVCState.ABANDONED, null))
                         .toList();
-        vcsToUpdates.addAll(existingPendingReturnUserVcsNotInSessionToUpdate);
+        var vcsToUpdates = new ArrayList<>(existingPendingReturnUserVcsNotInSessionToUpdate);
 
         if (!isPendingIdentity) {
             var existingPendingReturnUserVcsInSessionToUpdate =

@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -48,7 +47,7 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -174,7 +173,13 @@ public class ProcessAsyncCriCredentialHandler
             throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
                     UnrecognisedVotException, CredentialParseException, EvcsServiceException {
-        validateOAuthState(successAsyncCriResponse);
+        final CriResponseItem criResponseItem =
+                criResponseService.getCriResponseItem(
+                        successAsyncCriResponse.getUserId(),
+                        successAsyncCriResponse.getCredentialIssuer());
+        validateOAuthState(successAsyncCriResponse, criResponseItem);
+
+        configService.setFeatureSet(criResponseItem.getFeatureSet());
 
         var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
@@ -185,7 +190,6 @@ public class ProcessAsyncCriCredentialHandler
                         successAsyncCriResponse.getUserId(),
                         successAsyncCriResponse.getCredentialIssuer(),
                         successAsyncCriResponse.getVerifiableCredentialJWTs(),
-                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
 
@@ -198,7 +202,7 @@ public class ProcessAsyncCriCredentialHandler
             submitVcToCiStorage(vc);
             postMitigatingVc(vc);
 
-            if (configService.enabled(EVCS_WRITE_ENABLED)) {
+            if (configService.enabled(EVCS_ASYNC_WRITE_ENABLED)) {
                 evcsService.storePendingVc(vc);
                 vc.setMigrated(Instant.now());
             }
@@ -208,12 +212,9 @@ public class ProcessAsyncCriCredentialHandler
         }
     }
 
-    private void validateOAuthState(SuccessAsyncCriResponse successAsyncCriResponse)
+    private void validateOAuthState(
+            SuccessAsyncCriResponse successAsyncCriResponse, CriResponseItem criResponseItem)
             throws AsyncVerifiableCredentialException {
-        final CriResponseItem criResponseItem =
-                criResponseService.getCriResponseItem(
-                        successAsyncCriResponse.getUserId(),
-                        successAsyncCriResponse.getCredentialIssuer());
         if (criResponseItem == null) {
             LOGGER.error(LogHelper.buildLogMessage("No response item found"));
             throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);

@@ -31,13 +31,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountIntervention;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -229,8 +229,9 @@ public class InitialiseIpvSessionHandler
                 }
             }
 
+            var isReproveIdentity = isReproveIdentity(claimsSet);
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
-                    new AuditExtensionsIpvJourneyStart(isReproveIdentity(claimsSet), vtr);
+                    new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
 
             AuditEvent auditEvent =
                     AuditEvent.createWithDeviceInformation(
@@ -241,6 +242,15 @@ public class InitialiseIpvSessionHandler
                             new AuditRestrictedDeviceInformation(deviceInformation));
 
             auditService.sendAuditEvent(auditEvent);
+
+            if (Boolean.TRUE.equals(isReproveIdentity)) {
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithoutDeviceInformation(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser,
+                                AuditExtensionAccountIntervention.newReproveIdentity()));
+            }
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
@@ -427,7 +437,6 @@ public class InitialiseIpvSessionHandler
                         userId,
                         HMRC_MIGRATION.getId(),
                         inheritedIdentityJwtList.get(0),
-                        VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE,
                         inheritedIdentityCriConfig.getSigningKey(),
                         inheritedIdentityCriConfig.getComponentId(),
                         true);

@@ -1,5 +1,5 @@
 [versions]
-awsSdk = "2.25.31"
+awsSdk = "2.26.9"
 jackson = "2.15.3"
 log4j = "2.23.0"
 mockito = "5.12.0"
@@ -16,7 +16,7 @@ awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
 awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
-awsSdkCrtClient = { module = "software.amazon.awssdk:aws-crt-client" }
+awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
 diVocab = "uk.gov.di.model:di-data-model-jackson:v1.7.1"
 hamcrest = "org.hamcrest:hamcrest:2.2"
@@ -31,7 +31,7 @@ log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.12"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.13"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.1.0-RELEASE"
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }

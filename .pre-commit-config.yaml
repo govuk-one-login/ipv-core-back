@@ -28,7 +28,11 @@ repos:
         verbose: true
         args: [--soft-fail]
 
-  - repo: https://github.com/Wynndow/spotless-pre-commit.git
-    rev: 'v0.2.0'
+  - repo: local
     hooks:
       - id: spotlessCheck
+        name: Run spotless check
+        entry: ./gradlew spotlessCheck
+        language: system
+        pass_filenames: false
+        files: \.(java|gradle)

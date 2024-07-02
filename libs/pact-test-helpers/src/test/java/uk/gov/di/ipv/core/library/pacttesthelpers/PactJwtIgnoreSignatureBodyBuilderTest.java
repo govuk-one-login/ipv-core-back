@@ -31,7 +31,8 @@ class PactJwtIgnoreSignatureBodyBuilderTest {
             }
             """;
 
-    private final String JWT_BODY_BASE64 = "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0";
+    private final String JWT_BODY_BASE64 =
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0"; // pragma: allowlist secret
 
     @Test
     void buildBodyReturnsAValidExampleBody() {
