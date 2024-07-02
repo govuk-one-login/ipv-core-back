@@ -64,6 +64,8 @@ class ProcessJourneyEventHandlerTest {
             "/journey/testWithContext?currentPage=";
     private static final String JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE =
             "/journey/eventTwo?currentPage=page-id-for-page-state";
+    private static final String JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE =
+            "/journey/build-client-oauth-response";
     private static final String TEST_IP = "1.2.3.4";
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
@@ -184,6 +186,21 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
+    }
+
+    @Test
+    void shouldReturnResponseForBuildClientOAuthResponseEvent() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE)
+                        .ipvSessionId(null)
+                        .build();
+
+        Map<String, Object> output =
+                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+
+        assertEquals(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE, output.get("journey"));
     }
 
     @Test
@@ -374,7 +391,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals("/journey/build-client-oauth-response", output.get("journey"));
+        assertEquals(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE, output.get("journey"));
     }
 
     @Test

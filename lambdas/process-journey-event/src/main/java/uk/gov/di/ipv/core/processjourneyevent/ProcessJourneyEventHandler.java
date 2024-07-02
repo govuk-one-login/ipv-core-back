@@ -69,9 +69,9 @@ public class ProcessJourneyEventHandler
     public static final String CURRENT_PAGE = "currentPage";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
-    private static final String END_SESSION_EVENT = "build-client-oauth-response";
-    private static final StepResponse END_SESSION_RESPONSE =
-            new ProcessStepResponse(END_SESSION_EVENT, null);
+    private static final String BUILD_CLIENT_OAUTH_RESPONSE_EVENT = "build-client-oauth-response";
+    private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
+            new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     public static final String BACK_EVENT = "back";
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -112,19 +112,20 @@ public class ProcessJourneyEventHandler
         LogHelper.attachComponentId(configService);
 
         try {
+            String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
+
+            // Handle route direct back to RP (used for recoverable timeouts)
+            if (journeyEvent.equals(BUILD_CLIENT_OAUTH_RESPONSE_EVENT)) {
+                LOGGER.warn(LogHelper.buildLogMessage("Returning end session response directly"));
+                return BUILD_CLIENT_OAUTH_RESPONSE.value();
+            }
+
             // Extract variables
             String ipvSessionId = RequestHelper.getIpvSessionId(journeyRequest);
             String ipAddress = RequestHelper.getIpAddress(journeyRequest);
             String deviceInformation = journeyRequest.getDeviceInformation();
-            String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
             String currentPage = RequestHelper.getJourneyParameter(journeyRequest, CURRENT_PAGE);
             configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
-
-            // Handle route direct back to RP (used for recoverable timeouts)
-            if (journeyEvent.equals(END_SESSION_EVENT)) {
-                LOGGER.warn(LogHelper.buildLogMessage("Returning end session response directly"));
-                return END_SESSION_RESPONSE.value();
-            }
 
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
