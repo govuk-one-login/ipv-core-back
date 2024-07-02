@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -11,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_1;
 
 class SharedClaimsTest {
 
@@ -23,7 +22,7 @@ class SharedClaimsTest {
         nameSet.add(names);
 
         Set<Address> addressSet = new HashSet<>();
-        addressSet.add(new ObjectMapper().readValue(ADDRESS_JSON_1, Address.class));
+        addressSet.add(ADDRESS_1);
 
         Set<BirthDate> birthDaySet = new HashSet<>();
         BirthDate birthDate = new BirthDate("2020-02-03");
@@ -56,7 +55,7 @@ class SharedClaimsTest {
         nameSet.add(names);
 
         Set<Address> addressSet = new HashSet<>();
-        addressSet.add(new ObjectMapper().readValue(ADDRESS_JSON_1, Address.class));
+        addressSet.add(ADDRESS_1);
 
         Set<BirthDate> birthDaySet = new HashSet<>();
         BirthDate birthDate = new BirthDate("2020-02-03");
