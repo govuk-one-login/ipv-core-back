@@ -130,8 +130,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
-    private static final List<Vot> SUPPORTED_VOTS_BY_STRENGTH_DESCENDING =
-            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -532,10 +530,10 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated)
             throws ParseException, UnknownEvidenceTypeException, SqsException,
                     CredentialParseException, VerifiableCredentialException, EvcsServiceException {
-        // Check for attained vot from vtr
+        // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
-                        clientOAuthSessionItem.getVtr(),
+                        clientOAuthSessionItem.getRequestedVotsByStrength(),
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
@@ -734,20 +732,14 @@ public class CheckExistingIdentityHandler
 
     @Tracing
     private Optional<Vot> getStrongestAttainedVotForVtr(
-            List<String> vtr,
+            List<Vot> requestedVotsByStrength,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
             boolean areGpg45VcsCorrelated)
             throws UnknownEvidenceTypeException, ParseException, SqsException,
                     CredentialParseException {
-
-        var requestedVotsByStrength =
-                SUPPORTED_VOTS_BY_STRENGTH_DESCENDING.stream()
-                        .filter(vot -> vtr.contains(vot.name()))
-                        .toList();
-
-        for (var requestedVot : requestedVotsByStrength) {
+        for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
                 if (areGpg45VcsCorrelated) {

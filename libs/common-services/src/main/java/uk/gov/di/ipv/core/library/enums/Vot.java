@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.enums;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.helpers.CollectionHelper;
 
 import java.util.List;
 
@@ -16,6 +17,8 @@ public enum Vot {
     P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), null, GPG45),
     PCL250(null, List.of(OperationalProfile.PCL250), OPERATIONAL_HMRC),
     PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200), OPERATIONAL_HMRC);
+    public static final List<Vot> SUPPORTED_VOTS_BY_DESCENDING_STRENGTH =
+            List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1);
 
     private final List<Gpg45Profile> supportedGpg45Profiles;
     private final List<OperationalProfile> supportedOperationalProfiles;
@@ -40,5 +43,12 @@ public enum Vot {
 
     public ProfileType getProfileType() {
         return this.profileType;
+    }
+
+    public static Vot fromGpg45Profile(Gpg45Profile profile) {
+        return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
+                .filter(vot -> GPG45.equals(vot.profileType))
+                .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
+                .collect(CollectionHelper.toSingleton());
     }
 }

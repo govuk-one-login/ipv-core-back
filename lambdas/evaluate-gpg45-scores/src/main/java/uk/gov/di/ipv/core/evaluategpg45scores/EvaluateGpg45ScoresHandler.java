@@ -46,7 +46,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -182,13 +181,18 @@ public class EvaluateGpg45ScoresHandler
             String deviceInformation)
             throws UnknownEvidenceTypeException, SqsException, CredentialParseException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
-            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-            Optional<Gpg45Profile> matchedProfile =
+            var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
+
+            var requestedVotsByStrength = clientOAuthSessionItem.getRequestedVotsByStrength();
+            var supportedGpg45ProfilesByVotStrength =
+                    requestedVotsByStrength.stream()
+                            .flatMap(vot -> vot.getSupportedGpg45Profiles().stream())
+                            .toList();
+            var matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            gpg45Scores, Vot.P2.getSupportedGpg45Profiles());
+                            gpg45Scores, supportedGpg45ProfilesByVotStrength);
 
             if (matchedProfile.isPresent()) {
-
                 auditService.sendAuditEvent(
                         buildProfileMatchedAuditEvent(
                                 ipvSessionItem,
@@ -198,7 +202,8 @@ public class EvaluateGpg45ScoresHandler
                                 vcs,
                                 ipAddress,
                                 deviceInformation));
-                ipvSessionItem.setVot(Vot.P2);
+
+                ipvSessionItem.setVot(Vot.fromGpg45Profile(matchedProfile.get()));
                 ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
