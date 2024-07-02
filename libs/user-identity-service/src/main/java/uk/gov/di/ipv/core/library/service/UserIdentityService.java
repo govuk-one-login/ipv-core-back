@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.AddressClaim;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -329,7 +328,7 @@ public class UserIdentityService {
         identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
-            Optional<AddressClaim> addressClaim = generateAddressClaim(vcs);
+            Optional<List<Address>> addressClaim = generateAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
             Optional<JsonNode> passportClaim = generatePassportClaim(successfulVcs);
@@ -559,7 +558,7 @@ public class UserIdentityService {
         return Vot.valueOf(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
-    private Optional<AddressClaim> generateAddressClaim(List<VerifiableCredential> vcs)
+    private Optional<List<Address>> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var addressVc = findVc(ADDRESS.getId(), vcs);
 
@@ -567,13 +566,20 @@ public class UserIdentityService {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
             return Optional.empty();
         }
-        var address =
-                ((IdentityCheckCredential) addressVc.get().getCredential())
-                        .getCredentialSubject()
-                        .getAddress();
 
-        if (address == null) {
+        var credentialSubject =
+                ((IdentityCheckCredential) addressVc.get().getCredential()).getCredentialSubject();
+
+        if (credentialSubject == null) {
             LOGGER.error(LogHelper.buildLogMessage("Address property is missing from address VC"));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+        }
+
+        var address = credentialSubject.getAddress();
+
+        if (address.isEmpty()) {
+            LOGGER.error(LogHelper.buildLogMessage("No addresses found in address VC"));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
@@ -582,9 +588,8 @@ public class UserIdentityService {
                 address.stream()
                         .map(this::mapPostalAddressToAddressClass)
                         .collect(Collectors.toList());
-        var addressClaim = new AddressClaim(mappedAddresses);
 
-        return Optional.of(addressClaim);
+        return Optional.of(mappedAddresses);
     }
 
     private Address mapPostalAddressToAddressClass(PostalAddress postalAddress) {
@@ -601,6 +606,7 @@ public class UserIdentityService {
                 .dependentAddressLocality(postalAddress.getDependentAddressLocality())
                 .postalCode(postalAddress.getPostalCode())
                 .addressCountry(postalAddress.getAddressCountry())
+                .addressLocality(postalAddress.getAddressLocality())
                 .validFrom(postalAddress.getValidFrom())
                 .validUntil(postalAddress.getValidUntil())
                 .build();
