@@ -34,7 +34,7 @@ public class UserIdentity {
     private IdentityClaim identityClaim;
 
     @JsonProperty(ADDRESS_CLAIM_NAME)
-    private JsonNode addressClaim;
+    private AddressClaim addressClaim;
 
     @JsonProperty(PASSPORT_CLAIM_NAME)
     private JsonNode passportClaim;
@@ -58,7 +58,7 @@ public class UserIdentity {
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
-            @JsonProperty(value = ADDRESS_CLAIM_NAME) JsonNode addressClaim,
+            @JsonProperty(value = ADDRESS_CLAIM_NAME) AddressClaim addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) JsonNode passportClaim,
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
             @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
