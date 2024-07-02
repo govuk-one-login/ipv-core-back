@@ -434,6 +434,18 @@ public interface VcFixtures {
                         .build());
     }
 
+    static VerifiableCredential vcMissingPassportProperty() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.PASSPORT.getId(),
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(SUCCESSFUL_EVIDENCE)
+                        .build());
+    }
+
     VerifiableCredential VC_ADDRESS =
             generateVerifiableCredential(
                     TEST_SUBJECT,
