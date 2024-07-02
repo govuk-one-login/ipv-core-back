@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.domain.AddressClaim;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -81,7 +82,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
@@ -159,7 +160,7 @@ class BuildUserIdentityHandlerTest {
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
-                        OBJECT_MAPPER.readTree(ADDRESS_JSON_1),
+                        new AddressClaim(List.of(ADDRESS_1)),
                         OBJECT_MAPPER.readTree(PASSPORT_JSON_1),
                         OBJECT_MAPPER.readTree(DRIVING_PERMIT_JSON_1),
                         OBJECT_MAPPER.readTree(NINO_JSON_1),
