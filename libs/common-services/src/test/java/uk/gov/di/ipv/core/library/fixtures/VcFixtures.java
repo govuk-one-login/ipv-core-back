@@ -673,6 +673,22 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcDrivingPermitEmptyDrivingPermit() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_4))
+                        .drivingPermit(List.of())
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE.getId(),
+                TestVc.builder()
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcDrivingPermitFailedChecks() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
