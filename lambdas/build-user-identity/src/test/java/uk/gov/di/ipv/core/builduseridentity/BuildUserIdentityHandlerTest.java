@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
+import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -166,7 +167,7 @@ class BuildUserIdentityHandlerTest {
                         List.of(
                                 OBJECT_MAPPER.readValue(
                                         DRIVING_PERMIT_JSON_1, DrivingPermitDetails.class)),
-                        OBJECT_MAPPER.readTree(NINO_JSON_1),
+                        List.of(OBJECT_MAPPER.readValue(NINO_JSON_1, SocialSecurityRecord.class)),
                         "test-sub",
                         Vot.P2,
                         VTM,

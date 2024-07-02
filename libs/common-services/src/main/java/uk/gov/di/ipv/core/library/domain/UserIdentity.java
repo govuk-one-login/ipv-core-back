@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +44,7 @@ public class UserIdentity {
     private List<DrivingPermitDetails> drivingPermitClaim;
 
     @JsonProperty(NINO_CLAIM_NAME)
-    private JsonNode ninoClaim;
+    private List<SocialSecurityRecord> ninoClaim;
 
     @JsonProperty private String sub;
 
@@ -64,7 +63,7 @@ public class UserIdentity {
             @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME)
                     List<DrivingPermitDetails> drivingPermitClaim,
-            @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
+            @JsonProperty(value = NINO_CLAIM_NAME) List<SocialSecurityRecord> ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,
