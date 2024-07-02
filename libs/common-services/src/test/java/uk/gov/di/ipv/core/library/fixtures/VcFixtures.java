@@ -435,6 +435,18 @@ public interface VcFixtures {
                         .build());
     }
 
+    static VerifiableCredential vcMissingPassportProperty() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(SUCCESSFUL_EVIDENCE)
+                        .build());
+    }
+
     private static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -460,7 +472,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.ADDRESS.getId(),
+                Cri.ADDRESS,
                 TestVc.builder().credentialSubject(credentialSubject).build());
     }
 

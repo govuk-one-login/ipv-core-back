@@ -200,7 +200,7 @@ public interface TestFixtures {
 
     String ADDRESS_JSON_2 =
             "{\"buildingNumber\":11,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
-    String PASSPORT_JSON_1 = "{\"documentNumber\":12345678,\"expiryDate\":\"2022-02-01\"}";
+    String PASSPORT_JSON_1 = "{\"documentNumber\":\"12345678\",\"expiryDate\":\"2022-02-01\"}";
 
     String DRIVING_PERMIT_JSON_1 =
             "{\"personalNumber\": \"DOE99802085J99FG\",\"fullAddress\": \"122 BURNS CRESCENT EDINBURGH EH1 9GP\",\"expiryDate\": \"2023-01-18\",\"issueNumber\": 5,\"issuedBy\": \"DVLA\",\"issueDate\": \"2010-01-18\"}";

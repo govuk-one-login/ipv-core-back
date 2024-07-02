@@ -43,6 +43,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.model.PassportDetails;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -1137,10 +1138,10 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode passportClaim = credentials.getPassportClaim();
+        PassportDetails passportClaim = credentials.getPassportClaim().get(0);
 
-        assertEquals("321654987", passportClaim.get(0).get("documentNumber").asText());
-        assertEquals("2030-01-01", passportClaim.get(0).get("expiryDate").asText());
+        assertEquals("321654987", passportClaim.getDocumentNumber());
+        assertEquals("2030-01-01", passportClaim.getExpiryDate());
     }
 
     @Test
@@ -1160,7 +1161,29 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingPassportProperty() throws Exception {
+    void shouldReturnNullWhenMissingPassportProperty() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcMissingPassportProperty(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getPassportClaim());
+    }
+
+    @Test
+    void shouldReturnNullWhenEmptyPassportProperty() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -1178,7 +1201,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertTrue(credentials.getPassportClaim().isEmpty());
+        assertNull(credentials.getPassportClaim());
     }
 
     @Test
