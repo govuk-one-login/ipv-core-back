@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 
 import java.text.Normalizer;
@@ -330,7 +331,7 @@ public class UserIdentityService {
             Optional<List<Address>> addressClaim = generateAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVcs);
+            Optional<List<PassportDetails>> passportClaim = generatePassportClaim(successfulVcs);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
             Optional<JsonNode> drivingPermitClaim = generateDrivingPermitClaim(successfulVcs);
@@ -570,15 +571,17 @@ public class UserIdentityService {
                 ((IdentityCheckCredential) addressVc.get().getCredential()).getCredentialSubject();
 
         if (credentialSubject == null) {
-            LOGGER.error(LogHelper.buildLogMessage("Address property is missing from address VC"));
+            LOGGER.error(LogHelper.buildLogMessage("Credential subject missing from VC"));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
 
         var address = credentialSubject.getAddress();
 
-        if (address.isEmpty()) {
-            LOGGER.error(LogHelper.buildLogMessage("No addresses found in address VC"));
+        if (address == null || address.isEmpty()) {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Address property missing from VC or empty address property "));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
@@ -648,7 +651,7 @@ public class UserIdentityService {
         return Optional.of(ninoNode);
     }
 
-    private Optional<JsonNode> generatePassportClaim(List<VerifiableCredential> vcs)
+    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
 
@@ -657,26 +660,34 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var passportNode =
-                extractSubjectDetailFromVc(
-                        PASSPORT_PROPERTY_NAME,
-                        passportVc.get(),
-                        "Error while parsing Passport CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+        var credentialSubject =
+                ((IdentityCheckCredential) passportVc.get().getCredential()).getCredentialSubject();
 
-        if (passportNode.isMissingNode()) {
+        if (credentialSubject == null) {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Passport property is missing from VC")
+                                    "Credential subject missing from VC")
                             .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
-
             return Optional.empty();
         }
 
-        return Optional.of(passportNode);
+        var passport = credentialSubject.getPassport();
+
+        if (passport == null || passport.isEmpty()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Passport property is missing from VC or empty passport property.")
+                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
+            LOGGER.warn(mapMessage);
+            return Optional.empty();
+        }
+
+        return Optional.of(passport);
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(
