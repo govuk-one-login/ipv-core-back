@@ -3,8 +3,6 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +30,7 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
@@ -334,7 +333,8 @@ public class UserIdentityService {
             Optional<List<PassportDetails>> passportClaim = generatePassportClaim(successfulVcs);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
-            Optional<JsonNode> drivingPermitClaim = generateDrivingPermitClaim(successfulVcs);
+            Optional<List<DrivingPermitDetails>> drivingPermitClaim =
+                    generateDrivingPermitClaim(successfulVcs);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
@@ -651,8 +651,7 @@ public class UserIdentityService {
         return Optional.of(ninoNode);
     }
 
-    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody {
+    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs) {
         var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
 
         if (passportVc.isEmpty()) {
@@ -690,7 +689,7 @@ public class UserIdentityService {
         return Optional.of(passport);
     }
 
-    private Optional<JsonNode> generateDrivingPermitClaim(
+    private Optional<List<DrivingPermitDetails>> generateDrivingPermitClaim(
             List<VerifiableCredential> verifiableCredentials)
             throws HttpResponseExceptionWithErrorBody {
         var drivingPermitVc = findVc(DRIVING_PERMIT_CRI_TYPES, verifiableCredentials);
@@ -700,33 +699,42 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var drivingPermitNode =
-                extractSubjectDetailFromVc(
-                        DRIVING_PERMIT_PROPERTY_NAME,
-                        drivingPermitVc.get(),
-                        "Error while parsing Driving Permit CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+        var credentialSubject =
+                ((IdentityCheckCredential) drivingPermitVc.get().getCredential())
+                        .getCredentialSubject();
 
-        if (drivingPermitNode.isMissingNode()) {
+        if (credentialSubject == null) {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Driving Permit property is missing from VC")
-                            .with(
-                                    LOG_CRI_ISSUER.getFieldName(),
-                                    drivingPermitVc.get().getCri().getId());
+                                    "Credential subject missing from VC")
+                            .with(LOG_CRI_ISSUER.getFieldName(), drivingPermitVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
-
             return Optional.empty();
         }
 
-        if (drivingPermitNode instanceof ArrayNode) {
-            ((ObjectNode) drivingPermitNode.get(0)).remove("fullAddress");
-            ((ObjectNode) drivingPermitNode.get(0)).remove("issueDate");
+        var drivingPermit = credentialSubject.getDrivingPermit();
+
+        if (drivingPermit == null || drivingPermit.isEmpty()) {
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Driving Permit property is missing from VC or empty driving permit property.")
+                            .with(LOG_CRI_ISSUER.getFieldName(), drivingPermitVc.get().getCri().getId());
+            LOGGER.warn(mapMessage);
+            return Optional.empty();
         }
 
-        return Optional.of(drivingPermitNode);
+        drivingPermit.stream()
+                .forEach(
+                        permit -> {
+                            permit.setFullAddress(null);
+                            permit.setIssueDate(null);
+                        });
+
+        return Optional.of(drivingPermit);
     }
 
     private Optional<VerifiableCredential> findVc(String criName, List<VerifiableCredential> vcs) {

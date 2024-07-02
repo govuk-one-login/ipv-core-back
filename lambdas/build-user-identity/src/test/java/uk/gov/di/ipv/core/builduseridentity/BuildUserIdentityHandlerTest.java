@@ -54,6 +54,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
 
 import java.time.Instant;
@@ -159,7 +160,9 @@ class BuildUserIdentityHandlerTest {
                         new IdentityClaim(names, birthDates),
                         List.of(ADDRESS_1),
                         List.of(OBJECT_MAPPER.readValue(PASSPORT_JSON_1, PassportDetails.class)),
-                        OBJECT_MAPPER.readTree(DRIVING_PERMIT_JSON_1),
+                        List.of(
+                                OBJECT_MAPPER.readValue(
+                                        DRIVING_PERMIT_JSON_1, DrivingPermitDetails.class)),
                         OBJECT_MAPPER.readTree(NINO_JSON_1),
                         "test-sub",
                         Vot.P2,
