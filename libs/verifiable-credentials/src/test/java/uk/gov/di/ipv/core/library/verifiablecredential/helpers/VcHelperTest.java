@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
@@ -39,7 +38,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcEmptyEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -192,38 +190,6 @@ class VcHelperTest {
     @Test
     void shouldReturnNullIfVcVotIsNotPresent() throws Exception {
         assertNull(VcHelper.getVcVot(vcNullVot()));
-    }
-
-    @Test
-    void shouldReturnEmptyListIfEvidenceTypeIsValidAndNotPresent() {
-        var vcs = List.of(vcPassportM1aFailed());
-        // Call the method under test
-        List<VerifiableCredential> result =
-                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void shouldReturnListIfEvidenceTypeIsValidAndPresentForFiltering() {
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne(), vcTicf());
-        // Call the method under test
-        List<VerifiableCredential> result =
-                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
-
-        // Assert Result
-        assertFalse(result.isEmpty());
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void shouldReturnFalseIfEmptyEvidenceType() {
-        var vcs = List.of(vcEmptyEvidence());
-        // Call the method under test
-        List<VerifiableCredential> result =
-                VcHelper.filterVCBasedOnEvidenceType(vcs, EvidenceType.IDENTITY_FRAUD);
-
-        // Assert Result
-        assertTrue(result.isEmpty());
     }
 
     @Test

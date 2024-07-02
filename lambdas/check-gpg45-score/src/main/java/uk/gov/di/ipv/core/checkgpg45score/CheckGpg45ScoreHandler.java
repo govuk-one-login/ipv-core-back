@@ -14,11 +14,9 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownScoreTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -108,22 +106,6 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (CredentialParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Unable to parse GPG45 scores from existing credentials", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
-                    .toObjectMap();
-        } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
-                    .toObjectMap();
         } catch (UnknownScoreTypeException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unable to process score type", e));
             return new JourneyErrorResponse(
@@ -135,8 +117,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private int getScore(String ipvSessionId, String scoreType)
-            throws UnknownEvidenceTypeException, UnknownScoreTypeException,
-                    CredentialParseException, VerifiableCredentialException {
+            throws UnknownScoreTypeException, VerifiableCredentialException {
         var vcs = getParsedCredentials(ipvSessionId);
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         return switch (scoreType) {

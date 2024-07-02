@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
@@ -153,9 +152,6 @@ public class EvaluateGpg45ScoresHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (UnknownEvidenceTypeException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to determine type of credential", e));
-            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event to SQS queue", e));
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
@@ -179,7 +175,7 @@ public class EvaluateGpg45ScoresHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
             String deviceInformation)
-            throws UnknownEvidenceTypeException, SqsException, CredentialParseException {
+            throws SqsException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
