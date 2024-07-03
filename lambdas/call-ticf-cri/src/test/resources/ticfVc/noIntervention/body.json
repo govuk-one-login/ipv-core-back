@@ -3,6 +3,7 @@
   "aud": "https://identity.account.gov.uk",
   "iss": "https://ticf.account.gov.uk",
   "jti": "test-jti",
+  "iat": 4070908800,
   "nbf": 4070908800,
   "exp": 4070909400,
   "vc": {
