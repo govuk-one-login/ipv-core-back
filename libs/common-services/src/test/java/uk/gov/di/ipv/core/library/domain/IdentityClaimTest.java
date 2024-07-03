@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.model.BirthDate;
 
 import java.util.Arrays;
 

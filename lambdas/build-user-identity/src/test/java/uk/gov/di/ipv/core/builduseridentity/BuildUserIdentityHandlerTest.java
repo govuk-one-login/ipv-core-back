@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -43,6 +42,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -54,6 +54,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
@@ -154,7 +155,9 @@ class BuildUserIdentityHandlerTest {
         List<Name> names =
                 Collections.singletonList(
                         new Name(Collections.singletonList(new NameParts("GivenName", "Daniel"))));
-        List<BirthDate> birthDates = Collections.singletonList(new BirthDate("1990-02-10"));
+
+        List<BirthDate> birthDates =
+                Collections.singletonList(BirthDateHelper.createBirthDate("1990-02-10"));
 
         userIdentity =
                 new UserIdentity(

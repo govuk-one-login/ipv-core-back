@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -26,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressCredential;
+import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
@@ -522,12 +523,7 @@ public class UserIdentityService {
                                     .toList()
                             : List.of();
 
-            List<BirthDate> birthDates =
-                    person.getBirthDate() != null
-                            ? person.getBirthDate().stream()
-                                    .map(bd -> new BirthDate(bd.getValue()))
-                                    .toList()
-                            : List.of();
+            List<BirthDate> birthDates = requireNonNullElse(person.getBirthDate(), List.of());
 
             return new IdentityClaim(names, birthDates);
 
