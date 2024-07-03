@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
@@ -55,13 +54,7 @@ public class ClientOAuthSessionDetailsService {
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
         clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
-
-        Boolean reproveIdentity =
-                configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
-                        ? claimsSet.getBooleanClaim("reprove_identity")
-                        : null;
-
-        clientOAuthSessionItem.setReproveIdentity(reproveIdentity);
+        clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
