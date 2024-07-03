@@ -284,8 +284,7 @@ public class UserIdentityService {
         return true;
     }
 
-    private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs)
-            throws CredentialParseException {
+    private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs) {
         var successfulVcs = new ArrayList<VerifiableCredential>();
         for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
             if (VcHelper.isSuccessfulVc(vc)) {

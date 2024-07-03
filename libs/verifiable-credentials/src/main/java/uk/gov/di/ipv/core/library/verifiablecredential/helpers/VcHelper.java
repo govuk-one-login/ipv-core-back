@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -50,7 +49,7 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    public static boolean isSuccessfulVc(VerifiableCredential vc) throws CredentialParseException {
+    public static boolean isSuccessfulVc(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var evidence = identityCheckCredential.getEvidence();
             if (isNullOrEmpty(evidence)) {

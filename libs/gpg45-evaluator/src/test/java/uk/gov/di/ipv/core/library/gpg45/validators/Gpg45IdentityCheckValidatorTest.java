@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class Gpg45IdentityCheckValidatorTest {
+class Gpg45IdentityCheckValidatorTest {
     @ParameterizedTest
     @EnumSource(names = {"ADDRESS", "CLAIMED_IDENTITY", "TICF"})
     void isSuccessfulShouldReturnFalseForNonEvidenceCri(Cri cri) {

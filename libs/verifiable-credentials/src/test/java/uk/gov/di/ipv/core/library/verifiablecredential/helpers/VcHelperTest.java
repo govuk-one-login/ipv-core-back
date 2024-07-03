@@ -10,14 +10,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -71,13 +68,13 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
-    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) throws Exception {
+    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) {
         assertTrue(VcHelper.isSuccessfulVc(vc), name);
     }
 
     @ParameterizedTest
     @MethodSource("UnsuccessfulTestCases")
-    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) throws Exception {
+    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) {
         assertFalse(VcHelper.isSuccessfulVc(vc), name);
     }
 
@@ -207,21 +204,5 @@ class VcHelperTest {
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
                 Arguments.of("Failed passport VC", vcPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudFailed()));
-    }
-
-    private static OauthCriConfig createOauthCriConfig(String componentId)
-            throws URISyntaxException {
-        return OauthCriConfig.builder()
-                .tokenUrl(new URI("http://example.com/token"))
-                .credentialUrl(new URI("http://example.com/credential"))
-                .authorizeUrl(new URI("http://example.com/authorize"))
-                .clientId("ipv-core")
-                .signingKey("test-jwk")
-                .encryptionKey("test-encryption-jwk")
-                .componentId(componentId)
-                .clientCallbackUrl(new URI("http://example.com/redirect"))
-                .requiresApiKey(true)
-                .requiresAdditionalEvidence(false)
-                .build();
     }
 }
