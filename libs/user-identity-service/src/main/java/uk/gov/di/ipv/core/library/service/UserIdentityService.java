@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,8 +61,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    public static final String NAME_PROPERTY_NAME = "name";
-    public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT.getId(), DCMAW.getId());
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW.getId(), DRIVING_LICENCE.getId());
@@ -75,7 +72,6 @@ public class UserIdentityService {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
 
