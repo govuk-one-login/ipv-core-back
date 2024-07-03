@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
-import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
@@ -45,6 +44,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -1225,7 +1225,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        SocialSecurityRecord ninoClaim = credentials.getNinoClaim().get(0);
+        SocialSecurityRecordDetails ninoClaim = credentials.getNinoClaim().get(0);
         assertEquals("AA000003D", ninoClaim.getPersonalNumber());
     }
 

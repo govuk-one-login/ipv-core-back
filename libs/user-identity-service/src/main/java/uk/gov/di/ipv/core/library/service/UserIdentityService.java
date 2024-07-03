@@ -326,7 +326,7 @@ public class UserIdentityService {
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
-        Optional<List<SocialSecurityRecord>> ninoClaim =
+        Optional<List<SocialSecurityRecordDetails>> ninoClaim =
                 generateNinoClaim(successfulVcs, profileType);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
@@ -585,7 +585,7 @@ public class UserIdentityService {
                 .build();
     }
 
-    private Optional<List<SocialSecurityRecord>> generateNinoClaim(
+    private Optional<List<SocialSecurityRecordDetails>> generateNinoClaim(
             List<VerifiableCredential> vcs, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
         String criToExtractFrom =
@@ -624,9 +624,8 @@ public class UserIdentityService {
 
             return Optional.empty();
         }
-        var mappedNino = nino.stream().map(this::mapNinoToSocialSecurityRecord).toList();
 
-        return Optional.of(mappedNino);
+        return Optional.of(nino);
     }
 
     private SocialSecurityRecord mapNinoToSocialSecurityRecord(SocialSecurityRecordDetails nino) {
