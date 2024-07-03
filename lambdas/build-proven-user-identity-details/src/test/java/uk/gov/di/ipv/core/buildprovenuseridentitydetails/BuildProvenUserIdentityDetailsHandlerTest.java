@@ -16,7 +16,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -24,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -485,7 +485,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         new Name(
                                 Collections.singletonList(
                                         new NameParts("KENNETH DECERQUEIRA", "dummyType"))));
-        var birthDates = Collections.singletonList(new BirthDate("1965-07-08"));
+
+        var birthDates = Collections.singletonList(BirthDateHelper.createBirthDate("1965-07-08"));
 
         return Optional.of(new IdentityClaim(names, birthDates));
     }

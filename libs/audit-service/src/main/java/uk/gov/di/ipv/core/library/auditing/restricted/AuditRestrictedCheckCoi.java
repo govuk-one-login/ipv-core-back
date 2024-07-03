@@ -3,8 +3,8 @@ package uk.gov.di.ipv.core.library.auditing.restricted;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.model.BirthDate;
 
 import java.util.List;
 

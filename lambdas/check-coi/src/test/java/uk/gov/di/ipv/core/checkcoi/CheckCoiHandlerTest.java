@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -36,6 +35,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -133,7 +133,7 @@ class CheckCoiHandlerTest {
 
         private Optional<IdentityClaim> getMockIdentityClaim() {
             var mockNameParts = new NameParts("Kenneth Decerqueira", "full-name");
-            var mockBirthDate = new BirthDate("1965-07-08");
+            var mockBirthDate = BirthDateHelper.createBirthDate("1965-07-08");
             return Optional.of(
                     new IdentityClaim(
                             List.of(new Name(List.of(mockNameParts))), List.of(mockBirthDate)));

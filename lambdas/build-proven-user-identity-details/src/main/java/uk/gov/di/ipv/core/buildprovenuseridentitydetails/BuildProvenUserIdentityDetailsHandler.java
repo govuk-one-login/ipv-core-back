@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdenti
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
@@ -41,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.BirthDate;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -163,7 +163,7 @@ public class BuildProvenUserIdentityDetailsHandler
                         500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
             }
 
-            BirthDate birthDate =
+            var birthDate =
                     mapper.convertValue(identityClaim.get().getBirthDate().get(0), BirthDate.class);
 
             return new NameAndDateOfBirth(
