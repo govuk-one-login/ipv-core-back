@@ -16,11 +16,12 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
-import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ADDRESS_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
@@ -434,70 +435,52 @@ public interface VcFixtures {
                         .build());
     }
 
+    private static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.ADDRESS,
+                TestVc.builder()
+                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
+                        .credentialSubject(subject)
+                        .evidence(null)
+                        .build(),
+                TEST_ISSUER_INTEGRATION,
+                Instant.ofEpochSecond(1658829720));
+    }
+
     VerifiableCredential VC_ADDRESS =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.ADDRESS,
-                    TestVc.builder()
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .address(List.of(ADDRESS_1))
-                                            .build())
-                            .build());
+            generateAddressVc(
+                    TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build());
 
     static VerifiableCredential vcAddressTwo() {
-        TestVc.TestCredentialSubject credentialSubject =
+        return generateAddressVc(
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(ALICE_PARKER_NAME))
                         .address(List.of(ADDRESS_2))
-                        .build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.ADDRESS,
-                TestVc.builder().credentialSubject(credentialSubject).build());
+                        .build());
     }
 
     VerifiableCredential M1A_ADDRESS_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.ADDRESS,
-                    TestVc.builder()
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .name(null)
-                                            .address(List.of(ADDRESS_3))
-                                            .build())
-                            .evidence(null)
-                            .build(),
-                    TEST_ISSUER_INTEGRATION,
-                    Instant.ofEpochSecond(1658829720));
+            generateAddressVc(
+                    TestVc.TestCredentialSubject.builder()
+                            .name(null)
+                            .address(List.of(ADDRESS_3))
+                            .build());
 
     static VerifiableCredential vcAddressMultipleAddresses() {
-        TestVc.TestCredentialSubject credentialSubject =
+        return generateAddressVc(
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
                         .address(MULTIPLE_ADDRESSES_VALID)
-                        .build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.ADDRESS,
-                TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                TEST_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829720));
+                        .build());
     }
 
     static VerifiableCredential vcAddressMultipleAddressesNoValidFrom() {
-        TestVc.TestCredentialSubject credentialSubject =
+        return generateAddressVc(
                 TestVc.TestCredentialSubject.builder()
                         .name(null)
                         .address(MULTIPLE_ADDRESSES_NO_VALID_FROM)
-                        .build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.ADDRESS,
-                TestVc.builder().credentialSubject(credentialSubject).evidence(null).build(),
-                TEST_ISSUER_INTEGRATION,
-                Instant.ofEpochSecond(1658829720));
+                        .build());
     }
 
     VerifiableCredential M1A_EXPERIAN_FRAUD_VC =
@@ -538,7 +521,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_FAILED_EVIDENCE)
                         .credentialSubject(credentialSubject)
@@ -552,7 +535,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_3)).build();
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                Cri.EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_WITH_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -569,7 +552,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -589,7 +572,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
-                Cri.EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_NO_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
@@ -611,7 +594,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "user-id",
-                Cri.EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
                         .credentialSubject(credentialSubject)
@@ -628,7 +611,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092",
-                Cri.EXPERIAN_KBV,
+                EXPERIAN_FRAUD,
                 TestVc.builder()
                         .evidence(FRAUD_EVIDENCE_CRI_STUB_CHECK)
                         .credentialSubject(credentialSubject)

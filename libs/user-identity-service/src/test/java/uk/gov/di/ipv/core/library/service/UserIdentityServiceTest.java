@@ -20,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -74,6 +75,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ID
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
@@ -84,6 +88,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class UserIdentityServiceTest {
     public static final JWSHeader JWS_HEADER =
             new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -204,7 +209,7 @@ class UserIdentityServiceTest {
                 List.of(
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
@@ -214,7 +219,7 @@ class UserIdentityServiceTest {
                                         "Corky", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
@@ -230,7 +235,7 @@ class UserIdentityServiceTest {
                 List.of(
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                DCMAW.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
@@ -259,7 +264,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         missingName, "Jones", "1000-01-01")));
         mockCredentialIssuerConfig();
@@ -397,12 +402,12 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                DCMAW.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
         mockCredentialIssuerConfig();
@@ -588,12 +593,12 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                DCMAW.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         TestFixtures.createVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01"))));
         mockCredentialIssuerConfig();
@@ -637,7 +642,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -647,7 +652,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
             mockCredentialIssuerConfig();
@@ -663,7 +668,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -673,7 +678,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Dimbo", "Bones", "1000-01-01")));
             mockCredentialIssuerConfig();
@@ -689,7 +694,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -699,7 +704,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", "2000-01-01")));
             mockCredentialIssuerConfig();
@@ -716,7 +721,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -726,7 +731,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             missingName, "Bones", "1000-01-01")));
             mockCredentialIssuerConfig();
@@ -750,7 +755,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -760,7 +765,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", missingDob)));
             mockCredentialIssuerConfig();
@@ -845,7 +850,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -855,7 +860,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
             mockCredentialIssuerConfig();
@@ -871,7 +876,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -881,7 +886,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "2000-01-01")));
             mockCredentialIssuerConfig();
@@ -899,7 +904,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -909,7 +914,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", missingName, "1000-01-01")));
             mockCredentialIssuerConfig();
@@ -935,7 +940,7 @@ class UserIdentityServiceTest {
                     List.of(
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
@@ -945,7 +950,7 @@ class UserIdentityServiceTest {
                                             "Jimbo", "Jones", "1000-01-01")),
                             TestFixtures.createVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", missingDob)));
             mockCredentialIssuerConfig();
@@ -1878,10 +1883,11 @@ class UserIdentityServiceTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        Arrays.stream(Cri.values()).forEach(
-                credentialIssuer ->
-                        when(mockConfigService.getComponentId(credentialIssuer.getId()))
-                                .thenReturn(credentialIssuer.getId()));
+        Arrays.stream(Cri.values())
+                .forEach(
+                        credentialIssuer ->
+                                when(mockConfigService.getComponentId(credentialIssuer.getId()))
+                                        .thenReturn(credentialIssuer.getId()));
     }
 
     private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
@@ -1928,10 +1934,15 @@ class UserIdentityServiceTest {
             boolean isSuccessful)
             throws Exception {
         var credentialSubject = new HashMap<String, Object>();
+        var evidence = new HashMap<String, Object>();
         var vcClaim = new HashMap<String, Object>();
 
         vcClaim.put(
                 VC_TYPE, new String[] {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE});
+
+        vcClaim.put(VC_EVIDENCE, List.of(evidence));
+        evidence.put(VC_EVIDENCE_STRENGTH, isSuccessful ? 4 : 0);
+        evidence.put(VC_EVIDENCE_VALIDITY, isSuccessful ? 2 : 0);
 
         vcClaim.put(VC_CREDENTIAL_SUBJECT, credentialSubject);
         List<NameParts> nameParts =
@@ -1950,10 +1961,7 @@ class UserIdentityServiceTest {
         JWTClaimsSet claims =
                 new JWTClaimsSet.Builder()
                         .claim(VC_CLAIM, vcClaim)
-                        .issuer(
-                                // address VC are always considered "successful" even without
-                                // evidence
-                                isSuccessful ? ADDRESS.getId() : PASSPORT.getId())
+                        .issuer(PASSPORT.getId())
                         .build();
 
         SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);

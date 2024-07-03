@@ -3,14 +3,12 @@ package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheckCredential;
 
@@ -37,7 +35,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -46,7 +43,6 @@ public class VcHelper {
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
     private static final int ONLY = 0;
-    private static final List<String> OPERATIONAL_CRIS = Cri.getOperationalCriIds();
 
     private VcHelper() {}
 
@@ -58,19 +54,14 @@ public class VcHelper {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var evidence = identityCheckCredential.getEvidence();
             if (isNullOrEmpty(evidence)) {
-                LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vc.getClaimsSet().getIssuer());
+                LOGGER.warn(
+                        "Unexpected missing evidence on VC from issuer: {}",
+                        vc.getClaimsSet().getIssuer());
                 return false;
             }
-            Cri cri;
-            try {
-                cri = Cri.valueOf(vc.getCriId());
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn(LogHelper
-                        .buildLogMessage("Unknown CRI")
-                        .with(LOG_CRI_ID.getFieldName(), vc.getCriId()));
-                return false;
-            }
-            return evidence.stream().anyMatch(check -> Gpg45IdentityCheckValidator.isSuccessful(check, cri));
+            return evidence.stream()
+                    .anyMatch(
+                            check -> Gpg45IdentityCheckValidator.isSuccessful(check, vc.getCri()));
         }
         return true;
     }
@@ -78,13 +69,9 @@ public class VcHelper {
     public static List<VerifiableCredential> filterVCBasedOnProfileType(
             List<VerifiableCredential> vcs, ProfileType profileType) {
         if (profileType.equals(ProfileType.GPG45)) {
-            return vcs.stream()
-                    .filter(vc -> !OPERATIONAL_CRIS.contains(vc.getCri().getId()))
-                    .toList();
+            return vcs.stream().filter(vc -> !vc.getCri().isOperationalCri()).toList();
         } else {
-            return vcs.stream()
-                    .filter(vc -> (OPERATIONAL_CRIS.contains(vc.getCri().getId())))
-                    .toList();
+            return vcs.stream().filter(vc -> vc.getCri().isOperationalCri()).toList();
         }
     }
 

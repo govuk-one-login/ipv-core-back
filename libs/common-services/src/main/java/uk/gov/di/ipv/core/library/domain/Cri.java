@@ -3,9 +3,6 @@ package uk.gov.di.ipv.core.library.domain;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.util.Arrays;
-import java.util.List;
-
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum Cri {
@@ -45,12 +42,5 @@ public enum Cri {
             }
         }
         throw new IllegalArgumentException("no cri found with ID " + id);
-    }
-
-    public static List<String> getOperationalCriIds() {
-        return Arrays.stream(Cri.values())
-                .filter(Cri::isOperationalCri)
-                .map(Cri::getId)
-                .toList();
     }
 }

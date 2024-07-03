@@ -17,11 +17,12 @@ public class Gpg45IdentityCheckValidator {
         return switch (cri) {
             case BAV, DRIVING_LICENCE, PASSPORT -> isEvidenceSuccessful(identityCheck);
             case EXPERIAN_FRAUD -> isFraudCheckSuccessful(identityCheck);
-            case EXPERIAN_KBV, HMRC_KBV -> isVerificationSuccessful(identityCheck);
+            case DWP_KBV, EXPERIAN_KBV, HMRC_KBV -> isVerificationSuccessful(identityCheck);
             case DCMAW, DCMAW_ASYNC, F2F, HMRC_MIGRATION -> isEvidenceSuccessful(identityCheck)
                     && isVerificationSuccessful(identityCheck);
             case NINO -> isNinoSuccessful(identityCheck);
             case ADDRESS,
+                    CIMIT,
                     CLAIMED_IDENTITY,
                     TICF -> false; // These CRIs should not perform identity checks
         };
