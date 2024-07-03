@@ -1,13 +1,19 @@
 package uk.gov.di.ipv.core.library.gpg45.validators;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.model.IdentityCheck;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator.getVerificationScore;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class Gpg45IdentityCheckValidator {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     @ExcludeFromGeneratedCoverageReport
     private Gpg45IdentityCheckValidator() {
         throw new IllegalStateException("Utility class");
@@ -21,10 +27,12 @@ public class Gpg45IdentityCheckValidator {
             case DCMAW, DCMAW_ASYNC, F2F, HMRC_MIGRATION -> isEvidenceSuccessful(identityCheck)
                     && isVerificationSuccessful(identityCheck);
             case NINO -> isNinoSuccessful(identityCheck);
-            case ADDRESS,
-                    CIMIT,
-                    CLAIMED_IDENTITY,
-                    TICF -> false; // These CRIs should not perform identity checks
+            case ADDRESS, CIMIT, CLAIMED_IDENTITY, TICF -> {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage("Unexpected IdentityCheck from non-evidence CRI")
+                                .with(LOG_CRI_ID.name(), cri.getId()));
+                yield false;
+            }
         };
     }
 

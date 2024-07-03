@@ -386,7 +386,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .clientId("ipv-core")
                 .signingKey(EC_PRIVATE_KEY_JWK)
                 .encryptionKey(null)
-                .componentId(ProcessAsyncCriCredentialHandlerTest.TEST_COMPONENT_ID)
+                .componentId(TEST_COMPONENT_ID)
                 .clientCallbackUrl(new URI(""))
                 .requiresApiKey(false)
                 .requiresAdditionalEvidence(false)
