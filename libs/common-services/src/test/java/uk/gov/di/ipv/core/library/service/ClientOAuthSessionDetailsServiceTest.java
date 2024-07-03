@@ -7,7 +7,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -69,8 +68,6 @@ class ClientOAuthSessionDetailsServiceTest {
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        when(mockConfigService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)).thenReturn(true);
 
         JWTClaimsSet testClaimSet =
                 new JWTClaimsSet.Builder()

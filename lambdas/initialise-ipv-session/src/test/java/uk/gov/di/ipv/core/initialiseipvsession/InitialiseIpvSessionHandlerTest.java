@@ -45,6 +45,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionAccountInterv
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
@@ -85,7 +86,6 @@ import static com.nimbusds.oauth2.sdk.OAuth2Error.INVALID_REQUEST_OBJECT_CODE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -101,7 +101,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_TOKEN_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPROVE_IDENTITY_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
@@ -236,8 +235,7 @@ class InitialiseIpvSessionHandlerTest {
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
-        when(mockConfigService.enabled(REPROVE_IDENTITY_ENABLED)).thenReturn(true);
-        when(mockConfigService.enabled(not(eq(REPROVE_IDENTITY_ENABLED)))).thenReturn(false);
+        when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(

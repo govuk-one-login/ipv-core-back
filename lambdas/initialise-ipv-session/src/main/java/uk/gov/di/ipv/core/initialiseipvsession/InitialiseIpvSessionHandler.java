@@ -222,7 +222,7 @@ public class InitialiseIpvSessionHandler
                 }
             }
 
-            var isReproveIdentity = isReproveIdentity(claimsSet);
+            var isReproveIdentity = claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY);
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
                     new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
 
@@ -325,12 +325,6 @@ public class InitialiseIpvSessionHandler
                     claimsSet,
                     e);
         }
-    }
-
-    private Boolean isReproveIdentity(JWTClaimsSet claimsSet) throws ParseException {
-        return configService.enabled(CoreFeatureFlag.REPROVE_IDENTITY_ENABLED)
-                ? claimsSet.getBooleanClaim(REPROVE_IDENTITY_KEY)
-                : null;
     }
 
     private static boolean isListEmpty(List<String> list) {
