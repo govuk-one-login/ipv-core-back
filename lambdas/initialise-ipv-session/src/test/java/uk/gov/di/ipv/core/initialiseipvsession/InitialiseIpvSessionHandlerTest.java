@@ -98,7 +98,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_TOKEN_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPROVE_IDENTITY_ENABLED;
@@ -282,8 +281,6 @@ class InitialiseIpvSessionHandlerTest {
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-        when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
 
@@ -336,9 +333,6 @@ class InitialiseIpvSessionHandlerTest {
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -651,7 +645,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -711,7 +704,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -768,7 +760,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -841,7 +832,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -931,7 +921,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response;
@@ -972,7 +961,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
 
             // Act
             APIGatewayProxyResponseEvent response =
@@ -997,7 +985,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1040,7 +1027,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1096,7 +1082,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(true);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1146,7 +1131,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
@@ -1209,7 +1193,6 @@ class InitialiseIpvSessionHandlerTest {
             when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-            when(mockConfigService.enabled(EVCS_TOKEN_READ_ENABLED)).thenReturn(false);
             when(mockJarValidator.validateRequestJwt(any(), any()))
                     .thenReturn(
                             getValidClaimsBuilder()
