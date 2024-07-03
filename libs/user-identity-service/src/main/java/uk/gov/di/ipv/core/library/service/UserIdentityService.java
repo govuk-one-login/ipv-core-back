@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -58,8 +55,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -508,26 +503,9 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private JsonNode getVcClaimNode(String credential, String node)
-            throws CredentialParseException {
-        try {
-            return OBJECT_MAPPER
-                    .readTree(SignedJWT.parse(credential).getPayload().toString())
-                    .path(VC_CLAIM)
-                    .path(node);
-        } catch (JsonProcessingException | ParseException e) {
-            throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse VC store item: "
-                            + e.getMessage());
-        }
-    }
-
     private List<NameParts> getNamePartsFromCredentialSubjectName(uk.gov.di.model.Name name) {
         return name.getNameParts().stream()
-                .map(
-                        np -> {
-                            return new NameParts(np.getValue(), np.getType().toString());
-                        })
+                .map(np -> new NameParts(np.getValue(), np.getType().toString()))
                 .toList();
     }
 
@@ -569,7 +547,9 @@ public class UserIdentityService {
                 ((IdentityCheckCredential) addressVc.get().getCredential()).getCredentialSubject();
 
         if (credentialSubject == null) {
-            LOGGER.error(LogHelper.buildLogMessage("Credential subject missing from VC"));
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
@@ -584,10 +564,7 @@ public class UserIdentityService {
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
 
-        var mappedAddresses =
-                address.stream()
-                        .map(this::mapPostalAddressToAddressClass)
-                        .collect(Collectors.toList());
+        var mappedAddresses = address.stream().map(this::mapPostalAddressToAddressClass).toList();
 
         return Optional.of(mappedAddresses);
     }
@@ -631,7 +608,9 @@ public class UserIdentityService {
                 ((IdentityCheckCredential) ninoVc.get().getCredential()).getCredentialSubject();
 
         if (credentialSubject == null) {
-            LOGGER.error(LogHelper.buildLogMessage("Credential subject missing from VC"));
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
@@ -674,7 +653,7 @@ public class UserIdentityService {
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Credential subject missing from VC")
+                                    ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage())
                             .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
             return Optional.empty();
@@ -715,7 +694,7 @@ public class UserIdentityService {
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Credential subject missing from VC")
+                                    ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage())
                             .with(
                                     LOG_CRI_ISSUER.getFieldName(),
                                     drivingPermitVc.get().getCri().getId());
@@ -759,20 +738,6 @@ public class UserIdentityService {
         return vcs.stream()
                 .filter(credential -> criNames.contains(credential.getCri().getId()))
                 .findFirst();
-    }
-
-    private JsonNode extractSubjectDetailFromVc(
-            String detailName,
-            VerifiableCredential vc,
-            String errorLog,
-            ErrorResponse errorResponse)
-            throws HttpResponseExceptionWithErrorBody {
-        try {
-            return getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT).path(detailName);
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage(errorLog, e));
-            throw new HttpResponseExceptionWithErrorBody(SC_SERVER_ERROR, errorResponse);
-        }
     }
 
     private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
