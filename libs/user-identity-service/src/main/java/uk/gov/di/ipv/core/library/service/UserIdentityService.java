@@ -552,7 +552,6 @@ public class UserIdentityService {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
             return Optional.empty();
         }
-        var l = addressVc.get();
 
         if (addressVc.get().getCredential() instanceof AddressCredential addressCredential) {
             var credentialSubject = addressCredential.getCredentialSubject();
