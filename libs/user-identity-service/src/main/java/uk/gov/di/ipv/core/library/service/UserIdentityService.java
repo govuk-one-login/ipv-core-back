@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
-import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -27,10 +26,13 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
@@ -505,25 +507,37 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
-        var credentialSubject =
-                ((IdentityCheckCredential) vc.getCredential()).getCredentialSubject();
+    private IdentityClaim getIdentityClaim(VerifiableCredential vc)
+            throws HttpResponseExceptionWithErrorBody {
+        if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
 
-        var names =
-                credentialSubject.getName() != null
-                        ? credentialSubject.getName().stream()
-                                .map(name -> new Name(getNamePartsFromCredentialSubjectName(name)))
-                                .toList()
-                        : new ArrayList<Name>();
+            List<Name> names =
+                    person.getName() != null
+                            ? person.getName().stream()
+                                    .map(
+                                            name ->
+                                                    new Name(
+                                                            getNamePartsFromCredentialSubjectName(
+                                                                    name)))
+                                    .toList()
+                            : List.of();
 
-        var birthDates =
-                credentialSubject.getBirthDate() != null
-                        ? credentialSubject.getBirthDate().stream()
-                                .map(bd -> new BirthDate(bd.getValue()))
-                                .toList()
-                        : new ArrayList<BirthDate>();
+            List<BirthDate> birthDates =
+                    person.getBirthDate() != null
+                            ? person.getBirthDate().stream()
+                                    .map(bd -> new BirthDate(bd.getValue()))
+                                    .toList()
+                            : List.of();
 
-        return new IdentityClaim(names, birthDates);
+            return new IdentityClaim(names, birthDates);
+
+        } else {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Address property missing from VC or empty address property "));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
     }
 
     public Vot getVot(VerifiableCredential vc) throws IllegalArgumentException, ParseException {
@@ -538,31 +552,38 @@ public class UserIdentityService {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
             return Optional.empty();
         }
+        var l = addressVc.get();
 
-        var credentialSubject =
-                ((IdentityCheckCredential) addressVc.get().getCredential()).getCredentialSubject();
+        if (addressVc.get().getCredential() instanceof AddressCredential addressCredential) {
+            var credentialSubject = addressCredential.getCredentialSubject();
 
-        if (credentialSubject == null) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+            if (credentialSubject == null) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            }
+
+            var address = credentialSubject.getAddress();
+
+            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(address)) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Address property missing from VC or empty address property."));
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            }
+
+            var mappedAddresses =
+                    address.stream().map(this::mapPostalAddressToAddressClass).toList();
+
+            return Optional.of(mappedAddresses);
+        } else {
+            LOGGER.error(LogHelper.buildLogMessage("Credential must be an Address credential."));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
-
-        var address = credentialSubject.getAddress();
-
-        if (address == null || address.isEmpty()) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            "Address property missing from VC or empty address property "));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
-        }
-
-        var mappedAddresses = address.stream().map(this::mapPostalAddressToAddressClass).toList();
-
-        return Optional.of(mappedAddresses);
     }
 
     private Address mapPostalAddressToAddressClass(PostalAddress postalAddress) {
@@ -600,39 +621,35 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var credentialSubject =
-                ((IdentityCheckCredential) ninoVc.get().getCredential()).getCredentialSubject();
+        if (ninoVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
 
-        if (credentialSubject == null) {
+            var nino = credentialSubject.getSocialSecurityRecord();
+
+            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(nino)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Nino property is missing from VC")
+                                .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+
+                return Optional.empty();
+            }
+
+            return Optional.of(nino);
+        } else {
             LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
             throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                    500, ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
         }
-
-        var nino = credentialSubject.getSocialSecurityRecord();
-
-        if (nino == null || nino.isEmpty()) {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Nino property is missing from VC")
-                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-
-            return Optional.empty();
-        }
-
-        return Optional.of(nino);
     }
 
-    private SocialSecurityRecord mapNinoToSocialSecurityRecord(SocialSecurityRecordDetails nino) {
-        return new SocialSecurityRecord(nino.getPersonalNumber());
-    }
-
-    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs) {
+    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
         var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
 
         if (passportVc.isEmpty()) {
@@ -640,34 +657,33 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var credentialSubject =
-                ((IdentityCheckCredential) passportVc.get().getCredential()).getCredentialSubject();
+        if (passportVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
 
-        if (credentialSubject == null) {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage())
-                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-            return Optional.empty();
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
+
+            var passport = credentialSubject.getPassport();
+
+            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(passport)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Passport property is missing from VC or empty passport property.")
+                                .with(
+                                        LOG_CRI_ISSUER.getFieldName(),
+                                        passportVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+                return Optional.empty();
+            }
+
+            return Optional.of(passport);
+        } else {
+            LOGGER.error(
+                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
         }
-
-        var passport = credentialSubject.getPassport();
-
-        if (passport == null || passport.isEmpty()) {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Passport property is missing from VC or empty passport property.")
-                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-            return Optional.empty();
-        }
-
-        return Optional.of(passport);
     }
 
     private Optional<List<DrivingPermitDetails>> generateDrivingPermitClaim(
@@ -680,46 +696,39 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var credentialSubject =
-                ((IdentityCheckCredential) drivingPermitVc.get().getCredential())
-                        .getCredentialSubject();
+        if (drivingPermitVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
 
-        if (credentialSubject == null) {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage())
-                            .with(
-                                    LOG_CRI_ISSUER.getFieldName(),
-                                    drivingPermitVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-            return Optional.empty();
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
+
+            var drivingPermit = credentialSubject.getDrivingPermit();
+
+            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(drivingPermit)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Driving Permit property is missing from VC or empty driving permit property.")
+                                .with(
+                                        LOG_CRI_ISSUER.getFieldName(),
+                                        drivingPermitVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+                return Optional.empty();
+            }
+
+            drivingPermit.forEach(
+                    permit -> {
+                        permit.setFullAddress(null);
+                        permit.setIssueDate(null);
+                    });
+
+            return Optional.of(drivingPermit);
+        } else {
+            LOGGER.error(
+                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
         }
-
-        var drivingPermit = credentialSubject.getDrivingPermit();
-
-        if (drivingPermit == null || drivingPermit.isEmpty()) {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Driving Permit property is missing from VC or empty driving permit property.")
-                            .with(
-                                    LOG_CRI_ISSUER.getFieldName(),
-                                    drivingPermitVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-            return Optional.empty();
-        }
-
-        drivingPermit.stream()
-                .forEach(
-                        permit -> {
-                            permit.setFullAddress(null);
-                            permit.setIssueDate(null);
-                        });
-
-        return Optional.of(drivingPermit);
     }
 
     private Optional<VerifiableCredential> findVc(String criName, List<VerifiableCredential> vcs) {
@@ -735,20 +744,44 @@ public class UserIdentityService {
                 .findFirst();
     }
 
-    private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
-        var vcEvidence = ((IdentityCheckCredential) vc.getCredential()).getEvidence();
-        if (vcEvidence == null) {
-            return false;
-        }
-
-        for (IdentityCheck evidence : vcEvidence) {
-            if (isNonZeroInt(evidence.getValidityScore())
-                    && isNonZeroInt(evidence.getStrengthScore())) {
-                return true;
+    private boolean isEvidenceVc(VerifiableCredential vc)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var vcEvidence = identityCheckCredential.getEvidence();
+            if (vcEvidence == null) {
+                return false;
             }
+
+            for (IdentityCheck evidence : vcEvidence) {
+                if (isNonZeroInt(evidence.getValidityScore())
+                        && isNonZeroInt(evidence.getStrengthScore())) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            LOGGER.error(
+                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.INVALID_CREDENTIAL_TYPE);
+        }
+    }
+
+    private IdentityCheckSubject getIdentityCheckSubjectOrThrowError(
+            IdentityCheckCredential identityCheckCredential)
+            throws HttpResponseExceptionWithErrorBody {
+        var credentialSubject = identityCheckCredential.getCredentialSubject();
+
+        if (credentialSubject == null) {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
         }
 
-        return false;
+        return credentialSubject;
     }
 
     private boolean isNonZeroInt(Integer value) {
@@ -761,7 +794,8 @@ public class UserIdentityService {
                         vc -> {
                             try {
                                 return isEvidenceVc(vc);
-                            } catch (CredentialParseException e) {
+                            } catch (CredentialParseException
+                                    | HttpResponseExceptionWithErrorBody e) {
                                 return false;
                             }
                         })
