@@ -79,10 +79,7 @@ public class UserIdentityService {
             List.of(ADDRESS.getId(), BAV.getId());
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
-    private static final String PASSPORT_PROPERTY_NAME = "passport";
-    private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
@@ -719,7 +716,9 @@ public class UserIdentityService {
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Credential subject missing from VC")
-                            .with(LOG_CRI_ISSUER.getFieldName(), drivingPermitVc.get().getCri().getId());
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    drivingPermitVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
             return Optional.empty();
         }
@@ -732,7 +731,9 @@ public class UserIdentityService {
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Driving Permit property is missing from VC or empty driving permit property.")
-                            .with(LOG_CRI_ISSUER.getFieldName(), drivingPermitVc.get().getCri().getId());
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    drivingPermitVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
             return Optional.empty();
         }
