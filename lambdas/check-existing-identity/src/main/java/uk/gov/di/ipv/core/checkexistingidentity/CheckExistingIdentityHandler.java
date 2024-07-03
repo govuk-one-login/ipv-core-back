@@ -381,10 +381,16 @@ public class CheckExistingIdentityHandler
                                 evcsIdentityVcs,
                                 isPendingEvcs,
                                 vcBundle.isF2fIdentity());
+
+                if (hasPartiallyMigratedVcs) {
+                    // use tactical vcs but with evcs flags so that the store-identity lambda is
+                    // called next and updates the evcs pending one
+                    vcBundle = new VerifiableCredentialBundle(tacticalVcs, true, true);
+                }
             }
             logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
             // only use these evcs vcs if they exist and have been fully migrated
-            if (vcBundle != null && !hasPartiallyMigratedVcs) {
+            if (vcBundle != null) {
                 return vcBundle;
             }
         }

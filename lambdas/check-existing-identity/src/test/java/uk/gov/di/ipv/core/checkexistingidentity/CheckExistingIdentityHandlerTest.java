@@ -391,37 +391,7 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyReuseResponseIfVcIsF2fAndHasPartiallyMigratedSingleVc()
-                throws CredentialParseException, EvcsServiceException,
-                        HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
-            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-            var f2fVc = vcF2fM1a();
-            f2fVc.setMigrated(Instant.now());
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(gpg45Vc, f2fVc));
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
-                    .thenReturn(Map.of(PENDING_RETURN, List.of(f2fVc)));
-
-            when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
-            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            any(), eq(P2.getSupportedGpg45Profiles())))
-                    .thenReturn(Optional.of(Gpg45Profile.M1A));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-            JourneyResponse journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-            // non-migrated vc should be migrated
-            verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc));
-        }
-
-        @Test
-        void shouldReturnJourneyReuseResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
+        void shouldReturnJourneyReuseStoreResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
@@ -448,9 +418,9 @@ class CheckExistingIdentityHandlerTest {
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
 
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-            // non-migrated vc should be migrated
-            verify(mockEvcsMigrationService).migrateExistingIdentity(TEST_USER_ID, List.of(f2fVc3));
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+            // pending vcs should not be migrated
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
         }
 
         @Test
