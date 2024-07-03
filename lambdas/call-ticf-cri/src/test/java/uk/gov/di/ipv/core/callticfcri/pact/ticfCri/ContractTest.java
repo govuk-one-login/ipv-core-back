@@ -290,7 +290,7 @@ class ContractTest {
                                                         "interventionCode",
                                                         "01",
                                                         "interventionReason",
-                                                        "007"))))));
+                                                        "not-set"))))));
     }
 
     @Pact(provider = "TicfCriProvider", consumer = "IpvCoreBack")
