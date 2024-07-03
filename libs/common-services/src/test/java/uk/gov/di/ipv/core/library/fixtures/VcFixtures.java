@@ -681,7 +681,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE.getId(),
+                DRIVING_LICENCE,
                 TestVc.builder()
                         .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .credentialSubject(credentialSubject)
