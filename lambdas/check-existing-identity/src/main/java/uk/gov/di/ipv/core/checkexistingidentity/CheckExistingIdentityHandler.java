@@ -381,6 +381,21 @@ public class CheckExistingIdentityHandler
                                 evcsIdentityVcs,
                                 isPendingEvcs,
                                 vcBundle.isF2fIdentity());
+
+                if (hasPartiallyMigratedVcs) {
+                    var vcs = vcBundle.credentials;
+                    if (evcsIdentityVcs.size() == 1
+                            && F2F.equals(evcsIdentityVcs.get(0).getCri())) {
+                        // get the evcs f2f and add it to the tactical vcs if it does not exist
+                        var evcsVc = evcsIdentityVcs.get(0);
+                        if (!vcs.stream()
+                                .anyMatch(vc -> vc.getVcString().equals(evcsVc.getVcString()))) {
+
+                            vcs.add(evcsVc);
+                            return new VerifiableCredentialBundle(vcs, true, true);
+                        }
+                    }
+                }
             }
             logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
             // only use these evcs vcs if they exist and have been fully migrated
