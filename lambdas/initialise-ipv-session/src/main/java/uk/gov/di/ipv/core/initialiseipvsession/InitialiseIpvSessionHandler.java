@@ -69,7 +69,6 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_TOKEN_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -369,17 +368,12 @@ public class InitialiseIpvSessionHandler
     @Tracing
     private String getEvcsAccessToken(JWTClaimsSet claimsSet)
             throws RecoverableJarValidationException, ParseException {
-
-        var writeEnabled = configService.enabled(EVCS_WRITE_ENABLED);
-        var readEnabled = configService.enabled(EVCS_READ_ENABLED);
-        if (!configService.enabled(EVCS_TOKEN_READ_ENABLED) && !writeEnabled && !readEnabled) {
-            return null;
-        }
         try {
             return validateEvcsAccessToken(
                     getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken), claimsSet);
         } catch (RecoverableJarValidationException | ParseException e) {
-            if (writeEnabled || readEnabled) {
+            if (configService.enabled(EVCS_WRITE_ENABLED)
+                    || configService.enabled(EVCS_READ_ENABLED)) {
                 throw e;
             } else {
                 return null;
