@@ -414,10 +414,9 @@ class CheckExistingIdentityHandlerTest {
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
 
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-            // non-migrated vc should be migrated
-            verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(TEST_USER_ID, List.of(gpg45Vc));
+            assertEquals(JOURNEY_REUSE_WITH_STORE, journeyResponse);
+            // pending vcs should not be migrated
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
         }
 
         @Test

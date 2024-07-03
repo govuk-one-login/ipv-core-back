@@ -382,19 +382,12 @@ public class CheckExistingIdentityHandler
                                 isPendingEvcs,
                                 vcBundle.isF2fIdentity());
 
-                if (hasPartiallyMigratedVcs) {
-                    var vcs = vcBundle.credentials;
-                    if (evcsIdentityVcs.size() == 1
-                            && F2F.equals(evcsIdentityVcs.get(0).getCri())) {
-                        // get the evcs f2f and add it to the tactical vcs if it does not exist
-                        var evcsVc = evcsIdentityVcs.get(0);
-                        if (!vcs.stream()
-                                .anyMatch(vc -> vc.getVcString().equals(evcsVc.getVcString()))) {
-
-                            vcs.add(evcsVc);
-                            return new VerifiableCredentialBundle(vcs, true, true);
-                        }
-                    }
+                if (hasPartiallyMigratedVcs
+                        && evcsIdentityVcs.size() == 1
+                        && F2F.equals(evcsIdentityVcs.get(0).getCri())) {
+                    // use tactical vcs but with evcs flags so that the store-identity lambda is
+                    // called next and updates the evcs pending one
+                    return new VerifiableCredentialBundle(tacticalVcs, true, true);
                 }
             }
             logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
