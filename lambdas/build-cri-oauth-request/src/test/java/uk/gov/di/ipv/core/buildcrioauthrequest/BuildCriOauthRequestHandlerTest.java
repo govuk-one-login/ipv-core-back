@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -1385,36 +1384,6 @@ class BuildCriOauthRequestHandlerTest {
                 TEST_NI_NUMBER,
                 sharedClaims.get("socialSecurityRecord").get(0).get("personalNumber").asText());
         verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
-    }
-
-    @Test
-    void shouldReceive500CredentialOfUnknownType() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
-                .thenReturn(dcmawOauthCriConfig);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenThrow(new UnknownEvidenceTypeException());
-
-        JourneyRequest input =
-                JourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, F2F_CRI))
-                        .build();
-
-        // Act
-        var response = handleRequest(input, context);
-
-        // Assert
-        assertErrorResponse(
-                HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                response,
-                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
     }
 
     @ParameterizedTest

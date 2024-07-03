@@ -36,9 +36,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -334,8 +332,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (ParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
-        } catch (UnknownEvidenceTypeException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, e);
         } catch (SqsException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, e);
         } catch (CredentialParseException e) {
@@ -528,8 +524,8 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated)
-            throws ParseException, UnknownEvidenceTypeException, SqsException,
-                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
+            throws ParseException, SqsException, VerifiableCredentialException,
+                    EvcsServiceException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -622,7 +618,7 @@ public class CheckExistingIdentityHandler
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && !hasCurrentFraudVc(vcBundle.credentials)) {
+                && allFraudVcsAreExpired(vcBundle.credentials)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
@@ -679,16 +675,10 @@ public class CheckExistingIdentityHandler
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
     }
 
-    private boolean hasCurrentFraudVc(List<VerifiableCredential> vcs) {
-        var fraudVCs =
-                VcHelper.filterVCBasedOnEvidenceType(
-                        vcs, EvidenceType.IDENTITY_FRAUD, EvidenceType.FRAUD_WITH_ACTIVITY);
-        for (var vc : fraudVCs) {
-            if (!VcHelper.isExpiredFraudVc(vc)) {
-                return true;
-            }
-        }
-        return false;
+    private boolean allFraudVcsAreExpired(List<VerifiableCredential> vcs) {
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
+                .allMatch(VcHelper::isExpiredFraudVc);
     }
 
     private void sendAuditEvent(
@@ -737,8 +727,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             boolean areGpg45VcsCorrelated)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    CredentialParseException {
+            throws ParseException, SqsException {
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
@@ -766,8 +755,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws UnknownEvidenceTypeException, ParseException, SqsException,
-                    CredentialParseException {
+            throws ParseException, SqsException {
 
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
