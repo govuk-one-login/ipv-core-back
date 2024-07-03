@@ -233,8 +233,7 @@ class CriStoringServiceTest {
 
         // Assert
         verify(mockSessionCredentialsService)
-                .deleteSessionCredentialsForCri(
-                        mockIpvSessionItem.getIpvSessionId(), ADDRESS.getId());
+                .deleteSessionCredentialsForCri(mockIpvSessionItem.getIpvSessionId(), ADDRESS);
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());

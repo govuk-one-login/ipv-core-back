@@ -175,7 +175,7 @@ public class CriStoringService {
                 if (criId.equals(ADDRESS.getId())) {
                     // Remove any existing address VC from session credentials - for 6MFC
                     sessionCredentialsService.deleteSessionCredentialsForCri(
-                            ipvSessionItem.getIpvSessionId(), ADDRESS.getId());
+                            ipvSessionItem.getIpvSessionId(), ADDRESS);
                 }
                 sessionCredentialsService.persistCredentials(
                         List.of(vc), ipvSessionItem.getIpvSessionId(), true);
