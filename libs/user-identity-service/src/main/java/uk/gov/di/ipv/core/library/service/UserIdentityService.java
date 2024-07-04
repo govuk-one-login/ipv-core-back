@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
@@ -534,7 +535,7 @@ public class UserIdentityService {
         } else {
             LOGGER.error(
                     LogHelper.buildLogMessage(
-                            "Address property missing from VC or empty address property "));
+                            "Credential subject must be of type PersonWithIdentity."));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
         }
@@ -566,7 +567,7 @@ public class UserIdentityService {
 
             var address = credentialSubject.getAddress();
 
-            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(address)) {
+            if (isNullOrEmpty(address)) {
                 LOGGER.error(
                         LogHelper.buildLogMessage(
                                 "Address property missing from VC or empty address property."));
@@ -626,7 +627,7 @@ public class UserIdentityService {
 
             var nino = credentialSubject.getSocialSecurityRecord();
 
-            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(nino)) {
+            if (isNullOrEmpty(nino)) {
                 StringMapMessage mapMessage =
                         new StringMapMessage()
                                 .with(
@@ -663,7 +664,7 @@ public class UserIdentityService {
 
             var passport = credentialSubject.getPassport();
 
-            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(passport)) {
+            if (isNullOrEmpty(passport)) {
                 StringMapMessage mapMessage =
                         new StringMapMessage()
                                 .with(
@@ -702,7 +703,7 @@ public class UserIdentityService {
 
             var drivingPermit = credentialSubject.getDrivingPermit();
 
-            if (software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty(drivingPermit)) {
+            if (isNullOrEmpty(drivingPermit)) {
                 StringMapMessage mapMessage =
                         new StringMapMessage()
                                 .with(
