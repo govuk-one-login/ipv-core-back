@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
-import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -57,6 +56,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.NameHelper.createName;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
@@ -482,9 +483,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private Optional<IdentityClaim> createIdentityClaim() {
         var names =
                 Collections.singletonList(
-                        NameHelper.createName(
+                        createName(
                                 Collections.singletonList(
-                                        NameHelper.NamePartHelper.createNamePart(
+                                        createNamePart(
                                                 "KENNETH DECERQUEIRA",
                                                 NamePart.NamePartType.GIVEN_NAME))));
 

@@ -515,7 +515,7 @@ public class UserIdentityService {
     private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
 
-            List<uk.gov.di.model.Name> names = requireNonNullElse(person.getName(), List.of());
+            List<Name> names = requireNonNullElse(person.getName(), List.of());
 
             List<BirthDate> birthDates = requireNonNullElse(person.getBirthDate(), List.of());
 
@@ -746,7 +746,7 @@ public class UserIdentityService {
         return vcs.stream().filter(this::isEvidenceVc).toList();
     }
 
-    private String getMissingNames(List<uk.gov.di.model.Name> names) {
+    private String getMissingNames(List<Name> names) {
         if (CollectionUtils.isEmpty(names)) {
             return "Name list";
         }
