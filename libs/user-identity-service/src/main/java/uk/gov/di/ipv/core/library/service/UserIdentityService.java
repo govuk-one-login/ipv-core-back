@@ -743,8 +743,7 @@ public class UserIdentityService {
                 .findFirst();
     }
 
-    private boolean isEvidenceVc(VerifiableCredential vc)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+    private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var vcEvidence = identityCheckCredential.getEvidence();
             if (vcEvidence == null) {
@@ -759,12 +758,8 @@ public class UserIdentityService {
             }
 
             return false;
-        } else {
-            LOGGER.error(
-                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.INVALID_CREDENTIAL_TYPE);
         }
+        return false;
     }
 
     private IdentityCheckSubject getIdentityCheckSubjectOrThrowError(
@@ -793,8 +788,7 @@ public class UserIdentityService {
                         vc -> {
                             try {
                                 return isEvidenceVc(vc);
-                            } catch (CredentialParseException
-                                    | HttpResponseExceptionWithErrorBody e) {
+                            } catch (CredentialParseException e) {
                                 return false;
                             }
                         })
