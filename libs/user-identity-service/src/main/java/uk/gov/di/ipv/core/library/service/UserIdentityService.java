@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
@@ -30,6 +29,8 @@ import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.PostalAddress;
@@ -219,7 +220,7 @@ public class UserIdentityService {
         if (!checkNamesForCorrelation(
                 getNameProperty(
                         getIdentityClaimsForNameCorrelation(successfulVcs),
-                        GIVEN_NAME_PROPERTY_NAME))) {
+                        NamePart.NamePartType.GIVEN_NAME))) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -413,18 +414,18 @@ public class UserIdentityService {
                                     nameParts.stream()
                                             .filter(
                                                     namePart ->
-                                                            GIVEN_NAME_PROPERTY_NAME.equals(
+                                                            NamePart.NamePartType.GIVEN_NAME.equals(
                                                                     namePart.getType()))
-                                            .map(NameParts::getValue)
+                                            .map(NamePart::getValue)
                                             .collect(Collectors.joining(" "));
 
                             String familyNames =
                                     nameParts.stream()
                                             .filter(
                                                     namePart ->
-                                                            FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                    namePart.getType()))
-                                            .map(NameParts::getValue)
+                                                            NamePart.NamePartType.FAMILY_NAME
+                                                                    .equals(namePart.getType()))
+                                            .map(NamePart::getValue)
                                             .collect(Collectors.joining(" "));
 
                             return givenNames + " " + familyNames;
@@ -434,7 +435,7 @@ public class UserIdentityService {
     }
 
     private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNameProperty(identityClaims, FAMILY_NAME_PROPERTY_NAME).stream()
+        return getNameProperty(identityClaims, NamePart.NamePartType.FAMILY_NAME).stream()
                 .map(
                         familyName ->
                                 StringUtils.substring(
@@ -446,14 +447,15 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> getNameProperty(List<IdentityClaim> identityClaims, String nameProperty) {
+    private List<String> getNameProperty(
+            List<IdentityClaim> identityClaims, NamePart.NamePartType nameProperty) {
         return identityClaims.stream()
                 .map(IdentityClaim::getNameParts)
                 .map(
                         nameParts ->
                                 nameParts.stream()
                                         .filter(namePart -> nameProperty.equals(namePart.getType()))
-                                        .map(NameParts::getValue)
+                                        .map(NamePart::getValue)
                                         .collect(Collectors.joining(" ")))
                 .toList();
     }
@@ -512,16 +514,8 @@ public class UserIdentityService {
 
     private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
-            List<Name> names =
-                    person.getName() != null
-                            ? person.getName().stream()
-                                    .map(
-                                            name ->
-                                                    new Name(
-                                                            getNamePartsFromCredentialSubjectName(
-                                                                    name)))
-                                    .toList()
-                            : List.of();
+
+            List<uk.gov.di.model.Name> names = requireNonNullElse(person.getName(), List.of());
 
             List<BirthDate> birthDates = requireNonNullElse(person.getBirthDate(), List.of());
 
@@ -752,7 +746,7 @@ public class UserIdentityService {
         return vcs.stream().filter(this::isEvidenceVc).toList();
     }
 
-    private String getMissingNames(List<Name> names) {
+    private String getMissingNames(List<uk.gov.di.model.Name> names) {
         if (CollectionUtils.isEmpty(names)) {
             return "Name list";
         }

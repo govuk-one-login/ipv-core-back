@@ -18,12 +18,11 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdenti
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
+import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -33,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.NamePart;
 
 import java.util.Collections;
 import java.util.List;
@@ -482,9 +482,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private Optional<IdentityClaim> createIdentityClaim() {
         var names =
                 Collections.singletonList(
-                        new Name(
+                        NameHelper.createName(
                                 Collections.singletonList(
-                                        new NameParts("KENNETH DECERQUEIRA", "dummyType"))));
+                                        NameHelper.NamePartHelper.createNamePart(
+                                                "KENNETH DECERQUEIRA",
+                                                NamePart.NamePartType.GIVEN_NAME))));
 
         var birthDates = Collections.singletonList(BirthDateHelper.createBirthDate("1965-07-08"));
 

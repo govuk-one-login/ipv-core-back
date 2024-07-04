@@ -31,8 +31,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -45,6 +43,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
+import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -58,6 +57,8 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -157,7 +158,10 @@ class BuildUserIdentityHandlerTest {
 
         List<Name> names =
                 Collections.singletonList(
-                        new Name(Collections.singletonList(new NameParts("GivenName", "Daniel"))));
+                        NameHelper.createName(
+                                Collections.singletonList(
+                                        NameHelper.NamePartHelper.createNamePart(
+                                                "Daniel", NamePart.NamePartType.GIVEN_NAME))));
 
         List<BirthDate> birthDates =
                 Collections.singletonList(BirthDateHelper.createBirthDate("1990-02-10"));
