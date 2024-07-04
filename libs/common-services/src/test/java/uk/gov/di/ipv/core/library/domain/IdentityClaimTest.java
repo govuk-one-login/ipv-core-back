@@ -1,11 +1,15 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.NamePart;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
 
 class IdentityClaimTest {
 
@@ -15,15 +19,23 @@ class IdentityClaimTest {
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
-                                new Name(
+                                NameHelper.createName(
                                         Arrays.asList(
-                                                new NameParts("FirstNamePart1", "dummyType"),
-                                                new NameParts("FirstNamePart2", "dummyType"))),
-                                new Name(
+                                                createNamePart(
+                                                        "FirstNamePart1",
+                                                        NamePart.NamePartType.GIVEN_NAME),
+                                                createNamePart(
+                                                        "FirstNamePart2",
+                                                        NamePart.NamePartType.FAMILY_NAME))),
+                                NameHelper.createName(
                                         Arrays.asList(
-                                                new NameParts("SecondNamePart1", "dummyType"),
-                                                new NameParts("SecondNamePart2", "dummyType")))),
-                        Arrays.asList(new BirthDate()));
+                                                createNamePart(
+                                                        "SecondNamePart1",
+                                                        NamePart.NamePartType.GIVEN_NAME),
+                                                createNamePart(
+                                                        "SecondNamePart2",
+                                                        NamePart.NamePartType.FAMILY_NAME)))),
+                        List.of(new BirthDate()));
 
         // Act
         var result = underTest.getFullName();
@@ -38,15 +50,23 @@ class IdentityClaimTest {
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
-                                new Name(
+                                NameHelper.createName(
                                         Arrays.asList(
-                                                new NameParts("FirstNamePart1", "dummyType"),
-                                                new NameParts("FirstNamePart2", "dummyType"))),
-                                new Name(
+                                                createNamePart(
+                                                        "FirstNamePart1",
+                                                        NamePart.NamePartType.GIVEN_NAME),
+                                                createNamePart(
+                                                        "FirstNamePart2",
+                                                        NamePart.NamePartType.FAMILY_NAME))),
+                                NameHelper.createName(
                                         Arrays.asList(
-                                                new NameParts("SecondNamePart1", "dummyType"),
-                                                new NameParts("SecondNamePart2", "dummyType")))),
-                        Arrays.asList(new BirthDate()));
+                                                createNamePart(
+                                                        "SecondNamePart1",
+                                                        NamePart.NamePartType.GIVEN_NAME),
+                                                createNamePart(
+                                                        "SecondNamePart2",
+                                                        NamePart.NamePartType.FAMILY_NAME)))),
+                        List.of(new BirthDate()));
 
         // Act
         var result = underTest.getNameParts();

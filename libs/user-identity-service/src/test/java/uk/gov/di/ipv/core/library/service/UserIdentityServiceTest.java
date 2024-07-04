@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -991,7 +992,9 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -1019,7 +1022,9 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -1984,7 +1989,9 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -2003,7 +2010,9 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
