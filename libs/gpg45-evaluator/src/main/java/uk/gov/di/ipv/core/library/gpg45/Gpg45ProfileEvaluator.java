@@ -78,10 +78,13 @@ public class Gpg45ProfileEvaluator {
     }
 
     private int getMaxVerificationScore(List<IdentityCheck> identityChecks) {
-        return identityChecks.stream().mapToInt(this::getVerificationScore).max().orElse(NO_SCORE);
+        return identityChecks.stream()
+                .mapToInt(Gpg45ProfileEvaluator::getVerificationScore)
+                .max()
+                .orElse(NO_SCORE);
     }
 
-    private int getVerificationScore(IdentityCheck identityCheck) {
+    public static int getVerificationScore(IdentityCheck identityCheck) {
         if (identityCheck.getVerificationScore() != null) {
             return identityCheck.getVerificationScore();
         }

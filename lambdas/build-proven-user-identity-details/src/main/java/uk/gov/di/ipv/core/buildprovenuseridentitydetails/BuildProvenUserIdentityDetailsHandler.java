@@ -211,8 +211,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Tracing
-    private List<VcStatusDto> generateCurrentVcStatuses(List<VerifiableCredential> vcs)
-            throws CredentialParseException {
+    private List<VcStatusDto> generateCurrentVcStatuses(List<VerifiableCredential> vcs) {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
         for (var vc : vcs) {

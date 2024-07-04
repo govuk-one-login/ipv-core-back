@@ -10,14 +10,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.List;
 import java.util.stream.Stream;
@@ -30,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
@@ -58,18 +53,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 @ExtendWith(MockitoExtension.class)
 class VcHelperTest {
     @Mock private ConfigService configService;
-    private static OauthCriConfig addressConfig = null;
-    private static OauthCriConfig claimedIdentityConfig = null;
-
-    static {
-        try {
-            addressConfig = createOauthCriConfig("https://review-a.integration.account.gov.uk");
-            claimedIdentityConfig =
-                    createOauthCriConfig("https://review-c.integration.account.gov.uk");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-    }
 
     private static Stream<Arguments> SuccessfulTestCases() {
         return Stream.of(
@@ -85,17 +68,13 @@ class VcHelperTest {
 
     @ParameterizedTest
     @MethodSource("SuccessfulTestCases")
-    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) throws Exception {
-        mockCredentialIssuerConfig();
-
+    void shouldIdentifySuccessfulVc(String name, VerifiableCredential vc) {
         assertTrue(VcHelper.isSuccessfulVc(vc), name);
     }
 
     @ParameterizedTest
     @MethodSource("UnsuccessfulTestCases")
-    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) throws Exception {
-        mockCredentialIssuerConfig();
-
+    void shouldIdentifyUnsuccessfulVcs(String name, VerifiableCredential vc) {
         assertFalse(VcHelper.isSuccessfulVc(vc), name);
     }
 
@@ -225,29 +204,5 @@ class VcHelperTest {
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
                 Arguments.of("Failed passport VC", vcPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudFailed()));
-    }
-
-    private void mockCredentialIssuerConfig() {
-        VcHelper.setConfigService(configService);
-        when(configService.getComponentId(ADDRESS.getId()))
-                .thenReturn(addressConfig.getComponentId());
-        when(configService.getComponentId(CLAIMED_IDENTITY.getId()))
-                .thenReturn(claimedIdentityConfig.getComponentId());
-    }
-
-    private static OauthCriConfig createOauthCriConfig(String componentId)
-            throws URISyntaxException {
-        return OauthCriConfig.builder()
-                .tokenUrl(new URI("http://example.com/token"))
-                .credentialUrl(new URI("http://example.com/credential"))
-                .authorizeUrl(new URI("http://example.com/authorize"))
-                .clientId("ipv-core")
-                .signingKey("test-jwk")
-                .encryptionKey("test-encryption-jwk")
-                .componentId(componentId)
-                .clientCallbackUrl(new URI("http://example.com/redirect"))
-                .requiresApiKey(true)
-                .requiresAdditionalEvidence(false)
-                .build();
     }
 }

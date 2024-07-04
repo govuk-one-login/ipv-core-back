@@ -49,8 +49,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -61,8 +59,6 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_CREDENTIAL_ISSUER_ID = F2F.getId();
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
     private static final String TEST_COMPONENT_ID = "f2f";
-    private static final String TEST_COMPONENT_ID_ADDRESS = "address";
-    private static final String TEST_COMPONENT_ID_CLAIMED_IDENTITY = "claimed_identity";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
@@ -81,8 +77,6 @@ class ProcessAsyncCriCredentialHandlerTest {
             "Additional information on the error";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG;
-    private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
-    private static OauthCriConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
     private VerifiableCredential F2F_VC;
 
     @Mock private ConfigService configService;
@@ -96,10 +90,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @BeforeAll
     static void setUpBeforeAll() throws URISyntaxException {
-        TEST_CREDENTIAL_ISSUER_CONFIG = createOauthCriConfig(TEST_COMPONENT_ID);
-        TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS = createOauthCriConfig(TEST_COMPONENT_ID_ADDRESS);
-        TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
-                createOauthCriConfig(TEST_COMPONENT_ID_CLAIMED_IDENTITY);
+        TEST_CREDENTIAL_ISSUER_CONFIG = createTestOauthCriConfig();
     }
 
     @BeforeEach
@@ -385,14 +376,9 @@ class ProcessAsyncCriCredentialHandlerTest {
     private void mockCredentialIssuerConfig() {
         when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getComponentId(ADDRESS.getId()))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS.getComponentId());
-        when(configService.getComponentId(CLAIMED_IDENTITY.getId()))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
     }
 
-    private static OauthCriConfig createOauthCriConfig(String componentId)
-            throws URISyntaxException {
+    private static OauthCriConfig createTestOauthCriConfig() throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI(""))
                 .credentialUrl(new URI(""))
@@ -400,7 +386,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .clientId("ipv-core")
                 .signingKey(EC_PRIVATE_KEY_JWK)
                 .encryptionKey(null)
-                .componentId(componentId)
+                .componentId(TEST_COMPONENT_ID)
                 .clientCallbackUrl(new URI(""))
                 .requiresApiKey(false)
                 .requiresAdditionalEvidence(false)
