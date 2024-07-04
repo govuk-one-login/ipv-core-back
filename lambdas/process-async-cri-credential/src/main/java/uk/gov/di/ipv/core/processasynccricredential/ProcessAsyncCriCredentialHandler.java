@@ -91,7 +91,7 @@ public class ProcessAsyncCriCredentialHandler
         this.configService = new ConfigService();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.evcsService = new EvcsService(configService);
@@ -102,43 +102,50 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
-        LogHelper.attachComponentId(configService);
-        List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
+        try {
+            LogHelper.attachComponentId(configService);
+            List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
 
-        for (SQSMessage message : event.getRecords()) {
-
-            try {
-                final BaseAsyncCriResponse asyncCriResponse =
-                        getAsyncResponseMessage(message.getBody());
-                if (isSuccessAsyncCriResponse(asyncCriResponse)) {
-                    processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
-                } else {
-                    processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
-                }
-            } catch (JsonProcessingException
-                    | ParseException
-                    | SqsException
-                    | CiPutException
-                    | AsyncVerifiableCredentialException
-                    | UnrecognisedVotException
-                    | CiPostMitigationsException
-                    | CredentialParseException
-                    | EvcsServiceException e) {
-                LOGGER.error(
-                        LogHelper.buildErrorMessage("Failed to process VC response message.", e));
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
-            } catch (VerifiableCredentialException e) {
-                LOGGER.error(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to process VC response message.")
-                                .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getErrorResponse()));
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+            for (SQSMessage message : event.getRecords()) {
+                failedRecords.addAll(processOrReturnItemFailure(message));
             }
-        }
 
-        return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+            return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+        } finally {
+            auditService.awaitAuditEvents();
+        }
+    }
+
+    private List<SQSBatchResponse.BatchItemFailure> processOrReturnItemFailure(SQSMessage message) {
+        try {
+            final BaseAsyncCriResponse asyncCriResponse =
+                    getAsyncResponseMessage(message.getBody());
+            if (isSuccessAsyncCriResponse(asyncCriResponse)) {
+                processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
+            } else {
+                processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
+            }
+        } catch (JsonProcessingException
+                | ParseException
+                | SqsException
+                | CiPutException
+                | AsyncVerifiableCredentialException
+                | UnrecognisedVotException
+                | CiPostMitigationsException
+                | CredentialParseException
+                | EvcsServiceException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
+            return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+        } catch (VerifiableCredentialException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Failed to process VC response message.")
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getErrorResponse()));
+            return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+        }
+        return List.of();
     }
 
     private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse)

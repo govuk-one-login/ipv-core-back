@@ -8,13 +8,17 @@ import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
@@ -64,8 +68,9 @@ class BuildClientOauthResponseHandlerTest {
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    public static final String TEST_FEATURE_SET = "fs-001";
+    private static final String TEST_FEATURE_SET = "fs-001";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
 
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
@@ -73,20 +78,21 @@ class BuildClientOauthResponseHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
-
-    private BuildClientOauthResponseHandler handler;
+    @InjectMocks private BuildClientOauthResponseHandler handler;
     private String authorizationCode;
 
     @BeforeEach
     void setUp() {
         authorizationCode = new AuthorizationCode().getValue();
-        handler =
-                new BuildClientOauthResponseHandler(
-                        mockSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        mockAuthRequestValidator,
-                        mockAuditService);
+    }
+
+    @AfterEach
+    void checkAuditEventWait(TestInfo testInfo) {
+        if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
+            InOrder auditInOrder = inOrder(mockAuditService);
+            auditInOrder.verify(mockAuditService).awaitAuditEvents();
+            auditInOrder.verifyNoMoreInteractions();
+        }
     }
 
     @Test
@@ -286,6 +292,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams() {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());

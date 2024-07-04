@@ -2,8 +2,11 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -24,6 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -40,14 +44,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
-    public static final String TEST_USER_ID = "a-user-id";
-    public static final ClientOAuthSessionItem clientOAuthSessionItem =
+    private static final String TEST_USER_ID = "a-user-id";
+    private static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
@@ -61,7 +66,9 @@ class CallTicfCriHandlerTest {
                     .journey("a-journey")
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
-    public static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
+    private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
+    private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
+
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -72,11 +79,21 @@ class CallTicfCriHandlerTest {
     @Mock private CriStoringService mockCriStoringService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private VerifiableCredential mockVerifiableCredential;
+    @Mock private AuditService mockAuditService;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
 
     @BeforeEach
     public void setUp() {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
+    }
+
+    @AfterEach
+    void checkAuditEventWait(TestInfo testInfo) {
+        if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
+            InOrder auditInOrder = inOrder(mockAuditService);
+            auditInOrder.verify(mockAuditService).awaitAuditEvents();
+            auditInOrder.verifyNoMoreInteractions();
+        }
     }
 
     @Test
@@ -204,6 +221,7 @@ class CallTicfCriHandlerTest {
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows() throws Exception {
         List<Exception> exceptionsToThrow =
                 List.of(
@@ -233,6 +251,11 @@ class CallTicfCriHandlerTest {
             assertEquals(
                     ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
                     lambdaResult.get("message"));
+
+            InOrder auditInOrder = inOrder(mockAuditService);
+            auditInOrder.verify(mockAuditService).awaitAuditEvents();
+            auditInOrder.verifyNoMoreInteractions();
+            reset(mockAuditService);
         }
 
         List<Class<?>> declaredExceptions =

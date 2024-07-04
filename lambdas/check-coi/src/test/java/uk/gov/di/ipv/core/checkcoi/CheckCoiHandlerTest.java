@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,6 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -83,6 +86,7 @@ class CheckCoiHandlerTest {
     private static final String CLIENT_SESSION_ID = "client-session-id";
     private static final String USER_ID = "user-id";
     private static final String DEVICE_INFORMATION = "dummy-device-information";
+
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -111,6 +115,13 @@ class CheckCoiHandlerTest {
         when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(List.of(M1A_ADDRESS_VC));
         when(mockSessionCredentialService.getCredentials(IPV_SESSION_ID, USER_ID))
                 .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Nested

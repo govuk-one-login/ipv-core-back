@@ -1,10 +1,16 @@
 package uk.gov.di.ipv.core.processcricallback;
 
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -12,6 +18,7 @@ import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -20,6 +27,7 @@ import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -31,27 +39,33 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_CONFIG;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessCriCallbackHandlerTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String TEST_CRI_ID = ADDRESS.getId();
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_session_id";
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
+    @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
@@ -60,12 +74,22 @@ class ProcessCriCallbackHandlerTest {
     @Mock private CriApiService mockCriApiService;
     @Mock private CriStoringService mockCriStoringService;
     @Mock private CriCheckingService mockCriCheckingService;
+    @Mock private AuditService mockAuditService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
 
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
+    }
+
     @Test
-    void getJourneyResponseShouldReturnNextWhenAllChecksPassForCreatedVcs() throws Exception {
+    void shouldReturnNextWhenAllChecksPassForCreatedVcs() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -79,8 +103,7 @@ class ProcessCriCallbackHandlerTest {
                         .build();
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
 
-        when(mockIpvSessionService.getIpvSession(callbackRequest.getIpvSessionId()))
-                .thenReturn(ipvSessionItem);
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId()))
                 .thenReturn(clientOAuthSessionItem);
@@ -107,10 +130,12 @@ class ProcessCriCallbackHandlerTest {
                                 .build());
 
         // Act
-        var result = processCriCallbackHandler.getJourneyResponse(callbackRequest);
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
         verify(mockCriCheckingService).validateSessionIds(callbackRequest);
         verify(mockCriCheckingService)
                 .validateCallbackRequest(callbackRequest, criOAuthSessionItem);
@@ -125,9 +150,11 @@ class ProcessCriCallbackHandlerTest {
     }
 
     @Test
-    void getJourneyResponseShouldReturnNextWhenAllChecksPassForPendingVcs() throws Exception {
+    void shouldReturnNextWhenAllChecksPassForPendingVcs() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -156,33 +183,44 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
-        var result = processCriCallbackHandler.getJourneyResponse(callbackRequest);
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
         verify(mockCriCheckingService).validateSessionIds(callbackRequest);
         verify(mockCriStoringService).recordCriResponse(callbackRequest, clientOAuthSessionItem);
     }
 
     @Test
-    void getJourneyResponseShouldThrowWhenValidateSessionIdsFails()
-            throws InvalidCriCallbackRequestException {
+    void shouldReturnAttemptRecoveryPageResponseWhenValidateSessionIdsFails() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         doThrow(new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE))
                 .when(mockCriCheckingService)
                 .validateSessionIds(callbackRequest);
 
-        // Act & Assert
-        assertThrows(
-                InvalidCriCallbackRequestException.class,
-                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var errorPageResponse =
+                OBJECT_MAPPER.readValue(
+                        lambdaResponse.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertEquals("error", errorPageResponse.get("type"));
+        assertEquals(400, errorPageResponse.get("statusCode"));
+        assertEquals("pyi-attempt-recovery", errorPageResponse.get("page"));
     }
 
     @Test
-    void getJourneyResponseShouldThrowWhenCriCheckingServiceThrows() throws Exception {
+    void shouldReturnJourneyErrorResponseWhenCriCheckingServiceThrows() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -219,16 +257,23 @@ class ProcessCriCallbackHandlerTest {
                         eq(clientOAuthSessionItem),
                         eq(TEST_IPV_SESSION_ID)))
                 .thenThrow(new ConfigException("bad config"));
+
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
         // Assert
-        assertThrows(
-                ConfigException.class,
-                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+        var journeyErrorResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
+        assertEquals(FAILED_TO_PARSE_CONFIG.getCode(), journeyErrorResponse.getCode());
+        assertEquals(500, journeyErrorResponse.getStatusCode());
     }
 
     @Test
-    void getJourneyResponseShouldThrowWhenAccessTokenCannotBeFetched() throws CriApiException {
+    void shouldReturnJourneyErrorResponseWhenAccessTokenCannotBeFetched() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -241,23 +286,27 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriOAuthSessionService.getCriOauthSessionItem(
                         ipvSessionItem.getCriOAuthSessionId()))
                 .thenReturn(criOAuthSessionItem);
-        doThrow(
-                        new CriApiException(
-                                HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST))
+        doThrow(new CriApiException(HTTPResponse.SC_BAD_REQUEST, INVALID_TOKEN_REQUEST))
                 .when(mockCriApiService)
                 .fetchAccessToken(eq(callbackRequest), any(CriOAuthSessionItem.class));
 
-        // Act & Assert
-        assertThrows(
-                CriApiException.class,
-                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var journeyErrorResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
+        assertEquals(INVALID_TOKEN_REQUEST.getCode(), journeyErrorResponse.getCode());
+        assertEquals(400, journeyErrorResponse.getStatusCode());
     }
 
     @Test
-    void getJourneyResponseShouldThrowWhenVerifiableCredentialCannotBeFetched()
-            throws CriApiException, JsonProcessingException {
+    void shouldReturnJourneyErrorResponseWhenVerifiableCredentialCannotBeFetched()
+            throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -275,25 +324,31 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(bearerToken);
         doThrow(
                         new CriApiException(
-                                HTTPResponse.SC_BAD_REQUEST,
-                                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE))
+                                HTTPResponse.SC_BAD_REQUEST, FAILED_TO_EXCHANGE_AUTHORIZATION_CODE))
                 .when(mockCriApiService)
                 .fetchVerifiableCredential(
                         any(BearerAccessToken.class),
                         eq(TEST_CRI_ID),
                         any(CriOAuthSessionItem.class));
 
-        // Act & Assert
-        assertThrows(
-                CriApiException.class,
-                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var journeyErrorResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
+        assertEquals(
+                FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getCode(), journeyErrorResponse.getCode());
+        assertEquals(400, journeyErrorResponse.getStatusCode());
     }
 
     @Test
-    void getJourneyResponseShouldHandleErrorResponseFromCri() throws Exception {
+    void shouldReturnJourneyResponseWhenErrorResponseFromCri() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         callbackRequest.setError(TEST_ERROR);
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         var ipvSessionItem = buildValidIpvSessionItem();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem();
@@ -311,35 +366,59 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(new JourneyResponse(JOURNEY_ERROR_PATH));
 
         // Act
-        var result = processCriCallbackHandler.getJourneyResponse(callbackRequest);
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
 
         // Assert
-        assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), result);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyResponse.class);
+        assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
         verify(mockCriCheckingService).validateOAuthForError(eq(callbackRequest), any(), any());
     }
 
     @Test
-    void getJourneyResponseShouldHandleNoIpvForCriOAuthSessionException()
-            throws InvalidCriCallbackRequestException {
+    void shouldReturnTimeoutRecoverablePageForCriOAuthSessionException() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
         doThrow(new InvalidCriCallbackRequestException(ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION))
                 .when(mockCriCheckingService)
                 .validateSessionIds(callbackRequest);
 
-        // Act & Assert
-        assertThrows(
-                InvalidCriCallbackRequestException.class,
-                () -> processCriCallbackHandler.getJourneyResponse(callbackRequest));
+        // Act
+        var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        var errorPageResponse =
+                OBJECT_MAPPER.readValue(
+                        lambdaResponse.getBody(), new TypeReference<Map<String, Object>>() {});
+        assertEquals("error", errorPageResponse.get("type"));
+        assertEquals(401, errorPageResponse.get("statusCode"));
+        assertEquals("pyi-timeout-recoverable", errorPageResponse.get("page"));
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
         return CriCallbackRequest.builder()
-                .ipvSessionId(TEST_IPV_SESSION_ID)
                 .credentialIssuerId(TEST_CRI_ID)
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .state(TEST_CRI_OAUTH_SESSION_ID)
                 .build();
+    }
+
+    private APIGatewayProxyRequestEvent buildValidRequestEvent(CriCallbackRequest callbackRequest)
+            throws JsonProcessingException {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setBody(OBJECT_MAPPER.writeValueAsString(callbackRequest));
+
+        event.setHeaders(Map.of("ipv-session-id", TEST_IPV_SESSION_ID));
+
+        // These get set on the callback request in the handler after parsing it from the event
+        // body.
+        // Setting them here to keep the test cases tidier.
+        callbackRequest.setIpvSessionId(TEST_IPV_SESSION_ID);
+        callbackRequest.setFeatureSet(List.of());
+
+        return event;
     }
 
     private CriOAuthSessionItem buildValidCriOAuthSessionItem() {

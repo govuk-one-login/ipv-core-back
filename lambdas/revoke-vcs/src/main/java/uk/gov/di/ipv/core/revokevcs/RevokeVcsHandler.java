@@ -78,7 +78,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         VcStoreItem.class,
                         DataStore.getClient(),
                         configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
 
     @Override
@@ -110,6 +110,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         } finally {
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
             objectMapper.writeValue(outputStream, result);
+            auditService.awaitAuditEvents();
         }
     }
 

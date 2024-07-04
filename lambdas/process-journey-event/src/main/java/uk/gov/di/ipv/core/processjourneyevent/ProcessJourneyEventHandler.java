@@ -97,7 +97,7 @@ public class ProcessJourneyEventHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyEventHandler() throws IOException {
         this.configService = new ConfigService();
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
@@ -171,6 +171,8 @@ public class ProcessJourneyEventHandler
         } catch (SqsException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
