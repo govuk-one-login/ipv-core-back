@@ -42,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
@@ -367,5 +368,23 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.updateUserVCs("user%^", EVCS_UPDATE_USER_VCS_DTO));
+    }
+
+    @Test
+    void testGetUserVCsShouldRetryRequestIfStatusCode429() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
+
+        when(mockHttpResponse.statusCode()).thenReturn(429, 429, 200);
+
+        // Act
+
+        evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+        // Assert
+        verify(mockHttpClient, times(3)).send(any(), any());
     }
 }

@@ -28,6 +28,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,9 @@ public class EvcsClient {
     public static final String VC_STATE_PARAM = "state";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final List<Integer> RETRYABLE_STATUS_CODES = Arrays.asList(429);
+    private static final int MAX_RETRIES = 3;
+    private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
     private final ConfigService configService;
 
@@ -200,13 +204,32 @@ public class EvcsClient {
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
     }
 
-    @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest evcsHttpRequest)
+            throws EvcsServiceException {
+        return sendHttpRequest(evcsHttpRequest, 0);
+    }
+
+    @Tracing
+    private HttpResponse<String> sendHttpRequest(HttpRequest evcsHttpRequest, int numAttempts)
             throws EvcsServiceException {
         LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
         try {
             HttpResponse<String> response =
                     httpClient.send(evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
+
+            var statusCode = response.statusCode();
+            if (RETRYABLE_STATUS_CODES.contains(statusCode) && numAttempts < MAX_RETRIES) {
+
+                var delay = (long) Math.pow(2, numAttempts++) * RETRY_DELAY_MILLIS;
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                        String.format(
+                                                "Retrying HTTP request in %d milliseconds", delay))
+                                .with(LOG_STATUS_CODE.getFieldName(), statusCode));
+                Thread.sleep(delay);
+                return sendHttpRequest(evcsHttpRequest, numAttempts);
+            }
+
             checkResponseStatusCode(response);
             return response;
         } catch (IOException | InterruptedException e) {
