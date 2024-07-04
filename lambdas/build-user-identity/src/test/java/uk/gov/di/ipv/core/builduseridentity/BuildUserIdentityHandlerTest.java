@@ -43,7 +43,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
-import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -94,6 +93,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.NameHelper.createName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildUserIdentityHandlerTest {
@@ -158,9 +159,9 @@ class BuildUserIdentityHandlerTest {
 
         List<Name> names =
                 Collections.singletonList(
-                        NameHelper.createName(
+                        createName(
                                 Collections.singletonList(
-                                        NameHelper.NamePartHelper.createNamePart(
+                                        createNamePart(
                                                 "Daniel", NamePart.NamePartType.GIVEN_NAME))));
 
         List<BirthDate> birthDates =

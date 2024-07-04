@@ -24,6 +24,7 @@ public class IdentityClaim {
     }
 
     // Return the first name that we have (they should all be the same for now)
+    // and concatenate all the name parts together into a single string.
     @JsonIgnore
     public String getFullName() {
         StringBuilder nameBuilder = new StringBuilder();
