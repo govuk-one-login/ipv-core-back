@@ -181,7 +181,7 @@ public class UserIdentityService {
     }
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
@@ -213,7 +213,7 @@ public class UserIdentityService {
     }
 
     public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNamesForCorrelation(
@@ -248,7 +248,7 @@ public class UserIdentityService {
     }
 
     public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNamesForCorrelation(
