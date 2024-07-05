@@ -95,15 +95,9 @@ class UserIdentityServiceTest {
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", CI_SCORING_THRESHOLD, "0");
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0WithNoCi =
-            Map.of(
-                    CORE_VTM_CLAIM,
-                    "mock-vtm-claim",
-                    CI_SCORING_THRESHOLD,
-                    "0",
-                    RETURN_CODES_NON_CI_BREACHING_P0,
-                    "🐧");
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", RETURN_CODES_NON_CI_BREACHING_P0, "🐧");
 
     private static List<String> NON_EVIDENCE_CRI_TYPES = Cri.getNonEvidenceCriIds();
     public static OauthCriConfig claimedIdentityConfig;
@@ -1027,6 +1021,7 @@ class UserIdentityServiceTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
@@ -1145,6 +1140,7 @@ class UserIdentityServiceTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
@@ -1207,6 +1203,7 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), vcNinoSuccessful());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
@@ -1375,6 +1372,7 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcExperianFraudScoreOne(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
@@ -1412,6 +1410,7 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
@@ -1560,6 +1559,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1619,6 +1619,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1653,7 +1654,7 @@ class UserIdentityServiceTest {
             throws Exception {
         // Arrange
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("10");
         when(mockConfigService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
