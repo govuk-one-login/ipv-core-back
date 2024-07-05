@@ -1336,29 +1336,6 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldReturnEmptyClaimIfNinoVcPropertyIsNull() throws Exception {
-        // Arrange
-        var vcs =
-                List.of(
-                        vcDrivingPermit(),
-                        vcExperianFraudScoreOne(),
-                        vcExperianFraudScoreTwo(),
-                        VC_ADDRESS,
-                        vcNinoMissingSocialSecurityRecord());
-
-        mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
-
-        // Act
-        var credentials =
-                userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
-
-        // Assert
-        assertNull(credentials.getNinoClaim());
-    }
-
-    @Test
     void generateUserIdentityShouldReturnEmptyClaimIfNinoVcPropertyIsEmpty() throws Exception {
         // Arrange
         var vcs =
@@ -1382,7 +1359,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldThrowIfNinoVcIsIncorrectType() throws Exception {
+    void generateUserIdentityShouldThrowIfNinoVcIsIncorrectType() {
         // Arrange
         var vcs =
                 List.of(
