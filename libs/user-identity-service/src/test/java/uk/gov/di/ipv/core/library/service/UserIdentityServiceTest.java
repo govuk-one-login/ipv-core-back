@@ -1204,6 +1204,30 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void generateUserIdentityShouldThrowIfPassportClaimIsIncorrectType() {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcPassportClaimInvalidType(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM,
+                thrownException.getErrorResponse());
+    }
+
+    @Test
     void generateUserIdentityShouldSetNinoClaimWhenVotIsP2() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
@@ -1309,6 +1333,79 @@ class UserIdentityServiceTest {
 
         // Assert
         assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyClaimIfNinoVcPropertyIsNull() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermit(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS,
+                        vcNinoMissingSocialSecurityRecord());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyClaimIfNinoVcPropertyIsEmpty() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermit(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS,
+                        vcNinoEmptySocialSecurityRecord());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfNinoVcIsIncorrectType() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermit(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS,
+                        vcNinoInvalidVcType());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM, thrownException.getErrorResponse());
     }
 
     @Test
@@ -1556,6 +1653,33 @@ class UserIdentityServiceTest {
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfDrivingPermitVcIsIncorrectType() {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermitIncorrectType(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM,
+                thrownException.getErrorResponse());
     }
 
     @Test

@@ -628,7 +628,7 @@ public class UserIdentityService {
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Nino property is missing from VC")
+                                        "SocialSecurityRecord property is missing from VC or empty SocialSecurityRecord property.")
                                 .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
                 LOGGER.warn(mapMessage);
 
