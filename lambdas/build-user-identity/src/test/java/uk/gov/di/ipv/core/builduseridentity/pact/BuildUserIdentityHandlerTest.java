@@ -315,7 +315,7 @@ class BuildUserIdentityHandlerTest {
                   "vc": {
                      "type": [
                        "VerifiableCredential",
-                       "IdentityCheckCredential"
+                       "AddressCredential"
                      ],
                      "credentialSubject": {
                        "name": [
