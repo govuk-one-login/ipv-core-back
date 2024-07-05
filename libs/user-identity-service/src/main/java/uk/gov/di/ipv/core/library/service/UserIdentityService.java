@@ -344,7 +344,7 @@ public class UserIdentityService {
     }
 
     private boolean checkBirthDateCorrelationInCredentials(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForBirthDateCorrelation(vcs);
         return identityClaims.stream()
                         .map(IdentityClaim::getBirthDate)
