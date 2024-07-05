@@ -33,11 +33,9 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -1446,7 +1444,7 @@ class UserIdentityServiceTest {
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo(),
-                        vcMissingCredentialSubject());
+                        vcAddressNoCredentialSubject());
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -1884,21 +1882,6 @@ class UserIdentityServiceTest {
 
         fullNames = List.of("Alice JANE DOE", "Alice JANE Onel");
         assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
-    }
-
-    @Test
-    void isVcSuccessfulShouldThrowIfNoStatusFoundForIssuer() {
-        // Arrange
-        List<VcStatusDto> vcStatusDtos =
-                List.of(
-                        new VcStatusDto("issuer1", true),
-                        new VcStatusDto("issuer2", true),
-                        new VcStatusDto("issuer3", true));
-
-        // Act & Assert
-        assertThrows(
-                NoVcStatusForIssuerException.class,
-                () -> userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer"));
     }
 
     @Test

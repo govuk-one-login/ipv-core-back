@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
@@ -99,7 +98,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -130,7 +128,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithNameAndDoBOnDifferentVcs()
             throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
@@ -161,7 +158,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithCorrectlyOrderedAddressHistory()
             throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true);
@@ -198,7 +194,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void
             shouldReceive200ResponseCodeProvenUserIdentityDetailsWith1stAddressIfCurrentAddressCantBeFound()
                     throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true).thenReturn(true).thenReturn(true);
@@ -382,36 +377,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
-        when(mockUserIdentityService.isVcSuccessful(any(), any()))
-                .thenThrow(new NoVcStatusForIssuerException("Bad"));
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true);
-        when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
-
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var input = createRequestEvent();
-
-        var output = handler.handleRequest(input, context);
-
-        assertEquals(500, output.getStatusCode());
-        assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER,
-                toResponseClass(output, ErrorResponse.class));
-    }
-
-    @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsForGPGProfile() throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);

@@ -23,10 +23,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -41,7 +39,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -109,15 +106,13 @@ public class BuildProvenUserIdentityDetailsHandler
                     sessionCredentialsService.getCredentials(
                             ipvSessionId, clientOAuthSessionItem.getUserId());
 
-            var currentVcStatuses = generateCurrentVcStatuses(vcs);
-
             var identity = getProvenIdentity(vcs);
             provenUserIdentityDetailsBuilder.name(identity.getFullName());
             provenUserIdentityDetailsBuilder.nameParts(identity.getNameParts());
             provenUserIdentityDetailsBuilder.dateOfBirth(identity.getBirthDate().get(0).getValue());
 
             if (ipvSessionItem.getVot().getProfileType().equals(ProfileType.GPG45)) {
-                var addresses = getProvenIdentityAddresses(vcs, currentVcStatuses);
+                var addresses = getProvenIdentityAddresses(vcs);
                 provenUserIdentityDetailsBuilder.addresses(addresses);
             }
 
@@ -133,8 +128,6 @@ public class BuildProvenUserIdentityDetailsHandler
         } catch (ProvenUserIdentityDetailsException e) {
             return buildJourneyErrorResponse(
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
-        } catch (NoVcStatusForIssuerException e) {
-            return buildJourneyErrorResponse(ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
         }
     }
 
@@ -172,15 +165,12 @@ public class BuildProvenUserIdentityDetailsHandler
         }
     }
 
+    // TODO
     @Tracing
-    private List<Address> getProvenIdentityAddresses(
-            List<VerifiableCredential> vcs, List<VcStatusDto> currentVcStatuses)
-            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
-                    NoVcStatusForIssuerException {
+    private List<Address> getProvenIdentityAddresses(List<VerifiableCredential> vcs)
+            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (var vc : vcs) {
-            if (vc.getCri().equals(ADDRESS)
-                    && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, configService.getComponentId(vc.getCri()))) {
+            if (vc.getCri().equals(ADDRESS) && VcHelper.isSuccessfulVc(vc)) {
                 JsonNode addressNode =
                         mapper.readTree(SignedJWT.parse(vc.getVcString()).getPayload().toString())
                                 .path(VC_CLAIM)
@@ -201,17 +191,5 @@ public class BuildProvenUserIdentityDetailsHandler
         LOGGER.error(LogHelper.buildLogMessage("Failed to find addresses of proven user identity"));
         throw new ProvenUserIdentityDetailsException(
                 "Failed to find addresses of proven user identity");
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateCurrentVcStatuses(List<VerifiableCredential> vcs) {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-
-        for (var vc : vcs) {
-            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
-
-            vcStatuses.add(new VcStatusDto(vc.getClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
     }
 }

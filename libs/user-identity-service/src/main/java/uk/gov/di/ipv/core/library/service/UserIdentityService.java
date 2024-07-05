@@ -7,6 +7,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
@@ -14,11 +15,9 @@ import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -64,22 +63,16 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT.getId(), DCMAW.getId());
-    private static final List<String> DRIVING_PERMIT_CRI_TYPES =
-            List.of(DCMAW.getId(), DRIVING_LICENCE.getId());
+    private static final List<Cri> PASSPORT_CRI_TYPES = List.of(PASSPORT, DCMAW);
+    private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, DRIVING_LICENCE);
 
-    private static final List<String> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION =
-            List.of(ADDRESS.getId());
-    private static final List<String> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION =
-            List.of(ADDRESS.getId(), BAV.getId());
+    private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS);
+    private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS, BAV);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
-
-    public static final String GIVEN_NAME_PROPERTY_NAME = "GivenName";
-    public static final String FAMILY_NAME_PROPERTY_NAME = "FamilyName";
 
     private static final String MUST_BE_IDENTITYCHECK_MESSAGE =
             "Credential must be an IdentityCheck credential.";
@@ -165,19 +158,6 @@ public class UserIdentityService {
             }
         }
         return false;
-    }
-
-    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)
-            throws NoVcStatusForIssuerException {
-        return currentVcStatuses.stream()
-                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
-                .findFirst()
-                .orElseThrow(
-                        () ->
-                                new NoVcStatusForIssuerException(
-                                        String.format(
-                                                "No VC status found for issuer '%s'", criIss)))
-                .getIsSuccessfulVc();
     }
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
@@ -297,16 +277,11 @@ public class UserIdentityService {
             List<VerifiableCredential> vcs,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        var successfulVcs = new ArrayList<VerifiableCredential>();
-        for (var vc : vcs) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                successfulVcs.add(vc);
-            }
-        }
         if (Vot.P0.equals(vot)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
         } else {
-            addUserIdentityClaims(profileType, vcs, userIdentityBuilder, successfulVcs);
+            var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
+            addUserIdentityClaims(profileType, successfulVcs, userIdentityBuilder);
             userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
         }
     }
@@ -314,26 +289,24 @@ public class UserIdentityService {
     private void addUserIdentityClaims(
             ProfileType profileType,
             List<VerifiableCredential> vcs,
-            UserIdentity.UserIdentityBuilder userIdentityBuilder,
-            List<VerifiableCredential> successfulVcs)
+            UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        Optional<IdentityClaim> identityClaim = findIdentityClaim(successfulVcs);
+        Optional<IdentityClaim> identityClaim = findIdentityClaim(vcs);
         identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
             Optional<List<PostalAddress>> addressClaim = generateAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<List<PassportDetails>> passportClaim = generatePassportClaim(successfulVcs);
+            Optional<List<PassportDetails>> passportClaim = generatePassportClaim(vcs);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
             Optional<List<DrivingPermitDetails>> drivingPermitClaim =
-                    generateDrivingPermitClaim(successfulVcs);
+                    generateDrivingPermitClaim(vcs);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
-        Optional<List<SocialSecurityRecordDetails>> ninoClaim =
-                generateNinoClaim(successfulVcs, profileType);
+        Optional<List<SocialSecurityRecordDetails>> ninoClaim = generateNinoClaim(vcs, profileType);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
@@ -373,7 +346,7 @@ public class UserIdentityService {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             String missingNames = getMissingNames(identityClaim.getName());
             if (!missingNames.isBlank()) {
-                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(vc.getCri().getId())) {
+                if (CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION.contains(vc.getCri())) {
                     continue;
                 }
                 addLogMessage(vc, "Names missing from VC: " + missingNames);
@@ -391,7 +364,7 @@ public class UserIdentityService {
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCri().getId())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCri())) {
                     continue;
                 }
                 addLogMessage(vc, "Birthdate property is missing from VC");
@@ -525,7 +498,7 @@ public class UserIdentityService {
 
     private Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
-        var addressVc = findVc(ADDRESS.getId(), vcs);
+        var addressVc = findVc(ADDRESS, vcs);
 
         if (addressVc.isEmpty()) {
             LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
@@ -564,8 +537,7 @@ public class UserIdentityService {
     private Optional<List<SocialSecurityRecordDetails>> generateNinoClaim(
             List<VerifiableCredential> vcs, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
-        String criToExtractFrom =
-                profileType.equals(ProfileType.GPG45) ? NINO.getId() : HMRC_MIGRATION.getId();
+        var criToExtractFrom = profileType.equals(ProfileType.GPG45) ? NINO : HMRC_MIGRATION;
         var ninoVc = findVc(criToExtractFrom, vcs);
 
         if (ninoVc.isEmpty()) {
@@ -701,17 +673,12 @@ public class UserIdentityService {
         }
     }
 
-    private Optional<VerifiableCredential> findVc(String criName, List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(credential -> credential.getCri().getId().equals(criName))
-                .findFirst();
+    private Optional<VerifiableCredential> findVc(Cri cri, List<VerifiableCredential> vcs) {
+        return vcs.stream().filter(credential -> credential.getCri().equals(cri)).findFirst();
     }
 
-    private Optional<VerifiableCredential> findVc(
-            List<String> criNames, List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(credential -> criNames.contains(credential.getCri().getId()))
-                .findFirst();
+    private Optional<VerifiableCredential> findVc(List<Cri> cris, List<VerifiableCredential> vcs) {
+        return vcs.stream().filter(credential -> cris.contains(credential.getCri())).findFirst();
     }
 
     private boolean isEvidenceVc(VerifiableCredential vc) {
