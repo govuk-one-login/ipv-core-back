@@ -81,6 +81,9 @@ public class UserIdentityService {
     public static final String GIVEN_NAME_PROPERTY_NAME = "GivenName";
     public static final String FAMILY_NAME_PROPERTY_NAME = "FamilyName";
 
+    private static final String MUST_BE_IDENTITYCHECK_MESSAGE =
+            "Credential must be an IdentityCheck credential.";
+
     private final ConfigService configService;
     private final CiMitUtilityService ciMitUtilityService;
 
@@ -335,7 +338,7 @@ public class UserIdentityService {
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForNameCorrelation(vcs);
         return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
     }
@@ -383,8 +386,7 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
-            List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            List<VerifiableCredential> vcs) throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
@@ -635,8 +637,7 @@ public class UserIdentityService {
 
             return Optional.of(nino);
         } else {
-            LOGGER.error(
-                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
         }
@@ -673,8 +674,7 @@ public class UserIdentityService {
 
             return Optional.of(passport);
         } else {
-            LOGGER.error(
-                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
         }
@@ -718,8 +718,7 @@ public class UserIdentityService {
 
             return Optional.of(drivingPermit);
         } else {
-            LOGGER.error(
-                    LogHelper.buildLogMessage("Credential must be an IdentityCheck credential."));
+            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
         }
@@ -738,7 +737,7 @@ public class UserIdentityService {
                 .findFirst();
     }
 
-    private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
+    private boolean isEvidenceVc(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var vcEvidence = identityCheckCredential.getEvidence();
             if (vcEvidence == null) {
@@ -778,16 +777,7 @@ public class UserIdentityService {
     }
 
     private List<VerifiableCredential> filterValidVCs(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(
-                        vc -> {
-                            try {
-                                return isEvidenceVc(vc);
-                            } catch (CredentialParseException e) {
-                                return false;
-                            }
-                        })
-                .toList();
+        return vcs.stream().filter(this::isEvidenceVc).toList();
     }
 
     private String getMissingNames(List<Name> names) {

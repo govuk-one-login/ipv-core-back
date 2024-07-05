@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -95,7 +94,6 @@ class UserIdentityServiceTest {
     public static final JWSHeader JWS_HEADER =
             new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     private static final String USER_ID_1 = "user-id-1";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static ECDSASigner jwtSigner;
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().usersContraIndicators(List.of()).build();
