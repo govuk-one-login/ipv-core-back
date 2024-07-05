@@ -68,7 +68,7 @@ public class AuditService {
     }
 
     public void awaitAuditEvents() {
-        if (!configService.enabled(SQS_ASYNC)) {
+        if (events.isEmpty()) {
             return;
         }
 

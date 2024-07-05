@@ -4,10 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -37,14 +37,13 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -67,7 +66,6 @@ class CallTicfCriHandlerTest {
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
-    private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
 
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
@@ -88,12 +86,10 @@ class CallTicfCriHandlerTest {
     }
 
     @AfterEach
-    void checkAuditEventWait(TestInfo testInfo) {
-        if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
-            InOrder auditInOrder = inOrder(mockAuditService);
-            auditInOrder.verify(mockAuditService).awaitAuditEvents();
-            auditInOrder.verifyNoMoreInteractions();
-        }
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -220,65 +216,35 @@ class CallTicfCriHandlerTest {
                 lambdaResult.get("message"));
     }
 
-    @Test
-    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
-    void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows() throws Exception {
-        List<Exception> exceptionsToThrow =
-                List.of(
-                        new SqsException("Oops"),
-                        new CiPutException("Oops"),
-                        new CiPostMitigationsException("Oops"),
-                        new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+    private static Stream<Exception> ciStoringExceptions() {
+        return Stream.of(
+                new SqsException("Oops"),
+                new CiPutException("Oops"),
+                new CiPostMitigationsException("Oops"),
+                new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+    }
 
-        for (Exception e : exceptionsToThrow) {
-            when(mockIpvSessionService.getIpvSession("a-session-id"))
-                    .thenReturn(mockIpvSessionItem);
-            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(new ClientOAuthSessionItem());
-            when(mockTicfCriService.getTicfVc(any(), any()))
-                    .thenReturn(List.of(mockVerifiableCredential));
-            doThrow(e)
-                    .when(mockCriStoringService)
-                    .storeVcs(any(), any(), any(), any(), any(), any());
+    @ParameterizedTest
+    @MethodSource("ciStoringExceptions")
+    void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows(Exception e)
+            throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(new ClientOAuthSessionItem());
+        when(mockTicfCriService.getTicfVc(any(), any()))
+                .thenReturn(List.of(mockVerifiableCredential));
+        doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any(), any());
 
-            Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-            assertEquals("/journey/error", lambdaResult.get("journey"));
-            assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
-            assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
-                    lambdaResult.get("code"));
-            assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
-                    lambdaResult.get("message"));
-
-            InOrder auditInOrder = inOrder(mockAuditService);
-            auditInOrder.verify(mockAuditService).awaitAuditEvents();
-            auditInOrder.verifyNoMoreInteractions();
-            reset(mockAuditService);
-        }
-
-        List<Class<?>> declaredExceptions =
-                List.of(
-                        CriStoringService.class
-                                .getMethod(
-                                        "storeVcs",
-                                        String.class,
-                                        String.class,
-                                        String.class,
-                                        List.class,
-                                        ClientOAuthSessionItem.class,
-                                        IpvSessionItem.class)
-                                .getExceptionTypes());
-
-        // Checking to make sure we've tested all exceptions that can be thrown
-        assertTrue(
-                exceptionsToThrow.stream()
-                        .allMatch(
-                                exception ->
-                                        declaredExceptions.contains(exception.getClass())
-                                                || declaredExceptions.contains(
-                                                        exception.getClass().getSuperclass())));
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
+                lambdaResult.get("code"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                lambdaResult.get("message"));
     }
 
     @Test

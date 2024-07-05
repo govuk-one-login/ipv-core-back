@@ -10,12 +10,11 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -70,7 +69,6 @@ class BuildClientOauthResponseHandlerTest {
             SecureTokenHelper.getInstance().generate();
     private static final String TEST_FEATURE_SET = "fs-001";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
 
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
@@ -87,12 +85,10 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @AfterEach
-    void checkAuditEventWait(TestInfo testInfo) {
-        if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
-            InOrder auditInOrder = inOrder(mockAuditService);
-            auditInOrder.verify(mockAuditService).awaitAuditEvents();
-            auditInOrder.verifyNoMoreInteractions();
-        }
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -291,47 +287,39 @@ class BuildClientOauthResponseHandlerTest {
         verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
 
-    @Test
-    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
-    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams() {
+    @ParameterizedTest
+    @ValueSource(strings = {OAuth2RequestParams.CLIENT_ID, OAuth2RequestParams.RESPONSE_TYPE})
+    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams(String param) {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
-        List<String> paramsToRemove =
-                List.of(OAuth2RequestParams.CLIENT_ID, OAuth2RequestParams.RESPONSE_TYPE);
-        for (String param : paramsToRemove) {
-            when(mockSessionService.getIpvSession(anyString()))
-                    .thenReturn(generateIpvSessionItem());
-            ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
-            if (param.equals(OAuth2RequestParams.CLIENT_ID)) {
-                clientOAuthSessionItem.setClientId(null);
-            } else if (param.equals(OAuth2RequestParams.RESPONSE_TYPE)) {
-                clientOAuthSessionItem.setResponseType(null);
-            }
-            when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-
-            JourneyRequest event =
-                    JourneyRequest.builder()
-                            .ipvSessionId(TEST_SESSION_ID)
-                            .ipAddress(TEST_IP_ADDRESS)
-                            .build();
-
-            JourneyErrorResponse errorResponse =
-                    toResponseClass(
-                            handler.handleRequest(event, context), JourneyErrorResponse.class);
-
-            assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                    errorResponse.getCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                    errorResponse.getMessage());
-            verify(mockSessionService, never())
-                    .setAuthorizationCode(any(), anyString(), anyString());
+        ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
+        if (param.equals(OAuth2RequestParams.CLIENT_ID)) {
+            clientOAuthSessionItem.setClientId(null);
+        } else if (param.equals(OAuth2RequestParams.RESPONSE_TYPE)) {
+            clientOAuthSessionItem.setResponseType(null);
         }
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .build();
+
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(event, context), JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                errorResponse.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                errorResponse.getMessage());
+        verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
 
     @Test

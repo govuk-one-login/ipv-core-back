@@ -461,6 +461,11 @@ class AuditServiceTest {
                     .when(() -> CompletableFuture.allOf(any(CompletableFuture[].class)))
                     .thenReturn(mockAllOfCompletableFuture);
 
+            var event =
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
+            auditService.sendAuditEvent(event);
+
             var auditException =
                     assertThrows(AuditException.class, () -> auditService.awaitAuditEvents());
 
