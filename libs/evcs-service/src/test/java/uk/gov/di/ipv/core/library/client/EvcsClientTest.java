@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
@@ -116,6 +117,7 @@ class EvcsClientTest {
     @Mock private ConfigService mockConfigService;
     @Mock private HttpClient mockHttpClient;
     @Mock private HttpResponse<String> mockHttpResponse;
+    @Mock private Sleeper mockSleeper;
     @Captor ArgumentCaptor<HttpRequest> httpRequestCaptor;
     @Captor private ArgumentCaptor<String> stringCaptor;
     @InjectMocks private EvcsClient evcsClient;
@@ -382,9 +384,35 @@ class EvcsClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(429, 429, 200);
 
         // Act
-
-        evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
         // Assert
+        assertEquals(2, evcsGetUserVCsDto.vcs().size());
         verify(mockHttpClient, times(3)).send(any(), any());
+        verify(mockSleeper, times(2)).sleep(anyLong());
+        verify(mockSleeper, times(1)).sleep(1000);
+        verify(mockSleeper, times(1)).sleep(2000);
+    }
+
+    @Test
+    void testThrowExceptionIfRetryRequestLimitExceeded() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"throttled\"}");
+        when(mockHttpResponse.statusCode()).thenReturn(429);
+
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.getUserVcs(
+                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+        verify(mockHttpClient, times(4)).send(any(), any());
+        verify(mockSleeper, times(3)).sleep(anyLong());
+        verify(mockSleeper, times(1)).sleep(1000);
+        verify(mockSleeper, times(1)).sleep(2000);
+        verify(mockSleeper, times(1)).sleep(4000);
     }
 }

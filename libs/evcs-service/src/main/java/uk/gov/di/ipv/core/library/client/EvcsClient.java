@@ -52,17 +52,25 @@ public class EvcsClient {
     private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
     private final ConfigService configService;
+    private final Sleeper sleeper;
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsClient(ConfigService configService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
+        this.sleeper =
+                new Sleeper() {
+                    public void sleep(long millis) throws InterruptedException {
+                        Thread.sleep(millis);
+                    }
+                };
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public EvcsClient(ConfigService configService, HttpClient httpClient) {
+    public EvcsClient(ConfigService configService, HttpClient httpClient, Sleeper sleeper) {
         this.configService = configService;
         this.httpClient = httpClient;
+        this.sleeper = sleeper;
     }
 
     @Tracing
@@ -226,7 +234,7 @@ public class EvcsClient {
                                         String.format(
                                                 "Retrying HTTP request in %d milliseconds", delay))
                                 .with(LOG_STATUS_CODE.getFieldName(), statusCode));
-                Thread.sleep(delay);
+                sleeper.sleep(delay);
                 return sendHttpRequest(evcsHttpRequest, numAttempts);
             }
 
