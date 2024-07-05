@@ -16,7 +16,7 @@ import java.time.Instant;
 @DynamoDbBean
 @Data
 @NoArgsConstructor
-public class SessionCredentialItem implements DynamodbItem {
+public class SessionCredentialItem implements PersistenceItem {
 
     private static final String SORT_KEY_TEMPLATE = "%s#%s";
     public static final String SORT_KEY_DELIMITER = "#";

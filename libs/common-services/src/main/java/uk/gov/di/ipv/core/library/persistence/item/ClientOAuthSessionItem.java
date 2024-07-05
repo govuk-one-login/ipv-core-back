@@ -18,7 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientOAuthSessionItem implements DynamodbItem {
+public class ClientOAuthSessionItem implements PersistenceItem {
     private String clientOAuthSessionId;
     private String responseType;
     private String clientId;

@@ -6,14 +6,14 @@ import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
+import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ClientAuthJwtIdItem implements DynamodbItem {
+public class ClientAuthJwtIdItem implements PersistenceItem {
     private String jwtId;
     private String usedAtDateTime;
     private long ttl;

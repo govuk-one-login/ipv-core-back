@@ -1,214 +1,48 @@
 package uk.gov.di.ipv.core.library.persistence;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
-import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
-import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
-import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
+import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
+import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.time.Instant;
 import java.util.List;
 
-import static software.amazon.awssdk.regions.Region.EU_WEST_2;
+public interface DataStore<T extends PersistenceItem> {
 
-public class DataStore<T extends DynamodbItem> {
-
-    private static final Logger LOGGER = LogManager.getLogger();
-    private final Class<T> typeParameterClass;
-    private final ConfigService configService;
-    private final DynamoDbTable<T> table;
-
-    public DataStore(
-            String tableName,
-            Class<T> typeParameterClass,
-            DynamoDbEnhancedClient client,
-            ConfigService configService) {
-        this.typeParameterClass = typeParameterClass;
-        this.configService = configService;
-        this.table = client.table(tableName, TableSchema.fromBean(this.typeParameterClass));
+    static <T extends PersistenceItem> DataStore<T> create(
+            String tableName, Class<T> klass, ConfigService configService) {
+        return configService.isLocalDev()
+                ? new InMemoryDataStore<>(klass)
+                : new DynamoDataStore<>(
+                        tableName, klass, DynamoDataStore.getClient(), configService);
     }
 
-    @ExcludeFromGeneratedCoverageReport
-    public static DynamoDbEnhancedClient getClient() {
-        var client =
-                DynamoDbClient.builder()
-                        .region(EU_WEST_2)
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .build();
+    void create(T item, ConfigurationVariable tableTtl);
 
-        return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
-    }
+    void create(T item);
 
-    public void create(T item, ConfigurationVariable tableTtl) {
-        item.setTtl(
-                Instant.now()
-                        .plusSeconds(Long.parseLong(configService.getSsmParameter(tableTtl)))
-                        .getEpochSecond());
-        create(item);
-    }
+    void createIfNotExists(T item) throws ItemAlreadyExistsException;
 
-    public void create(T item) {
-        table.putItem(item);
-    }
+    T getItem(String partitionValue, String sortValue);
 
-    public void createIfNotExists(T item) {
-        PutItemEnhancedRequest<T> enhancedRequest =
-                PutItemEnhancedRequest.builder(typeParameterClass)
-                        .item(item)
-                        .conditionExpression(
-                                Expression.builder()
-                                        .expression("attribute_not_exists(userId)")
-                                        .build())
-                        .build();
+    T getItem(String partitionValue);
 
-        table.putItem(enhancedRequest);
-    }
+    T getItem(String partitionValue, boolean warnOnNull);
 
-    public T getItem(String partitionValue, String sortValue) {
-        var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return getItemByKey(key, true);
-    }
+    T getItemByIndex(String indexName, String value);
 
-    public T getItem(String partitionValue) {
-        return getItem(partitionValue, true);
-    }
+    List<T> getItems(String partitionValue);
 
-    public T getItem(String partitionValue, boolean warnOnNull) {
-        var key = Key.builder().partitionValue(partitionValue).build();
-        return getItemByKey(key, warnOnNull);
-    }
+    List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value);
 
-    public T getItemByIndex(String indexName, String value) throws DynamoDbException {
-        DynamoDbIndex<T> index = table.index(indexName);
-        var key = Key.builder().partitionValue(value).build();
-        var queryConditional = QueryConditional.keyEqualTo(key);
-        var queryEnhancedRequest =
-                QueryEnhancedRequest.builder().queryConditional(queryConditional).build();
+    List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix);
 
-        List<T> results =
-                index.query(queryEnhancedRequest).stream()
-                        .flatMap(page -> page.items().stream())
-                        .toList();
+    T update(T item);
 
-        if (results.isEmpty()) {
-            return null;
-        }
-        return results.get(0);
-    }
+    T delete(String partitionValue, String sortValue);
 
-    public List<T> getItems(String partitionValue) {
-        var key = Key.builder().partitionValue(partitionValue).build();
-        return table.query(QueryConditional.keyEqualTo(key)).stream()
-                .flatMap(page -> page.items().stream())
-                .toList();
-    }
+    void delete(List<T> items) throws BatchDeleteException;
 
-    public List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value) {
-        var queryConditional =
-                QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build());
-        var filterExpression =
-                Expression.builder()
-                        .expression("#a = :b")
-                        .putExpressionName("#a", name)
-                        .putExpressionValue(":b", AttributeValue.builder().bool(value).build())
-                        .build();
-        var queryEnhancedRequest =
-                QueryEnhancedRequest.builder()
-                        .queryConditional(queryConditional)
-                        .filterExpression(filterExpression)
-                        .build();
-        return table.query(queryEnhancedRequest).stream()
-                .flatMap(page -> page.items().stream())
-                .toList();
-    }
-
-    public List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix) {
-        Key key = Key.builder().partitionValue(partitionValue).sortValue(sortPrefix).build();
-
-        return table.query(QueryConditional.sortBeginsWith(key)).stream()
-                .flatMap(page -> page.items().stream())
-                .toList();
-    }
-
-    public T update(T item) {
-        return table.updateItem(item);
-    }
-
-    public T delete(String partitionValue, String sortValue) {
-        var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return table.deleteItem(key);
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
-        delete(getItems(partitionValue));
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    public void delete(List<T> items) throws BatchDeleteException {
-        if (!items.isEmpty()) {
-            BatchWriteResult batchWriteResult =
-                    processBatchWrite(createWriteBatchForDeleteItems(items));
-            // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
-            // process.
-            List<Key> unprocessedItems =
-                    batchWriteResult.unprocessedDeleteItemsForTable(this.table);
-            if (!unprocessedItems.isEmpty()) {
-                String errMessage = "Failed during batch deletion.";
-                LOGGER.error(LogHelper.buildLogMessage(errMessage));
-                throw new BatchDeleteException(errMessage);
-            }
-        } else {
-            LOGGER.info(LogHelper.buildLogMessage("No items to delete"));
-        }
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private WriteBatch createWriteBatchForDeleteItems(List<T> items) {
-        WriteBatch.Builder<T> builder =
-                WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
-        for (T item : items) {
-            builder.addDeleteItem(item).build();
-        }
-        return builder.build();
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private BatchWriteResult processBatchWrite(WriteBatch writeBatch) {
-        return getClient()
-                .batchWriteItem(
-                        BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
-    }
-
-    private T getItemByKey(Key key, boolean warnOnNull) {
-        T result = table.getItem(key);
-        if (warnOnNull && result == null) {
-            var message =
-                    new StringMapMessage()
-                            .with("datastore", "Null result retrieved from DynamoDB")
-                            .with("table", table.describeTable().table().tableName());
-            LOGGER.warn(message);
-        }
-        return result;
-    }
+    void deleteAllByPartition(String partitionValue) throws BatchDeleteException;
 }
