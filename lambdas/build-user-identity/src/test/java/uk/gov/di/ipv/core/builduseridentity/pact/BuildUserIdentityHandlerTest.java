@@ -5,7 +5,8 @@ import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
+import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -55,11 +56,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 // - Comment out the @PactBroker annotation below
 // - Uncomment @PactFolder annotation below
 @Provider("IpvCoreBackUserIdentityProvider")
-// @PactBroker(
-//        url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
-//        authentication = @PactBrokerAuth(username = "${PACT_USER}", password =
-// "${PACT_PASSWORD}"))
-@PactFolder("pacts")
+@PactBroker(
+        url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
+        authentication = @PactBrokerAuth(username = "${PACT_USER}", password = "${PACT_PASSWORD}"))
+// @PactFolder("pacts")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class BuildUserIdentityHandlerTest {
