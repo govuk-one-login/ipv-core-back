@@ -52,7 +52,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     private static final String TEST_USER = "dummyUserId";
-    private static final String API_PATH = "/risk-assessment";
+    private static final String API_PATH = "/ipvcore";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
     private static final String APPLICATION_JSON = "application/json";
     private static final Clock CURRENT_TIME =
@@ -635,8 +635,7 @@ class ContractTest {
         return RestCriConfig.builder()
                 .signingKey(EC_PRIVATE_KEY_JWK)
                 .componentId("https://ticf.account.gov.uk")
-                .credentialUrl(
-                        new URI("http://localhost:" + mockServer.getPort() + "/risk-assessment"))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + API_PATH))
                 .requiresApiKey(true)
                 .build();
     }
