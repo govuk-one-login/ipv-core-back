@@ -40,7 +40,7 @@ class CiMitUtilityServiceTest {
     @MethodSource("ciScoresAndSurpassedThresholds")
     void isBreachingCiThresholdShouldReturnTrueIfCiScoreBreaching(
             int ciScore1, int ciScore2, int ciScoreThreshold) {
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2"))
                 .thenReturn(String.valueOf(ciScoreThreshold));
 
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
@@ -77,7 +77,7 @@ class CiMitUtilityServiceTest {
     @MethodSource("ciScoresAndUnsurpassedThresholds")
     void isBreachingCiThresholdShouldReturnFalseIfCiScoreNotBreaching(
             int ciScore1, int ciScore2, int ciScoreThreshold) {
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2"))
                 .thenReturn(String.valueOf(ciScoreThreshold));
 
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
@@ -123,7 +123,7 @@ class CiMitUtilityServiceTest {
                         "ciCode1", new ContraIndicatorConfig("ciCode", 4, -3, "X"),
                         "ciCode2", new ContraIndicatorConfig("ciCode", 9, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("9");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("9");
 
         assertTrue(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VTR));
         assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci2, cis, TEST_VTR));
@@ -142,7 +142,7 @@ class CiMitUtilityServiceTest {
                         "ciCode1", new ContraIndicatorConfig("ciCode", 5, -5, "X"),
                         "ciCode2", new ContraIndicatorConfig("ciCode", 5, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VTR));
     }
@@ -166,7 +166,7 @@ class CiMitUtilityServiceTest {
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
@@ -188,7 +188,7 @@ class CiMitUtilityServiceTest {
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
@@ -223,7 +223,7 @@ class CiMitUtilityServiceTest {
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // assert
         assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR).isEmpty());
@@ -277,7 +277,7 @@ class CiMitUtilityServiceTest {
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -1, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
@@ -300,7 +300,7 @@ class CiMitUtilityServiceTest {
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // assert
         assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR).isEmpty());
@@ -338,7 +338,7 @@ class CiMitUtilityServiceTest {
                         "mit_ci_code",
                         new ContraIndicatorConfig("mit_ci_code", 7, -5, "X"));
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("5");
 
         // act
         var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
@@ -451,7 +451,7 @@ class CiMitUtilityServiceTest {
     @MethodSource("ciScoresAndUnsurpassedThresholds")
     void checkCiLevelShouldReturnEmptyOptionalIfCiScoreNotBreaching(
             int ciScore1, int ciScore2, int ciScoreThreshold) throws ConfigException {
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD, "P2"))
                 .thenReturn(String.valueOf(ciScoreThreshold));
 
         ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
