@@ -9,9 +9,12 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -154,12 +157,43 @@ public class DataStore<T extends DynamodbItem> {
         return table.deleteItem(key);
     }
 
-    public List<T> delete(List<T> items) {
-        return items.stream().map(table::deleteItem).toList();
-    }
-
     public void deleteAllByPartition(String partitionValue) {
         delete(getItems(partitionValue));
+    }
+
+    public int delete(List<T> items) {
+        if (!items.isEmpty()) {
+            BatchWriteResult batchWriteResult =
+                    processBatchWrite(createWriteBatchForDeleteItems(items));
+            // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
+            // process.
+            List<Key> unprocessedItems =
+                    batchWriteResult.unprocessedDeleteItemsForTable(this.table);
+            if (!unprocessedItems.isEmpty()) {
+                unprocessedItems.forEach(
+                        key ->
+                                LOGGER.warn(
+                                        "Delete fail for item key: %s".formatted(key.toString())));
+            }
+            return items.size() - unprocessedItems.size();
+        }
+        LOGGER.info("No items to delete");
+        return items.size();
+    }
+
+    private WriteBatch createWriteBatchForDeleteItems(List<T> items) {
+        WriteBatch.Builder<T> builder =
+                WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
+        for (T item : items) {
+            builder.addDeleteItem(item).build();
+        }
+        return builder.build();
+    }
+
+    private BatchWriteResult processBatchWrite(WriteBatch writeBatch) {
+        return getClient()
+                .batchWriteItem(
+                        BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
     }
 
     private T getItemByKey(Key key, boolean warnOnNull) {

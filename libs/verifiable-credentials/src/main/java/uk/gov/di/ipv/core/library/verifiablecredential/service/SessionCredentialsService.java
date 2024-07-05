@@ -147,7 +147,7 @@ public class SessionCredentialsService {
                     LogHelper.buildLogMessage(
                             String.format(
                                     "Deleted %d credentials for %s from session credentials table",
-                                    deleted.size(), criId)));
+                                    deleted, criId)));
         } catch (Exception e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(

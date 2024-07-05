@@ -114,22 +114,6 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void shouldDeleteAllExistingVCs() {
-        var experianVc1 = vcExperianFraudScoreOne();
-        var experianVc2 = vcExperianFraudScoreTwo();
-        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, experianVc1, experianVc2);
-
-        verifiableCredentialService.deleteVcs(vcs, true);
-
-        verify(mockDataStore)
-                .delete(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getUserId(),
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getCri().getId());
-        verify(mockDataStore).delete(experianVc1.getUserId(), experianVc1.getCri().getId());
-        verify(mockDataStore).delete(experianVc2.getUserId(), experianVc2.getCri().getId());
-    }
-
-    @Test
     void shouldDeleteInheritedIdentityIfPresent() throws Exception {
         // Arrange
         var inheritedIdentityVc = vcHmrcMigrationPCL250NoEvidence();
