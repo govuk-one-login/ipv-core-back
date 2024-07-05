@@ -67,7 +67,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
@@ -632,64 +631,6 @@ class CheckCoiHandlerTest {
         }
 
         @Test
-        void shouldReturnErrorIfFamilyNameCorrelationCheckThrowsVerifiableCredentialException()
-                throws Exception {
-            when(mockUserIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(new CredentialParseException("oops"));
-
-            var request =
-                    ProcessRequest.processRequestBuilder()
-                            .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", FAMILY_NAME_AND_DOB.name()))
-                            .build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
-            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-            var auditEventsCaptured = auditEventCaptor.getAllValues();
-
-            assertEquals(
-                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                    auditEventsCaptured.get(0).getEventName());
-            assertEquals(
-                    new AuditExtensionCoiCheck(CoiCheckType.FAMILY_NAME_AND_DOB, null),
-                    auditEventsCaptured.get(0).getExtensions());
-        }
-
-        @Test
-        void shouldReturnErrorIfGivenNameCorrelationCheckThrowsCredParseException()
-                throws Exception {
-            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(new CredentialParseException("oops"));
-
-            var request =
-                    ProcessRequest.processRequestBuilder()
-                            .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
-                            .build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
-            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-            var auditEventsCaptured = auditEventCaptor.getAllValues();
-
-            assertEquals(
-                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                    auditEventsCaptured.get(0).getEventName());
-            assertEquals(
-                    new AuditExtensionCoiCheck(CoiCheckType.GIVEN_NAMES_AND_DOB, null),
-                    auditEventsCaptured.get(0).getExtensions());
-        }
-
-        @Test
         void shouldReturnErrorIfAreVcsCorrelatedCheckThrowsHttpResponseException()
                 throws Exception {
             when(mockUserIdentityService.areVcsCorrelated(
@@ -708,35 +649,6 @@ class CheckCoiHandlerTest {
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
-            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-            var auditEventsCaptured = auditEventCaptor.getAllValues();
-
-            assertEquals(
-                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                    auditEventsCaptured.get(0).getEventName());
-            assertEquals(
-                    new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
-                    auditEventsCaptured.get(0).getExtensions());
-        }
-
-        @Test
-        void shouldReturnErrorIfAreVcsCorrelatedCheckThrowsCredentialParseException()
-                throws Exception {
-            when(mockUserIdentityService.areVcsCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(new CredentialParseException("oops"));
-
-            var request =
-                    ProcessRequest.processRequestBuilder()
-                            .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
-                            .build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), responseMap.get("message"));
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
             var auditEventsCaptured = auditEventCaptor.getAllValues();
 
