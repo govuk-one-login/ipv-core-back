@@ -635,8 +635,7 @@ class ContractTest {
         return RestCriConfig.builder()
                 .signingKey(EC_PRIVATE_KEY_JWK)
                 .componentId("https://ticf.account.gov.uk")
-                .credentialUrl(
-                        new URI("http://localhost:" + mockServer.getPort() + API_PATH))
+                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + API_PATH))
                 .requiresApiKey(true)
                 .build();
     }
