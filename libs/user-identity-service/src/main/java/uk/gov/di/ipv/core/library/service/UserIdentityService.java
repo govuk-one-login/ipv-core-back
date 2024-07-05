@@ -364,7 +364,7 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
@@ -508,10 +508,8 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private IdentityClaim getIdentityClaim(VerifiableCredential vc)
-            throws HttpResponseExceptionWithErrorBody {
+    private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
-
             List<Name> names =
                     person.getName() != null
                             ? person.getName().stream()
@@ -533,11 +531,7 @@ public class UserIdentityService {
             return new IdentityClaim(names, birthDates);
 
         } else {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            "Credential subject must be of type PersonWithIdentity."));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+            return new IdentityClaim(List.of(), List.of());
         }
     }
 
