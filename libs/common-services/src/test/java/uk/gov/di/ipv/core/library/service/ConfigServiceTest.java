@@ -43,7 +43,6 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -57,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
@@ -378,6 +378,14 @@ class ConfigServiceTest {
                 configService.enabled(TestFeatureFlag.TEST_FEATURE));
     }
 
+    @Test
+    void shouldGetFalseForMissingNamedFeatureFlag() {
+        String env = System.getenv(ENVIRONMENT.name());
+        when(ssmProvider.get("/" + env + "/core/featureFlags/testFeature"))
+                .thenThrow(ParameterNotFoundException.builder().build());
+        assertEquals(Boolean.FALSE, configService.enabled(TestFeatureFlag.TEST_FEATURE));
+    }
+
     private TestConfiguration getTestConfiguration(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
         configService.setFeatureSet(
@@ -665,62 +673,6 @@ class ConfigServiceTest {
         @Override
         public String getName() {
             return this.name;
-        }
-    }
-
-    private enum TestMultipleConfiguration {
-        CREDENTIAL_ISSUERS(
-                "credentialIssuers",
-                Map.of(
-                        "cri1/activeConnection",
-                        "stub",
-                        "cri1/connections/stub/clientId",
-                        "ipv-core",
-                        "cri2/activeConnection",
-                        "main",
-                        "cri2/connections/main/clientId",
-                        "a client id"),
-                Map.of(
-                        "FS01",
-                        Map.of("cri2/activeConnection", "stub", "cri3/activeConnection", "main")));
-
-        private final String path;
-        private final Map<String, String> baseValues;
-        private final Map<String, Map<String, String>> featureSetValues;
-
-        TestMultipleConfiguration(
-                String path,
-                Map<String, String> baseValues,
-                Map<String, Map<String, String>> featureSetValues) {
-            this.path = path;
-            this.baseValues = baseValues;
-            this.featureSetValues = featureSetValues;
-        }
-
-        public void setupMockConfig(SSMProvider ssmProvider) {
-            Mockito.lenient()
-                    .when(ssmProvider.getMultiple("/test/core/" + path))
-                    .thenReturn(baseValues);
-            featureSetValues.forEach(
-                    (featureSet, valueOverride) ->
-                            Mockito.lenient()
-                                    .when(
-                                            ssmProvider.getMultiple(
-                                                    "/test/core/features/"
-                                                            + featureSet
-                                                            + "/"
-                                                            + path))
-                                    .thenReturn(valueOverride));
-        }
-
-        public Map<String, String> getExpectedValue(String featureSet) {
-            if (featureSet == null) {
-                return baseValues;
-            } else {
-                var expected = new HashMap<>(baseValues);
-                expected.putAll(featureSetValues.get(featureSet));
-                return expected;
-            }
         }
     }
 

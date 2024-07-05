@@ -265,13 +265,22 @@ public class ConfigService {
     }
 
     public boolean enabled(FeatureFlag featureFlag) {
-        return Boolean.parseBoolean(
-                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName()));
+        return enabled(featureFlag.getName());
     }
 
     public boolean enabled(String featureFlagValue) {
-        return Boolean.parseBoolean(
-                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+        try {
+            return Boolean.parseBoolean(
+                    getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+        } catch (ParameterNotFoundException ex) {
+            LOGGER.warn(
+                    (new StringMapMessage())
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "SSM parameter not found for feature flag:"
+                                            + featureFlagValue));
+            return false;
+        }
     }
 
     public String getCoreSecretValue(ConfigurationVariable secretName) {
