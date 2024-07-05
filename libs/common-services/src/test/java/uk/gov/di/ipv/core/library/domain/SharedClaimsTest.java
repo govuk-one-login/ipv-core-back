@@ -1,9 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -15,8 +13,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_1;
 class SharedClaimsTest {
 
     @Test
-    void shouldBuildSharedAttributes() throws Exception {
-        List<NameParts> namePartsList = Arrays.asList(new NameParts("Paul", "GivenName"));
+    void shouldBuildSharedAttributes() {
+        List<NameParts> namePartsList = List.of(new NameParts("Paul", "GivenName"));
         Set<Name> nameSet = new HashSet<>();
         Name names = new Name(namePartsList);
         nameSet.add(names);
@@ -48,8 +46,8 @@ class SharedClaimsTest {
     }
 
     @Test
-    void shouldOverrideAddressAttributes() throws JsonProcessingException {
-        List<NameParts> namePartsList = Arrays.asList(new NameParts("Paul", "GivenName"));
+    void shouldOverrideAddressAttributes() {
+        List<NameParts> namePartsList = List.of(new NameParts("Paul", "GivenName"));
         Set<Name> nameSet = new HashSet<>();
         Name names = new Name(namePartsList);
         nameSet.add(names);
