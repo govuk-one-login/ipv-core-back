@@ -233,10 +233,10 @@ public class CriCheckingService {
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             callbackRequest.getIpAddress());
 
-            if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-                return ciMitUtilityService
-                        .getCiMitigationJourneyResponse(cis)
-                        .orElse(JOURNEY_FAIL_WITH_CI);
+            var journeyResponse =
+                    ciMitUtilityService.checkCiLevel(cis, clientOAuthSessionItem.getVtr());
+            if (journeyResponse.isPresent()) {
+                return journeyResponse.get();
             }
         }
 

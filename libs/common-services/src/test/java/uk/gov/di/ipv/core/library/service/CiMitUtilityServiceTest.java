@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 
 @ExtendWith(MockitoExtension.class)
 class CiMitUtilityServiceTest {
+    private static final List<String> TEST_VTR = List.of("P2");
     @Mock private ConfigService mockConfigService;
 
     @InjectMocks private CiMitUtilityService ciMitUtilityService;
@@ -57,7 +59,7 @@ class CiMitUtilityServiceTest {
         ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
 
         assertTrue(
-                ciMitUtilityService.isBreachingCiThreshold(cis),
+                ciMitUtilityService.isBreachingCiThreshold(cis, TEST_VTR),
                 String.format(
                         "CIs with scores %s and %s should breach threshold of %s",
                         ciScore1, ciScore2, ciScoreThreshold));
@@ -94,7 +96,7 @@ class CiMitUtilityServiceTest {
         ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
 
         assertFalse(
-                ciMitUtilityService.isBreachingCiThreshold(cis),
+                ciMitUtilityService.isBreachingCiThreshold(cis, TEST_VTR),
                 String.format(
                         "CIs with scores %s and %s shouldn't be breach threshold of %s",
                         ciScore1, ciScore2, ciScoreThreshold));
@@ -123,8 +125,8 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("9");
 
-        assertTrue(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis));
-        assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci2, cis));
+        assertTrue(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VTR));
+        assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci2, cis, TEST_VTR));
     }
 
     @Test
@@ -142,7 +144,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
-        assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis));
+        assertFalse(ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VTR));
     }
 
     @Test
@@ -167,7 +169,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -189,7 +191,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -224,7 +226,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // assert
-        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis).isEmpty());
+        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR).isEmpty());
     }
 
     @Test
@@ -236,7 +238,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -257,7 +259,7 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -278,7 +280,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -301,7 +303,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // assert
-        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis).isEmpty());
+        assertTrue(ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR).isEmpty());
     }
 
     @Test
@@ -339,7 +341,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis);
+        var result = ciMitUtilityService.getCiMitigationJourneyResponse(cis, TEST_VTR);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -401,5 +403,76 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 
         assertTrue(ciMitUtilityService.getMitigatedCiJourneyResponse(ci).isEmpty());
+    }
+
+    @Test
+    void checkCiLevelShouldReturnEmptyWhenCiIsNotMitigatable() throws Exception {
+        // arrange
+        var code = "ci_code";
+        var ci = ContraIndicator.builder().code(code).issuanceDate("some_date").build();
+        var cis = ContraIndicators.builder().usersContraIndicators(List.of(ci)).build();
+        when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
+
+        // act
+        var result = ciMitUtilityService.checkCiLevel(cis, TEST_VTR);
+
+        // assert
+        assertEquals(Optional.empty(), result);
+    }
+
+    @Test
+    void checkCiLevelShouldReturnMitigationWhenCiCanBeMitigated() throws Exception {
+        // arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String document = "doc_type/213123";
+        String documentType = "doc_type";
+        var ci =
+                ContraIndicator.builder()
+                        .code(code)
+                        .document(document)
+                        .issuanceDate("some_date")
+                        .mitigation(List.of(Mitigation.builder().build()))
+                        .build();
+        var cis = ContraIndicators.builder().usersContraIndicators(List.of(ci)).build();
+        var vtr = List.of("P1");
+
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+
+        // act
+        var result = ciMitUtilityService.checkCiLevel(cis, vtr);
+
+        // assert
+        assertEquals(Optional.of(new JourneyResponse(journey)), result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("ciScoresAndUnsurpassedThresholds")
+    void checkCiLevelShouldReturnEmptyOptionalIfCiScoreNotBreaching(
+            int ciScore1, int ciScore2, int ciScoreThreshold) throws ConfigException {
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD))
+                .thenReturn(String.valueOf(ciScoreThreshold));
+
+        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, ciScore1, null, null);
+        ContraIndicatorConfig ciConfig2 = new ContraIndicatorConfig(null, ciScore2, null, null);
+
+        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
+        ciConfigMap.put("ci_1", ciConfig1);
+        ciConfigMap.put("ci_2", ciConfig2);
+
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        var usersCis =
+                List.of(
+                        ContraIndicator.builder().code("ci_1").build(),
+                        ContraIndicator.builder().code("ci_2").build());
+        ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
+
+        assertTrue(
+                ciMitUtilityService.checkCiLevel(cis, TEST_VTR).isEmpty(),
+                String.format(
+                        "CIs with scores %s and %s should breach threshold of %s",
+                        ciScore1, ciScore2, ciScoreThreshold));
     }
 }

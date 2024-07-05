@@ -47,6 +47,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
     public static final String TEST_USER_ID = "a-user-id";
+    private static final List<String> TEST_VTR = List.of("P2");
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
@@ -136,7 +137,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCiMitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
@@ -155,8 +156,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCiMitUtilityService.getCiMitigationJourneyResponse(any()))
+        when(mockCiMitUtilityService.checkCiLevel(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

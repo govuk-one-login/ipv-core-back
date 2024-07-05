@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -27,7 +26,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -142,9 +140,10 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     ConfigException, UnrecognisedVotException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
-        ClientOAuthSessionItem clientOAuthSessionItem =
+        var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
+        var vtr = clientOAuthSessionItem.getVtr();
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
@@ -169,16 +168,9 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         request.getIpAddress());
 
-        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "CI score is breaching threshold - setting VOT to P0"));
-            ipvSessionItem.setVot(Vot.P0);
-
-            return ciMitUtilityService
-                    .getCiMitigationJourneyResponse(cis)
-                    .orElse(JOURNEY_FAIL_WITH_CI)
-                    .toObjectMap();
+        var journeyResponse = ciMitUtilityService.checkCiLevel(cis, vtr);
+        if (journeyResponse.isPresent()) {
+            return journeyResponse.get().toObjectMap();
         }
 
         LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));

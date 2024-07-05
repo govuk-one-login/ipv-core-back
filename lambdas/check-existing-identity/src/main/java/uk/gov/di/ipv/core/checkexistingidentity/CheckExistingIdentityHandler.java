@@ -248,6 +248,7 @@ public class CheckExistingIdentityHandler
             var ipvSessionId = ipvSessionItem.getIpvSessionId();
             var userId = clientOAuthSessionItem.getUserId();
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            var vtr = clientOAuthSessionItem.getVtr();
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -263,6 +264,7 @@ public class CheckExistingIdentityHandler
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity());
 
+            // Refactor this out in PYIC-6984
             // If we want to prove a full identity from scratch we want to go for the lowest
             // strength that is acceptable to the caller.
             var preferredNewIdentityLevel = Vot.P2;
@@ -275,7 +277,7 @@ public class CheckExistingIdentityHandler
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var ciScoringCheckResponse = checkForCIScoringFailure(contraIndicators);
+            var ciScoringCheckResponse = ciMitUtilityService.checkCiLevel(contraIndicators, vtr);
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
@@ -506,20 +508,6 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_F2F_FAIL;
             }
         }
-    }
-
-    @Tracing
-    private Optional<JourneyResponse> checkForCIScoringFailure(ContraIndicators contraIndicators)
-            throws ConfigException {
-
-        // CI scoring failure
-        if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
-            return Optional.of(
-                    ciMitUtilityService
-                            .getCiMitigationJourneyResponse(contraIndicators)
-                            .orElse(JOURNEY_FAIL_WITH_CI));
-        }
-        return Optional.empty();
     }
 
     @Tracing

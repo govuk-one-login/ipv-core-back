@@ -70,6 +70,7 @@ class CriCheckingServiceTest {
     private static final String TEST_USER_ID = "test_user_id";
     private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test_govuk_signin_journey_id";
     private static final String TEST_CI_CODE = "test_ci_code";
+    private static final List<String> TEST_VTR = List.of("P2");
     private static final ContraIndicators TEST_CONTRA_INDICATORS =
             ContraIndicators.builder()
                     .usersContraIndicators(
@@ -475,7 +476,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedVcHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
@@ -498,7 +499,8 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCimitUtilityService.checkCiLevel(any(), any()))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
 
         // Act
         JourneyResponse result =
@@ -525,7 +527,7 @@ class CriCheckingServiceTest {
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockCiMitService, never()).getContraIndicators(any(), any(), any());
-        verify(mockCimitUtilityService, never()).isBreachingCiThreshold(any());
+        verify(mockCimitUtilityService, never()).checkCiLevel(any(), any());
     }
 
     @Test
@@ -535,8 +537,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCimitUtilityService.getCiMitigationJourneyResponse(any()))
+        when(mockCimitUtilityService.checkCiLevel(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
 
         // Act
@@ -555,7 +556,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
@@ -576,7 +577,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
             mockedJwtHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);

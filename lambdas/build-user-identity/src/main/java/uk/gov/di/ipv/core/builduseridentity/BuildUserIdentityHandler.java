@@ -43,6 +43,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
@@ -99,14 +100,15 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
             var clientOAuthSessionItem = super.getClientOAuthSessionItem(ipvSessionItem);
 
-            String ipvSessionId = ipvSessionItem.getIpvSessionId();
-            String userId = clientOAuthSessionItem.getUserId();
-            AuditEventUser auditEventUser =
+            var ipvSessionId = ipvSessionItem.getIpvSessionId();
+            var userId = clientOAuthSessionItem.getUserId();
+            var auditEventUser =
                     new AuditEventUser(
-                            clientOAuthSessionItem.getUserId(),
+                            userId,
                             ipvSessionId,
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
+            var vtr = clientOAuthSessionItem.getVtr();
 
             var contraIndicatorsVc =
                     ciMitService.getContraIndicatorsVc(
@@ -116,9 +118,9 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            UserIdentity userIdentity =
+            var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, ipvSessionItem.getVot(), contraIndicators);
+                            vcs, userId, ipvSessionItem.getVot(), contraIndicators, vtr);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
             if (configService.enabled(TICF_CRI_BETA)
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -126,7 +128,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             }
 
             sendIdentityIssuedAuditEvent(
-                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
+                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity, vtr);
 
             closeSession(ipvSessionItem);
 
@@ -168,10 +170,11 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators,
-            UserIdentity userIdentity)
+            UserIdentity userIdentity,
+            List<String> vtr)
             throws SqsException {
 
-        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
+        var configMap = configService.getContraIndicatorConfigMap();
         var auditEventReturnCodes =
                 userIdentity.getReturnCode().stream()
                         .map(
@@ -180,10 +183,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                                                 returnCode, contraIndicators, configMap))
                         .toList();
 
-        AuditExtensionsUserIdentity extensions =
+        var extensions =
                 new AuditExtensionsUserIdentity(
                         ipvSessionItem.getVot(),
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, vtr),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 
