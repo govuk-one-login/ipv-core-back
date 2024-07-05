@@ -423,10 +423,11 @@ class CiMitUtilityServiceTest {
     @Test
     void checkCiLevelShouldReturnMitigationWhenCiCanBeMitigated() throws Exception {
         // arrange
+        var vtr = List.of("P1");
         var code = "ci_code";
         var journey = "some_mitigation";
-        String document = "doc_type/213123";
-        String documentType = "doc_type";
+        var document = "doc_type/213123";
+        var documentType = "doc_type";
         var ci =
                 ContraIndicator.builder()
                         .code(code)
@@ -435,8 +436,9 @@ class CiMitUtilityServiceTest {
                         .mitigation(List.of(Mitigation.builder().build()))
                         .build();
         var cis = ContraIndicators.builder().usersContraIndicators(List.of(ci)).build();
-        var vtr = List.of("P1");
+        var ciConfigMap = Map.of(code, new ContraIndicatorConfig(null, 4, 3, null));
 
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 

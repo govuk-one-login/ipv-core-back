@@ -143,6 +143,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
     private static final List<String> TEST_VTR = List.of("P2");
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
@@ -806,13 +808,15 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
+            throws ConfigException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.isBreachingCiThreshold(any(), eq(TEST_VTR))).thenReturn(true);
+        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR)))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -984,7 +988,7 @@ class CheckExistingIdentityHandlerTest {
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1160,7 +1164,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR))).thenReturn(Optional.empty());
+        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR)))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
                 toResponseClass(

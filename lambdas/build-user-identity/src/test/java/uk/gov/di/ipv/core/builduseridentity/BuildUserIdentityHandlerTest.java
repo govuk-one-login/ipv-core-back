@@ -125,7 +125,6 @@ class BuildUserIdentityHandlerTest {
                                                             "https://review-f.account.gov.uk"))
                                             .build()))
                     .build();
-    private static final List<String> TEST_VTR = List.of("P2");
     private static final APIGatewayProxyRequestEvent testEvent = getEventWithAuthAndIpHeaders();
 
     @Mock private Context mockContext;
@@ -237,7 +236,7 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService)
                 .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, TEST_VTR);
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, null);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -309,7 +308,7 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService)
                 .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, TEST_VTR);
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, null);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -326,7 +325,6 @@ class BuildUserIdentityHandlerTest {
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockCiMitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
         ipvSessionItem.setVot(Vot.P0);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
@@ -402,7 +400,6 @@ class BuildUserIdentityHandlerTest {
                                 "X01", new ContraIndicatorConfig("X01", 4, -3, "4"),
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
-        when(mockCiMitUtilityService.checkCiLevel(any(), any())).thenReturn(Optional.empty());
         ipvSessionItem.setVot(Vot.P0);
         ipvSessionItem.setRiskAssessmentCredential(vcTicf().getVcString());
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -933,7 +930,7 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService)
                 .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, TEST_VTR);
+                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, mockContraIndicators, null);
     }
 
     private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {
