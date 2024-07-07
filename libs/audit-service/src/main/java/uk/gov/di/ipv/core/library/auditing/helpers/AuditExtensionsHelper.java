@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedId
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -83,7 +82,7 @@ public class AuditExtensionsHelper {
 
     public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
             VerifiableCredential vc, String deviceInformation)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var credentialSubject = getCredentialSubjectOrThrow(identityCheckCredential);
 
