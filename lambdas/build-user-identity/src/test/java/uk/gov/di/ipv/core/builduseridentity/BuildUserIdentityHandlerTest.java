@@ -58,6 +58,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.time.Instant;
@@ -84,7 +85,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.NINO_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
@@ -162,7 +163,7 @@ class BuildUserIdentityHandlerTest {
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
-                        List.of(ADDRESS_1),
+                        List.of(OBJECT_MAPPER.readValue(ADDRESS_JSON_1, PostalAddress.class)),
                         List.of(OBJECT_MAPPER.readValue(PASSPORT_JSON_1, PassportDetails.class)),
                         List.of(
                                 OBJECT_MAPPER.readValue(

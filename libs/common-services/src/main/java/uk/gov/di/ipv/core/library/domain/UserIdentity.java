@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class UserIdentity {
     private IdentityClaim identityClaim;
 
     @JsonProperty(ADDRESS_CLAIM_NAME)
-    private List<Address> addressClaim;
+    private List<PostalAddress> addressClaim;
 
     @JsonProperty(PASSPORT_CLAIM_NAME)
     private List<PassportDetails> passportClaim;
@@ -60,7 +61,7 @@ public class UserIdentity {
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
-            @JsonProperty(value = ADDRESS_CLAIM_NAME) List<Address> addressClaim,
+            @JsonProperty(value = ADDRESS_CLAIM_NAME) List<PostalAddress> addressClaim,
             @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
             @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME)
                     List<DrivingPermitDetails> drivingPermitClaim,
