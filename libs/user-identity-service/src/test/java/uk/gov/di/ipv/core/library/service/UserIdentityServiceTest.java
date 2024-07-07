@@ -1476,7 +1476,33 @@ class UserIdentityServiceTest {
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo(),
-                        vcAddressNone());
+                        vcAddressEmpty());
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfAddressVcHasNoCredentialSubject() {
+        // Arrange
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressNoCredentialSubject());
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();

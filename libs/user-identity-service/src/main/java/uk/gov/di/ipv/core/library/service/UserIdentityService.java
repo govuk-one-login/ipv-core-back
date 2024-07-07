@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
-import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -577,26 +576,6 @@ public class UserIdentityService {
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
-    }
-
-    private Address mapPostalAddressToAddressClass(PostalAddress postalAddress) {
-        return Address.builder()
-                .uprn(postalAddress.getUprn())
-                .organisationName(postalAddress.getOrganisationName())
-                .departmentName(postalAddress.getDepartmentName())
-                .subBuildingName(postalAddress.getSubBuildingName())
-                .buildingNumber(postalAddress.getBuildingNumber())
-                .buildingName(postalAddress.getBuildingName())
-                .dependentStreetName(postalAddress.getDependentStreetName())
-                .streetName(postalAddress.getStreetName())
-                .doubleDependentAddressLocality(postalAddress.getDoubleDependentAddressLocality())
-                .dependentAddressLocality(postalAddress.getDependentAddressLocality())
-                .postalCode(postalAddress.getPostalCode())
-                .addressCountry(postalAddress.getAddressCountry())
-                .addressLocality(postalAddress.getAddressLocality())
-                .validFrom(postalAddress.getValidFrom())
-                .validUntil(postalAddress.getValidUntil())
-                .build();
     }
 
     private Optional<List<SocialSecurityRecordDetails>> generateNinoClaim(
