@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.auditing.helpers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import org.apache.logging.log4j.LogManager;
@@ -129,15 +128,6 @@ public class AuditExtensionsHelper {
                     new DeviceInformation(deviceInformation));
         } catch (JsonProcessingException e) {
             throw new CredentialParseException("Unable to parse VC for inherited ID audit data", e);
-        }
-    }
-
-    private static List<Name> getNameFromCredentialSubject(JsonNode credentialSubject)
-            throws CredentialParseException {
-        try {
-            return OBJECT_MAPPER.treeToValue(credentialSubject.path(VC_NAME), LIST_NAME_TYPE);
-        } catch (JsonProcessingException e) {
-            throw new CredentialParseException("Unable to get name list from credential subject");
         }
     }
 }
