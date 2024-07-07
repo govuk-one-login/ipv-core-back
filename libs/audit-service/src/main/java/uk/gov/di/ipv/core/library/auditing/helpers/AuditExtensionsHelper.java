@@ -4,35 +4,38 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.util.List;
 
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EXPIRY_DATE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ID_CARD;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_SOCIAL_SECURITY_RECORD;
 
 public class AuditExtensionsHelper {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final com.fasterxml.jackson.databind.type.CollectionType LIST_NAME_TYPE =
             OBJECT_MAPPER.getTypeFactory().constructCollectionType(List.class, Name.class);
@@ -59,41 +62,51 @@ public class AuditExtensionsHelper {
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc)
-            throws CredentialParseException {
-        var jwtClaimsSet = vc.getClaimsSet();
-        var credentialSubject =
-                OBJECT_MAPPER
-                        .valueToTree(jwtClaimsSet)
-                        .path(CLAIMS_CLAIM)
-                        .path(VC_CLAIM)
-                        .path(VC_CREDENTIAL_SUBJECT);
-        var name = getNameFromCredentialSubject(credentialSubject);
+            throws HttpResponseExceptionWithErrorBody {
 
-        var passport = credentialSubject.path(VC_PASSPORT);
-        if (passport.isArray() && !passport.isEmpty()) {
-            var docExpiryDate = passport.path(0).path(VC_EXPIRY_DATE).asText();
-            return new AuditRestrictedF2F(name, docExpiryDate);
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var credentialSubject = identityCheckCredential.getCredentialSubject();
+
+            if (credentialSubject == null) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+            }
+
+            var name = credentialSubject.getName();
+
+            var passport = credentialSubject.getPassport();
+            if (!isNullOrEmpty(passport)) {
+                var docExpiryDate = passport.get(0).getExpiryDate();
+                return new AuditRestrictedF2F(name, docExpiryDate);
+            }
+
+            var drivingPermit = credentialSubject.getDrivingPermit();
+            if (!isNullOrEmpty(drivingPermit)) {
+                var docExpiryDate = drivingPermit.get(0).getExpiryDate();
+                return new AuditRestrictedF2F(name, docExpiryDate);
+            }
+
+            var brp = credentialSubject.getResidencePermit();
+            if (!isNullOrEmpty(brp)) {
+                var docExpiryDate = brp.get(0).getExpiryDate();
+                return new AuditRestrictedF2F(name, docExpiryDate);
+            }
+
+            var idCard = credentialSubject.getIdCard();
+            if (!isNullOrEmpty(idCard)) {
+                var docExpiryDate = idCard.get(0).getExpiryDate();
+                return new AuditRestrictedF2F(name, docExpiryDate);
+            }
+
+            return new AuditRestrictedF2F(name);
+        } else {
+            LOGGER.error(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
         }
-
-        var drivingPermit = credentialSubject.path(VC_DRIVING_PERMIT);
-        if (drivingPermit.isArray() && !drivingPermit.isEmpty()) {
-            var docExpiryDate = drivingPermit.path(0).path(VC_EXPIRY_DATE).asText();
-            return new AuditRestrictedF2F(name, docExpiryDate);
-        }
-
-        var brp = credentialSubject.path(VC_RESIDENCE_PERMIT);
-        if (brp.isArray() && !brp.isEmpty()) {
-            var docExpiryDate = brp.path(0).path(VC_EXPIRY_DATE).asText();
-            return new AuditRestrictedF2F(name, docExpiryDate);
-        }
-
-        var idCard = credentialSubject.path(VC_ID_CARD);
-        if (idCard.isArray() && !idCard.isEmpty()) {
-            var docExpiryDate = idCard.get(0).path(VC_EXPIRY_DATE).asText();
-            return new AuditRestrictedF2F(name, docExpiryDate);
-        }
-
-        return new AuditRestrictedF2F(name);
     }
 
     public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(

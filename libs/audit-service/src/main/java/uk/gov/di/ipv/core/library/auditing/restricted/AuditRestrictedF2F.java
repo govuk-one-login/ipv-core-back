@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.auditing.restricted;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.model.Name;
 
 import java.util.List;
 

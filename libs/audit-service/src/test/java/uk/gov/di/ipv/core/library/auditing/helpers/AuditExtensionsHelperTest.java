@@ -8,17 +8,22 @@ import uk.gov.di.ipv.core.library.helpers.TestVc;
 
 import java.time.LocalDate;
 import java.time.Period;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNoCredentialSubjectProperty;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
@@ -98,6 +103,30 @@ class AuditExtensionsHelperTest {
     void shouldGetIdCardExpiryDateForAudit() throws Exception {
         var auditNameParts = getRestrictedAuditDataForF2F(vcF2fIdCard());
         assertEquals("2031-08-02", auditNameParts.getDocExpiryDate());
+    }
+
+    @Test
+    void getRestrictedAuditDataForF2FShouldThrowIfInvalidVcType() {
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> getRestrictedAuditDataForF2F(VC_ADDRESS));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void getRestrictedAuditDataForF2FShouldThrowIfNullCredentialSubject() {
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                getRestrictedAuditDataForF2F(
+                                        vcDrivingPermitNoCredentialSubjectProperty()));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(ErrorResponse.CREDENTIAL_SUBJECT_MISSING, thrownException.getErrorResponse());
     }
 
     @Test

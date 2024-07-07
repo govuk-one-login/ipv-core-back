@@ -739,16 +739,6 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static VerifiableCredential vcDrivingPermitIncorrectType() {
-        return generateVerifiableCredential(
-                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE,
-                TestVc.builder()
-                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
-                        .build(),
-                Instant.ofEpochSecond(1705986521));
-    }
-
     static VerifiableCredential vcDrivingPermitNoCredentialSubjectProperty() {
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
@@ -758,8 +748,18 @@ public interface VcFixtures {
                         .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .type(
                                 new String[] {
-                                    VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
+                                        VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
                                 })
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcDrivingPermitIncorrectType() {
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                TestVc.builder()
+                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
                         .build(),
                 Instant.ofEpochSecond(1705986521));
     }
