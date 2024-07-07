@@ -321,7 +321,7 @@ public class UserIdentityService {
         identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
-            Optional<List<Address>> addressClaim = generateAddressClaim(vcs);
+            Optional<List<PostalAddress>> addressClaim = generateAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
             Optional<List<PassportDetails>> passportClaim = generatePassportClaim(successfulVcs);
@@ -541,7 +541,7 @@ public class UserIdentityService {
         return Vot.valueOf(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
-    private Optional<List<Address>> generateAddressClaim(List<VerifiableCredential> vcs)
+    private Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var addressVc = findVc(ADDRESS.getId(), vcs);
 
@@ -571,10 +571,7 @@ public class UserIdentityService {
                         500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
             }
 
-            var mappedAddresses =
-                    address.stream().map(this::mapPostalAddressToAddressClass).toList();
-
-            return Optional.of(mappedAddresses);
+            return Optional.of(address);
         } else {
             LOGGER.error(LogHelper.buildLogMessage("Credential must be an Address credential."));
             throw new HttpResponseExceptionWithErrorBody(
