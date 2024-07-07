@@ -147,4 +147,31 @@ class AuditExtensionsHelperTest {
                 "{\"encoded\":\"test_device_data\"}",
                 OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
+
+    @Test
+    void getRestrictedAuditDataForInheritedIdentityShouldThrowIfInvalidVcType() {
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                getRestrictedAuditDataForInheritedIdentity(
+                                        VC_ADDRESS, "test-device-info"));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void getRestrictedAuditDataForInheritedIdentityShouldThrowIfMissingCredentialSubject() {
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                getRestrictedAuditDataForInheritedIdentity(
+                                        vcDrivingPermitNoCredentialSubjectProperty(),
+                                        "test-device-info"));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE, thrownException.getErrorResponse());
+    }
 }
