@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -45,8 +44,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
-import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static java.util.Objects.requireNonNullElse;
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
@@ -503,12 +502,6 @@ public class UserIdentityService {
                 .distinct()
                 .sorted()
                 .map(ReturnCode::new)
-                .toList();
-    }
-
-    private List<NameParts> getNamePartsFromCredentialSubjectName(uk.gov.di.model.Name name) {
-        return name.getNameParts().stream()
-                .map(np -> new NameParts(np.getValue(), np.getType().toString()))
                 .toList();
     }
 

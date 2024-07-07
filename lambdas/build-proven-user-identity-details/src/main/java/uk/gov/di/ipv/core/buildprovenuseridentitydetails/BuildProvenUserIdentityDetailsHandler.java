@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.NameAndDateOfBirth;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -40,7 +39,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.BirthDate;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -113,10 +111,10 @@ public class BuildProvenUserIdentityDetailsHandler
 
             var currentVcStatuses = generateCurrentVcStatuses(vcs);
 
-            var nameAndDateOfBirth = getProvenIdentityNameAndDateOfBirth(vcs);
-            provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.name());
-            provenUserIdentityDetailsBuilder.nameParts(nameAndDateOfBirth.nameParts());
-            provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.dateOfBirth());
+            var identity = getProvenIdentity(vcs);
+            provenUserIdentityDetailsBuilder.name(identity.getFullName());
+            provenUserIdentityDetailsBuilder.nameParts(identity.getNameParts());
+            provenUserIdentityDetailsBuilder.dateOfBirth(identity.getBirthDate().get(0).getValue());
 
             if (ipvSessionItem.getVot().getProfileType().equals(ProfileType.GPG45)) {
                 var addresses = getProvenIdentityAddresses(vcs, currentVcStatuses);
@@ -151,7 +149,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Tracing
-    private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(List<VerifiableCredential> vcs)
+    private IdentityClaim getProvenIdentity(List<VerifiableCredential> vcs)
             throws ProvenUserIdentityDetailsException, CredentialParseException {
         try {
             final Optional<IdentityClaim> identityClaim =
@@ -163,13 +161,8 @@ public class BuildProvenUserIdentityDetailsHandler
                         500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
             }
 
-            var birthDate =
-                    mapper.convertValue(identityClaim.get().getBirthDate().get(0), BirthDate.class);
+            return identityClaim.get();
 
-            return new NameAndDateOfBirth(
-                    identityClaim.get().getFullName(),
-                    identityClaim.get().getNameParts(),
-                    birthDate.getValue());
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(
                     LogHelper.buildLogMessage(
