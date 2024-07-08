@@ -748,7 +748,7 @@ public interface VcFixtures {
                         .evidence(DCMAW_EVIDENCE_VRI_CHECK)
                         .type(
                                 new String[] {
-                                        VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
+                                    VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
                                 })
                         .build(),
                 Instant.ofEpochSecond(1705986521));

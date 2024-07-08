@@ -134,7 +134,8 @@ public class ProcessAsyncCriCredentialHandler
                 | UnrecognisedVotException
                 | CiPostMitigationsException
                 | CredentialParseException
-                | EvcsServiceException | HttpResponseExceptionWithErrorBody e) {
+                | EvcsServiceException
+                | HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
