@@ -140,7 +140,7 @@ public class LogHelper {
                         Objects.requireNonNullElse(errorDescription, "Unknown"));
     }
 
-    public static StringMapMessage buildErrorMessage(String message, Exception e) {
+    public static StringMapMessage buildErrorMessage(String message, Throwable e) {
         return buildLogMessage(message).with(LOG_ERROR_DESCRIPTION.getFieldName(), e);
     }
 
