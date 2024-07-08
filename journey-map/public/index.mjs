@@ -85,7 +85,9 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
-    window.history.pushState(undefined, undefined, getJourneyUrl(targetJourney));
+    const params = new URLSearchParams(window.location.search);
+    params.set('journeyType', targetJourney);
+    window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
     await updateView();
@@ -120,6 +122,7 @@ const setupHeader = () => {
 };
 
 const setupOptions = (name, options, fieldset, labels) => {
+    const selectedOptions = new URLSearchParams(window.location.search).getAll(name) || [];
     if (options.length) {
         options.forEach((option) => {
             const input = document.createElement('input');
@@ -127,6 +130,16 @@ const setupOptions = (name, options, fieldset, labels) => {
             input.name = name;
             input.value = option;
             input.id = option;
+            input.checked = selectedOptions.includes(option) ? 'checked' : undefined;
+            input.onchange = () => {
+                const params = new URLSearchParams(window.location.search);
+                if (input.checked) {
+                    params.append(name, option);
+                } else {
+                    params.delete(name, option);
+                }
+                window.history.replaceState(undefined, undefined, `?${params.toString()}`)
+            };
 
             const label = document.createElement('label');
             const span = document.createElement('span');
