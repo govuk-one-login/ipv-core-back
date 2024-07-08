@@ -59,8 +59,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
-import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
-import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -119,6 +117,10 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NA
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
+import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
@@ -829,20 +831,22 @@ class InitialiseIpvSessionHandlerTest {
                     (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
             var expectedName =
                     List.of(
-                            NameGenerator.createName(
+                            createName(
                                     List.of(
-                                            NameGenerator.NamePartGenerator.createNamePart(
+                                            createNamePart(
                                                     "KENNETH", NamePart.NamePartType.GIVEN_NAME),
-                                            NameGenerator.NamePartGenerator.createNamePart(
+                                            createNamePart(
                                                     "DECERQUEIRA",
                                                     NamePart.NamePartType.FAMILY_NAME))));
 
-            var expectedBirthDate = List.of(BirthDateGenerator.createBirthDate("1965-07-08"));
+            var expectedBirthDate = List.of(createBirthDate("1965-07-08"));
+            var expectedSocialSecurityRecord =
+                    List.of(
+                            createSocialSecurityRecordDetails(
+                                    "AB123456C")); // pragma: allowlist secret
             assertEquals(expectedName, restricted.name());
             assertEquals(expectedBirthDate, restricted.birthDate());
-            assertEquals(
-                    "[{\"personalNumber\":\"AB123456C\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
+            assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
 
             assertEquals(
                     AuditEventTypes.IPV_JOURNEY_START,

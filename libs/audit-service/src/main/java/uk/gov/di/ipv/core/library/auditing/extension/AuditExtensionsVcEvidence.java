@@ -9,9 +9,9 @@ import java.util.List;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @ExcludeFromGeneratedCoverageReport
-public record AuditExtensionsVcEvidence<TEvidence>(
+public record AuditExtensionsVcEvidence<T>(
         String iss,
-        List<TEvidence> evidence,
+        List<T> evidence,
         @JsonInclude(NON_NULL) Boolean successful,
         @JsonInclude(NON_NULL) Vot vot,
         @JsonInclude(NON_NULL) Boolean isUkIssued,

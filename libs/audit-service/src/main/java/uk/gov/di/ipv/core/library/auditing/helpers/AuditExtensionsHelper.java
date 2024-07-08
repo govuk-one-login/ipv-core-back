@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.auditing.helpers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
@@ -22,17 +21,15 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 public class AuditExtensionsHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private AuditExtensionsHelper() {}
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
             VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
-        var jwtClaimsSet = vc.getClaimsSet();
+        var issuer = vc.getClaimsSet().getIssuer();
         var vot = VcHelper.getVcVot(vc);
         var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
         var age = VcHelper.extractAgeFromCredential(vc);
-        var issuer = jwtClaimsSet.getIssuer();
 
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var identityChecks = identityCheckCredential.getEvidence();
@@ -48,8 +45,7 @@ public class AuditExtensionsHelper {
                     issuer, riskAssessments, isSuccessful, vot, isUkIssued, age);
         }
 
-        return new AuditExtensionsVcEvidence<>(
-                jwtClaimsSet.getIssuer(), null, isSuccessful, vot, isUkIssued, age);
+        return new AuditExtensionsVcEvidence<>(issuer, null, isSuccessful, vot, isUkIssued, age);
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc)
@@ -86,7 +82,7 @@ public class AuditExtensionsHelper {
 
             return new AuditRestrictedF2F(name);
         } else {
-            LOGGER.error(LogHelper.buildLogMessage("VC not of type IdentityCheckCredential."));
+            LOGGER.warn(LogHelper.buildLogMessage("VC not of type IdentityCheckCredential."));
             return new AuditRestrictedF2F(null);
         }
     }
