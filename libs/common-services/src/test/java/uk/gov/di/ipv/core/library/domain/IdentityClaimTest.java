@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.helpers.NameHelper;
+import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.NamePart;
 
@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 
 class IdentityClaimTest {
 
@@ -19,7 +19,7 @@ class IdentityClaimTest {
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
-                                NameHelper.createName(
+                                NameGenerator.createName(
                                         Arrays.asList(
                                                 createNamePart(
                                                         "FirstNamePart1",
@@ -27,7 +27,7 @@ class IdentityClaimTest {
                                                 createNamePart(
                                                         "FirstNamePart2",
                                                         NamePart.NamePartType.FAMILY_NAME))),
-                                NameHelper.createName(
+                                NameGenerator.createName(
                                         Arrays.asList(
                                                 createNamePart(
                                                         "SecondNamePart1",
@@ -50,7 +50,7 @@ class IdentityClaimTest {
         var underTest =
                 new IdentityClaim(
                         Arrays.asList(
-                                NameHelper.createName(
+                                NameGenerator.createName(
                                         Arrays.asList(
                                                 createNamePart(
                                                         "FirstNamePart1",
@@ -58,7 +58,7 @@ class IdentityClaimTest {
                                                 createNamePart(
                                                         "FirstNamePart2",
                                                         NamePart.NamePartType.FAMILY_NAME))),
-                                NameHelper.createName(
+                                NameGenerator.createName(
                                         Arrays.asList(
                                                 createNamePart(
                                                         "SecondNamePart1",

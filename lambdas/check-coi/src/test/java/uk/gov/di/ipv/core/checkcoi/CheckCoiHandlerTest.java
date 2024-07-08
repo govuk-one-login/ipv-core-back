@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -74,8 +74,8 @@ import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_NAMES_AND_DOB;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
-import static uk.gov.di.ipv.core.library.helpers.NameHelper.createName;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -135,7 +135,7 @@ class CheckCoiHandlerTest {
         private Optional<IdentityClaim> getMockIdentityClaim() {
             var mockNameParts =
                     createNamePart("Kenneth Decerqueira", NamePart.NamePartType.FAMILY_NAME);
-            var mockBirthDate = BirthDateHelper.createBirthDate("1965-07-08");
+            var mockBirthDate = BirthDateGenerator.createBirthDate("1965-07-08");
             return Optional.of(
                     new IdentityClaim(
                             List.of(createName(List.of(mockNameParts))), List.of(mockBirthDate)));
