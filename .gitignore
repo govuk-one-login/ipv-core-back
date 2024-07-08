@@ -54,6 +54,7 @@ local-running/bin/
 # User-specific secrets
 secrets.gradle
 
-api-tests/cucumber-report.html
+api-tests/reports/*
+!api-tests/reports/.gitkeep
 api-tests/.npmrc
 api-tests/.env

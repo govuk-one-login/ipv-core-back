@@ -118,7 +118,7 @@ services:
     environment:
       <<: *cri-config
       CREDENTIAL_ISSUER_NAME: Address (Stub)
-      CREDENTIAL_ISSUER_TYPE: USER_ASSERTED
+      CREDENTIAL_ISSUER_TYPE: ADDRESS
       CLIENT_AUDIENCE: https://address-cri.stubs.account.gov.uk
       CREDENTIAL_ISSUER_PORT: 3004
       MITIGATION_ENABLED: false

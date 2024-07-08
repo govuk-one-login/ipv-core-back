@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -42,6 +40,11 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -83,7 +86,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 
@@ -93,7 +95,6 @@ class UserIdentityServiceTest {
     public static final JWSHeader JWS_HEADER =
             new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     private static final String USER_ID_1 = "user-id-1";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static ECDSASigner jwtSigner;
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().usersContraIndicators(List.of()).build();
@@ -991,7 +992,9 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -1019,7 +1022,9 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -1137,10 +1142,10 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode passportClaim = credentials.getPassportClaim();
+        PassportDetails passportClaim = credentials.getPassportClaim().get(0);
 
-        assertEquals("321654987", passportClaim.get(0).get("documentNumber").asText());
-        assertEquals("2030-01-01", passportClaim.get(0).get("expiryDate").asText());
+        assertEquals("321654987", passportClaim.getDocumentNumber());
+        assertEquals("2030-01-01", passportClaim.getExpiryDate());
     }
 
     @Test
@@ -1160,7 +1165,29 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingPassportProperty() throws Exception {
+    void shouldReturnNullWhenMissingPassportProperty() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcMissingPassportProperty(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getPassportClaim());
+    }
+
+    @Test
+    void shouldReturnNullWhenEmptyPassportProperty() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -1178,7 +1205,26 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertTrue(credentials.getPassportClaim().isEmpty());
+        assertNull(credentials.getPassportClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyClaimIfClaimIsIncorrectType() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcPassportClaimInvalidType(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getPassportClaim());
     }
 
     @Test
@@ -1201,8 +1247,8 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode ninoClaim = credentials.getNinoClaim();
-        assertEquals("AA000003D", ninoClaim.get(0).get("personalNumber").asText());
+        SocialSecurityRecordDetails ninoClaim = credentials.getNinoClaim().get(0);
+        assertEquals("AA000003D", ninoClaim.getPersonalNumber());
     }
 
     @Test
@@ -1290,6 +1336,52 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void generateUserIdentityShouldReturnEmptyClaimIfNinoVcPropertyIsEmpty() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermit(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS,
+                        vcNinoEmptySocialSecurityRecord());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldEmptyClaimIfNinoVcIsIncorrectType() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermit(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS,
+                        vcNinoInvalidVcType());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getNinoClaim());
+    }
+
+    @Test
     void shouldSetSubClaimOnUserIdentity() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
@@ -1336,15 +1428,14 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode userIdentityJsonNode =
-                objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
-        JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
+        // There is one address in the claims set
+        PostalAddress address = userIdentity.getAddressClaim().get(0);
 
-        assertEquals("221B", address.get("buildingName").asText());
-        assertEquals("MILTON ROAD", address.get("streetName").asText());
-        assertEquals("Milton Keynes", address.get("addressLocality").asText());
-        assertEquals("MK15 5BX", address.get("postalCode").asText());
-        assertEquals("2024-01-01", address.get("validFrom").asText());
+        assertEquals("221B", address.getBuildingName());
+        assertEquals("MILTON ROAD", address.getStreetName());
+        assertEquals("Milton Keynes", address.getAddressLocality());
+        assertEquals("MK15 5BX", address.getPostalCode());
+        assertEquals("2024-01-01", address.getValidFrom());
     }
 
     @Test
@@ -1356,6 +1447,58 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo(),
                         vcMissingCredentialSubject());
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfNoAddressesInAddressVC() {
+        // Arrange
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressEmpty());
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        mockCredentialIssuerConfig();
+
+        // Act & Assert
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM, thrownException.getErrorResponse());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfAddressVcHasNoCredentialSubject() {
+        // Arrange
+        var vcs =
+                List.of(
+                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        vcAddressNoCredentialSubject());
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         mockCredentialIssuerConfig();
@@ -1403,11 +1546,11 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
 
-        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
-        assertEquals("123456", drivingPermitClaim.get(0).get("issueNumber").asText());
-        assertEquals("2042-10-01", drivingPermitClaim.get(0).get("expiryDate").asText());
+        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.getPersonalNumber());
+        assertEquals("123456", drivingPermitClaim.getIssueNumber());
+        assertEquals("2042-10-01", drivingPermitClaim.getExpiryDate());
     }
 
     @Test
@@ -1423,7 +1566,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P0, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
@@ -1447,7 +1590,7 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
@@ -1472,13 +1615,13 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+        List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
 
         assertNull(drivingPermitClaim);
     }
 
     @Test
-    void shouldReturnEmptyWhenMissingDrivingPermitProperty() throws Exception {
+    void shouldReturnNullWhenMissingDrivingPermitProperty() throws Exception {
         // Arrange
         var vcs = List.of(vcDrivingPermitMissingDrivingPermit());
 
@@ -1491,7 +1634,47 @@ class UserIdentityServiceTest {
                         vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
         // Assert
-        assertTrue(credentials.getDrivingPermitClaim().isNull());
+        assertNull(credentials.getDrivingPermitClaim());
+    }
+
+    @Test
+    void shouldReturnNullWhenEmptyDrivingPermitProperty() throws Exception {
+        // Arrange
+        var vcs = List.of(vcDrivingPermitEmptyDrivingPermit());
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getDrivingPermitClaim());
+    }
+
+    @Test
+    void generateUserIdentityShouldReturnEmptyClaimIfDrivingPermitVcIsIncorrectType()
+            throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        vcDrivingPermitIncorrectType(),
+                        vcExperianFraudScoreOne(),
+                        vcExperianFraudScoreTwo(),
+                        VC_ADDRESS);
+
+        mockParamStoreCalls(paramsToMockForP2);
+        mockCredentialIssuerConfig();
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNull(credentials.getDrivingPermitClaim());
     }
 
     @Test
@@ -1793,7 +1976,9 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -1812,7 +1997,9 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(
+                NamePart.NamePartType.GIVEN_NAME,
+                identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }

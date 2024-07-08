@@ -3142,6 +3142,10 @@ Resources:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "sessions-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
       AttributeDefinitions:
         - AttributeName: "ipvSessionId"
           AttributeType: "S"
@@ -3187,6 +3191,10 @@ Resources:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "client-oauth-sessions-v2-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
       AttributeDefinitions:
         - AttributeName: "clientOAuthSessionId"
           AttributeType: "S"
@@ -3207,6 +3215,10 @@ Resources:
     Properties:
       TableName: !Sub "client-auth-jwt-ids-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
       AttributeDefinitions:
         - AttributeName: "jwtId"
           AttributeType: "S"
@@ -3227,6 +3239,10 @@ Resources:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "cri-oauth-sessions-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
       AttributeDefinitions:
         - AttributeName: "criOAuthSessionId"
           AttributeType: "S"

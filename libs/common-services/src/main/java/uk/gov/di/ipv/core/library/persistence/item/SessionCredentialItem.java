@@ -8,6 +8,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnor
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 
 import java.time.Instant;
 
@@ -28,12 +29,12 @@ public class SessionCredentialItem implements DynamodbItem {
 
     public SessionCredentialItem(
             String ipvSessionId,
-            String criId,
+            Cri cri,
             SignedJWT signedCredJwt,
             boolean receivedThisSession,
             Instant migrated) {
         this.ipvSessionId = ipvSessionId;
-        this.sortKey = String.format(SORT_KEY_TEMPLATE, criId, signedCredJwt.getSignature());
+        this.sortKey = String.format(SORT_KEY_TEMPLATE, cri.getId(), signedCredJwt.getSignature());
         this.credential = signedCredJwt.serialize();
         this.receivedThisSession = receivedThisSession;
         this.migrated = migrated;

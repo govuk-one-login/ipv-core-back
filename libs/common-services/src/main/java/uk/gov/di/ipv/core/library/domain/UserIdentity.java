@@ -2,12 +2,15 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,16 +37,16 @@ public class UserIdentity {
     private IdentityClaim identityClaim;
 
     @JsonProperty(ADDRESS_CLAIM_NAME)
-    private JsonNode addressClaim;
+    private List<PostalAddress> addressClaim;
 
     @JsonProperty(PASSPORT_CLAIM_NAME)
-    private JsonNode passportClaim;
+    private List<PassportDetails> passportClaim;
 
     @JsonProperty(DRIVING_PERMIT_CLAIM_NAME)
-    private JsonNode drivingPermitClaim;
+    private List<DrivingPermitDetails> drivingPermitClaim;
 
     @JsonProperty(NINO_CLAIM_NAME)
-    private JsonNode ninoClaim;
+    private List<SocialSecurityRecordDetails> ninoClaim;
 
     @JsonProperty private String sub;
 
@@ -58,10 +61,11 @@ public class UserIdentity {
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
-            @JsonProperty(value = ADDRESS_CLAIM_NAME) JsonNode addressClaim,
-            @JsonProperty(value = PASSPORT_CLAIM_NAME) JsonNode passportClaim,
-            @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME) JsonNode drivingPermitClaim,
-            @JsonProperty(value = NINO_CLAIM_NAME) JsonNode ninoClaim,
+            @JsonProperty(value = ADDRESS_CLAIM_NAME) List<PostalAddress> addressClaim,
+            @JsonProperty(value = PASSPORT_CLAIM_NAME) List<PassportDetails> passportClaim,
+            @JsonProperty(value = DRIVING_PERMIT_CLAIM_NAME)
+                    List<DrivingPermitDetails> drivingPermitClaim,
+            @JsonProperty(value = NINO_CLAIM_NAME) List<SocialSecurityRecordDetails> ninoClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = VOT_CLAIM_NAME, required = true) Vot vot,
             @JsonProperty(value = "vtm", required = true) String vtm,

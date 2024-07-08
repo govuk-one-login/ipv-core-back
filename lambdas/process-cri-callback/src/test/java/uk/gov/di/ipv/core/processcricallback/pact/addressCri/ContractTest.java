@@ -272,9 +272,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -380,9 +378,7 @@ class ContractTest {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"),
-                        ADDRESS.getId(),
-                        CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
 
         verifiableCredentialResponse
                 .getVerifiableCredentials()
@@ -472,7 +468,7 @@ class ContractTest {
                         () -> {
                             underTest.fetchVerifiableCredential(
                                     new BearerAccessToken("dummyInvalidAccessToken"),
-                                    ADDRESS.getId(),
+                                    ADDRESS,
                                     CRI_OAUTH_SESSION_ITEM);
                         });
 
@@ -524,7 +520,11 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    ADDRESS.getId(),
+                    "dummyConnection",
+                    900);
 
     // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
     // sent by the CRI team

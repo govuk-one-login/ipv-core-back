@@ -84,7 +84,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     public BuildUserIdentityHandler() {
         super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
     }
@@ -161,6 +161,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

@@ -3,7 +3,10 @@ package uk.gov.di.ipv.core.processjourneyevent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -43,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,6 +78,7 @@ class ProcessJourneyEventHandlerTest {
     private static final String JOURNEY = "journey";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
+    private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -81,6 +86,15 @@ class ProcessJourneyEventHandlerTest {
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
+
+    @AfterEach
+    void checkAuditEventWait(TestInfo testInfo) {
+        if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
+            InOrder auditInOrder = inOrder(mockAuditService);
+            auditInOrder.verify(mockAuditService).awaitAuditEvents();
+            auditInOrder.verifyNoMoreInteractions();
+        }
+    }
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {
@@ -614,6 +628,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldGoBackIfCurrentAndPreviousStatesArePages() throws Exception {
         var firstTransitionInput =
                 JourneyRequest.builder()
@@ -684,6 +699,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldGoBackIfStatesAreInSeparateJourneyMaps() throws Exception {
         var inputToNextPageState =
                 JourneyRequest.builder()
@@ -717,13 +733,23 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(
                 new JourneyState(TECHNICAL_ERROR, "TECHNICAL_ERROR_PAGE"), ipvSession.getState());
 
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+        reset(mockAuditService);
+
         var backResponse = processJourneyEventHandler.handleRequest(backInput, mockContext);
         assertEquals("page-id-for-page-state", backResponse.get("page"));
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"), ipvSession.getState());
+
+        InOrder auditInOrderTwo = inOrder(mockAuditService);
+        auditInOrderTwo.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderTwo.verifyNoMoreInteractions();
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldGoBackIfCurrentPageIsNestedStateAndPreviousIsNot() throws Exception {
         var inputToEnterNestedStates =
                 JourneyRequest.builder()
@@ -759,14 +785,24 @@ class ProcessJourneyEventHandlerTest {
                         INITIAL_JOURNEY_SELECTION, "NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE"),
                 ipvSession.getState());
 
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+        reset(mockAuditService);
+
         var backResponse = processJourneyEventHandler.handleRequest(backInput, mockContext);
         assertEquals("page-id-for-page-state-at-start-of-no-photo-id", backResponse.get("page"));
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_AT_START_OF_NO_PHOTO_ID"),
                 ipvSession.getState());
+
+        InOrder auditInOrderTwo = inOrder(mockAuditService);
+        auditInOrderTwo.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderTwo.verifyNoMoreInteractions();
     }
 
     @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldUseBackEventDefinedOnStateIfExists() throws Exception {
         var inputToNextPageState =
                 JourneyRequest.builder()
@@ -801,10 +837,19 @@ class ProcessJourneyEventHandlerTest {
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE_WITH_BACK_EVENT"),
                 ipvSession.getState());
 
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+        reset(mockAuditService);
+
         processJourneyEventHandler.handleRequest(backInput, mockContext);
         assertEquals(
                 new JourneyState(INITIAL_JOURNEY_SELECTION, "PROCESS_STATE"),
                 ipvSession.getState());
+
+        InOrder auditInOrderTwo = inOrder(mockAuditService);
+        auditInOrderTwo.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderTwo.verifyNoMoreInteractions();
     }
 
     @Test

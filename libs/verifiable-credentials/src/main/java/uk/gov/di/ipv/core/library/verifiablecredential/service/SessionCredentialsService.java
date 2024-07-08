@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
@@ -137,8 +138,9 @@ public class SessionCredentialsService {
         }
     }
 
-    public void deleteSessionCredentialsForCri(String ipvSessionId, String criId)
+    public void deleteSessionCredentialsForCri(String ipvSessionId, Cri cri)
             throws VerifiableCredentialException {
+        var criId = cri.getId();
         try {
             var deleted = dataStore.delete(dataStore.getItemsBySortKeyPrefix(ipvSessionId, criId));
             LOGGER.info(

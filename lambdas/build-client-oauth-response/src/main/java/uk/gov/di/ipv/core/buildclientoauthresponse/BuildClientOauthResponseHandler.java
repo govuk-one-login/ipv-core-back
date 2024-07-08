@@ -73,7 +73,7 @@ public class BuildClientOauthResponseHandler
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
 
     public BuildClientOauthResponseHandler(
@@ -225,6 +225,8 @@ public class BuildClientOauthResponseHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

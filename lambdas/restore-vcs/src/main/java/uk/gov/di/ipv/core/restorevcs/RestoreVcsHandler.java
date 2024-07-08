@@ -77,7 +77,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         VcStoreItem.class,
                         DataStore.getClient(),
                         configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
 
     @Override
@@ -105,6 +105,8 @@ public class RestoreVcsHandler implements RequestStreamHandler {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped restoring VCs because of failure to send audit event", e));
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

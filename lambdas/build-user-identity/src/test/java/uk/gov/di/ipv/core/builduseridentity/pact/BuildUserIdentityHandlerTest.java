@@ -113,18 +113,10 @@ class BuildUserIdentityHandlerTest {
         List<SessionCredentialItem> sessionCredentials = new ArrayList<>();
         var passportCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID,
-                        DCMAW.getId(),
-                        passportVcBuilder.buildSignedJwt(),
-                        true,
-                        null);
+                        IPV_SESSION_ID, DCMAW, passportVcBuilder.buildSignedJwt(), true, null);
         var addressCredential =
                 new SessionCredentialItem(
-                        IPV_SESSION_ID,
-                        ADDRESS.getId(),
-                        addressVcBuilder.buildSignedJwt(),
-                        true,
-                        null);
+                        IPV_SESSION_ID, ADDRESS, addressVcBuilder.buildSignedJwt(), true, null);
         sessionCredentials.add(passportCredential);
         sessionCredentials.add(addressCredential);
 
@@ -315,7 +307,7 @@ class BuildUserIdentityHandlerTest {
                   "vc": {
                      "type": [
                        "VerifiableCredential",
-                       "IdentityCheckCredential"
+                       "AddressCredential"
                      ],
                      "credentialSubject": {
                        "name": [
