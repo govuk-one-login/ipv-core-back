@@ -52,6 +52,7 @@ public class CallDcmawAsyncCriHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final DcmawAsyncCriService dcmawAsyncCriService;
     private final CriStoringService criStoringService;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public CallDcmawAsyncCriHandler() {
@@ -59,10 +60,11 @@ public class CallDcmawAsyncCriHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.dcmawAsyncCriService = new DcmawAsyncCriService(configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,
-                        new AuditService(AuditService.getSqsClient(), configService),
+                        auditService,
                         new CriResponseService(configService),
                         new SessionCredentialsService(configService),
                         new CiMitService(configService));
@@ -73,12 +75,14 @@ public class CallDcmawAsyncCriHandler
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             DcmawAsyncCriService dcmawAsyncCriService,
-            CriStoringService criStoringService) {
+            CriStoringService criStoringService,
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.dcmawAsyncCriService = dcmawAsyncCriService;
         this.criStoringService = criStoringService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -134,6 +138,7 @@ public class CallDcmawAsyncCriHandler
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
+            auditService.awaitAuditEvents();
         }
     }
 

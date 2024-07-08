@@ -130,7 +130,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.configService = new ConfigService();
         this.signerFactory = new KmsEs256SignerFactory();
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
@@ -251,6 +251,8 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_EVIDENCE_REQUESTED);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
