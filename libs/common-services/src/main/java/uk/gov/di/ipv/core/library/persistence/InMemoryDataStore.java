@@ -16,15 +16,16 @@ import java.util.Map;
 
 public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T> {
     private static final String KEY_SEPARATOR = "/";
+    private static final Map<String, Map<String, ?>> TABLES = new HashMap<>();
 
-    private final Map<String, T> records = new HashMap<>();
-
+    private final Map<String, T> records;
     private final Class<T> klass;
     private final Method partitionKeyMethod;
     private final Method sortKeyMethod;
     private final boolean hasSortKey;
 
-    public InMemoryDataStore(Class<T> klass) {
+    @SuppressWarnings("unchecked") // Rely on callers to use consistent types per table
+    public InMemoryDataStore(String tableName, Class<T> klass) {
         Method partitionKey = null;
         Method sortKey = null;
         for (var method : klass.getMethods()) {
@@ -40,6 +41,8 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
                     "Missing partition key from class " + klass.getName());
         }
 
+        this.records =
+                (HashMap<String, T>) TABLES.computeIfAbsent(tableName, (k) -> new HashMap<>());
         this.klass = klass;
         this.partitionKeyMethod = partitionKey;
         this.sortKeyMethod = sortKey;

@@ -84,6 +84,7 @@ services:
       SQS_AUDIT_EVENT_QUEUE_URL: ${SQS_AUDIT_EVENT_QUEUE_URL}
       USER_ISSUED_CREDENTIALS_TABLE_NAME: user-issued-credentials-v2-${ENVIRONMENT}
       LAMBDA_TASK_ROOT: handler
+      LOCAL_DEV: true
       ENVIRONMENT:
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:

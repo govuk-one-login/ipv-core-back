@@ -13,7 +13,7 @@ public interface DataStore<T extends PersistenceItem> {
     static <T extends PersistenceItem> DataStore<T> create(
             String tableName, Class<T> klass, ConfigService configService) {
         return configService.isLocalDev()
-                ? new InMemoryDataStore<>(klass)
+                ? new InMemoryDataStore<>(tableName, klass)
                 : new DynamoDataStore<>(
                         tableName, klass, DynamoDataStore.getClient(), configService);
     }

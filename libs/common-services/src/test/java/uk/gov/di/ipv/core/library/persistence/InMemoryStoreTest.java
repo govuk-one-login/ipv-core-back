@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -18,7 +19,7 @@ class InMemoryStoreTest {
 
     @Test
     void createAndGetReturnsItemWithPartitionKey() {
-        var store = new InMemoryDataStore<>(IpvSessionItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
         var id = "test-id";
         var item = new IpvSessionItem();
         item.setIpvSessionId(id);
@@ -29,8 +30,23 @@ class InMemoryStoreTest {
     }
 
     @Test
+    void createAndGetReturnsItemAcrossInstances() {
+        var tableName = UUID.randomUUID().toString();
+
+        var store = new InMemoryDataStore<>(tableName, IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        store.create(item);
+
+        var store2 = new InMemoryDataStore<>(tableName, IpvSessionItem.class);
+
+        assertEquals(item, store2.getItem(id));
+    }
+
+    @Test
     void createAndGetReturnsItemWithPartitionAndSortKey() {
-        var store = new InMemoryDataStore<>(VcStoreItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), VcStoreItem.class);
         var partitionKey = "partition-key";
         var sortKey = "sort-key";
         var item = new VcStoreItem();
@@ -44,7 +60,7 @@ class InMemoryStoreTest {
 
     @Test
     void getItemByIndexUsesSecondaryIndex() {
-        var store = new InMemoryDataStore<>(IpvSessionItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
         var id = "test-id";
         var indexId = "index-id";
         var item = new IpvSessionItem();
@@ -58,7 +74,7 @@ class InMemoryStoreTest {
 
     @Test
     void getItemByIndexThrowsOnInvalidSecondaryIndex() {
-        var store = new InMemoryDataStore<>(IpvSessionItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
         var id = "test-id";
         var item = new IpvSessionItem();
         item.setIpvSessionId(id);
@@ -72,7 +88,7 @@ class InMemoryStoreTest {
 
     @Test
     void createAndGetReturnsItemsByPartitionKey() {
-        var store = new InMemoryDataStore<>(CriResponseItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), CriResponseItem.class);
         var partitionKey = "test-id";
         var item1 = new CriResponseItem();
         item1.setUserId(partitionKey);
@@ -93,7 +109,8 @@ class InMemoryStoreTest {
 
     @Test
     void createAndGetReturnsItemsByBooleanAttribute() {
-        var store = new InMemoryDataStore<>(SessionCredentialItem.class);
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), SessionCredentialItem.class);
         var partitionKey = "test-id";
         var item1 = new SessionCredentialItem();
         item1.setIpvSessionId(partitionKey);
@@ -114,7 +131,8 @@ class InMemoryStoreTest {
 
     @Test
     void createAndGetReturnsItemsBySortKeyPrefix() {
-        var store = new InMemoryDataStore<>(SessionCredentialItem.class);
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), SessionCredentialItem.class);
         var partitionKey = "test-id";
         var item1 = new SessionCredentialItem();
         item1.setIpvSessionId(partitionKey);
@@ -135,7 +153,7 @@ class InMemoryStoreTest {
 
     @Test
     void updateAndGetReturnsItem() {
-        var store = new InMemoryDataStore<>(IpvSessionItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
         var id = "test-id";
 
         var item = new IpvSessionItem();
@@ -154,7 +172,7 @@ class InMemoryStoreTest {
 
     @Test
     void deleteAndGetReturnsNoItem() {
-        var store = new InMemoryDataStore<>(VcStoreItem.class);
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), VcStoreItem.class);
         var partitionKey = "test-id";
         var sortKey = "sort-id";
 
@@ -170,7 +188,8 @@ class InMemoryStoreTest {
 
     @Test
     void deleteManyAndGetReturnsNoItem() {
-        var store = new InMemoryDataStore<>(CriOAuthSessionItem.class);
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), CriOAuthSessionItem.class);
 
         var item1 = new CriOAuthSessionItem();
         item1.setCriOAuthSessionId("one");
@@ -189,8 +208,10 @@ class InMemoryStoreTest {
         assertEquals(item3, store.getItem("three"));
     }
 
+    @Test
     void deleteByPartitionKeyAndGetReturnsNoItem() {
-        var store = new InMemoryDataStore<>(SessionCredentialItem.class);
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), SessionCredentialItem.class);
         var partitionKey = "test-id";
 
         var item1 = new SessionCredentialItem();

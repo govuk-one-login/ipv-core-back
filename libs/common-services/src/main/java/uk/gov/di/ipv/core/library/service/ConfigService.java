@@ -105,7 +105,7 @@ public class ConfigService {
     }
 
     public boolean isLocalDev() {
-        return "local".equals(getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT));
+        return "true".equals(getEnvironmentVariable(EnvironmentVariable.LOCAL_DEV));
     }
 
     public List<String> getFeatureSet() {
