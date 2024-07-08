@@ -596,9 +596,15 @@ public class UserIdentityService {
 
             return Optional.of(nino);
         } else {
-            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
+                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
+            LOGGER.warn(mapMessage);
+
+            return Optional.empty();
         }
     }
 
@@ -633,9 +639,14 @@ public class UserIdentityService {
 
             return Optional.of(passport);
         } else {
-            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
+                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
+            LOGGER.warn(mapMessage);
+            return Optional.empty();
         }
     }
 
@@ -677,9 +688,16 @@ public class UserIdentityService {
 
             return Optional.of(drivingPermit);
         } else {
-            LOGGER.error(LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+            StringMapMessage mapMessage =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
+                            .with(
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    drivingPermitVc.get().getCri().getId());
+            LOGGER.warn(mapMessage);
+            return Optional.empty();
         }
     }
 

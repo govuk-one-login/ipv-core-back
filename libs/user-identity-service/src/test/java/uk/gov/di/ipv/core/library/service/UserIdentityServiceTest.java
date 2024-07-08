@@ -1209,7 +1209,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldThrowIfPassportClaimIsIncorrectType() {
+    void generateUserIdentityShouldReturnEmptyClaimIfClaimIsIncorrectType() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -1218,18 +1218,13 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         VC_ADDRESS);
 
-        // Act & Assert
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM,
-                thrownException.getErrorResponse());
+        // Assert
+        assertNull(credentials.getPassportClaim());
     }
 
     @Test
@@ -1364,7 +1359,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldThrowIfNinoVcIsIncorrectType() {
+    void generateUserIdentityShouldEmptyClaimIfNinoVcIsIncorrectType() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -1377,17 +1372,13 @@ class UserIdentityServiceTest {
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
 
-        // Act & Assert
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM, thrownException.getErrorResponse());
+        // Assert
+        assertNull(credentials.getNinoClaim());
     }
 
     @Test
@@ -1664,7 +1655,8 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldThrowIfDrivingPermitVcIsIncorrectType() {
+    void generateUserIdentityShouldReturnEmptyClaimIfDrivingPermitVcIsIncorrectType()
+            throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -1676,18 +1668,13 @@ class UserIdentityServiceTest {
         mockParamStoreCalls(paramsToMockForP2);
         mockCredentialIssuerConfig();
 
-        // Act & Assert
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM,
-                thrownException.getErrorResponse());
+        // Assert
+        assertNull(credentials.getDrivingPermitClaim());
     }
 
     @Test
