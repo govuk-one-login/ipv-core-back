@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
-import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.util.List;
@@ -48,7 +47,7 @@ public class AuditExtensionsHelper {
         if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
             var riskAssessments = riskAssessmentCredential.getEvidence();
 
-            return new AuditExtensionsVcEvidence<List<RiskAssessment>>(
+            return new AuditExtensionsVcEvidence<>(
                     issuer, riskAssessments, isSuccessful, vot, isUkIssued, age);
         }
 
