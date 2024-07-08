@@ -50,6 +50,12 @@ public class StateMachine {
         }
 
         var result = state.transition(event, startState, journeyContext);
+        if (result.state() == null) {
+            throw new UnknownStateException(
+                    String.format(
+                            "Transition from state %s with event %s return null result state. Start state: %s Current page: %s",
+                            state, event, startState, currentPage));
+        }
 
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {

@@ -254,6 +254,13 @@ public class ProcessJourneyEventHandler
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getState().subJourney().name()));
             throw new JourneyEngineException();
+        } catch (Exception e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                                    "Unexpected error occurred processing journey event", e)
+                            .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getState().state())
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            throw new JourneyEngineException();
         }
     }
 
