@@ -51,16 +51,16 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       enhanced-verification:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: MITIGATION
         targetState: ENHANCED_VERIFICATION
       alternate-doc-invalid-dl:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: MITIGATION
         targetState: ALTERNATE_DOC_PASSPORT
       alternate-doc-invalid-passport:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: MITIGATION
         targetState: ALTERNATE_DOC_DL
       enhanced-verification-f2f-fail:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: MITIGATION
         targetState: ENHANCED_VERIFICATION_F2F_FAIL
       repeat-fraud-check:
         targetJourney: REPEAT_FRAUD_CHECK

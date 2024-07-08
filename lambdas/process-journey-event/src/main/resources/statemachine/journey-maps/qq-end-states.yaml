@@ -1,0 +1,125 @@
+name: QQ END STATES
+description: >-
+  Last bits of a journey - need to rename
+
+states:
+  # Entry points
+
+  EVALUATE_GPG45_SCORES_AND_FINISH:
+    events:
+      next:
+        targetState: EVALUATE_GPG45_SCORES
+
+  DCMAW_SUCCESS_AND_FINISH:
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+
+  STORE_IDENTITY_AND_FINISH:
+    events:
+      next:
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
+
+  RETURN_TO_RP_AND_FINISH:
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+
+  # Parent states
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # DCMAW journey (J1)
+  POST_DCMAW_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J1
+
+  ADDRESS_AND_FRAUD_J1:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: EVALUATE_GPG45_SCORES
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  EVALUATE_GPG45_SCORES:
+    response:
+      type: process
+      lambda: evaluate-gpg45-scores
+    events:
+      met:
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_SUCCESS
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  STORE_IDENTITY_BEFORE_SUCCESS:
+    response:
+      type: process
+      lambda: store-identity
+      lambdaInput:
+        identityType: NEW
+    events:
+      identity-stored:
+        targetState: IPV_SUCCESS_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  IPV_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-success
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

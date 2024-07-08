@@ -18,6 +18,8 @@ public enum IpvJourneyTypes {
     NEW_P1_IDENTITY("new-p2-identity"),
     NEW_P2_IDENTITY("new-p2-identity"),
     REPEAT_FRAUD_CHECK("repeat-fraud-check"),
+    MITIGATION("mitigation"),
+    QQ_END_STATES("qq-end-states"),
 
     // Unsuccessful journeys
     INELIGIBLE("ineligible"),
@@ -25,7 +27,8 @@ public enum IpvJourneyTypes {
     TECHNICAL_ERROR("technical-error"),
     SESSION_TIMEOUT("session-timeout"),
 
-    // F2F return journeys
+    // F2F journeys
+    F2F("f2f"),
     F2F_PENDING("f2f-pending"),
     F2F_FAILED("f2f-failed"),
 

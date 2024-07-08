@@ -1,0 +1,422 @@
+name: Mitigation
+description: >-
+  The routes a user can take to mitigate a failure.
+
+states:
+  # Entry points
+  ENHANCED_VERIFICATION:
+    events:
+      next:
+        targetState: MITIGATION_01_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+
+  ALTERNATE_DOC_PASSPORT:
+    events:
+      next:
+        targetState: MITIGATION_04_DL_NO_MATCH_PAGE
+
+  ALTERNATE_DOC_DL:
+    events:
+      next:
+        targetState: MITIGATION_06_PASSPORT_NO_MATCH_PAGE
+
+  ALTERNATE_DOC_PASSPORT_SAME_SESSION:
+    events:
+      next:
+        targetState: MITIGATION_03_OPTIONS
+
+  ALTERNATE_DOC_DL_SAME_SESSION:
+    events:
+      next:
+        targetState: MITIGATION_05_OPTIONS
+
+  ENHANCED_VERIFICATION_F2F_FAIL:
+    events:
+      next:
+        targetState: F2F_FAILED_MITIGATION_PAGE
+
+  # Parent states
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Journey states
+
+  # Mitigation journey (03) same session - invalid-dl
+  MITIGATION_03_OPTIONS:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Mitigation journey (04) separate session - invalid-dl
+  MITIGATION_04_DL_NO_MATCH_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match
+    events:
+      next:
+        targetState: MITIGATION_04_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+
+  MITIGATION_04_IDENTITY_START_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-continue-with-passport
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Passport journey (MITIGATION)
+  MITIGATION_PP_CRI_UK_PASSPORT:  #qq:DCC checked
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
+
+  MITIGATION_PP_PROVE_ANOTHER_WAY:  #qq:DCC checked
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: passport
+    events:
+      back:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  # Address and Fraud journey (MITIGATION)
+  MITIGATION_PP_ADDRESS_AND_FRAUD:  #qq:DCC checked - need to check nino and pre-experian
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Mitigation journey (05) same session - invalid-passport
+  MITIGATION_05_OPTIONS:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-passport-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Mitigation journey (06) separate session - invalid-passport
+  MITIGATION_06_PASSPORT_NO_MATCH_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-passport-no-match
+    events:
+      next:
+        targetState: MITIGATION_06_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+
+  MITIGATION_06_IDENTITY_START_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-continue-with-driving-licence
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  MITIGATION_DL_CRI_DRIVING_LICENCE:  #qq:DCC checked
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
+
+  MITIGATION_DL_PROVE_ANOTHER_WAY:  #qq:DCC checked
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: drivingLicence
+    events:
+      back:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  MITIGATION_DL_ADDRESS_AND_FRAUD:  #qq:DCC checked
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: MITIGATION_CHECK_FRAUD_SCORE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_CHECK_FRAUD_SCORE:  #qq:DCC checked
+    response:
+      type: process
+      lambda: check-gpg45-score
+      lambdaInput:
+        scoreType: fraud
+        scoreThreshold: 2  #qq:DCC do we need to vary this based on the journey?
+    events:
+      met:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Common Mitigation states - invalid-dl/invalid-passport
+  MITIGATION_CRI_DWP_KBV:  #qq:DCC checked
+    response:
+      type: cri
+      criId: dwpKbv
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: QQ_END_STATES
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_PP_CRI_NINO:
+    response:
+      type: cri
+      criId: nino
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_CRI_HMRC_KBV
+      fail-with-no-ci:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: MITIGATION_CRI_EXPERIAN_KBV
+
+  MITIGATION_CRI_EXPERIAN_KBV:  #qq:DCC checked
+    response:
+      type: cri
+      criId: kbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      next:
+        targetJourney: QQ_END_STATES
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_CRI_HMRC_KBV:
+    response:
+      type: cri
+      criId: hmrcKbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      next:
+        targetJourney: QQ_END_STATES
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  F2F_FAILED_MITIGATION_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-f2f-technical
+    events:
+      next:
+        targetState: MITIGATION_01_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+      end:
+        targetJourney: QQ_END_STATES
+        targetState: RETURN_TO_RP_AND_FINISH
+
+  MITIGATION_01_F2F_START_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: page-ipv-identity-postoffice-start
+    events:
+      next:
+        targetJourney: F2F
+        targetState: FULL_F2F_JOURNEY
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  MITIGATION_01_PYI_POST_OFFICE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: pyi-post-office
+    events:
+      next:
+        targetJourney: F2F
+        targetState: FULL_F2F_JOURNEY
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+
+  # Mitigation journey (01)
+  MITIGATION_01_IDENTITY_START_PAGE:  #qq:DCC checked
+    response:
+      type: page
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
+        targetState: MITIGATION_01_CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetState: MITIGATION_01_F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_CRI_DCMAW:  #qq:DCC checked
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: QQ_END_STATES
+        targetState: DCMAW_SUCCESS_AND_FINISH
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      access-denied:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      temporarily-unavailable:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      fail-with-no-ci:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      enhanced-verification:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
