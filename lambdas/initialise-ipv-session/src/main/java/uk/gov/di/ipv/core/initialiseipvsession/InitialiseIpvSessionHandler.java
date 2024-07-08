@@ -341,7 +341,7 @@ public class InitialiseIpvSessionHandler
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws RecoverableJarValidationException, ParseException, CredentialParseException,
-                    SqsException {
+                    SqsException, HttpResponseExceptionWithErrorBody {
         try {
             var inheritedIdentityVc =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
@@ -504,7 +504,8 @@ public class InitialiseIpvSessionHandler
             VerifiableCredential inheritedIdentityVc,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, CredentialParseException, UnrecognisedVotException {
+            throws SqsException, CredentialParseException, UnrecognisedVotException,
+                    HttpResponseExceptionWithErrorBody {
         try {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
