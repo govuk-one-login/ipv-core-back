@@ -8,6 +8,7 @@ import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
+import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -186,9 +187,20 @@ public interface TestFixtures {
 
     String ADDRESS_JSON_1 =
             "{\"buildingNumber\":10,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
+    Address ADDRESS_1 =
+            Address.builder()
+                    .buildingNumber("10")
+                    .streetName("DowningStreet")
+                    .dependentAddressLocality("Westminster")
+                    .addressLocality("London")
+                    .postalCode("SW1A2AA")
+                    .addressCountry("GB")
+                    .validFrom("2019-07-24")
+                    .build();
+
     String ADDRESS_JSON_2 =
             "{\"buildingNumber\":11,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
-    String PASSPORT_JSON_1 = "{\"documentNumber\":12345678,\"expiryDate\":\"2022-02-01\"}";
+    String PASSPORT_JSON_1 = "{\"documentNumber\":\"12345678\",\"expiryDate\":\"2022-02-01\"}";
 
     String DRIVING_PERMIT_JSON_1 =
             "{\"personalNumber\": \"DOE99802085J99FG\",\"fullAddress\": \"122 BURNS CRESCENT EDINBURGH EH1 9GP\",\"expiryDate\": \"2023-01-18\",\"issueNumber\": 5,\"issuedBy\": \"DVLA\",\"issueDate\": \"2010-01-18\"}";
