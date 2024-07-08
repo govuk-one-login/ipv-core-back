@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.helpers.TestVc;
+
+import java.time.LocalDate;
+import java.time.Period;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,9 +31,11 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        var expectedAge =
+                Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
-        assertEquals(58, auditExtensions.age());
+        assertEquals(expectedAge, auditExtensions.age());
         assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.iss());
         assertEquals(2, auditExtensions.evidence().get(0).get("validityScore").asInt());
         assertEquals(4, auditExtensions.evidence().get(0).get("strengthScore").asInt());
