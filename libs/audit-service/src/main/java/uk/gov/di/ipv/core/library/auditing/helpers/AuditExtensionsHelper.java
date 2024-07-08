@@ -13,12 +13,15 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
+
+import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class AuditExtensionsHelper {
 
@@ -30,14 +33,27 @@ public class AuditExtensionsHelper {
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
             VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
         var jwtClaimsSet = vc.getClaimsSet();
+        var vot = VcHelper.getVcVot(vc);
+        var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
+        var age = VcHelper.extractAgeFromCredential(vc);
+        var issuer = jwtClaimsSet.getIssuer();
 
-        return new AuditExtensionsVcEvidence(
-                jwtClaimsSet.getIssuer(),
-                OBJECT_MAPPER.valueToTree(jwtClaimsSet.getClaim(VC_CLAIM)).path(VC_EVIDENCE),
-                isSuccessful,
-                VcHelper.getVcVot(vc),
-                VcHelper.checkIfDocUKIssuedForCredential(vc),
-                VcHelper.extractAgeFromCredential(vc));
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var identityChecks = identityCheckCredential.getEvidence();
+
+            return new AuditExtensionsVcEvidence<List<IdentityCheck>>(
+                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age);
+        }
+
+        if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
+            var riskAssessments = riskAssessmentCredential.getEvidence();
+
+            return new AuditExtensionsVcEvidence<List<RiskAssessment>>(
+                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age);
+        }
+
+        return new AuditExtensionsVcEvidence<>(
+                jwtClaimsSet.getIssuer(), null, isSuccessful, vot, isUkIssued, age);
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc)
