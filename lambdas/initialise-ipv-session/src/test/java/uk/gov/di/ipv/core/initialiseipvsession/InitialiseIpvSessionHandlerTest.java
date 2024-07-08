@@ -59,6 +59,8 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
+import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -69,6 +71,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.model.NamePart;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -814,9 +817,9 @@ class InitialiseIpvSessionHandlerTest {
             var expectedAge =
                     Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
             var expectedExtension =
-                    new AuditExtensionsVcEvidence(
+                    new AuditExtensionsVcEvidence<>(
                             "https://orch.stubs.account.gov.uk/migration/v1",
-                            OBJECT_MAPPER.valueToTree(List.of()),
+                            List.of(),
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,
@@ -824,12 +827,19 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(expectedExtension, extension);
             var restricted =
                     (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
-            assertEquals(
-                    "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.name()));
-            assertEquals(
-                    "[{\"value\":\"1965-07-08\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
+            var expectedName =
+                    List.of(
+                            NameGenerator.createName(
+                                    List.of(
+                                            NameGenerator.NamePartGenerator.createNamePart(
+                                                    "KENNETH", NamePart.NamePartType.GIVEN_NAME),
+                                            NameGenerator.NamePartGenerator.createNamePart(
+                                                    "DECERQUEIRA",
+                                                    NamePart.NamePartType.FAMILY_NAME))));
+
+            var expectedBirthDate = List.of(BirthDateGenerator.createBirthDate("1965-07-08"));
+            assertEquals(expectedName, restricted.name());
+            assertEquals(expectedBirthDate, restricted.birthDate());
             assertEquals(
                     "[{\"personalNumber\":\"AB123456C\"}]",
                     OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));

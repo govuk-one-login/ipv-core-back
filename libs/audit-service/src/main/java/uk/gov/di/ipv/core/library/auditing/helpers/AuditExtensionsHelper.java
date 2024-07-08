@@ -86,9 +86,8 @@ public class AuditExtensionsHelper {
 
             return new AuditRestrictedF2F(name);
         } else {
-            LOGGER.error(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+            LOGGER.error(LogHelper.buildLogMessage("VC not of type IdentityCheckCredential."));
+            return new AuditRestrictedF2F(null);
         }
     }
 
@@ -106,7 +105,7 @@ public class AuditExtensionsHelper {
         } else {
             LOGGER.error(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
             throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+                    500, ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE);
         }
     }
 

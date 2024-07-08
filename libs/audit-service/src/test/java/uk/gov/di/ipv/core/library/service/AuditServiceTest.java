@@ -25,11 +25,11 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.AuditException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
+import uk.gov.di.model.NamePart;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -334,7 +334,12 @@ class AuditServiceTest {
     void shouldSendMessageToSqsQueueWithRestrictedF2F(boolean sqsAsyncEnabled) throws Exception {
         // Arrange
         when(mockConfigService.enabled(SQS_ASYNC)).thenReturn(sqsAsyncEnabled);
-        List<Name> name = List.of(new Name(List.of(new NameParts("first_name", "TestUser"))));
+        List<uk.gov.di.model.Name> name =
+                List.of(
+                        NameGenerator.createName(
+                                List.of(
+                                        NameGenerator.NamePartGenerator.createNamePart(
+                                                "first_name", NamePart.NamePartType.GIVEN_NAME))));
         var event =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
