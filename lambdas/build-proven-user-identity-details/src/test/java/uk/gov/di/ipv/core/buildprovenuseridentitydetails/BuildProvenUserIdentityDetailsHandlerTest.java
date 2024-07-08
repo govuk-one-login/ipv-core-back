@@ -21,8 +21,8 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.helpers.BirthDateHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -56,10 +56,10 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
-import static uk.gov.di.ipv.core.library.helpers.NameHelper.NamePartHelper.createNamePart;
-import static uk.gov.di.ipv.core.library.helpers.NameHelper.createName;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
@@ -489,7 +489,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                                 "KENNETH DECERQUEIRA",
                                                 NamePart.NamePartType.GIVEN_NAME))));
 
-        var birthDates = Collections.singletonList(BirthDateHelper.createBirthDate("1965-07-08"));
+        var birthDates =
+                Collections.singletonList(BirthDateGenerator.createBirthDate("1965-07-08"));
 
         return Optional.of(new IdentityClaim(names, birthDates));
     }
