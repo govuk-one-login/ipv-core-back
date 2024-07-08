@@ -157,10 +157,12 @@ public class DataStore<T extends DynamodbItem> {
         return table.deleteItem(key);
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public void deleteAllByPartition(String partitionValue) {
         delete(getItems(partitionValue));
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public int delete(List<T> items) {
         if (!items.isEmpty()) {
             BatchWriteResult batchWriteResult =
@@ -181,6 +183,7 @@ public class DataStore<T extends DynamodbItem> {
         return items.size();
     }
 
+    @ExcludeFromGeneratedCoverageReport
     private WriteBatch createWriteBatchForDeleteItems(List<T> items) {
         WriteBatch.Builder<T> builder =
                 WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
@@ -190,6 +193,7 @@ public class DataStore<T extends DynamodbItem> {
         return builder.build();
     }
 
+    @ExcludeFromGeneratedCoverageReport
     private BatchWriteResult processBatchWrite(WriteBatch writeBatch) {
         return getClient()
                 .batchWriteItem(

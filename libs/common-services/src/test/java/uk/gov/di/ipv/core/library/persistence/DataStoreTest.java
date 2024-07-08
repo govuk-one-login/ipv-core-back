@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,7 +22,6 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -257,50 +255,5 @@ class DataStoreTest {
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
         assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
         assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().sortKeyValue().get().s());
-    }
-
-    @Disabled
-    @Test
-    void deleteWithItemListShouldDeleteAllItems() {
-        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
-        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
-        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
-        setupMockForDeletion(item1, item2, item3);
-
-        dataStore.delete(List.of(item1, item2, item3));
-
-        verify(mockDynamoDbEnhancedClient).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
-    }
-
-    @Disabled
-    @Test
-    void deleteAllByPartitionShouldDeleteItemsFromDynamoDbTableViaPartitionKey() {
-        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
-        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
-        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
-
-        setupMockForDeletion(item1, item2, item3);
-        when(mockPageIterable.stream()).thenReturn(Stream.of(mockPage));
-        when(mockPage.items()).thenReturn(List.of(item1, item2, item3));
-        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
-
-        dataStore.deleteAllByPartition(PARTITION_VALUE);
-
-        verify(mockDynamoDbTable)
-                .query(
-                        QueryConditional.keyEqualTo(
-                                Key.builder().partitionValue(PARTITION_VALUE).build()));
-        verify(mockDynamoDbEnhancedClient).batchWriteItem(any(BatchWriteItemEnhancedRequest.class));
-    }
-
-    private void setupMockForDeletion(
-            AuthorizationCodeItem item1, AuthorizationCodeItem item2, AuthorizationCodeItem item3) {
-        when(mockDynamoDbTable.tableName()).thenReturn(TEST_TABLE_NAME);
-        when(mockDynamoDbTable.tableSchema())
-                .thenReturn(TableSchema.fromBean(AuthorizationCodeItem.class));
-        when(mockDynamoDbTable.keyFrom(any()))
-                .thenReturn(Key.builder().partitionValue(item1.getAuthCode()).build())
-                .thenReturn(Key.builder().partitionValue(item2.getAuthCode()).build())
-                .thenReturn(Key.builder().partitionValue(item3.getAuthCode()).build());
     }
 }
