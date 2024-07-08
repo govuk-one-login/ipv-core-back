@@ -46,7 +46,7 @@ mermaid.initialize({
 });
 
 // Page elements
-const headerBar = document.getElementById('header-bar');
+const journeySelect = document.getElementById('journey-select');
 const headerContent = document.getElementById('header-content');
 const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
@@ -101,18 +101,16 @@ const switchJourney = async (targetJourney, targetState) => {
 };
 
 const setupHeader = () => {
-    // Add header entries for each journey
+    // Add option to journey select for each journey
     Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
-        const link = document.createElement('a');
-        link.href = getJourneyUrl(id);
-        link.innerText = label;
-        link.onclick = async (e) => {
-            e.preventDefault();
-            await switchJourney(id, null);
-        }
-        headerBar.insertBefore(link,  stateSearch);
+        const option = document.createElement('option');
+        option.setAttribute('value', id)
+        option.innerText = label;
+        journeySelect.append(option);
     });
-
+    journeySelect.onchange = async (e) => {
+        await switchJourney(journeySelect.value, null);
+    }
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
         await updateView();
