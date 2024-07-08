@@ -272,16 +272,6 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  CRI_TICF_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetJourney: QQ_END_STATES
-        targetState: STORE_IDENTITY_AND_FINISH
-
   CRI_TICF_BEFORE_F2F:
     response:
       type: process

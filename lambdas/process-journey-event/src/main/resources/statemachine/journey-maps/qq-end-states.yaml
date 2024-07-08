@@ -15,11 +15,6 @@ states:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
 
-  STORE_IDENTITY_AND_FINISH:
-    events:
-      next:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-
   RETURN_TO_RP_AND_FINISH:
     events:
       next:
@@ -63,6 +58,24 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
+  CRI_TICF_STATE:
+    events:
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   # DCMAW journey (J1)
   POST_DCMAW_SUCCESS_PAGE:
     response:
@@ -97,6 +110,15 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED
+
+  CRI_TICF_BEFORE_SUCCESS:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: STORE_IDENTITY_BEFORE_SUCCESS
 
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:
