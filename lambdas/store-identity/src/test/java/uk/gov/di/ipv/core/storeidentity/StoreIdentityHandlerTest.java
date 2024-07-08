@@ -2,12 +2,14 @@ package uk.gov.di.ipv.core.storeidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -131,6 +134,13 @@ class StoreIdentityHandlerTest {
         when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test

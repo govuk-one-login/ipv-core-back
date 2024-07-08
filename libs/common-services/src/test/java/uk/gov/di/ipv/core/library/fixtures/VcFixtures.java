@@ -22,6 +22,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ADDRESS_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
@@ -435,6 +436,27 @@ public interface VcFixtures {
                         .build());
     }
 
+    static VerifiableCredential vcMissingPassportProperty() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder().build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                TestVc.builder()
+                        .credentialSubject(credentialSubject)
+                        .evidence(SUCCESSFUL_EVIDENCE)
+                        .build());
+    }
+
+    static VerifiableCredential vcPassportClaimInvalidType() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.PASSPORT,
+                TestVc.builder()
+                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
+                        .build());
+    }
+
     private static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -451,6 +473,23 @@ public interface VcFixtures {
     VerifiableCredential VC_ADDRESS =
             generateAddressVc(
                     TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build());
+
+    static VerifiableCredential vcAddressEmpty() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of(ALICE_PARKER_NAME))
+                        .address(List.of())
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                Cri.ADDRESS,
+                TestVc.builder().credentialSubject(credentialSubject).build());
+    }
+
+    static VerifiableCredential vcAddressNoCredentialSubject() {
+        return generateVerifiableCredential(
+                TEST_SUBJECT, Cri.ADDRESS, TestVc.builder().credentialSubject(null).build());
+    }
 
     static VerifiableCredential vcAddressTwo() {
         return generateAddressVc(
@@ -649,6 +688,22 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1705986521));
     }
 
+    static VerifiableCredential vcDrivingPermitEmptyDrivingPermit() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_4))
+                        .drivingPermit(List.of())
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                TestVc.builder()
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcDrivingPermitFailedChecks() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
@@ -684,29 +739,60 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1697097326));
     }
 
-    static VerifiableCredential vcNinoSuccessful() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(null)
-                        .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
-                        .build();
+    static VerifiableCredential vcDrivingPermitIncorrectType() {
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                TestVc.builder()
+                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential vcDrivingPermitNoCredentialSubjectProperty() {
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                TestVc.builder()
+                        .credentialSubject(null)
+                        .evidence(DCMAW_EVIDENCE_VRI_CHECK)
+                        .type(
+                                new String[] {
+                                    VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE
+                                })
+                        .build(),
+                Instant.ofEpochSecond(1705986521));
+    }
+
+    static VerifiableCredential generateNinoVc(
+            TestVc.TestCredentialSubject credentialSubject, List<TestVc.TestEvidence> evidence) {
         return generateVerifiableCredential(
                 "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
                 NINO,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                                .checkDetails(
-                                                        List.of(Map.of("checkMethod", "data")))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
+                TestVc.builder().evidence(evidence).credentialSubject(credentialSubject).build(),
                 "https://review-xx.account.gov.uk",
                 Instant.ofEpochSecond(1697097326));
+    }
+
+    static TestVc.TestEvidence testFailedNinoEvidence =
+            TestVc.TestEvidence.builder()
+                    .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                    .failedCheckDetails(List.of(Map.of("checkMethod", "data")))
+                    .build();
+
+    static VerifiableCredential vcNinoSuccessful() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .build();
+
+        var evidence =
+                List.of(
+                        TestVc.TestEvidence.builder()
+                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
+                                .checkDetails(List.of(Map.of("checkMethod", "data")))
+                                .build());
+        return generateNinoVc(credentialSubject, evidence);
     }
 
     static VerifiableCredential vcNinoUnsuccessful() {
@@ -717,45 +803,38 @@ public interface VcFixtures {
                         .birthDate(List.of(new BirthDate("1970-01-01")))
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
                         .build();
-        return generateVerifiableCredential(
-                "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
-                NINO,
-                TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                                .failedCheckDetails(
-                                                        List.of(Map.of("checkMethod", "data")))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-xx.account.gov.uk",
-                Instant.ofEpochSecond(1697097326));
+
+        var evidence = List.of(testFailedNinoEvidence);
+        return generateNinoVc(credentialSubject, evidence);
     }
 
     static VerifiableCredential vcNinoMissingSocialSecurityRecord() {
+        return generateNinoVc(
+                TestVc.TestCredentialSubject.builder().build(),
+                List.of(TestVc.TestEvidence.builder().build()));
+    }
+
+    static VerifiableCredential vcNinoEmptySocialSecurityRecord() {
         TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(null)
-                        .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .build();
+                TestVc.TestCredentialSubject.builder().socialSecurityRecord(List.of()).build();
+
+        var evidence = List.of(testFailedNinoEvidence);
+
+        return generateNinoVc(credentialSubject, evidence);
+    }
+
+    static VerifiableCredential vcNinoInvalidVcType() {
         return generateVerifiableCredential(
-                "urn:uuid:51dfa9ac-8624-4b93-aa8f-99ed772ff0ec",
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 NINO,
                 TestVc.builder()
-                        .evidence(
-                                List.of(
-                                        TestVc.TestEvidence.builder()
-                                                .txn("e5b22348-c866-4b25-bb50-ca2106af7874")
-                                                .failedCheckDetails(
-                                                        List.of(Map.of("checkMethod", "data")))
-                                                .build()))
-                        .credentialSubject(credentialSubject)
+                        .type(
+                                new String[] {
+                                    VERIFIABLE_CREDENTIAL_TYPE, RISK_ASSESSMENT_CREDENTIAL_TYPE
+                                })
                         .build(),
-                "https://review-xx.account.gov.uk",
-                Instant.ofEpochSecond(1697097326));
+                "https://ticf.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1704822570));
     }
 
     static VerifiableCredential vcTicf() {
@@ -978,13 +1057,6 @@ public interface VcFixtures {
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
                 Cri.ADDRESS,
                 TestVc.builder().credentialSubject(null).build());
-    }
-
-    static VerifiableCredential vcEmptyEvidence() {
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.ADDRESS,
-                TestVc.builder().evidence(Collections.emptyList()).build());
     }
 
     static VerifiableCredential vcHmrcMigration() throws Exception {

@@ -10,6 +10,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -171,6 +172,7 @@ class CheckExistingIdentityHandlerTest {
     private static VerifiableCredential pcl200Vc;
     private static VerifiableCredential pcl250Vc;
     private static VerifiableCredential gpg45Vc = vcDrivingPermit();
+
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -227,6 +229,13 @@ class CheckExistingIdentityHandlerTest {
                         .vtr(List.of(P2.name()))
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(auditService);
+        auditInOrder.verify(auditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -917,35 +926,6 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
-
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
-        verify(ipvSessionItem, never()).setVot(any());
-        assertNull(ipvSessionItem.getVot());
-    }
-
-    @Test
-    void shouldReturn500IfCredentialParseExceptionFromAreVcsCorrelated() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any()))
-                .thenThrow(
-                        new CredentialParseException("Failed to parse successful VC Store items."));
-
-        JourneyErrorResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
-                journeyResponse.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
-                journeyResponse.getMessage());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 

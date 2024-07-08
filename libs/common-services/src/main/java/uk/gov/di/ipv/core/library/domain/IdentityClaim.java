@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
 
 import java.util.List;
 
@@ -21,13 +24,26 @@ public class IdentityClaim {
     }
 
     // Return the first name that we have (they should all be the same for now)
+    // and concatenate all the name parts together into a single string.
     @JsonIgnore
     public String getFullName() {
-        return name.get(0).getFullName();
+        StringBuilder nameBuilder = new StringBuilder();
+        name.get(0)
+                .getNameParts()
+                .forEach(
+                        namePart -> {
+                            if (nameBuilder.isEmpty()) {
+                                nameBuilder.append(namePart.getValue());
+                            } else {
+                                nameBuilder.append(" ").append(namePart.getValue());
+                            }
+                        });
+
+        return nameBuilder.toString();
     }
 
     @JsonIgnore
-    public List<NameParts> getNameParts() {
+    public List<NamePart> getNameParts() {
         return name.get(0).getNameParts();
     }
 }

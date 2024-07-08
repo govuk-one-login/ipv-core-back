@@ -27,6 +27,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 @Jacksonized
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TestVc {
+
+    public static final String DEFAULT_DOB = "1965-07-08";
+
     @Builder.Default
     private String[] type = {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE};
 
@@ -50,7 +53,7 @@ public class TestVc {
                                         new NameParts("KENNETH", VC_GIVEN_NAME),
                                         new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
 
-        @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate("1965-07-08"));
+        @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate(DEFAULT_DOB));
         private List<Object> passport;
         private List<Object> address;
         private List<Object> socialSecurityRecord;

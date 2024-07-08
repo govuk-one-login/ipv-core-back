@@ -123,7 +123,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -216,7 +216,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -320,7 +320,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        HMRC_KBV.getId(),
+                                        HMRC_KBV,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -379,7 +379,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken("dummyAccessToken"),
-                        HMRC_KBV.getId(),
+                        HMRC_KBV,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -654,7 +654,11 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    HMRC_KBV.getId(),
+                    "dummyConnection",
+                    900);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
