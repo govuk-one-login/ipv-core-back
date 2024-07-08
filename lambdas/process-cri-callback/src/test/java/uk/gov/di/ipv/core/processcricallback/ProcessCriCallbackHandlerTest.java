@@ -59,7 +59,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 @ExtendWith(MockitoExtension.class)
 class ProcessCriCallbackHandlerTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String TEST_CRI_ID = ADDRESS.getId();
     private static final String TEST_AUTHORISATION_CODE = "test_authorisation_code";
     private static final String TEST_ERROR = "test_error";
     private static final String TEST_IPV_SESSION_ID = "test_ipv_session_id";
@@ -112,8 +111,7 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
-        when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
@@ -141,7 +139,7 @@ class ProcessCriCallbackHandlerTest {
                 .validateCallbackRequest(callbackRequest, criOAuthSessionItem);
         verify(mockCriStoringService)
                 .storeVcs(
-                        callbackRequest.getCredentialIssuerId(),
+                        callbackRequest.getCredentialIssuer(),
                         callbackRequest.getIpAddress(),
                         callbackRequest.getDeviceInformation(),
                         vcs,
@@ -175,8 +173,7 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
-        when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
                         List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID))
@@ -243,8 +240,7 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockCriApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem))
                 .thenReturn(bearerToken);
-        when(mockCriApiService.fetchVerifiableCredential(
-                        bearerToken, TEST_CRI_ID, criOAuthSessionItem))
+        when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -327,9 +323,7 @@ class ProcessCriCallbackHandlerTest {
                                 HTTPResponse.SC_BAD_REQUEST, FAILED_TO_EXCHANGE_AUTHORIZATION_CODE))
                 .when(mockCriApiService)
                 .fetchVerifiableCredential(
-                        any(BearerAccessToken.class),
-                        eq(TEST_CRI_ID),
-                        any(CriOAuthSessionItem.class));
+                        any(BearerAccessToken.class), eq(ADDRESS), any(CriOAuthSessionItem.class));
 
         // Act
         var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
@@ -399,7 +393,7 @@ class ProcessCriCallbackHandlerTest {
 
     private CriCallbackRequest buildValidCallbackRequest() {
         return CriCallbackRequest.builder()
-                .credentialIssuerId(TEST_CRI_ID)
+                .credentialIssuerId(ADDRESS.getId())
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .state(TEST_CRI_OAUTH_SESSION_ID)
                 .build();
@@ -423,7 +417,7 @@ class ProcessCriCallbackHandlerTest {
 
     private CriOAuthSessionItem buildValidCriOAuthSessionItem() {
         return CriOAuthSessionItem.builder()
-                .criId(TEST_CRI_ID)
+                .criId(ADDRESS.getId())
                 .criOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID)
                 .build();
     }

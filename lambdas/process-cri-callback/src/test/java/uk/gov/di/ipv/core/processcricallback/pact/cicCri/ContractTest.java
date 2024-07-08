@@ -137,7 +137,7 @@ class ContractTest {
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
                         new BearerAccessToken(CIC_ACCESS_TOKEN),
-                        CLAIMED_IDENTITY.getId(),
+                        CLAIMED_IDENTITY,
                         CRI_OAUTH_SESSION_ITEM);
 
         // Assert
@@ -217,7 +217,7 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("dummyInvalidAccessToken"),
-                                        CLAIMED_IDENTITY.getId(),
+                                        CLAIMED_IDENTITY,
                                         CRI_OAUTH_SESSION_ITEM));
 
         // Assert
@@ -450,7 +450,11 @@ class ContractTest {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    CLAIMED_IDENTITY.getId(),
+                    "dummyConnection",
+                    900);
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
@@ -34,7 +35,6 @@ class CriResponseServiceTest {
 
     private static final String USER_ID_1 = "user-id-1";
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER = F2F.getId();
     private static final String TEST_ISSUER_RESPONSE =
             "{\"sub\":"
                     + TEST_USER_ID
@@ -51,14 +51,13 @@ class CriResponseServiceTest {
     @Test
     void shouldReturnCredentialFromDataStoreForSpecificCri() {
         String ipvSessionId = "ipvSessionId";
-        String criId = "criId";
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
-        when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(criResponseItem);
+        when(mockDataStore.getItem(ipvSessionId, ADDRESS.getId())).thenReturn(criResponseItem);
 
         CriResponseItem retrievedCredentialItem =
-                criResponseService.getCriResponseItem(ipvSessionId, criId);
+                criResponseService.getCriResponseItem(ipvSessionId, ADDRESS);
 
         assertEquals(criResponseItem, retrievedCredentialItem);
     }
@@ -69,7 +68,7 @@ class CriResponseServiceTest {
                 List.of(EVCS_WRITE_ENABLED.getName(), EVCS_READ_ENABLED.getName());
         criResponseService.persistCriResponse(
                 TEST_USER_ID,
-                TEST_CREDENTIAL_ISSUER,
+                F2F,
                 TEST_ISSUER_RESPONSE,
                 TEST_OAUTH_STATE,
                 CriResponseService.STATUS_PENDING,
@@ -82,7 +81,7 @@ class CriResponseServiceTest {
         final CriResponseItem persistedCriResponseItem =
                 persistedCriResponseItemCaptor.getAllValues().get(0);
         assertEquals(TEST_USER_ID, persistedCriResponseItem.getUserId());
-        assertEquals(TEST_CREDENTIAL_ISSUER, persistedCriResponseItem.getCredentialIssuer());
+        assertEquals(F2F.getId(), persistedCriResponseItem.getCredentialIssuer());
         assertEquals(TEST_ISSUER_RESPONSE, persistedCriResponseItem.getIssuerResponse());
         assertEquals(TEST_OAUTH_STATE, persistedCriResponseItem.getOauthState());
         assertEquals(featureSet, persistedCriResponseItem.getFeatureSet());
@@ -106,11 +105,11 @@ class CriResponseServiceTest {
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, Instant.now());
 
-        when(mockDataStore.delete(USER_ID_1, TEST_CREDENTIAL_ISSUER)).thenReturn(criResponseItem);
+        when(mockDataStore.delete(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
 
-        criResponseService.deleteCriResponseItem(USER_ID_1, TEST_CREDENTIAL_ISSUER);
+        criResponseService.deleteCriResponseItem(USER_ID_1, F2F);
 
-        verify(mockDataStore, times(1)).delete(USER_ID_1, TEST_CREDENTIAL_ISSUER);
+        verify(mockDataStore, times(1)).delete(USER_ID_1, F2F.getId());
     }
 
     @Test

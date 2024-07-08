@@ -105,7 +105,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockCriStoringService)
                 .storeVcs(
-                        TICF.getId(),
+                        TICF,
                         "an-ip-address",
                         "device-information",
                         List.of(mockVerifiableCredential),
