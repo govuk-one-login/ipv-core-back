@@ -13,12 +13,9 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.RiskAssessmentCredential;
-
-import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 
@@ -40,7 +37,7 @@ public class AuditExtensionsHelper {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var identityChecks = identityCheckCredential.getEvidence();
 
-            return new AuditExtensionsVcEvidence<List<IdentityCheck>>(
+            return new AuditExtensionsVcEvidence<>(
                     issuer, identityChecks, isSuccessful, vot, isUkIssued, age);
         }
 
