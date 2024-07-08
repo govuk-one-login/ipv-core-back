@@ -3,12 +3,18 @@ package uk.gov.di.ipv.core.library.auditing.helpers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
+
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
@@ -23,10 +29,17 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final LocalDate mockTodayDate = LocalDate.of(2024, 7, 7);
 
     @Test
     void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
-        var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        AuditExtensionsVcEvidence auditExtensions;
+        try (MockedStatic<LocalDate> mockLocalDate =
+                mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
+            mockLocalDate.when(LocalDate::now).thenReturn(mockTodayDate);
+            auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        }
+
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
         assertEquals(58, auditExtensions.age());

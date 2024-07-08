@@ -74,6 +74,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
@@ -91,6 +92,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -786,8 +788,14 @@ class InitialiseIpvSessionHandlerTest {
             when(mockVerifiableCredentialService.getVc(TEST_USER_ID, HMRC_MIGRATION.getId()))
                     .thenReturn(null);
 
-            // Act
-            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            try (MockedStatic<LocalDate> mockLocalDate =
+                    mockStatic(LocalDate.class, CALLS_REAL_METHODS)) {
+                var mockTodayDate = LocalDate.of(2024, 7, 7);
+                mockLocalDate.when(LocalDate::now).thenReturn(mockTodayDate);
+
+                // Act
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            }
 
             // Assert
             ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
