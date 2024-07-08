@@ -36,7 +36,7 @@ body {
     display: flex;
     margin: 16px 0;
     overflow: hidden;
-    max-height: 450px;
+    max-height: 500px;
     transition: max-height 0.15s ease-out, margin 0.15s ease-out;
 }
 #header-content.hidden {
