@@ -252,7 +252,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
 
   PYI_CRI_ESCAPE_NO_F2F:
     response:
@@ -271,19 +272,6 @@ states:
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-
-  CRI_TICF_BEFORE_F2F:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetJourney: F2F
-        targetState: F2F_CRI
-      enhanced-verification:
-        targetJourney: F2F
-        targetState: F2F_CRI
 
   # Common pages
   PRE_EXPERIAN_KBV_TRANSITION_PAGE:
@@ -669,7 +657,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -719,7 +708,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -815,7 +805,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -837,7 +828,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -858,7 +850,8 @@ states:
         targetState: F2F_CRI
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+            targetJourney: F2F
+            targetState: F2F_TICF_BEFORE_CRI
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE

@@ -9,6 +9,11 @@ states:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
 
+  F2F_TICF_BEFORE_CRI:
+    events:
+      next:
+        targetState: CRI_TICF_BEFORE_F2F
+
   F2F_CRI:
     events:
       next:
@@ -78,6 +83,19 @@ states:
         checkFeatureFlag:
           ticfCriBeta:
             targetState: CRI_TICF_BEFORE_F2F
+
+  CRI_TICF_BEFORE_F2F:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetJourney: F2F
+        targetState: F2F_CRI
+      enhanced-verification:
+        targetJourney: F2F
+        targetState: F2F_CRI
 
   CRI_F2F:
     response:
