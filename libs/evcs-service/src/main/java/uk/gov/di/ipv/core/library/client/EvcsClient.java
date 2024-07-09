@@ -33,7 +33,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ public class EvcsClient {
     public static final String VC_STATE_PARAM = "state";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final List<Integer> RETRYABLE_STATUS_CODES = Arrays.asList(429);
+    private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(429);
     private static final int MAX_RETRIES = 4;
     private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
