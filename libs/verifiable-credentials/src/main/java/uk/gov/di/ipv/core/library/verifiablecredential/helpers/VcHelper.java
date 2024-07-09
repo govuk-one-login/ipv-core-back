@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
@@ -23,8 +24,6 @@ import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
@@ -97,15 +96,12 @@ public class VcHelper {
     }
 
     public static Integer extractAgeFromCredential(VerifiableCredential vc) {
-        var birthDateArr =
-                OBJECT_MAPPER
-                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                        .path(VC_CREDENTIAL_SUBJECT)
-                        .path(VC_BIRTH_DATE);
-        if (birthDateArr.isMissingNode() || birthDateArr.isEmpty()) {
-            return null;
+        if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
+            var birthDates = person.getBirthDate();
+
+            return isNullOrEmpty(birthDates) ? null : getAge(birthDates.get(ONLY).getValue());
         }
-        return getAge(birthDateArr.get(ONLY).path(VC_ATTR_VALUE_NAME).asText());
+        return null;
     }
 
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
