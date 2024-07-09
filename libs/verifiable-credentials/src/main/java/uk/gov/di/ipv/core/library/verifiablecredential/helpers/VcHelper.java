@@ -8,9 +8,12 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
+import uk.gov.di.model.ResidencePermitDetails;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
@@ -96,33 +99,51 @@ public class VcHelper {
         return null;
     }
 
+    private static String getIcaoIssuerFromPassport(List<PassportDetails> passports) {
+        if (isNullOrEmpty(passports)) {
+            return null;
+        }
+        return passports.get(ONLY).getIcaoIssuerCode();
+    }
+
+    private static String getIcaoIssuerFromResidencePermit(
+            List<ResidencePermitDetails> residencePermits) {
+        if (isNullOrEmpty(residencePermits)) {
+            return null;
+        }
+        return residencePermits.get(ONLY).getIcaoIssuerCode();
+    }
+
+    private static String getIssuedByFromDrivingPermit(List<DrivingPermitDetails> drivingPermits) {
+        if (isNullOrEmpty(drivingPermits)) {
+            return null;
+        }
+        return drivingPermits.get(ONLY).getIssuedBy();
+    }
+
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
         var credentialSubject = vc.getCredential().getCredentialSubject();
 
         if (credentialSubject instanceof PersonWithDocuments person) {
+            String icaoIssuerCode;
+
             var passport = person.getPassport();
-            if (!isNullOrEmpty(passport)) {
-                var icaoIssuerCode = passport.get(ONLY).getIcaoIssuerCode();
-                if (icaoIssuerCode != null) {
-                    return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
-                }
+            icaoIssuerCode = getIcaoIssuerFromPassport(passport);
+            if (icaoIssuerCode != null) {
+                return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
             }
 
             var residencePermit = person.getResidencePermit();
-            if (!isNullOrEmpty(residencePermit)) {
-                var icaoIssuerCode = residencePermit.get(ONLY).getIcaoIssuerCode();
-                if (icaoIssuerCode != null) {
-                    return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
-                }
+            icaoIssuerCode = getIcaoIssuerFromResidencePermit(residencePermit);
+            if (icaoIssuerCode != null) {
+                return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
             }
 
             // If Passport/ResidencePermit not exist then try for DL now
             var drivingPermit = person.getDrivingPermit();
-            if (!isNullOrEmpty(drivingPermit)) {
-                var issuer = drivingPermit.get(ONLY).getIssuedBy();
-                if (issuer != null) {
-                    return DL_UK_ISSUER_LIST.contains(issuer);
-                }
+            var issuer = getIssuedByFromDrivingPermit(drivingPermit);
+            if (issuer != null) {
+                return DL_UK_ISSUER_LIST.contains(issuer);
             }
         }
         return null; // NOSONAR

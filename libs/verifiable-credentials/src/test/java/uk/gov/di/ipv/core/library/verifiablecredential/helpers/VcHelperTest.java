@@ -140,9 +140,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldExtractAgeFromInvalidCredential() {}
-
-    {
+    void shouldExtractAgeFromInvalidCredential() {
         assertNull(VcHelper.extractAgeFromCredential(vcAddressTwo()));
     }
 
