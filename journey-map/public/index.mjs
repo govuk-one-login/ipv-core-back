@@ -23,6 +23,10 @@ const JOURNEY_TYPES = {
     REVERIFICATION: 'Reverification',
 };
 
+const COMMON_JOURNEY_TYPS = [
+    'NEW_P2_IDENTITY', 'REUSE_EXISTING_IDENTITY', 'REPEAT_FRAUD_CHECK', 'REVERIFICATION', 'UPDATE_ADDRESS', 'UPDATE_NAME'
+];
+
 const CRI_NAMES = {
     address: 'Address',
     claimedIdentity: 'Claimed Identity',
@@ -47,6 +51,8 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerBar = document.getElementById('header-bar');
+const headerActions = document.getElementById('header-actions');
 const journeySelect = document.getElementById('journey-select');
 const headerContent = document.getElementById('header-content');
 const headerToggle = document.getElementById('header-toggle');
@@ -104,6 +110,17 @@ const switchJourney = async (targetJourney, targetState) => {
 const setupHeader = () => {
     // Add option to journey select for each journey
     Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+        if (COMMON_JOURNEY_TYPS.indexOf(id) != -1) {
+            const link = document.createElement('a');
+            link.href = getJourneyUrl(id);
+            link.innerText = label;
+            link.onclick = async (e) => {
+                e.preventDefault();
+                await switchJourney(id, null);
+            }
+            headerBar.insertBefore(link,  headerActions);
+        }
+
         const option = document.createElement('option');
         option.setAttribute('value', id)
         option.innerText = label;
@@ -151,7 +168,7 @@ const updateView = async () => {
     } else {
         journeyDesc.innerText = '';
     }
-
+    journeySelect.value = selectedJourney;
     return renderSvg(selectedJourney, formData);
 };
 
