@@ -9,7 +9,7 @@ public interface RetryableTask<T> {
     /*
      * Interface for a retryable task - the implementation should return
      * an Optional with the successful value to return or
-     * throw a RetryableException if any the task can be retried or
+     * throw a RetryableException or return an empty option if the task can be retried or
      * thow a NonRetryableException if the task cannot be retried
      */
     public Optional<T> run(boolean isLastAttempt) throws RetryableException, NonRetryableException;
