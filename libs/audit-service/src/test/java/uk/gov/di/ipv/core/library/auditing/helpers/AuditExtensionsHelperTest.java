@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
@@ -21,7 +19,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
@@ -133,8 +130,7 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void getRestrictedAuditDataForF2FShouldReturnEmptyAuditRestrictedF2fIfInvalidVcType()
-            throws Exception {
+    void getRestrictedAuditDataForF2FShouldReturnEmptyAuditRestrictedF2fIfInvalidVcType() {
         var restricted = getRestrictedAuditDataForF2F(VC_ADDRESS);
 
         assertNull(restricted.getName());
@@ -142,16 +138,11 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void getRestrictedAuditDataForF2FShouldThrowIfNullCredentialSubject() {
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                getRestrictedAuditDataForF2F(
-                                        vcDrivingPermitNoCredentialSubjectProperty()));
+    void getRestrictedAuditDataForF2FShouldNullValuesIfNullCredentialSubject() {
+        var restricted = getRestrictedAuditDataForF2F(vcDrivingPermitNoCredentialSubjectProperty());
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(ErrorResponse.CREDENTIAL_SUBJECT_MISSING, thrownException.getErrorResponse());
+        assertNull(restricted.getName());
+        assertNull(restricted.getDocExpiryDate());
     }
 
     @Test
@@ -182,29 +173,31 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void getRestrictedAuditDataForInheritedIdentityShouldThrowIfInvalidVcType() {
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                getRestrictedAuditDataForInheritedIdentity(
-                                        VC_ADDRESS, "test-device-info"));
+    void getRestrictedAuditDataForInheritedIdentityShouldReturnNullValuesIfInvalidVcType()
+            throws Exception {
+        var restricted = getRestrictedAuditDataForInheritedIdentity(VC_ADDRESS, "test_device_data");
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE, thrownException.getErrorResponse());
+        assertNull(restricted.name());
+        assertNull(restricted.birthDate());
+        assertNull(restricted.socialSecurityRecord());
+        assertEquals(
+                "{\"encoded\":\"test_device_data\"}",
+                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
 
     @Test
-    void getRestrictedAuditDataForInheritedIdentityShouldThrowIfMissingCredentialSubject() {
-        HttpResponseExceptionWithErrorBody thrownException =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                getRestrictedAuditDataForInheritedIdentity(
-                                        vcDrivingPermitNoCredentialSubjectProperty(),
-                                        "test-device-info"));
+    void
+            getRestrictedAuditDataForInheritedIdentityShouldReturnNullValuesIfMissingCredentialSubject()
+                    throws Exception {
+        var restricted =
+                getRestrictedAuditDataForInheritedIdentity(
+                        vcDrivingPermitNoCredentialSubjectProperty(), "test_device_data");
 
-        assertEquals(500, thrownException.getResponseCode());
-        assertEquals(ErrorResponse.CREDENTIAL_SUBJECT_MISSING, thrownException.getErrorResponse());
+        assertNull(restricted.name());
+        assertNull(restricted.birthDate());
+        assertNull(restricted.socialSecurityRecord());
+        assertEquals(
+                "{\"encoded\":\"test_device_data\"}",
+                OBJECT_MAPPER.writeValueAsString(restricted.deviceInformation()));
     }
 }

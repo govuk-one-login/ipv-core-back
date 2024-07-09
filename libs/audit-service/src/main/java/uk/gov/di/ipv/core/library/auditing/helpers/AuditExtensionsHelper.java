@@ -6,9 +6,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -48,12 +46,9 @@ public class AuditExtensionsHelper {
         return new AuditExtensionsVcEvidence(issuer, null, isSuccessful, vot, isUkIssued, age);
     }
 
-    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc)
-            throws HttpResponseExceptionWithErrorBody {
-
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            var credentialSubject = getCredentialSubjectOrThrow(identityCheckCredential);
-
+    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {
+        if (vc.getCredential().getCredentialSubject()
+                instanceof IdentityCheckSubject credentialSubject) {
             var name = credentialSubject.getName();
 
             var passport = credentialSubject.getPassport();
@@ -88,35 +83,18 @@ public class AuditExtensionsHelper {
     }
 
     public static AuditRestrictedInheritedIdentity getRestrictedAuditDataForInheritedIdentity(
-            VerifiableCredential vc, String deviceInformation)
-            throws HttpResponseExceptionWithErrorBody {
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            var credentialSubject = getCredentialSubjectOrThrow(identityCheckCredential);
-
+            VerifiableCredential vc, String deviceInformation) {
+        if (vc.getCredential().getCredentialSubject()
+                instanceof IdentityCheckSubject credentialSubject) {
             return new AuditRestrictedInheritedIdentity(
                     credentialSubject.getName(),
                     credentialSubject.getBirthDate(),
                     credentialSubject.getSocialSecurityRecord(),
                     new DeviceInformation(deviceInformation));
         } else {
-            LOGGER.error(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.UNEXPECTED_CREDENTIAL_TYPE);
+            LOGGER.warn(LogHelper.buildLogMessage("VC must be of type IdentityCheckCredential."));
+            return new AuditRestrictedInheritedIdentity(
+                    null, null, null, new DeviceInformation(deviceInformation));
         }
-    }
-
-    private static IdentityCheckSubject getCredentialSubjectOrThrow(
-            IdentityCheckCredential credential) throws HttpResponseExceptionWithErrorBody {
-        var credentialSubject = credential.getCredentialSubject();
-
-        if (credentialSubject == null) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
-        }
-
-        return credentialSubject;
     }
 }

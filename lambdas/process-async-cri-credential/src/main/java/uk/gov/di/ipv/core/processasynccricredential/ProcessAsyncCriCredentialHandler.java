@@ -258,7 +258,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
-            throws SqsException, HttpResponseExceptionWithErrorBody {
+            throws SqsException {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,

@@ -504,8 +504,7 @@ public class InitialiseIpvSessionHandler
             VerifiableCredential inheritedIdentityVc,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, CredentialParseException, UnrecognisedVotException,
-                    HttpResponseExceptionWithErrorBody {
+            throws SqsException, CredentialParseException, UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
