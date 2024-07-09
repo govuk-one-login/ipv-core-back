@@ -112,7 +112,7 @@ class RetryTest {
 
     @Test
     void shouldNotSleepIfFirstAttemptSuccessful()
-            throws RetryableException, NonRetryableException, InterruptedException {
+            throws NonRetryableException, InterruptedException {
         var res =
                 Retry.runTaskWithBackoff(
                         mockSleeper,

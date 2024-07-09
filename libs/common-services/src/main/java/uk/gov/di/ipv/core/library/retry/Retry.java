@@ -37,7 +37,7 @@ public class Retry {
                                 "retryable task failed on attempt " + attempt, e));
             }
             if (attempt < maxAttempts) {
-                var backoff = (long) (waitInterval * Math.pow(2, attempt - 1));
+                var backoff = (long) (waitInterval * Math.pow(2, attempt - (double) 1));
                 sleeper.sleep(backoff);
             }
         }
