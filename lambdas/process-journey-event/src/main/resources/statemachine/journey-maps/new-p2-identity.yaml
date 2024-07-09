@@ -633,8 +633,6 @@ states:
       criId: hmrcKbv
     parent: CRI_STATE
     events:
-      fail-with-no-ci:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetState: EVALUATE_GPG45_SCORES
       enhanced-verification:
@@ -661,8 +659,6 @@ states:
       criId: hmrcKbv
     parent: CRI_STATE
     events:
-      fail-with-no-ci:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetState: EVALUATE_GPG45_SCORES
       enhanced-verification:
@@ -1337,8 +1333,6 @@ states:
       criId: hmrcKbv
     parent: CRI_STATE
     events:
-      fail-with-no-ci:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetState: EVALUATE_GPG45_SCORES
       enhanced-verification:

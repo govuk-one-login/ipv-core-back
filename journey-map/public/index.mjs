@@ -59,6 +59,7 @@ const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
 const disabledInput = document.getElementById('disabledInput');
 const featureFlagInput = document.getElementById('featureFlagInput')
+const otherOptions = document.getElementById('otherOptions');
 const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
@@ -92,7 +93,9 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
-    window.history.pushState(undefined, undefined, getJourneyUrl(targetJourney));
+    const params = new URLSearchParams(window.location.search);
+    params.set('journeyType', targetJourney);
+    window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
     await updateView();
@@ -135,7 +138,18 @@ const setupHeader = () => {
     });
 };
 
+const optionOnChangeHandler = (name, input) => () => {
+    const params = new URLSearchParams(window.location.search);
+    if (input.checked) {
+        params.append(name, input.value);
+    } else {
+        params.delete(name, input.value);
+    }
+    window.history.replaceState(undefined, undefined, `?${params.toString()}`);
+};
+
 const setupOptions = (name, options, fieldset, labels) => {
+    const selectedOptions = new URLSearchParams(window.location.search).getAll(name) || [];
     if (options.length) {
         options.forEach((option) => {
             const input = document.createElement('input');
@@ -143,6 +157,8 @@ const setupOptions = (name, options, fieldset, labels) => {
             input.name = name;
             input.value = option;
             input.id = option;
+            input.checked = selectedOptions.includes(option) ? 'checked' : undefined;
+            input.onchange = optionOnChangeHandler(name, input);
 
             const label = document.createElement('label');
             const span = document.createElement('span');
@@ -158,6 +174,14 @@ const setupOptions = (name, options, fieldset, labels) => {
     }
 };
 
+const setupOtherOptions = () => {
+    const selectedOptions = new URLSearchParams(window.location.search).getAll('otherOption') || [];
+    for (const input of otherOptions.getElementsByTagName('input')) {
+        input.checked = selectedOptions.includes(input.value) ? 'checked' : undefined;
+        input.onchange = optionOnChangeHandler('otherOption', input);
+    }
+}
+
 const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
     journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
@@ -169,6 +193,8 @@ const updateView = async () => {
         journeyDesc.innerText = '';
     }
     journeySelect.value = selectedJourney;
+    journeyDesc.innerText = desc || '';
+
     return renderSvg(selectedJourney, formData);
 };
 
@@ -308,6 +334,7 @@ const initialize = async () => {
     const { disabledOptions, featureFlagOptions } = getOptions(journeyMaps);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
+    setupOtherOptions();
     setupMermaidClickHandlers();
     setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
