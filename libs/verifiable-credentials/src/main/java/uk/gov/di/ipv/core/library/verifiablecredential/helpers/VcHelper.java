@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.RiskAssessmentCredential;
 
@@ -24,13 +25,6 @@ import java.util.List;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ICAO_ISSUER_CODE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
@@ -105,29 +99,32 @@ public class VcHelper {
     }
 
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
-        var credentialSubject =
-                OBJECT_MAPPER
-                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                        .path(VC_CREDENTIAL_SUBJECT);
-        if (!credentialSubject.isMissingNode()) {
-            var passportOrResPermitField =
-                    credentialSubject.hasNonNull(VC_PASSPORT)
-                            ? credentialSubject.path(VC_PASSPORT)
-                            : credentialSubject.path(VC_RESIDENCE_PERMIT);
-            if (passportOrResPermitField.isArray()) {
-                var icaoCode = passportOrResPermitField.path(ONLY).path(VC_ICAO_ISSUER_CODE);
-                if (!icaoCode.isMissingNode()) {
-                    return UK_ICAO_ISSUER_CODE.equals(icaoCode.asText());
+        var credentialSubject = vc.getCredential().getCredentialSubject();
+
+        if (credentialSubject instanceof PersonWithDocuments person) {
+            var passport = person.getPassport();
+            if (!isNullOrEmpty(passport)) {
+                var icaoIssuerCode = passport.get(ONLY).getIcaoIssuerCode();
+                if (icaoIssuerCode != null) {
+                    return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
                 }
             }
+
+            var residencePermit = person.getResidencePermit();
+            if (!isNullOrEmpty(residencePermit)) {
+                var icaoIssuerCode = residencePermit.get(ONLY).getIcaoIssuerCode();
+                if (icaoIssuerCode != null) {
+                    return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
+                }
+            }
+
             // If Passport/ResidencePermit not exist then try for DL now
-            var issuer =
-                    credentialSubject
-                            .path(VC_DRIVING_PERMIT)
-                            .path(ONLY)
-                            .path(VC_DRIVING_LICENCE_ISSUED_BY);
-            if (!issuer.isMissingNode()) {
-                return DL_UK_ISSUER_LIST.contains(issuer.asText());
+            var drivingPermit = person.getDrivingPermit();
+            if (!isNullOrEmpty(drivingPermit)) {
+                var issuer = drivingPermit.get(ONLY).getIssuedBy();
+                if (issuer != null) {
+                    return DL_UK_ISSUER_LIST.contains(issuer);
+                }
             }
         }
         return null; // NOSONAR

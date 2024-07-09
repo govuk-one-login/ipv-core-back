@@ -147,7 +147,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldChkIfDocUKIssuedForCredential() {
+    void shouldCheckIfDocUKIssuedForCredential() {
         assertEquals(
                 Boolean.TRUE,
                 VcHelper.checkIfDocUKIssuedForCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
@@ -171,6 +171,11 @@ class VcHelperTest {
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDCMAW() {
         assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+    }
+
+    @Test
+    void shouldCheckIfDocUKIssuedForVcWithoutDocuments() {
+        assertNull(VcHelper.checkIfDocUKIssuedForCredential(vcAddressTwo()));
     }
 
     @Test
