@@ -3,14 +3,18 @@ package uk.gov.di.ipv.core.library.retry;
 import uk.gov.di.ipv.core.library.exceptions.MaxRetryAttemptsExceededException;
 import uk.gov.di.ipv.core.library.exceptions.RetryException;
 
-public class Retryable {
+public class Retry {
     public static <T> T runTaskWithBackoff(
-            Sleeper sleeper, int maxAttempts, int waitInterval, Task<T> t)
+            Sleeper sleeper, int maxAttempts, int waitInterval, Task<T> task)
             throws RetryException, MaxRetryAttemptsExceededException {
+
+        if (maxAttempts < 1) {
+            throw new IllegalArgumentException("max attempts must be greater than 0");
+        }
         var count = 0;
         while (count < maxAttempts) {
             var isLastAttempt = (count + 1) >= maxAttempts;
-            var res = t.run(isLastAttempt);
+            var res = task.run(isLastAttempt);
             if (res.isPresent()) {
                 return res.get();
             }

@@ -20,7 +20,7 @@ import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.MaxRetryAttemptsExceededException;
 import uk.gov.di.ipv.core.library.exceptions.RetryException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.retry.Retryable;
+import uk.gov.di.ipv.core.library.retry.Retry;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.retry.Task;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -219,7 +219,7 @@ public class EvcsClient {
 
         try {
             var response =
-                    Retryable.runTaskWithBackoff(
+                    Retry.runTaskWithBackoff(
                             sleeper,
                             MAX_RETRIES,
                             RETRY_DELAY_MILLIS,
