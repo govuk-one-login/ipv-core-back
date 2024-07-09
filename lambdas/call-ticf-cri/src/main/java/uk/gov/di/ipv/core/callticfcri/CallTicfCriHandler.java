@@ -59,6 +59,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final CriStoringService criStoringService;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
@@ -68,10 +69,11 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ticfCriService = new TicfCriService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,
-                        new AuditService(AuditService.getSqsClient(), configService),
+                        auditService,
                         null,
                         new SessionCredentialsService(configService),
                         ciMitService);
@@ -85,7 +87,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             TicfCriService ticfCriService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            CriStoringService criStoringService) {
+            CriStoringService criStoringService,
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
@@ -93,6 +96,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.criStoringService = criStoringService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -133,6 +137,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -156,7 +161,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
 
         criStoringService.storeVcs(
-                TICF.getId(),
+                TICF,
                 request.getIpAddress(),
                 request.getDeviceInformation(),
                 ticfVcs,

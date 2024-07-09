@@ -112,7 +112,7 @@ public class InitialiseIpvSessionHandler
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -307,6 +307,8 @@ public class InitialiseIpvSessionHandler
                     LogHelper.buildErrorMessage("Failed to check if stronger vot vc present.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

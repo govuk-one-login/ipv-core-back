@@ -18,6 +18,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -95,6 +97,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -197,6 +200,13 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setUserId(TEST_USER_ID);
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test

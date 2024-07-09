@@ -249,7 +249,11 @@ class TokenTests {
             Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             new CriOAuthSessionItem(
-                    "dummySessionId", "dummyOAuthSessionId", "dummyCriId", "dummyConnection", 900);
+                    "dummySessionId",
+                    "dummyOAuthSessionId",
+                    PASSPORT.getId(),
+                    "dummyConnection",
+                    900);
 
     private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
     private static final String CLIENT_ASSERTION_BODY =

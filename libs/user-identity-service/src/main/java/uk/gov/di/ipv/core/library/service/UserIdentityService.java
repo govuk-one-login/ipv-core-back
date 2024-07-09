@@ -1,24 +1,14 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.type.CollectionType;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -32,6 +22,18 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
+import uk.gov.di.model.AddressCredential;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
+import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.Name;
+import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PersonWithIdentity;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.text.Normalizer;
 import java.text.ParseException;
@@ -42,6 +44,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
+import static java.util.Objects.requireNonNullElse;
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
@@ -53,11 +57,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -65,8 +64,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    public static final String NAME_PROPERTY_NAME = "name";
-    public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT.getId(), DCMAW.getId());
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW.getId(), DRIVING_LICENCE.getId());
@@ -77,16 +74,15 @@ public class UserIdentityService {
             List.of(ADDRESS.getId(), BAV.getId());
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
-    private static final String PASSPORT_PROPERTY_NAME = "passport";
-    private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
 
     public static final String GIVEN_NAME_PROPERTY_NAME = "GivenName";
     public static final String FAMILY_NAME_PROPERTY_NAME = "FamilyName";
+
+    private static final String MUST_BE_IDENTITYCHECK_MESSAGE =
+            "Credential must be an IdentityCheck credential.";
 
     private final ConfigService configService;
     private final CiMitUtilityService ciMitUtilityService;
@@ -185,7 +181,7 @@ public class UserIdentityService {
     }
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
@@ -217,13 +213,13 @@ public class UserIdentityService {
     }
 
     public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNamesForCorrelation(
                 getNameProperty(
                         getIdentityClaimsForNameCorrelation(successfulVcs),
-                        GIVEN_NAME_PROPERTY_NAME))) {
+                        NamePart.NamePartType.GIVEN_NAME))) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -252,7 +248,7 @@ public class UserIdentityService {
     }
 
     public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNamesForCorrelation(
@@ -325,28 +321,30 @@ public class UserIdentityService {
         identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
         if (profileType.equals(ProfileType.GPG45)) {
-            Optional<JsonNode> addressClaim = generateAddressClaim(vcs);
+            Optional<List<PostalAddress>> addressClaim = generateAddressClaim(vcs);
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVcs);
+            Optional<List<PassportDetails>> passportClaim = generatePassportClaim(successfulVcs);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
-            Optional<JsonNode> drivingPermitClaim = generateDrivingPermitClaim(successfulVcs);
+            Optional<List<DrivingPermitDetails>> drivingPermitClaim =
+                    generateDrivingPermitClaim(successfulVcs);
             drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
-        Optional<JsonNode> ninoClaim = generateNinoClaim(successfulVcs, profileType);
+        Optional<List<SocialSecurityRecordDetails>> ninoClaim =
+                generateNinoClaim(successfulVcs, profileType);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
     private boolean checkNameAndFamilyNameCorrelationInCredentials(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForNameCorrelation(vcs);
         return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
     }
 
     private boolean checkBirthDateCorrelationInCredentials(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = getIdentityClaimsForBirthDateCorrelation(vcs);
         return identityClaims.stream()
                         .map(IdentityClaim::getBirthDate)
@@ -369,7 +367,7 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForNameCorrelation(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
@@ -388,8 +386,7 @@ public class UserIdentityService {
     }
 
     private List<IdentityClaim> getIdentityClaimsForBirthDateCorrelation(
-            List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+            List<VerifiableCredential> vcs) throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
@@ -416,18 +413,18 @@ public class UserIdentityService {
                                     nameParts.stream()
                                             .filter(
                                                     namePart ->
-                                                            GIVEN_NAME_PROPERTY_NAME.equals(
+                                                            NamePart.NamePartType.GIVEN_NAME.equals(
                                                                     namePart.getType()))
-                                            .map(NameParts::getValue)
+                                            .map(NamePart::getValue)
                                             .collect(Collectors.joining(" "));
 
                             String familyNames =
                                     nameParts.stream()
                                             .filter(
                                                     namePart ->
-                                                            FAMILY_NAME_PROPERTY_NAME.equals(
-                                                                    namePart.getType()))
-                                            .map(NameParts::getValue)
+                                                            NamePart.NamePartType.FAMILY_NAME
+                                                                    .equals(namePart.getType()))
+                                            .map(NamePart::getValue)
                                             .collect(Collectors.joining(" "));
 
                             return givenNames + " " + familyNames;
@@ -437,7 +434,7 @@ public class UserIdentityService {
     }
 
     private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNameProperty(identityClaims, FAMILY_NAME_PROPERTY_NAME).stream()
+        return getNameProperty(identityClaims, NamePart.NamePartType.FAMILY_NAME).stream()
                 .map(
                         familyName ->
                                 StringUtils.substring(
@@ -449,14 +446,15 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> getNameProperty(List<IdentityClaim> identityClaims, String nameProperty) {
+    private List<String> getNameProperty(
+            List<IdentityClaim> identityClaims, NamePart.NamePartType nameProperty) {
         return identityClaims.stream()
                 .map(IdentityClaim::getNameParts)
                 .map(
                         nameParts ->
                                 nameParts.stream()
                                         .filter(namePart -> nameProperty.equals(namePart.getType()))
-                                        .map(NameParts::getValue)
+                                        .map(NamePart::getValue)
                                         .collect(Collectors.joining(" ")))
                 .toList();
     }
@@ -507,61 +505,25 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private JsonNode getVcClaimNode(String credential, String node)
-            throws CredentialParseException {
-        try {
-            return OBJECT_MAPPER
-                    .readTree(SignedJWT.parse(credential).getPayload().toString())
-                    .path(VC_CLAIM)
-                    .path(node);
-        } catch (JsonProcessingException | ParseException e) {
-            throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse VC store item: "
-                            + e.getMessage());
-        }
-    }
+    private IdentityClaim getIdentityClaim(VerifiableCredential vc) {
+        if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
 
-    private <T> T getJsonProperty(JsonNode jsonNode, String propertyName, CollectionType valueType)
-            throws HttpResponseExceptionWithErrorBody {
-        JsonNode propertyNode = jsonNode.path(propertyName);
-        if (propertyNode.isMissingNode()) {
-            return OBJECT_MAPPER.convertValue(List.of(), valueType);
-        }
-        try {
-            return OBJECT_MAPPER.treeToValue(propertyNode, valueType);
-        } catch (JsonProcessingException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse VC JWT", e));
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-        }
-    }
+            List<Name> names = requireNonNullElse(person.getName(), List.of());
 
-    private IdentityClaim getIdentityClaim(VerifiableCredential vc)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        JsonNode vcClaimNode = getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT);
-        List<Name> names =
-                getJsonProperty(
-                        vcClaimNode,
-                        NAME_PROPERTY_NAME,
-                        OBJECT_MAPPER
-                                .getTypeFactory()
-                                .constructCollectionType(List.class, Name.class));
-        List<BirthDate> birthDates =
-                getJsonProperty(
-                        vcClaimNode,
-                        BIRTH_DATE_PROPERTY_NAME,
-                        OBJECT_MAPPER
-                                .getTypeFactory()
-                                .constructCollectionType(List.class, BirthDate.class));
+            List<BirthDate> birthDates = requireNonNullElse(person.getBirthDate(), List.of());
 
-        return new IdentityClaim(names, birthDates);
+            return new IdentityClaim(names, birthDates);
+
+        } else {
+            return new IdentityClaim(List.of(), List.of());
+        }
     }
 
     public Vot getVot(VerifiableCredential vc) throws IllegalArgumentException, ParseException {
         return Vot.valueOf(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
-    private Optional<JsonNode> generateAddressClaim(List<VerifiableCredential> vcs)
+    private Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var addressVc = findVc(ADDRESS.getId(), vcs);
 
@@ -570,23 +532,36 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var addressNode =
-                extractSubjectDetailFromVc(
-                        ADDRESS_PROPERTY_NAME,
-                        addressVc.get(),
-                        "Error while parsing Address CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+        if (addressVc.get().getCredential() instanceof AddressCredential addressCredential) {
+            var credentialSubject = addressCredential.getCredentialSubject();
 
-        if (addressNode.isMissingNode()) {
-            LOGGER.error(LogHelper.buildLogMessage("Address property is missing from address VC"));
+            if (credentialSubject == null) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            }
+
+            var address = credentialSubject.getAddress();
+
+            if (isNullOrEmpty(address)) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Address property missing from VC or empty address property."));
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            }
+
+            return Optional.of(address);
+        } else {
+            LOGGER.error(LogHelper.buildLogMessage("Credential must be an Address credential."));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
-
-        return Optional.of(addressNode);
     }
 
-    private Optional<JsonNode> generateNinoClaim(
+    private Optional<List<SocialSecurityRecordDetails>> generateNinoClaim(
             List<VerifiableCredential> vcs, ProfileType profileType)
             throws HttpResponseExceptionWithErrorBody {
         String criToExtractFrom =
@@ -601,29 +576,39 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var ninoNode =
-                extractSubjectDetailFromVc(
-                        NINO_PROPERTY_NAME,
-                        ninoVc.get(),
-                        "Error while parsing Nino CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_NINO_CLAIM);
+        if (ninoVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
 
-        if (ninoNode.isMissingNode()) {
+            var nino = credentialSubject.getSocialSecurityRecord();
+
+            if (isNullOrEmpty(nino)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "SocialSecurityRecord property is missing from VC or empty SocialSecurityRecord property.")
+                                .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+
+                return Optional.empty();
+            }
+
+            return Optional.of(nino);
+        } else {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Nino property is missing from VC")
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
                             .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
 
             return Optional.empty();
         }
-
-        return Optional.of(ninoNode);
     }
 
-    private Optional<JsonNode> generatePassportClaim(List<VerifiableCredential> vcs)
+    private Optional<List<PassportDetails>> generatePassportClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
 
@@ -632,29 +617,40 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var passportNode =
-                extractSubjectDetailFromVc(
-                        PASSPORT_PROPERTY_NAME,
-                        passportVc.get(),
-                        "Error while parsing Passport CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+        if (passportVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
 
-        if (passportNode.isMissingNode()) {
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
+
+            var passport = credentialSubject.getPassport();
+
+            if (isNullOrEmpty(passport)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Passport property is missing from VC or empty passport property.")
+                                .with(
+                                        LOG_CRI_ISSUER.getFieldName(),
+                                        passportVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+                return Optional.empty();
+            }
+
+            return Optional.of(passport);
+        } else {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Passport property is missing from VC")
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
                             .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
-
             return Optional.empty();
         }
-
-        return Optional.of(passportNode);
     }
 
-    private Optional<JsonNode> generateDrivingPermitClaim(
+    private Optional<List<DrivingPermitDetails>> generateDrivingPermitClaim(
             List<VerifiableCredential> verifiableCredentials)
             throws HttpResponseExceptionWithErrorBody {
         var drivingPermitVc = findVc(DRIVING_PERMIT_CRI_TYPES, verifiableCredentials);
@@ -664,33 +660,45 @@ public class UserIdentityService {
             return Optional.empty();
         }
 
-        var drivingPermitNode =
-                extractSubjectDetailFromVc(
-                        DRIVING_PERMIT_PROPERTY_NAME,
-                        drivingPermitVc.get(),
-                        "Error while parsing Driving Permit CRI credential",
-                        ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+        if (drivingPermitVc.get().getCredential()
+                instanceof IdentityCheckCredential identityCheckCredential) {
 
-        if (drivingPermitNode.isMissingNode()) {
+            var credentialSubject = getIdentityCheckSubjectOrThrowError(identityCheckCredential);
+
+            var drivingPermit = credentialSubject.getDrivingPermit();
+
+            if (isNullOrEmpty(drivingPermit)) {
+                StringMapMessage mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Driving Permit property is missing from VC or empty driving permit property.")
+                                .with(
+                                        LOG_CRI_ISSUER.getFieldName(),
+                                        drivingPermitVc.get().getCri().getId());
+                LOGGER.warn(mapMessage);
+                return Optional.empty();
+            }
+
+            drivingPermit.forEach(
+                    permit -> {
+                        permit.setFullAddress(null);
+                        permit.setIssueDate(null);
+                    });
+
+            return Optional.of(drivingPermit);
+        } else {
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Driving Permit property is missing from VC")
+                                    MUST_BE_IDENTITYCHECK_MESSAGE)
                             .with(
                                     LOG_CRI_ISSUER.getFieldName(),
                                     drivingPermitVc.get().getCri().getId());
             LOGGER.warn(mapMessage);
-
             return Optional.empty();
         }
-
-        if (drivingPermitNode instanceof ArrayNode) {
-            ((ObjectNode) drivingPermitNode.get(0)).remove("fullAddress");
-            ((ObjectNode) drivingPermitNode.get(0)).remove("issueDate");
-        }
-
-        return Optional.of(drivingPermitNode);
     }
 
     private Optional<VerifiableCredential> findVc(String criName, List<VerifiableCredential> vcs) {
@@ -706,46 +714,47 @@ public class UserIdentityService {
                 .findFirst();
     }
 
-    private JsonNode extractSubjectDetailFromVc(
-            String detailName,
-            VerifiableCredential vc,
-            String errorLog,
-            ErrorResponse errorResponse)
-            throws HttpResponseExceptionWithErrorBody {
-        try {
-            return getVcClaimNode(vc.getVcString(), VC_CREDENTIAL_SUBJECT).path(detailName);
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage(errorLog, e));
-            throw new HttpResponseExceptionWithErrorBody(SC_SERVER_ERROR, errorResponse);
-        }
-    }
-
-    private boolean isEvidenceVc(VerifiableCredential vc) throws CredentialParseException {
-        JsonNode vcEvidenceNode = getVcClaimNode(vc.getVcString(), VC_EVIDENCE);
-        for (JsonNode evidence : vcEvidenceNode) {
-            if (isNonZeroInt(evidence.path(VC_EVIDENCE_VALIDITY))
-                    && isNonZeroInt(evidence.path(VC_EVIDENCE_STRENGTH))) {
-                return true;
+    private boolean isEvidenceVc(VerifiableCredential vc) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var vcEvidence = identityCheckCredential.getEvidence();
+            if (vcEvidence == null) {
+                return false;
             }
+
+            for (IdentityCheck evidence : vcEvidence) {
+                if (isNonZeroInt(evidence.getValidityScore())
+                        && isNonZeroInt(evidence.getStrengthScore())) {
+                    return true;
+                }
+            }
+
+            return false;
         }
         return false;
     }
 
-    private boolean isNonZeroInt(JsonNode node) {
-        return node.isInt() && node.asInt() != 0;
+    private IdentityCheckSubject getIdentityCheckSubjectOrThrowError(
+            IdentityCheckCredential identityCheckCredential)
+            throws HttpResponseExceptionWithErrorBody {
+        var credentialSubject = identityCheckCredential.getCredentialSubject();
+
+        if (credentialSubject == null) {
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+        }
+
+        return credentialSubject;
+    }
+
+    private boolean isNonZeroInt(Integer value) {
+        return value != null && value != 0;
     }
 
     private List<VerifiableCredential> filterValidVCs(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(
-                        vc -> {
-                            try {
-                                return isEvidenceVc(vc);
-                            } catch (CredentialParseException e) {
-                                return false;
-                            }
-                        })
-                .toList();
+        return vcs.stream().filter(this::isEvidenceVc).toList();
     }
 
     private String getMissingNames(List<Name> names) {

@@ -24,18 +24,19 @@ const JOURNEY_TYPES = {
 };
 
 const CRI_NAMES = {
-    address: 'Address CRI',
-    claimedIdentity: 'Claimed Identity CRI',
-    bav: 'Bank account CRI',
-    dcmaw: 'DCMAW (app) CRI',
-    drivingLicence: 'Driving licence (web) CRI',
-    f2f: 'Face-to-face CRI',
-    fraud: 'Experian fraud CRI',
-    hmrcKbv: 'HMRC KBV CRI',
-    kbv: 'Experian KBV CRI',
-    nino: 'NINO CRI',
-    ukPassport: 'Passport (web) CRI',
-    ticf: 'TICF CRI',
+    address: 'Address',
+    claimedIdentity: 'Claimed Identity',
+    bav: 'Bank account',
+    dcmaw: 'DCMAW (app)',
+    drivingLicence: 'Driving licence (web)',
+    dwpKbv: 'DWP KBV',
+    f2f: 'Face-to-face',
+    fraud: 'Experian fraud',
+    hmrcKbv: 'HMRC KBV',
+    kbv: 'Experian KBV',
+    nino: 'HMRC check (NINO)',
+    ukPassport: 'Passport (web)',
+    ticf: 'TICF',
 };
 
 mermaid.initialize({
@@ -156,7 +157,7 @@ const updateView = async () => {
 
 // Render the journey map SVG
 const renderSvg = async (selectedJourney, formData) => {
-    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, formData);
+    const diagram = render(selectedJourney, journeyMaps, nestedJourneys, formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;

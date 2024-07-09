@@ -1,3 +1,4 @@
+const topDownJourneys = ['INITIAL_JOURNEY_SELECTION'];
 const errorJourneys = ['TECHNICAL_ERROR'];
 const failureJourneys = ['INELIGIBLE', 'FAILED'];
 
@@ -237,9 +238,9 @@ const calcOrphanStates = (journeyMap) => {
     return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
 };
 
-export const render = (journeyMap, nestedJourneys, formData = new FormData()) => {
+export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = new FormData()) => {
     // Copy to avoid mutating the input
-    const journeyMapCopy = JSON.parse(JSON.stringify(journeyMap));
+    const journeyMapCopy = JSON.parse(JSON.stringify(journeyMaps[selectedJourney]));
 
     if (formData.has('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy.states, nestedJourneys, formData);
@@ -253,9 +254,11 @@ export const render = (journeyMap, nestedJourneys, formData = new FormData()) =>
 
     const { statesMermaid } = renderStates(journeyMapCopy, states);
 
+    const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
+
     // These styles should be kept in sync with the key in style.css
     const mermaid =
-`graph LR
+`graph ${direction}
     classDef process fill:#ffa,stroke:#000;
     classDef page fill:#ae8,stroke:#000;
     classDef cri fill:#faf,stroke:#000;

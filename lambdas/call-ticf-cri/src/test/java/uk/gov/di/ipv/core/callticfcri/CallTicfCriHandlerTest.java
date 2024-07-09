@@ -2,9 +2,12 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,6 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -33,9 +37,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -46,8 +50,8 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
-    public static final String TEST_USER_ID = "a-user-id";
-    public static final ClientOAuthSessionItem clientOAuthSessionItem =
+    private static final String TEST_USER_ID = "a-user-id";
+    private static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
@@ -61,7 +65,8 @@ class CallTicfCriHandlerTest {
                     .journey("a-journey")
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
-    public static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
+    private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
+
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -72,11 +77,19 @@ class CallTicfCriHandlerTest {
     @Mock private CriStoringService mockCriStoringService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private VerifiableCredential mockVerifiableCredential;
+    @Mock private AuditService mockAuditService;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
 
     @BeforeEach
     public void setUp() {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -92,7 +105,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockCriStoringService)
                 .storeVcs(
-                        TICF.getId(),
+                        TICF,
                         "an-ip-address",
                         "device-information",
                         List.of(mockVerifiableCredential),
@@ -203,59 +216,35 @@ class CallTicfCriHandlerTest {
                 lambdaResult.get("message"));
     }
 
-    @Test
-    void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows() throws Exception {
-        List<Exception> exceptionsToThrow =
-                List.of(
-                        new SqsException("Oops"),
-                        new CiPutException("Oops"),
-                        new CiPostMitigationsException("Oops"),
-                        new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+    private static Stream<Exception> ciStoringExceptions() {
+        return Stream.of(
+                new SqsException("Oops"),
+                new CiPutException("Oops"),
+                new CiPostMitigationsException("Oops"),
+                new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+    }
 
-        for (Exception e : exceptionsToThrow) {
-            when(mockIpvSessionService.getIpvSession("a-session-id"))
-                    .thenReturn(mockIpvSessionItem);
-            when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(new ClientOAuthSessionItem());
-            when(mockTicfCriService.getTicfVc(any(), any()))
-                    .thenReturn(List.of(mockVerifiableCredential));
-            doThrow(e)
-                    .when(mockCriStoringService)
-                    .storeVcs(any(), any(), any(), any(), any(), any());
+    @ParameterizedTest
+    @MethodSource("ciStoringExceptions")
+    void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows(Exception e)
+            throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(new ClientOAuthSessionItem());
+        when(mockTicfCriService.getTicfVc(any(), any()))
+                .thenReturn(List.of(mockVerifiableCredential));
+        doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any(), any());
 
-            Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-            assertEquals("/journey/error", lambdaResult.get("journey"));
-            assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
-            assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
-                    lambdaResult.get("code"));
-            assertEquals(
-                    ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
-                    lambdaResult.get("message"));
-        }
-
-        List<Class<?>> declaredExceptions =
-                List.of(
-                        CriStoringService.class
-                                .getMethod(
-                                        "storeVcs",
-                                        String.class,
-                                        String.class,
-                                        String.class,
-                                        List.class,
-                                        ClientOAuthSessionItem.class,
-                                        IpvSessionItem.class)
-                                .getExceptionTypes());
-
-        // Checking to make sure we've tested all exceptions that can be thrown
-        assertTrue(
-                exceptionsToThrow.stream()
-                        .allMatch(
-                                exception ->
-                                        declaredExceptions.contains(exception.getClass())
-                                                || declaredExceptions.contains(
-                                                        exception.getClass().getSuperclass())));
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
+                lambdaResult.get("code"));
+        assertEquals(
+                ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
+                lambdaResult.get("message"));
     }
 
     @Test

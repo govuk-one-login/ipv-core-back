@@ -200,7 +200,7 @@ public class CriCheckingService {
                 || criOAuthSessionItem.getCriId() == null
                 || !criOAuthSessionItem
                         .getCriId()
-                        .equals(callbackRequest.getCredentialIssuerId())) {
+                        .equals(callbackRequest.getCredentialIssuer().getId())) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
     }

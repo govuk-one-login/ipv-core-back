@@ -96,7 +96,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @ExcludeFromGeneratedCoverageReport
     public CheckCoiHandler() {
         this.configService = new ConfigService();
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
@@ -212,6 +212,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 

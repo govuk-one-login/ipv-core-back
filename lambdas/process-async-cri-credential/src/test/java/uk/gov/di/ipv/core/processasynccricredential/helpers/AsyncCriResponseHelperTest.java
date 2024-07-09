@@ -10,7 +10,7 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriRespon
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.DEFAULT_CREDENTIAL_ISSUER;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.isSuccessAsyncCriResponse;
 
@@ -40,7 +40,7 @@ class AsyncCriResponseHelperTest {
         assertTrue(isSuccessAsyncCriResponse(response));
         var successAsyncCriResponse = (SuccessAsyncCriResponse) response;
         assertEquals(TEST_USER, successAsyncCriResponse.getUserId());
-        assertEquals(DEFAULT_CREDENTIAL_ISSUER, successAsyncCriResponse.getCredentialIssuer());
+        assertEquals(F2F, successAsyncCriResponse.getCredentialIssuer());
         assertEquals(1, successAsyncCriResponse.getVerifiableCredentialJWTs().size());
         assertEquals(TEST_JWT, successAsyncCriResponse.getVerifiableCredentialJWTs().get(0));
     }
@@ -51,7 +51,7 @@ class AsyncCriResponseHelperTest {
         assertFalse(isSuccessAsyncCriResponse(response));
         var errorAsyncCriResponse = (ErrorAsyncCriResponse) response;
         assertEquals(TEST_USER, errorAsyncCriResponse.getUserId());
-        assertEquals(DEFAULT_CREDENTIAL_ISSUER, errorAsyncCriResponse.getCredentialIssuer());
+        assertEquals(F2F, errorAsyncCriResponse.getCredentialIssuer());
         assertEquals(TEST_ERROR, errorAsyncCriResponse.getError());
         assertEquals(TEST_ERROR_DESCRIPTION, errorAsyncCriResponse.getErrorDescription());
     }
