@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.http.crt.AwsCrtAsyncHttpClient;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -55,10 +54,7 @@ public class AuditService {
                         .region(EU_WEST_2)
                         .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build(),
-                SqsAsyncClient.builder()
-                        .region(EU_WEST_2)
-                        .httpClientBuilder(AwsCrtAsyncHttpClient.builder())
-                        .build());
+                SqsAsyncClient.builder().region(EU_WEST_2).build());
     }
 
     public void sendAuditEvent(AuditEvent auditEvent) throws SqsException {
