@@ -4,36 +4,40 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.exceptions.RetryException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.retry.Retry;
+import uk.gov.di.ipv.core.library.retry.RetryableTask;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class EmailService {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int NUMBER_OF_RETRIES = 3;
-    private static final int RETRY_WAIT_MILLISECONDS = 3000;
+    private static final int NUMBER_OF_SEND_ATTEMPTS = 4;
+    private static final int RETRY_WAIT_MILLISECONDS = 1500;
 
     private final ConfigService configService;
     private final NotificationClient notificationClient;
-    private final int retryWaitInMilliseconds;
+    // private final int retryWaitInMilliseconds;
+    private final Sleeper sleeper;
 
     @ExcludeFromGeneratedCoverageReport
     public EmailService(
-            ConfigService configService,
-            NotificationClient notificationClient,
-            int retryWaitInMilliseconds) {
+            ConfigService configService, NotificationClient notificationClient, Sleeper sleeper) {
         this.configService = configService;
         this.notificationClient = notificationClient;
-        this.retryWaitInMilliseconds = retryWaitInMilliseconds;
+        this.sleeper = sleeper;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EmailService(ConfigService configService, NotificationClient notificationClient) {
-        this(configService, notificationClient, RETRY_WAIT_MILLISECONDS);
+        this(configService, notificationClient, new Sleeper());
     }
 
     public void sendUserTriggeredIdentityResetConfirmation(
@@ -75,50 +79,44 @@ public class EmailService {
     private void sendEmail(
             String templateId, String toAddress, Map<String, Object> personalisation) {
 
-        var retries = 0;
+        try {
+            Retry.runTaskWithBackoff(
+                    sleeper,
+                    NUMBER_OF_SEND_ATTEMPTS,
+                    RETRY_WAIT_MILLISECONDS,
+                    new RetryableTask<Boolean>() {
+                        @Override
+                        public Optional<Boolean> run(boolean isLastAttempt)
+                                throws RetryException, InterruptedException {
+                            try {
+                                LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
+                                notificationClient.sendEmail(
+                                        templateId, toAddress, personalisation, null, null);
+                                LOGGER.debug(LogHelper.buildLogMessage("Email sent"));
+                                return Optional.of(true);
+                            } catch (NotificationClientException e) {
+                                LOGGER.warn(
+                                        "Exception caught trying to send email. Response code: {}. response message: '{}'",
+                                        e.getHttpResult(),
+                                        e.getMessage());
+                                var httpResult = e.getHttpResult();
 
-        while (true) {
-            try {
-                LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
-                notificationClient.sendEmail(templateId, toAddress, personalisation, null, null);
-                LOGGER.debug(LogHelper.buildLogMessage("Email sent"));
-                return;
-            } catch (NotificationClientException e) {
-                LOGGER.warn(
-                        "Exception caught trying to send email. Attempt: {}. Response code: {}. response message: '{}'",
-                        retries + 1,
-                        e.getHttpResult(),
-                        e.getMessage());
-                var httpResult = e.getHttpResult();
-
-                if (httpResult == 400 || httpResult == 403) {
-                    // A 400 or 403 is not going to be fixed by retrying so don't bother.
-                    LOGGER.error(
-                            LogHelper.buildLogMessage(
-                                    "Error sending email is not retryable. Email has NOT been sent"));
-                    return;
-                }
-            }
-
-            if (retries >= NUMBER_OF_RETRIES) {
-                LOGGER.error(
-                        LogHelper.buildLogMessage(
-                                "Number of retries exceeded. Email has NOT been sent"));
-                return;
-            }
-            retries++;
-
-            try {
-                Thread.sleep(retryWaitInMilliseconds);
-            } catch (InterruptedException e) {
-                // Set the interruption flag
-                Thread.currentThread().interrupt();
-                // If we're interrupted then give up on sending the email
-                LOGGER.error(
-                        LogHelper.buildLogMessage(
-                                "Interrupted while waiting to retry email. Email has NOT been sent"));
-                return;
-            }
+                                if (httpResult == 400 || httpResult == 403) {
+                                    // A 400 or 403 is not going to be fixed by retrying so don't
+                                    // bother.
+                                    LOGGER.error(
+                                            LogHelper.buildLogMessage(
+                                                    "Error sending email is not retryable. Email has NOT been sent"));
+                                    return Optional.of(false);
+                                }
+                                return Optional.empty();
+                            }
+                        }
+                    });
+        } catch (RetryException | InterruptedException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Exception while waiting to retry email. Email has NOT been sent", e));
         }
     }
 }

@@ -51,7 +51,7 @@ public class EvcsClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(429);
-    private static final int MAX_RETRIES = 4;
+    private static final int NUMBER_OF_HTTP_REQUEST_ATTEMPTS = 4;
     private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
     private final ConfigService configService;
@@ -218,7 +218,7 @@ public class EvcsClient {
             var response =
                     Retry.runTaskWithBackoff(
                             sleeper,
-                            MAX_RETRIES,
+                            NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
                             RETRY_DELAY_MILLIS,
                             new RetryableTask<HttpResponse<String>>() {
                                 @Override

@@ -11,10 +11,14 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.RetryException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.retry.Retry;
+import uk.gov.di.ipv.core.library.retry.RetryableTask;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -31,9 +35,11 @@ public class IpvSessionService {
     private static final String ERROR_STATE = "ERROR";
 
     private final DataStore<IpvSessionItem> dataStore;
+    private final Sleeper sleeper;
 
-    public IpvSessionService(DataStore<IpvSessionItem> dataStore) {
+    public IpvSessionService(DataStore<IpvSessionItem> dataStore, Sleeper sleeper) {
         this.dataStore = dataStore;
+        this.sleeper = sleeper;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -44,6 +50,7 @@ public class IpvSessionService {
                         IpvSessionItem.class,
                         DataStore.getClient(),
                         configService);
+        this.sleeper = new Sleeper();
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {
@@ -58,34 +65,37 @@ public class IpvSessionService {
     }
 
     public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
-
-        IpvSessionItem ipvSessionItem = null;
-
-        // Simple back off and retry
-        var attempts = 0;
-        while (attempts < 7) {
-            ipvSessionItem =
-                    dataStore.getItemByIndex("accessToken", DigestUtils.sha256Hex(accessToken));
-
-            if (ipvSessionItem == null) {
-                var backoff = (long) (10 * Math.pow(2, attempts++));
-                try {
-                    Thread.sleep(backoff);
-                } catch (InterruptedException e) {
-                    LOGGER.warn(
-                            LogHelper.buildLogMessage(
-                                    "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                break;
-            }
+        try {
+            var ipvSessionItem =
+                    Retry.runTaskWithBackoff(
+                            sleeper,
+                            7,
+                            10,
+                            new RetryableTask<IpvSessionItem>() {
+                                @Override
+                                public Optional<IpvSessionItem> run(boolean isLastAttempt)
+                                        throws RetryException, InterruptedException {
+                                    var item =
+                                            dataStore.getItemByIndex(
+                                                    "accessToken",
+                                                    DigestUtils.sha256Hex(accessToken));
+                                    return Optional.ofNullable(item);
+                                }
+                            });
+            return Optional.ofNullable(ipvSessionItem);
+        } catch (InterruptedException e) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
+            Thread.currentThread().interrupt();
+        } catch (RetryException e) {
+            LOGGER.warn(
+                    LogHelper.buildErrorMessage(
+                            "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
+                            e));
+            return Optional.empty();
         }
-
-        if (attempts > 0) {
-            LOGGER.warn(LogHelper.buildLogMessage("getIpvSessionByAccessToken() required retries"));
-        }
-        return Optional.ofNullable(ipvSessionItem);
+        return Optional.empty();
     }
 
     public IpvSessionItem generateIpvSession(

@@ -5,11 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
 
 import java.util.Map;
 
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -27,6 +29,7 @@ public class EmailServiceTest {
     @Mock private ConfigService mockConfigService;
     @Mock private NotificationClient mockNotificationClient;
     @Mock private NotificationClientException mockException;
+    @Mock private Sleeper mockSleeper;
 
     @Test
     void
@@ -121,14 +124,14 @@ public class EmailServiceTest {
     @Test
     void
             sendUserTriggeredIdentityResetConfirmation_whenNotificationClientThrows413Error_FailsAfterThreeRetries()
-                    throws NotificationClientException {
+                    throws NotificationClientException, InterruptedException {
         // Arrange
         when(mockConfigService.getSsmParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_TEMPLATE_ID);
         when(mockException.getHttpResult()).thenReturn(413);
-        var underTest = new EmailService(mockConfigService, mockNotificationClient, 1);
+        var underTest = new EmailService(mockConfigService, mockNotificationClient, mockSleeper);
         when(mockNotificationClient.sendEmail(
                         DUMMY_TEMPLATE_ID,
                         EMAIL_ADDRESS,
@@ -149,6 +152,12 @@ public class EmailServiceTest {
                         null,
                         null);
         verifyNoMoreInteractions(mockNotificationClient);
+
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(1500);
+        inOrder.verify(mockSleeper, times(1)).sleep(3000);
+        inOrder.verify(mockSleeper, times(1)).sleep(6000);
+        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
