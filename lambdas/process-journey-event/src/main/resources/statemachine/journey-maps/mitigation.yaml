@@ -302,6 +302,10 @@ states:
     events:
       fail-with-no-ci:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetJourney: QQ_END_STATES
         targetState: EVALUATE_GPG45_SCORES_AND_FINISH

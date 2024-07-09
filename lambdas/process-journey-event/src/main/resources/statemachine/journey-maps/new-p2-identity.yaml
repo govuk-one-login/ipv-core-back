@@ -450,6 +450,10 @@ states:
     events:
       fail-with-no-ci:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetJourney: QQ_END_STATES
         targetState: EVALUATE_GPG45_SCORES_AND_FINISH
@@ -474,6 +478,10 @@ states:
     parent: CRI_STATE
     events:
       fail-with-no-ci:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       next:
         targetJourney: QQ_END_STATES
