@@ -124,8 +124,7 @@ class RetryTest {
     }
 
     @Test
-    void shouldThrowInterruptedExceptionIfThrownBySleeper()
-            throws RetryException, InterruptedException {
+    void shouldThrowInterruptedExceptionIfThrownBySleeper() throws InterruptedException {
         doThrow(new InterruptedException()).when(mockSleeper).sleep(anyLong());
 
         assertThrows(
@@ -134,7 +133,7 @@ class RetryTest {
     }
 
     @Test
-    void shouldThrowRetryExceptionIfThrownByTask() throws InterruptedException, RetryException {
+    void shouldThrowRetryExceptionIfThrownByTask() throws InterruptedException {
         assertThrows(
                 RetryException.class,
                 () -> Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTaskWithException));

@@ -24,7 +24,6 @@ public class EmailService {
 
     private final ConfigService configService;
     private final NotificationClient notificationClient;
-    // private final int retryWaitInMilliseconds;
     private final Sleeper sleeper;
 
     @ExcludeFromGeneratedCoverageReport
@@ -113,10 +112,15 @@ public class EmailService {
                             }
                         }
                     });
-        } catch (RetryException | InterruptedException e) {
+        } catch (RetryException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Exception while waiting to retry email. Email has NOT been sent", e));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.error(
+                    LogHelper.buildLogMessage(
+                            "Interrupted while waiting to retry email. Email has NOT been sent"));
         }
     }
 }

@@ -93,7 +93,6 @@ public class IpvSessionService {
                     LogHelper.buildErrorMessage(
                             "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
                             e));
-            return Optional.empty();
         }
         return Optional.empty();
     }
