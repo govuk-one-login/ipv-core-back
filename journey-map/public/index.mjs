@@ -23,6 +23,10 @@ const JOURNEY_TYPES = {
     REVERIFICATION: 'Reverification',
 };
 
+const COMMON_JOURNEY_TYPES = [
+    'NEW_P2_IDENTITY', 'REUSE_EXISTING_IDENTITY', 'REPEAT_FRAUD_CHECK', 'REVERIFICATION', 'UPDATE_ADDRESS', 'UPDATE_NAME'
+];
+
 const CRI_NAMES = {
     address: 'Address',
     claimedIdentity: 'Claimed Identity',
@@ -48,6 +52,8 @@ mermaid.initialize({
 
 // Page elements
 const headerBar = document.getElementById('header-bar');
+const headerActions = document.getElementById('header-actions');
+const journeySelect = document.getElementById('journey-select');
 const headerContent = document.getElementById('header-content');
 const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
@@ -105,18 +111,29 @@ const switchJourney = async (targetJourney, targetState) => {
 };
 
 const setupHeader = () => {
-    // Add header entries for each journey
-    Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+    // Add header entries for most common journies
+    COMMON_JOURNEY_TYPES.forEach(id => {
         const link = document.createElement('a');
         link.href = getJourneyUrl(id);
+        const label = JOURNEY_TYPES[id];
         link.innerText = label;
         link.onclick = async (e) => {
             e.preventDefault();
             await switchJourney(id, null);
         }
-        headerBar.insertBefore(link,  stateSearch);
-    });
+        headerBar.insertBefore(link,  headerActions);
+    })
 
+    // Add option to journey select for each journey
+    Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+        const option = document.createElement('option');
+        option.setAttribute('value', id)
+        option.innerText = label;
+        journeySelect.append(option);
+    });
+    journeySelect.onchange = async (e) => {
+        await switchJourney(journeySelect.value, null);
+    }
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
         await updateView();
@@ -172,6 +189,12 @@ const updateView = async () => {
     journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
     const desc = journeyMaps[selectedJourney].description;
     const formData = new FormData(form);
+    if (desc && formData.has('showJourneyDesc')) {
+        journeyDesc.innerText = desc;
+    } else {
+        journeyDesc.innerText = '';
+    }
+    journeySelect.value = selectedJourney;
     journeyDesc.innerText = desc || '';
 
     return renderSvg(selectedJourney, formData);

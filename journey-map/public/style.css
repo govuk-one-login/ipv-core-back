@@ -27,6 +27,9 @@ body {
     display: flex;
     gap: 8px;
  }
+ #header-bar h1 a {
+    text-decoration: none;
+ }
 #header-bar a {
     flex: 1 1 auto;
     color: white;
@@ -188,4 +191,18 @@ form fieldset p {
 #diagramSvg .highlight.node rect {
     stroke-width: 3px;
     filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00) drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
+}
+#header-actions {
+    margin-left: auto;
+    display: flex;
+    height: 100%;
+    align-items: center;
+}
+#journey-select {
+    font-size: 1rem;
+    margin-right: 30px;
+    margin-left: 5px;
+}
+#state-search{
+    font-size: 1rem;
 }
