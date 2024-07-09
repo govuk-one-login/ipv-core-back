@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
@@ -29,7 +28,6 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
