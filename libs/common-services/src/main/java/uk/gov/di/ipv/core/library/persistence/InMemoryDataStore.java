@@ -10,15 +10,16 @@ import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T> {
     private static final String KEY_SEPARATOR = "/";
-    private static final Map<String, Map<String, ?>> TABLES = new HashMap<>();
+    private static final ConcurrentMap<String, Map<String, ?>> TABLES = new ConcurrentHashMap<>();
 
-    private final Map<String, T> records;
+    private final ConcurrentMap<String, T> records;
     private final Class<T> klass;
     private final Method partitionKeyMethod;
     private final Method sortKeyMethod;
@@ -42,7 +43,8 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
         }
 
         this.records =
-                (HashMap<String, T>) TABLES.computeIfAbsent(tableName, (k) -> new HashMap<>());
+                (ConcurrentMap<String, T>)
+                        TABLES.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
         this.klass = klass;
         this.partitionKeyMethod = partitionKey;
         this.sortKeyMethod = sortKey;
@@ -62,10 +64,9 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     @Override
     public void createIfNotExists(T item) throws ItemAlreadyExistsException {
         var key = getKey(item);
-        if (records.containsKey(key)) {
+        if (records.putIfAbsent(key, item) != null) {
             throw new ItemAlreadyExistsException();
         }
-        create(item);
     }
 
     @Override
@@ -117,6 +118,8 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
                 .toList();
     }
 
+    @SuppressWarnings(
+            "java:S3011") // We rely on field access to avoid needing to search for a getter
     @Override
     public List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value) {
         try {

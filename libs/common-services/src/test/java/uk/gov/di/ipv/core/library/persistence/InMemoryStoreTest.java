@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -42,6 +43,32 @@ class InMemoryStoreTest {
         var store2 = new InMemoryDataStore<>(tableName, IpvSessionItem.class);
 
         assertEquals(item, store2.getItem(id));
+    }
+
+    @Test
+    void createIfNotExistsCreatesANewItem() throws Exception {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+
+        store.createIfNotExists(item);
+
+        assertEquals(item, store.getItem(id));
+    }
+
+    @Test
+    void createIfNotExistsThrowsIfAlreadyExists() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        store.create(item);
+
+        var item2 = new IpvSessionItem();
+        item2.setIpvSessionId(id);
+
+        assertThrows(ItemAlreadyExistsException.class, () -> store.createIfNotExists(item2));
     }
 
     @Test
