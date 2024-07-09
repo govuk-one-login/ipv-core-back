@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
@@ -201,11 +202,14 @@ class EvcsClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
         // Act
         // Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () ->
-                        evcsClient.getUserVcs(
-                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+        var e =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () ->
+                                evcsClient.getUserVcs(
+                                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+
+        assertEquals(ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, e.getErrorResponse());
     }
 
     @Test

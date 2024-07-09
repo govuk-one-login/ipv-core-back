@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
+import lombok.Lombok;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
@@ -17,10 +18,10 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.RetryException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.retry.Retry;
-import uk.gov.di.ipv.core.library.retry.RetryableTask;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -220,38 +221,38 @@ public class EvcsClient {
                             sleeper,
                             NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
                             RETRY_DELAY_MILLIS,
-                            new RetryableTask<HttpResponse<String>>() {
-                                @Override
-                                public Optional<HttpResponse<String>> run(boolean isLastAttempt)
-                                        throws RetryException {
-                                    LOGGER.info(
-                                            LogHelper.buildLogMessage(
-                                                    "Sending HTTP request to EVCS"));
-                                    try {
-                                        var res =
-                                                httpClient.send(
-                                                        evcsHttpRequest,
-                                                        HttpResponse.BodyHandlers.ofString());
-                                        var statusCode = res.statusCode();
-                                        if (!isLastAttempt
-                                                && RETRYABLE_STATUS_CODES.contains(statusCode)) {
-                                            return Optional.empty();
-                                        }
-                                        return Optional.ofNullable(res);
-                                    } catch (IOException e) {
-                                        throw new RetryException(e);
-                                    } catch (InterruptedException e) {
-                                        // This should never happen running in Lambda as it's single
-                                        // threaded.
-                                        Thread.currentThread().interrupt();
-                                        throw new RetryException(e);
+                            (isLastAttempt) -> {
+                                LOGGER.info(
+                                        LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
+                                try {
+                                    var res =
+                                            httpClient.send(
+                                                    evcsHttpRequest,
+                                                    HttpResponse.BodyHandlers.ofString());
+                                    var statusCode = res.statusCode();
+                                    if (!isLastAttempt
+                                            && RETRYABLE_STATUS_CODES.contains(statusCode)) {
+                                        throw new RetryableException();
                                     }
+                                    checkResponseStatusCode(res);
+                                    return Optional.of(res);
+                                } catch (IOException e) {
+                                    throw new NonRetryableException(e);
+                                } catch (InterruptedException e) {
+                                    // This should never happen running in Lambda as it's single
+                                    // threaded.
+                                    Thread.currentThread().interrupt();
+                                    throw new NonRetryableException(e);
+                                } catch (EvcsServiceException e) {
+                                    // use a sneaky throw so we don't have to declare every possible
+                                    // error in the RetryableTask interface and we maintain the
+                                    // error details from checkResponseStatusCode
+                                    throw Lombok.sneakyThrow(e);
                                 }
                             });
 
-            checkResponseStatusCode(response);
             return response;
-        } catch (RetryException | InterruptedException e) {
+        } catch (NonRetryableException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();

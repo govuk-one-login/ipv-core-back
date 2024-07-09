@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.retry;
 
-import uk.gov.di.ipv.core.library.exceptions.RetryException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 
 public class Retry {
 
@@ -10,27 +11,28 @@ public class Retry {
 
     public static <T> T runTaskWithBackoff(
             Sleeper sleeper, int maxAttempts, int waitInterval, RetryableTask<T> task)
-            throws RetryException, InterruptedException {
+            throws NonRetryableException, InterruptedException {
 
         if (maxAttempts < 1) {
-            throw new IllegalArgumentException("max attempts must be greater than 0");
+            throw new IllegalArgumentException("Max attempts must be greater than 0");
         }
         if (waitInterval < 1) {
-            throw new IllegalArgumentException("wait interval must be greater than 0");
+            throw new IllegalArgumentException("Wait interval must be greater than 0");
         }
-        var count = 0;
-        while (count < maxAttempts) {
-            var isLastAttempt = (count + 1) >= maxAttempts;
-            var res = task.run(isLastAttempt);
-            if (res.isPresent()) {
-                return res.get();
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                var res = task.run(attempt == maxAttempts);
+                if (res.isPresent()) {
+                    return res.get();
+                }
+            } catch (RetryableException e) {
             }
-            if (isLastAttempt) {
-                throw new RetryException("max attempts reached for task: " + maxAttempts);
+            if (attempt < maxAttempts) {
+                var backoff = (long) (waitInterval * Math.pow(2, attempt - 1));
+                sleeper.sleep(backoff);
             }
-            var backoff = (long) (waitInterval * Math.pow(2, count++));
-            sleeper.sleep(backoff);
         }
-        throw new RetryException("max attempts reached for task: " + maxAttempts);
+        throw new NonRetryableException("Max attempts reached for task: " + maxAttempts);
     }
 }

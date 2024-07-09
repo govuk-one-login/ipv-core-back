@@ -4,10 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.exceptions.RetryException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.retry.Retry;
-import uk.gov.di.ipv.core.library.retry.RetryableTask;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.service.notify.NotificationClient;
 import uk.gov.service.notify.NotificationClientException;
@@ -83,35 +83,33 @@ public class EmailService {
                     sleeper,
                     NUMBER_OF_SEND_ATTEMPTS,
                     RETRY_WAIT_MILLISECONDS,
-                    new RetryableTask<Boolean>() {
-                        @Override
-                        public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
-                            try {
-                                LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
-                                notificationClient.sendEmail(
-                                        templateId, toAddress, personalisation, null, null);
-                                LOGGER.debug(LogHelper.buildLogMessage("Email sent"));
-                                return Optional.of(true);
-                            } catch (NotificationClientException e) {
-                                LOGGER.warn(
-                                        "Exception caught trying to send email. Response code: {}. response message: '{}'",
-                                        e.getHttpResult(),
-                                        e.getMessage());
-                                var httpResult = e.getHttpResult();
+                    (isLastAttempt) -> {
+                        try {
+                            LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
+                            notificationClient.sendEmail(
+                                    templateId, toAddress, personalisation, null, null);
+                            LOGGER.debug(LogHelper.buildLogMessage("Email sent"));
+                            return Optional.of(true);
+                        } catch (NotificationClientException e) {
+                            LOGGER.warn(
+                                    "Exception caught trying to send email. Response code: {}. response message: '{}'",
+                                    e.getHttpResult(),
+                                    e.getMessage());
+                            var httpResult = e.getHttpResult();
 
-                                if (httpResult == 400 || httpResult == 403) {
-                                    // A 400 or 403 is not going to be fixed by retrying so don't
-                                    // bother.
-                                    LOGGER.error(
-                                            LogHelper.buildLogMessage(
-                                                    "Error sending email is not retryable. Email has NOT been sent"));
-                                    return Optional.of(false);
-                                }
-                                return Optional.empty();
+                            if (httpResult == 400 || httpResult == 403) {
+                                // A 400 or 403 is not going to be fixed by retrying so don't
+                                // bother.
+                                LOGGER.error(
+                                        LogHelper.buildLogMessage(
+                                                "Error sending email is not retryable. Email has NOT been sent"));
+                                throw new NonRetryableException(e);
                             }
+                            throw new RetryableException(e);
                         }
                     });
-        } catch (RetryException e) {
+
+        } catch (NonRetryableException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Exception while waiting to retry email. Email has NOT been sent", e));

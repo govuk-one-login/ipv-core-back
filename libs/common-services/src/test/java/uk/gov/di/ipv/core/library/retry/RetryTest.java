@@ -4,7 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.exceptions.RetryException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 
 import java.util.Optional;
 
@@ -23,31 +24,29 @@ class RetryTest {
 
     @Mock private Sleeper mockSleeper;
 
-    private RetryableTask<Boolean> testTask =
-            new RetryableTask<Boolean>() {
-                @Override
-                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
-                    if (isLastAttempt) {
-                        return Optional.of(true);
-                    }
-                    return Optional.empty();
+    private final RetryableTask<Boolean> testTaskSucceedsOnLastAttemptWithRetryableExceptions =
+            (isLastAttempt) -> {
+                if (isLastAttempt) {
+                    return Optional.of(true);
                 }
+                throw new RetryableException("a retryable exception");
+            };
+    private final RetryableTask<Boolean> testTaskSucceedsOnLastAttempt =
+            (isLastAttempt) -> {
+                if (isLastAttempt) {
+                    return Optional.of(true);
+                }
+                return Optional.empty();
             };
 
-    private RetryableTask<Boolean> testTaskWithException =
-            new RetryableTask<Boolean>() {
-                @Override
-                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
-                    throw new RetryException("an exception");
-                }
+    private final RetryableTask<Boolean> testTaskFailedWithNonRetryableException =
+            (isLastAttempt) -> {
+                throw new NonRetryableException("a non retryable exception");
             };
 
-    private RetryableTask<Boolean> testTaskFailed =
-            new RetryableTask<Boolean>() {
-                @Override
-                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
-                    return Optional.empty();
-                }
+    private final RetryableTask<Boolean> testTaskFailedWitRetryableException =
+            (isLastAttempt) -> {
+                throw new RetryableException("a retryable exception");
             };
 
     @Test
@@ -55,9 +54,11 @@ class RetryTest {
         var exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> Retry.runTaskWithBackoff(mockSleeper, 0, 100, testTask));
+                        () ->
+                                Retry.runTaskWithBackoff(
+                                        mockSleeper, 0, 100, testTaskSucceedsOnLastAttempt));
 
-        assertEquals("max attempts must be greater than 0", exception.getMessage());
+        assertEquals("Max attempts must be greater than 0", exception.getMessage());
     }
 
     @Test
@@ -65,14 +66,17 @@ class RetryTest {
         var exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> Retry.runTaskWithBackoff(mockSleeper, 5, -1, testTask));
+                        () ->
+                                Retry.runTaskWithBackoff(
+                                        mockSleeper, 5, -1, testTaskSucceedsOnLastAttempt));
 
-        assertEquals("wait interval must be greater than 0", exception.getMessage());
+        assertEquals("Wait interval must be greater than 0", exception.getMessage());
     }
 
     @Test
-    void shouldSleepForCorrectAmountOfTime() throws RetryException, InterruptedException {
-        var res = Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTask);
+    void shouldSleepForCorrectAmountOfTime()
+            throws RetryableException, NonRetryableException, InterruptedException {
+        var res = Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTaskSucceedsOnLastAttempt);
 
         var inOrder = inOrder(mockSleeper);
         // should be 9 sleeps after the initial attempt
@@ -91,18 +95,32 @@ class RetryTest {
     }
 
     @Test
-    void shouldNotSleepIfFirstAttemptSuccessful() throws RetryException, InterruptedException {
+    void shouldSleepForCorrectAmountOfTimeWhenThrowingRetryableException()
+            throws RetryableException, NonRetryableException, InterruptedException {
+        var res =
+                Retry.runTaskWithBackoff(
+                        mockSleeper, 4, 2, testTaskSucceedsOnLastAttemptWithRetryableExceptions);
+
+        var inOrder = inOrder(mockSleeper);
+        // should be 9 sleeps after the initial attempt
+        inOrder.verify(mockSleeper, times(1)).sleep(2);
+        inOrder.verify(mockSleeper, times(1)).sleep(4);
+        inOrder.verify(mockSleeper, times(1)).sleep(8);
+        inOrder.verifyNoMoreInteractions();
+
+        assertTrue(res);
+    }
+
+    @Test
+    void shouldNotSleepIfFirstAttemptSuccessful()
+            throws RetryableException, NonRetryableException, InterruptedException {
         var res =
                 Retry.runTaskWithBackoff(
                         mockSleeper,
                         10,
                         1,
-                        new RetryableTask<Integer>() {
-                            @Override
-                            public Optional<Integer> run(boolean isLastAttempt)
-                                    throws RetryException {
-                                return Optional.of(1);
-                            }
+                        (isLastAttempt) -> {
+                            return Optional.of(1);
                         });
 
         assertEquals(1, res);
@@ -113,10 +131,12 @@ class RetryTest {
     void shouldThrowRetryExceptionIfNeverSuccessful() throws InterruptedException {
         var exception =
                 assertThrows(
-                        RetryException.class,
-                        () -> Retry.runTaskWithBackoff(mockSleeper, 5, 5, testTaskFailed));
+                        NonRetryableException.class,
+                        () ->
+                                Retry.runTaskWithBackoff(
+                                        mockSleeper, 5, 5, testTaskFailedWitRetryableException));
 
-        assertEquals("max attempts reached for task: 5", exception.getMessage());
+        assertEquals("Max attempts reached for task: 5", exception.getMessage());
         verify(mockSleeper, times(4)).sleep(anyLong());
     }
 
@@ -126,14 +146,16 @@ class RetryTest {
 
         assertThrows(
                 InterruptedException.class,
-                () -> Retry.runTaskWithBackoff(mockSleeper, 5, 5, testTaskFailed));
+                () -> Retry.runTaskWithBackoff(mockSleeper, 5, 5, testTaskSucceedsOnLastAttempt));
     }
 
     @Test
     void shouldThrowRetryExceptionIfThrownByTask() throws InterruptedException {
         assertThrows(
-                RetryException.class,
-                () -> Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTaskWithException));
+                NonRetryableException.class,
+                () ->
+                        Retry.runTaskWithBackoff(
+                                mockSleeper, 10, 1, testTaskFailedWithNonRetryableException));
 
         verify(mockSleeper, never()).sleep(anyLong());
     }

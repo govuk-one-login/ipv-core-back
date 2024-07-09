@@ -11,13 +11,13 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.RetryException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.retry.Retry;
-import uk.gov.di.ipv.core.library.retry.RetryableTask;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.time.Instant;
@@ -71,16 +71,14 @@ public class IpvSessionService {
                             sleeper,
                             7,
                             10,
-                            new RetryableTask<IpvSessionItem>() {
-                                @Override
-                                public Optional<IpvSessionItem> run(boolean isLastAttempt)
-                                        throws RetryException {
-                                    var item =
-                                            dataStore.getItemByIndex(
-                                                    "accessToken",
-                                                    DigestUtils.sha256Hex(accessToken));
-                                    return Optional.ofNullable(item);
+                            (isLastAttempt) -> {
+                                var item =
+                                        dataStore.getItemByIndex(
+                                                "accessToken", DigestUtils.sha256Hex(accessToken));
+                                if (item == null) {
+                                    throw new RetryableException();
                                 }
+                                return Optional.of(item);
                             });
             return Optional.ofNullable(ipvSessionItem);
         } catch (InterruptedException e) {
@@ -88,7 +86,7 @@ public class IpvSessionService {
                     LogHelper.buildLogMessage(
                             "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();
-        } catch (RetryException e) {
+        } catch (NonRetryableException e) {
             LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
