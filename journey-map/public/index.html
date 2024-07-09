@@ -29,28 +29,24 @@
                             <p>Show a feature currently in development.</p>
                         </fieldset>
                     </div>
-                    <fieldset>
+                    <fieldset id="otherOptions">
                         <legend>Turn on other options</legend>
                         <p>By default, only successful identity journeys are displayed.</p>
                         <label>
-                            <input id="includeFailuresInput" name="includeFailures" type="checkbox">
+                            <input id="includeFailuresInput" name="otherOption" value="includeFailures" type="checkbox">
                             <span>Show journeys that end in <strong>failures</strong></span>
                         </label>
                         <label>
-                            <input id="includeErrorsInput" name="includeErrors" type="checkbox">
+                            <input id="includeErrorsInput" name="otherOption" value="includeErrors" type="checkbox">
                             <span>Show unexpected <strong>errors</strong></span>
                         </label>
                         <label>
-                            <input id="onlyOrphanStatesInput" name="onlyOrphanStates" type="checkbox">
+                            <input id="onlyOrphanStatesInput" name="otherOption" value="onlyOrphanStates" type="checkbox">
                             <span>Show only <strong>orphaned states</strong></span>
                         </label>
                         <label>
-                            <input id="expandNestedJourneysInput" name="expandNestedJourneys" type="checkbox">
+                            <input id="expandNestedJourneysInput" name="otherOption" value="expandNestedJourneys" type="checkbox">
                             <span>Show all states within <strong>nested journeys</strong></span>
-                        </label>
-                        <label>
-                            <input id="showJourneyDescInput" name="showJourneyDesc" type="checkbox" checked>
-                            <span>Show journey <strong>descriptions</strong></span>
                         </label>
                     </fieldset>
                 </form>

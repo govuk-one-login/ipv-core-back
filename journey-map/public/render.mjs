@@ -136,10 +136,12 @@ const renderTransitions = (journeyMap, formData) => {
             const { targetJourney, targetState } = resolveEventTarget(def, formData);
             const target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
 
-            if (errorJourneys.includes(targetJourney) && !formData.has('includeErrors')) {
+            if (errorJourneys.includes(targetJourney) &&
+                !formData.getAll('otherOption').includes('includeErrors')) {
                 return;
             }
-            if (failureJourneys.includes(targetJourney) && !formData.has('includeFailures')) {
+            if (failureJourneys.includes(targetJourney) &&
+                !formData.getAll('otherOption').includes('includeFailures')) {
                 return;
             }
 
@@ -242,13 +244,13 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
     // Copy to avoid mutating the input
     const journeyMapCopy = JSON.parse(JSON.stringify(journeyMaps[selectedJourney]));
 
-    if (formData.has('expandNestedJourneys')) {
+    if (formData.getAll('otherOption').includes('expandNestedJourneys')) {
         expandNestedJourneys(journeyMapCopy.states, nestedJourneys, formData);
     }
 
     expandParents(journeyMapCopy.states);
 
-    const { transitionsMermaid, states } = formData.has('onlyOrphanStates')
+    const { transitionsMermaid, states } = formData.getAll('otherOption').includes('onlyOrphanStates')
         ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.states) }
         : renderTransitions(journeyMapCopy.states, formData);
 
