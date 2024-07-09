@@ -23,7 +23,7 @@ const JOURNEY_TYPES = {
     REVERIFICATION: 'Reverification',
 };
 
-const COMMON_JOURNEY_TYPS = [
+const COMMON_JOURNEY_TYPES = [
     'NEW_P2_IDENTITY', 'REUSE_EXISTING_IDENTITY', 'REPEAT_FRAUD_CHECK', 'REVERIFICATION', 'UPDATE_ADDRESS', 'UPDATE_NAME'
 ];
 
@@ -111,19 +111,21 @@ const switchJourney = async (targetJourney, targetState) => {
 };
 
 const setupHeader = () => {
+    // Add header entries for most common journies
+    COMMON_JOURNEY_TYPES.forEach(id => {
+        const link = document.createElement('a');
+        link.href = getJourneyUrl(id);
+        const label = JOURNEY_TYPES[id];
+        link.innerText = label;
+        link.onclick = async (e) => {
+            e.preventDefault();
+            await switchJourney(id, null);
+        }
+        headerBar.insertBefore(link,  headerActions);
+    })
+
     // Add option to journey select for each journey
     Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
-        if (COMMON_JOURNEY_TYPS.indexOf(id) != -1) {
-            const link = document.createElement('a');
-            link.href = getJourneyUrl(id);
-            link.innerText = label;
-            link.onclick = async (e) => {
-                e.preventDefault();
-                await switchJourney(id, null);
-            }
-            headerBar.insertBefore(link,  headerActions);
-        }
-
         const option = document.createElement('option');
         option.setAttribute('value', id)
         option.innerText = label;
