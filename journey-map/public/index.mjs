@@ -67,6 +67,8 @@ const stateSearch = document.getElementById('state-search');
 const journeyDesc = document.getElementById('journeyDesc');
 const journeyName = document.getElementById('journeyName');
 
+document.getElementById('header-title').href = window.location.href.split('?')[0];
+
 let svgPanZoomInstance = null;
 let journeyMaps = {};
 let nestedJourneys = {};
