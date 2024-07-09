@@ -9,8 +9,4 @@ public class RetryableException extends Exception {
     public RetryableException(Exception e) {
         super(e);
     }
-
-    public RetryableException(String msg) {
-        super(msg);
-    }
 }

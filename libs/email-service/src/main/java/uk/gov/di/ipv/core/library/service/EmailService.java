@@ -83,7 +83,7 @@ public class EmailService {
                     sleeper,
                     NUMBER_OF_SEND_ATTEMPTS,
                     RETRY_WAIT_MILLISECONDS,
-                    (isLastAttempt) -> {
+                    isLastAttempt -> {
                         try {
                             LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
                             notificationClient.sendEmail(

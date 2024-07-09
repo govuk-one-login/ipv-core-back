@@ -71,7 +71,7 @@ public class IpvSessionService {
                             sleeper,
                             7,
                             10,
-                            (isLastAttempt) -> {
+                            isLastAttempt -> {
                                 var item =
                                         dataStore.getItemByIndex(
                                                 "accessToken", DigestUtils.sha256Hex(accessToken));

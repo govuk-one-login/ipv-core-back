@@ -216,42 +216,36 @@ public class EvcsClient {
             throws EvcsServiceException {
 
         try {
-            var response =
-                    Retry.runTaskWithBackoff(
-                            sleeper,
-                            NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
-                            RETRY_DELAY_MILLIS,
-                            (isLastAttempt) -> {
-                                LOGGER.info(
-                                        LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
-                                try {
-                                    var res =
-                                            httpClient.send(
-                                                    evcsHttpRequest,
-                                                    HttpResponse.BodyHandlers.ofString());
-                                    var statusCode = res.statusCode();
-                                    if (!isLastAttempt
-                                            && RETRYABLE_STATUS_CODES.contains(statusCode)) {
-                                        throw new RetryableException();
-                                    }
-                                    checkResponseStatusCode(res);
-                                    return Optional.of(res);
-                                } catch (IOException e) {
-                                    throw new NonRetryableException(e);
-                                } catch (InterruptedException e) {
-                                    // This should never happen running in Lambda as it's single
-                                    // threaded.
-                                    Thread.currentThread().interrupt();
-                                    throw new NonRetryableException(e);
-                                } catch (EvcsServiceException e) {
-                                    // use a sneaky throw so we don't have to declare every possible
-                                    // error in the RetryableTask interface and we maintain the
-                                    // error details from checkResponseStatusCode
-                                    throw Lombok.sneakyThrow(e);
-                                }
-                            });
-
-            return response;
+            return Retry.runTaskWithBackoff(
+                    sleeper,
+                    NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
+                    RETRY_DELAY_MILLIS,
+                    isLastAttempt -> {
+                        LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
+                        try {
+                            var res =
+                                    httpClient.send(
+                                            evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
+                            var statusCode = res.statusCode();
+                            if (!isLastAttempt && RETRYABLE_STATUS_CODES.contains(statusCode)) {
+                                throw new RetryableException();
+                            }
+                            checkResponseStatusCode(res);
+                            return Optional.of(res);
+                        } catch (IOException e) {
+                            throw new NonRetryableException(e);
+                        } catch (InterruptedException e) {
+                            // This should never happen running in Lambda as it's single
+                            // threaded.
+                            Thread.currentThread().interrupt();
+                            throw new NonRetryableException(e);
+                        } catch (EvcsServiceException e) {
+                            // use a sneaky throw so we don't have to declare every possible
+                            // error in the RetryableTask interface and we maintain the
+                            // error details from checkResponseStatusCode
+                            throw Lombok.sneakyThrow(e);
+                        }
+                    });
         } catch (NonRetryableException | InterruptedException e) {
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.

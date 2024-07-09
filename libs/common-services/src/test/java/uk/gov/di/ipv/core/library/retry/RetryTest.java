@@ -25,14 +25,14 @@ class RetryTest {
     @Mock private Sleeper mockSleeper;
 
     private final RetryableTask<Boolean> testTaskSucceedsOnLastAttemptWithRetryableExceptions =
-            (isLastAttempt) -> {
+            isLastAttempt -> {
                 if (isLastAttempt) {
                     return Optional.of(true);
                 }
-                throw new RetryableException("a retryable exception");
+                throw new RetryableException();
             };
     private final RetryableTask<Boolean> testTaskSucceedsOnLastAttempt =
-            (isLastAttempt) -> {
+            isLastAttempt -> {
                 if (isLastAttempt) {
                     return Optional.of(true);
                 }
@@ -40,13 +40,13 @@ class RetryTest {
             };
 
     private final RetryableTask<Boolean> testTaskFailedWithNonRetryableException =
-            (isLastAttempt) -> {
+            isLastAttempt -> {
                 throw new NonRetryableException("a non retryable exception");
             };
 
     private final RetryableTask<Boolean> testTaskFailedWitRetryableException =
-            (isLastAttempt) -> {
-                throw new RetryableException("a retryable exception");
+            isLastAttempt -> {
+                throw new RetryableException();
             };
 
     @Test
@@ -74,8 +74,7 @@ class RetryTest {
     }
 
     @Test
-    void shouldSleepForCorrectAmountOfTime()
-            throws RetryableException, NonRetryableException, InterruptedException {
+    void shouldSleepForCorrectAmountOfTime() throws NonRetryableException, InterruptedException {
         var res = Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTaskSucceedsOnLastAttempt);
 
         var inOrder = inOrder(mockSleeper);
@@ -96,7 +95,7 @@ class RetryTest {
 
     @Test
     void shouldSleepForCorrectAmountOfTimeWhenThrowingRetryableException()
-            throws RetryableException, NonRetryableException, InterruptedException {
+            throws NonRetryableException, InterruptedException {
         var res =
                 Retry.runTaskWithBackoff(
                         mockSleeper, 4, 2, testTaskSucceedsOnLastAttemptWithRetryableExceptions);
@@ -119,7 +118,7 @@ class RetryTest {
                         mockSleeper,
                         10,
                         1,
-                        (isLastAttempt) -> {
+                        isLastAttempt -> {
                             return Optional.of(1);
                         });
 

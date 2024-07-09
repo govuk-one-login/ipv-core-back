@@ -1,9 +1,14 @@
 package uk.gov.di.ipv.core.library.retry;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 public class Retry {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private Retry() {
         throw new IllegalStateException("Utility class");
@@ -27,6 +32,9 @@ public class Retry {
                     return res.get();
                 }
             } catch (RetryableException e) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage(
+                                "retryable task failed on attempt " + attempt, e));
             }
             if (attempt < maxAttempts) {
                 var backoff = (long) (waitInterval * Math.pow(2, attempt - 1));
