@@ -24,7 +24,7 @@ public class AuditExtensionsHelper {
 
     private AuditExtensionsHelper() {}
 
-    public static AuditExtensionsVcEvidence getExtensionsForAudit(
+    public static AuditExtensionsVcEvidence<?> getExtensionsForAudit(
             VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
         var issuer = vc.getClaimsSet().getIssuer();
         var vot = VcHelper.getVcVot(vc);

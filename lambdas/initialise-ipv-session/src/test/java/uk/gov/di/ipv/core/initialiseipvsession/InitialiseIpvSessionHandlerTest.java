@@ -815,7 +815,7 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(
                     AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                     inheritedIdentityAuditEvent.getEventName());
-            var extension = (AuditExtensionsVcEvidence) inheritedIdentityAuditEvent.getExtensions();
+            var extension = inheritedIdentityAuditEvent.getExtensions();
             var expectedAge =
                     Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
             var expectedExtension =

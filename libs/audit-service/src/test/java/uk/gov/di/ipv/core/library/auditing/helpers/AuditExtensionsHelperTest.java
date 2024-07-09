@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.NamePart;
+import uk.gov.di.model.RiskAssessment;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -34,15 +35,17 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonD
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
 class AuditExtensionsHelperTest {
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
-    void shouldGetVerifiableCredentialExtensionsForAudit() throws Exception {
-        AuditExtensionsVcEvidence<IdentityCheck> auditExtensions =
-                getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+    void shouldGetIdentityCheckVerifiableCredentialExtensionsForAudit() throws Exception {
+        var auditExtensions =
+                (AuditExtensionsVcEvidence<IdentityCheck>)
+                        getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
         var expectedAge =
                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
@@ -58,6 +61,18 @@ class AuditExtensionsHelperTest {
                 auditExtensions.evidence().get(0).getCheckDetails().stream()
                         .filter(checkDetail -> checkDetail.getDataCheck() != null)
                         .count());
+    }
+
+    @Test
+    void shouldGetRiskAssessmentVerifiableCredentialExtensionsForAudit() throws Exception {
+        var auditExtensions =
+                (AuditExtensionsVcEvidence<RiskAssessment>) getExtensionsForAudit(vcTicf(), false);
+        assertFalse(auditExtensions.successful());
+        assertNull(auditExtensions.isUkIssued());
+        assertNull(auditExtensions.age());
+        assertEquals("https://ticf.stubs.account.gov.uk", auditExtensions.iss());
+        assertEquals(
+                "963deeb5-a52c-4030-a69a-3184f77a4f18", auditExtensions.evidence().get(0).getTxn());
     }
 
     @Test
