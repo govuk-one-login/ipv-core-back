@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.MaxRetryAttemptsExceededException;
 import uk.gov.di.ipv.core.library.exceptions.RetryException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.retry.Retry;
@@ -63,7 +62,6 @@ public class EvcsClient {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
         this.sleeper = new Sleeper();
-        ;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -225,7 +223,7 @@ public class EvcsClient {
                             new RetryableTask<HttpResponse<String>>() {
                                 @Override
                                 public Optional<HttpResponse<String>> run(boolean isLastAttempt)
-                                        throws RetryException {
+                                        throws RetryException, InterruptedException {
                                     LOGGER.info(
                                             LogHelper.buildLogMessage(
                                                     "Sending HTTP request to EVCS"));
@@ -240,7 +238,7 @@ public class EvcsClient {
                                             return Optional.empty();
                                         }
                                         return Optional.ofNullable(res);
-                                    } catch (IOException | InterruptedException e) {
+                                    } catch (IOException e) {
                                         throw new RetryException(e);
                                     }
                                 }
@@ -248,18 +246,11 @@ public class EvcsClient {
 
             checkResponseStatusCode(response);
             return response;
-        } catch (RetryException e) {
-            var cause = e.getCause();
-            if (cause instanceof InterruptedException) {
+        } catch (RetryException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();
             }
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), cause));
-            throw new EvcsServiceException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
-        } catch (MaxRetryAttemptsExceededException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));

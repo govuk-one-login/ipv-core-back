@@ -1,12 +1,16 @@
 package uk.gov.di.ipv.core.library.retry;
 
-import uk.gov.di.ipv.core.library.exceptions.MaxRetryAttemptsExceededException;
 import uk.gov.di.ipv.core.library.exceptions.RetryException;
 
 public class Retry {
+
+    private Retry() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static <T> T runTaskWithBackoff(
             Sleeper sleeper, int maxAttempts, int waitInterval, RetryableTask<T> task)
-            throws RetryException, MaxRetryAttemptsExceededException {
+            throws RetryException, InterruptedException {
 
         if (maxAttempts < 1) {
             throw new IllegalArgumentException("max attempts must be greater than 0");
@@ -19,15 +23,11 @@ public class Retry {
                 return res.get();
             }
             if (isLastAttempt) {
-                throw new MaxRetryAttemptsExceededException();
+                throw new RetryException("max retries reached for task: " + maxAttempts);
             }
             var backoff = (long) (waitInterval * Math.pow(2, count++));
-            try {
-                sleeper.sleep(backoff);
-            } catch (InterruptedException e) {
-                throw new RetryException(e);
-            }
+            sleeper.sleep(backoff);
         }
-        throw new MaxRetryAttemptsExceededException();
+        throw new RetryException("max retries reached for task: " + maxAttempts);
     }
 }
