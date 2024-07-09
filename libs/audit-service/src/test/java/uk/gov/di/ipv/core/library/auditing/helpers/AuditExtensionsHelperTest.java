@@ -71,7 +71,7 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void shouldGetPassportRestrictedDataForAudit() throws Exception {
+    void shouldGetPassportRestrictedDataForAudit() {
         var restrictedData = getRestrictedAuditDataForF2F(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var expectedName =
                 List.of(
@@ -88,7 +88,7 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void shouldGetDLRestrictedDataForAudit() throws Exception {
+    void shouldGetDLRestrictedDataForAudit() {
         var restrictedData = getRestrictedAuditDataForF2F(vcDrivingPermitNonDcmaw());
         var expectedName =
                 List.of(
@@ -106,25 +106,25 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
-    void shouldGetPassportExpiryDateForAudit() throws Exception {
+    void shouldGetPassportExpiryDateForAudit() {
         var auditNameParts = getRestrictedAuditDataForF2F(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         assertEquals("2030-01-01", auditNameParts.getDocExpiryDate());
     }
 
     @Test
-    void shouldNotGetExpiryDateForAudit() throws Exception {
+    void shouldNotGetExpiryDateForAudit() {
         var auditNameParts = getRestrictedAuditDataForF2F(vcDrivingPermitMissingDrivingPermit());
         assertNull(auditNameParts.getDocExpiryDate());
     }
 
     @Test
-    void shouldGetBRPExpiryDateForAudit() throws Exception {
+    void shouldGetBRPExpiryDateForAudit() {
         var auditNameParts = getRestrictedAuditDataForF2F(vcF2fBrp());
         assertEquals("2030-07-13", auditNameParts.getDocExpiryDate());
     }
 
     @Test
-    void shouldGetIdCardExpiryDateForAudit() throws Exception {
+    void shouldGetIdCardExpiryDateForAudit() {
         var auditNameParts = getRestrictedAuditDataForF2F(vcF2fIdCard());
         assertEquals("2031-08-02", auditNameParts.getDocExpiryDate());
     }

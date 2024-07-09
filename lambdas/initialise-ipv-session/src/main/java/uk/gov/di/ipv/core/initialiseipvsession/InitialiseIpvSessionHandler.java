@@ -341,7 +341,7 @@ public class InitialiseIpvSessionHandler
             AuditEventUser auditEventUser,
             String deviceInformation)
             throws RecoverableJarValidationException, ParseException, CredentialParseException,
-                    SqsException, HttpResponseExceptionWithErrorBody {
+                    SqsException {
         try {
             var inheritedIdentityVc =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
