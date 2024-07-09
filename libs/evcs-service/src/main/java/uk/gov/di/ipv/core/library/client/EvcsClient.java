@@ -21,8 +21,8 @@ import uk.gov.di.ipv.core.library.exceptions.MaxRetryAttemptsExceededException;
 import uk.gov.di.ipv.core.library.exceptions.RetryException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.retry.Retry;
+import uk.gov.di.ipv.core.library.retry.RetryableTask;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
-import uk.gov.di.ipv.core.library.retry.Task;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
@@ -223,7 +223,7 @@ public class EvcsClient {
                             sleeper,
                             MAX_RETRIES,
                             RETRY_DELAY_MILLIS,
-                            new Task<HttpResponse<String>>() {
+                            new RetryableTask<HttpResponse<String>>() {
                                 @Override
                                 public Optional<HttpResponse<String>> run(boolean isLastAttempt)
                                         throws RetryException {

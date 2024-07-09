@@ -5,7 +5,7 @@ import uk.gov.di.ipv.core.library.exceptions.RetryException;
 
 public class Retry {
     public static <T> T runTaskWithBackoff(
-            Sleeper sleeper, int maxAttempts, int waitInterval, Task<T> task)
+            Sleeper sleeper, int maxAttempts, int waitInterval, RetryableTask<T> task)
             throws RetryException, MaxRetryAttemptsExceededException {
 
         if (maxAttempts < 1) {
