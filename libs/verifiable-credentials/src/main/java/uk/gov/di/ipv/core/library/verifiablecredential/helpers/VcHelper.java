@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -28,8 +29,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ICAO_ISSUER_CODE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
@@ -77,13 +76,21 @@ public class VcHelper {
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
         List<String> txnIds = new ArrayList<>();
         for (var vc : vcs) {
-            var evidenceArray =
-                    OBJECT_MAPPER
-                            .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                            .path(VC_EVIDENCE);
-            if (evidenceArray.isArray()
-                    && !evidenceArray.isEmpty()) { // not all VCs have an evidence block
-                txnIds.add(evidenceArray.get(ONLY).path(VC_EVIDENCE_TXN).asText());
+            if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+                var identityChecks = identityCheckCredential.getEvidence();
+
+                if (!isNullOrEmpty(identityChecks)) {
+                    txnIds.add(identityChecks.get(ONLY).getTxn());
+                }
+                continue;
+            }
+
+            if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
+                var riskAssessments = riskAssessmentCredential.getEvidence();
+
+                if (!isNullOrEmpty(riskAssessments)) {
+                    txnIds.add(riskAssessments.get(ONLY).getTxn());
+                }
             }
         }
         return txnIds;
