@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
@@ -390,9 +390,10 @@ class EvcsClientTest {
         // Assert
         assertEquals(2, evcsGetUserVCsDto.vcs().size());
         verify(mockHttpClient, times(3)).send(any(), any());
-        verify(mockSleeper, times(2)).sleep(anyLong());
-        verify(mockSleeper, times(1)).sleep(1000);
-        verify(mockSleeper, times(1)).sleep(2000);
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(1000);
+        inOrder.verify(mockSleeper, times(1)).sleep(2000);
+        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -411,9 +412,10 @@ class EvcsClientTest {
                         evcsClient.getUserVcs(
                                 TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
         verify(mockHttpClient, times(4)).send(any(), any());
-        verify(mockSleeper, times(3)).sleep(anyLong());
-        verify(mockSleeper, times(1)).sleep(1000);
-        verify(mockSleeper, times(1)).sleep(2000);
-        verify(mockSleeper, times(1)).sleep(4000);
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(1000);
+        inOrder.verify(mockSleeper, times(1)).sleep(2000);
+        inOrder.verify(mockSleeper, times(1)).sleep(4000);
+        inOrder.verifyNoMoreInteractions();
     }
 }
