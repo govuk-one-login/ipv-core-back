@@ -51,6 +51,7 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerTitleLink = document.getElementById('header-title');
 const headerBar = document.getElementById('header-bar');
 const headerActions = document.getElementById('header-actions');
 const journeySelect = document.getElementById('journey-select');
@@ -66,8 +67,6 @@ const nodeDesc = document.getElementById('nodeDesc');
 const stateSearch = document.getElementById('state-search');
 const journeyDesc = document.getElementById('journeyDesc');
 const journeyName = document.getElementById('journeyName');
-
-document.getElementById('header-title').href = window.location.href.split('?')[0];
 
 let svgPanZoomInstance = null;
 let journeyMaps = {};
@@ -346,6 +345,10 @@ const initialize = async () => {
         await updateView();
     });
     setupSearchHandler();
+    headerTitleLink.onclick = async (e) => {
+        e.preventDefault();
+        await switchJourney(DEFAULT_JOURNEY_TYPE);
+      };
     await updateView();
 }
 
