@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
@@ -43,36 +42,35 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetIdentityCheckVerifiableCredentialExtensionsForAudit() throws Exception {
-        var auditExtensions =
-                (AuditExtensionsVcEvidence<IdentityCheck>)
-                        getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
+        var evidence = (List<IdentityCheck>) auditExtensions.evidence();
+
         var expectedAge =
                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
         assertEquals(expectedAge, auditExtensions.age());
         assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.iss());
-        assertEquals(2, auditExtensions.evidence().get(0).getValidityScore());
-        assertEquals(4, auditExtensions.evidence().get(0).getStrengthScore());
-        assertEquals(
-                "1c04edf0-a205-4585-8877-be6bd1776a39", auditExtensions.evidence().get(0).getTxn());
+        assertEquals(2, evidence.get(0).getValidityScore());
+        assertEquals(4, evidence.get(0).getStrengthScore());
+        assertEquals("1c04edf0-a205-4585-8877-be6bd1776a39", evidence.get(0).getTxn());
         assertEquals(
                 2,
-                auditExtensions.evidence().get(0).getCheckDetails().stream()
+                evidence.get(0).getCheckDetails().stream()
                         .filter(checkDetail -> checkDetail.getDataCheck() != null)
                         .count());
     }
 
     @Test
     void shouldGetRiskAssessmentVerifiableCredentialExtensionsForAudit() throws Exception {
-        var auditExtensions =
-                (AuditExtensionsVcEvidence<RiskAssessment>) getExtensionsForAudit(vcTicf(), false);
+        var auditExtensions = getExtensionsForAudit(vcTicf(), false);
+        var evidence = (List<RiskAssessment>) auditExtensions.evidence();
+
         assertFalse(auditExtensions.successful());
         assertNull(auditExtensions.isUkIssued());
         assertNull(auditExtensions.age());
         assertEquals("https://ticf.stubs.account.gov.uk", auditExtensions.iss());
-        assertEquals(
-                "963deeb5-a52c-4030-a69a-3184f77a4f18", auditExtensions.evidence().get(0).getTxn());
+        assertEquals("963deeb5-a52c-4030-a69a-3184f77a4f18", evidence.get(0).getTxn());
     }
 
     @Test

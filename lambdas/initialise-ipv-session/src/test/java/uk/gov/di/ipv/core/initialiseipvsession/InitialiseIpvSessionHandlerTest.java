@@ -819,7 +819,7 @@ class InitialiseIpvSessionHandlerTest {
             var expectedAge =
                     Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
             var expectedExtension =
-                    new AuditExtensionsVcEvidence<>(
+                    new AuditExtensionsVcEvidence(
                             "https://orch.stubs.account.gov.uk/migration/v1",
                             List.of(),
                             null,
