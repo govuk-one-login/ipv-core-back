@@ -26,8 +26,7 @@ class RetryTest {
     private RetryableTask<Boolean> testTask =
             new RetryableTask<Boolean>() {
                 @Override
-                public Optional<Boolean> run(boolean isLastAttempt)
-                        throws RetryException, InterruptedException {
+                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
                     if (isLastAttempt) {
                         return Optional.of(true);
                     }
@@ -38,8 +37,7 @@ class RetryTest {
     private RetryableTask<Boolean> testTaskWithException =
             new RetryableTask<Boolean>() {
                 @Override
-                public Optional<Boolean> run(boolean isLastAttempt)
-                        throws RetryException, InterruptedException {
+                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
                     throw new RetryException("an exception");
                 }
             };
@@ -47,8 +45,7 @@ class RetryTest {
     private RetryableTask<Boolean> testTaskFailed =
             new RetryableTask<Boolean>() {
                 @Override
-                public Optional<Boolean> run(boolean isLastAttempt)
-                        throws RetryException, InterruptedException {
+                public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
                     return Optional.empty();
                 }
             };
@@ -103,7 +100,7 @@ class RetryTest {
                         new RetryableTask<Integer>() {
                             @Override
                             public Optional<Integer> run(boolean isLastAttempt)
-                                    throws RetryException, InterruptedException {
+                                    throws RetryException {
                                 return Optional.of(1);
                             }
                         });

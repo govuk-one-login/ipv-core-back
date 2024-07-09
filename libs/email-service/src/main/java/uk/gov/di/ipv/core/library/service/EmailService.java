@@ -85,8 +85,7 @@ public class EmailService {
                     RETRY_WAIT_MILLISECONDS,
                     new RetryableTask<Boolean>() {
                         @Override
-                        public Optional<Boolean> run(boolean isLastAttempt)
-                                throws RetryException, InterruptedException {
+                        public Optional<Boolean> run(boolean isLastAttempt) throws RetryException {
                             try {
                                 LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
                                 notificationClient.sendEmail(

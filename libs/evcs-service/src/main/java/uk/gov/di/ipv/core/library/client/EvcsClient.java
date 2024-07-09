@@ -223,7 +223,7 @@ public class EvcsClient {
                             new RetryableTask<HttpResponse<String>>() {
                                 @Override
                                 public Optional<HttpResponse<String>> run(boolean isLastAttempt)
-                                        throws RetryException, InterruptedException {
+                                        throws RetryException {
                                     LOGGER.info(
                                             LogHelper.buildLogMessage(
                                                     "Sending HTTP request to EVCS"));
@@ -239,6 +239,11 @@ public class EvcsClient {
                                         }
                                         return Optional.ofNullable(res);
                                     } catch (IOException e) {
+                                        throw new RetryException(e);
+                                    } catch (InterruptedException e) {
+                                        // This should never happen running in Lambda as it's single
+                                        // threaded.
+                                        Thread.currentThread().interrupt();
                                         throw new RetryException(e);
                                     }
                                 }

@@ -74,7 +74,7 @@ public class IpvSessionService {
                             new RetryableTask<IpvSessionItem>() {
                                 @Override
                                 public Optional<IpvSessionItem> run(boolean isLastAttempt)
-                                        throws RetryException, InterruptedException {
+                                        throws RetryException {
                                     var item =
                                             dataStore.getItemByIndex(
                                                     "accessToken",

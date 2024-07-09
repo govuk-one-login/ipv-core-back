@@ -10,5 +10,5 @@ public interface RetryableTask<T> {
      * an Optional.empty() to indicate that the task should be retried and
      * throw a RetryException if any errors occur
      */
-    public Optional<T> run(boolean isLastAttempt) throws RetryException, InterruptedException;
+    public Optional<T> run(boolean isLastAttempt) throws RetryException;
 }
