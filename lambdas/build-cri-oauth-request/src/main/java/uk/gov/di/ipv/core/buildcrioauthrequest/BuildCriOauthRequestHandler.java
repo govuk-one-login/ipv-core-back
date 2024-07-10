@@ -176,8 +176,8 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            List<Vot> vot = clientOAuthSessionItem.getRequestedVotsByStrength();
-            Vot minimumRequestedVotsByStrength = vot.isEmpty() ? Vot.P2 : vot.get(0);
+            Vot minimumRequestedVotByStrength =
+                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -192,7 +192,7 @@ public class BuildCriOauthRequestHandler
                             cri,
                             criContext,
                             criEvidenceRequest,
-                            minimumRequestedVotsByStrength);
+                            minimumRequestedVotByStrength);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
 
@@ -304,7 +304,7 @@ public class BuildCriOauthRequestHandler
             Cri cri,
             String context,
             EvidenceRequest evidenceRequest,
-            Vot minimumRequestedVotsByStrength)
+            Vot requestedVot)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     VerifiableCredentialException {
 
@@ -315,7 +315,7 @@ public class BuildCriOauthRequestHandler
                 getSharedAttributesForUser(ipvSessionItem, vcs, cri);
 
         if (cri.equals(F2F)) {
-            evidenceRequest = getEvidenceRequestForF2F(vcs, minimumRequestedVotsByStrength);
+            evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
