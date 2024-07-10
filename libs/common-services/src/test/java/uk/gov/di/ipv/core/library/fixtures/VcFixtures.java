@@ -6,6 +6,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -30,6 +31,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
 
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
@@ -305,12 +307,14 @@ public interface VcFixtures {
                     "personalNumber", "MORGA753116SM9IJ",
                     "expiryDate", "2042-10-01");
 
-    List<Object> PASSPORT_DETAILS =
-            List.of(
-                    Map.of(
-                            "documentNumber", "321654987",
-                            "icaoIssuerCode", "GBR",
-                            "expiryDate", "2030-01-01"));
+    //    List<Object> PASSPORT_DETAILS =
+    //            List.of(
+    //                    Map.of(
+    //                            "documentNumber", "321654987",
+    //                            "icaoIssuerCode", "GBR",
+    //                            "expiryDate", "2030-01-01"));
+    List<PassportDetails> PASSPORT_DETAILS =
+            List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
 
     VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
             generateVerifiableCredential(
@@ -942,13 +946,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(MARY_WATSON_NAME))
-                        .passport(
-                                List.of(
-                                        Map.of(
-                                                "expiryDate",
-                                                "2030-01-01",
-                                                "documentNumber",
-                                                "824159121")))
+                        .passport(List.of(createPassportDetails("824159121", null, "2030-01-01")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",

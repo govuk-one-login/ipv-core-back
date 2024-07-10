@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +57,7 @@ public class TestVc {
                                                 NamePart.NamePartType.FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(createBirthDate(DEFAULT_DOB));
-        private List<Object> passport;
+        private List<PassportDetails> passport;
         private List<Object> address;
         private List<Object> socialSecurityRecord;
         private List<Object> drivingPermit;
