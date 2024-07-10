@@ -10,6 +10,7 @@ import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.ResidencePermitDetails;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.util.Collections;
@@ -63,7 +64,7 @@ public class TestVc {
         private List<Object> address;
         private List<SocialSecurityRecordDetails> socialSecurityRecord;
         private List<DrivingPermitDetails> drivingPermit;
-        private List<Object> residencePermit;
+        private List<ResidencePermitDetails> residencePermit;
         private List<Object> idCard;
     }
 

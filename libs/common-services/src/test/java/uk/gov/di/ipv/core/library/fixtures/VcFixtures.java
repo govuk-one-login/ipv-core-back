@@ -34,6 +34,7 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.create
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
 public interface VcFixtures {
@@ -985,15 +986,8 @@ public interface VcFixtures {
                         .birthDate(List.of(createBirthDate("1984-09-28")))
                         .residencePermit(
                                 List.of(
-                                        Map.of(
-                                                "icaoIssuerCode",
-                                                "UTO",
-                                                "documentType",
-                                                "CR",
-                                                "documentNumber",
-                                                "AX66K69P2",
-                                                "expiryDate",
-                                                "2030-07-13")))
+                                        createResidencePermitDetails(
+                                                "AX66K69P2", "2030-07-13", "CR", "UTO")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
