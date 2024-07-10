@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -35,6 +36,7 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGener
 import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.PostalAddressGenerator.createPostalAddress;
 import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
@@ -180,96 +182,101 @@ public interface VcFixtures {
                             .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
                             .checkDetails(null)
                             .build());
-    Map<String, String> ADDRESS_1 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("subBuildingName", ""),
-                    Map.entry("buildingNumber", "35"),
-                    Map.entry("buildingName", ""),
-                    Map.entry("streetName", "IDSWORTH ROAD"),
-                    Map.entry("addressLocality", "SHEFFIELD"),
-                    Map.entry("postalCode", "S5 6UN"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validFrom", "2000-01-01"));
 
-    Map<String, String> ADDRESS_2 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("subBuildingName", ""),
-                    Map.entry("buildingNumber", "8"),
-                    Map.entry("buildingName", "221B"),
-                    Map.entry("streetName", "MILTON ROAD"),
-                    Map.entry("addressLocality", "Milton Keynes"),
-                    Map.entry("postalCode", "MK15 5BX"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validFrom", "2024-01-01"));
-    Map<String, String> ADDRESS_3 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("buildingNumber", "8"),
-                    Map.entry("buildingName", ""),
-                    Map.entry("streetName", "HADLEY ROAD"),
-                    Map.entry("addressLocality", "BATH"),
-                    Map.entry("postalCode", "BA2 5AA"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validUntil", "2000-01-01"));
+    Long testUprn = Long.valueOf("100120012077");
 
-    Map<String, String> ADDRESS_4 =
-            Map.ofEntries(
-                    Map.entry("uprn", "10022812929"),
-                    Map.entry("organisationName", "FINCH GROUP"),
-                    Map.entry("subBuildingName", "UNIT 2B"),
-                    Map.entry("buildingNumber", "16"),
-                    Map.entry("buildingName", "COY POND BUSINESS PARK"),
-                    Map.entry("dependentStreetName", "KINGS PARK"),
-                    Map.entry("streetName", "BIG STREET"),
-                    Map.entry("doubleDependentAddressLocality", "SOME DISTRICT"),
-                    Map.entry("dependentAddressLocality", "LONG EATON"),
-                    Map.entry("addressLocality", "GREAT MISSENDEN"),
-                    Map.entry("postalCode", "HP16 0AL"),
-                    Map.entry("addressCountry", "GB"));
+    PostalAddress ADDRESS_1 =
+            createPostalAddress(
+                    "35",
+                    "",
+                    "IDSWORTH ROAD",
+                    "S5 6UN",
+                    "SHEFFIELD",
+                    "GB",
+                    testUprn,
+                    "2000-01-01",
+                    null);
 
-    List<Object> MULTIPLE_ADDRESSES_VALID =
+    PostalAddress ADDRESS_2 =
+            createPostalAddress(
+                    "8",
+                    "221B",
+                    "MILTON ROAD",
+                    "MK15 5BX",
+                    "Milton Keynes",
+                    "GB",
+                    testUprn,
+                    "2024-01-01",
+                    null);
+
+    PostalAddress ADDRESS_3 =
+            createPostalAddress(
+                    "8", "", "HADLEY ROAD", "BA2 5AA", "BATH", "GB", testUprn, null, "2000-01-01");
+
+    PostalAddress ADDRESS_4 =
+            createPostalAddress(
+                    "16",
+                    "COY POND BUSINESS PARK",
+                    "BIG STREET",
+                    "HP16 0AL",
+                    "GREAT MISSENDEN",
+                    "GB",
+                    testUprn,
+                    null,
+                    null,
+                    "UNIT 2B",
+                    "FINCH GROUP",
+                    "KINGS PARK",
+                    "SOME DISTRICT",
+                    "LONG EATON");
+
+    List<PostalAddress> MULTIPLE_ADDRESSES_VALID =
             List.of(
                     ADDRESS_3,
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "3"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "STOCKS HILL"),
-                            Map.entry("addressLocality", "HARRINGTON"),
-                            Map.entry("postalCode", "CA14 5PH"),
-                            Map.entry("addressCountry", "GB"),
-                            Map.entry("validFrom", "2011-01-01")),
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "24"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "SOME STREET"),
-                            Map.entry("addressLocality", "SOME LOCALITY"),
-                            Map.entry("postalCode", "TE5 7ER"),
-                            Map.entry("addressCountry", "GB"),
-                            Map.entry("validUntil", "2011-01-01")));
+                    createPostalAddress(
+                            "3",
+                            "",
+                            "STOCKS HILL",
+                            "CA14 5PH",
+                            "HARRINGTON",
+                            "GB",
+                            testUprn,
+                            "2011-01-01",
+                            null),
+                    createPostalAddress(
+                            "24",
+                            "",
+                            "SOME STREET",
+                            "TE5 7ER",
+                            "SOME LOCALITY",
+                            "GB",
+                            testUprn,
+                            null,
+                            "2011-01-01"));
 
-    List<Object> MULTIPLE_ADDRESSES_NO_VALID_FROM =
+    List<PostalAddress> MULTIPLE_ADDRESSES_NO_VALID_FROM =
             List.of(
                     ADDRESS_3,
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "3"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "STOCKS HILL"),
-                            Map.entry("addressLocality", "HARRINGTON"),
-                            Map.entry("postalCode", "CA14 5PH"),
-                            Map.entry("addressCountry", "GB")),
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "24"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "SOME STREET"),
-                            Map.entry("addressLocality", "SOME LOCALITY"),
-                            Map.entry("postalCode", "TE5 7ER"),
-                            Map.entry("addressCountry", "GB")));
+                    createPostalAddress(
+                            "3",
+                            "",
+                            "STOCKS HILL",
+                            "CA14 5PH",
+                            "HARRINGTON",
+                            "GB",
+                            testUprn,
+                            null,
+                            null),
+                    createPostalAddress(
+                            "24",
+                            "",
+                            "SOME STREET",
+                            "TE5 7ER",
+                            "SOME LOCALITY",
+                            "GB",
+                            testUprn,
+                            null,
+                            null));
 
     Map<String, List<NamePart>> ALICE_PARKER_NAME =
             Map.of(
@@ -624,7 +631,7 @@ public interface VcFixtures {
                                                                 "Chris",
                                                                 NamePart.NamePartType
                                                                         .GIVEN_NAME)))))
-                        .address(List.of(Map.of("type", "PostalAddress", "postalCode", "LE12 9BN")))
+                        .address(List.of(ADDRESS_1))
                         .birthDate(List.of(createBirthDate("1984-09-28")))
                         .build();
         return generateVerifiableCredential(

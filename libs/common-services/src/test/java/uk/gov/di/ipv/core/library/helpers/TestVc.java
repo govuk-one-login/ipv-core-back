@@ -11,6 +11,7 @@ import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdCardDetails;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.ResidencePermitDetails;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
@@ -62,7 +63,7 @@ public class TestVc {
 
         @Builder.Default private List<BirthDate> birthDate = List.of(createBirthDate(DEFAULT_DOB));
         private List<PassportDetails> passport;
-        private List<Object> address;
+        private List<PostalAddress> address;
         private List<SocialSecurityRecordDetails> socialSecurityRecord;
         private List<DrivingPermitDetails> drivingPermit;
         private List<ResidencePermitDetails> residencePermit;
