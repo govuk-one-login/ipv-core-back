@@ -141,7 +141,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals(passportVc.getVcString(), credentials.getVcs().get(0));
@@ -165,7 +165,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals(Vot.P2, credentials.getVot());
@@ -981,7 +981,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
@@ -1011,7 +1011,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
@@ -1035,7 +1035,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getIdentityClaim());
@@ -1086,7 +1086,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -1111,7 +1111,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -1134,7 +1134,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         PassportDetails passportClaim = credentials.getPassportClaim().get(0);
@@ -1154,7 +1154,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1176,7 +1176,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1198,7 +1198,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1217,7 +1217,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1240,7 +1240,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         SocialSecurityRecordDetails ninoClaim = credentials.getNinoClaim().get(0);
@@ -1258,7 +1258,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1281,7 +1281,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1303,7 +1303,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1326,7 +1326,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1349,7 +1349,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1372,7 +1372,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1386,7 +1386,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals("test-sub", credentials.getSub());
@@ -1400,7 +1400,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals("mock-vtm-claim", credentials.getVtm());
@@ -1422,7 +1422,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         // There is one address in the claims set
@@ -1454,7 +1454,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1480,7 +1480,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1506,7 +1506,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1524,7 +1524,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getAddressClaim());
@@ -1541,7 +1541,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
@@ -1562,7 +1562,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1586,7 +1586,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1611,7 +1611,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1630,7 +1630,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1647,7 +1647,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1670,7 +1670,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1700,7 +1700,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, contraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(List.of(new ReturnCode("🦆")), userIdentity.getReturnCode());
@@ -1715,7 +1715,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         assertEquals(List.of(), userIdentity.getReturnCode());
     }
@@ -1739,7 +1739,7 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                emptyList, "test-sub", Vot.P2, contraIndicators));
+                                emptyList, "test-sub", Vot.P2, Vot.P2, contraIndicators));
     }
 
     @Test
@@ -1773,7 +1773,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(
@@ -1799,7 +1799,7 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                emptyList, "test-sub", Vot.P0, contraIndicators));
+                                emptyList, "test-sub", Vot.P0, Vot.P2, contraIndicators));
     }
 
     @Test
@@ -1828,7 +1828,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(
@@ -1856,7 +1856,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
@@ -1969,7 +1969,7 @@ class UserIdentityServiceTest {
 
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         assertEquals(2, credentials.getVcs().size());
         assertEquals(passportVc.getVcString(), credentials.getVcs().get(0));
@@ -1991,7 +1991,7 @@ class UserIdentityServiceTest {
 
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.PCL200, emptyContraIndicators);
+                        vcs, "test-sub", Vot.PCL200, Vot.PCL200, emptyContraIndicators);
 
         assertEquals(1, credentials.getVcs().size());
         assertEquals(hmrcVc.getVcString(), credentials.getVcs().get(0));

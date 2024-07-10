@@ -94,18 +94,23 @@ public class UserIdentityService {
     }
 
     public UserIdentity generateUserIdentity(
-            List<VerifiableCredential> vcs, String sub, Vot vot, ContraIndicators contraIndicators)
+            List<VerifiableCredential> vcs,
+            String sub,
+            Vot acheivedVot,
+            Vot targetVot,
+            ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        var profileType = vot.getProfileType();
+        var profileType = acheivedVot.getProfileType();
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
         var vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
 
-        var userIdentityBuilder = UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
+        var userIdentityBuilder =
+                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(acheivedVot).vtm(vtm);
 
         buildUserIdentityBasedOnProfileType(
-                vot, contraIndicators, profileType, vcs, userIdentityBuilder);
+                acheivedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }
@@ -291,7 +296,8 @@ public class UserIdentityService {
     }
 
     private void buildUserIdentityBasedOnProfileType(
-            Vot vot,
+            Vot achievedVot,
+            Vot targetVot,
             ContraIndicators contraIndicators,
             ProfileType profileType,
             List<VerifiableCredential> vcs,
@@ -303,8 +309,8 @@ public class UserIdentityService {
                 successfulVcs.add(vc);
             }
         }
-        if (Vot.P0.equals(vot)) {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, vot));
+        if (Vot.P0.equals(achievedVot)) {
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
             addUserIdentityClaims(profileType, vcs, userIdentityBuilder, successfulVcs);
             userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));

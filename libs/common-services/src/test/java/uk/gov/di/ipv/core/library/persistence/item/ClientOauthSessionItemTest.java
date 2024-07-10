@@ -86,4 +86,32 @@ class ClientOauthSessionItemTest {
         // Assert
         assertEquals(Vot.P1, result);
     }
+
+    @Test
+    void getLowestStrengthRequestedVot_ShouldIgnoreP1_WhenP1IsDisabled() {
+        // Arrange
+        var vtr = List.of("P2", "PCL200", "PCL250", "P1");
+        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
+
+        // Act
+        var result = underTest.getLowestStrengthRequestedVot(mockConfigService);
+
+        // Assert
+        assertEquals(Vot.PCL200, result);
+    }
+
+    @Test
+    void getLowestStrengthRequestedVot_ShouldReturnP1_WhenP1IsEnabled() {
+        // Arrange
+        var vtr = List.of("PCL200", "P1");
+        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+
+        // Act
+        var result = underTest.getLowestStrengthRequestedVot(mockConfigService);
+
+        // Assert
+        assertEquals(Vot.P1, result);
+    }
 }

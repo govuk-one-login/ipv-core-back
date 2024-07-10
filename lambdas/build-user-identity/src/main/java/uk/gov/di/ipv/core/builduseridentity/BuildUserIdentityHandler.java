@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -33,7 +34,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -116,9 +116,15 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
+            // PYIC-6901 there's probably a better way of getting the target Vot rather than
+            // re-calculating it here. Can we store it in the session in CheckExistingIdentity?
+            // We only actually need this to calculate CI breaches for return codes and the audit
+            // message
+            var targetVot = clientOAuthSessionItem.getLowestStrengthRequestedVot(configService);
+            var acheivedVot = ipvSessionItem.getVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, ipvSessionItem.getVot(), contraIndicators);
+                            vcs, userId, acheivedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
             if (configService.enabled(TICF_CRI_BETA)
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -126,7 +132,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             }
 
             sendIdentityIssuedAuditEvent(
-                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
+                    acheivedVot, targetVot, auditEventUser, contraIndicators, userIdentity);
 
             closeSession(ipvSessionItem);
 
@@ -167,7 +173,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     }
 
     private void sendIdentityIssuedAuditEvent(
-            IpvSessionItem ipvSessionItem,
+            Vot achievedVot,
+            Vot targetVot,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators,
             UserIdentity userIdentity)
@@ -184,9 +191,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
         var extensions =
                 new AuditExtensionsUserIdentity(
-                        ipvSessionItem.getVot(),
-                        ciMitUtilityService.isBreachingCiThreshold(
-                                contraIndicators, ipvSessionItem.getVot()),
+                        achievedVot,
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 

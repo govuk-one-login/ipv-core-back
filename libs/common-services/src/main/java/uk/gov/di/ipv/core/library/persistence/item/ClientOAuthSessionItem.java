@@ -71,4 +71,20 @@ public class ClientOAuthSessionItem implements DynamodbItem {
 
         return lowestStrengthRequestedGpg45Vot;
     }
+
+    // Refactor this out in PYIC-6984
+    public Vot getLowestStrengthRequestedVot(ConfigService configService) {
+        var requestedVotsByStrengthDescending = getRequestedVotsByStrengthDescending();
+
+        var lowestStrengthRequestedVot =
+                requestedVotsByStrengthDescending.get(requestedVotsByStrengthDescending.size() - 1);
+
+        if (lowestStrengthRequestedVot == Vot.P1 && !configService.enabled(P1_JOURNEYS_ENABLED)) {
+            lowestStrengthRequestedVot =
+                    requestedVotsByStrengthDescending.get(
+                            requestedVotsByStrengthDescending.size() - 2);
+        }
+
+        return lowestStrengthRequestedVot;
+    }
 }
