@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -156,6 +157,11 @@ class CallTicfCriHandlerTest {
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
+        InOrder inOrder = inOrder(mockIpvSessionItem, mockIpvSessionService);
+        inOrder.verify(mockIpvSessionItem).setVot(Vot.P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        inOrder.verifyNoMoreInteractions();
+
         assertEquals("/journey/fail-with-ci", lambdaResult.get("journey"));
     }
 
@@ -170,6 +176,11 @@ class CallTicfCriHandlerTest {
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+
+        InOrder inOrder = inOrder(mockIpvSessionItem, mockIpvSessionService);
+        inOrder.verify(mockIpvSessionItem).setVot(Vot.P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        inOrder.verifyNoMoreInteractions();
 
         assertEquals(JOURNEY_ENHANCED_VERIFICATION, lambdaResult.get("journey"));
     }
