@@ -86,7 +86,6 @@ public class BuildCriOauthRequestHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
@@ -159,16 +158,7 @@ public class BuildCriOauthRequestHandler
                                 ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
-            Cri cri;
-            try {
-                cri = Cri.fromId(criId);
-            } catch (IllegalArgumentException e) {
-                return new JourneyErrorResponse(
-                                JOURNEY_ERROR_PATH,
-                                SC_BAD_REQUEST,
-                                ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
-                        .toObjectMap();
-            }
+            var cri = Cri.fromId(criId);
             LogHelper.attachCriIdToLogs(cri);
 
             String criContext = getJourneyParameter(input, CONTEXT);
@@ -263,6 +253,12 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_EVIDENCE_REQUESTED);
+        } catch (IllegalArgumentException e) {
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            SC_BAD_REQUEST,
+                            ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
+                    .toObjectMap();
         } finally {
             auditService.awaitAuditEvents();
         }
