@@ -296,7 +296,7 @@ class BuildCriOauthRequestHandlerTest {
 
         // Assert
         assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test

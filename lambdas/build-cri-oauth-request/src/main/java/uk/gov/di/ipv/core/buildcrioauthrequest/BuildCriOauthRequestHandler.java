@@ -150,15 +150,14 @@ public class BuildCriOauthRequestHandler
             String ipAddress = getIpAddress(input);
             configService.setFeatureSet(getFeatureSet(input));
 
-            var criId = getCriIdFromJourney(input.getJourneyUri().getPath());
-            if (criId == null) {
+            var cri = getCriFromJourney(input.getJourneyUri().getPath());
+            if (cri == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
                                 SC_BAD_REQUEST,
-                                ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID)
+                                ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
-            var cri = Cri.fromId(criId);
             LogHelper.attachCriIdToLogs(cri);
 
             String criContext = getJourneyParameter(input, CONTEXT);
@@ -167,14 +166,6 @@ public class BuildCriOauthRequestHandler
             String connection = configService.getActiveConnection(cri);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, cri);
-
-            if (criConfig == null) {
-                return new JourneyErrorResponse(
-                                JOURNEY_ERROR_PATH,
-                                SC_BAD_REQUEST,
-                                ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
-                        .toObjectMap();
-            }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
@@ -272,9 +263,16 @@ public class BuildCriOauthRequestHandler
                 .toObjectMap();
     }
 
-    private String getCriIdFromJourney(String journeyPath) {
+    private Cri getCriFromJourney(String journeyPath) {
         Matcher matcher = LAST_SEGMENT_PATTERN.matcher(journeyPath);
-        return matcher.find() ? matcher.group(1) : null;
+        if (matcher.find()) {
+            try {
+                return Cri.fromId(matcher.group(1));
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private CriResponse getCriResponse(OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri)

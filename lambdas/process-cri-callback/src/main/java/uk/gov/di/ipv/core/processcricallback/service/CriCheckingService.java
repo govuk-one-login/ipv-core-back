@@ -163,16 +163,11 @@ public class CriCheckingService {
             CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws InvalidCriCallbackRequestException {
         var ipvSessionId = callbackRequest.getIpvSessionId();
-        var criId = callbackRequest.getCredentialIssuerId();
         var state = callbackRequest.getState();
         var authorisationCode = callbackRequest.getAuthorizationCode();
 
         if (StringUtils.isBlank(authorisationCode)) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-        if (StringUtils.isBlank(criId)) {
-            throw new InvalidCriCallbackRequestException(
-                    ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
         if (StringUtils.isBlank(ipvSessionId)) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
@@ -184,8 +179,14 @@ public class CriCheckingService {
                 || !state.equals(criOAuthSessionItem.getCriOAuthSessionId())) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
-        if (configService.getOauthCriActiveConnectionConfig(callbackRequest.getCredentialIssuer())
-                == null) {
+        try {
+            var cri = callbackRequest.getCredentialIssuer();
+            if (cri == null) {
+                throw new InvalidCriCallbackRequestException(
+                        ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+            }
+
+        } catch (IllegalArgumentException e) {
             throw new InvalidCriCallbackRequestException(
                     ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
