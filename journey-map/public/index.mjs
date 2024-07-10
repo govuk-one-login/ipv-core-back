@@ -51,6 +51,7 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerTitleLink = document.getElementById('header-title');
 const headerBar = document.getElementById('header-bar');
 const headerActions = document.getElementById('header-actions');
 const journeySelect = document.getElementById('journey-select');
@@ -344,6 +345,10 @@ const initialize = async () => {
         await updateView();
     });
     setupSearchHandler();
+    headerTitleLink.onclick = async (e) => {
+        e.preventDefault();
+        await switchJourney(DEFAULT_JOURNEY_TYPE);
+      };
     await updateView();
 }
 
