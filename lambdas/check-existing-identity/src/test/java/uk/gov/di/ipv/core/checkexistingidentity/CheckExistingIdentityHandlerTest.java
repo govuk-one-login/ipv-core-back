@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -68,6 +69,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -705,12 +707,18 @@ class CheckExistingIdentityHandlerTest {
     @ParameterizedTest
     @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
     void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
-            Map<String, Object> votAndVtr) {
+            List<String> vtr, Optional<Vot> vot) throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+
+        List<VerifiableCredential> credentials = new ArrayList<>();
+        if (vot.isPresent()) {
+            credentials.add(createOperationalProfileVc(vot.get()));
+        }
+        when(mockVerifiableCredentialService.getVcs(any())).thenReturn(credentials);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        clientOAuthSessionItem.setVtr((List<String>) votAndVtr.get("vtr"));
+        clientOAuthSessionItem.setVtr(vtr);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1454,22 +1462,14 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(P2, ipvSessionItem.getVot());
     }
 
-    private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
+    private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {
         return Stream.of(
-                Map.of("vtr", List.of(P2), "operationalCredVot", Optional.empty()),
-                Map.of("vtr", List.of(P2), "operationalCredVot", Optional.of(Vot.PCL200)),
-                Map.of("vtr", List.of(P2), "operationalCredVot", Optional.of(Vot.PCL250)),
-                Map.of("vtr", List.of(P2, Vot.PCL250), "operationalCredVot", Optional.empty()),
-                Map.of(
-                        "vtr",
-                        List.of(P2, Vot.PCL250),
-                        "operationalCredVot",
-                        Optional.of(Vot.PCL200)),
-                Map.of(
-                        "vtr",
-                        List.of(P2, Vot.PCL250, Vot.PCL200),
-                        "operationalCredVot",
-                        Optional.empty()));
+                Arguments.of(List.of("P2"), Optional.empty()),
+                Arguments.of(List.of("P2"), Optional.of(Vot.PCL200)),
+                Arguments.of(List.of("P2"), Optional.of(Vot.PCL250)),
+                Arguments.of(List.of("P2", "PCL250"), Optional.empty()),
+                Arguments.of(List.of("P2", "PCL250"), Optional.of(Vot.PCL200)),
+                Arguments.of(List.of("P2", "PCL250", "PCL200"), Optional.empty()));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
