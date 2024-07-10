@@ -32,6 +32,7 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.g
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
@@ -790,7 +791,8 @@ public interface VcFixtures {
     static VerifiableCredential vcNinoSuccessful() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .socialSecurityRecord(
+                                List.of(createSocialSecurityRecordDetails("AA000003D")))
                         .build();
 
         var evidence =
@@ -808,7 +810,8 @@ public interface VcFixtures {
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
                         .birthDate(List.of(createBirthDate("1970-01-01")))
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .socialSecurityRecord(
+                                List.of(createSocialSecurityRecordDetails("AA000003D")))
                         .build();
 
         var evidence = List.of(testFailedNinoEvidence);
@@ -1073,8 +1076,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
@@ -1103,8 +1105,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
@@ -1123,8 +1124,7 @@ public interface VcFixtures {
                         .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
@@ -1154,8 +1154,7 @@ public interface VcFixtures {
                         .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
