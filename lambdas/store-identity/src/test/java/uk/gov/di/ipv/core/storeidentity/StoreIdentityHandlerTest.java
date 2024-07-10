@@ -12,6 +12,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -132,7 +133,9 @@ class StoreIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
+        Mockito.lenient()
+                .when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID))
+                .thenReturn(VCS);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
     }
