@@ -32,6 +32,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VE
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
@@ -1019,15 +1020,8 @@ public interface VcFixtures {
                         .birthDate(List.of(createBirthDate("1984-09-28")))
                         .idCard(
                                 List.of(
-                                        Map.of(
-                                                "icaoIssuerCode",
-                                                "NLD",
-                                                "documentNumber",
-                                                "SPEC12031",
-                                                "expiryDate",
-                                                "2031-08-02",
-                                                "issueDate",
-                                                "2021-08-02")))
+                                        createIdCardDetails(
+                                                "SPEC12031", "2031-08-02", "NLD", "2021-08-02")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
