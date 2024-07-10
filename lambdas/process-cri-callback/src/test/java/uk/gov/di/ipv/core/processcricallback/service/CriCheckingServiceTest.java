@@ -494,6 +494,29 @@ class CriCheckingServiceTest {
         verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
+    @Test
+    void checkVcResponseShouldReturnNextWhenAllChecksPassForLowerConfidenceVot() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var vcs = List.of(M1A_ADDRESS_VC);
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
+        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
+                .thenReturn(TEST_CONTRA_INDICATORS);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
+                .thenReturn(Optional.empty());
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
+
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
