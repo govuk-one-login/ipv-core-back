@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -174,11 +175,12 @@ public class DataStore<T extends DynamodbItem> {
                     batchWriteResult.unprocessedDeleteItemsForTable(this.table);
             if (!unprocessedItems.isEmpty()) {
                 String errMessage = "Failed during batch deletion.";
-                LOGGER.error(errMessage);
+                LOGGER.error(LogHelper.buildLogMessage(errMessage));
                 throw new BatchDeleteException(errMessage);
             }
+        } else {
+            LOGGER.info(LogHelper.buildLogMessage("No items to delete"));
         }
-        LOGGER.info("No items to delete");
     }
 
     @ExcludeFromGeneratedCoverageReport
