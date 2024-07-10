@@ -355,45 +355,53 @@ public class CheckExistingIdentityHandler
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
         if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
-            var evcsVcs =
-                    evcsService.getVerifiableCredentialsByState(
-                            userId, evcsAccessToken, CURRENT, PENDING_RETURN);
+            try {
+                var evcsVcs =
+                        evcsService.getVerifiableCredentialsByState(
+                                userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-            // Use pending return vcs to determine identity if available
-            var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
-            var isPendingEvcs = true;
-            var hasPartiallyMigratedVcs = false;
-            VerifiableCredentialBundle vcBundle = null;
-            if (isNullOrEmpty(evcsIdentityVcs)) {
-                evcsIdentityVcs = evcsVcs.get(CURRENT);
-                isPendingEvcs = false;
-            }
-            if (!isNullOrEmpty(evcsIdentityVcs)) {
-                vcBundle =
-                        new VerifiableCredentialBundle(
-                                configService.enabled(EVCS_READ_ENABLED)
-                                        ? evcsIdentityVcs
-                                        : tacticalVcs,
-                                true,
-                                isPendingEvcs);
-
-                hasPartiallyMigratedVcs =
-                        hasPartiallyMigratedVcs(
-                                tacticalVcs,
-                                evcsIdentityVcs,
-                                isPendingEvcs,
-                                vcBundle.isF2fIdentity());
-
-                if (hasPartiallyMigratedVcs) {
-                    // use tactical vcs but with evcs flags so that the store-identity lambda is
-                    // called next and updates the evcs pending one
-                    vcBundle = new VerifiableCredentialBundle(tacticalVcs, true, true);
+                // Use pending return vcs to determine identity if available
+                var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
+                var isPendingEvcs = true;
+                var hasPartiallyMigratedVcs = false;
+                VerifiableCredentialBundle vcBundle = null;
+                if (isNullOrEmpty(evcsIdentityVcs)) {
+                    evcsIdentityVcs = evcsVcs.get(CURRENT);
+                    isPendingEvcs = false;
                 }
-            }
-            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
-            // only use these evcs vcs if they exist and have been fully migrated
-            if (vcBundle != null) {
-                return vcBundle;
+                if (!isNullOrEmpty(evcsIdentityVcs)) {
+                    vcBundle =
+                            new VerifiableCredentialBundle(
+                                    configService.enabled(EVCS_READ_ENABLED)
+                                            ? evcsIdentityVcs
+                                            : tacticalVcs,
+                                    true,
+                                    isPendingEvcs);
+
+                    hasPartiallyMigratedVcs =
+                            hasPartiallyMigratedVcs(
+                                    tacticalVcs,
+                                    evcsIdentityVcs,
+                                    isPendingEvcs,
+                                    vcBundle.isF2fIdentity());
+
+                    if (hasPartiallyMigratedVcs) {
+                        // use tactical vcs but with evcs flags so that the store-identity lambda is
+                        // called next and updates the evcs pending one
+                        vcBundle = new VerifiableCredentialBundle(tacticalVcs, true, true);
+                    }
+                }
+                logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
+                // only use these evcs vcs if they exist and have been fully migrated
+                if (vcBundle != null) {
+                    return vcBundle;
+                }
+            } catch (EvcsServiceException e) {
+                if (configService.enabled(EVCS_READ_ENABLED)) {
+                    throw e;
+                } else {
+                    LOGGER.error(LogHelper.buildErrorMessage("Failed to read EVCS VCs", e));
+                }
             }
         }
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
@@ -672,10 +680,22 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle vcBundle)
             throws EvcsServiceException, VerifiableCredentialException, SqsException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
-            evcsMigrationService.migrateExistingIdentity(
-                    auditEventUser.getUserId(),
-                    vcBundle.credentials.stream().filter(vc -> vc.getMigrated() == null).toList());
-            sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
+            try {
+                evcsMigrationService.migrateExistingIdentity(
+                        auditEventUser.getUserId(),
+                        vcBundle.credentials.stream()
+                                .filter(vc -> vc.getMigrated() == null)
+                                .toList());
+                sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
+            } catch (EvcsServiceException e) {
+                if (configService.enabled(EVCS_READ_ENABLED)) {
+                    throw e;
+                } else {
+                    LOGGER.error(
+                            LogHelper.buildErrorMessage(
+                                    "Failed to store EVCS migrated identity", e));
+                }
+            }
         }
     }
 

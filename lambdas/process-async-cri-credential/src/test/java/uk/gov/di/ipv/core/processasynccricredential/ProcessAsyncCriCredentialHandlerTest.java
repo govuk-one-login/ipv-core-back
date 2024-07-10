@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -133,6 +134,29 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyCiStorageServicePostMitigations();
         verifyVerifiableCredentialService(evcsAsyncWrites);
         verify(evcsService, times(evcsAsyncWrites ? 1 : 0)).storePendingVc(F2F_VC);
+        verifyAuditService();
+    }
+
+    @Test
+    void shouldProcessSuccessfullyIfEvcsFailsAndEvcsReadsIsNotEnabled() throws Exception {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
+
+        when(verifiableCredentialValidator.parseAndValidate(
+                        eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
+                .thenReturn(List.of(F2F_VC));
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_CRI))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        mockCredentialIssuerConfig();
+        when(configService.enabled(EVCS_ASYNC_WRITE_ENABLED)).thenReturn(true);
+        doThrow(EvcsServiceException.class).when(evcsService).storePendingVc(F2F_VC);
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
+
+        verifyVerifiableCredentialJwtValidator();
+        verifyCiStorageServicePutContraIndicators();
+        verifyCiStorageServicePostMitigations();
         verifyAuditService();
     }
 

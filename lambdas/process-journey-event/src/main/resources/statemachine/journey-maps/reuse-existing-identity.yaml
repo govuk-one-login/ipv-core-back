@@ -45,8 +45,6 @@ states:
             targetState: CRI_TICF_BEFORE_REUSE
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
-          coiEnabled:
-            targetState: IDENTITY_REUSE_PAGE_COI
 
   CRI_TICF_BEFORE_REUSE:
     response:

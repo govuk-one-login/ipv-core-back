@@ -27,8 +27,7 @@ public class EvcsMigrationService {
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsMigrationService(ConfigService configService) {
-        this.evcsService = new EvcsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
+        this(new EvcsService(configService), new VerifiableCredentialService(configService));
     }
 
     @Tracing

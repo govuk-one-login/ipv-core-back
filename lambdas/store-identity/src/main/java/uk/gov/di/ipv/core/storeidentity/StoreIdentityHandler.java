@@ -39,6 +39,7 @@ import java.util.Map;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
@@ -109,14 +110,23 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             var identityType = RequestHelper.getIdentityType(input);
 
             if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                if (identityType != IdentityType.PENDING) {
-                    evcsService.storeCompletedIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                } else {
-                    evcsService.storePendingIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                try {
+                    if (identityType != IdentityType.PENDING) {
+                        evcsService.storeCompletedIdentity(
+                                userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                    } else {
+                        evcsService.storePendingIdentity(
+                                userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                    }
+                    credentials.forEach(credential -> credential.setMigrated(Instant.now()));
+                } catch (EvcsServiceException e) {
+                    if (configService.enabled(EVCS_READ_ENABLED)) {
+                        throw e;
+                    } else {
+                        LOGGER.error(
+                                LogHelper.buildErrorMessage("Failed to store EVCS identity", e));
+                    }
                 }
-                credentials.forEach(credential -> credential.setMigrated(Instant.now()));
             }
 
             verifiableCredentialService.storeIdentity(credentials, userId);
