@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
 import com.nimbusds.jose.jwk.KeyType;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -29,6 +28,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RI
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 
 public interface VcFixtures {
@@ -412,7 +412,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .birthDate(List.of(new BirthDate("invalid")))
+                        .birthDate(List.of(createBirthDate("invalid")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -530,7 +530,7 @@ public interface VcFixtures {
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .birthDate(List.of(createBirthDate("1959-08-23")))
                                             .build())
                             .build(),
                     "https://review-f.integration.account.gov.uk",
@@ -545,7 +545,7 @@ public interface VcFixtures {
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .birthDate(List.of(createBirthDate("1959-08-23")))
                                             .build())
                             .build(),
                     "https://review-f.integration.account.gov.uk",
@@ -555,7 +555,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -586,7 +586,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -606,7 +606,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -632,7 +632,7 @@ public interface VcFixtures {
                                                                 NamePart.NamePartType
                                                                         .GIVEN_NAME)))))
                         .address(List.of(Map.of("type", "PostalAddress", "postalCode", "LE12 9BN")))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .build();
         return generateVerifiableCredential(
                 "user-id",
@@ -728,7 +728,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
                         .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
                         .build();
         return generateVerifiableCredential(
@@ -803,7 +803,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
                         .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
                         .build();
 
@@ -884,7 +884,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -995,7 +995,7 @@ public interface VcFixtures {
                                                                 "Chris",
                                                                 NamePart.NamePartType
                                                                         .GIVEN_NAME)))))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .residencePermit(
                                 List.of(
                                         Map.of(
@@ -1035,7 +1035,7 @@ public interface VcFixtures {
                                                                 "Chris",
                                                                 NamePart.NamePartType
                                                                         .GIVEN_NAME)))))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .idCard(
                                 List.of(
                                         Map.of(

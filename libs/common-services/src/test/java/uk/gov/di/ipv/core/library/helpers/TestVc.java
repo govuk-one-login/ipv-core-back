@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.NamePart;
 
 import java.util.Collections;
@@ -17,6 +17,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ID
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 
 @AllArgsConstructor
@@ -54,7 +55,7 @@ public class TestVc {
                                                 "DECERQUEIRA",
                                                 NamePart.NamePartType.FAMILY_NAME))));
 
-        @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate(DEFAULT_DOB));
+        @Builder.Default private List<BirthDate> birthDate = List.of(createBirthDate(DEFAULT_DOB));
         private List<Object> passport;
         private List<Object> address;
         private List<Object> socialSecurityRecord;
