@@ -5,6 +5,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 
@@ -30,6 +31,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
+import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
@@ -288,32 +290,16 @@ public interface VcFixtures {
                             createNamePart("Mary", NamePart.NamePartType.GIVEN_NAME),
                             createNamePart("Watson", NamePart.NamePartType.FAMILY_NAME)));
 
-    Map<String, Object> DRIVING_PERMIT_DVA =
-            Map.of(
-                    "personalNumber", "MORGA753116SM9IJ",
-                    "expiryDate", "2042-10-01",
-                    "issuedBy", "DVA",
-                    "issueNumber", 123456,
-                    "issueDate", "2018-04-19");
+    DrivingPermitDetails DRIVING_PERMIT_DVA =
+            createDrivingPermitDetails(
+                    "MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19", "123456");
 
-    Map<String, Object> DRIVING_PERMIT_DVLA =
-            Map.of(
-                    "personalNumber", "PARKE710112PBFGA",
-                    "expiryDate", "2032-02-02",
-                    "issuedBy", "DVLA",
-                    "issueDate", "2005-02-02");
+    DrivingPermitDetails DRIVING_PERMIT_DVLA =
+            createDrivingPermitDetails("PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02");
 
-    Map<String, Object> INVALID_DRIVING_PERMIT =
-            Map.of(
-                    "personalNumber", "MORGA753116SM9IJ",
-                    "expiryDate", "2042-10-01");
+    DrivingPermitDetails INVALID_DRIVING_PERMIT =
+            createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", null, null);
 
-    //    List<Object> PASSPORT_DETAILS =
-    //            List.of(
-    //                    Map.of(
-    //                            "documentNumber", "321654987",
-    //                            "icaoIssuerCode", "GBR",
-    //                            "expiryDate", "2030-01-01"));
     List<PassportDetails> PASSPORT_DETAILS =
             List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
 

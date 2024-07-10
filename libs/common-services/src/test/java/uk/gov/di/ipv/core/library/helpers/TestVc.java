@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -61,7 +62,7 @@ public class TestVc {
         private List<PassportDetails> passport;
         private List<Object> address;
         private List<SocialSecurityRecordDetails> socialSecurityRecord;
-        private List<Object> drivingPermit;
+        private List<DrivingPermitDetails> drivingPermit;
         private List<Object> residencePermit;
         private List<Object> idCard;
     }
