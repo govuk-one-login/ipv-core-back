@@ -98,11 +98,7 @@ public class UserIdentityService {
     }
 
     public UserIdentity generateUserIdentity(
-            List<VerifiableCredential> vcs,
-            String sub,
-            Vot vot,
-            ContraIndicators contraIndicators,
-            List<String> vtr)
+            List<VerifiableCredential> vcs, String sub, Vot vot, ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
         var profileType = vot.getProfileType();
@@ -113,7 +109,7 @@ public class UserIdentityService {
         var userIdentityBuilder = UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         buildUserIdentityBasedOnProfileType(
-                vot, contraIndicators, profileType, vcs, userIdentityBuilder, vtr);
+                vot, contraIndicators, profileType, vcs, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }
@@ -304,8 +300,7 @@ public class UserIdentityService {
             ContraIndicators contraIndicators,
             ProfileType profileType,
             List<VerifiableCredential> vcs,
-            UserIdentity.UserIdentityBuilder userIdentityBuilder,
-            List<String> vtr)
+            UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
         var successfulVcs = new ArrayList<VerifiableCredential>();
         for (var vc : vcs) {
@@ -314,7 +309,7 @@ public class UserIdentityService {
             }
         }
         if (Vot.P0.equals(vot)) {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, vtr));
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, vot));
         } else {
             addUserIdentityClaims(profileType, vcs, userIdentityBuilder, successfulVcs);
             userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
@@ -472,9 +467,9 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, List<String> vtr)
+    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot vot)
             throws UnrecognisedCiException {
-        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, vtr)
+        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, vot)
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(

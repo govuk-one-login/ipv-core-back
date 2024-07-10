@@ -138,7 +138,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.checkCiLevel(any(), any()))
+        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -153,7 +153,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.checkCiLevel(any(), any()))
+        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

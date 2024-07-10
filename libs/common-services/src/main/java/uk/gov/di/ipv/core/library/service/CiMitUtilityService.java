@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 public class CiMitUtilityService {
@@ -23,53 +22,48 @@ public class CiMitUtilityService {
         this.configService = configService;
     }
 
-    public boolean isBreachingCiThreshold(ContraIndicators contraIndicators, List<String> vtr) {
+    public boolean isBreachingCiThreshold(
+            ContraIndicators contraIndicators, Vot confidenceRequested) {
         return isScoreBreachingCiThreshold(
                 contraIndicators.getContraIndicatorScore(
                         configService.getContraIndicatorConfigMap()),
-                vtr);
+                confidenceRequested);
     }
 
     public boolean isBreachingCiThresholdIfMitigated(
-            ContraIndicator ci, ContraIndicators cis, List<String> vtr) {
+            ContraIndicator ci, ContraIndicators cis, Vot confidenceRequested) {
         var scoreOnceMitigated =
                 cis.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
                         + configService
                                 .getContraIndicatorConfigMap()
                                 .get(ci.getCode())
                                 .getCheckedScore();
-        return isScoreBreachingCiThreshold(scoreOnceMitigated, vtr);
+        return isScoreBreachingCiThreshold(scoreOnceMitigated, confidenceRequested);
     }
 
-    private boolean isScoreBreachingCiThreshold(int score, List<String> vtr) {
-        // Refactor this out in PYIC-6984
-        var newIdentityLevel = Vot.P2;
-        if (configService.enabled(P1_JOURNEYS_ENABLED) && vtr.contains(Vot.P1.name())) {
-            newIdentityLevel = Vot.P1;
-        }
-
+    private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(
-                        configService.getSsmParameter(
-                                CI_SCORING_THRESHOLD, newIdentityLevel.name()));
+                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD, vot.name()));
     }
 
-    public Optional<JourneyResponse> checkCiLevel(ContraIndicators cis, List<String> vtr)
-            throws ConfigException {
-        if (isBreachingCiThreshold(cis, vtr)) {
+    public Optional<JourneyResponse> getMitigationJourneyIfBreaching(
+            ContraIndicators cis, Vot confidenceRequested) throws ConfigException {
+        if (isBreachingCiThreshold(cis, confidenceRequested)) {
             return Optional.of(
-                    getCiMitigationJourneyResponse(cis, vtr).orElse(JOURNEY_FAIL_WITH_CI));
+                    getCiMitigationJourneyResponse(cis, confidenceRequested)
+                            .orElse(JOURNEY_FAIL_WITH_CI));
         }
         return Optional.empty();
     }
 
-    public Optional<JourneyResponse> getCiMitigationJourneyResponse(
-            ContraIndicators contraIndicators, List<String> vtr) throws ConfigException {
+    private Optional<JourneyResponse> getCiMitigationJourneyResponse(
+            ContraIndicators contraIndicators, Vot confidenceRequested) throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
         for (var ci : contraIndicators.getUsersContraIndicators()) {
             if (isCiMitigatable(ci)
-                    && !isBreachingCiThresholdIfMitigated(ci, contraIndicators, vtr)) {
+                    && !isBreachingCiThresholdIfMitigated(
+                            ci, contraIndicators, confidenceRequested)) {
                 // Prevent new mitigation journey if there is already a mitigated CI that fixes the
                 // breach
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {

@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -143,7 +144,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
-        var vtr = clientOAuthSessionItem.getVtr();
+        var vot = ipvSessionItem.getVot();
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
@@ -168,8 +169,13 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         request.getIpAddress());
 
-        var journeyResponse = ciMitUtilityService.checkCiLevel(cis, vtr);
+        var journeyResponse = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, vot);
         if (journeyResponse.isPresent()) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "CI score is breaching threshold - setting VOT to P0"));
+            ipvSessionItem.setVot(Vot.P0);
+
             return journeyResponse.get().toObjectMap();
         }
 

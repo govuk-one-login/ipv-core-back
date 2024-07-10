@@ -142,7 +142,7 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
-    private static final List<String> TEST_VTR = List.of("P2");
+    private static final Vot TEST_VOT = P2;
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final List<VerifiableCredential> VCS_FROM_STORE =
@@ -815,7 +815,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR)))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
@@ -966,7 +966,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -987,7 +987,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1025,7 +1025,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR)))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -1164,7 +1164,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(any(), eq(TEST_VTR)))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
@@ -1230,7 +1230,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
@@ -1260,7 +1260,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
@@ -1292,7 +1292,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
@@ -1327,7 +1327,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.checkCiLevel(testContraIndicators, TEST_VTR))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))

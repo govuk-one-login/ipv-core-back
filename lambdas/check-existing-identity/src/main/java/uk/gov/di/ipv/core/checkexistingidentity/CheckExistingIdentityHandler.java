@@ -68,7 +68,6 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -248,7 +247,6 @@ public class CheckExistingIdentityHandler
             var ipvSessionId = ipvSessionItem.getIpvSessionId();
             var userId = clientOAuthSessionItem.getUserId();
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-            var vtr = clientOAuthSessionItem.getVtr();
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -264,25 +262,21 @@ public class CheckExistingIdentityHandler
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity());
 
-            // Refactor this out in PYIC-6984
-            // If we want to prove a full identity from scratch we want to go for the lowest
-            // strength that is acceptable to the caller.
-            var preferredNewIdentityLevel = Vot.P2;
-            if (configService.enabled(P1_JOURNEYS_ENABLED)
-                    && clientOAuthSessionItem.getVtr().contains(Vot.P1.name())) {
-                preferredNewIdentityLevel = Vot.P1;
-            }
+            // If we want to prove or mitigate CIs for an identity we want to go for the lowest
+            // strength that is acceptable to the caller. We can only prove/mitigate GPG45
+            // identities
+            var lowestGpg45ConfidenceRequested =
+                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
 
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var ciScoringCheckResponse = ciMitUtilityService.checkCiLevel(contraIndicators, vtr);
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                if (preferredNewIdentityLevel == Vot.P1) {
+                if (lowestGpg45ConfidenceRequested == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -291,6 +285,11 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
+            // PYIC-6901 Confirm that we only want to compare CI scores against the lowest requested
+            // VOT
+            var ciScoringCheckResponse =
+                    ciMitUtilityService.getMitigationJourneyIfBreaching(
+                            contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -325,7 +324,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             contraIndicators)
-                    : buildNoMatchResponse(contraIndicators, preferredNewIdentityLevel);
+                    : buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -523,7 +522,7 @@ public class CheckExistingIdentityHandler
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
-                        clientOAuthSessionItem.getRequestedVotsByStrength(),
+                        clientOAuthSessionItem.getRequestedVotsByStrengthDescending(),
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
