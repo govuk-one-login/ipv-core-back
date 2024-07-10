@@ -142,12 +142,14 @@ public class SessionCredentialsService {
             throws VerifiableCredentialException {
         var criId = cri.getId();
         try {
-            var deleted = dataStore.delete(dataStore.getItemsBySortKeyPrefix(ipvSessionId, criId));
+            List<SessionCredentialItem> itemsToDelete =
+                    dataStore.getItemsBySortKeyPrefix(ipvSessionId, criId);
+            dataStore.delete(itemsToDelete);
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             String.format(
                                     "Deleted %d credentials for %s from session credentials table",
-                                    deleted.size(), criId)));
+                                    itemsToDelete.size(), criId)));
         } catch (Exception e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
