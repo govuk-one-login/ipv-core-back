@@ -19,10 +19,10 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -91,7 +91,7 @@ public class ProcessAsyncCriCredentialHandler
         this.configService = new ConfigService();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.evcsService = new EvcsService(configService);
@@ -102,43 +102,51 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
-        LogHelper.attachComponentId(configService);
-        List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
+        try {
+            LogHelper.attachComponentId(configService);
+            List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
 
-        for (SQSMessage message : event.getRecords()) {
-
-            try {
-                final BaseAsyncCriResponse asyncCriResponse =
-                        getAsyncResponseMessage(message.getBody());
-                if (isSuccessAsyncCriResponse(asyncCriResponse)) {
-                    processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
-                } else {
-                    processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
-                }
-            } catch (JsonProcessingException
-                    | ParseException
-                    | SqsException
-                    | CiPutException
-                    | AsyncVerifiableCredentialException
-                    | UnrecognisedVotException
-                    | CiPostMitigationsException
-                    | CredentialParseException
-                    | EvcsServiceException e) {
-                LOGGER.error(
-                        LogHelper.buildErrorMessage("Failed to process VC response message.", e));
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
-            } catch (VerifiableCredentialException e) {
-                LOGGER.error(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to process VC response message.")
-                                .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getErrorResponse()));
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+            for (SQSMessage message : event.getRecords()) {
+                failedRecords.addAll(processOrReturnItemFailure(message));
             }
-        }
 
-        return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+            return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+        } finally {
+            auditService.awaitAuditEvents();
+        }
+    }
+
+    private List<SQSBatchResponse.BatchItemFailure> processOrReturnItemFailure(SQSMessage message) {
+        try {
+            final BaseAsyncCriResponse asyncCriResponse =
+                    getAsyncResponseMessage(message.getBody());
+            if (isSuccessAsyncCriResponse(asyncCriResponse)) {
+                processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
+            } else {
+                processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
+            }
+        } catch (JsonProcessingException
+                | ParseException
+                | SqsException
+                | CiPutException
+                | AsyncVerifiableCredentialException
+                | UnrecognisedVotException
+                | CiPostMitigationsException
+                | CredentialParseException
+                | EvcsServiceException
+                | HttpResponseExceptionWithErrorBody e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
+            return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+        } catch (VerifiableCredentialException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Failed to process VC response message.")
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getErrorResponse()));
+            return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+        }
+        return List.of();
     }
 
     private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse)
@@ -173,7 +181,8 @@ public class ProcessAsyncCriCredentialHandler
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
-                    UnrecognisedVotException, CredentialParseException, EvcsServiceException {
+                    UnrecognisedVotException, CredentialParseException, EvcsServiceException,
+                    HttpResponseExceptionWithErrorBody {
         final CriResponseItem criResponseItem =
                 criResponseService.getCriResponseItem(
                         successAsyncCriResponse.getUserId(),
@@ -184,12 +193,12 @@ public class ProcessAsyncCriCredentialHandler
 
         var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
-                        successAsyncCriResponse.getCredentialIssuer());
+                        successAsyncCriResponse.getCredentialIssuer().getId());
 
         var vcs =
                 verifiableCredentialValidator.parseAndValidate(
                         successAsyncCriResponse.getUserId(),
-                        Cri.fromId(successAsyncCriResponse.getCredentialIssuer()),
+                        successAsyncCriResponse.getCredentialIssuer(),
                         successAsyncCriResponse.getVerifiableCredentialJWTs(),
                         oauthCriConfig.getSigningKey(),
                         oauthCriConfig.getComponentId());
@@ -248,7 +257,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
-            throws SqsException, CredentialParseException {
+            throws SqsException {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,

@@ -81,7 +81,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.evcsService = new EvcsService(configService);
     }
 
@@ -151,6 +151,8 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 }

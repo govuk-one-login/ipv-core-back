@@ -31,7 +31,6 @@ spotless {
 subprojects {
 	task allDeps(type: DependencyReportTask) {}
 	configurations.all {
-		exclude group: 'software.amazon.awssdk', module: 'netty-nio-client'
 		exclude group: 'software.amazon.awssdk', module: 'apache-client'
 	}
 }

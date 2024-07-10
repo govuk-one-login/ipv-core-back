@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -77,7 +76,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         VcStoreItem.class,
                         DataStore.getClient(),
                         configService);
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
 
     @Override
@@ -105,6 +104,8 @@ public class RestoreVcsHandler implements RequestStreamHandler {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped restoring VCs because of failure to send audit event", e));
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -186,7 +187,9 @@ public class RestoreVcsHandler implements RequestStreamHandler {
             throws SqsException, UnrecognisedVotException, CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
-        AuditExtensionsVcEvidence auditExtensions =
+        var vc = VerifiableCredential.fromVcStoreItem(vcStoreItem);
+
+        var auditExtensions =
                 getExtensionsForAudit(VerifiableCredential.fromVcStoreItem(vcStoreItem), null);
 
         var auditEvent =

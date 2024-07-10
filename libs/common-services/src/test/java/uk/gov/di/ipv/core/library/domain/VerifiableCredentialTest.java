@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 
 class VerifiableCredentialTest {
@@ -153,7 +154,7 @@ class VerifiableCredentialTest {
     void fromSessionCredentialItemShouldCreateAVerifiableCredential() throws Exception {
         var now = Instant.now();
         var sessionCredentialItem =
-                new SessionCredentialItem(SESSION_ID, CRI_ID, vcFixture.getSignedJwt(), true, now);
+                new SessionCredentialItem(SESSION_ID, CRI, vcFixture.getSignedJwt(), true, now);
         var generatedVc =
                 VerifiableCredential.fromSessionCredentialItem(sessionCredentialItem, USER_ID);
 
@@ -169,7 +170,7 @@ class VerifiableCredentialTest {
     void fromSessionCredentialItemShouldThrowCredentialParseExceptionIfVCParserThrowsException() {
         var now = Instant.now();
         var sessionCredentialItem =
-                new SessionCredentialItem(SESSION_ID, CRI_ID, vcFixture.getSignedJwt(), true, now);
+                new SessionCredentialItem(SESSION_ID, CRI, vcFixture.getSignedJwt(), true, now);
         try (MockedStatic<VerifiableCredentialParser> mockVcParser =
                 mockStatic(VerifiableCredentialParser.class)) {
             mockVcParser
@@ -189,7 +190,7 @@ class VerifiableCredentialTest {
         var mockSignedJwt = mock(SignedJWT.class);
         when(mockSignedJwt.serialize()).thenReturn("👽");
         var sessionCredentialItem =
-                new SessionCredentialItem(SESSION_ID, CRI_ID, mockSignedJwt, true, null);
+                new SessionCredentialItem(SESSION_ID, CRI, mockSignedJwt, true, null);
 
         assertThrows(
                 CredentialParseException.class,
@@ -206,7 +207,7 @@ class VerifiableCredentialTest {
 
         var expected =
                 new SessionCredentialItem(
-                        SESSION_ID, "drivingLicence", vcFixture.getSignedJwt(), true, now);
+                        SESSION_ID, DRIVING_LICENCE, vcFixture.getSignedJwt(), true, now);
 
         assertEquals(expected.getIpvSessionId(), sessionCredentialItem.getIpvSessionId());
         assertEquals(expected.getSortKey(), sessionCredentialItem.getSortKey());

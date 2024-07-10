@@ -18,6 +18,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -56,6 +58,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -66,6 +69,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.model.NamePart;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -74,6 +78,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Date;
@@ -92,6 +98,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -110,6 +117,10 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NA
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
+import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
@@ -194,6 +205,13 @@ class InitialiseIpvSessionHandlerTest {
         clientOAuthSessionItem.setUserId(TEST_USER_ID);
         clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
         clientOAuthSessionItem.setVtr(List.of("Cl.Cm.P2", "Cl.Cm.PCL200"));
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -797,27 +815,38 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(
                     AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                     inheritedIdentityAuditEvent.getEventName());
-            var extension = (AuditExtensionsVcEvidence) inheritedIdentityAuditEvent.getExtensions();
+            var extension = inheritedIdentityAuditEvent.getExtensions();
+            var expectedAge =
+                    Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
             var expectedExtension =
                     new AuditExtensionsVcEvidence(
                             "https://orch.stubs.account.gov.uk/migration/v1",
-                            OBJECT_MAPPER.valueToTree(List.of()),
+                            List.of(),
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,
-                            58);
+                            expectedAge);
             assertEquals(expectedExtension, extension);
             var restricted =
                     (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
-            assertEquals(
-                    "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.name()));
-            assertEquals(
-                    "[{\"value\":\"1965-07-08\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
-            assertEquals(
-                    "[{\"personalNumber\":\"AB123456C\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
+            var expectedName =
+                    List.of(
+                            createName(
+                                    List.of(
+                                            createNamePart(
+                                                    "KENNETH", NamePart.NamePartType.GIVEN_NAME),
+                                            createNamePart(
+                                                    "DECERQUEIRA",
+                                                    NamePart.NamePartType.FAMILY_NAME))));
+
+            var expectedBirthDate = List.of(createBirthDate("1965-07-08"));
+            var expectedSocialSecurityRecord =
+                    List.of(
+                            createSocialSecurityRecordDetails(
+                                    "AB123456C")); // pragma: allowlist secret
+            assertEquals(expectedName, restricted.name());
+            assertEquals(expectedBirthDate, restricted.birthDate());
+            assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
 
             assertEquals(
                     AuditEventTypes.IPV_JOURNEY_START,

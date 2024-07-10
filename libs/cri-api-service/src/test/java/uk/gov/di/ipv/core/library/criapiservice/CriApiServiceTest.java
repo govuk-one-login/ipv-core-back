@@ -55,6 +55,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -63,8 +65,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class CriApiServiceTest {
-    private static final String TEST_CRI_ID = "test-cri-id";
-    private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String TEST_API_KEY = "test_api_key";
     private static final String TEST_BASIC_AUTH_USER = "test_basic_auth_user";
@@ -224,7 +224,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
+                        ADDRESS, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertEquals(TEST_API_KEY, request.getHeaderMap().get(API_KEY_HEADER).get(0));
@@ -242,7 +242,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
+                        ADDRESS, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertEquals(
@@ -268,7 +268,7 @@ class CriApiServiceTest {
                     () ->
                             criApiService
                                     .buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                                            TEST_CRI_ID, TEST_AUTHORISATION_CODE, null));
+                                            ADDRESS, TEST_AUTHORISATION_CODE, null));
         }
     }
 
@@ -285,7 +285,7 @@ class CriApiServiceTest {
         // Act
         var httpRequest =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
+                        ADDRESS, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertNotEquals("InvalidApiKey", httpRequest.getAuthorization());
@@ -303,7 +303,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
+                        ADDRESS, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertTrue(request.getBody().contains("code=" + TEST_AUTHORISATION_CODE));
@@ -321,7 +321,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        TEST_CRI_ID, TEST_AUTHORISATION_CODE, null);
+                        ADDRESS, TEST_AUTHORISATION_CODE, null);
 
         // Assert
         assertTrue(request.getBody().contains("redirect_uri="));
@@ -332,7 +332,7 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldBuildAnAuthorizationHeader() {
         // Arrange
         var criOauthSession = new CriOAuthSessionItem();
-        criOauthSession.setCriId(TEST_CRI_ID);
+        criOauthSession.setCriId(ADDRESS.getId());
 
         // Act
         var request =
@@ -350,7 +350,7 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithBasicAuthenticationAndClientCredentialsShouldIncludeGrantTypeInRequestBody() {
         // Arrange
         var criOauthSession = new CriOAuthSessionItem();
-        criOauthSession.setCriId(TEST_CRI_ID);
+        criOauthSession.setCriId(ADDRESS.getId());
 
         // Act
         var request =
@@ -375,7 +375,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
+                criApiService.fetchVerifiableCredential(accessToken, ADDRESS, null);
 
         // Assert
         assertEquals(
@@ -406,7 +406,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
+                criApiService.fetchVerifiableCredential(accessToken, ADDRESS, null);
 
         // Assert
         assertEquals(testUserId, verifiableCredentialResponse.getUserId());
@@ -432,7 +432,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
+                criApiService.fetchVerifiableCredential(accessToken, ADDRESS, null);
 
         // Assert
         assertEquals(
@@ -461,7 +461,7 @@ class CriApiServiceTest {
 
         // Act
         var verifiableCredentialResponse =
-                criApiService.fetchVerifiableCredential(accessToken, TEST_CRI_ID, null);
+                criApiService.fetchVerifiableCredential(accessToken, ADDRESS, null);
 
         // Assert
         assertEquals(
@@ -489,7 +489,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"), TEST_CRI_ID, null));
+                                        new BearerAccessToken("validToken"), ADDRESS, null));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -499,7 +499,7 @@ class CriApiServiceTest {
     void getVerifiableCredentialThrowsIf404NotFoundFromDcmawCri() {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        callbackRequest.setCredentialIssuerId("dcmaw");
+        callbackRequest.setCredentialIssuerId(DCMAW.getId());
 
         stubFor(
                 post("/credentials/issue")
@@ -515,7 +515,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"), DCMAW_CRI_ID, null));
+                                        new BearerAccessToken("validToken"), DCMAW, null));
 
         assertEquals(HTTPResponse.SC_NOT_FOUND, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -537,7 +537,7 @@ class CriApiServiceTest {
                         CriApiException.class,
                         () ->
                                 criApiService.fetchVerifiableCredential(
-                                        new BearerAccessToken("validToken"), TEST_CRI_ID, null));
+                                        new BearerAccessToken("validToken"), ADDRESS, null));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -552,7 +552,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
+                        new BearerAccessToken("validToken"), ADDRESS, null, null);
 
         // Assert
         assertEquals(TEST_API_KEY, request.getHeaderMap().get("x-api-key").get(0));
@@ -564,7 +564,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
+                        new BearerAccessToken("validToken"), ADDRESS, null, null);
 
         // Assert
         assertEquals("Bearer validToken", request.getAuthorization());
@@ -578,14 +578,14 @@ class CriApiServiceTest {
                 new AsyncCredentialRequestBodyDto(
                         "userId",
                         "journeyId",
-                        TEST_CRI_ID,
+                        ADDRESS.getId(),
                         "RANDOM_STATE_VALUE",
                         "https://example.com");
 
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+                        new BearerAccessToken("validToken"), ADDRESS, null, body);
 
         // Assert
         assertEquals("application/json", request.getHeaderMap().get("Content-Type").get(0));
@@ -599,14 +599,14 @@ class CriApiServiceTest {
                 new AsyncCredentialRequestBodyDto(
                         "userId",
                         "journeyId",
-                        TEST_CRI_ID,
+                        ADDRESS.getId(),
                         "RANDOM_STATE_VALUE",
                         "https://example.com");
 
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, body);
+                        new BearerAccessToken("validToken"), ADDRESS, null, body);
 
         // Assert
         assertTrue(request.getBody().contains("userId"));
@@ -618,7 +618,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildFetchVerifiableCredentialRequest(
-                        new BearerAccessToken("validToken"), TEST_CRI_ID, null, null);
+                        new BearerAccessToken("validToken"), ADDRESS, null, null);
         // Assert
         assertEquals(
                 String.format("http://localhost:%s/credentials/issue", wmRuntimeInfo.getHttpPort()),
@@ -627,7 +627,7 @@ class CriApiServiceTest {
 
     private CriCallbackRequest getValidCallbackRequest() {
         return CriCallbackRequest.builder()
-                .credentialIssuerId(TEST_CRI_ID)
+                .credentialIssuerId(ADDRESS.getId())
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .build();
     }

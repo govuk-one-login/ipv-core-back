@@ -105,21 +105,21 @@ class SessionCredentialsServiceTest {
             var item1 =
                     new SessionCredentialItem(
                             SESSION_ID,
-                            CREDENTIAL_1.getCri().getId(),
+                            CREDENTIAL_1.getCri(),
                             CREDENTIAL_1.getSignedJwt(),
                             false,
                             now);
             var item2 =
                     new SessionCredentialItem(
                             SESSION_ID,
-                            CREDENTIAL_2.getCri().getId(),
+                            CREDENTIAL_2.getCri(),
                             CREDENTIAL_2.getSignedJwt(),
                             false,
                             now.plusSeconds(10));
             var item3 =
                     new SessionCredentialItem(
                             SESSION_ID,
-                            CREDENTIAL_3.getCri().getId(),
+                            CREDENTIAL_3.getCri(),
                             CREDENTIAL_3.getSignedJwt(),
                             true,
                             null);
@@ -144,7 +144,7 @@ class SessionCredentialsServiceTest {
             var item1 =
                     new SessionCredentialItem(
                             SESSION_ID,
-                            CREDENTIAL_1.getCri().getId(),
+                            CREDENTIAL_1.getCri(),
                             CREDENTIAL_1.getSignedJwt(),
                             false,
                             null);
@@ -168,7 +168,7 @@ class SessionCredentialsServiceTest {
 
             var sessionCredentialItem =
                     new SessionCredentialItem(
-                            SESSION_ID, CREDENTIAL_1.getCri().getId(), mockSignedJwt, false, null);
+                            SESSION_ID, CREDENTIAL_1.getCri(), mockSignedJwt, false, null);
             when(mockDataStore.getItems(SESSION_ID)).thenReturn(List.of(sessionCredentialItem));
 
             var caughtException =
@@ -228,7 +228,7 @@ class SessionCredentialsServiceTest {
                     .thenReturn(List.of(sessionCredentialItem));
 
             sessionCredentialService.deleteSessionCredentialsForCri(
-                    SESSION_ID, CREDENTIAL_1.getCri().getId());
+                    SESSION_ID, CREDENTIAL_1.getCri());
 
             verify(mockDataStore)
                     .getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId());
@@ -329,7 +329,7 @@ class SessionCredentialsServiceTest {
                             VerifiableCredentialException.class,
                             () ->
                                     sessionCredentialService.deleteSessionCredentialsForCri(
-                                            SESSION_ID, CREDENTIAL_1.getCri().getId()));
+                                            SESSION_ID, CREDENTIAL_1.getCri()));
 
             assertEquals(
                     HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
@@ -348,7 +348,7 @@ class SessionCredentialsServiceTest {
                             VerifiableCredentialException.class,
                             () ->
                                     sessionCredentialService.deleteSessionCredentialsForCri(
-                                            SESSION_ID, CREDENTIAL_1.getCri().getId()));
+                                            SESSION_ID, CREDENTIAL_1.getCri()));
 
             assertEquals(
                     HTTPResponse.SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());

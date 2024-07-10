@@ -99,6 +99,6 @@ public class VerifiableCredential {
     public SessionCredentialItem toSessionCredentialItem(
             String ipvSessionId, boolean receivedThisSession) {
         return new SessionCredentialItem(
-                ipvSessionId, cri.getId(), signedJwt, receivedThisSession, migrated);
+                ipvSessionId, cri, signedJwt, receivedThisSession, migrated);
     }
 }

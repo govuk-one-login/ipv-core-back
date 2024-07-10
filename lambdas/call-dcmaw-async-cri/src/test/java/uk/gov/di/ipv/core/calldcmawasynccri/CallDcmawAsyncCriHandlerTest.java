@@ -2,9 +2,11 @@ package uk.gov.di.ipv.core.calldcmawasynccri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -14,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -26,6 +29,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -54,12 +58,20 @@ class CallDcmawAsyncCriHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private DcmawAsyncCriService mockDcmawAsyncCriService;
     @Mock private CriStoringService mockCriStoringService;
+    @Mock private AuditService mockAuditService;
     private static final IpvSessionItem mockIpvSessionItem = new IpvSessionItem();
     @InjectMocks private CallDcmawAsyncCriHandler callDcmawAsyncCriHandler;
 
     @BeforeEach
     public void setUp() {
         mockIpvSessionItem.setIpvSessionId("a-session-id");
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -86,7 +98,7 @@ class CallDcmawAsyncCriHandlerTest {
         verify(mockCriStoringService)
                 .recordCriResponse(
                         eq(input),
-                        eq(DCMAW_ASYNC.getId()),
+                        eq(DCMAW_ASYNC),
                         any(String.class),
                         eq(clientOAuthSessionItem),
                         eq(Collections.emptyList()));

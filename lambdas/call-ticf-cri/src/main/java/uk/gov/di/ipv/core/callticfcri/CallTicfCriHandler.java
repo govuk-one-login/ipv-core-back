@@ -41,13 +41,11 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
 
@@ -58,6 +56,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final CriStoringService criStoringService;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
@@ -67,10 +66,11 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ticfCriService = new TicfCriService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,
-                        new AuditService(AuditService.getSqsClient(), configService),
+                        auditService,
                         null,
                         new SessionCredentialsService(configService),
                         ciMitService);
@@ -84,7 +84,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             TicfCriService ticfCriService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService,
-            CriStoringService criStoringService) {
+            CriStoringService criStoringService,
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
@@ -92,6 +93,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
         this.criStoringService = criStoringService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -132,6 +134,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -156,7 +159,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
 
         criStoringService.storeVcs(
-                TICF.getId(),
+                TICF,
                 request.getIpAddress(),
                 request.getDeviceInformation(),
                 ticfVcs,

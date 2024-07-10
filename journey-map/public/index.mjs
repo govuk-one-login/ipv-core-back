@@ -23,19 +23,24 @@ const JOURNEY_TYPES = {
     REVERIFICATION: 'Reverification',
 };
 
+const COMMON_JOURNEY_TYPES = [
+    'NEW_P2_IDENTITY', 'REUSE_EXISTING_IDENTITY', 'REPEAT_FRAUD_CHECK', 'REVERIFICATION', 'UPDATE_ADDRESS', 'UPDATE_NAME'
+];
+
 const CRI_NAMES = {
-    address: 'Address CRI',
-    claimedIdentity: 'Claimed Identity CRI',
-    bav: 'Bank account CRI',
-    dcmaw: 'DCMAW (app) CRI',
-    drivingLicence: 'Driving licence (web) CRI',
-    f2f: 'Face-to-face CRI',
-    fraud: 'Experian fraud CRI',
-    hmrcKbv: 'HMRC KBV CRI',
-    kbv: 'Experian KBV CRI',
-    nino: 'NINO CRI',
-    ukPassport: 'Passport (web) CRI',
-    ticf: 'TICF CRI',
+    address: 'Address',
+    claimedIdentity: 'Claimed Identity',
+    bav: 'Bank account',
+    dcmaw: 'DCMAW (app)',
+    drivingLicence: 'Driving licence (web)',
+    dwpKbv: 'DWP KBV',
+    f2f: 'Face-to-face',
+    fraud: 'Experian fraud',
+    hmrcKbv: 'HMRC KBV',
+    kbv: 'Experian KBV',
+    nino: 'HMRC check (NINO)',
+    ukPassport: 'Passport (web)',
+    ticf: 'TICF',
 };
 
 mermaid.initialize({
@@ -46,12 +51,16 @@ mermaid.initialize({
 });
 
 // Page elements
+const headerTitleLink = document.getElementById('header-title');
 const headerBar = document.getElementById('header-bar');
+const headerActions = document.getElementById('header-actions');
+const journeySelect = document.getElementById('journey-select');
 const headerContent = document.getElementById('header-content');
 const headerToggle = document.getElementById('header-toggle');
 const form = document.getElementById('configuration-form');
 const disabledInput = document.getElementById('disabledInput');
 const featureFlagInput = document.getElementById('featureFlagInput')
+const otherOptions = document.getElementById('otherOptions');
 const nodeTitle = document.getElementById('nodeTitle');
 const nodeDef = document.getElementById('nodeDef');
 const nodeDesc = document.getElementById('nodeDesc');
@@ -85,7 +94,9 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
-    window.history.pushState(undefined, undefined, getJourneyUrl(targetJourney));
+    const params = new URLSearchParams(window.location.search);
+    params.set('journeyType', targetJourney);
+    window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
     await updateView();
@@ -101,25 +112,47 @@ const switchJourney = async (targetJourney, targetState) => {
 };
 
 const setupHeader = () => {
-    // Add header entries for each journey
-    Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+    // Add header entries for most common journies
+    COMMON_JOURNEY_TYPES.forEach(id => {
         const link = document.createElement('a');
         link.href = getJourneyUrl(id);
+        const label = JOURNEY_TYPES[id];
         link.innerText = label;
         link.onclick = async (e) => {
             e.preventDefault();
             await switchJourney(id, null);
         }
-        headerBar.insertBefore(link,  stateSearch);
-    });
+        headerBar.insertBefore(link,  headerActions);
+    })
 
+    // Add option to journey select for each journey
+    Object.entries(JOURNEY_TYPES).forEach(([id, label]) => {
+        const option = document.createElement('option');
+        option.setAttribute('value', id)
+        option.innerText = label;
+        journeySelect.append(option);
+    });
+    journeySelect.onchange = async (e) => {
+        await switchJourney(journeySelect.value, null);
+    }
     // Handle user navigating back/forwards
     window.addEventListener('popstate', async () => {
         await updateView();
     });
 };
 
+const optionOnChangeHandler = (name, input) => () => {
+    const params = new URLSearchParams(window.location.search);
+    if (input.checked) {
+        params.append(name, input.value);
+    } else {
+        params.delete(name, input.value);
+    }
+    window.history.replaceState(undefined, undefined, `?${params.toString()}`);
+};
+
 const setupOptions = (name, options, fieldset, labels) => {
+    const selectedOptions = new URLSearchParams(window.location.search).getAll(name) || [];
     if (options.length) {
         options.forEach((option) => {
             const input = document.createElement('input');
@@ -127,6 +160,8 @@ const setupOptions = (name, options, fieldset, labels) => {
             input.name = name;
             input.value = option;
             input.id = option;
+            input.checked = selectedOptions.includes(option) ? 'checked' : undefined;
+            input.onchange = optionOnChangeHandler(name, input);
 
             const label = document.createElement('label');
             const span = document.createElement('span');
@@ -142,6 +177,14 @@ const setupOptions = (name, options, fieldset, labels) => {
     }
 };
 
+const setupOtherOptions = () => {
+    const selectedOptions = new URLSearchParams(window.location.search).getAll('otherOption') || [];
+    for (const input of otherOptions.getElementsByTagName('input')) {
+        input.checked = selectedOptions.includes(input.value) ? 'checked' : undefined;
+        input.onchange = optionOnChangeHandler('otherOption', input);
+    }
+}
+
 const updateView = async () => {
     const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
     journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
@@ -152,13 +195,15 @@ const updateView = async () => {
     } else {
         journeyDesc.innerText = '';
     }
+    journeySelect.value = selectedJourney;
+    journeyDesc.innerText = desc || '';
 
     return renderSvg(selectedJourney, formData);
 };
 
 // Render the journey map SVG
 const renderSvg = async (selectedJourney, formData) => {
-    const diagram = render(journeyMaps[selectedJourney], nestedJourneys, formData);
+    const diagram = render(selectedJourney, journeyMaps, nestedJourneys, formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
@@ -292,6 +337,7 @@ const initialize = async () => {
     const { disabledOptions, featureFlagOptions } = getOptions(journeyMaps);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
+    setupOtherOptions();
     setupMermaidClickHandlers();
     setupHeaderToggleClickHandlers();
     form.addEventListener('change', async (event) => {
@@ -299,6 +345,10 @@ const initialize = async () => {
         await updateView();
     });
     setupSearchHandler();
+    headerTitleLink.onclick = async (e) => {
+        e.preventDefault();
+        await switchJourney(DEFAULT_JOURNEY_TYPE);
+      };
     await updateView();
 }
 

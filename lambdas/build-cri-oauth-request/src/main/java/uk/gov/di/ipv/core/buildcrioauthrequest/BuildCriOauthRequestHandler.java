@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -131,7 +130,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.configService = new ConfigService();
         this.signerFactory = new KmsEs256SignerFactory();
-        this.auditService = new AuditService(AuditService.getSqsClient(), configService);
+        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
@@ -252,6 +251,8 @@ public class BuildCriOauthRequestHandler
                     e,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_EVIDENCE_REQUESTED);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -402,7 +403,7 @@ public class BuildCriOauthRequestHandler
                 LOGGER.error(LogHelper.buildErrorMessage("Failed to get Shared Attributes.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
-            } catch (ParseException | CredentialParseException e) {
+            } catch (ParseException e) {
                 LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials.", e));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, FAILED_TO_PARSE_ISSUED_CREDENTIALS);

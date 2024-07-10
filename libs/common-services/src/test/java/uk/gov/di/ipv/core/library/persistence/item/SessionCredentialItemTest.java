@@ -12,10 +12,10 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 
 @ExtendWith(MockitoExtension.class)
 class SessionCredentialItemTest {
-    private static final String CRI_ID = "cri-id";
     private static final String SESSION_ID = "session-id";
     private static final String SIGNATURE = "signature";
     @Mock private SignedJWT mockJwt;
@@ -25,16 +25,16 @@ class SessionCredentialItemTest {
     public void setUp() {
         when(mockJwt.getSignature()).thenReturn(Base64URL.encode(SIGNATURE));
         sessionCredentialItem =
-                new SessionCredentialItem(SESSION_ID, CRI_ID, mockJwt, true, Instant.now());
+                new SessionCredentialItem(SESSION_ID, ADDRESS, mockJwt, true, Instant.now());
     }
 
     @Test
     void shouldCorrectlyFormSortKey() {
-        assertEquals("cri-id#c2lnbmF0dXJl", sessionCredentialItem.getSortKey());
+        assertEquals("address#c2lnbmF0dXJl", sessionCredentialItem.getSortKey());
     }
 
     @Test
     void getCriIdShouldDoWhatYouThinkItShould() {
-        assertEquals(CRI_ID, sessionCredentialItem.getCriId());
+        assertEquals(ADDRESS.getId(), sessionCredentialItem.getCriId());
     }
 }
