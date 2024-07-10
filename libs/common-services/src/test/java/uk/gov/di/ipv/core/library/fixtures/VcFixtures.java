@@ -183,7 +183,7 @@ public interface VcFixtures {
                             .checkDetails(null)
                             .build());
 
-    Long testUprn = Long.valueOf("100120012077");
+    Long TEST_UPRN = Long.valueOf("100120012077");
 
     PostalAddress ADDRESS_1 =
             createPostalAddress(
@@ -193,7 +193,7 @@ public interface VcFixtures {
                     "S5 6UN",
                     "SHEFFIELD",
                     "GB",
-                    testUprn,
+                    TEST_UPRN,
                     "2000-01-01",
                     null);
 
@@ -205,13 +205,13 @@ public interface VcFixtures {
                     "MK15 5BX",
                     "Milton Keynes",
                     "GB",
-                    testUprn,
+                    TEST_UPRN,
                     "2024-01-01",
                     null);
 
     PostalAddress ADDRESS_3 =
             createPostalAddress(
-                    "8", "", "HADLEY ROAD", "BA2 5AA", "BATH", "GB", testUprn, null, "2000-01-01");
+                    "8", "", "HADLEY ROAD", "BA2 5AA", "BATH", "GB", TEST_UPRN, null, "2000-01-01");
 
     PostalAddress ADDRESS_4 =
             createPostalAddress(
@@ -221,7 +221,7 @@ public interface VcFixtures {
                     "HP16 0AL",
                     "GREAT MISSENDEN",
                     "GB",
-                    testUprn,
+                    TEST_UPRN,
                     null,
                     null,
                     "UNIT 2B",
@@ -240,7 +240,7 @@ public interface VcFixtures {
                             "CA14 5PH",
                             "HARRINGTON",
                             "GB",
-                            testUprn,
+                            TEST_UPRN,
                             "2011-01-01",
                             null),
                     createPostalAddress(
@@ -250,7 +250,7 @@ public interface VcFixtures {
                             "TE5 7ER",
                             "SOME LOCALITY",
                             "GB",
-                            testUprn,
+                            TEST_UPRN,
                             null,
                             "2011-01-01"));
 
@@ -264,7 +264,7 @@ public interface VcFixtures {
                             "CA14 5PH",
                             "HARRINGTON",
                             "GB",
-                            testUprn,
+                            TEST_UPRN,
                             null,
                             null),
                     createPostalAddress(
@@ -274,7 +274,7 @@ public interface VcFixtures {
                             "TE5 7ER",
                             "SOME LOCALITY",
                             "GB",
-                            testUprn,
+                            TEST_UPRN,
                             null,
                             null));
 
