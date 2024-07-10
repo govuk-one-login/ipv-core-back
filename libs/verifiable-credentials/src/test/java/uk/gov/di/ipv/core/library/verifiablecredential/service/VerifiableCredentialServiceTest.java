@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
@@ -174,13 +176,29 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void storeIdentityShouldThrowIfFailureToDeleteExistingVc() {
-        doThrow(new IllegalStateException()).when(mockDataStore).deleteAllByPartition(USER_ID);
+    void storeIdentityShouldThrowIfFailureToDeleteExistingVc() throws BatchDeleteException {
+        doThrow(new BatchDeleteException("Deletion failed"))
+                .when(mockDataStore)
+                .deleteAllByPartition(USER_ID);
 
         var verifiableCredentialException =
                 assertThrows(
                         VerifiableCredentialException.class,
                         () -> verifiableCredentialService.storeIdentity(List.of(), USER_ID));
+
+        assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
+        assertEquals(FAILED_TO_DELETE_CREDENTIAL, verifiableCredentialException.getErrorResponse());
+    }
+
+    @Test
+    void storeIdentityShouldThrowIfAnyFailure() {
+        var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        doThrow(new IllegalStateException()).when(mockDataStore).create(any());
+
+        var verifiableCredentialException =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> verifiableCredentialService.storeIdentity(vcs, USER_ID));
 
         assertEquals(SC_SERVER_ERROR, verifiableCredentialException.getResponseCode());
         assertEquals(FAILED_TO_STORE_IDENTITY, verifiableCredentialException.getErrorResponse());

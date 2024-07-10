@@ -21,6 +21,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -158,12 +159,12 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public void deleteAllByPartition(String partitionValue) {
+    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
         delete(getItems(partitionValue));
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public int delete(List<T> items) {
+    public void delete(List<T> items) throws BatchDeleteException {
         if (!items.isEmpty()) {
             BatchWriteResult batchWriteResult =
                     processBatchWrite(createWriteBatchForDeleteItems(items));
@@ -172,15 +173,12 @@ public class DataStore<T extends DynamodbItem> {
             List<Key> unprocessedItems =
                     batchWriteResult.unprocessedDeleteItemsForTable(this.table);
             if (!unprocessedItems.isEmpty()) {
-                unprocessedItems.forEach(
-                        key ->
-                                LOGGER.warn(
-                                        "Delete fail for item key: %s".formatted(key.toString())));
+                String errMessage = "Failed during batch deletion.";
+                LOGGER.error(errMessage);
+                throw new BatchDeleteException(errMessage);
             }
-            return items.size() - unprocessedItems.size();
         }
         LOGGER.info("No items to delete");
-        return items.size();
     }
 
     @ExcludeFromGeneratedCoverageReport

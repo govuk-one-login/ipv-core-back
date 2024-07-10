@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
@@ -204,7 +205,8 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting() {
+        void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting()
+                throws BatchDeleteException {
             doThrow(new IllegalStateException())
                     .when(mockDataStore)
                     .deleteAllByPartition(SESSION_ID);
@@ -338,10 +340,11 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
-        void deleteSessionCredentialsForCriShouldThrowIfProblemDeleting() {
+        void deleteSessionCredentialsForCriShouldThrowIfProblemDeleting()
+                throws BatchDeleteException {
             when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
                     .thenReturn(List.of());
-            when(mockDataStore.delete(any())).thenThrow(new IllegalStateException());
+            doThrow(new IllegalStateException()).when(mockDataStore).delete(any());
 
             var verifiableCredentialException =
                     assertThrows(
