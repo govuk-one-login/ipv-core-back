@@ -188,7 +188,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_CRI))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+        when(configService.getOauthCriActiveConnectionConfig(F2F))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         doThrow(VerifiableCredentialException.class)
                 .when(verifiableCredentialValidator)
@@ -379,7 +379,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        when(configService.getOauthCriActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+        when(configService.getOauthCriActiveConnectionConfig(F2F))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
     }
 

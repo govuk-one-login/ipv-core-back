@@ -184,7 +184,8 @@ public class CriCheckingService {
                 || !state.equals(criOAuthSessionItem.getCriOAuthSessionId())) {
             throw new InvalidCriCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
-        if (configService.getOauthCriActiveConnectionConfig(criId) == null) {
+        if (configService.getOauthCriActiveConnectionConfig(callbackRequest.getCredentialIssuer())
+                == null) {
             throw new InvalidCriCallbackRequestException(
                     ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }

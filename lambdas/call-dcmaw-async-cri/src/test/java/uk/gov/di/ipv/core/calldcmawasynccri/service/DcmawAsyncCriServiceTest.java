@@ -81,13 +81,13 @@ class DcmawAsyncCriServiceTest {
                         .build();
 
         when(mockCriOAuthSessionService.persistCriOAuthSession(
-                        CRI_OAUTH_STATE, DCMAW_ASYNC.getId(), CLIENT_OAUTH_SESSION_ID, CONNECTION))
+                        CRI_OAUTH_STATE, DCMAW_ASYNC, CLIENT_OAUTH_SESSION_ID, CONNECTION))
                 .thenReturn(criOAuthSessionItem);
 
         when(mockConfigService.getOauthCriConfig(criOAuthSessionItem)).thenReturn(criConfig);
         when(mockConfigService.getCriOAuthClientSecret(criOAuthSessionItem))
                 .thenReturn(TEST_SECRET);
-        when(mockConfigService.getActiveConnection(DCMAW_ASYNC.getId())).thenReturn(CONNECTION);
+        when(mockConfigService.getActiveConnection(DCMAW_ASYNC)).thenReturn(CONNECTION);
 
         var accessToken = new BearerAccessToken(ACCESS_TOKEN);
         when(mockCriApiService.fetchAccessToken(CRI_CLIENT_ID, TEST_SECRET, criOAuthSessionItem))

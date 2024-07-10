@@ -175,8 +175,8 @@ public class ConfigService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public String getCriPrivateApiKeyForActiveConnection(String criId) {
-        return getApiKeyFromSecretManager(criId, getActiveConnection(criId));
+    public String getCriPrivateApiKeyForActiveConnection(Cri cri) {
+        return getApiKeyFromSecretManager(cri, getActiveConnection(cri));
     }
 
     public String getAppApiKey(String appId) {
@@ -185,51 +185,50 @@ public class ConfigService {
 
     public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
         return getApiKeyFromSecretManager(
-                criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
+                Cri.fromId(criOAuthSessionItem.getCriId()), criOAuthSessionItem.getConnection());
     }
 
     public String getCriOAuthClientSecret(CriOAuthSessionItem criOAuthSessionItem) {
         return getOAuthClientSecretFromSecretManager(
-                criOAuthSessionItem.getCriId(), criOAuthSessionItem.getConnection());
+                Cri.fromId(criOAuthSessionItem.getCriId()), criOAuthSessionItem.getConnection());
     }
 
-    public OauthCriConfig getOauthCriActiveConnectionConfig(String credentialIssuerId) {
-        return getOauthCriConfigForConnection(
-                getActiveConnection(credentialIssuerId), credentialIssuerId);
+    public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {
+        return getOauthCriConfigForConnection(getActiveConnection(cri), cri);
     }
 
     public OauthCriConfig getOauthCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
         return getOauthCriConfigForConnection(
-                criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
+                criOAuthSessionItem.getConnection(), Cri.fromId(criOAuthSessionItem.getCriId()));
     }
 
-    public OauthCriConfig getOauthCriConfigForConnection(String connection, String criId) {
-        return getCriConfigForType(connection, criId, OauthCriConfig.class);
+    public OauthCriConfig getOauthCriConfigForConnection(String connection, Cri cri) {
+        return getCriConfigForType(connection, cri, OauthCriConfig.class);
     }
 
-    public RestCriConfig getRestCriConfig(String criId) {
-        return getCriConfigForType(getActiveConnection(criId), criId, RestCriConfig.class);
+    public RestCriConfig getRestCriConfig(Cri cri) {
+        return getCriConfigForType(getActiveConnection(cri), cri, RestCriConfig.class);
     }
 
-    public CriConfig getCriConfig(String criId) {
-        return getCriConfigForType(getActiveConnection(criId), criId, CriConfig.class);
+    public CriConfig getCriConfig(Cri cri) {
+        return getCriConfigForType(getActiveConnection(cri), cri, CriConfig.class);
     }
 
-    public String getActiveConnection(String credentialIssuerId) {
+    public String getActiveConnection(Cri cri) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/activeConnection";
-        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId);
+        return getSsmParameterWithOverride(pathTemplate, cri.getId());
     }
 
-    public String getComponentId(String credentialIssuerId) {
-        var criConfig = getOauthCriActiveConnectionConfig(credentialIssuerId);
+    public String getComponentId(Cri cri) {
+        var criConfig = getOauthCriActiveConnectionConfig(cri);
         return criConfig.getComponentId();
     }
 
-    public String getAllowedSharedAttributes(String credentialIssuerId) {
+    public String getAllowedSharedAttributes(Cri cri) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/allowedSharedAttributes";
-        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId);
+        return getSsmParameterWithOverride(pathTemplate, cri.getId());
     }
 
     public boolean isEnabled(String credentialIssuerId) {
@@ -321,7 +320,8 @@ public class ConfigService {
         return null;
     }
 
-    private String getApiKeyFromSecretManager(String criId, String connection) {
+    private String getApiKeyFromSecretManager(Cri cri, String connection) {
+        String criId = cri.getId();
         String secretId =
                 String.format(
                         "/%s/credential-issuers/%s/connections/%s/api-key",
@@ -357,7 +357,8 @@ public class ConfigService {
         }
     }
 
-    private String getOAuthClientSecretFromSecretManager(String criId, String connection) {
+    private String getOAuthClientSecretFromSecretManager(Cri cri, String connection) {
+        String criId = cri.getId();
         String secretId =
                 String.format(
                         "/%s/credential-issuers/%s/connections/%s/oauth-client-secret",
@@ -378,8 +379,8 @@ public class ConfigService {
         return secretValue;
     }
 
-    private <T> T getCriConfigForType(String connection, String criId, Class<T> configType) {
-
+    private <T> T getCriConfigForType(String connection, Cri cri, Class<T> configType) {
+        String criId = cri.getId();
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         try {

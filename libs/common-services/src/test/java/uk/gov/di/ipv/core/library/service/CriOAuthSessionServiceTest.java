@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 
 @ExtendWith(MockitoExtension.class)
 class CriOAuthSessionServiceTest {
@@ -51,14 +52,14 @@ class CriOAuthSessionServiceTest {
         CriOAuthSessionItem criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId("testState")
-                        .criId("testAddress")
+                        .criId(ADDRESS.getId())
                         .connection("main")
                         .build();
 
         CriOAuthSessionItem result =
                 criOauthSessionService.persistCriOAuthSession(
                         criOAuthSessionItem.getCriOAuthSessionId(),
-                        criOAuthSessionItem.getCriId(),
+                        ADDRESS,
                         criOAuthSessionItem.getClientOAuthSessionId(),
                         criOAuthSessionItem.getConnection());
 

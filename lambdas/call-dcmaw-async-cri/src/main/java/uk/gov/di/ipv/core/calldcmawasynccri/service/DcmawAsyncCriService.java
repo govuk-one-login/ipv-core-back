@@ -54,8 +54,8 @@ public class DcmawAsyncCriService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws CriApiException, JsonProcessingException {
-        final String criId = DCMAW_ASYNC.getId();
-        String connection = configService.getActiveConnection(criId);
+
+        String connection = configService.getActiveConnection(DCMAW_ASYNC);
 
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -63,7 +63,7 @@ public class DcmawAsyncCriService {
         var criOAuthSessionItem =
                 criOAuthSessionService.persistCriOAuthSession(
                         oauthState,
-                        criId,
+                        DCMAW_ASYNC,
                         clientOAuthSessionItem.getClientOAuthSessionId(),
                         connection);
 

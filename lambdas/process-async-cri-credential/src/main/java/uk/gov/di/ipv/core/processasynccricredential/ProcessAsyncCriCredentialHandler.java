@@ -190,7 +190,7 @@ public class ProcessAsyncCriCredentialHandler
 
         var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
-                        successAsyncCriResponse.getCredentialIssuer().getId());
+                        successAsyncCriResponse.getCredentialIssuer());
 
         var vcs =
                 verifiableCredentialValidator.parseAndValidate(

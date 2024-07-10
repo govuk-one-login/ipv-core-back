@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -65,6 +66,7 @@ import java.util.regex.Pattern;
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
@@ -157,14 +159,24 @@ public class BuildCriOauthRequestHandler
                                 ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
-            LogHelper.attachCriIdToLogs(criId);
+            Cri cri;
+            try {
+                cri = Cri.fromId(criId);
+            } catch (IllegalArgumentException e) {
+                return new JourneyErrorResponse(
+                                JOURNEY_ERROR_PATH,
+                                SC_BAD_REQUEST,
+                                ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
+                        .toObjectMap();
+            }
+            LogHelper.attachCriIdToLogs(cri);
 
             String criContext = getJourneyParameter(input, CONTEXT);
             EvidenceRequest criEvidenceRequest =
                     EvidenceRequest.fromBase64(getJourneyParameter(input, EVIDENCE_REQUESTED));
-            String connection = configService.getActiveConnection(criId);
+            String connection = configService.getActiveConnection(cri);
             OauthCriConfig criConfig =
-                    configService.getOauthCriConfigForConnection(connection, criId);
+                    configService.getOauthCriConfigForConnection(connection, cri);
 
             if (criConfig == null) {
                 return new JourneyErrorResponse(
@@ -193,15 +205,15 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            criId,
+                            cri,
                             criContext,
                             criEvidenceRequest);
 
-            CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
+            CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
 
             persistOauthState(ipvSessionItem, oauthState);
 
-            persistCriOauthState(oauthState, criId, clientOAuthSessionId, connection);
+            persistCriOauthState(oauthState, cri, clientOAuthSessionId, connection);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -269,8 +281,7 @@ public class BuildCriOauthRequestHandler
         return matcher.find() ? matcher.group(1) : null;
     }
 
-    private CriResponse getCriResponse(
-            OauthCriConfig oauthCriConfig, JWEObject jweObject, String criId)
+    private CriResponse getCriResponse(OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
@@ -278,11 +289,11 @@ public class BuildCriOauthRequestHandler
                         .addParameter("client_id", oauthCriConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
-        if (criId.equals(DCMAW_CRI_ID)) {
+        if (cri.equals(DCMAW)) {
             redirectUri.addParameter("response_type", "code");
         }
 
-        return new CriResponse(new CriDetails(criId, redirectUri.build().toString()));
+        return new CriResponse(new CriDetails(cri.getId(), redirectUri.build().toString()));
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -292,7 +303,7 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            String criId,
+            Cri cri,
             String context,
             EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
@@ -302,9 +313,9 @@ public class BuildCriOauthRequestHandler
                 sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributesForUser(ipvSessionItem, vcs, criId);
+                getSharedAttributesForUser(ipvSessionItem, vcs, cri);
 
-        if (criId.equals(F2F.getId())) {
+        if (cri.equals(F2F)) {
             evidenceRequest = getEvidenceRequestForF2F(vcs);
         }
         SignedJWT signedJWT =
@@ -359,11 +370,11 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, String criId)
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, Cri cri)
             throws HttpResponseExceptionWithErrorBody {
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
-        List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
+        List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(cri);
         boolean hasAddressVc = false;
         for (var vc : vcs) {
             try {
@@ -389,7 +400,7 @@ public class BuildCriOauthRequestHandler
                     SharedClaims credentialsSharedClaims =
                             OBJECT_MAPPER.readValue(
                                     credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(configService.getComponentId(ADDRESS.getId()))) {
+                    if (credentialIss.equals(configService.getComponentId(ADDRESS))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -439,8 +450,8 @@ public class BuildCriOauthRequestHandler
         }
     }
 
-    private List<String> getAllowedSharedClaimAttrs(String criId) {
-        String allowedSharedAttributes = configService.getAllowedSharedAttributes(criId);
+    private List<String> getAllowedSharedClaimAttrs(Cri cri) {
+        String allowedSharedAttributes = configService.getAllowedSharedAttributes(cri);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
@@ -454,8 +465,8 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private void persistCriOauthState(
-            String oauthState, String criId, String clientOAuthSessionId, String connection) {
+            String oauthState, Cri cri, String clientOAuthSessionId, String connection) {
         criOAuthSessionService.persistCriOAuthSession(
-                oauthState, criId, clientOAuthSessionId, connection);
+                oauthState, cri, clientOAuthSessionId, connection);
     }
 }

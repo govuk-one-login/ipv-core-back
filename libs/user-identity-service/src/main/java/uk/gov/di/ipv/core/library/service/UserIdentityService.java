@@ -160,7 +160,7 @@ public class UserIdentityService {
             var filterValidVCs = filterValidVCs(vcs);
             if (filterValidVCs.size() == 1) {
                 return configService
-                        .getOauthCriActiveConnectionConfig(filterValidVCs.get(0).getCri().getId())
+                        .getOauthCriActiveConnectionConfig(filterValidVCs.get(0).getCri())
                         .isRequiresAdditionalEvidence();
             }
         }
