@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -132,7 +133,8 @@ public class ProcessAsyncCriCredentialHandler
                 | UnrecognisedVotException
                 | CiPostMitigationsException
                 | CredentialParseException
-                | EvcsServiceException e) {
+                | EvcsServiceException
+                | HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process VC response message.", e));
             return List.of(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
         } catch (VerifiableCredentialException e) {
@@ -179,7 +181,8 @@ public class ProcessAsyncCriCredentialHandler
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
-                    UnrecognisedVotException, CredentialParseException, EvcsServiceException {
+                    UnrecognisedVotException, CredentialParseException, EvcsServiceException,
+                    HttpResponseExceptionWithErrorBody {
         final CriResponseItem criResponseItem =
                 criResponseService.getCriResponseItem(
                         successAsyncCriResponse.getUserId(),
@@ -254,7 +257,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
-            throws SqsException, CredentialParseException {
+            throws SqsException {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,

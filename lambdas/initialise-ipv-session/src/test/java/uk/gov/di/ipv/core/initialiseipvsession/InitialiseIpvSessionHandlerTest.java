@@ -69,6 +69,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.model.NamePart;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -116,6 +117,10 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.PASSPORT_CLAIM_NA
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
+import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
@@ -810,13 +815,13 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(
                     AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
                     inheritedIdentityAuditEvent.getEventName());
-            var extension = (AuditExtensionsVcEvidence) inheritedIdentityAuditEvent.getExtensions();
+            var extension = inheritedIdentityAuditEvent.getExtensions();
             var expectedAge =
                     Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
             var expectedExtension =
                     new AuditExtensionsVcEvidence(
                             "https://orch.stubs.account.gov.uk/migration/v1",
-                            OBJECT_MAPPER.valueToTree(List.of()),
+                            List.of(),
                             null,
                             Vot.PCL200,
                             Boolean.TRUE,
@@ -824,15 +829,24 @@ class InitialiseIpvSessionHandlerTest {
             assertEquals(expectedExtension, extension);
             var restricted =
                     (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
-            assertEquals(
-                    "[{\"nameParts\":[{\"value\":\"KENNETH\",\"type\":\"GivenName\"},{\"value\":\"DECERQUEIRA\",\"type\":\"FamilyName\"}]}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.name()));
-            assertEquals(
-                    "[{\"value\":\"1965-07-08\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.birthDate()));
-            assertEquals(
-                    "[{\"personalNumber\":\"AB123456C\"}]",
-                    OBJECT_MAPPER.writeValueAsString(restricted.socialSecurityRecord()));
+            var expectedName =
+                    List.of(
+                            createName(
+                                    List.of(
+                                            createNamePart(
+                                                    "KENNETH", NamePart.NamePartType.GIVEN_NAME),
+                                            createNamePart(
+                                                    "DECERQUEIRA",
+                                                    NamePart.NamePartType.FAMILY_NAME))));
+
+            var expectedBirthDate = List.of(createBirthDate("1965-07-08"));
+            var expectedSocialSecurityRecord =
+                    List.of(
+                            createSocialSecurityRecordDetails(
+                                    "AB123456C")); // pragma: allowlist secret
+            assertEquals(expectedName, restricted.name());
+            assertEquals(expectedBirthDate, restricted.birthDate());
+            assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
 
             assertEquals(
                     AuditEventTypes.IPV_JOURNEY_START,

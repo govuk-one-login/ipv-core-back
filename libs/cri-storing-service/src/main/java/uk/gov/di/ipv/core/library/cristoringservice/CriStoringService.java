@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -143,8 +142,7 @@ public class CriStoringService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws SqsException, CiPutException, CiPostMitigationsException,
-                    VerifiableCredentialException, UnrecognisedVotException,
-                    CredentialParseException {
+                    VerifiableCredentialException, UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
