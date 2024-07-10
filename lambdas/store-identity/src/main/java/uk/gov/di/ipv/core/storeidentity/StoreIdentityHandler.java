@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -96,56 +97,22 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         try {
             var ipvSessionItem =
                     ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(input));
-            ClientOAuthSessionItem clientOAuthSessionItem =
+            var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            String userId = clientOAuthSessionItem.getUserId();
-            List<VerifiableCredential> credentials =
-                    sessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), userId);
-
             var identityType = RequestHelper.getIdentityType(input);
+            var ipAddress = RequestHelper.getIpAddress(input);
 
-            if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                try {
-                    if (identityType != IdentityType.PENDING) {
-                        evcsService.storeCompletedIdentity(
-                                userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                    } else {
-                        evcsService.storePendingIdentity(
-                                userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                    }
-                    credentials.forEach(credential -> credential.setMigrated(Instant.now()));
-                } catch (EvcsServiceException e) {
-                    if (configService.enabled(EVCS_READ_ENABLED)) {
-                        throw e;
-                    } else {
-                        LOGGER.error(
-                                LogHelper.buildErrorMessage("Failed to store EVCS identity", e));
-                    }
-                }
-            }
-
-            verifiableCredentialService.storeIdentity(credentials, userId);
-
-            LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
-
-            Vot vot = ipvSessionItem.getVot();
-            auditService.sendAuditEvent(
-                    AuditEvent.createWithDeviceInformation(
-                            IPV_IDENTITY_STORED,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(
-                                    userId,
-                                    ipvSessionItem.getIpvSessionId(),
-                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                    input.getIpAddress()),
-                            new AuditExtensionIdentityType(
-                                    identityType, vot.equals(P0) ? null : vot),
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+            storeIdentity(ipvSessionItem, clientOAuthSessionItem, identityType);
+            sendIdentityStoredEvent(
+                    ipvSessionItem,
+                    clientOAuthSessionItem,
+                    identityType,
+                    ipAddress,
+                    input.getDeviceInformation());
 
             return JOURNEY_IDENTITY_STORED;
 
@@ -164,5 +131,59 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         } finally {
             auditService.awaitAuditEvents();
         }
+    }
+
+    private void storeIdentity(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IdentityType identityType)
+            throws VerifiableCredentialException, EvcsServiceException {
+        String userId = clientOAuthSessionItem.getUserId();
+        List<VerifiableCredential> credentials =
+                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
+
+        if (configService.enabled(EVCS_WRITE_ENABLED)) {
+            try {
+                if (identityType != IdentityType.PENDING) {
+                    evcsService.storeCompletedIdentity(
+                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                } else {
+                    evcsService.storePendingIdentity(
+                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+                }
+                credentials.forEach(credential -> credential.setMigrated(Instant.now()));
+            } catch (EvcsServiceException e) {
+                if (configService.enabled(EVCS_READ_ENABLED)) {
+                    throw e;
+                } else {
+                    LOGGER.error(LogHelper.buildErrorMessage("Failed to store EVCS identity", e));
+                }
+            }
+        }
+
+        verifiableCredentialService.storeIdentity(credentials, userId);
+
+        LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
+    }
+
+    private void sendIdentityStoredEvent(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IdentityType identityType,
+            String ipAddress,
+            String deviceInformation)
+            throws SqsException {
+        Vot vot = ipvSessionItem.getVot();
+        auditService.sendAuditEvent(
+                AuditEvent.createWithDeviceInformation(
+                        IPV_IDENTITY_STORED,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        new AuditEventUser(
+                                clientOAuthSessionItem.getUserId(),
+                                ipvSessionItem.getIpvSessionId(),
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                ipAddress),
+                        new AuditExtensionIdentityType(identityType, vot.equals(P0) ? null : vot),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 }
