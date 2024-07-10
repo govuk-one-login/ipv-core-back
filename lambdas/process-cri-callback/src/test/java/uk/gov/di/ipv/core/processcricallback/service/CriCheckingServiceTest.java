@@ -72,7 +72,6 @@ class CriCheckingServiceTest {
     private static final String TEST_USER_ID = "test_user_id";
     private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test_govuk_signin_journey_id";
     private static final String TEST_CI_CODE = "test_ci_code";
-    private static final List<String> TEST_VTR = List.of("P2");
     private static final ContraIndicators TEST_CONTRA_INDICATORS =
             ContraIndicators.builder()
                     .usersContraIndicators(

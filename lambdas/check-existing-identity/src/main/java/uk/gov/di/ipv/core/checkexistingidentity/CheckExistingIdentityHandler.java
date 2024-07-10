@@ -85,7 +85,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCE
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -119,8 +118,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
             new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =

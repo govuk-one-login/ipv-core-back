@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -45,7 +44,6 @@ import java.util.Objects;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
@@ -55,8 +53,6 @@ public class CriCheckingService {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCESS_DENIED =
@@ -223,7 +219,7 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipvSessionId)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, VerifiableCredentialException {
+                    VerifiableCredentialException {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
