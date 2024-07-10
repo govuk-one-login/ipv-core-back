@@ -3,10 +3,10 @@ package uk.gov.di.ipv.core.library.fixtures;
 import com.nimbusds.jose.jwk.KeyType;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.model.NamePart;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -26,11 +26,10 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ID
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
@@ -265,26 +264,26 @@ public interface VcFixtures {
                             Map.entry("postalCode", "TE5 7ER"),
                             Map.entry("addressCountry", "GB")));
 
-    Map<String, List<NameParts>> ALICE_PARKER_NAME =
+    Map<String, List<NamePart>> ALICE_PARKER_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("Alice", VC_GIVEN_NAME),
-                            new NameParts("Jane", VC_GIVEN_NAME),
-                            new NameParts("Parker", VC_FAMILY_NAME)));
-    Map<String, List<NameParts>> MORGAN_SARAH_MEREDYTH_NAME =
+                            createNamePart("Alice", NamePart.NamePartType.GIVEN_NAME),
+                            createNamePart("Jane", NamePart.NamePartType.GIVEN_NAME),
+                            createNamePart("Parker", NamePart.NamePartType.FAMILY_NAME)));
+    Map<String, List<NamePart>> MORGAN_SARAH_MEREDYTH_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("MORGAN", VC_GIVEN_NAME),
-                            new NameParts("SARAH MEREDYTH", VC_FAMILY_NAME)));
+                            createNamePart("MORGAN", NamePart.NamePartType.GIVEN_NAME),
+                            createNamePart("SARAH MEREDYTH", NamePart.NamePartType.FAMILY_NAME)));
 
-    Map<String, List<NameParts>> MARY_WATSON_NAME =
+    Map<String, List<NamePart>> MARY_WATSON_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("Mary", VC_GIVEN_NAME),
-                            new NameParts("Watson", VC_FAMILY_NAME)));
+                            createNamePart("Mary", NamePart.NamePartType.GIVEN_NAME),
+                            createNamePart("Watson", NamePart.NamePartType.FAMILY_NAME)));
 
     Map<String, Object> DRIVING_PERMIT_DVA =
             Map.of(
@@ -627,7 +626,11 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
                         .address(List.of(Map.of("type", "PostalAddress", "postalCode", "LE12 9BN")))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
                         .build();
@@ -987,7 +990,11 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
                         .residencePermit(
                                 List.of(
@@ -1023,7 +1030,11 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
                         .birthDate(List.of(new BirthDate("1984-09-28")))
                         .idCard(
                                 List.of(

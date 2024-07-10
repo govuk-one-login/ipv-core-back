@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
-import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.model.NamePart;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,10 +15,9 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -45,13 +44,15 @@ public class TestVc {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class TestCredentialSubject {
         @Builder.Default
-        private List<Map<String, List<NameParts>>> name =
+        private List<Map<String, List<NamePart>>> name =
                 List.of(
                         Map.of(
                                 VC_NAME_PARTS,
                                 List.of(
-                                        new NameParts("KENNETH", VC_GIVEN_NAME),
-                                        new NameParts("DECERQUEIRA", VC_FAMILY_NAME))));
+                                        createNamePart("KENNETH", NamePart.NamePartType.GIVEN_NAME),
+                                        createNamePart(
+                                                "DECERQUEIRA",
+                                                NamePart.NamePartType.FAMILY_NAME))));
 
         @Builder.Default private List<BirthDate> birthDate = List.of(new BirthDate(DEFAULT_DOB));
         private List<Object> passport;
