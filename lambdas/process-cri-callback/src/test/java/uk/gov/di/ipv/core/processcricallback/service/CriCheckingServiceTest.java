@@ -9,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -23,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -45,9 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
@@ -87,6 +89,7 @@ class CriCheckingServiceTest {
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
+    @Mock private MockedStatic<VcHelper> mockedVcHelper;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @Test
@@ -479,18 +482,18 @@ class CriCheckingServiceTest {
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        try (MockedStatic<VcHelper> mockedVcHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
-            // Act
-            JourneyResponse result =
-                    criCheckingService.checkVcResponse(
-                            vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
 
-            // Assert
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-            verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
-        }
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
+    }
+
     }
 
     @Test
@@ -582,18 +585,16 @@ class CriCheckingServiceTest {
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
 
-            // Act
-            JourneyResponse result =
-                    criCheckingService.checkVcResponse(
-                            vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
 
-            // Assert
-            assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
-            verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
-        }
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
@@ -619,6 +620,7 @@ class CriCheckingServiceTest {
         return ClientOAuthSessionItem.builder()
                 .userId(TEST_USER_ID)
                 .scope(ScopeConstants.OPENID)
+                .vtr(List.of("P2"))
                 .build();
     }
 }
