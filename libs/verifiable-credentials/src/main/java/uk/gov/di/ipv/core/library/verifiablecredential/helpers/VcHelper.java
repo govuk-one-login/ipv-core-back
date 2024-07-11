@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
@@ -9,39 +8,38 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PersonWithDocuments;
+import uk.gov.di.model.PersonWithIdentity;
+import uk.gov.di.model.ResidencePermitDetails;
+import uk.gov.di.model.RiskAssessment;
+import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ATTR_VALUE_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_LICENCE_ISSUED_BY;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_ICAO_ISSUER_CODE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_RESIDENCE_PERMIT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
-    private static final int ONLY = 0;
 
     private VcHelper() {}
 
@@ -75,56 +73,75 @@ public class VcHelper {
     }
 
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
-        List<String> txnIds = new ArrayList<>();
-        for (var vc : vcs) {
-            var evidenceArray =
-                    OBJECT_MAPPER
-                            .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                            .path(VC_EVIDENCE);
-            if (evidenceArray.isArray()
-                    && !evidenceArray.isEmpty()) { // not all VCs have an evidence block
-                txnIds.add(evidenceArray.get(ONLY).path(VC_EVIDENCE_TXN).asText());
-            }
-        }
-        return txnIds;
+        var identityCheckTxns =
+                vcs.stream()
+                        .map(VerifiableCredential::getCredential)
+                        .filter(IdentityCheckCredential.class::isInstance)
+                        .flatMap(
+                                credential ->
+                                        Optional.ofNullable(
+                                                ((IdentityCheckCredential) credential)
+                                                        .getEvidence())
+                                                .orElse(List.of())
+                                                .stream())
+                        .map(IdentityCheck::getTxn)
+                        .toList();
+
+        var riskAssessmentTxns =
+                vcs.stream()
+                        .map(VerifiableCredential::getCredential)
+                        .filter(RiskAssessmentCredential.class::isInstance)
+                        .flatMap(
+                                credential ->
+                                        Optional.ofNullable(
+                                                ((RiskAssessmentCredential) credential)
+                                                        .getEvidence())
+                                                .orElse(List.of())
+                                                .stream())
+                        .map(RiskAssessment::getTxn)
+                        .toList();
+
+        return Stream.of(identityCheckTxns, riskAssessmentTxns)
+                .flatMap(Collection::stream)
+                .toList();
     }
 
     public static Integer extractAgeFromCredential(VerifiableCredential vc) {
-        var birthDateArr =
-                OBJECT_MAPPER
-                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                        .path(VC_CREDENTIAL_SUBJECT)
-                        .path(VC_BIRTH_DATE);
-        if (birthDateArr.isMissingNode() || birthDateArr.isEmpty()) {
-            return null;
+        if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
+            var birthDate =
+                    extractFromFirstElementOfList(person.getBirthDate(), BirthDate::getValue);
+
+            return birthDate == null ? null : getAge(birthDate);
         }
-        return getAge(birthDateArr.get(ONLY).path(VC_ATTR_VALUE_NAME).asText());
+        return null;
     }
 
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
-        var credentialSubject =
-                OBJECT_MAPPER
-                        .valueToTree(vc.getClaimsSet().getClaim(VC_CLAIM))
-                        .path(VC_CREDENTIAL_SUBJECT);
-        if (!credentialSubject.isMissingNode()) {
-            var passportOrResPermitField =
-                    credentialSubject.hasNonNull(VC_PASSPORT)
-                            ? credentialSubject.path(VC_PASSPORT)
-                            : credentialSubject.path(VC_RESIDENCE_PERMIT);
-            if (passportOrResPermitField.isArray()) {
-                var icaoCode = passportOrResPermitField.path(ONLY).path(VC_ICAO_ISSUER_CODE);
-                if (!icaoCode.isMissingNode()) {
-                    return UK_ICAO_ISSUER_CODE.equals(icaoCode.asText());
-                }
+        var credentialSubject = vc.getCredential().getCredentialSubject();
+
+        if (credentialSubject instanceof PersonWithDocuments person) {
+            String icaoIssuerCode;
+
+            icaoIssuerCode =
+                    extractFromFirstElementOfList(
+                            person.getPassport(), PassportDetails::getIcaoIssuerCode);
+            if (icaoIssuerCode != null) {
+                return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
             }
+
+            icaoIssuerCode =
+                    extractFromFirstElementOfList(
+                            person.getResidencePermit(), ResidencePermitDetails::getIcaoIssuerCode);
+            if (icaoIssuerCode != null) {
+                return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
+            }
+
             // If Passport/ResidencePermit not exist then try for DL now
             var issuer =
-                    credentialSubject
-                            .path(VC_DRIVING_PERMIT)
-                            .path(ONLY)
-                            .path(VC_DRIVING_LICENCE_ISSUED_BY);
-            if (!issuer.isMissingNode()) {
-                return DL_UK_ISSUER_LIST.contains(issuer.asText());
+                    extractFromFirstElementOfList(
+                            person.getDrivingPermit(), DrivingPermitDetails::getIssuedBy);
+            if (issuer != null) {
+                return DL_UK_ISSUER_LIST.contains(issuer);
             }
         }
         return null; // NOSONAR

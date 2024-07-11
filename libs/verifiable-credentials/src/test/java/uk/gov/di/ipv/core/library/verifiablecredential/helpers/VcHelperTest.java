@@ -32,6 +32,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
@@ -39,6 +40,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
@@ -101,11 +103,36 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldExtractTxIdFromCredentials() {
+    void shouldExtractTxIdFromIdentityCheckCredentials() {
         var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcNinoSuccessful()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
+    }
+
+    @Test
+    void shouldExtractTxIdDespiteNullEvidence() throws Exception {
+        var txns =
+                VcHelper.extractTxnIdsFromCredentials(
+                        List.of(vcNinoSuccessful(), vcHmrcMigrationNoEvidence()));
+
+        assertEquals(1, txns.size());
+        assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
+    }
+
+    @Test
+    void shouldExtractTxIdFromRiskAssessmentCredentials() {
+        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcTicf()));
+
+        assertEquals(1, txns.size());
+        assertEquals("963deeb5-a52c-4030-a69a-3184f77a4f18", txns.get(0));
+    }
+
+    @Test
+    void shouldExtractEmptyTxIdFromAddressCredentials() {
+        var txns = VcHelper.extractTxnIdsFromCredentials(List.of(vcAddressTwo()));
+
+        assertEquals(0, txns.size());
     }
 
     @Test
@@ -124,7 +151,12 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldChkIfDocUKIssuedForCredential() {
+    void shouldExtractAgeFromInvalidCredential() {
+        assertNull(VcHelper.extractAgeFromCredential(vcAddressTwo()));
+    }
+
+    @Test
+    void shouldCheckIfDocUKIssuedForCredential() {
         assertEquals(
                 Boolean.TRUE,
                 VcHelper.checkIfDocUKIssuedForCredential(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
@@ -148,6 +180,11 @@ class VcHelperTest {
     @Test
     void shouldCheckIfDocUKIssuedForCredentialForDCMAW() {
         assertEquals(Boolean.TRUE, VcHelper.checkIfDocUKIssuedForCredential(vcDrivingPermit()));
+    }
+
+    @Test
+    void shouldCheckIfDocUKIssuedForVcWithoutDocuments() {
+        assertNull(VcHelper.checkIfDocUKIssuedForCredential(vcAddressTwo()));
     }
 
     @Test
