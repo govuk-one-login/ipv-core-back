@@ -1,14 +1,19 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import uk.gov.di.model.BirthDate;
 
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 
 class ListHelperTest {
 
@@ -50,5 +55,23 @@ class ListHelperTest {
         var result = ListHelper.getBatches(listToPermute, 3);
 
         assertThat(result, containsInAnyOrder(expectedResults.toArray()));
+    }
+
+    @Test
+    void shouldApplyExtractorToFirstItemInList() {
+        var birthDates = List.of(createBirthDate("2000-01-01"), createBirthDate("2024-01-01"));
+
+        var result = ListHelper.extractFromFirstElementOfList(birthDates, BirthDate::getValue);
+
+        assertEquals("2000-01-01", result);
+    }
+
+    @Test
+    void shouldApplyExtractorToFirstItemInListForNullValue() {
+        var birthDates = List.of(createBirthDate(null), createBirthDate("2024-01-01"));
+
+        var result = ListHelper.extractFromFirstElementOfList(birthDates, BirthDate::getValue);
+
+        assertNull(result);
     }
 }

@@ -4,7 +4,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.IntStream;
+
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 
 public class ListHelper {
 
@@ -52,5 +55,9 @@ public class ListHelper {
         T tmp = elements.get(a);
         elements.set(a, elements.get(b));
         elements.set(b, tmp);
+    }
+
+    public static <T, R> R extractFromFirstElementOfList(List<T> list, Function<T, R> extractor) {
+        return isNullOrEmpty(list) ? null : extractor.apply(list.get(0));
     }
 }

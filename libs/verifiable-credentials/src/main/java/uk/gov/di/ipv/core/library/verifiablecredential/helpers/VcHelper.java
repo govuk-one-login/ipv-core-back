@@ -9,11 +9,13 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.ResidencePermitDetails;
+import uk.gov.di.model.RiskAssessment;
 import uk.gov.di.model.RiskAssessmentCredential;
 
 import java.text.ParseException;
@@ -21,20 +23,23 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
-    private static final int ONLY = 0;
+    private static final int FIRST = 0;
 
     private VcHelper() {}
 
@@ -68,57 +73,46 @@ public class VcHelper {
     }
 
     public static List<String> extractTxnIdsFromCredentials(List<VerifiableCredential> vcs) {
-        List<String> txnIds = new ArrayList<>();
-        for (var vc : vcs) {
-            if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-                var identityChecks = identityCheckCredential.getEvidence();
+        var identityCheckTxns =
+                vcs.stream()
+                        .map(VerifiableCredential::getCredential)
+                        .filter(credential -> credential instanceof IdentityCheckCredential)
+                        .flatMap(
+                                credential ->
+                                        Optional.ofNullable(
+                                                ((IdentityCheckCredential) credential)
+                                                        .getEvidence())
+                                                .orElse(List.of())
+                                                .stream())
+                        .map(IdentityCheck::getTxn)
+                        .toList();
 
-                if (!isNullOrEmpty(identityChecks)) {
-                    txnIds.add(identityChecks.get(ONLY).getTxn());
-                }
-                continue;
-            }
+        var riskAssessmentTxns =
+                vcs.stream()
+                        .map(VerifiableCredential::getCredential)
+                        .filter(credential -> credential instanceof RiskAssessmentCredential)
+                        .flatMap(
+                                credential ->
+                                        Optional.ofNullable(
+                                                ((RiskAssessmentCredential) credential)
+                                                        .getEvidence())
+                                                .orElse(List.of())
+                                                .stream())
+                        .map(RiskAssessment::getTxn)
+                        .toList();
 
-            if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
-                var riskAssessments = riskAssessmentCredential.getEvidence();
-
-                if (!isNullOrEmpty(riskAssessments)) {
-                    txnIds.add(riskAssessments.get(ONLY).getTxn());
-                }
-            }
-        }
-        return txnIds;
+        return Stream.of(identityCheckTxns, riskAssessmentTxns)
+                .flatMap(Collection::stream)
+                .toList();
     }
 
     public static Integer extractAgeFromCredential(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
             var birthDates = person.getBirthDate();
 
-            return isNullOrEmpty(birthDates) ? null : getAge(birthDates.get(ONLY).getValue());
+            return isNullOrEmpty(birthDates) ? null : getAge(birthDates.get(FIRST).getValue());
         }
         return null;
-    }
-
-    private static String getIcaoIssuerFromPassport(List<PassportDetails> passports) {
-        if (isNullOrEmpty(passports)) {
-            return null;
-        }
-        return passports.get(ONLY).getIcaoIssuerCode();
-    }
-
-    private static String getIcaoIssuerFromResidencePermit(
-            List<ResidencePermitDetails> residencePermits) {
-        if (isNullOrEmpty(residencePermits)) {
-            return null;
-        }
-        return residencePermits.get(ONLY).getIcaoIssuerCode();
-    }
-
-    private static String getIssuedByFromDrivingPermit(List<DrivingPermitDetails> drivingPermits) {
-        if (isNullOrEmpty(drivingPermits)) {
-            return null;
-        }
-        return drivingPermits.get(ONLY).getIssuedBy();
     }
 
     public static Boolean checkIfDocUKIssuedForCredential(VerifiableCredential vc) {
@@ -127,21 +121,24 @@ public class VcHelper {
         if (credentialSubject instanceof PersonWithDocuments person) {
             String icaoIssuerCode;
 
-            var passport = person.getPassport();
-            icaoIssuerCode = getIcaoIssuerFromPassport(passport);
+            icaoIssuerCode =
+                    extractFromFirstElementOfList(
+                            person.getPassport(), PassportDetails::getIcaoIssuerCode);
             if (icaoIssuerCode != null) {
                 return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
             }
 
-            var residencePermit = person.getResidencePermit();
-            icaoIssuerCode = getIcaoIssuerFromResidencePermit(residencePermit);
+            icaoIssuerCode =
+                    extractFromFirstElementOfList(
+                            person.getResidencePermit(), ResidencePermitDetails::getIcaoIssuerCode);
             if (icaoIssuerCode != null) {
                 return UK_ICAO_ISSUER_CODE.equals(icaoIssuerCode);
             }
 
             // If Passport/ResidencePermit not exist then try for DL now
-            var drivingPermit = person.getDrivingPermit();
-            var issuer = getIssuedByFromDrivingPermit(drivingPermit);
+            var issuer =
+                    extractFromFirstElementOfList(
+                            person.getDrivingPermit(), DrivingPermitDetails::getIssuedBy);
             if (issuer != null) {
                 return DL_UK_ISSUER_LIST.contains(issuer);
             }
