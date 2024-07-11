@@ -39,6 +39,8 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.
 import static uk.gov.di.ipv.core.library.helpers.vocab.PostalAddressGenerator.createPostalAddress;
 import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
+import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
+import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
@@ -282,22 +284,22 @@ public interface VcFixtures {
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            createNamePart("Alice", NamePart.NamePartType.GIVEN_NAME),
-                            createNamePart("Jane", NamePart.NamePartType.GIVEN_NAME),
-                            createNamePart("Parker", NamePart.NamePartType.FAMILY_NAME)));
+                            createNamePart("Alice", GIVEN_NAME),
+                            createNamePart("Jane", GIVEN_NAME),
+                            createNamePart("Parker", FAMILY_NAME)));
     Map<String, List<NamePart>> MORGAN_SARAH_MEREDYTH_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            createNamePart("MORGAN", NamePart.NamePartType.GIVEN_NAME),
-                            createNamePart("SARAH MEREDYTH", NamePart.NamePartType.FAMILY_NAME)));
+                            createNamePart("MORGAN", GIVEN_NAME),
+                            createNamePart("SARAH MEREDYTH", FAMILY_NAME)));
 
     Map<String, List<NamePart>> MARY_WATSON_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            createNamePart("Mary", NamePart.NamePartType.GIVEN_NAME),
-                            createNamePart("Watson", NamePart.NamePartType.FAMILY_NAME)));
+                            createNamePart("Mary", GIVEN_NAME),
+                            createNamePart("Watson", FAMILY_NAME)));
 
     DrivingPermitDetails DRIVING_PERMIT_DVA =
             createDrivingPermitDetails(
