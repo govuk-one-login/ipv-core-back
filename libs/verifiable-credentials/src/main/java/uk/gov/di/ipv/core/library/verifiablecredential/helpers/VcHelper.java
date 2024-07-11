@@ -40,7 +40,6 @@ public class VcHelper {
     private static final List<String> DL_UK_ISSUER_LIST = Arrays.asList("DVLA", "DVA");
     private static final String UK_ICAO_ISSUER_CODE = "GBR";
     private static ConfigService configService;
-    private static final int FIRST = 0;
 
     private VcHelper() {}
 
