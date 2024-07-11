@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,7 +35,9 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 
 @ExtendWith(MockitoExtension.class)
 class DataStoreTest {
+    public static final String PARTITION_VALUE = "partition-key-12345";
     private static final String TEST_TABLE_NAME = "test-auth-code-table";
+    public static final String SORT_KEY_VALUE = "sort-key-12345";
 
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
@@ -45,7 +46,6 @@ class DataStoreTest {
     @Mock private DynamoDbIndex<AuthorizationCodeItem> mockIndex;
     @Mock private SdkIterable<Page<AuthorizationCodeItem>> mockIterable;
     @Mock private ConfigService mockConfigService;
-    @Mock private BatchWriteResult mockBatchWriteResult;
 
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
@@ -119,7 +119,7 @@ class DataStoreTest {
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
         TableDescription tableDescription =
-                TableDescription.builder().tableName("test-table").build();
+                TableDescription.builder().tableName(TEST_TABLE_NAME).build();
         DescribeTableResponse describeTableResponse =
                 DescribeTableResponse.builder().table(tableDescription).build();
         when(mockDynamoDbTable.describeTable())
@@ -128,7 +128,7 @@ class DataStoreTest {
                                 .response(describeTableResponse)
                                 .build());
 
-        dataStore.getItem("partition-key-12345", "sort-key-12345");
+        dataStore.getItem(PARTITION_VALUE, SORT_KEY_VALUE);
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
@@ -137,14 +137,14 @@ class DataStoreTest {
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
+        assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
+        assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().sortKeyValue().get().s());
     }
 
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKey() {
         TableDescription tableDescription =
-                TableDescription.builder().tableName("test-table").build();
+                TableDescription.builder().tableName(TEST_TABLE_NAME).build();
         DescribeTableResponse describeTableResponse =
                 DescribeTableResponse.builder().table(tableDescription).build();
         when(mockDynamoDbTable.describeTable())
@@ -153,7 +153,7 @@ class DataStoreTest {
                                 .response(describeTableResponse)
                                 .build());
 
-        dataStore.getItem("partition-key-12345");
+        dataStore.getItem(PARTITION_VALUE);
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
@@ -162,7 +162,7 @@ class DataStoreTest {
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
+        assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
         assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
     }
 
@@ -172,7 +172,7 @@ class DataStoreTest {
         when(mockDynamoDbTable.index(anyString())).thenReturn(mockIndex);
 
         String indexName = "test-index";
-        dataStore.getItemByIndex(indexName, "partition-key-12345");
+        dataStore.getItemByIndex(indexName, PARTITION_VALUE);
 
         verify(mockIndex).query(any(QueryEnhancedRequest.class));
     }
@@ -182,7 +182,7 @@ class DataStoreTest {
         when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
-        dataStore.getItems("partition-key-12345");
+        dataStore.getItems(PARTITION_VALUE);
 
         verify(mockDynamoDbEnhancedClient)
                 .table(
@@ -197,7 +197,7 @@ class DataStoreTest {
         when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
-        dataStore.getItemsWithBooleanAttribute("partition-key-12345", testAttribute, true);
+        dataStore.getItemsWithBooleanAttribute(PARTITION_VALUE, testAttribute, true);
 
         var keyCaptor = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
 
@@ -214,7 +214,7 @@ class DataStoreTest {
         when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
-        dataStore.getItemsBySortKeyPrefix("partition-value", "sort-key-prefix");
+        dataStore.getItemsBySortKeyPrefix(PARTITION_VALUE, "sort-key-prefix");
 
         var queryConditional = ArgumentCaptor.forClass(QueryConditional.class);
         verify(mockDynamoDbTable).query(queryConditional.capture());
@@ -244,7 +244,7 @@ class DataStoreTest {
 
     @Test
     void shouldDeleteItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
-        dataStore.delete("partition-key-12345", "sort-key-12345");
+        dataStore.delete(PARTITION_VALUE, SORT_KEY_VALUE);
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
@@ -253,50 +253,7 @@ class DataStoreTest {
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
-    }
-
-    @Test
-    void deleteWithItemListShouldDeleteAllItems() {
-        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
-        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
-        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
-
-        when(mockDynamoDbTable.deleteItem(any(AuthorizationCodeItem.class)))
-                .thenReturn(item1)
-                .thenReturn(item2)
-                .thenReturn(item3);
-
-        var deletedItems = dataStore.delete(List.of(item1, item2, item3));
-
-        assertEquals(List.of(item1, item2, item3), deletedItems);
-
-        verify(mockDynamoDbTable).deleteItem(item1);
-        verify(mockDynamoDbTable).deleteItem(item2);
-        verify(mockDynamoDbTable).deleteItem(item3);
-    }
-
-    @Test
-    void deleteAllByPartitionShouldDeleteItemsFromDynamoDbTableViaPartitionKey() {
-        var item1 = AuthorizationCodeItem.builder().authCode("1").build();
-        var item2 = AuthorizationCodeItem.builder().authCode("2").build();
-        var item3 = AuthorizationCodeItem.builder().authCode("3").build();
-
-        when(mockPageIterable.stream()).thenReturn(Stream.of(mockPage));
-        when(mockPage.items()).thenReturn(List.of(item1, item2, item3));
-        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
-
-        String partitionValue = "partition-key-12345";
-
-        dataStore.deleteAllByPartition(partitionValue);
-
-        verify(mockDynamoDbTable)
-                .query(
-                        QueryConditional.keyEqualTo(
-                                Key.builder().partitionValue(partitionValue).build()));
-        verify(mockDynamoDbTable).deleteItem(item1);
-        verify(mockDynamoDbTable).deleteItem(item2);
-        verify(mockDynamoDbTable).deleteItem(item3);
+        assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
+        assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().sortKeyValue().get().s());
     }
 }

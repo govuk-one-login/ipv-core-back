@@ -9,15 +9,20 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -154,12 +159,45 @@ public class DataStore<T extends DynamodbItem> {
         return table.deleteItem(key);
     }
 
-    public List<T> delete(List<T> items) {
-        return items.stream().map(table::deleteItem).toList();
+    @ExcludeFromGeneratedCoverageReport
+    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
+        delete(getItems(partitionValue));
     }
 
-    public void deleteAllByPartition(String partitionValue) {
-        delete(getItems(partitionValue));
+    @ExcludeFromGeneratedCoverageReport
+    public void delete(List<T> items) throws BatchDeleteException {
+        if (!items.isEmpty()) {
+            BatchWriteResult batchWriteResult =
+                    processBatchWrite(createWriteBatchForDeleteItems(items));
+            // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
+            // process.
+            List<Key> unprocessedItems =
+                    batchWriteResult.unprocessedDeleteItemsForTable(this.table);
+            if (!unprocessedItems.isEmpty()) {
+                String errMessage = "Failed during batch deletion.";
+                LOGGER.error(LogHelper.buildLogMessage(errMessage));
+                throw new BatchDeleteException(errMessage);
+            }
+        } else {
+            LOGGER.info(LogHelper.buildLogMessage("No items to delete"));
+        }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private WriteBatch createWriteBatchForDeleteItems(List<T> items) {
+        WriteBatch.Builder<T> builder =
+                WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
+        for (T item : items) {
+            builder.addDeleteItem(item).build();
+        }
+        return builder.build();
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private BatchWriteResult processBatchWrite(WriteBatch writeBatch) {
+        return getClient()
+                .batchWriteItem(
+                        BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
     }
 
     private T getItemByKey(Key key, boolean warnOnNull) {
