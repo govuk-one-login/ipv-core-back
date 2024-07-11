@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -108,9 +109,10 @@ public class VcHelper {
 
     public static Integer extractAgeFromCredential(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject() instanceof PersonWithIdentity person) {
-            var birthDates = person.getBirthDate();
+            var birthDate =
+                    extractFromFirstElementOfList(person.getBirthDate(), BirthDate::getValue);
 
-            return isNullOrEmpty(birthDates) ? null : getAge(birthDates.get(FIRST).getValue());
+            return birthDate == null ? null : getAge(birthDate);
         }
         return null;
     }

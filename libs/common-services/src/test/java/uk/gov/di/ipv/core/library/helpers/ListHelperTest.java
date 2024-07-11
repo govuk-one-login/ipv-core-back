@@ -74,4 +74,11 @@ class ListHelperTest {
 
         assertNull(result);
     }
+
+    @Test
+    void shouldApplyExtractorToFirstItemInListForEmptyList() {
+        var result = ListHelper.extractFromFirstElementOfList(List.of(), BirthDate::getValue);
+
+        assertNull(result);
+    }
 }
