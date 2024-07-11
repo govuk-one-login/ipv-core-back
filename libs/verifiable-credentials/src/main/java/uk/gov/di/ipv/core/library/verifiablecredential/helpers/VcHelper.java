@@ -76,7 +76,7 @@ public class VcHelper {
         var identityCheckTxns =
                 vcs.stream()
                         .map(VerifiableCredential::getCredential)
-                        .filter(credential -> credential instanceof IdentityCheckCredential)
+                        .filter(IdentityCheckCredential.class::isInstance)
                         .flatMap(
                                 credential ->
                                         Optional.ofNullable(
@@ -90,7 +90,7 @@ public class VcHelper {
         var riskAssessmentTxns =
                 vcs.stream()
                         .map(VerifiableCredential::getCredential)
-                        .filter(credential -> credential instanceof RiskAssessmentCredential)
+                        .filter(RiskAssessmentCredential.class::isInstance)
                         .flatMap(
                                 credential ->
                                         Optional.ofNullable(
