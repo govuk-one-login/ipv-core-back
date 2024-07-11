@@ -88,6 +88,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -103,11 +104,6 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String CLAIMED_IDENTITY_CRI = CLAIMED_IDENTITY.getId();
-    private static final String DCMAW_CRI = DCMAW.getId();
-    private static final String F2F_CRI = F2F.getId();
-    private static final String HMRC_KBV_CRI = HMRC_KBV.getId();
-    private static final String CRI_ID = "PassportIssuer";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     private static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
@@ -125,7 +121,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final String CONTEXT = "context";
     private static final String TEST_CONTEXT = "test_context";
     private static final String CRI_WITH_CONTEXT =
-            String.format("%s?%s=%s", CLAIMED_IDENTITY_CRI, CONTEXT, TEST_CONTEXT);
+            String.format("%s?%s=%s", CLAIMED_IDENTITY.getId(), CONTEXT, TEST_CONTEXT);
     private static final String EVIDENCE_REQUEST = "evidenceRequest";
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
     private static final EvidenceRequest TEST_EVIDENCE_REQUESTED = new EvidenceRequest("gpg45", 2);
@@ -163,11 +159,13 @@ class BuildCriOauthRequestHandlerTest {
         CRI_WITH_EVIDENCE_REQUEST =
                 String.format(
                         "%s?%s=%s",
-                        CLAIMED_IDENTITY_CRI, EVIDENCE_REQUEST, TEST_EVIDENCE_REQUESTED.toBase64());
+                        CLAIMED_IDENTITY.getId(),
+                        EVIDENCE_REQUEST,
+                        TEST_EVIDENCE_REQUESTED.toBase64());
         CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST =
                 String.format(
                         "%s?%s=%s&%s=%s",
-                        CLAIMED_IDENTITY_CRI,
+                        CLAIMED_IDENTITY.getId(),
                         CONTEXT,
                         TEST_CONTEXT,
                         EVIDENCE_REQUEST,
@@ -298,7 +296,7 @@ class BuildCriOauthRequestHandlerTest {
 
         // Assert
         assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -324,12 +322,12 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
             throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -356,7 +354,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -368,7 +366,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(CRI_ID, response.getCri().getId());
+        assertEquals(PASSPORT.getId(), response.getCri().getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -407,8 +405,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
                     throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -440,7 +438,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -452,7 +450,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(CRI_ID, response.getCri().getId());
+        assertEquals(PASSPORT.getId(), response.getCri().getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -491,12 +489,12 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
                     throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -522,7 +520,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -534,7 +532,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(CRI_ID, response.getCri().getId());
+        assertEquals(PASSPORT.getId(), response.getCri().getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -574,12 +572,12 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
                     throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -605,7 +603,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -617,7 +615,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(CRI_ID, response.getCri().getId());
+        assertEquals(PASSPORT.getId(), response.getCri().getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -656,12 +654,12 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
         // Arrange
-        when(configService.getActiveConnection(DCMAW_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW_CRI))
+        when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
                 .thenReturn(dcmawOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -687,7 +685,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, DCMAW_CRI))
+                        .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
                         .build();
 
         // Act
@@ -699,7 +697,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(DCMAW_CRI, response.getCri().getId());
+        assertEquals(DCMAW.getId(), response.getCri().getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -738,7 +736,7 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
         // Arrange
-        JourneyRequest input = JourneyRequest.builder().journey(CRI_ID).build();
+        JourneyRequest input = JourneyRequest.builder().journey(PASSPORT.getId()).build();
 
         // Act
         var responseJson = handleRequest(input, context);
@@ -828,12 +826,12 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldDeduplicateSharedClaims() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -859,7 +857,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -894,12 +892,12 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -925,7 +923,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -958,12 +956,12 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldDeduplicateNamesThatAppearInDifferentVCs() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -989,7 +987,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -1041,12 +1039,12 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldRemoveExtraAddressClaimsAndOnlyUseValuesFromTheAddressVC() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -1077,7 +1075,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -1112,12 +1110,12 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldNotIncludeFailedVcsInTheSharedClaims() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, false);
@@ -1143,7 +1141,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -1179,14 +1177,14 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
-        when(configService.getAllowedSharedAttributes(CRI_ID))
+        when(configService.getAllowedSharedAttributes(PASSPORT))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         ipvSessionItem.setEmailAddress(null);
@@ -1218,7 +1216,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, CRI_ID))
+                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
         // Act
@@ -1253,14 +1251,14 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldOnlyEmailForF2FAndAllowCRIConfiguredSharedClaimAttr() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
+        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
-        when(configService.getAllowedSharedAttributes(F2F_CRI))
+        when(configService.getAllowedSharedAttributes(F2F))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -1293,7 +1291,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, F2F_CRI))
+                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
                         .build();
 
         // Act
@@ -1328,14 +1326,14 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldIncludeSocialSecurityRecordInSharedClaimsIfConfigured() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(HMRC_KBV_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV_CRI))
+        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
-        when(configService.getAllowedSharedAttributes(HMRC_KBV_CRI))
+        when(configService.getAllowedSharedAttributes(HMRC_KBV))
                 .thenReturn("name,birthDate,address,socialSecurityRecord");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
@@ -1366,7 +1364,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV_CRI))
+                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
                         .build();
 
         // Act
@@ -1401,8 +1399,8 @@ class BuildCriOauthRequestHandlerTest {
     void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
             String journeyUri, Map<String, Object> expectedClaims) throws Exception {
         // Arrange
-        when(configService.getActiveConnection(CLAIMED_IDENTITY_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY_CRI))
+        when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
                 .thenReturn(claimedIdentityOauthCriConfig);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("5000");

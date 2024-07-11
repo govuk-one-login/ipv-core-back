@@ -273,7 +273,7 @@ public class ProcessCriCallbackHandler
                 clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
-        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer().getId());
+        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachComponentId(configService);
 
         // Validate callback request

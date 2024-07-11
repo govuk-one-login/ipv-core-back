@@ -90,7 +90,7 @@ public class CallDcmawAsyncCriHandler
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
-        LogHelper.attachCriIdToLogs(DCMAW_ASYNC.getId());
+        LogHelper.attachCriIdToLogs(DCMAW_ASYNC);
         List<String> featureSets = RequestHelper.getFeatureSet(request);
         configService.setFeatureSet(featureSets);
 
