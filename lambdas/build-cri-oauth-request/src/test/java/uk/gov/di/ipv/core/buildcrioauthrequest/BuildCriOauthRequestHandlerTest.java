@@ -1328,14 +1328,14 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
-        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
+        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getComponentId(ADDRESS.getId()))
+        when(configService.getComponentId(ADDRESS))
                 .thenReturn(addressOauthCriConfig.getComponentId());
-        when(configService.getAllowedSharedAttributes(F2F_CRI))
+        when(configService.getAllowedSharedAttributes(F2F))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1358,9 +1358,9 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS,
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3),
                                         ADDRESS_ISSUER)));
-        clientOAuthSessionItem.setVtr(List.of("P1"));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setVtr(List.of("P1"));
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
         when(mockKmsEs256SignerFactory.getSigner(any()))
@@ -1370,7 +1370,7 @@ class BuildCriOauthRequestHandlerTest {
                 JourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
-                        .journey(String.format(JOURNEY_BASE_URL, F2F_CRI))
+                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
                         .build();
 
         // Act
