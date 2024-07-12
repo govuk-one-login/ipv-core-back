@@ -100,6 +100,20 @@ class InMemoryStoreTest {
     }
 
     @Test
+    void getItemByIndexReturnsNullIfNoMatch() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var indexId = "index-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        item.setAccessToken(indexId);
+
+        store.create(item);
+
+        assertNull(store.getItemByIndex("accessToken", "other"));
+    }
+
+    @Test
     void getItemByIndexThrowsOnInvalidSecondaryIndex() {
         var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
         var id = "test-id";
@@ -154,6 +168,22 @@ class InMemoryStoreTest {
         assertEquals(
                 List.of(item1),
                 store.getItemsWithBooleanAttribute(partitionKey, "receivedThisSession", true));
+    }
+
+    @Test
+    void getByBooleanAttributeThrowsIfInvalidAttribute() {
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), SessionCredentialItem.class);
+        var partitionKey = "test-id";
+        var item1 = new SessionCredentialItem();
+        item1.setIpvSessionId(partitionKey);
+        item1.setSortKey("one");
+        item1.setReceivedThisSession(true);
+        store.create(item1);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> store.getItemsWithBooleanAttribute(partitionKey, "invalid", true));
     }
 
     @Test

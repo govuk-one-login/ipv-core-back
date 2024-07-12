@@ -178,6 +178,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     }
 
     @Override
+    @ExcludeFromGeneratedCoverageReport
     public void delete(List<T> items) throws BatchDeleteException {
         if (!items.isEmpty()) {
             BatchWriteResult batchWriteResult =
