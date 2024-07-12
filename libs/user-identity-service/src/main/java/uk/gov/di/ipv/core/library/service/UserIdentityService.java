@@ -496,7 +496,7 @@ public class UserIdentityService {
         return Vot.valueOf(vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME));
     }
 
-    private Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
+    public Optional<List<PostalAddress>> generateAddressClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var addressVc = findVc(ADDRESS, vcs);
 
