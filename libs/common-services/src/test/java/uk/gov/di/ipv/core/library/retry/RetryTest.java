@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -31,7 +32,7 @@ class RetryTest {
 
     private final RetryableTask<Boolean> testTaskFailedWitRetryableException =
             () -> {
-                throw new RetryableException(new Exception());
+                throw new RetryableException(new Exception("an exception"));
             };
 
     @Test
@@ -116,6 +117,8 @@ class RetryTest {
                                         mockSleeper, 5, 5, testTaskFailedWitRetryableException));
 
         assertEquals("Max attempts reached for task: 5", exception.getMessage());
+        assertNotNull(exception.getCause());
+        assertEquals("an exception", exception.getCause().getMessage());
         verify(mockSleeper, times(4)).sleep(anyLong());
     }
 
