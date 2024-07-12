@@ -12,6 +12,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -54,6 +55,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
@@ -131,7 +133,9 @@ class StoreIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID)).thenReturn(VCS);
+        Mockito.lenient()
+                .when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID))
+                .thenReturn(VCS);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
     }
@@ -388,11 +392,12 @@ class StoreIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsWriteEnabled_forPendingF2f()
+    void shouldReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsReadEnabled_forPendingF2f()
             throws Exception {
         reset(mockIpvSessionService);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
         doThrow(
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
@@ -407,5 +412,25 @@ class StoreIdentityHandlerTest {
         assertEquals(500, response.get(STATUS_CODE));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getCode(), response.get(CODE));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), response.get(MESSAGE));
+    }
+
+    @Test
+    void
+            shouldNotReturnAnErrorJourneyIfFailedAtEvcsIdentityStore_whenEvcsReadNotEnabled_forPendingF2f()
+                    throws Exception {
+        reset(mockIpvSessionService);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        doThrow(
+                        new EvcsServiceException(
+                                HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
+                .when(mockEvcsService)
+                .storePendingIdentity(USER_ID, VCS, clientOAuthSessionItem.getEvcsAccessToken());
+
+        var response =
+                storeIdentityHandler.handleRequest(
+                        PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext);
+
+        assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
     }
 }
