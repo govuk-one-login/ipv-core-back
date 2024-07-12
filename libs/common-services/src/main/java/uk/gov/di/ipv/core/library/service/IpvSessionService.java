@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
@@ -66,7 +67,7 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem getIpvSessionByAccessToken(String accessToken)
-            throws UnknownAccessTokenException {
+            throws UnknownAccessTokenException, GetAccessTokenException {
         try {
             return Retry.runTaskWithBackoff(
                     sleeper,
@@ -88,6 +89,7 @@ public class IpvSessionService {
                     LogHelper.buildLogMessage(
                             "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();
+            throw new GetAccessTokenException("Failed to get the supplied access token", e);
         } catch (NonRetryableException e) {
             LOGGER.warn(
                     LogHelper.buildErrorMessage(
@@ -96,8 +98,8 @@ public class IpvSessionService {
             if (e.getCause() instanceof UnknownAccessTokenException uatException) {
                 throw uatException;
             }
+            throw new GetAccessTokenException("Failed to get the supplied access token", e);
         }
-        return null;
     }
 
     public IpvSessionItem generateIpvSession(

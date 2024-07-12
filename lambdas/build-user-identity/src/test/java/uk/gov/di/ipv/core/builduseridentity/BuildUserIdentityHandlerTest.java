@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
@@ -759,7 +760,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException {
+                    UnknownAccessTokenException, GetAccessTokenException {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenThrow(new UnknownAccessTokenException("error"));
 
@@ -783,7 +784,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException {
+                    UnknownAccessTokenException, GetAccessTokenException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
@@ -808,7 +809,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException {
+                    UnknownAccessTokenException, GetAccessTokenException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -826,6 +827,24 @@ class BuildUserIdentityHandlerTest {
                         .appendDescription(" - The supplied access token has expired")
                         .getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturn500ErrorResponseWhenGetAccessTokenThrown()
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException, GetAccessTokenException {
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenThrow(new GetAccessTokenException("err", new Exception()));
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals(OAuth2Error.SERVER_ERROR.getCode(), responseBody.get("error"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
