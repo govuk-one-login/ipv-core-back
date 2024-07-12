@@ -25,12 +25,16 @@ public class Retry {
             throw new IllegalArgumentException("Wait interval must be greater than 0");
         }
 
-        Exception caught = null;
+        Throwable caught = null;
         for (var attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
                 return task.run();
             } catch (RetryableException e) {
-                caught = e;
+                if (e.getCause() != null) {
+                    caught = e.getCause();
+                } else {
+                    caught = e;
+                }
                 LOGGER.warn(
                         LogHelper.buildErrorMessage(
                                 "retryable task failed on attempt " + attempt, e));

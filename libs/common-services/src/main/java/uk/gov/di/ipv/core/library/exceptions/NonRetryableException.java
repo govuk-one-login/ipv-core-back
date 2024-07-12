@@ -10,7 +10,7 @@ public class NonRetryableException extends Exception {
         super(msg);
     }
 
-    public NonRetryableException(String msg, Exception e) {
-        super(msg, e);
+    public NonRetryableException(String msg, Throwable throwable) {
+        super(msg, throwable);
     }
 }

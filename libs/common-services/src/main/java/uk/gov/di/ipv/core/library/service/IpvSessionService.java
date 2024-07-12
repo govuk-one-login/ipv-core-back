@@ -89,13 +89,13 @@ public class IpvSessionService {
                             "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();
         } catch (NonRetryableException e) {
-            if (e.getCause() instanceof UnknownAccessTokenException uatException) {
-                throw uatException;
-            }
             LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
                             e));
+            if (e.getCause() instanceof UnknownAccessTokenException uatException) {
+                throw uatException;
+            }
         }
         return null;
     }

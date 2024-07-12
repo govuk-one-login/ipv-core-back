@@ -176,11 +176,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @State("accessToken is a invalid access token")
-    public void dontSetAccessToken() {
-        when(mockIpvSessionDataStore.getItemByIndex(
-                        "accessToken", DigestUtils.sha256Hex("accessToken")))
-                .thenReturn(null);
-    }
+    public void dontSetAccessToken() {}
 
     @TestTemplate
     @ExtendWith(PactVerificationInvocationContextProvider.class)
