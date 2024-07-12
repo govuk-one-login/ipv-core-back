@@ -338,6 +338,41 @@ class EvcsServiceTest {
     }
 
     @Test
+    void updatePendingIdentityShouldUpdateStateToAbandoned() throws EvcsServiceException {
+        EvcsGetUserVCsDto evcsGetUserVcsWithPendingAllExistingDto =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        VC_ADDRESS_TEST.getVcString(),
+                                        EvcsVCState.PENDING_RETURN,
+                                        Map.of("reason", "testing")),
+                                new EvcsGetUserVCDto(
+                                        M1A_EXPERIAN_FRAUD_VC.getVcString(),
+                                        EvcsVCState.PENDING_RETURN,
+                                        Map.of("reason", "testing"))));
+        when(mockEvcsClient.getUserVcs(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN)))
+                .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
+        evcsService.updatePendingIdentity(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN);
+
+        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN));
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .updateUserVCs(
+                        stringArgumentCaptor.capture(), evcsUpdateUserVCsDtosCaptor.capture());
+
+        var userVCsToUpdate = evcsUpdateUserVCsDtosCaptor.getValue();
+        assertEquals(
+                2,
+                (userVCsToUpdate.stream()
+                        .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
+                        .count()));
+    }
+
+    @Test
     void testGetVerifiableCredentials()
             throws CredentialParseException, NoCriForIssuerException, EvcsServiceException {
         // Arrange

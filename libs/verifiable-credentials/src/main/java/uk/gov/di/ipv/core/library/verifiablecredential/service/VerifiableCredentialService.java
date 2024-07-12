@@ -73,6 +73,14 @@ public class VerifiableCredentialService {
         }
     }
 
+    public void deleteVCs(String userId) throws VerifiableCredentialException {
+        try {
+            dataStore.deleteAllByPartition(userId);
+        } catch (Exception e) {
+            throw new VerifiableCredentialException(SC_SERVER_ERROR, FAILED_TO_DELETE_CREDENTIAL);
+        }
+    }
+
     private void deleteVcStoreItem(String userId, String criId) {
         dataStore.delete(userId, criId);
     }
