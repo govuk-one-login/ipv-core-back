@@ -121,7 +121,7 @@ public class EvcsService {
                                 credential.getVcString(), PENDING_RETURN, null, OFFLINE)));
     }
 
-    public void updatePendingIdentity(String userId, String evcsAccessToken)
+    public void abandonPendingIdentity(String userId, String evcsAccessToken)
             throws EvcsServiceException {
         List<EvcsUpdateUserVCsDto> vcsToUpdates =
                 getUserVCs(userId, evcsAccessToken, PENDING_RETURN).stream()

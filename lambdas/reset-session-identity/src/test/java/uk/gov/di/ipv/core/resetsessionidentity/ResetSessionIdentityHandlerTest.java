@@ -153,7 +153,7 @@ class ResetSessionIdentityHandlerTest {
                         ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
         verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
-        verify(mockEvcsService).updatePendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
@@ -169,7 +169,7 @@ class ResetSessionIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         doThrow(EvcsServiceException.class)
                 .when(mockEvcsService)
-                .updatePendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+                .abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
@@ -192,7 +192,7 @@ class ResetSessionIdentityHandlerTest {
                         ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
         verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
-        verify(mockEvcsService).updatePendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
@@ -210,7 +210,7 @@ class ResetSessionIdentityHandlerTest {
                         new EvcsServiceException(
                                 HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(mockEvcsService)
-                .updatePendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+                .abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
@@ -230,7 +230,7 @@ class ResetSessionIdentityHandlerTest {
                         ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
         verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
         verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
-        verify(mockEvcsService).updatePendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
 
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
         assertEquals(500, journeyResponse.get(STATUS_CODE));

@@ -143,7 +143,7 @@ public class ResetSessionIdentityHandler
             throws EvcsServiceException {
         try {
             if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                evcsService.updatePendingIdentity(userId, evcsAccessToken);
+                evcsService.abandonPendingIdentity(userId, evcsAccessToken);
             }
         } catch (EvcsServiceException e) {
             if (configService.enabled(EVCS_READ_ENABLED)) {

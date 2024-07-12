@@ -13,7 +13,7 @@ states:
       next:
         targetState: PENDING_PAGE
         checkFeatureFlag:
-          deleteDetailsEnabled:
+          pendingF2FResetEnabled:
             targetState: PENDING_PAGE_TEST
 
   # Journey states

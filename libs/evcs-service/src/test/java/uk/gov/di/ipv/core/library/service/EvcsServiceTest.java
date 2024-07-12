@@ -353,7 +353,7 @@ class EvcsServiceTest {
         when(mockEvcsClient.getUserVcs(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN)))
                 .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
-        evcsService.updatePendingIdentity(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN);
+        evcsService.abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN);
 
         InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
         mockOrderVerifier
