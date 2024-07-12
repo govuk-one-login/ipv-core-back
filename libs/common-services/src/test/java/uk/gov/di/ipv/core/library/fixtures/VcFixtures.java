@@ -1,12 +1,14 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
 import com.nimbusds.jose.jwk.KeyType;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PassportDetails;
+import uk.gov.di.model.PostalAddress;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;
@@ -26,11 +28,19 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.ID
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_EVIDENCE_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RISK_ASSESSMENT_EVIDENCE_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
+import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.PassportDetailsGenerator.createPassportDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.PostalAddressGenerator.createPostalAddress;
+import static uk.gov.di.ipv.core.library.helpers.vocab.ResidencePermitDetailsGenerator.createResidencePermitDetails;
+import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
+import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
+import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 
 public interface VcFixtures {
     String TEST_SUBJECT = "urn:uuid:e6e2e324-5b66-4ad6-8338-83f9f837e345";
@@ -174,144 +184,135 @@ public interface VcFixtures {
                             .txn("963deeb5-a52c-4030-a69a-3184f77a4f18")
                             .checkDetails(null)
                             .build());
-    Map<String, String> ADDRESS_1 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("subBuildingName", ""),
-                    Map.entry("buildingNumber", "35"),
-                    Map.entry("buildingName", ""),
-                    Map.entry("streetName", "IDSWORTH ROAD"),
-                    Map.entry("addressLocality", "SHEFFIELD"),
-                    Map.entry("postalCode", "S5 6UN"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validFrom", "2000-01-01"));
 
-    Map<String, String> ADDRESS_2 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("subBuildingName", ""),
-                    Map.entry("buildingNumber", "8"),
-                    Map.entry("buildingName", "221B"),
-                    Map.entry("streetName", "MILTON ROAD"),
-                    Map.entry("addressLocality", "Milton Keynes"),
-                    Map.entry("postalCode", "MK15 5BX"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validFrom", "2024-01-01"));
-    Map<String, String> ADDRESS_3 =
-            Map.ofEntries(
-                    Map.entry("uprn", "100120012077"),
-                    Map.entry("buildingNumber", "8"),
-                    Map.entry("buildingName", ""),
-                    Map.entry("streetName", "HADLEY ROAD"),
-                    Map.entry("addressLocality", "BATH"),
-                    Map.entry("postalCode", "BA2 5AA"),
-                    Map.entry("addressCountry", "GB"),
-                    Map.entry("validUntil", "2000-01-01"));
+    Long TEST_UPRN = Long.valueOf("100120012077");
 
-    Map<String, String> ADDRESS_4 =
-            Map.ofEntries(
-                    Map.entry("uprn", "10022812929"),
-                    Map.entry("organisationName", "FINCH GROUP"),
-                    Map.entry("subBuildingName", "UNIT 2B"),
-                    Map.entry("buildingNumber", "16"),
-                    Map.entry("buildingName", "COY POND BUSINESS PARK"),
-                    Map.entry("dependentStreetName", "KINGS PARK"),
-                    Map.entry("streetName", "BIG STREET"),
-                    Map.entry("doubleDependentAddressLocality", "SOME DISTRICT"),
-                    Map.entry("dependentAddressLocality", "LONG EATON"),
-                    Map.entry("addressLocality", "GREAT MISSENDEN"),
-                    Map.entry("postalCode", "HP16 0AL"),
-                    Map.entry("addressCountry", "GB"));
+    PostalAddress ADDRESS_1 =
+            createPostalAddress(
+                    "35",
+                    "",
+                    "IDSWORTH ROAD",
+                    "S5 6UN",
+                    "SHEFFIELD",
+                    "GB",
+                    TEST_UPRN,
+                    "2000-01-01",
+                    null);
 
-    List<Object> MULTIPLE_ADDRESSES_VALID =
+    PostalAddress ADDRESS_2 =
+            createPostalAddress(
+                    "8",
+                    "221B",
+                    "MILTON ROAD",
+                    "MK15 5BX",
+                    "Milton Keynes",
+                    "GB",
+                    TEST_UPRN,
+                    "2024-01-01",
+                    null);
+
+    PostalAddress ADDRESS_3 =
+            createPostalAddress(
+                    "8", "", "HADLEY ROAD", "BA2 5AA", "BATH", "GB", TEST_UPRN, null, "2000-01-01");
+
+    PostalAddress ADDRESS_4 =
+            createPostalAddress(
+                    "16",
+                    "COY POND BUSINESS PARK",
+                    "BIG STREET",
+                    "HP16 0AL",
+                    "GREAT MISSENDEN",
+                    "GB",
+                    TEST_UPRN,
+                    null,
+                    null,
+                    "UNIT 2B",
+                    "FINCH GROUP",
+                    "KINGS PARK",
+                    "SOME DISTRICT",
+                    "LONG EATON");
+
+    List<PostalAddress> MULTIPLE_ADDRESSES_VALID =
             List.of(
                     ADDRESS_3,
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "3"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "STOCKS HILL"),
-                            Map.entry("addressLocality", "HARRINGTON"),
-                            Map.entry("postalCode", "CA14 5PH"),
-                            Map.entry("addressCountry", "GB"),
-                            Map.entry("validFrom", "2011-01-01")),
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "24"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "SOME STREET"),
-                            Map.entry("addressLocality", "SOME LOCALITY"),
-                            Map.entry("postalCode", "TE5 7ER"),
-                            Map.entry("addressCountry", "GB"),
-                            Map.entry("validUntil", "2011-01-01")));
+                    createPostalAddress(
+                            "3",
+                            "",
+                            "STOCKS HILL",
+                            "CA14 5PH",
+                            "HARRINGTON",
+                            "GB",
+                            TEST_UPRN,
+                            "2011-01-01",
+                            null),
+                    createPostalAddress(
+                            "24",
+                            "",
+                            "SOME STREET",
+                            "TE5 7ER",
+                            "SOME LOCALITY",
+                            "GB",
+                            TEST_UPRN,
+                            null,
+                            "2011-01-01"));
 
-    List<Object> MULTIPLE_ADDRESSES_NO_VALID_FROM =
+    List<PostalAddress> MULTIPLE_ADDRESSES_NO_VALID_FROM =
             List.of(
                     ADDRESS_3,
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "3"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "STOCKS HILL"),
-                            Map.entry("addressLocality", "HARRINGTON"),
-                            Map.entry("postalCode", "CA14 5PH"),
-                            Map.entry("addressCountry", "GB")),
-                    Map.ofEntries(
-                            Map.entry("uprn", "100120012077"),
-                            Map.entry("buildingNumber", "24"),
-                            Map.entry("buildingName", ""),
-                            Map.entry("streetName", "SOME STREET"),
-                            Map.entry("addressLocality", "SOME LOCALITY"),
-                            Map.entry("postalCode", "TE5 7ER"),
-                            Map.entry("addressCountry", "GB")));
+                    createPostalAddress(
+                            "3",
+                            "",
+                            "STOCKS HILL",
+                            "CA14 5PH",
+                            "HARRINGTON",
+                            "GB",
+                            TEST_UPRN,
+                            null,
+                            null),
+                    createPostalAddress(
+                            "24",
+                            "",
+                            "SOME STREET",
+                            "TE5 7ER",
+                            "SOME LOCALITY",
+                            "GB",
+                            TEST_UPRN,
+                            null,
+                            null));
 
-    Map<String, List<NameParts>> ALICE_PARKER_NAME =
+    Map<String, List<NamePart>> ALICE_PARKER_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("Alice", VC_GIVEN_NAME),
-                            new NameParts("Jane", VC_GIVEN_NAME),
-                            new NameParts("Parker", VC_FAMILY_NAME)));
-    Map<String, List<NameParts>> MORGAN_SARAH_MEREDYTH_NAME =
+                            createNamePart("Alice", GIVEN_NAME),
+                            createNamePart("Jane", GIVEN_NAME),
+                            createNamePart("Parker", FAMILY_NAME)));
+    Map<String, List<NamePart>> MORGAN_SARAH_MEREDYTH_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("MORGAN", VC_GIVEN_NAME),
-                            new NameParts("SARAH MEREDYTH", VC_FAMILY_NAME)));
+                            createNamePart("MORGAN", GIVEN_NAME),
+                            createNamePart("SARAH MEREDYTH", FAMILY_NAME)));
 
-    Map<String, List<NameParts>> MARY_WATSON_NAME =
+    Map<String, List<NamePart>> MARY_WATSON_NAME =
             Map.of(
                     VC_NAME_PARTS,
                     List.of(
-                            new NameParts("Mary", VC_GIVEN_NAME),
-                            new NameParts("Watson", VC_FAMILY_NAME)));
+                            createNamePart("Mary", GIVEN_NAME),
+                            createNamePart("Watson", FAMILY_NAME)));
 
-    Map<String, Object> DRIVING_PERMIT_DVA =
-            Map.of(
-                    "personalNumber", "MORGA753116SM9IJ",
-                    "expiryDate", "2042-10-01",
-                    "issuedBy", "DVA",
-                    "issueNumber", 123456,
-                    "issueDate", "2018-04-19");
+    DrivingPermitDetails DRIVING_PERMIT_DVA =
+            createDrivingPermitDetails(
+                    "MORGA753116SM9IJ", "2042-10-01", "DVA", "2018-04-19", "123456");
 
-    Map<String, Object> DRIVING_PERMIT_DVLA =
-            Map.of(
-                    "personalNumber", "PARKE710112PBFGA",
-                    "expiryDate", "2032-02-02",
-                    "issuedBy", "DVLA",
-                    "issueDate", "2005-02-02");
+    DrivingPermitDetails DRIVING_PERMIT_DVLA =
+            createDrivingPermitDetails("PARKE710112PBFGA", "2032-02-02", "DVLA", "2005-02-02");
 
-    Map<String, Object> INVALID_DRIVING_PERMIT =
-            Map.of(
-                    "personalNumber", "MORGA753116SM9IJ",
-                    "expiryDate", "2042-10-01");
+    DrivingPermitDetails INVALID_DRIVING_PERMIT =
+            createDrivingPermitDetails("MORGA753116SM9IJ", "2042-10-01", null, null);
 
-    List<Object> PASSPORT_DETAILS =
-            List.of(
-                    Map.of(
-                            "documentNumber", "321654987",
-                            "icaoIssuerCode", "GBR",
-                            "expiryDate", "2030-01-01"));
+    List<PassportDetails> PASSPORT_DETAILS =
+            List.of(createPassportDetails("321654987", "GBR", "2030-01-01"));
 
     VerifiableCredential PASSPORT_NON_DCMAW_SUCCESSFUL_VC =
             generateVerifiableCredential(
@@ -413,7 +414,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
-                        .birthDate(List.of(new BirthDate("invalid")))
+                        .birthDate(List.of(createBirthDate("invalid")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -531,7 +532,7 @@ public interface VcFixtures {
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .birthDate(List.of(createBirthDate("1959-08-23")))
                                             .build())
                             .build(),
                     "https://review-f.integration.account.gov.uk",
@@ -546,7 +547,7 @@ public interface VcFixtures {
                             .credentialSubject(
                                     TestVc.TestCredentialSubject.builder()
                                             .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(new BirthDate("1959-08-23")))
+                                            .birthDate(List.of(createBirthDate("1959-08-23")))
                                             .build())
                             .build(),
                     "https://review-f.integration.account.gov.uk",
@@ -556,7 +557,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -587,7 +588,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -607,7 +608,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(new BirthDate("1959-08-23")))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
                         .build();
         return generateVerifiableCredential(
                 TEST_SUBJECT,
@@ -627,9 +628,13 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
-                        .address(List.of(Map.of("type", "PostalAddress", "postalCode", "LE12 9BN")))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
+                        .address(List.of(ADDRESS_1))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .build();
         return generateVerifiableCredential(
                 "user-id",
@@ -725,7 +730,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
                         .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
                         .build();
         return generateVerifiableCredential(
@@ -783,7 +788,8 @@ public interface VcFixtures {
     static VerifiableCredential vcNinoSuccessful() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .socialSecurityRecord(
+                                List.of(createSocialSecurityRecordDetails("AA000003D")))
                         .build();
 
         var evidence =
@@ -800,8 +806,9 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(null)
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
-                        .socialSecurityRecord(List.of(Map.of("personalNumber", "AA000003D")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
+                        .socialSecurityRecord(
+                                List.of(createSocialSecurityRecordDetails("AA000003D")))
                         .build();
 
         var evidence = List.of(testFailedNinoEvidence);
@@ -881,7 +888,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_4))
                         .name(List.of((ALICE_PARKER_NAME)))
-                        .birthDate(List.of(new BirthDate("1970-01-01")))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -939,13 +946,7 @@ public interface VcFixtures {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(MARY_WATSON_NAME))
-                        .passport(
-                                List.of(
-                                        Map.of(
-                                                "expiryDate",
-                                                "2030-01-01",
-                                                "documentNumber",
-                                                "824159121")))
+                        .passport(List.of(createPassportDetails("824159121", null, "2030-01-01")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -987,19 +988,16 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .residencePermit(
                                 List.of(
-                                        Map.of(
-                                                "icaoIssuerCode",
-                                                "UTO",
-                                                "documentType",
-                                                "CR",
-                                                "documentNumber",
-                                                "AX66K69P2",
-                                                "expiryDate",
-                                                "2030-07-13")))
+                                        createResidencePermitDetails(
+                                                "AX66K69P2", "2030-07-13", "CR", "UTO")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -1023,19 +1021,16 @@ public interface VcFixtures {
                                 List.of(
                                         Map.of(
                                                 VC_NAME_PARTS,
-                                                List.of(new NameParts("Chris", VC_GIVEN_NAME)))))
-                        .birthDate(List.of(new BirthDate("1984-09-28")))
+                                                List.of(
+                                                        createNamePart(
+                                                                "Chris",
+                                                                NamePart.NamePartType
+                                                                        .GIVEN_NAME)))))
+                        .birthDate(List.of(createBirthDate("1984-09-28")))
                         .idCard(
                                 List.of(
-                                        Map.of(
-                                                "icaoIssuerCode",
-                                                "NLD",
-                                                "documentNumber",
-                                                "SPEC12031",
-                                                "expiryDate",
-                                                "2031-08-02",
-                                                "issueDate",
-                                                "2021-08-02")))
+                                        createIdCardDetails(
+                                                "SPEC12031", "2031-08-02", "NLD", "2021-08-02")))
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
@@ -1064,8 +1059,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
@@ -1094,8 +1088,7 @@ public interface VcFixtures {
                 TestVc.TestCredentialSubject.builder()
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
@@ -1114,8 +1107,7 @@ public interface VcFixtures {
                         .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         TestVc.TestEvidence evidence =
@@ -1145,8 +1137,7 @@ public interface VcFixtures {
                         .passport(PASSPORT_DETAILS)
                         .socialSecurityRecord(
                                 List.of(
-                                        Map.of(
-                                                "personalNumber",
+                                        createSocialSecurityRecordDetails(
                                                 "AB123456C"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
