@@ -104,6 +104,7 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
@@ -259,6 +260,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -279,6 +281,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(JOURNEY_IPV_GPG45_LOW, journeyResponse);
 
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(P1, ipvSessionItem.getTargetVot());
     }
 
     @Nested
@@ -459,13 +462,14 @@ class CheckExistingIdentityHandlerTest {
                     auditEventArgumentCaptor.getValue().getEventName());
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-            verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+            verify(ipvSessionService, times(3)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
             inOrder.verify(ipvSessionItem).setVot(P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+            assertEquals(P2, ipvSessionItem.getTargetVot());
         }
 
         @Test // User returning after migration
@@ -491,6 +495,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.PCL200, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getTargetVot());
         }
 
         @Test // User returning after migration
@@ -516,6 +521,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.PCL250, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getTargetVot());
         }
 
         @Test // User returning after migration
@@ -539,6 +545,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.PCL250, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getTargetVot());
         }
 
         @Test // User in process of migration
@@ -563,6 +570,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.PCL200, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getTargetVot());
         }
 
         @Test // User in process of migration
@@ -589,6 +597,7 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(Vot.PCL250, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL250, ipvSessionItem.getTargetVot());
         }
 
         @Test
@@ -613,13 +622,62 @@ class CheckExistingIdentityHandlerTest {
                     auditEventArgumentCaptor.getValue().getEventName());
             verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-            verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+            verify(ipvSessionService, times(3)).updateIpvSession(ipvSessionItem);
 
             InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setTargetVot(P2);
             inOrder.verify(ipvSessionItem).setVot(P2);
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
+            assertEquals(Vot.PCL200, ipvSessionItem.getTargetVot());
+        }
+
+        @Test
+        void shouldMatchWeakerVotIfStrongerVotHasBreachingCi() throws Exception {
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1B));
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P1.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.L1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+
+            var testContraIndicators = ContraIndicators.builder().build();
+            when(ciMitService.getContraIndicators(
+                            TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                    .thenReturn(testContraIndicators);
+            when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P2))
+                    .thenReturn(true);
+            when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P1))
+                    .thenReturn(false);
+
+            clientOAuthSessionItem.setVtr(List.of(Vot.P1.name(), P2.name()));
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            verify(ipvSessionService, times(3)).updateIpvSession(ipvSessionItem);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P1);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P1, ipvSessionItem.getVot());
+            assertEquals(P1, ipvSessionItem.getTargetVot());
         }
 
         @Test
@@ -677,9 +735,9 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -701,9 +759,9 @@ class CheckExistingIdentityHandlerTest {
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @ParameterizedTest
@@ -756,6 +814,7 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -776,10 +835,9 @@ class CheckExistingIdentityHandlerTest {
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -820,10 +878,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_PENDING, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -844,10 +901,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_PENDING, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -865,10 +921,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -893,10 +948,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -920,10 +974,9 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
         assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -942,10 +995,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
-        verify(ipvSessionService, never()).updateIpvSession(any());
-
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -968,6 +1020,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(testJourneyResponse, response.getJourney());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -989,6 +1042,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.getJourney());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1077,7 +1131,7 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        verify(ipvSessionService, times(1)).updateIpvSession(ipvSessionItem);
+        verify(ipvSessionService, times(3)).updateIpvSession(ipvSessionItem);
 
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
         inOrder.verify(ipvSessionItem).setVot(P2);
@@ -1085,6 +1139,7 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
         verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1109,11 +1164,13 @@ class CheckExistingIdentityHandlerTest {
 
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
     void shouldRemoveOperationalProfileIfMatchingGpg45ProfileIsPresent() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        clientOAuthSessionItem.setVtr(List.of(P2.name(), PCL250.name()));
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
                 .thenReturn(
                         Stream.concat(
@@ -1141,6 +1198,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
         assertEquals(JOURNEY_REUSE, journeyResponse);
         verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
+        assertEquals(PCL250, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1182,6 +1240,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1204,6 +1263,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH, journeyResponse.getJourney());
+        assertEquals(P1, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1373,8 +1433,8 @@ class CheckExistingIdentityHandlerTest {
                 .persistCredentials(expectedStoredVc, ipvSessionItem.getIpvSessionId(), false);
 
         verify(ipvSessionItem, never()).setVot(any());
-        verify(ipvSessionService, never()).updateIpvSession(any());
         verify(mockEvcsMigrationService, times(0)).migrateExistingIdentity(any(), any());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1462,6 +1522,7 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
     private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {

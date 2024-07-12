@@ -269,6 +269,11 @@ public class CheckExistingIdentityHandler
                             .getParsedVtr()
                             .getLowestStrengthRequestedGpg45Vot(configService);
 
+            // As almost all of our journeys are proving or mitigating a GPG45 vot we set the
+            // target vot here as a default value. It will be overridden for identity reuse.
+            ipvSessionItem.setTargetVot(lowestGpg45ConfidenceRequested);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -308,8 +313,15 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             vcs,
-                            areGpg45VcsCorrelated);
+                            areGpg45VcsCorrelated,
+                            contraIndicators);
             if (profileMatchResponse.isPresent()) {
+                // We are re-using an existing Vot so it might not be a GPG45 vot
+                ipvSessionItem.setTargetVot(
+                        clientOAuthSessionItem
+                                .getParsedVtr()
+                                .getLowestStrengthRequestedVot(configService));
+                ipvSessionService.updateIpvSession(ipvSessionItem);
                 return profileMatchResponse.get();
             }
 
@@ -528,7 +540,8 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             VerifiableCredentialBundle vcBundle,
-            boolean areGpg45VcsCorrelated)
+            boolean areGpg45VcsCorrelated,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException, VerifiableCredentialException,
                     EvcsServiceException {
         // Check for attained vot from requested vots
@@ -540,7 +553,8 @@ public class CheckExistingIdentityHandler
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
-                        areGpg45VcsCorrelated);
+                        areGpg45VcsCorrelated,
+                        contraIndicators);
 
         // vot achieved for vtr
         if (strongestAttainedVotFromVtr.isPresent()) {
@@ -745,7 +759,8 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            boolean areGpg45VcsCorrelated)
+            boolean areGpg45VcsCorrelated,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException {
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
@@ -756,10 +771,11 @@ public class CheckExistingIdentityHandler
                                     requestedVot,
                                     VcHelper.filterVCBasedOnProfileType(vcs, GPG45),
                                     auditEventUser,
-                                    deviceInformation);
+                                    deviceInformation,
+                                    contraIndicators);
                 }
             } else {
-                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);
+                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs, contraIndicators);
             }
 
             if (requestedVotAttained) {
@@ -773,7 +789,8 @@ public class CheckExistingIdentityHandler
             Vot requestedVot,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
-            String deviceInformation)
+            String deviceInformation,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException {
 
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
@@ -783,8 +800,11 @@ public class CheckExistingIdentityHandler
                                 gpg45Scores, requestedVot.getSupportedGpg45Profiles())
                         : Optional.empty();
 
+        var isBreaching =
+                ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+
         // Successful match
-        if (matchedGpg45Profile.isPresent()) {
+        if (matchedGpg45Profile.isPresent() && !isBreaching) {
             // remove weaker operational profile
             if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
@@ -808,7 +828,8 @@ public class CheckExistingIdentityHandler
         return false;
     }
 
-    private boolean hasOperationalProfileVc(Vot requestedVot, List<VerifiableCredential> vcs)
+    private boolean hasOperationalProfileVc(
+            Vot requestedVot, List<VerifiableCredential> vcs, ContraIndicators contraIndicators)
             throws ParseException {
         for (var vc : vcs) {
             String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
@@ -818,8 +839,11 @@ public class CheckExistingIdentityHandler
                             .filter(profileName -> profileName.equals(credentialVot))
                             .findFirst();
 
+            var isBreaching =
+                    ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+
             // Successful match
-            if (matchedOperationalProfile.isPresent()) {
+            if (matchedOperationalProfile.isPresent() && !isBreaching) {
                 LOGGER.info(
                         new StringMapMessage()
                                 .with(
