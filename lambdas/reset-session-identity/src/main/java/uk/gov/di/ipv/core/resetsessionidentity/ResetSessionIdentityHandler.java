@@ -106,27 +106,11 @@ public class ResetSessionIdentityHandler
                     RequestHelper.getSessionCredentialsResetType(input);
             sessionCredentialsService.deleteSessionCredentialsForResetType(
                     ipvSessionId, sessionCredentialsResetType);
+            LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 
             if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
-                String userId = clientOAuthSessionItem.getUserId();
-                criResponseService.deleteCriResponseItem(userId, F2F);
-                verifiableCredentialService.deleteVCs(userId);
-                try {
-                    if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                        evcsService.updatePendingIdentity(
-                                userId, clientOAuthSessionItem.getEvcsAccessToken());
-                    }
-                } catch (EvcsServiceException e) {
-                    if (configService.enabled(EVCS_READ_ENABLED)) {
-                        throw e;
-                    } else {
-                        LOGGER.error(
-                                LogHelper.buildErrorMessage("Failed to update EVCS identity", e));
-                    }
-                }
+                doResetForPendingF2f(clientOAuthSessionItem);
             }
-
-            LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody
@@ -143,6 +127,30 @@ public class ResetSessionIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_RESET_TYPE)
                     .toObjectMap();
+        }
+    }
+
+    private void doResetForPendingF2f(ClientOAuthSessionItem clientOAuthSessionItem)
+            throws VerifiableCredentialException, EvcsServiceException {
+        String userId = clientOAuthSessionItem.getUserId();
+        criResponseService.deleteCriResponseItem(userId, F2F);
+        verifiableCredentialService.deleteVCs(userId);
+        updateEvcsPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
+        LOGGER.info(LogHelper.buildLogMessage("Reset done for F2F pending identity."));
+    }
+
+    private void updateEvcsPendingIdentity(String userId, String evcsAccessToken)
+            throws EvcsServiceException {
+        try {
+            if (configService.enabled(EVCS_WRITE_ENABLED)) {
+                evcsService.updatePendingIdentity(userId, evcsAccessToken);
+            }
+        } catch (EvcsServiceException e) {
+            if (configService.enabled(EVCS_READ_ENABLED)) {
+                throw e;
+            } else {
+                LOGGER.error(LogHelper.buildErrorMessage("Failed to update EVCS identity", e));
+            }
         }
     }
 }
