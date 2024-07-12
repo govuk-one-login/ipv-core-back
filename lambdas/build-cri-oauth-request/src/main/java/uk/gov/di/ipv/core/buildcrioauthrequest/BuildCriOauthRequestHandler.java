@@ -176,9 +176,6 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            Vot minimumRequestedVotByStrength =
-                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.getInstance().generate();
@@ -191,8 +188,7 @@ public class BuildCriOauthRequestHandler
                             govukSigninJourneyId,
                             cri,
                             criContext,
-                            criEvidenceRequest,
-                            minimumRequestedVotByStrength);
+                            criEvidenceRequest);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
 
@@ -303,8 +299,7 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId,
             Cri cri,
             String context,
-            EvidenceRequest evidenceRequest,
-            Vot requestedVot)
+            EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     VerifiableCredentialException {
 
@@ -315,7 +310,7 @@ public class BuildCriOauthRequestHandler
                 getSharedAttributesForUser(ipvSessionItem, vcs, cri);
 
         if (cri.equals(F2F)) {
-            evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
+            evidenceRequest = getEvidenceRequestForF2F(vcs);
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -333,12 +328,11 @@ public class BuildCriOauthRequestHandler
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
-    private EvidenceRequest getEvidenceRequestForF2F(
-            List<VerifiableCredential> vcs, Vot minimumRequestedVotsByStrength) {
+    private EvidenceRequest getEvidenceRequestForF2F(List<VerifiableCredential> vcs) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        minimumRequestedVotsByStrength.getSupportedGpg45Profiles());
+                        Vot.P2.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()
