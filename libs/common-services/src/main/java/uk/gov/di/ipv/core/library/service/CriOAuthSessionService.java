@@ -4,6 +4,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -36,12 +37,12 @@ public class CriOAuthSessionService {
     }
 
     public CriOAuthSessionItem persistCriOAuthSession(
-            String state, String criId, String clientOAuthSessionId, String connection) {
+            String state, Cri cri, String clientOAuthSessionId, String connection) {
 
         CriOAuthSessionItem criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(state)
-                        .criId(criId)
+                        .criId(cri.getId())
                         .clientOAuthSessionId(clientOAuthSessionId)
                         .connection(connection)
                         .build();

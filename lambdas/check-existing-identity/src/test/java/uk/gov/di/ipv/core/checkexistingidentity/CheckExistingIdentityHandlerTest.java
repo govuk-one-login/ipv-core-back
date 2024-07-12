@@ -178,6 +178,8 @@ class CheckExistingIdentityHandlerTest {
     private static VerifiableCredential pcl250Vc;
     private static VerifiableCredential gpg45Vc = vcDrivingPermit();
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -1503,7 +1505,7 @@ class CheckExistingIdentityHandlerTest {
                         new JWSHeader(JWSAlgorithm.ES256),
                         new JWTClaimsSet.Builder()
                                 .claim(VOT_CLAIM_NAME, vot.name())
-                                .claim(VC_CLAIM, testVcClaim)
+                                .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(testVcClaim, Map.class))
                                 .build());
         jwt.sign(jwtSigner);
         return VerifiableCredential.fromValidJwt(

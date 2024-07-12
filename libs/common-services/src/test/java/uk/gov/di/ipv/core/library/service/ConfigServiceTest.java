@@ -125,8 +125,7 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
-            OauthCriConfig result =
-                    configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT.getId());
+            OauthCriConfig result = configService.getOauthCriActiveConnectionConfig(Cri.PASSPORT);
 
             assertEquals(expectedOauthCriConfig, result);
         }
@@ -154,7 +153,7 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenReturn(oauthCriJsonConfig);
 
-            var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT.getId());
+            var result = configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT);
 
             assertEquals(expectedOauthCriConfig, result);
         }
@@ -165,10 +164,9 @@ class ConfigServiceTest {
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
                     .thenThrow(ParameterNotFoundException.builder().build());
 
-            var criId = Cri.PASSPORT.getId();
             assertThrows(
                     NoConfigForConnectionException.class,
-                    () -> configService.getOauthCriConfigForConnection("stub", criId));
+                    () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
         }
 
         @Test
@@ -183,7 +181,7 @@ class ConfigServiceTest {
                                     "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            RestCriConfig restCriConfig = configService.getRestCriConfig(Cri.ADDRESS.getId());
+            RestCriConfig restCriConfig = configService.getRestCriConfig(Cri.ADDRESS);
 
             var expectedRestCriConfig =
                     RestCriConfig.builder()
@@ -208,7 +206,7 @@ class ConfigServiceTest {
                                     "{\"signingKey\":%s,\"componentId\":\"https://testComponentId\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT.getId());
+            CriConfig criConfig = configService.getCriConfig(Cri.PASSPORT);
 
             var expectedCriConfig =
                     CriConfig.builder()
@@ -232,7 +230,7 @@ class ConfigServiceTest {
                                     "{\"signingKey\":%s,\"componentId\":\"%s\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED, testComponentId));
 
-            assertEquals(testComponentId, configService.getComponentId(Cri.PASSPORT.getId()));
+            assertEquals(testComponentId, configService.getComponentId(Cri.PASSPORT));
         }
     }
 
@@ -253,7 +251,7 @@ class ConfigServiceTest {
     class OauthCriConfigItems {
 
         private void setupTestData(
-                String credentialIssuer,
+                Cri credentialIssuer,
                 String attributeName,
                 String baseValue,
                 String featureSet,
@@ -264,13 +262,13 @@ class ConfigServiceTest {
                 when(ssmProvider.get(
                                 String.format(
                                         "/test/core/credentialIssuers/%s/%s",
-                                        credentialIssuer, attributeName)))
+                                        credentialIssuer.getId(), attributeName)))
                         .thenReturn(baseValue);
             } else {
                 when(ssmProvider.getMultiple(
                                 String.format(
                                         "/test/core/features/%s/credentialIssuers/%s",
-                                        featureSet, credentialIssuer)))
+                                        featureSet, credentialIssuer.getId())))
                         .thenReturn(Map.of(attributeName, featureSetValue));
             }
         }
@@ -282,7 +280,7 @@ class ConfigServiceTest {
                 String featureSetActiveConnection,
                 String featureSet,
                 String expectedActiveConnection) {
-            final String credentialIssuer = Cri.PASSPORT.getId();
+            final var credentialIssuer = Cri.PASSPORT;
             setupTestData(
                     credentialIssuer,
                     "activeConnection",
@@ -300,12 +298,12 @@ class ConfigServiceTest {
                 String featureSetIsEnabled,
                 String featureSet,
                 String expectedIsEnabled) {
-            final String credentialIssuer = Cri.PASSPORT.getId();
+            final var credentialIssuer = Cri.PASSPORT;
             setupTestData(
                     credentialIssuer, "enabled", baseIsEnabled, featureSet, featureSetIsEnabled);
             assertEquals(
                     Boolean.parseBoolean(expectedIsEnabled),
-                    configService.isEnabled(credentialIssuer));
+                    configService.isEnabled(credentialIssuer.getId()));
         }
 
         @ParameterizedTest
@@ -320,7 +318,7 @@ class ConfigServiceTest {
                 String featureSetAllowedSharedAttributes,
                 String featureSet,
                 String expectedIAllowedSharedAttributes) {
-            final String credentialIssuer = Cri.PASSPORT.getId();
+            final var credentialIssuer = Cri.PASSPORT;
             setupTestData(
                     credentialIssuer,
                     "allowedSharedAttributes",
@@ -411,7 +409,7 @@ class ConfigServiceTest {
         when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
                 .thenReturn("stub");
 
-        String apiKey = configService.getCriPrivateApiKeyForActiveConnection(Cri.PASSPORT.getId());
+        String apiKey = configService.getCriPrivateApiKeyForActiveConnection(Cri.PASSPORT);
 
         assertEquals("api-key-value", apiKey);
     }

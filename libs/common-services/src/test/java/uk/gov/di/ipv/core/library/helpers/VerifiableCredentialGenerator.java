@@ -150,7 +150,7 @@ public class VerifiableCredentialGenerator {
                         .claim(SUBJECT, userId)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
-                        .claim(VC_CLAIM, vcClaim)
+                        .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
                         .claim(VC_VOT, vot)
                         .claim(JWT_ID, jti)
                         .claim(VC_VTM, vtm)
@@ -171,7 +171,7 @@ public class VerifiableCredentialGenerator {
                             .claim(SUBJECT, userId)
                             .claim(ISSUER, "https://review-p.staging.account.gov.uk")
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
-                            .claim(VC_CLAIM, vcClaim)
+                            .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Object.class))
                             .build();
             return signTestVc(userId, cri, claimsSet, signingKeyType);
         } catch (Exception e) {

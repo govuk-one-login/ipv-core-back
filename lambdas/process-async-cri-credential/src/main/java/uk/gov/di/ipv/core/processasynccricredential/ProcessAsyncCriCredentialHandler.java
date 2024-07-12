@@ -49,6 +49,7 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -193,7 +194,7 @@ public class ProcessAsyncCriCredentialHandler
 
         var oauthCriConfig =
                 configService.getOauthCriActiveConnectionConfig(
-                        successAsyncCriResponse.getCredentialIssuer().getId());
+                        successAsyncCriResponse.getCredentialIssuer());
 
         var vcs =
                 verifiableCredentialValidator.parseAndValidate(
@@ -213,8 +214,17 @@ public class ProcessAsyncCriCredentialHandler
             postMitigatingVc(vc);
 
             if (configService.enabled(EVCS_ASYNC_WRITE_ENABLED)) {
-                evcsService.storePendingVc(vc);
-                vc.setMigrated(Instant.now());
+                try {
+                    evcsService.storePendingVc(vc);
+                    vc.setMigrated(Instant.now());
+                } catch (EvcsServiceException e) {
+                    if (configService.enabled(EVCS_READ_ENABLED)) {
+                        throw e;
+                    } else {
+                        LOGGER.error(
+                                LogHelper.buildErrorMessage("Failed to store EVCS async VC", e));
+                    }
+                }
             }
             verifiableCredentialService.persistUserCredentials(vc);
 

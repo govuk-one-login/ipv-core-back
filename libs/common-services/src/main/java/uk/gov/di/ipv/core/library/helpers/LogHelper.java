@@ -6,6 +6,7 @@ import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
@@ -98,8 +99,8 @@ public class LogHelper {
         attachFieldToLogs(LogField.LOG_CLIENT_ID, clientId);
     }
 
-    public static void attachCriIdToLogs(String criId) {
-        attachFieldToLogs(LOG_CRI_ID, criId);
+    public static void attachCriIdToLogs(Cri cri) {
+        attachFieldToLogs(LOG_CRI_ID, cri.getId());
     }
 
     public static void attachIpvSessionIdToLogs(String sessionId) {

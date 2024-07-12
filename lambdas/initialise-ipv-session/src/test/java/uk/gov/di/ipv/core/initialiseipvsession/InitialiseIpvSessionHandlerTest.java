@@ -676,8 +676,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL250_MIGRATION_VC
                                                                                     .getVcString())))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -735,8 +734,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL200_MIGRATION_VC
                                                                                     .getVcString())))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -791,8 +789,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL200_MIGRATION_VC
                                                                                     .getVcString())))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -874,8 +871,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL200_MIGRATION_VC
                                                                                     .getVcString())))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -935,8 +931,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                                     .getVcString())))))
                                     .build());
 
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -1169,8 +1164,7 @@ class InitialiseIpvSessionHandlerTest {
                                                             INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                                             Map.of(VALUES, List.of("🌭")))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,
@@ -1235,8 +1229,7 @@ class InitialiseIpvSessionHandlerTest {
                                                                             PCL200_MIGRATION_VC
                                                                                     .getVcString())))))
                                     .build());
-            when(mockConfigService.getCriConfig(HMRC_MIGRATION.getId()))
-                    .thenReturn(TEST_CRI_CONFIG);
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
             when(mockVerifiableCredentialValidator.parseAndValidate(
                             TEST_USER_ID,
                             HMRC_MIGRATION,

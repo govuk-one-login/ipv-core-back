@@ -431,7 +431,7 @@ public class InitialiseIpvSessionHandler
                                     inheritedIdentityJwtList.size())));
         }
 
-        var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION.getId());
+        var inheritedIdentityCriConfig = configService.getCriConfig(HMRC_MIGRATION);
 
         // The HMRC inherited identity VC will contain an HMRC-specific pairwise identifier
         // rather than our internal user id, so we cannot validate it against the OAuth user id.

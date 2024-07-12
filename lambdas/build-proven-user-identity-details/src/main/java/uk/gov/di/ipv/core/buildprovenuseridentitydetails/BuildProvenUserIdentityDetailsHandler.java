@@ -180,7 +180,7 @@ public class BuildProvenUserIdentityDetailsHandler
         for (var vc : vcs) {
             if (vc.getCri().equals(ADDRESS)
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, configService.getComponentId(vc.getCri().getId()))) {
+                            currentVcStatuses, configService.getComponentId(vc.getCri()))) {
                 JsonNode addressNode =
                         mapper.readTree(SignedJWT.parse(vc.getVcString()).getPayload().toString())
                                 .path(VC_CLAIM)

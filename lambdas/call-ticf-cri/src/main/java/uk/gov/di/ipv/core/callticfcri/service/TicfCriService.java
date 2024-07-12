@@ -73,7 +73,7 @@ public class TicfCriService {
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
         try {
-            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF.getId());
+            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF);
 
             TicfCriDto ticfCriRequest =
                     new TicfCriDto(
@@ -100,7 +100,7 @@ public class TicfCriService {
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
-                        configService.getCriPrivateApiKeyForActiveConnection(TICF.getId()));
+                        configService.getCriPrivateApiKeyForActiveConnection(TICF));
             }
             httpRequestBuilder.header("Content-Type", "application/json; charset=utf-8");
 

@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -285,8 +284,6 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var criOAuthSessionItem = buildValidCriOAuthSessionItem(callbackRequest.getState());
-        when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
-                .thenReturn(OauthCriConfig.builder().build());
 
         // Act & Assert
         assertDoesNotThrow(
@@ -378,8 +375,8 @@ class CriCheckingServiceTest {
     void validateCallbackRequestShouldThrowExceptionWhenCredentialIssuerIdIsInvalid() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
+        callbackRequest.setCredentialIssuerId("invalid");
         var criOAuthSessionItem = buildValidCriOAuthSessionItem(callbackRequest.getState());
-        when(mockConfigService.getOauthCriActiveConnectionConfig(any())).thenReturn(null);
 
         // Act & Assert
         assertThrows(

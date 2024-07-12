@@ -2074,7 +2074,7 @@ class UserIdentityServiceTest {
         Arrays.stream(Cri.values())
                 .forEach(
                         credentialIssuer ->
-                                when(mockConfigService.getComponentId(credentialIssuer.getId()))
+                                when(mockConfigService.getComponentId(credentialIssuer))
                                         .thenReturn(credentialIssuer.getId()));
     }
 
