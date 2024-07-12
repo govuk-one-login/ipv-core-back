@@ -251,11 +251,8 @@ public class EvcsClient {
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();
-            } else {
-                var cause = e.getCause();
-                if (cause != null && cause instanceof EvcsServiceException) {
-                    throw (EvcsServiceException) cause;
-                }
+            } else if (e.getCause() instanceof EvcsServiceException evcsException) {
+                throw evcsException;
             }
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
