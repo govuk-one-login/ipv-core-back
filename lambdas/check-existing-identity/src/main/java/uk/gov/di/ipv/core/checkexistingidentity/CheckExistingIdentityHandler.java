@@ -265,7 +265,9 @@ public class CheckExistingIdentityHandler
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
             // identities
             var lowestGpg45ConfidenceRequested =
-                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
+                    clientOAuthSessionItem
+                            .getParsedVtr()
+                            .getLowestStrengthRequestedGpg45Vot(configService);
 
             var contraIndicators =
                     ciMitService.getContraIndicators(
@@ -532,7 +534,9 @@ public class CheckExistingIdentityHandler
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
-                        clientOAuthSessionItem.getRequestedVotsByStrengthDescending(),
+                        clientOAuthSessionItem
+                                .getParsedVtr()
+                                .getRequestedVotsByStrengthDescending(),
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,

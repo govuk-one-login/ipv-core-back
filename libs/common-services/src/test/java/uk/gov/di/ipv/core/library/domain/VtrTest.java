@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.persistence.item;
+package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
-class ClientOauthSessionItemTest {
+class VtrTest {
     @Mock private ConfigService mockConfigService;
 
     @ParameterizedTest
@@ -26,7 +26,7 @@ class ClientOauthSessionItemTest {
     void getRequestedVotsByStrength_ShouldReturnCorrectVots(
             List<String> vtr, List<Vot> expectedRequestedVots) {
         // Arrange
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
 
         // Act
         var result = underTest.getRequestedVotsByStrengthDescending();
@@ -50,7 +50,7 @@ class ClientOauthSessionItemTest {
             getLowestStrengthRequestedGpg45Vot_ShouldReturnGpg45Vot_WhenWeakerNonGpg45VotAlsoRequested() {
         // Arrange
         var vtr = List.of("P2", "PCL200");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
 
         // Act
         var result = underTest.getLowestStrengthRequestedGpg45Vot(mockConfigService);
@@ -63,7 +63,7 @@ class ClientOauthSessionItemTest {
     void getLowestStrengthRequestedGpg45Vot_ShouldIgnoreP1_WhenP1IsDisabled() {
         // Arrange
         var vtr = List.of("P2", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
         when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
 
         // Act
@@ -77,7 +77,7 @@ class ClientOauthSessionItemTest {
     void getLowestStrengthRequestedGpg45Vot_ShouldReturnP1_WhenP1IsEnabled() {
         // Arrange
         var vtr = List.of("P2", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
         when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         // Act
@@ -91,7 +91,7 @@ class ClientOauthSessionItemTest {
     void getLowestStrengthRequestedVot_ShouldIgnoreP1_WhenP1IsDisabled() {
         // Arrange
         var vtr = List.of("P2", "PCL200", "PCL250", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
         when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
 
         // Act
@@ -105,7 +105,7 @@ class ClientOauthSessionItemTest {
     void getLowestStrengthRequestedVot_ShouldReturnP1_WhenP1IsEnabled() {
         // Arrange
         var vtr = List.of("PCL200", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var underTest = new Vtr(vtr);
         when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         // Act
