@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -65,22 +66,24 @@ public class IpvSessionService {
     }
 
     public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
+        IpvSessionItem ipvSessionItem = null;
         try {
-            var ipvSessionItem =
+            ipvSessionItem =
                     Retry.runTaskWithBackoff(
                             sleeper,
                             7,
                             10,
-                            isLastAttempt -> {
+                            () -> {
                                 var item =
                                         dataStore.getItemByIndex(
                                                 "accessToken", DigestUtils.sha256Hex(accessToken));
                                 if (item == null) {
-                                    throw new RetryableException();
+                                    throw new RetryableException(
+                                            new UnknownAccessTokenException(
+                                                    "Failed to find access token"));
                                 }
-                                return Optional.of(item);
+                                return item;
                             });
-            return Optional.ofNullable(ipvSessionItem);
         } catch (InterruptedException e) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
@@ -92,7 +95,7 @@ public class IpvSessionService {
                             "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
                             e));
         }
-        return Optional.empty();
+        return Optional.ofNullable(ipvSessionItem);
     }
 
     public IpvSessionItem generateIpvSession(

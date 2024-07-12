@@ -7,7 +7,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 
-import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,29 +24,14 @@ class RetryTest {
 
     @Mock private Sleeper mockSleeper;
 
-    private final RetryableTask<Boolean> testTaskSucceedsOnLastAttemptWithRetryableExceptions =
-            isLastAttempt -> {
-                if (isLastAttempt) {
-                    return Optional.of(true);
-                }
-                throw new RetryableException();
-            };
-    private final RetryableTask<Boolean> testTaskSucceedsOnLastAttempt =
-            isLastAttempt -> {
-                if (isLastAttempt) {
-                    return Optional.of(true);
-                }
-                return Optional.empty();
-            };
-
     private final RetryableTask<Boolean> testTaskFailedWithNonRetryableException =
-            isLastAttempt -> {
+            () -> {
                 throw new NonRetryableException("a non retryable exception");
             };
 
     private final RetryableTask<Boolean> testTaskFailedWitRetryableException =
-            isLastAttempt -> {
-                throw new RetryableException();
+            () -> {
+                throw new RetryableException(new Exception());
             };
 
     @Test
@@ -56,7 +41,7 @@ class RetryTest {
                         IllegalArgumentException.class,
                         () ->
                                 Retry.runTaskWithBackoff(
-                                        mockSleeper, 0, 100, testTaskSucceedsOnLastAttempt));
+                                        mockSleeper, 0, 100, testTaskFailedWitRetryableException));
 
         assertEquals("Max attempts must be greater than 0", exception.getMessage());
     }
@@ -68,14 +53,26 @@ class RetryTest {
                         IllegalArgumentException.class,
                         () ->
                                 Retry.runTaskWithBackoff(
-                                        mockSleeper, 5, -1, testTaskSucceedsOnLastAttempt));
+                                        mockSleeper, 5, -1, testTaskFailedWitRetryableException));
 
         assertEquals("Wait interval must be greater than 0", exception.getMessage());
     }
 
     @Test
-    void shouldSleepForCorrectAmountOfTime() throws NonRetryableException, InterruptedException {
-        var res = Retry.runTaskWithBackoff(mockSleeper, 10, 1, testTaskSucceedsOnLastAttempt);
+    void shouldSleepForCorrectAmountOfTimeWhenThrowingRetryableException()
+            throws NonRetryableException, InterruptedException {
+        AtomicInteger count = new AtomicInteger(0);
+        var res =
+                Retry.runTaskWithBackoff(
+                        mockSleeper,
+                        10,
+                        1,
+                        () -> {
+                            if (count.incrementAndGet() == 10) {
+                                return true;
+                            }
+                            throw new RetryableException(new Exception());
+                        });
 
         var inOrder = inOrder(mockSleeper);
         // should be 9 sleeps after the initial attempt
@@ -94,23 +91,6 @@ class RetryTest {
     }
 
     @Test
-    void shouldSleepForCorrectAmountOfTimeWhenThrowingRetryableException()
-            throws NonRetryableException, InterruptedException {
-        var res =
-                Retry.runTaskWithBackoff(
-                        mockSleeper, 4, 2, testTaskSucceedsOnLastAttemptWithRetryableExceptions);
-
-        var inOrder = inOrder(mockSleeper);
-        // should be 9 sleeps after the initial attempt
-        inOrder.verify(mockSleeper, times(1)).sleep(2);
-        inOrder.verify(mockSleeper, times(1)).sleep(4);
-        inOrder.verify(mockSleeper, times(1)).sleep(8);
-        inOrder.verifyNoMoreInteractions();
-
-        assertTrue(res);
-    }
-
-    @Test
     void shouldNotSleepIfFirstAttemptSuccessful()
             throws NonRetryableException, InterruptedException {
         var res =
@@ -118,8 +98,8 @@ class RetryTest {
                         mockSleeper,
                         10,
                         1,
-                        isLastAttempt -> {
-                            return Optional.of(1);
+                        () -> {
+                            return 1;
                         });
 
         assertEquals(1, res);
@@ -145,7 +125,9 @@ class RetryTest {
 
         assertThrows(
                 InterruptedException.class,
-                () -> Retry.runTaskWithBackoff(mockSleeper, 5, 5, testTaskSucceedsOnLastAttempt));
+                () ->
+                        Retry.runTaskWithBackoff(
+                                mockSleeper, 5, 5, testTaskFailedWitRetryableException));
     }
 
     @Test

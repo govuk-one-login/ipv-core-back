@@ -14,7 +14,6 @@ import uk.gov.service.notify.NotificationClientException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class EmailService {
 
@@ -83,13 +82,13 @@ public class EmailService {
                     sleeper,
                     NUMBER_OF_SEND_ATTEMPTS,
                     RETRY_WAIT_MILLISECONDS,
-                    isLastAttempt -> {
+                    () -> {
                         try {
                             LOGGER.debug(LogHelper.buildLogMessage("About to send email"));
                             notificationClient.sendEmail(
                                     templateId, toAddress, personalisation, null, null);
                             LOGGER.debug(LogHelper.buildLogMessage("Email sent"));
-                            return Optional.of(true);
+                            return true;
                         } catch (NotificationClientException e) {
                             LOGGER.warn(
                                     "Exception caught trying to send email. Response code: {}. response message: '{}'",

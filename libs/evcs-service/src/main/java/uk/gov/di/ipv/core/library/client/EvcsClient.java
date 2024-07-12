@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
-import lombok.Lombok;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
@@ -184,8 +183,9 @@ public class EvcsClient {
     }
 
     private void checkResponseStatusCode(HttpResponse<String> evcsHttpResponse)
-            throws EvcsServiceException {
-        if (200 > evcsHttpResponse.statusCode() || evcsHttpResponse.statusCode() > 299) {
+            throws RetryableException, EvcsServiceException {
+        var statusCode = evcsHttpResponse.statusCode();
+        if (200 > statusCode || statusCode > 299) {
             String responseMessage;
             try {
                 Map<String, String> responseBody =
@@ -200,12 +200,19 @@ public class EvcsClient {
                     LogHelper.buildLogMessage(
                                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
                                             .getMessage())
-                            .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode())
+                            .with(LOG_STATUS_CODE.getFieldName(), statusCode)
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), responseMessage));
-            if (evcsHttpResponse.statusCode() != 404) {
-                throw new EvcsServiceException(
-                        HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+
+            if (statusCode != 404) {
+                var e =
+                        new EvcsServiceException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+
+                if (RETRYABLE_STATUS_CODES.contains(statusCode)) {
+                    throw new RetryableException(e);
+                }
+                throw e;
             }
         }
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
@@ -220,40 +227,36 @@ public class EvcsClient {
                     sleeper,
                     NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
                     RETRY_DELAY_MILLIS,
-                    isLastAttempt -> {
+                    () -> {
                         LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
                         try {
                             var res =
                                     httpClient.send(
                                             evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
-                            var statusCode = res.statusCode();
-                            if (!isLastAttempt && RETRYABLE_STATUS_CODES.contains(statusCode)) {
-                                throw new RetryableException();
-                            }
                             checkResponseStatusCode(res);
-                            return Optional.of(res);
-                        } catch (IOException e) {
+                            return res;
+                        } catch (EvcsServiceException | IOException e) {
                             throw new NonRetryableException(e);
                         } catch (InterruptedException e) {
                             // This should never happen running in Lambda as it's single
                             // threaded.
                             Thread.currentThread().interrupt();
                             throw new NonRetryableException(e);
-                        } catch (EvcsServiceException e) {
-                            // use a sneaky throw so we don't have to declare every possible
-                            // error in the RetryableTask interface and we maintain the
-                            // error details from checkResponseStatusCode
-                            throw Lombok.sneakyThrow(e);
                         }
                     });
         } catch (NonRetryableException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                // This should never happen running in Lambda as it's single threaded.
-                Thread.currentThread().interrupt();
-            }
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));
+            if (e instanceof InterruptedException) {
+                // This should never happen running in Lambda as it's single threaded.
+                Thread.currentThread().interrupt();
+            } else {
+                var cause = e.getCause();
+                if (cause != null && cause instanceof EvcsServiceException) {
+                    throw (EvcsServiceException) cause;
+                }
+            }
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
         }
