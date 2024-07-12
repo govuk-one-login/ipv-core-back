@@ -65,37 +65,39 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
-    public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
-        IpvSessionItem ipvSessionItem = null;
+    public IpvSessionItem getIpvSessionByAccessToken(String accessToken)
+            throws UnknownAccessTokenException {
         try {
-            ipvSessionItem =
-                    Retry.runTaskWithBackoff(
-                            sleeper,
-                            7,
-                            10,
-                            () -> {
-                                var item =
-                                        dataStore.getItemByIndex(
-                                                "accessToken", DigestUtils.sha256Hex(accessToken));
-                                if (item == null) {
-                                    throw new RetryableException(
-                                            new UnknownAccessTokenException(
-                                                    "Failed to find access token"));
-                                }
-                                return item;
-                            });
+            return Retry.runTaskWithBackoff(
+                    sleeper,
+                    7,
+                    10,
+                    () -> {
+                        var item =
+                                dataStore.getItemByIndex(
+                                        "accessToken", DigestUtils.sha256Hex(accessToken));
+                        if (item == null) {
+                            throw new RetryableException(
+                                    new UnknownAccessTokenException(
+                                            "The supplied access token was not found in the database"));
+                        }
+                        return item;
+                    });
         } catch (InterruptedException e) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
                             "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();
         } catch (NonRetryableException e) {
+            if (e.getCause() instanceof UnknownAccessTokenException uatException) {
+                throw uatException;
+            }
             LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
                             e));
         }
-        return Optional.ofNullable(ipvSessionItem);
+        return null;
     }
 
     public IpvSessionItem generateIpvSession(

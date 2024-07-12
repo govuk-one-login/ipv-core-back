@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -67,7 +68,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static java.lang.String.valueOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -207,7 +207,7 @@ class BuildUserIdentityHandlerTest {
     void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -274,7 +274,7 @@ class BuildUserIdentityHandlerTest {
                     throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -354,7 +354,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
         ipvSessionItem.setVot(Vot.P0);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -431,7 +431,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setVot(Vot.P0);
         ipvSessionItem.setRiskAssessmentCredential(vcTicf().getVcString());
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -507,7 +507,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
         ipvSessionItem.setVot(Vot.P0);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -576,7 +576,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
@@ -603,7 +603,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseOnCIRetrievalException() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
@@ -654,7 +654,7 @@ class BuildUserIdentityHandlerTest {
                 getClientAuthSessionItemWithScope("a-different-scope");
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItemWithScope);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
@@ -685,7 +685,7 @@ class BuildUserIdentityHandlerTest {
                 getClientAuthSessionItemWithScope("a-different-scope");
         // Arrange
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -758,9 +758,10 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
-            throws JsonProcessingException, VerifiableCredentialException {
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.empty());
+                .thenThrow(new UnknownAccessTokenException("error"));
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -781,12 +782,13 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
-            throws JsonProcessingException, VerifiableCredentialException {
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -805,12 +807,13 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
-            throws JsonProcessingException, VerifiableCredentialException {
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -830,7 +833,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseOnCredentialParseException() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenThrow(
                         new CredentialParseException(
@@ -855,7 +858,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseOnUnrecognisedCiException() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenThrow(new UnrecognisedCiException("This shouldn't really happen"));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -878,7 +881,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseOnSessionCredentialsReadFailure() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenThrow(new VerifiableCredentialException(418, FAILED_TO_GET_CREDENTIAL));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -898,7 +901,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenIpvSessionIsNull() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(null));
+                .thenThrow(new UnknownAccessTokenException("error"));
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -920,7 +923,7 @@ class BuildUserIdentityHandlerTest {
     void shouldReturnErrorResponseWhenAuditServiceThrowsError() throws Exception {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))

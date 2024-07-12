@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -30,7 +31,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -80,7 +80,7 @@ class UserReverificationHandlerTest {
     void shouldReturnSuccsessfulReverificationResponseOnFailedReverification() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -108,7 +108,7 @@ class UserReverificationHandlerTest {
         // Arrange
         ipvSessionItem.setReverificationStatus(ReverificationStatus.FAILED);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -132,12 +132,13 @@ class UserReverificationHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasExpired()
-            throws JsonProcessingException, VerifiableCredentialException {
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 userReverificationHandler.handleRequest(testEvent, mockContext);
@@ -157,12 +158,13 @@ class UserReverificationHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
-            throws JsonProcessingException, VerifiableCredentialException {
+            throws JsonProcessingException, VerifiableCredentialException,
+                    UnknownAccessTokenException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 userReverificationHandler.handleRequest(testEvent, mockContext);
@@ -213,7 +215,7 @@ class UserReverificationHandlerTest {
                 getClientAuthSessionItemWithScope("a-different-scope");
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItemWithScope);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);

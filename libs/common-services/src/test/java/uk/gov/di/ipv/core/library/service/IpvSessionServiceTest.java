@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -83,7 +84,7 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldReturnSessionItemByAccessToken() {
+    void shouldReturnSessionItemByAccessToken() throws UnknownAccessTokenException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 
@@ -93,8 +94,7 @@ class IpvSessionServiceTest {
         when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
                 .thenReturn(ipvSessionItem);
 
-        IpvSessionItem result =
-                ipvSessionService.getIpvSessionByAccessToken(accessToken).orElseThrow();
+        IpvSessionItem result = ipvSessionService.getIpvSessionByAccessToken(accessToken);
 
         assertEquals(result, ipvSessionItem);
     }
@@ -110,8 +110,7 @@ class IpvSessionServiceTest {
         when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
                 .thenReturn(null, null, null, null, null, ipvSessionItem);
 
-        IpvSessionItem result =
-                ipvSessionService.getIpvSessionByAccessToken(accessToken).orElseThrow();
+        IpvSessionItem result = ipvSessionService.getIpvSessionByAccessToken(accessToken);
 
         assertEquals(result, ipvSessionItem);
 
