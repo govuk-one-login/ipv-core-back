@@ -234,7 +234,9 @@ public class CriCheckingService {
             // Check CI levels against the lowest confidence identity requested so we don't send the
             // user on an unnecessary mitigation journey.
             var lowestConfidenceRequested =
-                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
+                    clientOAuthSessionItem
+                            .getParsedVtr()
+                            .getLowestStrengthRequestedGpg45Vot(configService);
             var journeyResponse =
                     ciMitUtilityService.getMitigationJourneyIfBreaching(
                             cis, lowestConfidenceRequested);

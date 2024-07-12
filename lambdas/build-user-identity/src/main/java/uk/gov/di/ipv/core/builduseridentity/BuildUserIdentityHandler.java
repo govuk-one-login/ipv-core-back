@@ -120,7 +120,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             // re-calculating it here. Can we store it in the session in CheckExistingIdentity?
             // We only actually need this to calculate CI breaches for return codes and the audit
             // message
-            var targetVot = clientOAuthSessionItem.getLowestStrengthRequestedVot(configService);
+            var targetVot =
+                    clientOAuthSessionItem
+                            .getParsedVtr()
+                            .getLowestStrengthRequestedVot(configService);
             var acheivedVot = ipvSessionItem.getVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
