@@ -11,7 +11,45 @@ on:
       - '.github/workflows/secure-post-merge-notags.yml'
 
 jobs:
+  check-if-api-tests-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      api-tests-changed: ${{ steps.get-changed-files.outputs.any_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed api-tests files
+        id: get-changed-files
+        uses: tj-actions/changed-files@6b2903bdce6310cfbddd87c418f253cf29b2dec9 # v44.5.6
+        with:
+          files: |
+            api-tests/**
+            .github/workflows/secure-pipeline-api-tests-image.yml
+
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+
+  build-test-images-if-needed:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/secure-pipeline-api-tests-image.yml@main
+    secrets: inherit # pragma: allowlist secret
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+
   deploy:
+    needs: build-test-images-if-needed
+    if: '!failure()'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -48,12 +86,6 @@ jobs:
 
       - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
         run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
-
-      - name: Set up AWS creds For Integration Tests
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
-          aws-region: eu-west-2
 
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v4
