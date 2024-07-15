@@ -1121,7 +1121,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
         when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
@@ -1162,6 +1161,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setReproveIdentity(true);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
@@ -1184,6 +1184,7 @@ class CheckExistingIdentityHandlerTest {
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setReproveIdentity(true);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
@@ -1344,7 +1345,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
@@ -1388,7 +1388,6 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
@@ -1432,7 +1431,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
