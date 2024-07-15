@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
 import java.text.ParseException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -77,6 +78,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("govuk_signin_journey_id", "test-journey-id")
                         .claim("reprove_identity", false)
                         .claim("scope", "test-scope")
+                        .claim("vtr", List.of("P1"))
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -116,6 +118,63 @@ class ClientOAuthSessionDetailsServiceTest {
                 clientOAuthSessionItem.getScope(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getScope());
         assertFalse(clientOAuthSessionItem.getReproveIdentity());
+        assertEquals(
+                clientOAuthSessionItem.getVtr(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getVtr());
+    }
+
+    @Test
+    void shouldCreateClientOAuthSessionItemWithP2Vtr() throws ParseException {
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+
+        JWTClaimsSet testClaimSet =
+                new JWTClaimsSet.Builder()
+                        .claim("response_type", "test-type")
+                        .claim("redirect_uri", "http://example.com")
+                        .claim("state", "test-state")
+                        .claim("govuk_signin_journey_id", "test-journey-id")
+                        .claim("reprove_identity", false)
+                        .claim("scope", "test-scope")
+                        .subject("test-user-id")
+                        .build();
+        ClientOAuthSessionItem clientOAuthSessionItem =
+                clientOAuthSessionDetailsService.generateClientSessionDetails(
+                        clientOAuthSessionId,
+                        testClaimSet,
+                        "test-client",
+                        "test-evcs-access-token");
+
+        ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
+        assertEquals(
+                clientOAuthSessionItem.getClientId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
+        assertEquals(
+                clientOAuthSessionItem.getResponseType(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getResponseType());
+        assertEquals(
+                clientOAuthSessionItem.getRedirectUri(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
+        assertEquals(
+                clientOAuthSessionItem.getState(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getState());
+        assertEquals(
+                clientOAuthSessionItem.getUserId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
+        assertEquals(
+                clientOAuthSessionItem.getEvcsAccessToken(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getEvcsAccessToken());
+        assertEquals(
+                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getScope(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getScope());
+        assertFalse(clientOAuthSessionItem.getReproveIdentity());
+        assertEquals(clientOAuthSessionItem.getVtr(), List.of("P2"));
     }
 
     @Test
