@@ -13,7 +13,7 @@ states:
       next:
         targetState: PENDING_PAGE
         checkFeatureFlag:
-          deleteDetailsEnabled:
+          pendingF2FResetEnabled:
             targetState: PENDING_PAGE_TEST
 
   # Journey states
@@ -55,19 +55,19 @@ states:
     events:
       next:
         targetState:
-          RESET_SESSION_IDENTITY
+          RESET_PENDING_F2F_SESSION_IDENTITY
         auditEvents:
           - IPV_F2F_USER_CANCEL_START
       end:
         targetState:
           PENDING_PAGE_TEST
 
-  RESET_SESSION_IDENTITY:
+  RESET_PENDING_F2F_SESSION_IDENTITY:
     response:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: PENDING_F2F_ALL
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
@@ -81,7 +81,7 @@ states:
       pageId: pyi-details-deleted
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
+        targetJourney: INITIAL_JOURNEY_SELECTION
         targetState: START
 
   RETURN_TO_RP:

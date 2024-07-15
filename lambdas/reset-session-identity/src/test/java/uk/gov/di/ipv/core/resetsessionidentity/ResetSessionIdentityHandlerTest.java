@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.resetsessionidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -19,8 +21,11 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Map;
 
@@ -32,11 +37,16 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
@@ -52,6 +62,7 @@ class ResetSessionIdentityHandlerTest {
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_EMAIL_ADDRESS = "test.test@example.com";
     private static final String STATUS_CODE = "statusCode";
+    public static final String TEST_EVCS_TOKEN = "test-evcs-token";
     private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
 
@@ -60,6 +71,9 @@ class ResetSessionIdentityHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Context mockContext;
+    @Mock private CriResponseService mockCriResponseService;
+    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private EvcsService mockEvcsService;
     @InjectMocks private ResetSessionIdentityHandler resetSessionIdentityHandler;
     @Mock private ConfigService mockConfigService;
 
@@ -79,6 +93,7 @@ class ResetSessionIdentityHandlerTest {
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
+                        .evcsAccessToken(TEST_EVCS_TOKEN)
                         .build();
     }
 
@@ -92,7 +107,7 @@ class ResetSessionIdentityHandlerTest {
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of("resetType", "ALL"))
+                        .lambdaInput(Map.of("resetType", ALL.name()))
                         .build();
 
         // Act
@@ -111,12 +126,125 @@ class ResetSessionIdentityHandlerTest {
     }
 
     @Test
+    void handleRequestShouldCleanupVcsAndReturnNext_forPendingF2f() throws Exception {
+        // Arrange
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_F2F_ALL.name()))
+                        .build();
+
+        // Act
+        JourneyResponse journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
+        verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void
+            handleRequestShouldCleanupVcsAndReturnNext_forPendingF2f_evenWhenEvcsFailsAndEvcsReadsIsNotEnabled()
+                    throws Exception {
+        // Arrange
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        doThrow(EvcsServiceException.class)
+                .when(mockEvcsService)
+                .abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_F2F_ALL.name()))
+                        .build();
+
+        // Act
+        JourneyResponse journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
+        verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @Test
+    void shouldReturnErrorJourney_forPendingF2f_evenWhenEvcsFailsAndEvcsReadsIsEnabled()
+            throws Exception {
+        // Arrange
+        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        doThrow(
+                        new EvcsServiceException(
+                                HTTPResponse.SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
+                .when(mockEvcsService)
+                .abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", PENDING_F2F_ALL.name()))
+                        .build();
+
+        // Act
+        var journeyResponse = resetSessionIdentityHandler.handleRequest(event, mockContext);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(
+                        ipvSessionItem.getIpvSessionId(), PENDING_F2F_ALL);
+        verify(mockCriResponseService).deleteCriResponseItem(TEST_USER_ID, F2F);
+        verify(mockVerifiableCredentialService).deleteVCs(TEST_USER_ID);
+        verify(mockEvcsService).abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_TOKEN);
+
+        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
+        assertEquals(500, journeyResponse.get(STATUS_CODE));
+        assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getCode(), journeyResponse.get("code"));
+        assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), journeyResponse.get("message"));
+    }
+
+    @Test
     void shouldReturnErrorJourneyIfIpvSessionIdMissing() {
         // Arrange
         ProcessRequest event =
                 ProcessRequest.processRequestBuilder()
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of("resetType", "ALL"))
+                        .lambdaInput(Map.of("resetType", ALL.name()))
                         .build();
 
         // Act
@@ -142,7 +270,7 @@ class ResetSessionIdentityHandlerTest {
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
-                        .lambdaInput(Map.of("resetType", "NAME_ONLY_CHANGE"))
+                        .lambdaInput(Map.of("resetType", NAME_ONLY_CHANGE.name()))
                         .build();
 
         // Act
