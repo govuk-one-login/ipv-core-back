@@ -2,12 +2,14 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
 
 public class ClientOAuthSessionDetailsService {
@@ -35,27 +37,30 @@ public class ClientOAuthSessionDetailsService {
         return dataStore.getItem(clientOAuthSessionId);
     }
 
+    public void updateClientOauthSession(ClientOAuthSessionItem clientOAuthSessionItem) {
+        dataStore.update(clientOAuthSessionItem);
+    }
+
     public ClientOAuthSessionItem generateClientSessionDetails(
             String clientOauthSessionId,
             JWTClaimsSet claimsSet,
             String clientId,
             String evcsAccessToken)
-            throws ParseException {
-        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
-
-        clientOAuthSessionItem.setClientOAuthSessionId(clientOauthSessionId);
-        clientOAuthSessionItem.setResponseType(claimsSet.getStringClaim("response_type"));
-        clientOAuthSessionItem.setClientId(clientId);
-        clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
-        clientOAuthSessionItem.setState(claimsSet.getStringClaim("state"));
-        clientOAuthSessionItem.setUserId(claimsSet.getSubject());
-        clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
-        clientOAuthSessionItem.setGovukSigninJourneyId(
-                claimsSet.getStringClaim("govuk_signin_journey_id"));
-        clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
-        clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
-        clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
-        clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);
+            throws ParseException, HttpResponseExceptionWithErrorBody {
+        var clientOAuthSessionItem =
+                new ClientOAuthSessionItem(
+                        clientOauthSessionId,
+                        claimsSet.getStringClaim("response_type"),
+                        clientId,
+                        claimsSet.getStringClaim("scope"),
+                        claimsSet.getStringClaim("redirect_uri"),
+                        claimsSet.getStringClaim("state"),
+                        claimsSet.getSubject(),
+                        claimsSet.getStringClaim("govuk_signin_journey_id"),
+                        claimsSet.getBooleanClaim("reprove_identity"),
+                        claimsSet.getStringListClaim("vtr"),
+                        evcsAccessToken,
+                        configService.enabled(P1_JOURNEYS_ENABLED));
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
         return clientOAuthSessionItem;

@@ -68,6 +68,7 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -246,6 +247,7 @@ public class CheckExistingIdentityHandler
             var ipvSessionId = ipvSessionItem.getIpvSessionId();
             var userId = clientOAuthSessionItem.getUserId();
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            var targetVot = clientOAuthSessionItem.getTargetVot();
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -261,12 +263,6 @@ public class CheckExistingIdentityHandler
                             && (!configService.enabled(EVCS_READ_ENABLED)
                                     || vcs.isPendingEvcsIdentity());
 
-            // If we want to prove or mitigate CIs for an identity we want to go for the lowest
-            // strength that is acceptable to the caller. We can only prove/mitigate GPG45
-            // identities
-            var lowestGpg45ConfidenceRequested =
-                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
-
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -275,7 +271,7 @@ public class CheckExistingIdentityHandler
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                if (lowestGpg45ConfidenceRequested == Vot.P1) {
+                if (Vot.P1.equals(targetVot)) {
                     LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -288,7 +284,7 @@ public class CheckExistingIdentityHandler
             // VOT
             var ciScoringCheckResponse =
                     ciMitUtilityService.getMitigationJourneyIfBreaching(
-                            contraIndicators, lowestGpg45ConfidenceRequested);
+                            contraIndicators, targetVot);
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -311,6 +307,11 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
+            // Update targetVot now we know we must use gpg45 to make it
+            clientOAuthSessionItem.updateTargetVotForGpg45Only(
+                    configService.enabled(P1_JOURNEYS_ENABLED));
+            clientOAuthSessionDetailsService.updateClientOauthSession(clientOAuthSessionItem);
+
             // No profile matched but has a pending F2F request
             if (isF2FIncomplete) {
                 return buildF2FIncompleteResponse(f2fRequest);
@@ -323,7 +324,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             contraIndicators)
-                    : buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
+                    : buildNoMatchResponse(contraIndicators, targetVot);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -517,7 +518,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated)
             throws ParseException, SqsException, VerifiableCredentialException,
-                    EvcsServiceException {
+                    EvcsServiceException, HttpResponseExceptionWithErrorBody {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -575,8 +576,7 @@ public class CheckExistingIdentityHandler
         return JOURNEY_F2F_FAIL;
     }
 
-    private JourneyResponse buildNoMatchResponse(
-            ContraIndicators contraIndicators, Vot preferredNewIdentityLevel)
+    private JourneyResponse buildNoMatchResponse(ContraIndicators contraIndicators, Vot targetVot)
             throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
@@ -591,7 +591,7 @@ public class CheckExistingIdentityHandler
                                                     mitigatedCI.get())));
         }
 
-        if (preferredNewIdentityLevel == Vot.P1) {
+        if (Vot.P1.equals(targetVot)) {
             LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
             return JOURNEY_IPV_GPG45_LOW;
         }

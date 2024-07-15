@@ -8,14 +8,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
 class ClientOauthSessionItemTest {
@@ -45,71 +44,33 @@ class ClientOauthSessionItemTest {
                         List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1)));
     }
 
-    @Test
-    void
-            getLowestStrengthRequestedGpg45Vot_ShouldReturnGpg45Vot_WhenWeakerNonGpg45VotAlsoRequested() {
-        // Arrange
-        var vtr = List.of("P2", "PCL200");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
-
-        // Act
-        var result = underTest.getLowestStrengthRequestedGpg45Vot(mockConfigService);
-
-        // Assert
-        assertEquals(Vot.P2, result);
-    }
+    // would need to add tests for updating targetVot
 
     @Test
-    void getLowestStrengthRequestedGpg45Vot_ShouldIgnoreP1_WhenP1IsDisabled() {
-        // Arrange
-        var vtr = List.of("P2", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
-
-        // Act
-        var result = underTest.getLowestStrengthRequestedGpg45Vot(mockConfigService);
-
-        // Assert
-        assertEquals(Vot.P2, result);
-    }
-
-    @Test
-    void getLowestStrengthRequestedGpg45Vot_ShouldReturnP1_WhenP1IsEnabled() {
-        // Arrange
-        var vtr = List.of("P2", "P1");
-        var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
-
-        // Act
-        var result = underTest.getLowestStrengthRequestedGpg45Vot(mockConfigService);
-
-        // Assert
-        assertEquals(Vot.P1, result);
-    }
-
-    @Test
-    void getLowestStrengthRequestedVot_ShouldIgnoreP1_WhenP1IsDisabled() {
+    void getLowestStrengthRequestedVot_ShouldIgnoreP1_WhenP1IsDisabled()
+            throws HttpResponseExceptionWithErrorBody {
         // Arrange
         var vtr = List.of("P2", "PCL200", "PCL250", "P1");
         var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(false);
+        var isP1JourneysEnabled = false;
 
         // Act
-        var result = underTest.getLowestStrengthRequestedVot(mockConfigService);
+        var result = underTest.getLowestStrengthRequestedVot(isP1JourneysEnabled);
 
         // Assert
         assertEquals(Vot.PCL200, result);
     }
 
     @Test
-    void getLowestStrengthRequestedVot_ShouldReturnP1_WhenP1IsEnabled() {
+    void getLowestStrengthRequestedVot_ShouldReturnP1_WhenP1IsEnabled()
+            throws HttpResponseExceptionWithErrorBody {
         // Arrange
         var vtr = List.of("PCL200", "P1");
         var underTest = ClientOAuthSessionItem.builder().vtr(vtr).build();
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+        var isP1JourneysEnabled = true;
 
         // Act
-        var result = underTest.getLowestStrengthRequestedVot(mockConfigService);
+        var result = underTest.getLowestStrengthRequestedVot(isP1JourneysEnabled);
 
         // Assert
         assertEquals(Vot.P1, result);
