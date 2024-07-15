@@ -17,7 +17,11 @@ import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.retry.Retry;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
@@ -46,19 +50,25 @@ public class EvcsClient {
     public static final String VC_STATE_PARAM = "state";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(429);
+    private static final int NUMBER_OF_HTTP_REQUEST_ATTEMPTS = 4;
+    private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
     private final ConfigService configService;
+    private final Sleeper sleeper;
 
     @ExcludeFromGeneratedCoverageReport
     public EvcsClient(ConfigService configService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
+        this.sleeper = new Sleeper();
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public EvcsClient(ConfigService configService, HttpClient httpClient) {
+    public EvcsClient(ConfigService configService, HttpClient httpClient, Sleeper sleeper) {
         this.configService = configService;
         this.httpClient = httpClient;
+        this.sleeper = sleeper;
     }
 
     @Tracing
@@ -173,8 +183,9 @@ public class EvcsClient {
     }
 
     private void checkResponseStatusCode(HttpResponse<String> evcsHttpResponse)
-            throws EvcsServiceException {
-        if (200 > evcsHttpResponse.statusCode() || evcsHttpResponse.statusCode() > 299) {
+            throws RetryableException, EvcsServiceException {
+        var statusCode = evcsHttpResponse.statusCode();
+        if (200 > statusCode || statusCode > 299) {
             String responseMessage;
             try {
                 Map<String, String> responseBody =
@@ -189,12 +200,19 @@ public class EvcsClient {
                     LogHelper.buildLogMessage(
                                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
                                             .getMessage())
-                            .with(LOG_STATUS_CODE.getFieldName(), evcsHttpResponse.statusCode())
+                            .with(LOG_STATUS_CODE.getFieldName(), statusCode)
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), responseMessage));
-            if (evcsHttpResponse.statusCode() != 404) {
-                throw new EvcsServiceException(
-                        HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+
+            if (statusCode != 404) {
+                var e =
+                        new EvcsServiceException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+
+                if (RETRYABLE_STATUS_CODES.contains(statusCode)) {
+                    throw new RetryableException(e);
+                }
+                throw e;
             }
         }
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
@@ -203,20 +221,39 @@ public class EvcsClient {
     @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest evcsHttpRequest)
             throws EvcsServiceException {
-        LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
+
         try {
-            HttpResponse<String> response =
-                    httpClient.send(evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
-            checkResponseStatusCode(response);
-            return response;
-        } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-                // This should never happen running in Lambda as it's single threaded.
-                Thread.currentThread().interrupt();
-            }
+            return Retry.runTaskWithBackoff(
+                    sleeper,
+                    NUMBER_OF_HTTP_REQUEST_ATTEMPTS,
+                    RETRY_DELAY_MILLIS,
+                    () -> {
+                        LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to EVCS"));
+                        try {
+                            var res =
+                                    httpClient.send(
+                                            evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
+                            checkResponseStatusCode(res);
+                            return res;
+                        } catch (EvcsServiceException | IOException e) {
+                            throw new NonRetryableException(e);
+                        } catch (InterruptedException e) {
+                            // This should never happen running in Lambda as it's single
+                            // threaded.
+                            Thread.currentThread().interrupt();
+                            throw new NonRetryableException(e);
+                        }
+                    });
+        } catch (NonRetryableException | InterruptedException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));
+            if (e instanceof InterruptedException) {
+                // This should never happen running in Lambda as it's single threaded.
+                Thread.currentThread().interrupt();
+            } else if (e.getCause() instanceof EvcsServiceException evcsException) {
+                throw evcsException;
+            }
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
         }

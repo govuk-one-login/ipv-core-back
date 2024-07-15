@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -60,6 +61,7 @@ class IssueClientAccessTokenHandlerTest {
     @Mock private DataStore<IpvSessionItem> ipvSessionDataStore;
     @Mock private DataStore<ClientOAuthSessionItem> oAuthDataStore;
     @Mock private DataStore<ClientAuthJwtIdItem> jwtIdStore;
+    @Mock private Sleeper mockSleeper;
 
     @BeforeAll
     static void setupServer() {
@@ -71,7 +73,7 @@ class IssueClientAccessTokenHandlerTest {
     void pactSetup(PactVerificationContext context) throws IOException {
 
         var accessTokenService = new AccessTokenService(configService);
-        var sessionService = new IpvSessionService(ipvSessionDataStore);
+        var sessionService = new IpvSessionService(ipvSessionDataStore, mockSleeper);
         var clientOAuthSessionService =
                 new ClientOAuthSessionDetailsService(oAuthDataStore, configService);
         var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);

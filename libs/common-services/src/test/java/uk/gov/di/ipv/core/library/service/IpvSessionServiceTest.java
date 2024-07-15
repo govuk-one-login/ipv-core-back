@@ -12,9 +12,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.util.Date;
 
@@ -22,6 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -38,6 +43,7 @@ class IpvSessionServiceTest {
 
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private DataStore<IpvSessionItem> mockDataStore;
+    @Mock private Sleeper mockSleeper;
     @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test
@@ -79,7 +85,8 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldReturnSessionItemByAccessToken() {
+    void shouldReturnSessionItemByAccessToken()
+            throws UnknownAccessTokenException, GetAccessTokenException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 
@@ -89,14 +96,13 @@ class IpvSessionServiceTest {
         when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
                 .thenReturn(ipvSessionItem);
 
-        IpvSessionItem result =
-                ipvSessionService.getIpvSessionByAccessToken(accessToken).orElseThrow();
+        IpvSessionItem result = ipvSessionService.getIpvSessionByAccessToken(accessToken);
 
         assertEquals(result, ipvSessionItem);
     }
 
     @Test
-    void shouldRetryGettingSessionItemByAccessToken() {
+    void shouldRetryGettingSessionItemByAccessToken() throws Exception {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 
@@ -104,12 +110,19 @@ class IpvSessionServiceTest {
         ipvSessionItem.setIpvSessionId(ipvSessionID);
 
         when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
-                .thenReturn(null, ipvSessionItem);
+                .thenReturn(null, null, null, null, null, ipvSessionItem);
 
-        IpvSessionItem result =
-                ipvSessionService.getIpvSessionByAccessToken(accessToken).orElseThrow();
+        IpvSessionItem result = ipvSessionService.getIpvSessionByAccessToken(accessToken);
 
         assertEquals(result, ipvSessionItem);
+
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(10);
+        inOrder.verify(mockSleeper, times(1)).sleep(20);
+        inOrder.verify(mockSleeper, times(1)).sleep(40);
+        inOrder.verify(mockSleeper, times(1)).sleep(80);
+        inOrder.verify(mockSleeper, times(1)).sleep(160);
+        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
