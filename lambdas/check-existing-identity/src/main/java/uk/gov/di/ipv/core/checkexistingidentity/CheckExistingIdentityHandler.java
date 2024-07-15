@@ -281,7 +281,7 @@ public class CheckExistingIdentityHandler
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
+            if (reproveIdentity.orElse(false) && configService.enabled(RESET_IDENTITY)) {
                 if (preferredNewIdentityLevel == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
