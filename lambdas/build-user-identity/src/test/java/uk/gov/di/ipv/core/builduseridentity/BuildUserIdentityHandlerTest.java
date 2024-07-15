@@ -82,7 +82,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
@@ -280,6 +279,7 @@ class BuildUserIdentityHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("P2", "P1"));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setTargetVot(Vot.P1);
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
@@ -289,7 +289,6 @@ class BuildUserIdentityHandlerTest {
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
 
@@ -1053,6 +1052,7 @@ class BuildUserIdentityHandlerTest {
                 .clientId("test-client")
                 .govukSigninJourneyId("test-journey-id")
                 .vtr(List.of("P2"))
+                .targetVot(Vot.P2)
                 .scope(scope)
                 .build();
     }

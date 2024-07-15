@@ -133,6 +133,8 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
+// TODO: Add assertions clientOauthSession is updated
+
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
@@ -232,6 +234,7 @@ class CheckExistingIdentityHandlerTest {
                         .govukSigninJourneyId(TEST_JOURNEY_ID)
                         .reproveIdentity(false)
                         .vtr(List.of(P2.name()))
+                        .targetVot(TEST_VOT)
                         .evcsAccessToken(EVCS_TEST_TOKEN)
                         .build();
     }
@@ -263,8 +266,10 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyNewGpg45LowIdentityForP1Vtr() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
+        clientOAuthSessionItem.setTargetVot(P1);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1187,6 +1192,7 @@ class CheckExistingIdentityHandlerTest {
         var testContraIndicators = ContraIndicators.builder().build();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
+        clientOAuthSessionItem.setTargetVot(P1);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
@@ -1194,7 +1200,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
-        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(

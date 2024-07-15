@@ -216,7 +216,8 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException,
+                    HttpResponseExceptionWithErrorBody {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
@@ -249,7 +250,8 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException,
+                    HttpResponseExceptionWithErrorBody {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
@@ -329,7 +331,8 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException,
+                    HttpResponseExceptionWithErrorBody {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
 
         var evcsAccessTokenClaims =
@@ -464,7 +467,8 @@ class InitialiseIpvSessionHandlerTest {
     @MethodSource("getVtrTestValues")
     void shouldIpvSessionIdIfMissingVtrAndReverificationJourney(List<String> vtrList)
             throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException, ParseException, JarValidationException {
+                    JOSEException, ParseException, JarValidationException,
+                    HttpResponseExceptionWithErrorBody {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);

@@ -7,11 +7,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
 import java.text.ParseException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -66,7 +68,8 @@ class ClientOAuthSessionDetailsServiceTest {
     }
 
     @Test
-    void shouldCreateClientOAuthSessionItem() throws ParseException {
+    void shouldCreateClientOAuthSessionItem()
+            throws ParseException, HttpResponseExceptionWithErrorBody {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
         JWTClaimsSet testClaimSet =
@@ -77,6 +80,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("govuk_signin_journey_id", "test-journey-id")
                         .claim("reprove_identity", false)
                         .claim("scope", "test-scope")
+                        .claim("vtr", List.of("P2"))
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
@@ -90,31 +94,10 @@ class ClientOAuthSessionDetailsServiceTest {
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
         verify(mockDataStore)
                 .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        var storedClientOauthSessionItem = clientOAuthSessionItemArgumentCaptor.getValue();
+
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
-        assertEquals(
-                clientOAuthSessionItem.getClientId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
-        assertEquals(
-                clientOAuthSessionItem.getResponseType(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getResponseType());
-        assertEquals(
-                clientOAuthSessionItem.getRedirectUri(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
-        assertEquals(
-                clientOAuthSessionItem.getState(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getState());
-        assertEquals(
-                clientOAuthSessionItem.getUserId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
-        assertEquals(
-                clientOAuthSessionItem.getEvcsAccessToken(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getEvcsAccessToken());
-        assertEquals(
-                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
-        assertEquals(
-                clientOAuthSessionItem.getScope(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getScope());
+        assertEquals(clientOAuthSessionItem, storedClientOauthSessionItem);
         assertFalse(clientOAuthSessionItem.getReproveIdentity());
     }
 

@@ -307,7 +307,7 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
-            // Update targetVot now we know we must use gpg45 to make it
+            // Update targetVot to be gpg45 if needed
             clientOAuthSessionItem.updateTargetVotForGpg45Only(
                     configService.enabled(P1_JOURNEYS_ENABLED));
             clientOAuthSessionDetailsService.updateClientOauthSession(clientOAuthSessionItem);

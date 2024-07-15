@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// TODO: Add test for ArrayIndexOutOfBoundsException exception
+
 @ExtendWith(MockitoExtension.class)
 class ClientOauthSessionItemTest {
     @Mock private ConfigService mockConfigService;
@@ -44,7 +46,35 @@ class ClientOauthSessionItemTest {
                         List.of(Vot.P2, Vot.PCL250, Vot.PCL200, Vot.P1)));
     }
 
-    // would need to add tests for updating targetVot
+    @Test
+    void updateTargetVotForGpg45Only_ShouldUpdateSessionWithNewTargetVot_WhenP1IsDisabled()
+            throws HttpResponseExceptionWithErrorBody {
+        // Arrange
+        var vtr = List.of("P2", "PCL200", "PCL250", "P1");
+        var clientOAuthSessionItem = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var isP1JourneysEnabled = false;
+
+        // Act
+        clientOAuthSessionItem.updateTargetVotForGpg45Only(isP1JourneysEnabled);
+
+        // Assert
+        assertEquals(Vot.P2, clientOAuthSessionItem.getTargetVot());
+    }
+
+    @Test
+    void updateTargetVotForGpg45Only_ShouldUpdateSessionWithNewTargetVot_WhenP1IsEnabled()
+            throws HttpResponseExceptionWithErrorBody {
+        // Arrange
+        var vtr = List.of("P2", "PCL200", "PCL250", "P1");
+        var clientOAuthSessionItem = ClientOAuthSessionItem.builder().vtr(vtr).build();
+        var isP1JourneysEnabled = true;
+
+        // Act
+        clientOAuthSessionItem.updateTargetVotForGpg45Only(isP1JourneysEnabled);
+
+        // Assert
+        assertEquals(Vot.P1, clientOAuthSessionItem.getTargetVot());
+    }
 
     @Test
     void getLowestStrengthRequestedVot_ShouldIgnoreP1_WhenP1IsDisabled()
@@ -74,5 +104,59 @@ class ClientOauthSessionItemTest {
 
         // Assert
         assertEquals(Vot.P1, result);
+    }
+
+    @Test
+    void constructor_ShouldSetTargetVot_WhenP1IsDisabled()
+            throws HttpResponseExceptionWithErrorBody {
+        // Arrange
+        var vtr = List.of("P2", "PCL200", "PCL250", "P1");
+        var isP1JourneysEnabled = false;
+
+        // Act
+        var clientOauthSessionItem =
+                new ClientOAuthSessionItem(
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        vtr,
+                        null,
+                        isP1JourneysEnabled);
+
+        // Assert
+        assertEquals(Vot.PCL200, clientOauthSessionItem.getTargetVot());
+    }
+
+    @Test
+    void constructor_ShouldSetTargetVot_WhenP1IsEnabled()
+            throws HttpResponseExceptionWithErrorBody {
+        // Arrange
+        var vtr = List.of("P2", "PCL200", "PCL250", "P1");
+        var isP1JourneysEnabled = true;
+
+        // Act
+        var clientOauthSessionItem =
+                new ClientOAuthSessionItem(
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        vtr,
+                        null,
+                        isP1JourneysEnabled);
+
+        // Assert
+        assertEquals(Vot.P1, clientOauthSessionItem.getTargetVot());
     }
 }
