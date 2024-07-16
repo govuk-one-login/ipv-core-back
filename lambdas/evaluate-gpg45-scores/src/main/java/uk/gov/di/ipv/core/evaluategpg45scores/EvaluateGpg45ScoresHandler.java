@@ -14,8 +14,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -34,6 +36,8 @@ import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -64,6 +68,8 @@ public class EvaluateGpg45ScoresHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final ConfigService configService;
     private final AuditService auditService;
+    private final CiMitService ciMitService;
+    private final CiMitUtilityService ciMitUtilityService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
@@ -80,7 +86,9 @@ public class EvaluateGpg45ScoresHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             VerifiableCredentialService verifiableCredentialService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            CiMitService ciMitService,
+            CiMitUtilityService ciMitUtilityService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
@@ -89,6 +97,8 @@ public class EvaluateGpg45ScoresHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.ciMitService = ciMitService;
+        this.ciMitUtilityService = ciMitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -103,6 +113,8 @@ public class EvaluateGpg45ScoresHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.ciMitService = new CiMitService(configService);
+        this.ciMitUtilityService = new CiMitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -131,13 +143,18 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
+            var contraIndicators =
+                    ciMitService.getContraIndicators(
+                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+
             boolean hasMatchingGpg45Profile =
                     hasMatchingGpg45Profile(
                             vcs,
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             ipAddress,
-                            event.getDeviceInformation());
+                            event.getDeviceInformation(),
+                            contraIndicators);
 
             if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
                     && hasMatchingGpg45Profile) {
@@ -154,6 +171,11 @@ public class EvaluateGpg45ScoresHandler
         } catch (SqsException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event to SQS queue", e));
             return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } catch (CiRetrievalException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), e));
+            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -171,38 +193,46 @@ public class EvaluateGpg45ScoresHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
-            String deviceInformation)
+            String deviceInformation,
+            ContraIndicators contraIndicators)
             throws SqsException {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
             var requestedVotsByStrength =
                     clientOAuthSessionItem.getParsedVtr().getRequestedVotsByStrengthDescending();
-            var supportedGpg45ProfilesByVotStrength =
+
+            var gpg45Vots =
                     requestedVotsByStrength.stream()
                             .filter(vot -> vot.getSupportedGpg45Profiles() != null)
-                            .flatMap(vot -> vot.getSupportedGpg45Profiles().stream())
                             .toList();
-            var matchedProfile =
-                    gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            gpg45Scores, supportedGpg45ProfilesByVotStrength);
 
-            if (matchedProfile.isPresent()) {
-                auditService.sendAuditEvent(
-                        buildProfileMatchedAuditEvent(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                matchedProfile.get(),
-                                gpg45Scores,
-                                vcs,
-                                ipAddress,
-                                deviceInformation));
+            for (Vot requestedVot : gpg45Vots) {
+                var profiles = requestedVot.getSupportedGpg45Profiles();
 
-                ipvSessionItem.setVot(Vot.fromGpg45Profile(matchedProfile.get()));
-                ipvSessionService.updateIpvSession(ipvSessionItem);
+                var matchedProfile =
+                        gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, profiles);
 
-                logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
-                return true;
+                var isBreaching =
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+
+                if (matchedProfile.isPresent() && !isBreaching) {
+                    auditService.sendAuditEvent(
+                            buildProfileMatchedAuditEvent(
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    matchedProfile.get(),
+                                    gpg45Scores,
+                                    vcs,
+                                    ipAddress,
+                                    deviceInformation));
+
+                    ipvSessionItem.setVot(Vot.fromGpg45Profile(matchedProfile.get()));
+                    ipvSessionService.updateIpvSession(ipvSessionItem);
+
+                    logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
+                    return true;
+                }
             }
         }
         logLambdaResponse("No GPG45 profiles have been met", JOURNEY_UNMET);
