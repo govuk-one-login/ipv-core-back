@@ -116,14 +116,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            // PYIC-6901 there's probably a better way of getting the target Vot rather than
-            // re-calculating it here. Can we store it in the session in CheckExistingIdentity?
-            // We only actually need this to calculate CI breaches for return codes and the audit
-            // message
-            var targetVot =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedVot(configService);
+            var targetVot = ipvSessionItem.getTargetVot();
             var acheivedVot = ipvSessionItem.getVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
@@ -192,10 +185,19 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                                                 returnCode, contraIndicators, configMap))
                         .toList();
 
+        // We need to know what vot to check for CI breaches against.
+        // If the user has achieved a profile we should use that, if they haven't then the session
+        // Vot will still be P0
+        // and we should use the target Vot when looking for breaches.
+        var ciVot = targetVot;
+        if (achievedVot != Vot.P0) {
+            ciVot = achievedVot;
+        }
+
         var extensions =
                 new AuditExtensionsUserIdentity(
                         achievedVot,
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot),
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, ciVot),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 

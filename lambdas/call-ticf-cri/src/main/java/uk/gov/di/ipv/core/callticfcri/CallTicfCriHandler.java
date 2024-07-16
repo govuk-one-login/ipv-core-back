@@ -147,7 +147,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
-        var vot = ipvSessionItem.getVot();
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
 
@@ -172,7 +171,17 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         request.getIpAddress());
 
-        var journeyResponse = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, vot);
+        // We need to know what vot to check for mitigations against.
+        // If the user has achieved a profile we should use that, if they haven't then the session
+        // Vot will still be P0
+        // and we should use the target Vot when looking for mitigations.
+        var achievedVot = ipvSessionItem.getVot();
+        var targetVot = ipvSessionItem.getTargetVot();
+        if (achievedVot != Vot.P0) {
+            targetVot = achievedVot;
+        }
+
+        var journeyResponse = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, targetVot);
         if (journeyResponse.isPresent()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
