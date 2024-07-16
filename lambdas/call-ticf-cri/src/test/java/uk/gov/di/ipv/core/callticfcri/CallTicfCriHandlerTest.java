@@ -99,6 +99,7 @@ class CallTicfCriHandlerTest {
     void handleRequestShouldCallTicfCriAndReturnJourneyNextIfNoBreachingCiReceived()
             throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P0);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
@@ -148,6 +149,7 @@ class CallTicfCriHandlerTest {
     @Test
     void handleRequestShouldReturnFailWithCiIfBreachingCiReceived() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P0);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
@@ -168,6 +170,7 @@ class CallTicfCriHandlerTest {
     @Test
     void handleRequestShouldReturnEnhancedVerificationIfBreachingCiReceived() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P0);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
@@ -253,6 +256,7 @@ class CallTicfCriHandlerTest {
     @Test
     void handleRequestShouldReturnJourneyErrorResponseIfCiMitServiceThrows() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P0);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
         when(mockTicfCriService.getTicfVc(any(), any()))

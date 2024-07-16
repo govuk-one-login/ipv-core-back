@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -165,6 +166,13 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ticfVcs,
                 clientOAuthSessionItem,
                 ipvSessionItem);
+
+        if (ProfileType.OPERATIONAL_HMRC.equals(vot.getProfileType())) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Operational HMRC profile attained - won't check for CIs"));
+            return JOURNEY_NEXT;
+        }
 
         ContraIndicators cis =
                 ciMitService.getContraIndicators(
