@@ -36,7 +36,7 @@ public class EmailServiceTest {
             sendUserTriggeredIdentityResetConfirmation_whenCalledWithNoIssues_SendsEmailUsingNotificationClient()
                     throws NotificationClientException {
         // Arrange
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_TEMPLATE_ID);
@@ -60,7 +60,7 @@ public class EmailServiceTest {
             sendUserTriggeredIdentityResetConfirmation_whenNotificationClientThrows400Error_FailsImmediately()
                     throws NotificationClientException {
         // Arrange
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_TEMPLATE_ID);
@@ -93,7 +93,7 @@ public class EmailServiceTest {
             sendUserTriggeredIdentityResetConfirmation_whenNotificationClientThrows403Error_FailsImmediately()
                     throws NotificationClientException {
         // Arrange
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_TEMPLATE_ID);
@@ -126,7 +126,7 @@ public class EmailServiceTest {
             sendUserTriggeredIdentityResetConfirmation_whenNotificationClientThrows413Error_FailsAfterThreeRetries()
                     throws NotificationClientException, InterruptedException {
         // Arrange
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_TEMPLATE_ID);
@@ -166,7 +166,7 @@ public class EmailServiceTest {
                     throws NotificationClientException {
         // Arrange
         var underTest = new EmailService(mockConfigService, mockNotificationClient);
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION))
                 .thenReturn(DUMMY_F2F_TEMPLATE_ID);

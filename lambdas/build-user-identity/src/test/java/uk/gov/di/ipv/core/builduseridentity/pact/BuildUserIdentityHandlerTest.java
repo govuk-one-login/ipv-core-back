@@ -104,7 +104,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
 
         // Configure the config service
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
 
         var passportVcBuilder =
                 new PactJwtBuilder(

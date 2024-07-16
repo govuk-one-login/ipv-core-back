@@ -1,10 +1,14 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -17,8 +21,12 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import java.time.Clock;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONNECTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class DcmawAsyncCriService {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final ConfigService configService;
     private final CriApiService criApiService;
     private final IpvSessionService ipvSessionService;
@@ -67,7 +75,19 @@ public class DcmawAsyncCriService {
                         clientOAuthSessionItem.getClientOAuthSessionId(),
                         connection);
 
-        String dcmawAsyncClientSecret = configService.getCriOAuthClientSecret(criOAuthSessionItem);
+        var dcmawAsyncClientSecret =
+                configService.getSecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET,
+                        criOAuthSessionItem.getCriId(),
+                        criOAuthSessionItem.getConnection());
+
+        if (dcmawAsyncClientSecret == null) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage("DCMAW Async OAuth secret value not found")
+                            .with(LOG_CRI_ID.getFieldName(), DCMAW_ASYNC)
+                            .with(LOG_CONNECTION.getFieldName(), connection));
+        }
+
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
 
         var accessToken =

@@ -62,17 +62,17 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn(audience);
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(audience);
         validator = new TokenRequestValidator(mockConfigService, mockClientAuthJwtIdService);
     }
 
     @Test
     void shouldNotThrowForValidJwtSignedWithRS256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -82,10 +82,10 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowForValidJwtSignedWithES256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
-        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -94,7 +94,7 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
 
@@ -183,10 +183,10 @@ class TokenRequestValidatorTest {
     @Test
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -236,10 +236,10 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldCheckIfJwtIdIsMissingOrEmpty() throws Exception {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 
@@ -250,10 +250,10 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldStoreJwtIdAndCheckItHasNotAlreadyBeenUsed() throws Exception {
-        when(mockConfigService.getSsmParameter(
+        when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 

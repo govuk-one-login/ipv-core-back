@@ -182,7 +182,7 @@ public class VcHelper {
             return true;
         }
         var expiryPeriod =
-                Integer.parseInt(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
+                Integer.parseInt(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
         var now = Instant.now();
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }

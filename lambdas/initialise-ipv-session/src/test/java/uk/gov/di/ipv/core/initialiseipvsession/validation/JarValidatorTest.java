@@ -54,6 +54,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
@@ -124,17 +125,17 @@ class JarValidatorTest {
     @ValueSource(booleans = {true, false})
     void validateRequestJwtShouldPassValidationChecksOnValidJARRequest(boolean mfaResetEnabled)
             throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
         when(configService.enabled(MFA_RESET)).thenReturn(mfaResetEnabled);
         if (mfaResetEnabled) {
-            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+            when(configService.getParameter(CLIENT_VALID_SCOPES, clientIdClaim))
                     .thenReturn("openid");
         }
 
@@ -145,7 +146,7 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidClientId() throws Exception {
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -171,13 +172,13 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldThrowRecoverableExceptionIfScopeClaimMissing()
                 throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -197,15 +198,15 @@ class JarValidatorTest {
 
         @Test
         void validateRequestJwtShouldPassIfNoRequiredScopeProvided() throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -218,17 +219,17 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnInvalidScopeForClient()
                 throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
-            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+            when(configService.getParameter(CLIENT_VALID_SCOPES, clientIdClaim))
                     .thenReturn("reverification");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -248,15 +249,15 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksIfOpenIdAndReverificationScopesProvided()
                 throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -278,17 +279,17 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnEmptyValidScopesForClient()
                 throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
-            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim)).thenReturn("");
+            when(configService.getParameter(CLIENT_VALID_SCOPES, clientIdClaim)).thenReturn("");
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -307,17 +308,17 @@ class JarValidatorTest {
         @Test
         void validateRequestJwtShouldFailValidationChecksOnScopeNotDefinedForClient()
                 throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
-            when(configService.getSsmParameter(CLIENT_VALID_SCOPES, clientIdClaim))
+            when(configService.getParameter(CLIENT_VALID_SCOPES, clientIdClaim))
                     .thenThrow(ParameterNotFoundException.class);
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -336,15 +337,15 @@ class JarValidatorTest {
 
         @Test
         void validateRequestJwtShouldFailValidationCheckIfScopeCanNotBeParsed() throws Exception {
-            when(configService.getSsmParameter(
+            when(configService.getParameter(
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
-            when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-            when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+            when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
-            when(configService.getClientRedirectUrls(anyString()))
+            when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
 
             var claimsSetValues = getValidClaimsSetValues();
@@ -390,9 +391,9 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidJWTSignature() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK_2);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -410,9 +411,9 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidPublicJwk() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn("invalid-jwk");
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
         JarValidationException thrown =
@@ -432,10 +433,10 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksOnMissingRequiredClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
@@ -464,11 +465,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidAudienceClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims = getValidClaimsSetValues();
@@ -491,11 +492,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidIssuerClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidIssuerClaims = getValidClaimsSetValues();
@@ -518,11 +519,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidResponseTypeClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidResponseTypeClaim = getValidClaimsSetValues();
@@ -546,11 +547,12 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
             throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        var differentClientId = "different-client-id";
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, differentClientId))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -558,7 +560,7 @@ class JarValidatorTest {
         JarValidationException thrown =
                 assertThrows(
                         JarValidationException.class,
-                        () -> jarValidator.validateRequestJwt(signedJWT, "different-client-id"));
+                        () -> jarValidator.validateRequestJwt(signedJWT, differentClientId));
         ErrorObject errorObject = thrown.getErrorObject();
         assertEquals(
                 OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
@@ -570,11 +572,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnExpiredJWT() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> expiredClaims = getValidClaimsSetValues();
@@ -595,11 +597,11 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnFutureNbfClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> notValidYet = getValidClaimsSetValues();
@@ -620,13 +622,13 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnExpiryClaimToFarInFuture() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> futureClaims = getValidClaimsSetValues();
@@ -650,10 +652,10 @@ class JarValidatorTest {
 
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidRedirectUriClaim() throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getClientRedirectUrls(anyString()))
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList("test-redirect-uri"));
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -674,9 +676,9 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksOnParseFailureOfRedirectUri()
             throws Exception {
-        when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configService.getParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
 
         Map<String, Object> badRedirectClaims = getValidClaimsSetValues();
         badRedirectClaims.put("redirect_uri", "({[]})./sd-234345////invalid-redirect-uri");

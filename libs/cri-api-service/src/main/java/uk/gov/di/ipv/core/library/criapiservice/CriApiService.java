@@ -78,7 +78,10 @@ public class CriApiService {
 
     private String getApiKey(OauthCriConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
         return criConfig.isRequiresApiKey()
-                ? configService.getCriPrivateApiKey(criOAuthSessionItem)
+                ? configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY,
+                        criOAuthSessionItem.getCriId(),
+                        criOAuthSessionItem.getConnection())
                 : null;
     }
 
@@ -162,7 +165,7 @@ public class CriApiService {
                             criConfig.getComponentId(),
                             dateTime.plusSeconds(
                                             Long.parseLong(
-                                                    configService.getSsmParameter(
+                                                    configService.getParameter(
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             secureTokenHelper.generate());
@@ -170,7 +173,9 @@ public class CriApiService {
             var signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(
                             clientAuthClaims,
-                            signerFactory.getSigner(configService.getSigningKeyId()));
+                            signerFactory.getSigner(
+                                    configService.getParameter(
+                                            ConfigurationVariable.SIGNING_KEY_ID)));
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 

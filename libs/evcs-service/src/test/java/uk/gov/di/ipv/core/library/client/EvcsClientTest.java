@@ -50,7 +50,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 
@@ -126,17 +125,17 @@ class EvcsClientTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn(EVCS_APPLICATION_URL);
         lenient()
-                .when(mockConfigService.getAppApiKey(EVCS_APP_ID.getPath()))
+                .when(mockConfigService.getApiKeySecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {EVCS_APPLICATION_URL, EVCS_APPLICATION_URL_WITH_V1_VCS})
     void testGetUserVCs(String appUrl) throws Exception {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn(appUrl);
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
@@ -284,7 +283,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn("\\");
         // Act
         // Assert
@@ -327,7 +326,7 @@ class EvcsClientTest {
     @Test
     void testCreateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn("\\");
         // Act
         // Assert
@@ -368,7 +367,7 @@ class EvcsClientTest {
     @Test
     void testUpdateUserVCs_shouldThrowException_ifBadUrl() {
         // Arrange
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn("\\");
         // Act
         // Assert

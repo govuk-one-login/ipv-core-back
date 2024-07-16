@@ -62,7 +62,7 @@ public class TokenRequestValidator {
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
         long maxAllowedTtlSeconds =
-                Long.parseLong(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+                Long.parseLong(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
 
         OffsetDateTime offsetDateTime = OffsetDateTime.now().plusSeconds(maxAllowedTtlSeconds);
         if (expirationTime.getTime() / 1000L > offsetDateTime.toEpochSecond()) {
@@ -92,7 +92,7 @@ public class TokenRequestValidator {
 
         return new ClientAuthenticationVerifier<>(
                 new ConfigurationServicePublicKeySelector(configService),
-                Set.of(new Audience(configService.getSsmParameter(COMPONENT_ID))));
+                Set.of(new Audience(configService.getParameter(COMPONENT_ID))));
     }
 
     private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {

@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
 class BasicEventTest {
@@ -40,8 +41,10 @@ class BasicEventTest {
         BasicState alternativeTargetState = new BasicState();
         alternativeEvent.setTargetStateObj(alternativeTargetState);
 
-        when(mockConfigService.isEnabled("anEnabledCri")).thenReturn(true);
-        when(mockConfigService.isEnabled("aDisabledCri")).thenReturn(false);
+        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "anEnabledCri"))
+                .thenReturn(true);
+        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aDisabledCri"))
+                .thenReturn(false);
         LinkedHashMap<String, Event> checkIfDisabled = new LinkedHashMap<>();
         checkIfDisabled.put("anEnabledCri", new BasicEvent());
         checkIfDisabled.put("aDisabledCri", alternativeEvent);

@@ -53,6 +53,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
@@ -251,7 +252,8 @@ class ProcessJourneyEventHandlerTest {
                         .ipvSessionId(TEST_IP)
                         .build();
 
-        when(mockConfigService.isEnabled("aCriId")).thenReturn(true);
+        when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aCriId"))
+                .thenReturn(true);
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
 
@@ -351,7 +353,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("CRI_STATE");
         IpvSessionItem ipvSessionItem = mockIpvSessionService.getIpvSession(TEST_IP);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
+        when(mockConfigService.getParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
@@ -949,8 +951,8 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState));
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
 
-        when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("core");
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
+        when(mockConfigService.getParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());

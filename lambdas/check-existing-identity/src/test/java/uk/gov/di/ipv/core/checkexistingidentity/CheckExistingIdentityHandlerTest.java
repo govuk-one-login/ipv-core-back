@@ -1358,8 +1358,8 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1402,8 +1402,8 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1444,8 +1444,8 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
-        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this
 
         JourneyResponse journeyResponse =

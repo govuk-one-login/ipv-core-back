@@ -213,7 +213,7 @@ class VcHelperTest {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudExpired();
-        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);
@@ -227,7 +227,7 @@ class VcHelperTest {
         VcHelper.setConfigService(configService);
         // Arrange
         VerifiableCredential vc = vcFraudNotExpired();
-        when(configService.getSsmParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
+        when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
         // Act
         boolean result = VcHelper.isExpiredFraudVc(vc);

@@ -9,9 +9,9 @@ import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -73,9 +73,10 @@ public class TicfCriService {
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
         try {
-            RestCriConfig ticfCriConfig = configService.getRestCriConfig(TICF);
+            var connection = configService.getActiveConnection(TICF);
+            var ticfCriConfig = configService.getRestCriConfigForConnection(connection, TICF);
 
-            TicfCriDto ticfCriRequest =
+            var ticfCriRequest =
                     new TicfCriDto(
                             clientOAuthSessionItem.getVtr(),
                             ipvSessionItem.getVot(),
@@ -100,7 +101,10 @@ public class TicfCriService {
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
-                        configService.getCriPrivateApiKeyForActiveConnection(TICF));
+                        configService.getApiKeySecret(
+                                ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY,
+                                TICF.getId(),
+                                connection));
             }
             httpRequestBuilder.header("Content-Type", "application/json; charset=utf-8");
 

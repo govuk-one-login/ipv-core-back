@@ -85,9 +85,9 @@ class IssueClientAccessTokenHandlerTest {
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired
 
-        when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn("3153600000"); // 100 years
-        when(configService.getSsmParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
+        when(configService.getParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
                 .thenReturn("3153600000"); // 100 years
         when(configService.getBearerAccessTokenTtl()).thenReturn(3153600000L); // 100 years
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
@@ -129,8 +129,7 @@ class IssueClientAccessTokenHandlerTest {
         var signingKey =
                 "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
-        when(configService.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
+        when(configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
                 .thenReturn(signingKey);
     }
 
@@ -139,7 +138,7 @@ class IssueClientAccessTokenHandlerTest {
 
     @State("the audience is http://ipv/")
     public void setAudience() {
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
     }
 
     @TestTemplate
