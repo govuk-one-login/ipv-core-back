@@ -98,65 +98,63 @@ public class CiMitService {
     }
 
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
-            throws CiPutException, NonRetryableException, JsonProcessingException {
+            throws CiPutException {
+        try {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
 
-        String payload;
-        if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
-            try {
-                payload =
+                var payload =
                         OBJECT_MAPPER.writeValueAsString(
                                 new PostCiPrivateApiRequest(vc.getVcString()));
 
-            } catch (JsonProcessingException e) {
-                throw new CiPutException("Failed to serialize PutCiRequest");
-            }
+                var endpointUri =
+                        configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
+                                + configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_POST_CI_ENDPOINT);
+                var httpRequestBuilder =
+                        HttpRequest.newBuilder()
+                                .uri(URI.create(endpointUri))
+                                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
+                                .header(IP_ADDRESS, ipAddress)
+                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-            var endpointUri =
-                    configService.getSsmParameter(ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
-                            + configService.getSsmParameter(
-                                    ConfigurationVariable.CIMIT_POST_CI_ENDPOINT);
-            var httpRequestBuilder =
-                    HttpRequest.newBuilder()
-                            .uri(URI.create(endpointUri))
-                            .POST(HttpRequest.BodyPublishers.ofString(payload))
-                            .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
-                            .header(IP_ADDRESS, ipAddress)
-                            .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                var response = sendHttpRequest(httpRequestBuilder.build());
+                var parsedResponse =
+                        OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
 
-            var response = sendHttpRequest(httpRequestBuilder.build());
-            var parsedResponse = OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
+                if (FAILED_RESPONSE.equals(parsedResponse.result())) {
+                    logApiRequestError(parsedResponse);
+                    throw new CiPutException(FAILED_API_REQUEST);
+                }
 
-            if (FAILED_RESPONSE.equals(parsedResponse.result())) {
-                logApiRequestError(parsedResponse);
-                throw new CiPutException(FAILED_API_REQUEST);
-            }
-
-        } else {
-            try {
-                payload =
+            } else {
+                var payload =
                         OBJECT_MAPPER.writeValueAsString(
                                 new PutCiRequest(
                                         govukSigninJourneyId, ipAddress, vc.getVcString()));
 
-            } catch (JsonProcessingException e) {
-                throw new CiPutException("Failed to serialize PutCiRequest");
+                var invokeRequest =
+                        InvokeRequest.builder()
+                                .functionName(
+                                        configService.getEnvironmentVariable(
+                                                CI_STORAGE_PUT_LAMBDA_ARN))
+                                .payload(SdkBytes.fromUtf8String(payload))
+                                .qualifier(LIVE_ALIAS)
+                                .build();
+
+                LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
+                var response = lambdaClient.invoke(invokeRequest);
+
+                if (lambdaExecutionFailed(response)) {
+                    logLambdaExecutionError(response, CI_STORAGE_PUT_LAMBDA_ARN);
+                    throw new CiPutException(FAILED_LAMBDA_MESSAGE);
+                }
             }
-
-            var invokeRequest =
-                    InvokeRequest.builder()
-                            .functionName(
-                                    configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
-                            .payload(SdkBytes.fromUtf8String(payload))
-                            .qualifier(LIVE_ALIAS)
-                            .build();
-
-            LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
-            var response = lambdaClient.invoke(invokeRequest);
-
-            if (lambdaExecutionFailed(response)) {
-                logLambdaExecutionError(response, CI_STORAGE_PUT_LAMBDA_ARN);
-                throw new CiPutException(FAILED_LAMBDA_MESSAGE);
-            }
+        } catch (JsonProcessingException e) {
+            throw new CiPutException("Failed to serialize payload for post CI request.");
+        } catch (Exception e) {
+            throw new CiPutException(FAILED_LAMBDA_MESSAGE);
         }
     }
 
