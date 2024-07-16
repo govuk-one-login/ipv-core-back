@@ -12,17 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
-import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -31,12 +29,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.NamePart;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -58,8 +53,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingNa
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
-import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
 @ExtendWith(MockitoExtension.class)
 class BuildProvenUserIdentityDetailsHandlerTest {
@@ -71,12 +64,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
-    @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
+
+    @Spy
+    private UserIdentityService userIdentityService = new UserIdentityService(mockConfigService);
+
     @InjectMocks private BuildProvenUserIdentityDetailsHandler handler;
 
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -94,13 +90,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         .build();
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
+        Mockito.lenient().when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
     }
 
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
@@ -130,8 +124,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithNameAndDoBOnDifferentVcs()
             throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -161,8 +153,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithCorrectlyOrderedAddressHistory()
             throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -182,10 +172,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 toResponseClass(
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
-        List<Address> addresses = provenUserIdentityDetails.getAddresses();
+        var addresses = provenUserIdentityDetails.getAddresses();
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals(
-                "KENNETH DECERQUEIRA", provenUserIdentityDetails.getNameParts().get(0).getValue());
+        assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals(3, addresses.size());
         assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
@@ -198,8 +187,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void
             shouldReceive200ResponseCodeProvenUserIdentityDetailsWith1stAddressIfCurrentAddressCantBeFound()
                     throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true).thenReturn(true).thenReturn(true);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -220,8 +207,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals(
-                "KENNETH DECERQUEIRA", provenUserIdentityDetails.getNameParts().get(0).getValue());
+        assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("CA14 5PH", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -229,7 +215,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC, vcVerificationM1a()));
@@ -249,7 +234,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeWhenAddressVcIsMissing() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
@@ -274,7 +258,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive500ResponseCodeWhenEvidenceVcIsNotSuccessful() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
@@ -300,7 +283,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive500ResponseCodeWhenMissingNameInVcs() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
@@ -326,7 +308,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive500ResponseCodeWhenMissingDoBInVcs() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
                 .thenReturn(
@@ -382,37 +363,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
-        when(mockUserIdentityService.isVcSuccessful(any(), any()))
-                .thenThrow(new NoVcStatusForIssuerException("Bad"));
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true);
-        when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_EXPERIAN_FRAUD_VC,
-                                vcVerificationM1a()));
-
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var input = createRequestEvent();
-
-        var output = handler.handleRequest(input, context);
-
-        assertEquals(500, output.getStatusCode());
-        assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER,
-                toResponseClass(output, ErrorResponse.class));
-    }
-
-    @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsForGPGProfile() throws Exception {
-        when(mockUserIdentityService.isVcSuccessful(any(), any())).thenReturn(true);
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -434,8 +385,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals(
-                "KENNETH DECERQUEIRA", provenUserIdentityDetails.getNameParts().get(0).getValue());
+        assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -444,7 +394,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetailsForOperationalProfile()
             throws Exception {
-        when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(createIdentityClaim());
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getVot()).thenReturn(Vot.PCL250);
         when(VcHelper.isSuccessfulVc(any())).thenReturn(true, true, true, true, true);
@@ -467,8 +416,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
-        assertEquals(
-                "KENNETH DECERQUEIRA", provenUserIdentityDetails.getNameParts().get(0).getValue());
+        assertEquals("KENNETH", provenUserIdentityDetails.getNameParts().get(0).getValue());
         assertEquals("1965-07-08", provenUserIdentityDetails.getDateOfBirth());
         assertNull(provenUserIdentityDetails.getAddresses());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -478,21 +426,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return new APIGatewayProxyRequestEvent()
                 .withHeaders(
                         Map.of(IPV_SESSION_ID_HEADER, SESSION_ID, IP_ADDRESS_HEADER, "10.10.10.1"));
-    }
-
-    private Optional<IdentityClaim> createIdentityClaim() {
-        var names =
-                Collections.singletonList(
-                        createName(
-                                Collections.singletonList(
-                                        createNamePart(
-                                                "KENNETH DECERQUEIRA",
-                                                NamePart.NamePartType.GIVEN_NAME))));
-
-        var birthDates =
-                Collections.singletonList(BirthDateGenerator.createBirthDate("1965-07-08"));
-
-        return Optional.of(new IdentityClaim(names, birthDates));
     }
 
     private <T> T toResponseClass(

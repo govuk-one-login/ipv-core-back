@@ -476,20 +476,18 @@ public interface VcFixtures {
                     TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build());
 
     static VerifiableCredential vcAddressEmpty() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .name(List.of(ALICE_PARKER_NAME))
-                        .address(List.of())
-                        .build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                Cri.ADDRESS,
-                TestVc.builder().credentialSubject(credentialSubject).build());
+        return generateAddressVc(TestVc.TestCredentialSubject.builder().build());
     }
 
     static VerifiableCredential vcAddressNoCredentialSubject() {
         return generateVerifiableCredential(
-                TEST_SUBJECT, Cri.ADDRESS, TestVc.builder().credentialSubject(null).build());
+                TEST_SUBJECT,
+                Cri.ADDRESS,
+                TestVc.builder()
+                        .type(new String[] {VERIFIABLE_CREDENTIAL_TYPE, ADDRESS_CREDENTIAL_TYPE})
+                        .credentialSubject(null)
+                        .evidence(null)
+                        .build());
     }
 
     static VerifiableCredential vcAddressTwo() {
@@ -1045,13 +1043,6 @@ public interface VcFixtures {
                         .credentialSubject(credentialSubject)
                         .build(),
                 Instant.ofEpochSecond(1652953080));
-    }
-
-    static VerifiableCredential vcMissingCredentialSubject() {
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                Cri.ADDRESS,
-                TestVc.builder().credentialSubject(null).build());
     }
 
     static VerifiableCredential vcHmrcMigration() throws Exception {
