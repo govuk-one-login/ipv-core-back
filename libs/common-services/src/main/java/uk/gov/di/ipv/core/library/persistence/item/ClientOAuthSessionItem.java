@@ -38,6 +38,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private long ttl;
     private String evcsAccessToken;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ClientOAuthSessionItem(
             String clientOAuthSessionId,
             String responseType,

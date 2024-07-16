@@ -133,8 +133,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
-// TODO: Add assertions clientOauthSession is updated
-
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";

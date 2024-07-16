@@ -518,7 +518,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated)
             throws ParseException, SqsException, VerifiableCredentialException,
-                    EvcsServiceException, HttpResponseExceptionWithErrorBody {
+                    EvcsServiceException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(

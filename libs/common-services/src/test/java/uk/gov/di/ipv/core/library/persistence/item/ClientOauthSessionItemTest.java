@@ -16,8 +16,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// TODO: Add test for ArrayIndexOutOfBoundsException exception
-
 @ExtendWith(MockitoExtension.class)
 class ClientOauthSessionItemTest {
     @Mock private ConfigService mockConfigService;
