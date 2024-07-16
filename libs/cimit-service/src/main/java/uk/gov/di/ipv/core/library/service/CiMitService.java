@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiMitigationRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiPrivateApiRequest;
+import uk.gov.di.ipv.core.library.cimit.domain.PostMitigationsPrivateApiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PrivateApiResponse;
 import uk.gov.di.ipv.core.library.cimit.domain.PutCiRequest;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
@@ -119,6 +120,7 @@ public class CiMitService {
                                 .header(IP_ADDRESS, ipAddress)
                                 .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
+                LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
                 var response = sendHttpRequest(httpRequestBuilder.build());
                 var parsedResponse =
                         OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
@@ -161,34 +163,73 @@ public class CiMitService {
     public void submitMitigatingVcList(
             List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
-
-        String payload;
         try {
-            payload =
-                    OBJECT_MAPPER.writeValueAsString(
-                            new PostCiMitigationRequest(
-                                    govukSigninJourneyId,
-                                    ipAddress,
-                                    vcs.stream().map(VerifiableCredential::getVcString).toList()));
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
+                var payload =
+                        OBJECT_MAPPER.writeValueAsString(
+                                new PostMitigationsPrivateApiRequest(
+                                        vcs.stream()
+                                                .map(VerifiableCredential::getVcString)
+                                                .toList()));
+
+                var endpointUri =
+                        configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
+                                + configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_POST_MITIGATIONS_ENDPOINT);
+
+                var httpRequestBuilder =
+                        HttpRequest.newBuilder()
+                                .uri(URI.create(endpointUri))
+                                .POST(HttpRequest.BodyPublishers.ofString(payload))
+                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
+                                .header(IP_ADDRESS, ipAddress)
+                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+                LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
+                var response = sendHttpRequest(httpRequestBuilder.build());
+                var parsedResponse =
+                        OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
+
+                if (FAILED_RESPONSE.equals(parsedResponse.result())) {
+                    logApiRequestError(parsedResponse);
+                    throw new CiPutException(FAILED_API_REQUEST);
+                }
+
+            } else {
+                String payload =
+                        OBJECT_MAPPER.writeValueAsString(
+                                new PostCiMitigationRequest(
+                                        govukSigninJourneyId,
+                                        ipAddress,
+                                        vcs.stream()
+                                                .map(VerifiableCredential::getVcString)
+                                                .toList()));
+
+                var invokeRequest =
+                        InvokeRequest.builder()
+                                .functionName(
+                                        configService.getEnvironmentVariable(
+                                                CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+                                .payload(SdkBytes.fromUtf8String(payload))
+                                .qualifier(LIVE_ALIAS)
+                                .build();
+
+                LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
+                var result = lambdaClient.invoke(invokeRequest);
+
+                if (lambdaExecutionFailed(result)) {
+                    logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
+                    throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
+                }
+            }
         } catch (JsonProcessingException e) {
-            throw new CiPostMitigationsException("Failed to serialize PostCiMitigationRequest");
-        }
-
-        var invokeRequest =
-                InvokeRequest.builder()
-                        .functionName(
-                                configService.getEnvironmentVariable(
-                                        CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
-                        .payload(SdkBytes.fromUtf8String(payload))
-                        .qualifier(LIVE_ALIAS)
-                        .build();
-
-        LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
-        var result = lambdaClient.invoke(invokeRequest);
-
-        if (lambdaExecutionFailed(result)) {
-            logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
-            throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
+            throw new CiPostMitigationsException(
+                    "Failed to serialize payload for post mitigations request");
+        } catch (CiPostMitigationsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CiPostMitigationsException("Failed to submit mitigating VC list.");
         }
     }
 
