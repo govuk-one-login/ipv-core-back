@@ -145,13 +145,13 @@ public class ConfigService {
         String resolvedPath = resolvePath(templatePath, pathProperties);
         try {
             return ssmProvider.get(resolvedPath);
-        }
-        catch (RuntimeException e) {
-            LOGGER.error((new StringMapMessage())
-                    .with(
-                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                            "Error retrieving SSM parameter")
-                    .with(LOG_PARAMETER_PATH.getFieldName(), resolvedPath));
+        } catch (RuntimeException e) {
+            LOGGER.error(
+                    (new StringMapMessage())
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Error retrieving SSM parameter")
+                            .with(LOG_PARAMETER_PATH.getFieldName(), resolvedPath));
             throw e;
         }
     }
