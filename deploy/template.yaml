@@ -2912,6 +2912,8 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2945,12 +2947,18 @@ Resources:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CRIResponseTable
       AutoPublishAlias: live
 
   ResetSessionIdentityFunctionLogGroup:

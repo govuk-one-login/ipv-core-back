@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
@@ -23,6 +24,7 @@ import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
@@ -40,8 +42,10 @@ import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
@@ -115,6 +119,7 @@ class EvcsClientTest {
     @Mock private ConfigService mockConfigService;
     @Mock private HttpClient mockHttpClient;
     @Mock private HttpResponse<String> mockHttpResponse;
+    @Mock private Sleeper mockSleeper;
     @Captor ArgumentCaptor<HttpRequest> httpRequestCaptor;
     @Captor private ArgumentCaptor<String> stringCaptor;
     @InjectMocks private EvcsClient evcsClient;
@@ -197,11 +202,14 @@ class EvcsClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
         // Act
         // Assert
-        assertThrows(
-                EvcsServiceException.class,
-                () ->
-                        evcsClient.getUserVcs(
-                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+        var e =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () ->
+                                evcsClient.getUserVcs(
+                                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+
+        assertEquals(ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE, e.getErrorResponse());
     }
 
     @Test
@@ -367,5 +375,51 @@ class EvcsClientTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> evcsClient.updateUserVCs("user%^", EVCS_UPDATE_USER_VCS_DTO));
+    }
+
+    @Test
+    void testGetUserVCsShouldRetryRequestIfStatusCode429() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
+
+        when(mockHttpResponse.statusCode()).thenReturn(429, 429, 200);
+
+        // Act
+        var evcsGetUserVCsDto =
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+        // Assert
+        assertEquals(2, evcsGetUserVCsDto.vcs().size());
+        verify(mockHttpClient, times(3)).send(any(), any());
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(1000);
+        inOrder.verify(mockSleeper, times(1)).sleep(2000);
+        inOrder.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void testThrowExceptionIfRetryRequestLimitExceeded() throws Exception {
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.body()).thenReturn("{\"message\":\"throttled\"}");
+        when(mockHttpResponse.statusCode()).thenReturn(429);
+
+        // Act
+        // Assert
+        assertThrows(
+                EvcsServiceException.class,
+                () ->
+                        evcsClient.getUserVcs(
+                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
+        verify(mockHttpClient, times(4)).send(any(), any());
+        var inOrder = inOrder(mockSleeper);
+        inOrder.verify(mockSleeper, times(1)).sleep(1000);
+        inOrder.verify(mockSleeper, times(1)).sleep(2000);
+        inOrder.verify(mockSleeper, times(1)).sleep(4000);
+        inOrder.verifyNoMoreInteractions();
     }
 }

@@ -83,6 +83,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -267,6 +268,7 @@ class BuildCriOauthRequestHandlerTest {
                         .govukSigninJourneyId("test-journey-id")
                         .userId(TEST_USER_ID)
                         .clientId("test-client")
+                        .vtr(List.of("P2"))
                         .build();
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
@@ -1320,6 +1322,83 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
         JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertEquals(3, evidenceRequested.get("strengthScore").asInt());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    }
+
+    @Test
+    void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
+        // Arrange
+        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
+                .thenReturn(f2FOauthCriConfig);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getComponentId(ADDRESS))
+                .thenReturn(addressOauthCriConfig.getComponentId());
+        when(configService.getAllowedSharedAttributes(F2F))
+                .thenReturn("name,birthDate,address,emailAddress");
+        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
+                                        ADDRESS_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        clientOAuthSessionItem.setVtr(List.of("P1"));
+        when(mockGpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
+        assertEquals(3, sharedClaims.get("name").size());
+        assertEquals(2, sharedClaims.get("birthDate").size());
+        assertEquals(1, sharedClaims.get("address").size());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+        assertEquals(2, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 

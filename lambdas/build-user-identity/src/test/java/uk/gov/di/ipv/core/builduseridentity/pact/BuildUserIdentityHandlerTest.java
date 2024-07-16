@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -75,6 +76,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCiMitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
+    @Mock private Sleeper mockSleeper;
 
     @BeforeAll
     static void setupServer() {
@@ -86,7 +88,7 @@ class BuildUserIdentityHandlerTest {
             throws IOException, CiRetrievalException, ParseException, CredentialParseException {
 
         var userIdentityService = new UserIdentityService(mockConfigService);
-        var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore);
+        var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
 

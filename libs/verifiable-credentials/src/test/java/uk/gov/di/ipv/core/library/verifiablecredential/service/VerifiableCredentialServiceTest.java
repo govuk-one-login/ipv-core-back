@@ -37,6 +37,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_I
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
@@ -116,6 +117,15 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
+    void shouldDeleteAllExistingVCsForPartitionKeyUserId() throws Exception {
+        verifiableCredentialService.deleteVCs(TEST_SUBJECT);
+
+        ArgumentCaptor<String> userIdCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockDataStore).deleteAllByPartition(userIdCaptor.capture());
+        assertEquals(TEST_SUBJECT, userIdCaptor.getValue());
+    }
+
+    @Test
     void shouldDeleteInheritedIdentityIfPresent() throws Exception {
         // Arrange
         var inheritedIdentityVc = vcHmrcMigrationPCL250NoEvidence();
@@ -176,7 +186,7 @@ class VerifiableCredentialServiceTest {
     }
 
     @Test
-    void storeIdentityShouldThrowIfFailureToDeleteExistingVc() throws BatchDeleteException {
+    void storeIdentityShouldThrowIfFailureToDeleteExistingVc() throws Exception {
         doThrow(new BatchDeleteException("Deletion failed"))
                 .when(mockDataStore)
                 .deleteAllByPartition(USER_ID);

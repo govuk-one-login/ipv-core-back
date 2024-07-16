@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
+import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
@@ -26,7 +27,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
-import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 
@@ -63,7 +63,7 @@ public abstract class UserIdentityRequestHandler {
 
     protected IpvSessionItem validateAccessTokenAndGetIpvSession(APIGatewayProxyRequestEvent input)
             throws ParseException, UnknownAccessTokenException, RevokedAccessTokenException,
-                    ExpiredAccessTokenException {
+                    ExpiredAccessTokenException, GetAccessTokenException {
 
         LogHelper.attachComponentId(configService);
 
@@ -73,12 +73,7 @@ public abstract class UserIdentityRequestHandler {
                         AccessTokenType.BEARER);
 
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.getIpvSessionByAccessToken(accessToken.getValue()).orElse(null);
-
-        if (Objects.isNull((ipvSessionItem))) {
-            throw new UnknownAccessTokenException(
-                    "The supplied access token was not found in the database");
-        }
+                ipvSessionService.getIpvSessionByAccessToken(accessToken.getValue());
 
         configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
 

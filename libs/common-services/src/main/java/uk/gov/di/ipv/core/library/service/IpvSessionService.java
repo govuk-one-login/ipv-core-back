@@ -11,10 +11,16 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
+import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
+import uk.gov.di.ipv.core.library.exceptions.RetryableException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.retry.Retry;
+import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -31,9 +37,11 @@ public class IpvSessionService {
     private static final String ERROR_STATE = "ERROR";
 
     private final DataStore<IpvSessionItem> dataStore;
+    private final Sleeper sleeper;
 
-    public IpvSessionService(DataStore<IpvSessionItem> dataStore) {
+    public IpvSessionService(DataStore<IpvSessionItem> dataStore, Sleeper sleeper) {
         this.dataStore = dataStore;
+        this.sleeper = sleeper;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -44,6 +52,7 @@ public class IpvSessionService {
                         IpvSessionItem.class,
                         DataStore.getClient(),
                         configService);
+        this.sleeper = new Sleeper();
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {
@@ -57,35 +66,40 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
-    public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
-
-        IpvSessionItem ipvSessionItem = null;
-
-        // Simple back off and retry
-        var attempts = 0;
-        while (attempts < 7) {
-            ipvSessionItem =
-                    dataStore.getItemByIndex("accessToken", DigestUtils.sha256Hex(accessToken));
-
-            if (ipvSessionItem == null) {
-                var backoff = (long) (10 * Math.pow(2, attempts++));
-                try {
-                    Thread.sleep(backoff);
-                } catch (InterruptedException e) {
-                    LOGGER.warn(
-                            LogHelper.buildLogMessage(
-                                    "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                break;
+    public IpvSessionItem getIpvSessionByAccessToken(String accessToken)
+            throws UnknownAccessTokenException, GetAccessTokenException {
+        try {
+            return Retry.runTaskWithBackoff(
+                    sleeper,
+                    7,
+                    10,
+                    () -> {
+                        var item =
+                                dataStore.getItemByIndex(
+                                        "accessToken", DigestUtils.sha256Hex(accessToken));
+                        if (item == null) {
+                            throw new RetryableException(
+                                    new UnknownAccessTokenException(
+                                            "The supplied access token was not found in the database"));
+                        }
+                        return item;
+                    });
+        } catch (InterruptedException e) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(
+                            "getIpvSessionByAccessToken() backoff and retry sleep was interrupted"));
+            Thread.currentThread().interrupt();
+            throw new GetAccessTokenException("Failed to get the supplied access token", e);
+        } catch (NonRetryableException e) {
+            LOGGER.warn(
+                    LogHelper.buildErrorMessage(
+                            "getIpvSessionByAccessToken() exception occurred retrying getItemByIndex",
+                            e));
+            if (e.getCause() instanceof UnknownAccessTokenException uatException) {
+                throw uatException;
             }
+            throw new GetAccessTokenException("Failed to get the supplied access token", e);
         }
-
-        if (attempts > 0) {
-            LOGGER.warn(LogHelper.buildLogMessage("getIpvSessionByAccessToken() required retries"));
-        }
-        return Optional.ofNullable(ipvSessionItem);
     }
 
     public IpvSessionItem generateIpvSession(
