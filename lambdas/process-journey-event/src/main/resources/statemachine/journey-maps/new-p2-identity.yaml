@@ -179,7 +179,7 @@ states:
   BANK_ACCOUNT_START_PAGE:
     response:
       type: page
-      pageId: prove-identity-bank-account
+      pageId: prove-identity-no-photo-id
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_M2B
