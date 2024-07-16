@@ -9,7 +9,7 @@ public enum ConfigurationVariable {
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_POST_CI_ENDPOINT("cimit/postCiEndpointUrl"),
     CIMIT_POST_MITIGATIONS_ENDPOINT("cimit/postMitigationsEndpointUrl"),
-    CIMIT_GET_VCS("cimit/getVcsEndpointUrl"),
+    CIMIT_GET_VCS_ENDPOINT("cimit/getVcsEndpointUrl"),
     CIMIT_PRIVATE_API_BASE_URL("cimit/privateApiBaseUrl"),
     CI_CONFIG("self/ci-config"),
     CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),

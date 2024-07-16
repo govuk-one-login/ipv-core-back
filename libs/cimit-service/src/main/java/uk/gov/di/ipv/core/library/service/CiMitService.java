@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,6 +67,7 @@ public class CiMitService {
 
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "govuk-signin-journey-id";
     private static final String IP_ADDRESS = "ip-address";
+    private static final String USER_ID_PARAMETER = "user_id";
 
     private static final String SUCCESS_RESPONSE = "success";
     private static final String FAILED_RESPONSE = "fail";
@@ -259,50 +261,83 @@ public class CiMitService {
 
         try {
             ContraIndicatorCredentialDto contraIndicatorCredential =
-                    OBJECT_MAPPER.readValue(
-                            response.payload().asUtf8String(), ContraIndicatorCredentialDto.class);
+                    OBJECT_MAPPER.readValue(response, ContraIndicatorCredentialDto.class);
             return extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
         } catch (JsonProcessingException e) {
             throw new CiRetrievalException("Failed to deserialize ContraIndicatorCredentialDto");
         }
     }
 
-    private InvokeResponse invokeClientToGetCIResult(
+    private String invokeClientToGetCIResult(
             String govukSigninJourneyId, String ipAddress, String userId)
             throws CiRetrievalException {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
-
-        String payload;
         try {
-            payload =
-                    OBJECT_MAPPER.writeValueAsString(
-                            new GetCiRequest(govukSigninJourneyId, ipAddress, userId));
-        } catch (JsonProcessingException e) {
-            throw new CiRetrievalException("Failed to serialize GetCiRequest");
-        }
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
+                var baseUri =
+                        configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
+                                + configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_GET_VCS_ENDPOINT);
 
-        var invokeRequest =
-                InvokeRequest.builder()
-                        .functionName(
-                                configService.getEnvironmentVariable(
-                                        CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
-                        .payload(SdkBytes.fromUtf8String(payload))
-                        .qualifier(LIVE_ALIAS)
-                        .build();
+                var uri = new URIBuilder(baseUri).addParameter(USER_ID_PARAMETER, userId).build();
 
-        InvokeResponse response;
-        try {
-            response = lambdaClient.invoke(invokeRequest);
-        } catch (LambdaException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
-            throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
-        }
+                var httpRequestBuilder =
+                        HttpRequest.newBuilder()
+                                .uri(uri)
+                                .GET()
+                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
+                                .header(IP_ADDRESS, ipAddress)
+                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-        if (lambdaExecutionFailed(response)) {
-            logLambdaExecutionError(response, CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN);
-            throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
+                var response = sendHttpRequest(httpRequestBuilder.build());
+
+                if (response.statusCode() != SC_OK) {
+                    var parsedResponse =
+                            OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
+                    logApiRequestError(parsedResponse);
+                    throw new CiPutException(FAILED_API_REQUEST);
+                }
+                return response.body();
+            } else {
+                String payload;
+                try {
+                    payload =
+                            OBJECT_MAPPER.writeValueAsString(
+                                    new GetCiRequest(govukSigninJourneyId, ipAddress, userId));
+                } catch (JsonProcessingException e) {
+                    throw new CiRetrievalException("Failed to serialize GetCiRequest");
+                }
+
+                var invokeRequest =
+                        InvokeRequest.builder()
+                                .functionName(
+                                        configService.getEnvironmentVariable(
+                                                CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                                .payload(SdkBytes.fromUtf8String(payload))
+                                .qualifier(LIVE_ALIAS)
+                                .build();
+
+                InvokeResponse response;
+                try {
+                    response = lambdaClient.invoke(invokeRequest);
+                } catch (LambdaException e) {
+                    LOGGER.error(
+                            LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
+                    throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
+                }
+
+                if (lambdaExecutionFailed(response)) {
+                    logLambdaExecutionError(response, CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN);
+                    throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
+                }
+                return response.payload().asUtf8String();
+            }
+        } catch (CiRetrievalException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CiRetrievalException("Failed to get CI from CIMIT");
         }
-        return response;
     }
 
     private VerifiableCredential extractAndValidateContraIndicatorsJwt(
