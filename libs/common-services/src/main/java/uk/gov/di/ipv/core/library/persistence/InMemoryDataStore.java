@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -23,32 +24,30 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     private final Class<T> klass;
     private final Method partitionKeyMethod;
     private final Method sortKeyMethod;
-    private final boolean hasSortKey;
 
     @SuppressWarnings("unchecked") // Rely on callers to use consistent types per table
     public InMemoryDataStore(String tableName, Class<T> klass) {
-        Method partitionKey = null;
-        Method sortKey = null;
-        for (var method : klass.getMethods()) {
-            if (method.isAnnotationPresent(DynamoDbPartitionKey.class)) {
-                partitionKey = method;
-            }
-            if (method.isAnnotationPresent(DynamoDbSortKey.class)) {
-                sortKey = method;
-            }
-        }
-        if (partitionKey == null) {
-            throw new IllegalArgumentException(
-                    "Missing partition key from class " + klass.getName());
-        }
-
         this.records =
                 (ConcurrentMap<String, T>)
                         TABLES.computeIfAbsent(tableName, k -> new ConcurrentHashMap<>());
         this.klass = klass;
-        this.partitionKeyMethod = partitionKey;
-        this.sortKeyMethod = sortKey;
-        this.hasSortKey = sortKey != null;
+        this.partitionKeyMethod = findMethodWithAnnotation(klass, DynamoDbPartitionKey.class);
+        this.sortKeyMethod = findMethodWithAnnotation(klass, DynamoDbSortKey.class);
+
+        if (this.partitionKeyMethod == null) {
+            throw new IllegalArgumentException(
+                    "Missing partition key from class " + klass.getName());
+        }
+    }
+
+    private Method findMethodWithAnnotation(
+            Class<T> klass, Class<? extends Annotation> annotationClass) {
+        for (var method : klass.getMethods()) {
+            if (method.isAnnotationPresent(annotationClass)) {
+                return method;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -126,6 +125,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
             var field = klass.getDeclaredField(name);
             field.setAccessible(true);
             return records.values().stream()
+                    .filter(i -> getPartitionKey(i).equals(partitionValue))
                     .filter(
                             i -> {
                                 try {
@@ -143,6 +143,10 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
 
     @Override
     public List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix) {
+        if (sortKeyMethod == null) {
+            throw new IllegalArgumentException(
+                    "Cannot search by sort key on a record with no sort key");
+        }
         return records.values().stream()
                 .filter(
                         i ->
@@ -189,7 +193,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     private String getSortKey(T item) {
-        if (!hasSortKey) {
+        if (sortKeyMethod == null) {
             return null;
         }
         try {

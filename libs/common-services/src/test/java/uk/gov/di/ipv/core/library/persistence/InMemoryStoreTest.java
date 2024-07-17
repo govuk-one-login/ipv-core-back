@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.persistence;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
+import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -161,9 +162,14 @@ class InMemoryStoreTest {
         item2.setIpvSessionId(partitionKey);
         item2.setSortKey("two");
         item2.setReceivedThisSession(false);
+        var item3 = new SessionCredentialItem();
+        item3.setIpvSessionId("other-id");
+        item3.setSortKey("three");
+        item3.setReceivedThisSession(true);
 
         store.create(item1);
         store.create(item2);
+        store.create(item3);
 
         assertEquals(
                 List.of(item1),
@@ -206,6 +212,21 @@ class InMemoryStoreTest {
         store.create(item3);
 
         assertEquals(List.of(item1, item2), store.getItemsBySortKeyPrefix(partitionKey, "test"));
+    }
+
+    @Test
+    void getReturnsItemsBySortKeyPrefixThrowsIfNoSortKey() {
+        var store =
+                new InMemoryDataStore<>(UUID.randomUUID().toString(), AuthorizationCodeItem.class);
+        var partitionKey = "test-id";
+        var item1 = new AuthorizationCodeItem();
+        item1.setAuthCode(partitionKey);
+
+        store.create(item1);
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> store.getItemsBySortKeyPrefix(partitionKey, "test"));
     }
 
     @Test
