@@ -15,6 +15,7 @@ dependencies {
 			libs.commonsCodec,
 			libs.diVocab,
 			libs.jacksonDatabind,
+			libs.jacksonDataformatYaml,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:journey-uris")
