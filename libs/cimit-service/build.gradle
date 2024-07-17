@@ -12,6 +12,7 @@ dependencies {
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
+			libs.powertoolsTracing,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 

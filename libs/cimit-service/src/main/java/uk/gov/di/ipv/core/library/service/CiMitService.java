@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.lambda.LambdaClient;
 import software.amazon.awssdk.services.lambda.model.InvokeRequest;
 import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiMitigationRequest;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCrede
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -100,6 +102,7 @@ public class CiMitService {
         this.httpClient = HttpClient.newHttpClient();
     }
 
+    @Tracing
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
 
@@ -117,9 +120,7 @@ public class CiMitService {
                                                 ConfigurationVariable.CIMIT_POST_CI_ENDPOINT))
                                 .build();
 
-                var response =
-                        sendPostHttpRequest(
-                                URI.create(uri), govukSigninJourneyId, ipAddress, payload);
+                var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
                         OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
 
@@ -157,6 +158,7 @@ public class CiMitService {
         }
     }
 
+    @Tracing
     public void submitMitigatingVcList(
             List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
@@ -178,9 +180,7 @@ public class CiMitService {
                                                         .CIMIT_POST_MITIGATIONS_ENDPOINT))
                                 .build();
 
-                var response =
-                        sendPostHttpRequest(
-                                URI.create(uri), govukSigninJourneyId, ipAddress, payload);
+                var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
                         OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
 
@@ -225,6 +225,7 @@ public class CiMitService {
         }
     }
 
+    @Tracing
     public ContraIndicators getContraIndicators(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
@@ -233,6 +234,7 @@ public class CiMitService {
         return getContraIndicators(vc);
     }
 
+    @Tracing
     public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
         var evidenceItem = parseContraIndicatorEvidence(vc);
@@ -244,6 +246,7 @@ public class CiMitService {
                 .build();
     }
 
+    @Tracing
     public VerifiableCredential getContraIndicatorsVc(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
@@ -437,7 +440,7 @@ public class CiMitService {
         }
     }
 
-    private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) {
+    private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
         var baseUri =
                 configService.getSsmParameter(ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
                         + endpointUrl;
