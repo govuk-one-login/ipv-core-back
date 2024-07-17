@@ -176,7 +176,9 @@ public class EvaluateGpg45ScoresHandler
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
-            var requestedVotsByStrength = clientOAuthSessionItem.getRequestedVotsByStrength();
+            var requestedVotsByStrength =
+                    clientOAuthSessionItem.getParsedVtr().getRequestedVotsByStrengthDescending();
+
             var supportedGpg45ProfilesByVotStrength =
                     requestedVotsByStrength.stream()
                             .filter(vot -> vot.getSupportedGpg45Profiles() != null)
