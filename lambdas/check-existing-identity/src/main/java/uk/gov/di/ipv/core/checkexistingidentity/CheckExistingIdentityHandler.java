@@ -272,6 +272,11 @@ public class CheckExistingIdentityHandler
                             .getParsedVtr()
                             .getLowestStrengthRequestedGpg45Vot(configService);
 
+            // As almost all of our journeys are proving or mitigating a GPG45 vot we set the
+            // target vot here as a default value. It will be overridden for identity reuse.
+            ipvSessionItem.setTargetVot(lowestGpg45ConfidenceRequested);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
             var contraIndicators =
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
@@ -309,6 +314,12 @@ public class CheckExistingIdentityHandler
                             vcs,
                             areGpg45VcsCorrelated);
             if (profileMatchResponse.isPresent()) {
+                // We are re-using an existing Vot so it might not be a GPG45 vot
+                ipvSessionItem.setTargetVot(
+                        clientOAuthSessionItem
+                                .getParsedVtr()
+                                .getLowestStrengthRequestedVot(configService));
+                ipvSessionService.updateIpvSession(ipvSessionItem);
                 return profileMatchResponse.get();
             }
 
