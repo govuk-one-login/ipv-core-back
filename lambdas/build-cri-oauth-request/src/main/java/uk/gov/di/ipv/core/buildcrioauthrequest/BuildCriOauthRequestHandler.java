@@ -177,7 +177,9 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
             Vot minimumRequestedVotByStrength =
-                    clientOAuthSessionItem.getLowestStrengthRequestedGpg45Vot(configService);
+                    clientOAuthSessionItem
+                            .getParsedVtr()
+                            .getLowestStrengthRequestedGpg45Vot(configService);
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
