@@ -102,6 +102,8 @@ public class CiMitService {
 
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
+
+        LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
 
@@ -109,21 +111,15 @@ public class CiMitService {
                         OBJECT_MAPPER.writeValueAsString(
                                 new PostCiPrivateApiRequest(vc.getVcString()));
 
-                var endpointUri =
+                var uri =
                         getUriBuilderWithBaseApiUrl(
                                         configService.getSsmParameter(
                                                 ConfigurationVariable.CIMIT_POST_CI_ENDPOINT))
                                 .build();
-                var httpRequestBuilder =
-                        HttpRequest.newBuilder()
-                                .uri(URI.create(endpointUri))
-                                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
-                                .header(IP_ADDRESS, ipAddress)
-                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
-                LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
-                var response = sendHttpRequest(httpRequestBuilder.build());
+                var response =
+                        sendPostHttpRequest(
+                                URI.create(uri), govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
                         OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
 
@@ -147,7 +143,6 @@ public class CiMitService {
                                 .qualifier(LIVE_ALIAS)
                                 .build();
 
-                LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
                 var response = lambdaClient.invoke(invokeRequest);
 
                 if (lambdaExecutionFailed(response)) {
@@ -165,6 +160,8 @@ public class CiMitService {
     public void submitMitigatingVcList(
             List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
+
+        LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var payload =
@@ -174,23 +171,16 @@ public class CiMitService {
                                                 .map(VerifiableCredential::getVcString)
                                                 .toList()));
 
-                var endpointUri =
+                var uri =
                         getUriBuilderWithBaseApiUrl(
                                         configService.getSsmParameter(
                                                 ConfigurationVariable
                                                         .CIMIT_POST_MITIGATIONS_ENDPOINT))
                                 .build();
 
-                var httpRequestBuilder =
-                        HttpRequest.newBuilder()
-                                .uri(URI.create(endpointUri))
-                                .POST(HttpRequest.BodyPublishers.ofString(payload))
-                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
-                                .header(IP_ADDRESS, ipAddress)
-                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-
-                LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
-                var response = sendHttpRequest(httpRequestBuilder.build());
+                var response =
+                        sendPostHttpRequest(
+                                URI.create(uri), govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
                         OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
 
@@ -218,7 +208,6 @@ public class CiMitService {
                                 .qualifier(LIVE_ALIAS)
                                 .build();
 
-                LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
                 var result = lambdaClient.invoke(invokeRequest);
 
                 if (lambdaExecutionFailed(result)) {
@@ -282,15 +271,7 @@ public class CiMitService {
 
                 var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
 
-                var httpRequestBuilder =
-                        HttpRequest.newBuilder()
-                                .uri(uri)
-                                .GET()
-                                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
-                                .header(IP_ADDRESS, ipAddress)
-                                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
-
-                var response = sendHttpRequest(httpRequestBuilder.build());
+                var response = sendGetHttpRequest(uri, govukSigninJourneyId, ipAddress);
 
                 if (response.statusCode() != SC_OK) {
                     var parsedResponse =
@@ -414,6 +395,31 @@ public class CiMitService {
 
     private void logApiRequestError(PrivateApiResponse failedResponse) {
         LOGGER.error(LogHelper.buildErrorMessage(FAILED_API_REQUEST, failedResponse.reason()));
+    }
+
+    private HttpResponse<String> sendPostHttpRequest(
+            URI uri, String govukSigninJourneyId, String ipAddress, String payload)
+            throws NonRetryableException {
+        var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress);
+        httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(payload));
+
+        return sendHttpRequest(httpRequestBuilder.build());
+    }
+
+    private HttpResponse<String> sendGetHttpRequest(
+            URI uri, String govukSigninJourneyId, String ipAddress) throws NonRetryableException {
+        var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress).GET();
+
+        return sendHttpRequest(httpRequestBuilder.build());
+    }
+
+    private HttpRequest.Builder buildHttpRequest(
+            URI uri, String govukSigninJourneyId, String ipAddress) {
+        return HttpRequest.newBuilder()
+                .uri(uri)
+                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
+                .header(IP_ADDRESS, ipAddress)
+                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
