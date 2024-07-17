@@ -119,6 +119,7 @@ public class IpvSessionService {
         if (errorObject == null) {
             if (isReverification) {
                 ipvSessionItem.pushState(new JourneyState(REVERIFICATION, START_STATE));
+                // PYIC-7076
                 // Currently reverifcation journeys don't check the user's existing profile so we
                 // have to hard code this to P2 here. Eventually this can be set in the first step
                 // of the reverification journey.

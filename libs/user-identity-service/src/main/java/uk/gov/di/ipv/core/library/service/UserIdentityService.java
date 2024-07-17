@@ -443,9 +443,9 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot vot)
+    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot targetVot)
             throws UnrecognisedCiException {
-        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, vot)
+        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(

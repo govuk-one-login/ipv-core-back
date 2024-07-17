@@ -190,8 +190,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
         // We need to know what vot to check for CI breaches against.
         // If the user has achieved a profile we should use that, if they haven't then the session
-        // Vot will still be P0
-        // and we should use the target Vot when looking for breaches.
+        // Vot will still be P0 and we should use the target Vot when looking for breaches.
         var ciVot = targetVot;
         if (achievedVot != Vot.P0) {
             ciVot = achievedVot;
