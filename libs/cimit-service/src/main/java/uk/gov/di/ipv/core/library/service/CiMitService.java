@@ -110,10 +110,10 @@ public class CiMitService {
                                 new PostCiPrivateApiRequest(vc.getVcString()));
 
                 var endpointUri =
-                        configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
-                                + configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_POST_CI_ENDPOINT);
+                        getUriBuilderWithBaseApiUrl(
+                                        configService.getSsmParameter(
+                                                ConfigurationVariable.CIMIT_POST_CI_ENDPOINT))
+                                .build();
                 var httpRequestBuilder =
                         HttpRequest.newBuilder()
                                 .uri(URI.create(endpointUri))
@@ -175,10 +175,11 @@ public class CiMitService {
                                                 .toList()));
 
                 var endpointUri =
-                        configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
-                                + configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_POST_MITIGATIONS_ENDPOINT);
+                        getUriBuilderWithBaseApiUrl(
+                                        configService.getSsmParameter(
+                                                ConfigurationVariable
+                                                        .CIMIT_POST_MITIGATIONS_ENDPOINT))
+                                .build();
 
                 var httpRequestBuilder =
                         HttpRequest.newBuilder()
@@ -274,13 +275,12 @@ public class CiMitService {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
-                var baseUri =
-                        configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
-                                + configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_GET_VCS_ENDPOINT);
+                var uriBuilder =
+                        getUriBuilderWithBaseApiUrl(
+                                configService.getSsmParameter(
+                                        ConfigurationVariable.CIMIT_GET_VCS_ENDPOINT));
 
-                var uri = new URIBuilder(baseUri).addParameter(USER_ID_PARAMETER, userId).build();
+                var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
 
                 var httpRequestBuilder =
                         HttpRequest.newBuilder()
@@ -429,5 +429,13 @@ public class CiMitService {
             Thread.currentThread().interrupt();
             throw new NonRetryableException(e);
         }
+    }
+
+    private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) {
+        var baseUri =
+                configService.getSsmParameter(ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
+                        + endpointUrl;
+
+        return new URIBuilder(baseUri);
     }
 }
