@@ -22,7 +22,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENAB
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ClientOAuthSessionItem implements DynamodbItem {
+public class ClientOAuthSessionItem implements PersistenceItem {
     private String clientOAuthSessionId;
     private String responseType;
     private String clientId;

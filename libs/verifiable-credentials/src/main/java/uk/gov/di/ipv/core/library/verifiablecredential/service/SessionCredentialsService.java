@@ -35,11 +35,10 @@ public class SessionCredentialsService {
     @ExcludeFromGeneratedCoverageReport
     public SessionCredentialsService(ConfigService configService) {
         this.dataStore =
-                new DataStore<>(
+                DataStore.create(
                         configService.getEnvironmentVariable(
                                 EnvironmentVariable.SESSION_CREDENTIALS_TABLE_NAME),
                         SessionCredentialItem.class,
-                        DataStore.getClient(),
                         configService);
     }
 

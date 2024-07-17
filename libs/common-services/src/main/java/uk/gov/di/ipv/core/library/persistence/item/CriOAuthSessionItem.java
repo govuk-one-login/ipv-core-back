@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CriOAuthSessionItem implements DynamodbItem {
+public class CriOAuthSessionItem implements PersistenceItem {
     private String criOAuthSessionId;
     private String clientOAuthSessionId;
     private String criId;

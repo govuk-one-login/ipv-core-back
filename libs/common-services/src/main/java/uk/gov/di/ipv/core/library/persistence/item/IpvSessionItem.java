@@ -19,7 +19,7 @@ import java.util.List;
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
-public class IpvSessionItem implements DynamodbItem {
+public class IpvSessionItem implements PersistenceItem {
     private String ipvSessionId;
     private String clientOAuthSessionId;
     private String criOAuthSessionId;

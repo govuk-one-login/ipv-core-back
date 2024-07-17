@@ -65,18 +65,16 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     public RevokeVcsHandler() {
         this.configService = new ConfigService();
         this.vcDataStore =
-                new DataStore<>(
+                DataStore.create(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(),
                         configService);
         this.archivedVcDataStore =
-                new DataStore<>(
+                DataStore.create(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(),
                         configService);
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
