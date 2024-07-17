@@ -193,6 +193,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot(Vot.P2);
+        ipvSessionItem.setTargetVot(Vot.P2);
         ipvSessionItem.setFeatureSet("someCoolNewThing");
 
         clientOAuthSessionItem = getClientAuthSessionItemWithScope(OPENID_SCOPE);
@@ -274,11 +275,11 @@ class BuildUserIdentityHandlerTest {
     void shouldReturnCredentialsWithP1OnSuccessfulUserInfoRequestForP1() throws Exception {
         // Arrange
         ipvSessionItem.setVot(Vot.P1);
+        ipvSessionItem.setTargetVot(Vot.P1);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
                 .thenReturn(userIdentity);
-        clientOAuthSessionItem.setVtr(List.of("P2", "P1"));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockCiMitService.getContraIndicatorsVc(any(), any(), any()))
@@ -290,7 +291,6 @@ class BuildUserIdentityHandlerTest {
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
         when(mockConfigService.enabled(TICF_CRI_BETA)).thenReturn(false);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
 
