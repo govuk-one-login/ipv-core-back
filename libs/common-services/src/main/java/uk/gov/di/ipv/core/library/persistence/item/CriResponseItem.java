@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CriResponseItem implements DynamodbItem {
+public class CriResponseItem implements PersistenceItem {
     private String userId;
     private String credentialIssuer;
     private String issuerResponse;

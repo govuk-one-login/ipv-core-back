@@ -17,7 +17,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VcStoreItem implements DynamodbItem {
+public class VcStoreItem implements PersistenceItem {
 
     private String userId;
     private String credentialIssuer;

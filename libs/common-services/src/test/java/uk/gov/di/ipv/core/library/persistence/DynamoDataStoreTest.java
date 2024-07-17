@@ -34,9 +34,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
-class DataStoreTest {
-    public static final String PARTITION_VALUE = "partition-key-12345";
+class DynamoDataStoreTest {
     private static final String TEST_TABLE_NAME = "test-auth-code-table";
+    public static final String PARTITION_VALUE = "partition-key-12345";
     public static final String SORT_KEY_VALUE = "sort-key-12345";
 
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
@@ -63,7 +63,7 @@ class DataStoreTest {
         authorizationCodeItem.setIpvSessionId("test-session-12345");
 
         dataStore =
-                new DataStore<>(
+                new DynamoDataStore<>(
                         TEST_TABLE_NAME,
                         AuthorizationCodeItem.class,
                         mockDynamoDbEnhancedClient,
@@ -96,7 +96,7 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldPutItemIntoDynamoDbTableIfNotExists() {
+    void shouldPutItemIntoDynamoDbTableIfNotExists() throws Exception {
         dataStore.createIfNotExists(authorizationCodeItem);
 
         ArgumentCaptor<PutItemEnhancedRequest<AuthorizationCodeItem>>

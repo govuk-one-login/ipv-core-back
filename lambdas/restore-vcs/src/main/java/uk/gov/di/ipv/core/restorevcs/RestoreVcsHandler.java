@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -19,8 +18,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.CredentialAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -63,18 +62,16 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     public RestoreVcsHandler() {
         this.configService = new ConfigService();
         this.vcDataStore =
-                new DataStore<>(
+                DataStore.create(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(),
                         configService);
         this.archivedVcDataStore =
-                new DataStore<>(
+                DataStore.create(
                         this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        DataStore.getClient(),
                         configService);
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
     }
@@ -130,7 +127,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         String.format(
                                 "Failed to send audit event IPV_VC_RESTORED (%s / %s): %s",
                                 i + 1, numberOfVcs, e.getMessage()));
-            } catch (CredentialAlreadyExistsException e) {
+            } catch (ItemAlreadyExistsException e) {
                 LOGGER.info(
                         LogHelper.buildErrorMessage(
                                 String.format(
@@ -148,7 +145,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void restore(UserIdCriIdPair userIdCriIdPair)
-            throws VerifiableCredentialException, CredentialAlreadyExistsException, SqsException,
+            throws VerifiableCredentialException, ItemAlreadyExistsException, SqsException,
                     RestoreVcException, UnrecognisedVotException, CredentialParseException {
         // Read VC with userId and CriId
         var archivedVc =
@@ -171,11 +168,11 @@ public class RestoreVcsHandler implements RequestStreamHandler {
 
     public void createVcStoreItemIfNotExists(
             VcStoreItem vcStoreItem) // moved from verifiableCredentialService
-            throws VerifiableCredentialException, CredentialAlreadyExistsException {
+            throws VerifiableCredentialException, ItemAlreadyExistsException {
         try {
             vcDataStore.createIfNotExists(vcStoreItem);
-        } catch (ConditionalCheckFailedException e) {
-            throw new CredentialAlreadyExistsException();
+        } catch (ItemAlreadyExistsException e) {
+            throw e;
         } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new VerifiableCredentialException(

@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
 @Builder
 @Data
-public class AuthorizationCodeItem implements DynamodbItem {
+public class AuthorizationCodeItem implements PersistenceItem {
 
     private String authCode;
     private String ipvSessionId;

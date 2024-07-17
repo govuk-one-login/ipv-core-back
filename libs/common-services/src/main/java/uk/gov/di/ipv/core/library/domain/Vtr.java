@@ -19,7 +19,6 @@ public class Vtr {
         return Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream().filter(vots::contains).toList();
     }
 
-    // Refactor this out in PYIC-6984
     public Vot getLowestStrengthRequestedGpg45Vot(ConfigService configService) {
         var requestedGpg45VotsByStrengthDescending =
                 getRequestedVotsByStrengthDescending().stream()
@@ -40,7 +39,6 @@ public class Vtr {
         return lowestStrengthRequestedGpg45Vot;
     }
 
-    // Refactor this out in PYIC-6984
     public Vot getLowestStrengthRequestedVot(ConfigService configService) {
         var requestedVotsByStrengthDescending = getRequestedVotsByStrengthDescending();
 

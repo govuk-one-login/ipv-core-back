@@ -104,6 +104,10 @@ public class ConfigService {
                         .defaultMaxAge(cacheDuration, MINUTES);
     }
 
+    public boolean isLocalDev() {
+        return "true".equals(getEnvironmentVariable(EnvironmentVariable.LOCAL_DEV));
+    }
+
     public List<String> getFeatureSet() {
         return featureSet;
     }
