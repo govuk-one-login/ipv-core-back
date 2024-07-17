@@ -130,15 +130,16 @@ class DynamoDataStoreTest {
 
         dataStore.getItem(PARTITION_VALUE, SORT_KEY_VALUE);
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+        ArgumentCaptor<GetItemEnhancedRequest> keyCaptor =
+                ArgumentCaptor.forClass(GetItemEnhancedRequest.class);
 
         verify(mockDynamoDbEnhancedClient)
                 .table(
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
-        assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().sortKeyValue().get().s());
+        assertEquals(PARTITION_VALUE, keyCaptor.getValue().key().partitionKeyValue().s());
+        assertEquals(SORT_KEY_VALUE, keyCaptor.getValue().key().sortKeyValue().get().s());
     }
 
     @Test
@@ -155,15 +156,16 @@ class DynamoDataStoreTest {
 
         dataStore.getItem(PARTITION_VALUE);
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+        ArgumentCaptor<GetItemEnhancedRequest> keyCaptor =
+                ArgumentCaptor.forClass(GetItemEnhancedRequest.class);
 
         verify(mockDynamoDbEnhancedClient)
                 .table(
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals(PARTITION_VALUE, keyCaptor.getValue().partitionKeyValue().s());
-        assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
+        assertEquals(PARTITION_VALUE, keyCaptor.getValue().key().partitionKeyValue().s());
+        assertTrue(keyCaptor.getValue().key().sortKeyValue().isEmpty());
     }
 
     @Test
@@ -179,7 +181,7 @@ class DynamoDataStoreTest {
 
     @Test
     void shouldGetItemsFromDynamoDbTableViaPartitionKeyQueryRequest() {
-        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
         dataStore.getItems(PARTITION_VALUE);
@@ -188,7 +190,7 @@ class DynamoDataStoreTest {
                 .table(
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).query(any(QueryConditional.class));
+        verify(mockDynamoDbTable).query(any(QueryEnhancedRequest.class));
     }
 
     @Test
@@ -211,15 +213,17 @@ class DynamoDataStoreTest {
 
     @Test
     void getItemsBySortKeyPrefixShouldUseBeginsWithConditional() {
-        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
         dataStore.getItemsBySortKeyPrefix(PARTITION_VALUE, "sort-key-prefix");
 
-        var queryConditional = ArgumentCaptor.forClass(QueryConditional.class);
-        verify(mockDynamoDbTable).query(queryConditional.capture());
+        var QueryEnhancedRequest = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        verify(mockDynamoDbTable).query(QueryEnhancedRequest.capture());
 
-        assertTrue(queryConditional.getValue() instanceof BeginsWithConditional);
+        assertTrue(
+                QueryEnhancedRequest.getValue().queryConditional()
+                        instanceof BeginsWithConditional);
     }
 
     @Test
