@@ -138,7 +138,7 @@ class BuildClientOauthResponseHandlerTest {
     @ParameterizedTest
     @EnumSource(
             value = Vot.class,
-            names = {"P0", "P2"})
+            names = {"P0", "P1", "P2"})
     void shouldReturn200OnSuccessfulOauthRequestForReproveIdentity(Vot vot)
             throws SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
@@ -173,7 +173,11 @@ class BuildClientOauthResponseHandlerTest {
         AuditExtensionAccountIntervention extensions =
                 (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
         assertEquals("reprove_identity", extensions.getType());
-        assertEquals(vot == Vot.P2, extensions.getSuccess());
+        if (Vot.P0.equals(vot)) {
+            assertEquals(false, extensions.getSuccess());
+        } else {
+            assertEquals(true, extensions.getSuccess());
+        }
 
         URI expectedRedirectUrl =
                 new URIBuilder("https://example.com")
