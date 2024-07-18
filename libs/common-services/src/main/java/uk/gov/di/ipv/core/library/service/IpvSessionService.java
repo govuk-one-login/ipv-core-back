@@ -84,12 +84,15 @@ public class IpvSessionService {
         }
     }
 
-    // TODO
-    public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode) {
-        IpvSessionItem ipvSessionItem =
-                dataStore.getItemByIndex(
-                        "authorizationCode", DigestUtils.sha256Hex(authorizationCode));
-        return Optional.ofNullable(ipvSessionItem);
+    public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode)
+            throws GetIpvSessionException {
+        return callRunTaskWithBackoff(
+                () -> {
+                    IpvSessionItem ipvSessionItem =
+                            dataStore.getItemByIndex(
+                                    "authorizationCode", DigestUtils.sha256Hex(authorizationCode));
+                    return Optional.ofNullable(ipvSessionItem);
+                });
     }
 
     public IpvSessionItem getIpvSessionByAccessToken(String accessToken)

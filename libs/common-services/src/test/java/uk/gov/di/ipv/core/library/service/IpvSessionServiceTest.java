@@ -68,7 +68,7 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldReturnSessionItemByAuthorizationCode() {
+    void shouldReturnSessionItemByAuthorizationCode() throws GetIpvSessionException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String authorizationCode = "12345";
 
