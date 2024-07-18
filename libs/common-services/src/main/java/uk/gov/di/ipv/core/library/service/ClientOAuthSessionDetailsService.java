@@ -20,7 +20,7 @@ public class ClientOAuthSessionDetailsService {
         this.configService = configService;
         dataStore =
                 DataStore.create(
-                        this.configService.getEnvironmentVariable(CLIENT_OAUTH_SESSIONS_TABLE_NAME),
+                        CLIENT_OAUTH_SESSIONS_TABLE_NAME,
                         ClientOAuthSessionItem.class,
                         configService);
     }

@@ -41,17 +41,15 @@ public abstract class ConfigService {
     private static final String API_KEY = "apiKey";
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
+    public static boolean IS_LOCAL = false;
+
     @Getter @Setter private List<String> featureSet;
 
     public static ConfigService create() {
-        if (isLocalDev()) {
+        if (IS_LOCAL) {
             return new YamlConfigService();
         }
         return new SsmConfigService();
-    }
-
-    public static boolean isLocalDev() {
-        return "true".equals(System.getenv(EnvironmentVariable.LOCAL_DEV.name()));
     }
 
     protected abstract String getParameter(String path);

@@ -68,18 +68,9 @@ services:
       CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
       CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
-      CLIENT_AUTH_JWT_IDS_TABLE_NAME: client-auth-jwt-ids-local
-      CLIENT_OAUTH_SESSIONS_TABLE_NAME: client-oauth-sessions-local
-      CONFIG_SERVICE_CACHE_DURATION_MINUTES: 0
-      CRI_OAUTH_SESSIONS_TABLE_NAME: cri-oauth-sessions-local
-      CRI_RESPONSE_TABLE_NAME: cri-response-local
       F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
-      IPV_SESSIONS_TABLE_NAME: sessions-local
-      SESSION_CREDENTIALS_TABLE_NAME: session-credentials-local
       SQS_AUDIT_EVENT_QUEUE_URL: ${SQS_AUDIT_EVENT_QUEUE_URL}
-      USER_ISSUED_CREDENTIALS_TABLE_NAME: user-issued-credentials-local
       LAMBDA_TASK_ROOT: handler
-      LOCAL_DEV: true
       ENVIRONMENT: local
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:

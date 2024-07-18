@@ -26,9 +26,7 @@ public class CriOAuthSessionService {
     public CriOAuthSessionService(ConfigService configService) {
         dataStore =
                 DataStore.create(
-                        configService.getEnvironmentVariable(CRI_OAUTH_SESSIONS_TABLE_NAME),
-                        CriOAuthSessionItem.class,
-                        configService);
+                        CRI_OAUTH_SESSIONS_TABLE_NAME, CriOAuthSessionItem.class, configService);
     }
 
     public CriOAuthSessionItem getCriOauthSessionItem(String criOAuthSessionId) {

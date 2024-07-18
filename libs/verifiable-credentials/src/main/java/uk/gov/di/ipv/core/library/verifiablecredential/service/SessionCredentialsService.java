@@ -36,8 +36,7 @@ public class SessionCredentialsService {
     public SessionCredentialsService(ConfigService configService) {
         this.dataStore =
                 DataStore.create(
-                        configService.getEnvironmentVariable(
-                                EnvironmentVariable.SESSION_CREDENTIALS_TABLE_NAME),
+                        EnvironmentVariable.SESSION_CREDENTIALS_TABLE_NAME,
                         SessionCredentialItem.class,
                         configService);
     }

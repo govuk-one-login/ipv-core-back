@@ -63,14 +63,12 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         this.configService = ConfigService.create();
         this.vcDataStore =
                 DataStore.create(
-                        this.configService.getEnvironmentVariable(
-                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                        EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME,
                         VcStoreItem.class,
                         configService);
         this.archivedVcDataStore =
                 DataStore.create(
-                        this.configService.getEnvironmentVariable(
-                                EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME),
+                        EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME,
                         VcStoreItem.class,
                         configService);
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
