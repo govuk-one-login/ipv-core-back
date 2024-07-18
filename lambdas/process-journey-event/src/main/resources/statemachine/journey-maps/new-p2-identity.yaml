@@ -40,6 +40,46 @@ states:
       next:
         targetState: REPROVE_IDENTITY_START
 
+  F2F:
+    events:
+      next:
+        targetState: CRI_F2F
+
+  EVALUATE_GPG45_SCORES_AND_FINISH:
+    events:
+      next:
+        targetState: EVALUATE_GPG45_SCORES
+
+  ADDRESS_AND_FRAUD_PASSPORT:
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J2
+
+  ADDRESS_AND_FRAUD_DL:
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J3
+
+  HMRC_KBV:
+    events:
+      next:
+        targetState: CRI_NINO_J6
+
+  EXPERIAN_KBV:
+    events:
+      next:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  KBV_DROPOUT:
+    events:
+      next:
+        targetState: PYI_KBV_DROPOUT_M2B
+
+  KBV_DROPOUT_NO_F2F:
+    events:
+      next:
+        targetState: PYI_CRI_ESCAPE_NO_F2F
+
   # Parent states
 
   CRI_STATE:

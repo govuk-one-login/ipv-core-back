@@ -1,0 +1,394 @@
+name: New P1 Identity
+description: >-
+  The routes a user can take to prove their identity to a low
+  confidence level (P1).
+
+states:
+  # Entry points
+  START:
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+
+  REPROVE_IDENTITY:
+    events:
+      next:
+        targetState: REPROVE_IDENTITY_START
+
+  # Q's:
+  # - No photo id journey doesn't have bav CRI intentional?
+  # - Multiple doc page Nino skip eligibility page?
+  # - StrategicApp placeholder?
+  # - Ticket for new f2f volumes?
+  # - Mitigations?
+  # - "Route to DCMAW" on NINO CRI?
+
+  # Proposal
+  # - New web app journey
+  #   - Can lead to no photo id journey
+  #
+  # - Generally:
+  #   - Don't add any mitigations yet (saves time & allows clearer picture before re-evaluation)
+
+  # talk to joe - he may have an idea with how to extract sub-journeys
+
+  # Parent states
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Journey states
+  REPROVE_IDENTITY_START:
+    response:
+      type: page
+      pageId: reprove-identity-start
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+
+  IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
+        targetState: CRI_DCMAW
+        checkIfDisabled:
+          dcmaw:
+            targetState: NINO_START_PAGE
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: F2F_START_PAGE
+                checkIfDisabled:
+                  f2f:
+                    targetState: PYI_ESCAPE
+
+      end:
+        targetState: NINO_START_PAGE
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: F2F_START_PAGE
+            checkIfDisabled:
+              f2f:
+                targetState: PYI_ESCAPE
+
+  NINO_START_PAGE:
+    response:
+      type: page
+      pageId: prove-identity-no-photo-id
+      context: nino-only
+    events:
+      next:
+        targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: F2F_START_PAGE
+            checkIfDisabled:
+              f2f:
+                targetState: PYI_ESCAPE
+      end:
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  F2F_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-postoffice-start
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: F2F
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+      end:
+        targetState: PYI_ESCAPE
+
+  CRI_DCMAW:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      not-found:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      access-denied:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      temporarily-unavailable:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      fail-with-no-ci:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+
+  MULTIPLE_DOC_CHECK_PAGE:
+    response:
+      type: page
+      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+    events:
+      ukPassport:
+        targetState: CRI_UK_PASSPORT
+      drivingLicence:
+        targetState: CRI_DRIVING_LICENCE
+      nino:
+        targetState: NINO_START_PAGE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  MULTIPLE_DOC_F2F_CHECK_PAGE:
+    response:
+      type: page
+      context: f2f
+      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+    events:
+      ukPassport:
+        targetState: CRI_UK_PASSPORT
+      drivingLicence:
+        targetState: CRI_DRIVING_LICENCE
+      nino:
+        targetState: NINO_START_PAGE
+      end:
+        targetState: PYI_POST_OFFICE
+
+  PYI_POST_OFFICE:
+    response:
+      type: page
+      pageId: pyi-post-office
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: F2F
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+      end:
+        targetState: PYI_ESCAPE
+
+  PYI_ESCAPE: # is this right?
+    response:
+      type: page
+      pageId: pyi-escape
+    events:
+      next:
+        targetState: RESET_SESSION_IDENTITY
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  RESET_SESSION_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+
+  # DCMAW journey
+  POST_DCMAW_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_DCMAW
+
+  ADDRESS_AND_FRAUD_DCMAW:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # No photo id journey
+  CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: claimedIdentity
+      context: hmrc_record_check
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_NINO_NO_PHOTO_ID
+      access-denied:
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID # ?
+
+  CRI_NINO_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: nino
+      evidenceRequest: # ?
+        scoringPolicy: gpg45
+        strengthScore: 2
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID
+      access-denied:
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NINO
+
+  PYI_ESCAPE_ABANDON_NO_PHOTO_ID:
+    response:
+      type: page
+      context: abandon
+      pageId: no-photo-id-exit-find-another-way
+    events:
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+      next:
+        targetState: RESET_SESSION_IDENTITY
+
+  ADDRESS_AND_FRAUD_NO_PHOTO_ID:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+
+  CRI_DWP_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: dwpKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
+
+  CRI_HMRC_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: hmrcKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: CRI_EXPERIAN_KBV_NO_PHOTO_ID
+
+  CRI_EXPERIAN_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: kbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+      fail-with-no-ci:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: KBV_DROPOUT
+        checkIfDisabled:
+          f2f:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: KBV_DROPOUT_NO_F2F
+
+  # Passport journey
+  CRI_UK_PASSPORT:
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: ADDRESS_AND_FRAUD_PASSPORT
+      access-denied:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+
+  # Driving licence journey
+  CRI_DRIVING_LICENCE:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: ADDRESS_AND_FRAUD_DRIVING_LICENCE
+      access-denied:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
