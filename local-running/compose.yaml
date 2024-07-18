@@ -20,7 +20,7 @@ services:
       IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:3002/
       IPV_BACKCHANNEL_TOKEN_PATH: token
       IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity
-      IPV_CORE_AUDIENCE: https://${ENVIRONMENT}.${DEV_ACCOUNT_NUM}.dev.identity.account.gov.uk
+      IPV_CORE_AUDIENCE: https://identity.local.account.gov.uk
       IPV_ENDPOINT: http://localhost:3001/
       ORCHESTRATOR_CLIENT_ID: orchestrator # pragma: allowlist secret
       ORCHESTRATOR_CLIENT_JWT_TTL: 900
