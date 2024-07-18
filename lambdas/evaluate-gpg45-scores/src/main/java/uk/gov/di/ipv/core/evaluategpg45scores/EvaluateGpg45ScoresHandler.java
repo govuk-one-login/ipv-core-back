@@ -145,8 +145,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             var contraIndicators =
-                    ciMitService.getContraIndicators(
-                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+                    ciMitService.getContraIndicators(userId, govukSigninJourneyId, ipAddress);
 
             var matchingGpg45Profile =
                     findMatchingGpg45Profile(
