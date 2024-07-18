@@ -81,7 +81,6 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
     private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
-    private static final List<Gpg45Profile> P1_AND_P2_PROFILES = List.of(M1A, M1B, M2B, L1A);
     private static final ContraIndicators CONTRAINDICATORS = ContraIndicators.builder().build();
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
