@@ -69,7 +69,11 @@ public class CiMitService {
 
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "govuk-signin-journey-id";
     private static final String IP_ADDRESS = "ip-address";
-    private static final String USER_ID_PARAMETER = "user_id";
+    private static final String USER_ID_PARAMETER = "userId";
+
+    private static final String POST_CI_ENDPOINT = "/v1/contra-indicators/detect";
+    private static final String POST_MITIGATIONS_ENDPOINT = "/v1/contra-indicators/mitigate";
+    private static final String GET_VCS_ENDPOINT = "/v1/contra-indicators";
 
     private static final String SUCCESS_RESPONSE = "success";
     private static final String FAILED_RESPONSE = "fail";
@@ -109,16 +113,11 @@ public class CiMitService {
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
-
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(
                                 new PostCiPrivateApiRequest(vc.getVcString()));
 
-                var uri =
-                        getUriBuilderWithBaseApiUrl(
-                                        configService.getSsmParameter(
-                                                ConfigurationVariable.CIMIT_POST_CI_ENDPOINT))
-                                .build();
+                var uri = getUriBuilderWithBaseApiUrl(POST_CI_ENDPOINT).build();
 
                 var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
@@ -173,12 +172,7 @@ public class CiMitService {
                                                 .map(VerifiableCredential::getVcString)
                                                 .toList()));
 
-                var uri =
-                        getUriBuilderWithBaseApiUrl(
-                                        configService.getSsmParameter(
-                                                ConfigurationVariable
-                                                        .CIMIT_POST_MITIGATIONS_ENDPOINT))
-                                .build();
+                var uri = getUriBuilderWithBaseApiUrl(POST_MITIGATIONS_ENDPOINT).build();
 
                 var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
                 var parsedResponse =
@@ -267,10 +261,7 @@ public class CiMitService {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
-                var uriBuilder =
-                        getUriBuilderWithBaseApiUrl(
-                                configService.getSsmParameter(
-                                        ConfigurationVariable.CIMIT_GET_VCS_ENDPOINT));
+                var uriBuilder = getUriBuilderWithBaseApiUrl(GET_VCS_ENDPOINT);
 
                 var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
 
@@ -442,7 +433,7 @@ public class CiMitService {
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
         var baseUri =
-                configService.getSsmParameter(ConfigurationVariable.CIMIT_PRIVATE_API_BASE_URL)
+                configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL)
                         + endpointUrl;
 
         return new URIBuilder(baseUri);
