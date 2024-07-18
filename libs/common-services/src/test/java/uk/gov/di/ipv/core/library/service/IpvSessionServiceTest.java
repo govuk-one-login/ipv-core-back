@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
+import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -47,7 +47,7 @@ class IpvSessionServiceTest {
     @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test
-    void shouldReturnSessionItem() {
+    void shouldReturnSessionItem() throws GetIpvSessionException, UnknownAccessTokenException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -86,7 +86,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItemByAccessToken()
-            throws UnknownAccessTokenException, GetAccessTokenException {
+            throws UnknownAccessTokenException, GetIpvSessionException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 

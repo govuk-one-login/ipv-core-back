@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
+import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -134,7 +134,7 @@ class UserReverificationHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasExpired()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, GetAccessTokenException {
+                    UnknownAccessTokenException, GetIpvSessionException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -160,12 +160,12 @@ class UserReverificationHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenGetAccessTokenExceptionThrown()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, GetAccessTokenException {
+                    UnknownAccessTokenException, GetIpvSessionException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenThrow(new GetAccessTokenException("err", new Exception()));
+                .thenThrow(new GetIpvSessionException("err", new Exception()));
 
         APIGatewayProxyResponseEvent response =
                 userReverificationHandler.handleRequest(testEvent, mockContext);
@@ -181,7 +181,7 @@ class UserReverificationHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, GetAccessTokenException {
+                    UnknownAccessTokenException, GetIpvSessionException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
