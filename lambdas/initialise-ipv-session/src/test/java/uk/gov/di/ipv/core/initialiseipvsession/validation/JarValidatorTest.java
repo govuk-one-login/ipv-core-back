@@ -21,13 +21,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.nio.charset.StandardCharsets;
@@ -147,7 +147,7 @@ class JarValidatorTest {
     @Test
     void validateRequestJwtShouldFailValidationChecksOnInvalidClientId() throws Exception {
         when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
-                .thenThrow(ParameterNotFoundException.builder().build());
+                .thenThrow(ConfigParameterNotFoundException.class);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -319,7 +319,7 @@ class JarValidatorTest {
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
             when(configService.getParameter(CLIENT_VALID_SCOPES, clientIdClaim))
-                    .thenThrow(ParameterNotFoundException.class);
+                    .thenThrow(ConfigParameterNotFoundException.class);
 
             SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 

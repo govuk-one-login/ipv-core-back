@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -67,7 +66,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public CheckGpg45ScoreHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();

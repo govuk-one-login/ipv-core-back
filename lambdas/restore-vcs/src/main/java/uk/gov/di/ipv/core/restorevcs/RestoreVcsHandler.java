@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.restorevcs.exceptions.RestoreVcException;
 
 import java.io.IOException;
@@ -61,7 +60,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
 
     @SuppressWarnings("unused") // Used by AWS
     public RestoreVcsHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.vcDataStore =
                 DataStore.create(
                         this.configService.getEnvironmentVariable(

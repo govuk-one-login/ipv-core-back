@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.revokevcs.domain.RevokeVcsResult;
 import uk.gov.di.ipv.core.revokevcs.exceptions.RevokeVcException;
@@ -64,7 +63,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
 
     @SuppressWarnings("unused") // Used by AWS
     public RevokeVcsHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.vcDataStore =
                 DataStore.create(
                         this.configService.getEnvironmentVariable(

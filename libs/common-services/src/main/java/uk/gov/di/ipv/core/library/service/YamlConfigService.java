@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,8 +15,8 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DET
 import static java.util.Collections.emptyMap;
 
 public class YamlConfigService extends ConfigService {
-    private static final File PARAMETERS_FILE = new File("core.local.params.yaml");
-    private static final File SECRETS_FILE = new File("core.local.secrets.yaml");
+    private static final File PARAMETERS_FILE = new File("./core.local.params.yaml");
+    private static final File SECRETS_FILE = new File("./core.local.secrets.yaml");
     private static final String PATH_SEPARATOR = "/";
     private static final String CORE = "core";
     private static final String FEATURE_SETS = "features";
@@ -49,8 +50,7 @@ public class YamlConfigService extends ConfigService {
                                 featureSetParameters.put(entry.getKey(), map);
                             });
         } catch (IOException e) {
-            // TODO
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException("Could not load parameter files", e);
         }
     }
 
@@ -83,7 +83,9 @@ public class YamlConfigService extends ConfigService {
                 }
             }
         }
-        // TODO: exception if missing?
+        if (!parameters.containsKey(path)) {
+            throw new ConfigParameterNotFoundException(path);
+        }
         return parameters.get(path);
     }
 
@@ -98,7 +100,6 @@ public class YamlConfigService extends ConfigService {
 
     @Override
     protected String getSecret(String path) {
-        // TODO: exception if missing?
         return secrets.get(path);
     }
 }

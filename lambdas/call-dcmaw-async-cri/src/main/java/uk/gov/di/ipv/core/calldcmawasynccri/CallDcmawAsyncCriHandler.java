@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -57,7 +56,7 @@ public class CallDcmawAsyncCriHandler
 
     @ExcludeFromGeneratedCoverageReport
     public CallDcmawAsyncCriHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.dcmawAsyncCriService = new DcmawAsyncCriService(configService);

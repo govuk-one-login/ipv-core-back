@@ -19,7 +19,6 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -31,6 +30,7 @@ import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -162,7 +162,7 @@ class SsmConfigServiceTest {
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
+                    .thenThrow(ConfigParameterNotFoundException.class);
 
             assertThrows(
                     NoConfigForConnectionException.class,
@@ -325,7 +325,7 @@ class SsmConfigServiceTest {
     void shouldGetFalseForMissingNamedFeatureFlag() {
         String env = System.getenv(ENVIRONMENT.name());
         when(ssmProvider.get("/" + env + "/core/featureFlags/testFeature"))
-                .thenThrow(ParameterNotFoundException.builder().build());
+                .thenThrow(ConfigParameterNotFoundException.class);
         assertEquals(Boolean.FALSE, configService.enabled(TestFeatureFlag.TEST_FEATURE));
     }
 
