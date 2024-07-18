@@ -48,6 +48,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -147,8 +148,8 @@ public class EvaluateGpg45ScoresHandler
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            boolean hasMatchingGpg45Profile =
-                    hasMatchingGpg45Profile(
+            var matchingGpg45Profile =
+                    findMatchingGpg45Profile(
                             vcs,
                             ipvSessionItem,
                             clientOAuthSessionItem,
@@ -156,13 +157,20 @@ public class EvaluateGpg45ScoresHandler
                             event.getDeviceInformation(),
                             contraIndicators);
 
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)
-                    && hasMatchingGpg45Profile) {
+            if (matchingGpg45Profile.isEmpty()) {
+                logLambdaResponse("No GPG45 profiles have been met", JOURNEY_UNMET);
+                return JOURNEY_UNMET.toObjectMap();
+            }
+
+            ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
             }
-            return hasMatchingGpg45Profile
-                    ? JOURNEY_MET.toObjectMap()
-                    : JOURNEY_UNMET.toObjectMap();
+
+            logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
+            return JOURNEY_MET.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
             return new JourneyErrorResponse(
@@ -188,7 +196,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    private boolean hasMatchingGpg45Profile(
+    private Optional<Gpg45Profile> findMatchingGpg45Profile(
             List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -227,16 +235,11 @@ public class EvaluateGpg45ScoresHandler
                                     ipAddress,
                                     deviceInformation));
 
-                    ipvSessionItem.setVot(Vot.fromGpg45Profile(matchedProfile.get()));
-                    ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                    logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
-                    return true;
+                    return matchedProfile;
                 }
             }
         }
-        logLambdaResponse("No GPG45 profiles have been met", JOURNEY_UNMET);
-        return false;
+        return Optional.empty();
     }
 
     private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {

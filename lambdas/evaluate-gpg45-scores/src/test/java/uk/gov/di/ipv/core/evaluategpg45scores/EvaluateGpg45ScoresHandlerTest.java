@@ -270,7 +270,6 @@ class EvaluateGpg45ScoresHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
         JourneyResponse response =
                 toResponseClass(
                         evaluateGpg45ScoresHandler.handleRequest(request, context),
