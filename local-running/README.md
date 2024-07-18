@@ -22,17 +22,22 @@ All other AWS services are still used - Dynamo, SSM, SQS etc. They're called by 
 
 You need to have the core-front and stubs repos checked out and on the same level as the core-back repo.
 
-You'll need to update some config for your env. This is mostly to set up parameters for new connections for core to the
-locally running CRIs. Also a parameter to configure the orch-stubs expected redirect URL. We also need to stop the event
-source mapping that feeds the process-async-cri-credential lambda. This is to allow the local deployment to read
-messages from the SQS queue.
+You'll need to set up config and secrets for your local-running core-back,
+this involves updating the params and secrets files, copying the template versions and updating any placeholders:
 
-There is a script to do all this for you. You'll need to auth to your AWS dev account (dev01 or dev02), using your
+- `core.local.secrets.template.yaml` -> `core.local.secrets.yaml`
+- `core.local.params.template.yaml` -> `core.local.params.yaml`
+
+Values for the placeholders can be found in SSM/Secrets Manager in your dev account, or in the config repo.
+
+If you want to run F2F journeys, you'll also need to stop the event source mapping that feeds the
+process-async-cri-credential lambda. This is to allow the local deployment to read messages from the SQS queue.
+
+There is a script to do this for you. You'll need to auth to your AWS dev account (dev01 or dev02), using your
 favourite method. Basically make sure your AWS creds are in your environment. Below is an example. Change the dev
 account and dev-env to match your setup.
 
-You can add the `--dry-run` flag at the end to just show what params would get written. Probably worth doing the first
-time.
+You can add the `--dry-run` flag at the end to just show what would get written. Probably worth doing the first time.
 
 ```
 aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw local
@@ -70,6 +75,13 @@ URL. The script can do that.
 ```
 aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw cloud
 ```
+
+## Using local CRIs
+
+By default, the local configuration is set up to use deployed stubs for CRIs (and CIMIT, EVCS).
+
+To use a local version, the `core.local.params.yaml` configuration needs to be updated to point to your local instance.
+This typically means updating the URLs and possibly the dev signing and encryption keys.
 
 ## Known limitations
 
