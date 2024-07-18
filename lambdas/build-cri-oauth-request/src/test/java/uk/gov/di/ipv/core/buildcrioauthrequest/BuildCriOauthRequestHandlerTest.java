@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -83,7 +84,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -274,6 +274,7 @@ class BuildCriOauthRequestHandlerTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
+        ipvSessionItem.setTargetVot(Vot.P2);
     }
 
     @AfterEach
@@ -1328,6 +1329,7 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
+        ipvSessionItem.setTargetVot(Vot.P1);
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
@@ -1337,7 +1339,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(addressOauthCriConfig.getComponentId());
         when(configService.getAllowedSharedAttributes(F2F))
                 .thenReturn("name,birthDate,address,emailAddress");
-        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
