@@ -70,15 +70,40 @@ states:
       next:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
-  KBV_DROPOUT:
+  KBV_DROPOUT_NO_PHOTO_ID:
     events:
       next:
         targetState: PYI_KBV_DROPOUT_M2B
 
-  KBV_DROPOUT_NO_F2F:
+  KBV_DROPOUT_NO_PHOTO_ID_NO_F2F:
     events:
       next:
         targetState: PYI_CRI_ESCAPE_NO_F2F
+
+  ALTERNATE_DOC_INVALID_PASSPORT:
+    events:
+      next:
+        targetState: MITIGATION_05_OPTIONS
+
+  ALTERNATE_DOC_INVALID_DL:
+    events:
+      next:
+        targetState: MITIGATION_03_OPTIONS
+
+  MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID:
+    events:
+      next:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+
+  MITIGATION_OPTIONS_NO_PHOTO_ID:
+    events:
+      next:
+        targetState: MITIGATION_02_OPTIONS
+
+  KBV_FAIL_NO_PHOTO_ID:
+    events:
+      next:
+        targetState: MITIGATION_KBV_FAIL_M2B
 
   # Parent states
 

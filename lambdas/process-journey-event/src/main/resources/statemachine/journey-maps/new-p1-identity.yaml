@@ -20,17 +20,7 @@ states:
   # - Multiple doc page Nino skip eligibility page?
   # - StrategicApp placeholder?
   # - Ticket for new f2f volumes?
-  # - Mitigations?
   # - "Route to DCMAW" on NINO CRI?
-
-  # Proposal
-  # - New web app journey
-  #   - Can lead to no photo id journey
-  #
-  # - Generally:
-  #   - Don't add any mitigations yet (saves time & allows clearer picture before re-evaluation)
-
-  # talk to joe - he may have an idea with how to extract sub-journeys
 
   # Parent states
   CRI_STATE:
@@ -211,7 +201,7 @@ states:
       end:
         targetState: PYI_ESCAPE
 
-  PYI_ESCAPE: # is this right?
+  PYI_ESCAPE:
     response:
       type: page
       pageId: pyi-escape
@@ -261,14 +251,14 @@ states:
     events:
       next:
         targetState: CRI_NINO_NO_PHOTO_ID
-      access-denied:
-        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID # ?
+      enhanced-verification:
+        targetState: CRI_NINO_NO_PHOTO_ID
 
   CRI_NINO_NO_PHOTO_ID:
     response:
       type: cri
       criId: nino
-      evidenceRequest: # ?
+      evidenceRequest: # Is this still the same ?
         scoringPolicy: gpg45
         strengthScore: 2
     parent: CRI_STATE
@@ -319,6 +309,22 @@ states:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
+      enhanced-verification:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+      # do we not also want to point people downstream to (surely HMRC) Experian if they get fail-no-ci?
 
   CRI_HMRC_KBV_NO_PHOTO_ID:
     response:
@@ -334,6 +340,21 @@ states:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
     response:
@@ -355,11 +376,26 @@ states:
         targetState: EVALUATE_GPG45_SCORES_AND_FINISH
       fail-with-no-ci:
         targetJourney: NEW_P2_IDENTITY
-        targetState: KBV_DROPOUT
+        targetState: KBV_DROPOUT_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
             targetJourney: NEW_P2_IDENTITY
-            targetState: KBV_DROPOUT_NO_F2F
+            targetState: KBV_DROPOUT_NO_PHOTO_ID_NO_F2F
+      enhanced-verification:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: KBV_FAIL_NO_PHOTO_ID
+        checkIfDisabled:
+          f2f:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
 
   # Passport journey
   CRI_UK_PASSPORT:
@@ -376,6 +412,13 @@ states:
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-passport:
+        targetJourney: NEW_P2_JOURNEY
+        targetState: ALTERNATE_DOC_INVALID_PASSPORT
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
 
   # Driving licence journey
   CRI_DRIVING_LICENCE:
@@ -392,3 +435,10 @@ states:
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-dl:
+        targetJourney: NEW_P2_JOURNEY
+        targetState: ALTERNATE_DOC_INVALID_DL
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
