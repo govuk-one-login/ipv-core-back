@@ -97,7 +97,7 @@ states:
         targetState: ERROR_NO_TICF
 
   # Journey states
-  REPROVE_IDENTITY_START: # do I need this?
+  REPROVE_IDENTITY_START:
     response:
       type: page
       pageId: reprove-identity-start
