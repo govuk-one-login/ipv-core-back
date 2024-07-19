@@ -1,6 +1,6 @@
 name: New P2 Identity
 description: >-
-  The routes a user can take to prove their identity to a medium
+  The routes a user so they can prove their identity to a medium
   confidence level (P2).
 
 states:
@@ -39,71 +39,6 @@ states:
     events:
       next:
         targetState: REPROVE_IDENTITY_START
-
-  F2F:
-    events:
-      next:
-        targetState: CRI_F2F
-
-  EVALUATE_GPG45_SCORES_AND_FINISH:
-    events:
-      next:
-        targetState: EVALUATE_GPG45_SCORES
-
-  ADDRESS_AND_FRAUD_PASSPORT:
-    events:
-      next:
-        targetState: ADDRESS_AND_FRAUD_J2
-
-  ADDRESS_AND_FRAUD_DL:
-    events:
-      next:
-        targetState: ADDRESS_AND_FRAUD_J3
-
-  HMRC_KBV:
-    events:
-      next:
-        targetState: CRI_NINO_J6
-
-  EXPERIAN_KBV:
-    events:
-      next:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  KBV_DROPOUT_NO_PHOTO_ID:
-    events:
-      next:
-        targetState: PYI_KBV_DROPOUT_M2B
-
-  KBV_DROPOUT_NO_PHOTO_ID_NO_F2F:
-    events:
-      next:
-        targetState: PYI_CRI_ESCAPE_NO_F2F
-
-  ALTERNATE_DOC_INVALID_PASSPORT:
-    events:
-      next:
-        targetState: MITIGATION_05_OPTIONS
-
-  ALTERNATE_DOC_INVALID_DL:
-    events:
-      next:
-        targetState: MITIGATION_03_OPTIONS
-
-  MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID:
-    events:
-      next:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
-
-  MITIGATION_OPTIONS_NO_PHOTO_ID:
-    events:
-      next:
-        targetState: MITIGATION_02_OPTIONS
-
-  KBV_FAIL_NO_PHOTO_ID:
-    events:
-      next:
-        targetState: MITIGATION_KBV_FAIL_M2B
 
   # Parent states
 

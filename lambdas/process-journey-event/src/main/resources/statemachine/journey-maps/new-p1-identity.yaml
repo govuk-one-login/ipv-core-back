@@ -1,6 +1,6 @@
 name: New P1 Identity
 description: >-
-  The routes a user can take to prove their identity to a low
+  The routes a user so they can prove their identity to a low
   confidence level (P1).
 
 states:
@@ -16,7 +16,6 @@ states:
         targetState: REPROVE_IDENTITY_START
 
   # Q's:
-  # - No photo id journey doesn't have bav CRI intentional?
   # - Multiple doc page Nino skip eligibility page?
   # - StrategicApp placeholder?
   # - Ticket for new f2f volumes?
@@ -75,6 +74,9 @@ states:
     events:
       appTriage:
         targetState: CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
         checkIfDisabled:
           dcmaw:
             targetState: NINO_START_PAGE
@@ -84,7 +86,6 @@ states:
                 checkIfDisabled:
                   f2f:
                     targetState: PYI_ESCAPE
-
       end:
         targetState: NINO_START_PAGE
         checkIfDisabled:
@@ -93,6 +94,18 @@ states:
             checkIfDisabled:
               f2f:
                 targetState: PYI_ESCAPE
+
+  STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
 
   NINO_START_PAGE:
     response:
@@ -120,8 +133,8 @@ states:
       pageId: page-ipv-identity-postoffice-start
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
@@ -193,8 +206,8 @@ states:
       pageId: pyi-post-office
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
@@ -222,6 +235,95 @@ states:
       next:
         targetState: IDENTITY_START_PAGE
 
+  PYI_CRI_ESCAPE:
+    response:
+      type: page
+      pageId: pyi-cri-escape
+    events:
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+
+  PYI_CRI_ESCAPE_NO_F2F:
+    response:
+      type: page
+      pageId: pyi-cri-escape-no-f2f
+    events:
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  CRI_DCMAW_PYI_ESCAPE:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      not-found:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: FAILED
+            targetState: FAILED
+      access-denied:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      temporarily-unavailable:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      fail-with-no-ci:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      enhanced-verification:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
   # DCMAW journey
   POST_DCMAW_SUCCESS_PAGE:
     response:
@@ -235,8 +337,8 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -303,23 +405,21 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID # send to CRI_HMRC_KBV_NO_PHOTO_ID first?
       enhanced-verification:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
         checkIfDisabled:
           f2f:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            targetState: MITIGATION_KBV_OPTIONS
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -334,23 +434,21 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: MITIGATION_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
         checkIfDisabled:
           f2f:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            targetState: MITIGATION_KBV_OPTIONS
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -372,22 +470,18 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: EVALUATE_GPG45_SCORES_AND_FINISH
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       fail-with-no-ci:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: KBV_DROPOUT_NO_PHOTO_ID
+        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: KBV_DROPOUT_NO_PHOTO_ID_NO_F2F
+            targetState: PYI_CRI_ESCAPE_NO_F2F
       enhanced-verification:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: KBV_FAIL_NO_PHOTO_ID
+        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
-            targetJourney: NEW_P2_IDENTITY
-            targetState: MITIGATION_OPTIONS_NO_PHOTO_ID
+            targetState: MITIGATION_KBV_OPTIONS
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
@@ -397,6 +491,28 @@ states:
         auditContext:
           mitigationType: enhanced-verification
 
+  PYI_KBV_DROPOUT_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: no-photo-id-security-questions-find-another-way
+      context: dropout
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
   # Passport journey
   CRI_UK_PASSPORT:
     response:
@@ -405,7 +521,6 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
         targetState: ADDRESS_AND_FRAUD_PASSPORT
       access-denied:
         targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
@@ -413,12 +528,31 @@ states:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       alternate-doc-invalid-passport:
-        targetJourney: NEW_P2_JOURNEY
-        targetState: ALTERNATE_DOC_INVALID_PASSPORT
+        targetState: MITIGATION_05_OPTIONS
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-passport
+
+  ADDRESS_AND_FRAUD_PASSPORT:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetState: CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # Driving licence journey
   CRI_DRIVING_LICENCE:
@@ -428,17 +562,573 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetJourney: NEW_P2_IDENTITY
-        targetState: ADDRESS_AND_FRAUD_DRIVING_LICENCE
+        targetState: ADDRESS_AND_FRAUD_DL
       access-denied:
         targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       alternate-doc-invalid-dl:
-        targetJourney: NEW_P2_JOURNEY
-        targetState: ALTERNATE_DOC_INVALID_DL
+        targetState: MITIGATION_03_OPTIONS
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+
+  ADDRESS_AND_FRAUD_DL:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: CHECK_FRAUD_SCORE_DL
+      enhanced-verification:
+        targetState: CHECK_FRAUD_SCORE_DL
+
+  CHECK_FRAUD_SCORE_DL:
+    response:
+      type: process
+      lambda: check-gpg45-score
+    events:
+      met:
+        targetState: CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # DWP KBV journey
+  CRI_DWP_KBV:
+    response:
+      type: cri
+      criId: dwpKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_KBV_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+
+  # HMRC KBV journey
+  CRI_NINO:
+    response:
+      type: cri
+      criId: nino
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_HMRC_KBV
+      fail-with-no-ci:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  CRI_HMRC_KBV:
+    response:
+      type: cri
+      criId: hmrcKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_KBV_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  # Experian KBV Journey
+  PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: CRI_EXPERIAN_KBV
+
+  CRI_EXPERIAN_KBV:
+    response:
+      type: cri
+      criId: kbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetState: PYI_CRI_ESCAPE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_CRI_ESCAPE_NO_F2F
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_KBV_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+
+  # Mitigation Journeys
+
+  # Mitigation journey (01)
+  MITIGATION_01_IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
+        targetState: MITIGATION_01_CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetState: MITIGATION_01_F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_CRI_DCMAW:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      access-denied:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      temporarily-unavailable:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      fail-with-no-ci:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      enhanced-verification:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_F2F_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-postoffice-start
+    events:
+      next:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_CLAIMED_IDENTITY_J4
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  MITIGATION_01_PYI_POST_OFFICE:
+    response:
+      type: page
+      pageId: pyi-post-office
+    events:
+      next:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_CLAIMED_IDENTITY_J4
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  # Mitigation journey (02)
+  MITIGATION_02_OPTIONS:
+    response:
+      type: page
+      pageId: pyi-suggest-other-options-no-f2f
+    events:
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  MITIGATION_02_OPTIONS_WITH_F2F:
+    response:
+      type: page
+      pageId: pyi-suggest-other-options
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
+  MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: pyi-suggest-other-options
+      context: no-photo-id
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
+  # Mitigation journey (03) same session - invalid-dl
+  MITIGATION_03_OPTIONS:
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Mitigation journey (04) separate session - invalid-dl
+  MITIGATION_04_DL_NO_MATCH_PAGE:
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match
+    events:
+      next:
+        targetState: MITIGATION_04_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+
+  MITIGATION_04_IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: pyi-continue-with-passport
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Passport journey (MITIGATION)
+  MITIGATION_PP_CRI_UK_PASSPORT:
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
+
+  MITIGATION_PP_PROVE_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: passport
+    events:
+      back:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  # Address and Fraud journey (MITIGATION)
+  MITIGATION_PP_ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Mitigation journey (05) same session - invalid-passport
+  MITIGATION_05_OPTIONS:
+    response:
+      type: page
+      pageId: pyi-passport-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  # Mitigation journey (06) separate session - invalid-passport
+  MITIGATION_06_PASSPORT_NO_MATCH_PAGE:
+    response:
+      type: page
+      pageId: pyi-passport-no-match
+    events:
+      next:
+        targetState: MITIGATION_06_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+
+  MITIGATION_06_IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: pyi-continue-with-driving-licence
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  MITIGATION_DL_CRI_DRIVING_LICENCE:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
+
+  MITIGATION_DL_PROVE_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: drivingLicence
+    events:
+      back:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      returnToRp:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  MITIGATION_DL_ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: MITIGATION_CHECK_FRAUD_SCORE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_CHECK_FRAUD_SCORE:
+    response:
+      type: process
+      lambda: check-gpg45-score
+    events:
+      met:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  # Common Mitigation states - invalid-dl/invalid-passport
+  MITIGATION_PP_CRI_NINO:
+    response:
+      type: cri
+      criId: nino
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_CRI_HMRC_KBV
+      fail-with-no-ci:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: MITIGATION_CRI_EXPERIAN_KBV
+
+  MITIGATION_CRI_EXPERIAN_KBV:
+    response:
+      type: cri
+      criId: kbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_CRI_HMRC_KBV:
+    response:
+      type: cri
+      criId: hmrcKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  MITIGATION_CRI_DWP_KBV:
+    response:
+      type: cri
+      criId: dwpKbv
+      # requires verification score 1
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      invalid-request:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  MITIGATION_KBV_FAIL_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: no-photo-id-security-questions-find-another-way
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  F2F_FAILED_MITIGATION_PAGE:
+    response:
+      type: page
+      pageId: pyi-f2f-technical
+    events:
+      next:
+        targetState: MITIGATION_01_IDENTITY_START_PAGE
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+      end:
+        targetState: RETURN_TO_RP

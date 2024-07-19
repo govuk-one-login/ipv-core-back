@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
@@ -120,6 +121,11 @@ class JourneyMapTest {
                 }
             }
         }
+    }
+
+    @Test
+    void shouldMatchAllJourneyMapEntryPoints() {
+        // Idea being no undefined entry points assumed and no redundancies
     }
 
     @ParameterizedTest
