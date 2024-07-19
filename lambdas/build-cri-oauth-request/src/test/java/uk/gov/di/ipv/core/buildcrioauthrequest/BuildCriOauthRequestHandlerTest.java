@@ -125,7 +125,8 @@ class BuildCriOauthRequestHandlerTest {
             String.format("%s?%s=%s", CLAIMED_IDENTITY.getId(), CONTEXT, TEST_CONTEXT);
     private static final String EVIDENCE_REQUEST = "evidenceRequest";
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
-    private static final EvidenceRequest TEST_EVIDENCE_REQUESTED = new EvidenceRequest("gpg45", 2);
+    private static final EvidenceRequest TEST_EVIDENCE_REQUESTED =
+            new EvidenceRequest("gpg45", 2, null);
     private static String CRI_WITH_EVIDENCE_REQUEST;
     private static String CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST;
 

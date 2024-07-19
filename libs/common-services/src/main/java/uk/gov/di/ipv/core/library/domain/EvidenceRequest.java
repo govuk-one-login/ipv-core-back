@@ -10,19 +10,39 @@ import lombok.extern.jackson.Jacksonized;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 @Getter
 @Builder
 @Jacksonized
 @AllArgsConstructor
 @ExcludeFromGeneratedCoverageReport
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EvidenceRequest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String scoringPolicy;
+    private final Integer strengthScore;
+    private final Integer verificationScore;
 
-    private final int strengthScore;
+    // The JSON serialiser used by the Nimbus JWT library includes null values within claims so we
+    // need to have a way of giving it the values without including nulls. This is far from ideal.
+    public Map<String, Object> toMapWithNoNulls() {
+        var map = new HashMap<String, Object>();
+
+        if (scoringPolicy != null) {
+            map.put("scoringPolicy", scoringPolicy);
+        }
+        if (strengthScore != null) {
+            map.put("strengthScore", strengthScore);
+        }
+        if (verificationScore != null) {
+            map.put("verificationScore", verificationScore);
+        }
+
+        return map;
+    }
 
     public String toBase64() throws JsonProcessingException {
         var jsonString = objectMapper.writeValueAsString(this);

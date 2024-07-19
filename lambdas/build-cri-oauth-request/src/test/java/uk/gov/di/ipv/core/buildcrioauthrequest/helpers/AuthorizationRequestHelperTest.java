@@ -71,7 +71,8 @@ class AuthorizationRequestHelperTest {
     private static final String IPV_ISSUER = "http://example.com/issuer";
     private static final String AUDIENCE = "Audience";
     private static final String TEST_CONTEXT = "test_context";
-    private static final EvidenceRequest TEST_EVIDENCE_REQUEST = new EvidenceRequest("gpg45", 2);
+    private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
+            new EvidenceRequest("gpg45", 2, null);
     private static final String IPV_TOKEN_TTL = "900";
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
@@ -210,7 +211,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest("gpg45", 2),
+                        new EvidenceRequest("gpg45", 2, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
@@ -235,7 +236,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID,
-                        new EvidenceRequest(null, 2),
+                        new EvidenceRequest(null, 2, null),
                         null);
 
         var evidenceRequested = result.getJWTClaimsSet().getClaim("evidence_requested");
