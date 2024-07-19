@@ -25,7 +25,8 @@ public enum IpvJourneyTypes {
     TECHNICAL_ERROR("technical-error"),
     SESSION_TIMEOUT("session-timeout"),
 
-    // F2F return journeys
+    // F2F journeys
+    F2F_HAND_OFF("f2f-hand-off"),
     F2F_PENDING("f2f-pending"),
     F2F_FAILED("f2f-failed"),
 

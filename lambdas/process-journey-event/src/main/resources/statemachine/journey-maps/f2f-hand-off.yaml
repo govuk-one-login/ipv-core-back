@@ -1,0 +1,142 @@
+name: F2F Hand Off
+description: >-
+  The routes a user to proving their identity with f2f.
+
+states:
+  # Entry points
+  START:
+    events:
+      next:
+        targetState: CRI_F2F
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_F2F
+
+  # Parent states
+  CRI_STATE:
+    events:
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      access-denied:
+        targetJourney: FAILED
+        targetState: FAILED
+      invalid-request:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  CRI_TICF_STATE:
+    events:
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  # Journey states
+  CRI_TICF_BEFORE_F2F:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: CRI_F2F
+      enhanced-verification:
+        targetState: CRI_F2F
+
+  CRI_F2F:
+    response:
+      type: cri
+      criId: f2f
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      enhanced-verification:
+        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+      access-denied:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_NO_TICF
+      not-found:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      temporarily-unavailable:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  STORE_IDENTITY_BEFORE_F2F_HANDOFF:
+    response:
+      type: process
+      lambda: store-identity
+      lambdaInput:
+        identityType: PENDING
+    events:
+      identity-stored:
+        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  RESET_SESSION_BEFORE_F2F_HANDOFF:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: F2F_HANDOFF_PAGE
+      error:
+        targetState: F2F_HANDOFF_PAGE
+
+  F2F_HANDOFF_PAGE:
+    response:
+      type: page
+      pageId: page-face-to-face-handoff
