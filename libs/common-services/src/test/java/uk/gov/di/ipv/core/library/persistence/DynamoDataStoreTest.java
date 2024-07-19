@@ -50,8 +50,6 @@ class DynamoDataStoreTest {
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
 
-    private final long ttl = 7200;
-
     @BeforeEach
     void setUp() {
         when(mockDynamoDbEnhancedClient.table(
@@ -90,7 +88,7 @@ class DynamoDataStoreTest {
         assertEquals(
                 authorizationCodeItem.getIpvSessionId(),
                 authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(authorizationCodeItemArgumentCaptor.getValue().getTtl());
+        assertNotNull(Long.valueOf(authorizationCodeItemArgumentCaptor.getValue().getTtl()));
     }
 
     @Test
@@ -216,11 +214,11 @@ class DynamoDataStoreTest {
 
         dataStore.getItemsBySortKeyPrefix(PARTITION_VALUE, "sort-key-prefix");
 
-        var QueryEnhancedRequest = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
-        verify(mockDynamoDbTable).query(QueryEnhancedRequest.capture());
+        var queryEnhancedRequest = ArgumentCaptor.forClass(QueryEnhancedRequest.class);
+        verify(mockDynamoDbTable).query(queryEnhancedRequest.capture());
 
         assertTrue(
-                QueryEnhancedRequest.getValue().queryConditional()
+                queryEnhancedRequest.getValue().queryConditional()
                         instanceof BeginsWithConditional);
     }
 

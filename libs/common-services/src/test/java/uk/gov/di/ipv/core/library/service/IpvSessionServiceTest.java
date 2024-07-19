@@ -23,8 +23,11 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -47,7 +50,7 @@ class IpvSessionServiceTest {
     @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test
-    void shouldReturnSessionItem() throws GetIpvSessionException, UnknownAccessTokenException {
+    void shouldReturnSessionItem() throws UnknownAccessTokenException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -65,6 +68,58 @@ class IpvSessionServiceTest {
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getState(), result.getState());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
+
+    @Test
+    void shouldReturnSessionItemWithRetry()
+            throws UnknownAccessTokenException, GetIpvSessionException {
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
+
+        IpvSessionItem result = ipvSessionService.getIpvSession(ipvSessionID, true);
+
+        ArgumentCaptor<String> ipvSessionIDArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        verify(mockDataStore).getItem(ipvSessionIDArgumentCaptor.capture());
+        assertEquals(ipvSessionID, ipvSessionIDArgumentCaptor.getValue());
+        assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
+        assertEquals(ipvSessionItem.getState(), result.getState());
+        assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
+
+    @Test
+    void shouldReturnExceptionWithAllFailedRetries() throws UnknownAccessTokenException {
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+        ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        when(mockDataStore.getItem(ipvSessionID))
+                .thenReturn(null, null, null, null, null, null, null);
+
+        assertThrows(
+                GetIpvSessionException.class,
+                () -> ipvSessionService.getIpvSession(ipvSessionID, true));
+    }
+
+    @Test
+    void shouldReturnInterruptedExceptionWithRetry()
+            throws UnknownAccessTokenException, InterruptedException {
+        String ipvSessionID = SecureTokenHelper.getInstance().generate();
+        doThrow(new InterruptedException()).when(mockSleeper).sleep(anyLong());
+
+        when(mockDataStore.getItem(ipvSessionID)).thenReturn(null, null, null);
+
+        assertThrows(
+                GetIpvSessionException.class,
+                () -> ipvSessionService.getIpvSession(ipvSessionID, true));
     }
 
     @Test
