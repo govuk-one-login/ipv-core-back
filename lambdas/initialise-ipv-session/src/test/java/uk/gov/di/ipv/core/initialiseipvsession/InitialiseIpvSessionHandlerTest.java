@@ -53,7 +53,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -216,7 +215,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
@@ -249,7 +248,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
@@ -329,7 +328,7 @@ class InitialiseIpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException {
         ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
 
         var evcsAccessTokenClaims =

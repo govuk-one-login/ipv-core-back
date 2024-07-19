@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -45,11 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
@@ -96,7 +93,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @ExcludeFromGeneratedCoverageReport
     public CheckCoiHandler() {
         this.configService = ConfigService.create();
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
@@ -200,11 +197,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                             SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
-        } catch (SqsException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_SEND_AUDIT_EVENT)
-                    .toObjectMap();
         } catch (UnknownCoiCheckTypeException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Unknown COI check type received", e)
@@ -232,7 +224,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             List<VerifiableCredential> oldVcs,
             List<VerifiableCredential> sessionsVcs,
             String deviceInformation)
-            throws SqsException, HttpResponseExceptionWithErrorBody, CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
 
         var restrictedData =
                 auditEventType == AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END

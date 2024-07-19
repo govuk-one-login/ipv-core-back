@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
@@ -96,8 +95,7 @@ public class CriCheckingService {
     }
 
     public JourneyResponse handleCallbackError(
-            CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
-            throws SqsException {
+            CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem) {
         var ipAddress = callbackRequest.getIpAddress();
         var deviceInformation = callbackRequest.getDeviceInformation();
         var errorCode = callbackRequest.getError();

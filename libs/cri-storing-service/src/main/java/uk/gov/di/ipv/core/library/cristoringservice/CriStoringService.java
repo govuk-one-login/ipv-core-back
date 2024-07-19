@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -72,7 +71,7 @@ public class CriStoringService {
             String criOAuthSessionId,
             ClientOAuthSessionItem clientOAuthSessionItem,
             List<String> featureSets)
-            throws SqsException, JsonProcessingException {
+            throws JsonProcessingException {
 
         recordCriResponse(
                 cri,
@@ -86,7 +85,7 @@ public class CriStoringService {
 
     public void recordCriResponse(
             CriCallbackRequest callbackRequest, ClientOAuthSessionItem clientOAuthSessionItem)
-            throws SqsException, JsonProcessingException {
+            throws JsonProcessingException {
 
         recordCriResponse(
                 callbackRequest.getCredentialIssuer(),
@@ -106,7 +105,7 @@ public class CriStoringService {
             String deviceInformation,
             List<String> featureSet,
             ClientOAuthSessionItem clientOAuthSessionItem)
-            throws JsonProcessingException, SqsException {
+            throws JsonProcessingException {
         var userId = clientOAuthSessionItem.getUserId();
 
         var auditEventUser =
@@ -141,8 +140,8 @@ public class CriStoringService {
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws SqsException, CiPutException, CiPostMitigationsException,
-                    VerifiableCredentialException, UnrecognisedVotException {
+            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+                    UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
@@ -191,8 +190,7 @@ public class CriStoringService {
             String criResourceRetrievedType,
             Cri cri,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
 
         var criId = cri.getId();
         LOGGER.info(

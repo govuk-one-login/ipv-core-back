@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -161,8 +160,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldProcessErrorAsyncVerifiableCredentialSuccessfully()
-            throws JsonProcessingException, SqsException {
+    void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
         final SQSEvent testEvent = createErrorTestEvent();
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_CRI))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -316,7 +314,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .parseAndValidate(any(), any(), anyList(), any(), any());
     }
 
-    private void verifyAuditService() throws SqsException {
+    private void verifyAuditService() {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();

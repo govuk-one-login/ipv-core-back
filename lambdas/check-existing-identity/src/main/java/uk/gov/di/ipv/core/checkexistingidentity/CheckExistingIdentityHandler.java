@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -180,7 +179,7 @@ public class CheckExistingIdentityHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.ciMitService = new CiMitService(configService);
@@ -348,8 +347,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
         } catch (ParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, e);
-        } catch (SqsException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, e);
         } catch (CredentialParseException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS, e);
         } catch (ConfigException e) {
@@ -584,8 +581,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated,
             ContraIndicators contraIndicators)
-            throws ParseException, SqsException, VerifiableCredentialException,
-                    EvcsServiceException {
+            throws ParseException, VerifiableCredentialException, EvcsServiceException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
@@ -617,7 +613,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             ContraIndicators contraIndicators)
-            throws SqsException, ConfigException, MitigationRouteException {
+            throws ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -677,7 +673,7 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle vcBundle,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, VerifiableCredentialException, EvcsServiceException {
+            throws VerifiableCredentialException, EvcsServiceException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
@@ -725,7 +721,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             VerifiableCredentialBundle vcBundle)
-            throws EvcsServiceException, VerifiableCredentialException, SqsException {
+            throws EvcsServiceException, VerifiableCredentialException {
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             try {
                 evcsMigrationService.migrateExistingIdentity(
@@ -757,8 +753,7 @@ public class CheckExistingIdentityHandler
     private void sendAuditEvent(
             AuditEventTypes auditEventTypes,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
@@ -771,8 +766,7 @@ public class CheckExistingIdentityHandler
     private void sendVCsMigratedAuditEvent(
             AuditEventUser auditEventUser,
             List<VerifiableCredential> credentials,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_VCS_MIGRATED,
@@ -801,7 +795,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             boolean areGpg45VcsCorrelated,
             ContraIndicators contraIndicators)
-            throws ParseException, SqsException {
+            throws ParseException {
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
@@ -831,8 +825,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             ContraIndicators contraIndicators)
-            throws ParseException, SqsException {
-
+            throws ParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(vcs)
@@ -902,8 +895,7 @@ public class CheckExistingIdentityHandler
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,

@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -66,7 +65,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ticfCriService = new TicfCriService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,
@@ -116,7 +115,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
         } catch (TicfCriServiceException
-                | SqsException
                 | VerifiableCredentialException
                 | CiPostMitigationsException
                 | CiPutException
@@ -140,9 +138,9 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
     @Tracing
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
-            throws TicfCriServiceException, CiRetrievalException, SqsException,
-                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    ConfigException, UnrecognisedVotException, CredentialParseException {
+            throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
+                    CiPostMitigationsException, CiPutException, ConfigException,
+                    UnrecognisedVotException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(

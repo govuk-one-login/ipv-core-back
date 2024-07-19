@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -221,7 +220,6 @@ class CallTicfCriHandlerTest {
 
     private static Stream<Exception> ciStoringExceptions() {
         return Stream.of(
-                new SqsException("Oops"),
                 new CiPutException("Oops"),
                 new CiPostMitigationsException("Oops"),
                 new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
