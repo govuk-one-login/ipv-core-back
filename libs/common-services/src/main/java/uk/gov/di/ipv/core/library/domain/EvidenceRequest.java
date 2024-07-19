@@ -20,6 +20,8 @@ import java.util.Map;
 @ExcludeFromGeneratedCoverageReport
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EvidenceRequest {
+    public static final String SCORING_POLICY_GPG45 = "gpg45";
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final String scoringPolicy;

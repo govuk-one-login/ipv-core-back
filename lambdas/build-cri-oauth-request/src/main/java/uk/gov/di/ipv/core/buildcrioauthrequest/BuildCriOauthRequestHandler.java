@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.net.URISyntaxException;
+import java.security.InvalidParameterException;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -72,6 +73,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUC
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
+import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -318,6 +320,8 @@ public class BuildCriOauthRequestHandler
 
         if (cri.equals(F2F)) {
             evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
+        } else if (cri.isKbvCri()) {
+            evidenceRequest = getEvidenceRequestForKbvCri(ipvSessionItem.getTargetVot());
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -367,7 +371,19 @@ public class BuildCriOauthRequestHandler
             return null;
         }
 
-        return new EvidenceRequest("gpg45", minViableStrengthOpt.getAsInt());
+        return new EvidenceRequest(SCORING_POLICY_GPG45, minViableStrengthOpt.getAsInt(), null);
+    }
+
+    private EvidenceRequest getEvidenceRequestForKbvCri(Vot targetVot) {
+        var verificationScoreRequired =
+                switch (targetVot) {
+                    case P1 -> 1;
+                    case P2 -> 2;
+                    default -> throw new InvalidParameterException(
+                            "Cannot calculate verification score required for vot: " + targetVot);
+                };
+
+        return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);
     }
 
     @Tracing
