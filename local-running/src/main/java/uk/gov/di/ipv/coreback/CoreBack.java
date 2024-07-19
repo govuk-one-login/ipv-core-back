@@ -3,6 +3,7 @@ package uk.gov.di.ipv.coreback;
 import spark.Spark;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler;
+import uk.gov.di.ipv.coreback.handlers.AuditHandler;
 import uk.gov.di.ipv.coreback.handlers.HomeHandler;
 import uk.gov.di.ipv.coreback.handlers.JourneyEngineHandler;
 import uk.gov.di.ipv.coreback.handlers.LambdaHandler;
@@ -18,6 +19,7 @@ public class CoreBack {
 
         var lambdaHandler = new LambdaHandler();
         var journeyEngineHandler = new JourneyEngineHandler();
+        var auditHandler = new AuditHandler();
 
         new SqsPoller().start(new ProcessAsyncCriCredentialHandler());
 
@@ -34,6 +36,7 @@ public class CoreBack {
         Spark.get("/user-identity", lambdaHandler.getUserIdentity());
 
         Spark.get("/reverification", lambdaHandler.getUserReverification());
+        Spark.get("/audit-events", auditHandler.getAuditEvents());
 
         Spark.internalServerError("🤮");
     }
