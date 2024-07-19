@@ -4,6 +4,7 @@ import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
+import { getAuditEvents } from "../clients/local-audit-client.js";
 import config from "../config/config.js";
 import {
   generateCriStubBody,
@@ -23,8 +24,13 @@ When(
   "I start a new {string} journey",
   async function (this: World, journeyType: string): Promise<void> {
     this.userId = getRandomString(16);
+    this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
-      await generateInitialiseIpvSessionBody(this.userId, journeyType),
+      await generateInitialiseIpvSessionBody(
+        this.userId,
+        this.journeyId,
+        journeyType,
+      ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       "/journey/next",
@@ -119,3 +125,18 @@ When(
 Then("I get a {string} identity", function (this: World, vot: string): void {
   assert.equal(vot, this.identity.vot);
 });
+
+Then(
+  "a(n) {string} audit event was recorded",
+  async function (this: World, eventName: string): Promise<void> {
+    if (config.LOCAL_AUDIT_EVENTS) {
+      const auditEvents = await getAuditEvents(this.journeyId);
+      const event = auditEvents.find((e) => e.event_name === eventName);
+      if (!event) {
+        assert.fail(
+          `Could not find ${eventName} audit event, found: ${auditEvents.map((e) => e.event_name).join(", ")}`,
+        );
+      }
+    }
+  },
+);
