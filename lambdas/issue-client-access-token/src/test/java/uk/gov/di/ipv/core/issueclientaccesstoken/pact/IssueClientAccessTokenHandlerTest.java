@@ -7,6 +7,8 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
+import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -62,6 +64,11 @@ class IssueClientAccessTokenHandlerTest {
     @Mock private DataStore<ClientOAuthSessionItem> oAuthDataStore;
     @Mock private DataStore<ClientAuthJwtIdItem> jwtIdStore;
     @Mock private Sleeper mockSleeper;
+
+    @PactBrokerConsumerVersionSelectors
+    public static SelectorBuilder consumerVersionSelectors() {
+        return new SelectorBuilder().mainBranch();
+    }
 
     @BeforeAll
     static void setupServer() {
