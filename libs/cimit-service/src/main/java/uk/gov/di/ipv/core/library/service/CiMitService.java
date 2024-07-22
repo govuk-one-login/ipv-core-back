@@ -51,6 +51,7 @@ import java.util.Objects;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_INTERNAL_API_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.CIMIT_API_GATEWAY_ENABLED;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
@@ -70,10 +71,11 @@ public class CiMitService {
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "govuk-signin-journey-id";
     private static final String IP_ADDRESS = "ip-address";
     private static final String USER_ID_PARAMETER = "userId";
+    private static final String X_API_KEY_HEADER = "x-api-key";
 
-    private static final String POST_CI_ENDPOINT = "/v1/contra-indicators/detect";
-    private static final String POST_MITIGATIONS_ENDPOINT = "/v1/contra-indicators/mitigate";
-    private static final String GET_VCS_ENDPOINT = "/v1/contra-indicators";
+    private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
+    private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
+    private static final String GET_VCS_ENDPOINT = "/contra-indicators";
 
     private static final String SUCCESS_RESPONSE = "success";
     private static final String FAILED_RESPONSE = "fail";
@@ -413,7 +415,10 @@ public class CiMitService {
                 .uri(uri)
                 .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
                 .header(IP_ADDRESS, ipAddress)
-                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                .header(
+                        X_API_KEY_HEADER,
+                        configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()));
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
