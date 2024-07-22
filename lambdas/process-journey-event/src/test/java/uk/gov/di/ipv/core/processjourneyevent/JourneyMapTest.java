@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
@@ -24,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JourneyMapTest {
@@ -124,8 +126,65 @@ class JourneyMapTest {
     }
 
     @Test
-    void shouldMatchAllJourneyMapEntryPoints() {
-        // Idea being no undefined entry points assumed and no redundancies
+    void shouldMatchJourneyMapEntryPoints() throws IOException {
+        var allBasicStates = new ArrayList<BasicState>();
+        var journeyEntryPointUsages = new HashMap<String, JourneyChangeState>();
+
+        for (var journeyType : IpvJourneyTypes.values()) {
+            var stateMachine = new StateMachineInitializer(journeyType).initialize();
+            var stateMachineKeys = stateMachine.keySet();
+
+            for (var targetKey : stateMachineKeys) {
+                var targetState = stateMachine.get(targetKey);
+                if (targetState instanceof BasicState basicState) {
+                    var events = basicState.getEvents();
+                    recordJourneyEntryPointUsages(
+                            events,
+                            journeyEntryPointUsages,
+                            String.format(
+                                    "journey: %s, state: %s", journeyType, basicState.getName()));
+                    allBasicStates.add(basicState);
+                }
+            }
+        }
+
+        for (var usage : journeyEntryPointUsages.entrySet()) {
+            assertFalse(
+                    allBasicStates.stream()
+                            .filter(
+                                    basicState ->
+                                            isJourneyChangeStateReferencingBasicState(
+                                                    usage.getValue(), basicState))
+                            .toList()
+                            .isEmpty(),
+                    String.format(
+                            "%s references undefined journey entry point: journeyType: %s and state: %s",
+                            usage.getKey(),
+                            usage.getValue().getJourneyType(),
+                            usage.getValue().getInitialState()));
+        }
+    }
+
+    private void recordJourneyEntryPointUsages(
+            Map<String, Event> events,
+            Map<String, JourneyChangeState> journeyEntryPointUsages,
+            String stateReference) {
+        for (var event : events.values()) {
+            if (event instanceof BasicEvent basicEvent) {
+                var targetStateObj = basicEvent.getTargetStateObj();
+                if (targetStateObj instanceof JourneyChangeState journeyChangeState) {
+                    journeyEntryPointUsages.put(
+                            String.format("%s, event: %s", stateReference, basicEvent.getName()),
+                            journeyChangeState);
+                }
+            }
+        }
+    }
+
+    private boolean isJourneyChangeStateReferencingBasicState(
+            JourneyChangeState journeyChangeState, BasicState basicState) {
+        return Objects.equals(journeyChangeState.getJourneyType(), basicState.getJourneyType())
+                && Objects.equals(journeyChangeState.getInitialState(), basicState.getName());
     }
 
     @ParameterizedTest
