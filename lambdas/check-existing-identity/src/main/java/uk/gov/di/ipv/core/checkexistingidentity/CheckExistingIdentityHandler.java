@@ -493,22 +493,62 @@ public class CheckExistingIdentityHandler
         if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Unmigrated tactical credentials found alongside migrated credentials"));
+                                    "Unmigrated tactical credentials found alongside migrated credentials")
+                            .with(
+                                    "migratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(vc -> vc.getMigrated() != null)
+                                                    .toList()))
+                            .with(
+                                    "unmigratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(vc -> vc.getMigrated() == null)
+                                                    .toList())));
         }
 
         // check all the tactical vcs are in the selected evcs vcs
         if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Failed to find corresponding evcs credential for migrated tactical credential"));
+                                    "Failed to find corresponding evcs credential for migrated tactical credential")
+                            .with(
+                                    "migratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(
+                                                            vc ->
+                                                                    evcsVcStrings.contains(
+                                                                            vc.getVcString()))
+                                                    .toList()))
+                            .with(
+                                    "unmigratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(
+                                                            vc ->
+                                                                    !evcsVcStrings.contains(
+                                                                            vc.getVcString()))
+                                                    .toList())));
         }
 
         // check all the evcs vcs are in the tactical store
         if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Failed to find corresponding tactical credential for evcs credential"));
+                                    "Failed to find corresponding tactical credential for evcs credential")
+                            .with("pendingEvcsCris", getCriListString(evcsVcs.get(PENDING_RETURN)))
+                            .with("currentEvcsCris", getCriListString(evcsVcs.get(CURRENT)))
+                            .with("tacticalCris", getCriListString(tacticalVcs)));
         }
+    }
+
+    private static String getCriListString(List<VerifiableCredential> vcs) {
+        if (vcs == null) {
+            return "<none>";
+        }
+        return vcs.stream().map(vc -> vc.getCri().getId()).collect(Collectors.joining(","));
     }
 
     @Tracing
