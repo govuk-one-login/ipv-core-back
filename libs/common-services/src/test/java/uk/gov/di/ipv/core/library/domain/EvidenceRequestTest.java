@@ -11,15 +11,15 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EvidenceRequestTest {
-    // {"scoringPolicy":"gpg45","strengthScore":2}
+    // Data: {"scoringPolicy":"gpg45","strengthScore":2}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_NULL =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ==";
-    // {"scoringPolicy":"gpg45","verificationScore":1}
+    // Data: {"scoringPolicy":"gpg45","verificationScore":1}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_NULL_VERIFICATION_1 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
-    // {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1}
+    // Data: {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_1 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
