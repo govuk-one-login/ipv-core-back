@@ -291,8 +291,10 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
-            // PYIC-6901 Confirm that we only want to compare CI scores against the lowest requested
-            // VOT
+            // PYIC-6901 Currently we just check against the lowest Vot requested for this journey.
+            // That might cause an issue if a user needs to mitigate a P2 journey but comes back to
+            // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
+            // though.
             var ciScoringCheckResponse =
                     ciMitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
