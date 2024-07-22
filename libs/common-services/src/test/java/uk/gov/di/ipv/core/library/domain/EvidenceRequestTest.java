@@ -11,15 +11,18 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EvidenceRequestTest {
-    // Data: {"scoringPolicy":"gpg45","strengthScore":2}
+    @SuppressWarnings("java:S125") // Commented out code
+    // {"scoringPolicy":"gpg45","strengthScore":2}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_NULL =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyfQ==";
-    // Data: {"scoringPolicy":"gpg45","verificationScore":1}
+    @SuppressWarnings("java:S125") // Commented out code
+    // {"scoringPolicy":"gpg45","verificationScore":1}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_NULL_VERIFICATION_1 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
-    // Data: {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1}
+    @SuppressWarnings("java:S125") // Commented out code
+    // {"scoringPolicy":"gpg45","strengthScore":2,"verificationScore":1}
     private static final String BASE64_ENCODED_GPG45_STRENGTH_2_VERIFICATION_1 =
             // pragma: allowlist nextline secret
             "eyJzY29yaW5nUG9saWN5IjoiZ3BnNDUiLCJzdHJlbmd0aFNjb3JlIjoyLCJ2ZXJpZmljYXRpb25TY29yZSI6MX0=";
