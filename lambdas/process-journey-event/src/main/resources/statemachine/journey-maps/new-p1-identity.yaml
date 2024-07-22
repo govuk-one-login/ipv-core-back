@@ -128,20 +128,8 @@ states:
         checkIfDisabled:
           dcmaw:
             targetState: NINO_START_PAGE
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: F2F_START_PAGE
-                checkIfDisabled:
-                  f2f:
-                    targetState: PYI_ESCAPE
       end:
         targetState: NINO_START_PAGE
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: F2F_START_PAGE
-            checkIfDisabled:
-              f2f:
-                targetState: PYI_ESCAPE
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -388,17 +376,11 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # Driving licence journey (J3)
   CRI_DRIVING_LICENCE_J3:
@@ -425,26 +407,15 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CHECK_FRAUD_SCORE_J3
-      enhanced-verification:
-        targetState: CHECK_FRAUD_SCORE_J3
-
-  CHECK_FRAUD_SCORE_J3:
-    response:
-      type: process
-      lambda: check-gpg45-score
-    events:
-      met:
         targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED
+      enhanced-verification:
+        targetState: CRI_DWP_KBV_J7
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -477,6 +448,9 @@ states:
     events:
       next:
         targetState: CRI_HMRC_KBV_J6
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       fail-with-no-ci:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
@@ -1024,9 +998,6 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1109,9 +1080,6 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       unmet:
         targetJourney: FAILED
         targetState: FAILED
@@ -1125,6 +1093,9 @@ states:
     events:
       next:
         targetState: MITIGATION_CRI_HMRC_KBV
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       fail-with-no-ci:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
