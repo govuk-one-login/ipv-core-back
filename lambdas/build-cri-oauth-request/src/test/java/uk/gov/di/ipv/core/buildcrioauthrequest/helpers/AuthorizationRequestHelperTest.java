@@ -147,7 +147,7 @@ class AuthorizationRequestHelperTest {
     @MethodSource("journeyUriParameters")
     void shouldCreateSignedJWTWithGivenParameters(
             String context, EvidenceRequest evidenceRequest, Map<String, Object> expectedClaims)
-            throws ParseException, HttpResponseExceptionWithErrorBody {
+            throws ParseException, HttpResponseExceptionWithErrorBody, JsonProcessingException {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
         when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
@@ -168,8 +168,8 @@ class AuthorizationRequestHelperTest {
         for (Map.Entry<String, Object> entry : expectedClaims.entrySet()) {
             var actual = result.getJWTClaimsSet().getClaim(entry.getKey());
             assertEquals(
-                    entry.getValue(),
-                    actual,
+                    objectMapper.writeValueAsString(entry.getValue()),
+                    objectMapper.writeValueAsString(actual),
                     () ->
                             String.format(
                                     "Expected claim for key=%s to be %s, but found %s",
