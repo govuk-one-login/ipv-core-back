@@ -13,7 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -46,6 +47,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -136,11 +138,9 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(
-            value = Vot.class,
-            names = {"P0", "P1", "P2"})
-    void shouldReturn200OnSuccessfulOauthRequestForReproveIdentity(Vot vot)
-            throws SqsException, URISyntaxException {
+    @MethodSource("testParamsForSuccessfulOauthRequestForReproveIdentity")
+    void shouldReturn200OnSuccessfulOauthRequestForReproveIdentity(
+            Vot vot, String vtr, boolean success) throws SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
@@ -148,6 +148,7 @@ class BuildClientOauthResponseHandlerTest {
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         var oauthSessionItem = getClientOAuthSessionItem();
         oauthSessionItem.setReproveIdentity(true);
+        oauthSessionItem.setVtr(List.of(vtr));
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(oauthSessionItem);
 
@@ -173,11 +174,7 @@ class BuildClientOauthResponseHandlerTest {
         AuditExtensionAccountIntervention extensions =
                 (AuditExtensionAccountIntervention) capturedValues.get(1).getExtensions();
         assertEquals("reprove_identity", extensions.getType());
-        if (Vot.P0.equals(vot)) {
-            assertEquals(false, extensions.getSuccess());
-        } else {
-            assertEquals(true, extensions.getSuccess());
-        }
+        assertEquals(success, extensions.getSuccess());
 
         URI expectedRedirectUrl =
                 new URIBuilder("https://example.com")
@@ -441,5 +438,13 @@ class BuildClientOauthResponseHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
+    }
+
+    private static Stream<Arguments> testParamsForSuccessfulOauthRequestForReproveIdentity() {
+        return Stream.of(
+                Arguments.of(Vot.P1, "P1", true),
+                Arguments.of(Vot.P1, "P2", false),
+                Arguments.of(Vot.P2, "P2", true),
+                Arguments.of(Vot.P0, "P2", false));
     }
 }
