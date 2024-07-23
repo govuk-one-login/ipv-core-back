@@ -211,7 +211,8 @@ states:
   MULTIPLE_DOC_CHECK_PAGE:
     response:
       type: page
-      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+      context: nino-only
+      pageId: page-multiple-doc-check
     events:
       ukPassport:
         targetState: CRI_UK_PASSPORT_J2
@@ -226,8 +227,8 @@ states:
   MULTIPLE_DOC_F2F_CHECK_PAGE:
     response:
       type: page
-      context: f2f
-      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+      context: nino-only
+      pageId: page-multiple-doc-check
     events:
       ukPassport:
         targetState: CRI_UK_PASSPORT_J2
