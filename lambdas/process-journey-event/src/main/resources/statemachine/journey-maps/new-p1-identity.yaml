@@ -376,11 +376,17 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # Driving licence journey (J3)
   CRI_DRIVING_LICENCE_J3:
@@ -411,11 +417,17 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -448,9 +460,6 @@ states:
     events:
       next:
         targetState: CRI_HMRC_KBV_J6
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       fail-with-no-ci:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
@@ -998,6 +1007,9 @@ states:
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1065,22 +1077,14 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: MITIGATION_CHECK_FRAUD_SCORE
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  MITIGATION_CHECK_FRAUD_SCORE:
-    response:
-      type: process
-      lambda: check-gpg45-score
-    events:
-      met:
         targetState: MITIGATION_CRI_DWP_KBV
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
-      unmet:
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
 
@@ -1093,9 +1097,6 @@ states:
     events:
       next:
         targetState: MITIGATION_CRI_HMRC_KBV
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       fail-with-no-ci:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
