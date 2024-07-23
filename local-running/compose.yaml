@@ -69,9 +69,8 @@ services:
       CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
       F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
-      SQS_AUDIT_EVENT_QUEUE_URL: ${SQS_AUDIT_EVENT_QUEUE_URL}
-      LAMBDA_TASK_ROOT: handler
       ENVIRONMENT: local
+      AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:
       - "3002:3002"
