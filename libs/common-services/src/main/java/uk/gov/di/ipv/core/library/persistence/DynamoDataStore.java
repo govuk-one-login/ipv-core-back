@@ -11,6 +11,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.GetItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
@@ -116,7 +117,10 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         var key = Key.builder().partitionValue(value).build();
         var queryConditional = QueryConditional.keyEqualTo(key);
         var queryEnhancedRequest =
-                QueryEnhancedRequest.builder().queryConditional(queryConditional).build();
+                QueryEnhancedRequest.builder()
+                        .consistentRead(Boolean.FALSE)
+                        .queryConditional(queryConditional)
+                        .build();
 
         List<T> results =
                 index.query(queryEnhancedRequest).stream()
@@ -132,7 +136,13 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public List<T> getItems(String partitionValue) {
         var key = Key.builder().partitionValue(partitionValue).build();
-        return table.query(QueryConditional.keyEqualTo(key)).stream()
+        return table
+                .query(
+                        QueryEnhancedRequest.builder()
+                                .consistentRead(Boolean.TRUE)
+                                .queryConditional(QueryConditional.keyEqualTo(key))
+                                .build())
+                .stream()
                 .flatMap(page -> page.items().stream())
                 .toList();
     }
@@ -149,6 +159,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
                         .build();
         var queryEnhancedRequest =
                 QueryEnhancedRequest.builder()
+                        .consistentRead(Boolean.TRUE)
                         .queryConditional(queryConditional)
                         .filterExpression(filterExpression)
                         .build();
@@ -161,7 +172,13 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     public List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix) {
         Key key = Key.builder().partitionValue(partitionValue).sortValue(sortPrefix).build();
 
-        return table.query(QueryConditional.sortBeginsWith(key)).stream()
+        return table
+                .query(
+                        QueryEnhancedRequest.builder()
+                                .consistentRead(Boolean.TRUE)
+                                .queryConditional(QueryConditional.sortBeginsWith(key))
+                                .build())
+                .stream()
                 .flatMap(page -> page.items().stream())
                 .toList();
     }
@@ -220,7 +237,12 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     }
 
     private T getItemByKey(Key key, boolean warnOnNull) {
-        T result = table.getItem(key);
+        T result =
+                table.getItem(
+                        GetItemEnhancedRequest.builder()
+                                .consistentRead(Boolean.TRUE)
+                                .key(key)
+                                .build());
         if (warnOnNull && result == null) {
             var message =
                     new StringMapMessage()

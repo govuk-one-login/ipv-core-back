@@ -106,7 +106,9 @@ public enum ErrorResponse {
     ERROR_CALLING_DCMAW_ASYNC_CRI(1089, "Error calling the DCMAW Async CRI"),
     FAILED_TO_UPDATE_IDENTITY(1090, "Failed to update identity"),
     INVALID_SIGNING_KEY_TYPE(1091, "Signing key is invalid type. Must be EC or RSA"),
-    UNEXPECTED_CREDENTIAL_TYPE(1092, "Unexpected credential type");
+    UNEXPECTED_CREDENTIAL_TYPE(1092, "Unexpected credential type"),
+    IPV_SESSION_NOT_FOUND(1093, "Ipv session not found in db"),
+    ;
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
