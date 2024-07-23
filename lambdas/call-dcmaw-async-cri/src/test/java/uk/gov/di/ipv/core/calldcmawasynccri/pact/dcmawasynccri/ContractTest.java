@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -52,7 +52,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 class ContractTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String SUBJECT_ID = "dummySubjectId";
@@ -108,10 +108,7 @@ class ContractTest {
 
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -154,10 +151,7 @@ class ContractTest {
 
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -211,10 +205,7 @@ class ContractTest {
 
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -260,10 +251,7 @@ class ContractTest {
 
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =

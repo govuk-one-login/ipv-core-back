@@ -24,7 +24,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -82,7 +82,7 @@ class CriApiServiceTest {
     private static final CriOAuthSessionItem TEST_CRI_SESSION = new CriOAuthSessionItem();
 
     @Mock private ConfigService mockConfigService;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     private CriApiService criApiService;
 
     @BeforeEach
@@ -90,7 +90,7 @@ class CriApiServiceTest {
         criApiService =
                 new CriApiService(
                         mockConfigService,
-                        mockKmsEs256SignerFactory,
+                        mockSignerFactory,
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
 
@@ -105,8 +105,7 @@ class CriApiServiceTest {
         when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
                 .thenReturn(TEST_API_KEY);
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -134,8 +133,7 @@ class CriApiServiceTest {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -165,8 +163,7 @@ class CriApiServiceTest {
         when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
                 .thenReturn(TEST_API_KEY);
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -195,8 +192,7 @@ class CriApiServiceTest {
         when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
                 .thenReturn(TEST_API_KEY);
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
                 post("/token")
@@ -224,8 +220,7 @@ class CriApiServiceTest {
         when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
                 .thenReturn(TEST_API_KEY);
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request =
@@ -242,8 +237,7 @@ class CriApiServiceTest {
                     WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         // Arrange
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request =
@@ -265,8 +259,7 @@ class CriApiServiceTest {
                     .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
             when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-            when(mockKmsEs256SignerFactory.getSigner(any()))
-                    .thenReturn(new ECDSASigner(getPrivateKey()));
+            when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
             // Act & Assert
             assertThrows(
@@ -286,8 +279,7 @@ class CriApiServiceTest {
         when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
                 .thenReturn("InvalidApiKey");
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var httpRequest =
@@ -304,8 +296,7 @@ class CriApiServiceTest {
                     throws Exception {
         // Arrange
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request =
@@ -322,8 +313,7 @@ class CriApiServiceTest {
                     throws Exception {
         // Arrange
         when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
         var request =

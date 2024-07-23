@@ -40,7 +40,8 @@ public enum ConfigurationVariable {
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
-    SIGNING_KEY_ID("self/signingKeyId");
+    SIGNING_KEY_ID("self/signingKeyId"),
+    SIGNING_KEY_JWK("self/signingKey");
 
     private final String path;
 

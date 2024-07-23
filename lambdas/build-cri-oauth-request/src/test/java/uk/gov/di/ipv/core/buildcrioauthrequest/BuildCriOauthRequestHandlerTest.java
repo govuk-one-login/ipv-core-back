@@ -44,7 +44,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -150,7 +150,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private SessionCredentialsService mockSessionCredentialService;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     @InjectMocks private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
 
     private OauthCriConfig oauthCriConfig;
@@ -343,8 +343,7 @@ class BuildCriOauthRequestHandlerTest {
         when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -430,8 +429,7 @@ class BuildCriOauthRequestHandlerTest {
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -513,8 +511,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -597,8 +594,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -680,8 +676,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -854,8 +849,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -921,8 +915,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -986,8 +979,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1075,8 +1067,7 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1142,8 +1133,7 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1216,8 +1206,7 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1290,8 +1279,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1366,8 +1354,7 @@ class BuildCriOauthRequestHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("P1"));
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1429,7 +1416,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
+        when(mockSignerFactory.getSigner())
                 .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
@@ -1487,7 +1474,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
+        when(mockSignerFactory.getSigner())
                 .thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
@@ -1555,8 +1542,7 @@ class BuildCriOauthRequestHandlerTest {
                                         ADDRESS_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1609,8 +1595,7 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockKmsEs256SignerFactory.getSigner(any()))
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
