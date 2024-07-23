@@ -9,7 +9,6 @@ core:
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
     fraudCheckExpiryPeriodHours: 720
-    jarKmsEncryptionKeyId: "TODO: PYIC-6992"
     coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
     backendSessionTimeout: 3600
     backendSessionTtl: 3600
