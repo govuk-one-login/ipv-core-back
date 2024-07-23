@@ -61,4 +61,4 @@ else
 fi
 
 export ENVIRONMENT=$env
-aws-vault exec $profile -- docker compose up --build $attach
+aws-vault exec $profile -- docker compose up $attach
