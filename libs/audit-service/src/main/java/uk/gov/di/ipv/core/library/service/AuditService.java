@@ -5,7 +5,7 @@ import uk.gov.di.ipv.core.library.exception.AuditException;
 
 public interface AuditService {
     static AuditService create(ConfigService configService) {
-        if (ConfigService.IS_LOCAL) {
+        if (ConfigService.isLocal()) {
             return new LocalAuditService();
         }
         return new SqsAuditService(SqsAuditService.getSqsClient(), configService);
