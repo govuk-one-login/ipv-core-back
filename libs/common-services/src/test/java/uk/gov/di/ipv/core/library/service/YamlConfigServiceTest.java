@@ -3,13 +3,15 @@ package uk.gov.di.ipv.core.library.service;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
 import java.io.File;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class YamlConfigServiceTest {
+class YamlConfigServiceTest {
 
     private ConfigService getConfigService() throws Exception {
         return new YamlConfigService(
@@ -44,6 +46,15 @@ public class YamlConfigServiceTest {
         var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
         assertEquals("test-component-id", param);
+    }
+
+    @Test
+    void getParameterThrowsForMissingValue() throws Exception {
+        var configService = getConfigService();
+
+        assertThrows(
+                ConfigParameterNotFoundException.class,
+                () -> configService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL));
     }
 
     @Test

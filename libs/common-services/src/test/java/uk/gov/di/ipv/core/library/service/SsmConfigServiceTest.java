@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -90,6 +92,28 @@ class SsmConfigServiceTest {
     @BeforeEach
     void setUp() {
         configService = new SsmConfigService(ssmProvider, secretsProvider);
+    }
+
+    @Test
+    void getParameterShouldGetParameterFromSsm() {
+        var testComponentId = "test-component-id";
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/componentId")).thenReturn(testComponentId);
+
+        var value = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+
+        assertEquals(testComponentId, value);
+    }
+
+    @Test
+    void getParameterShouldThrowIfMissingInSsm() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/componentId"))
+                .thenThrow(ParameterNotFoundException.class);
+
+        assertThrows(
+                ConfigParameterNotFoundException.class,
+                () -> configService.getParameter(ConfigurationVariable.COMPONENT_ID));
     }
 
     @Nested
@@ -166,6 +190,17 @@ class SsmConfigServiceTest {
 
             assertThrows(
                     NoConfigForConnectionException.class,
+                    () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
+        }
+
+        @Test
+        void getOauthCriConfigForConnectionShouldThrowIfCriConfigMalformed() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
+                    .thenReturn("not-json");
+
+            assertThrows(
+                    ConfigParseException.class,
                     () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
         }
 

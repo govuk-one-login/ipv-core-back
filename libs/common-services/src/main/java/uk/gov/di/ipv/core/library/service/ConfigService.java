@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
@@ -41,12 +42,13 @@ public abstract class ConfigService {
     private static final String API_KEY = "apiKey";
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
-    public static boolean IS_LOCAL = false;
+    @Getter @Setter private static boolean local = false;
 
     @Getter @Setter private List<String> featureSet;
 
+    @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
-        if (IS_LOCAL) {
+        if (isLocal()) {
             return new YamlConfigService();
         }
         return new SsmConfigService();

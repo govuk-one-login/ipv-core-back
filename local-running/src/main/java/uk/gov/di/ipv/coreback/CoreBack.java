@@ -14,7 +14,7 @@ public class CoreBack {
     private static final int DEFAULT_PORT = 3002;
 
     public CoreBack() throws IOException {
-        ConfigService.IS_LOCAL = true;
+        ConfigService.setLocal(true);
 
         var lambdaHandler = new LambdaHandler();
         var journeyEngineHandler = new JourneyEngineHandler();

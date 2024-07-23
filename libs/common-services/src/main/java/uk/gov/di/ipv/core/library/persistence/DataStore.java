@@ -13,7 +13,7 @@ public interface DataStore<T extends PersistenceItem> {
 
     static <T extends PersistenceItem> DataStore<T> create(
             EnvironmentVariable tableName, Class<T> klass, ConfigService configService) {
-        return ConfigService.IS_LOCAL
+        return ConfigService.isLocal()
                 ? new InMemoryDataStore<>(tableName.name(), klass)
                 : new DynamoDataStore<>(
                         configService.getEnvironmentVariable(tableName),
