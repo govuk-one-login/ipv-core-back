@@ -119,6 +119,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var targetVot = ipvSessionItem.getTargetVot();
             var achievedVot = ipvSessionItem.getVot();
+            var thresholdVot = ipvSessionItem.getThresholdVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
                             vcs, userId, achievedVot, targetVot, contraIndicators);
@@ -129,7 +130,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             }
 
             sendIdentityIssuedAuditEvent(
-                    achievedVot, targetVot, auditEventUser, contraIndicators, userIdentity);
+                    achievedVot, thresholdVot, auditEventUser, contraIndicators, userIdentity);
 
             closeSession(ipvSessionItem);
 
@@ -173,7 +174,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     private void sendIdentityIssuedAuditEvent(
             Vot achievedVot,
-            Vot targetVot,
+            Vot thresholdVot,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators,
             UserIdentity userIdentity)
@@ -188,18 +189,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                                                 returnCode, contraIndicators, configMap))
                         .toList();
 
-        // We need to know what vot to check for CI breaches against.
-        // If the user has achieved a profile we should use that, if they haven't then the session
-        // Vot will still be P0 and we should use the target Vot when looking for breaches.
-        var ciVot = targetVot;
-        if (achievedVot != Vot.P0) {
-            ciVot = achievedVot;
-        }
-
         var extensions =
                 new AuditExtensionsUserIdentity(
                         achievedVot,
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, ciVot),
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, thresholdVot),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 
