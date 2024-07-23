@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.exception.AuditException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
+import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -14,10 +15,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 public class LocalAuditService implements AuditService {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final ConcurrentLinkedDeque<AuditEvent> AUDIT_EVENTS =
-            new ConcurrentLinkedDeque<>();
+    private static final Deque<AuditEvent> AUDIT_EVENTS = new ConcurrentLinkedDeque<>();
 
-    private ConcurrentLinkedDeque<AuditEvent> pendingAuditEvents = new ConcurrentLinkedDeque<>();
+    private Deque<AuditEvent> pendingAuditEvents = new ConcurrentLinkedDeque<>();
 
     public static List<AuditEvent> getAuditEvents(String journeyId) {
         return AUDIT_EVENTS.stream()

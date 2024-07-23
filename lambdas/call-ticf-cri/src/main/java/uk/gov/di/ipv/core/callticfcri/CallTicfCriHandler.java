@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -120,8 +119,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiPutException
                 | CiRetrievalException
                 | ConfigException
-                | UnrecognisedVotException
-                | CredentialParseException e) {
+                | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -140,7 +138,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,
-                    UnrecognisedVotException, CredentialParseException {
+                    UnrecognisedVotException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(

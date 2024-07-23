@@ -322,19 +322,18 @@ class SqsAuditServiceTest {
 
     @Test
     void shouldThrowAuditException() throws Exception {
-        ObjectMapper mockObjectMapper = mock(ObjectMapper.class);
-        AuditService underTest =
+        var mockObjectMapper = mock(ObjectMapper.class);
+        var underTest =
                 new SqsAuditService(mockSqsAsyncClient, mockConfigService, mockObjectMapper);
+        var event =
+                AuditEvent.createWithoutDeviceInformation(
+                        AuditEventTypes.IPV_JOURNEY_START,
+                        "{\\}",
+                        new AuditEventUser("1234", "1234", "1234", "1.1.1.1"));
         when(mockObjectMapper.writeValueAsString(any(AuditEvent.class)))
                 .thenThrow(new JsonProcessingException("") {});
-        assertThrows(
-                AuditException.class,
-                () ->
-                        underTest.sendAuditEvent(
-                                AuditEvent.createWithoutDeviceInformation(
-                                        AuditEventTypes.IPV_JOURNEY_START,
-                                        "{\\}",
-                                        new AuditEventUser("1234", "1234", "1234", "1.1.1.1"))));
+
+        assertThrows(AuditException.class, () -> underTest.sendAuditEvent(event));
     }
 
     @Test
