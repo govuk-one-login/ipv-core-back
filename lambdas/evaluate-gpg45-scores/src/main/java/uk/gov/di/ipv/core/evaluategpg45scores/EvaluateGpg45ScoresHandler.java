@@ -145,8 +145,15 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
+            // This is a performance optimisation as calling ciMitService.getContraIndicators()
+            // takes about 0.5 seconds.
+            // If the VTR only contains one entry then it is impossible for a user to reach here
+            // with a breaching CI so we don't have to check.
             var contraIndicators =
-                    ciMitService.getContraIndicators(userId, govukSigninJourneyId, ipAddress);
+                    clientOAuthSessionItem.getVtr().size() == 1
+                            ? null
+                            : ciMitService.getContraIndicators(
+                                    userId, govukSigninJourneyId, ipAddress);
 
             var matchingGpg45Profile =
                     findMatchingGpg45Profile(
@@ -222,7 +229,9 @@ public class EvaluateGpg45ScoresHandler
                         gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, profiles);
 
                 var isBreaching =
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+                        contraIndicators != null
+                                && ciMitUtilityService.isBreachingCiThreshold(
+                                        contraIndicators, requestedVot);
 
                 if (matchedProfile.isPresent() && !isBreaching) {
                     auditService.sendAuditEvent(
