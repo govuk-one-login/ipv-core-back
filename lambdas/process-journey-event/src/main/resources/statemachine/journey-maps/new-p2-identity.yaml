@@ -188,7 +188,7 @@ states:
       end:
         targetState: PYI_ESCAPE_M2B
 
-  CRI_F2F:
+  CRI_F2F: # PYIC-7018: Remove after period of redirecting users
     response:
       type: cri
       criId: f2f
@@ -220,7 +220,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  F2F_HANDOFF_PAGE:
+  F2F_HANDOFF_PAGE: # PYIC-7018: Remove after period of redirecting users
     response:
       type: page
       pageId: page-face-to-face-handoff
@@ -306,10 +306,8 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
 
   PYI_CRI_ESCAPE_NO_F2F:
     response:
@@ -329,7 +327,7 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  EVALUATE_GPG45_SCORES:
+  EVALUATE_GPG45_SCORES: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: evaluate-gpg45-scores
@@ -346,7 +344,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
-  STORE_IDENTITY_BEFORE_SUCCESS:
+  STORE_IDENTITY_BEFORE_SUCCESS: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: store-identity
@@ -359,7 +357,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  STORE_IDENTITY_BEFORE_F2F_HANDOFF:
+  STORE_IDENTITY_BEFORE_F2F_HANDOFF: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: store-identity
@@ -372,7 +370,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-  RESET_SESSION_BEFORE_F2F_HANDOFF:
+  RESET_SESSION_BEFORE_F2F_HANDOFF: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: reset-session-identity
@@ -384,7 +382,7 @@ states:
       error:
         targetState: F2F_HANDOFF_PAGE
 
-  IPV_SUCCESS_PAGE:
+  IPV_SUCCESS_PAGE: # PYIC-7018: Remove after period of redirecting users
     response:
       type: page
       pageId: page-ipv-success
@@ -397,7 +395,7 @@ states:
       type: process
       lambda: build-client-oauth-response
 
-  CRI_TICF_BEFORE_SUCCESS:
+  CRI_TICF_BEFORE_SUCCESS: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: call-ticf-cri
@@ -406,7 +404,7 @@ states:
       next:
         targetState: STORE_IDENTITY_BEFORE_SUCCESS
 
-  CRI_TICF_BEFORE_F2F:
+  CRI_TICF_BEFORE_F2F: # PYIC-7018: Remove after period of redirecting users
     response:
       type: process
       lambda: call-ticf-cri
@@ -438,7 +436,8 @@ states:
           f2f:
             targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
@@ -466,7 +465,8 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -605,15 +605,11 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       enhanced-verification:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
 
   # HMRC KBV journey (J6)
   CRI_NINO_J6:
@@ -634,7 +630,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
@@ -660,7 +657,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
         auditEvents:
@@ -687,7 +685,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
@@ -713,7 +712,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
       access-denied:
@@ -816,7 +816,8 @@ states:
           f2f:
             targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_KBV_FAIL_M2B
         checkIfDisabled:
@@ -837,10 +838,8 @@ states:
       pageId: no-photo-id-security-questions-find-another-way
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -886,10 +885,8 @@ states:
       context: dropout
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1041,7 +1038,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       not-found:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -1079,10 +1077,8 @@ states:
       pageId: pyi-suggest-other-options
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1100,10 +1096,8 @@ states:
       context: no-photo-id
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1120,10 +1114,8 @@ states:
       pageId: pyi-post-office
     events:
       next:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -1322,7 +1314,8 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1334,7 +1327,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1350,7 +1344,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
