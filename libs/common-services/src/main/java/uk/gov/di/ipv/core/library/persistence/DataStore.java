@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.persistence;
 
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
@@ -11,11 +12,14 @@ import java.util.List;
 public interface DataStore<T extends PersistenceItem> {
 
     static <T extends PersistenceItem> DataStore<T> create(
-            String tableName, Class<T> klass, ConfigService configService) {
-        return configService.isLocalDev()
-                ? new InMemoryDataStore<>(tableName, klass)
+            EnvironmentVariable tableName, Class<T> klass, ConfigService configService) {
+        return ConfigService.isLocal()
+                ? new InMemoryDataStore<>(tableName.name(), klass)
                 : new DynamoDataStore<>(
-                        tableName, klass, DynamoDataStore.getClient(), configService);
+                        configService.getEnvironmentVariable(tableName),
+                        klass,
+                        DynamoDataStore.getClient(),
+                        configService);
     }
 
     void create(T item, ConfigurationVariable tableTtl);

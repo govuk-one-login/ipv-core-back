@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
@@ -41,7 +42,17 @@ public abstract class ConfigService {
     private static final String API_KEY = "apiKey";
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
+    @Getter @Setter private static boolean local = false;
+
     @Getter @Setter private List<String> featureSet;
+
+    @ExcludeFromGeneratedCoverageReport
+    public static ConfigService create() {
+        if (isLocal()) {
+            return new YamlConfigService();
+        }
+        return new SsmConfigService();
+    }
 
     protected abstract String getParameter(String path);
 
@@ -103,10 +114,6 @@ public abstract class ConfigService {
         return String.format(path, (Object[]) pathProperties);
     }
 
-    public boolean isLocalDev() {
-        return "true".equals(getEnvironmentVariable(EnvironmentVariable.LOCAL_DEV));
-    }
-
     // PYIC-7048 Replace this with proper config
     public long getBearerAccessTokenTtl() {
         return Optional.ofNullable(getEnvironmentVariable(BEARER_TOKEN_TTL))
@@ -141,7 +148,7 @@ public abstract class ConfigService {
             String parameter =
                     getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_CONFIG, criId, connection);
             return OBJECT_MAPPER.readValue(parameter, configType);
-        } catch (ParameterNotFoundException e) {
+        } catch (ConfigParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",
@@ -191,7 +198,7 @@ public abstract class ConfigService {
     public boolean enabled(String featureFlagValue) {
         try {
             return getBooleanParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue);
-        } catch (ParameterNotFoundException ex) {
+        } catch (ConfigParameterNotFoundException ex) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
                             "SSM parameter not found for feature flag: " + featureFlagValue));
@@ -223,7 +230,7 @@ public abstract class ConfigService {
                 result.add(criConfig.getComponentId());
             }
             return result;
-        } catch (ParameterNotFoundException e) {
+        } catch (ConfigParameterNotFoundException e) {
             throw new NoConfigForConnectionException(
                     String.format("No config found for criId: '%s'", criId));
         } catch (JsonProcessingException e) {

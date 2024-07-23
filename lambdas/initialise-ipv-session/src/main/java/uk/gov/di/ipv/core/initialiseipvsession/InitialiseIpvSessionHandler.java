@@ -54,7 +54,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -105,7 +104,7 @@ public class InitialiseIpvSessionHandler
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.userIdentityService = new UserIdentityService(configService);

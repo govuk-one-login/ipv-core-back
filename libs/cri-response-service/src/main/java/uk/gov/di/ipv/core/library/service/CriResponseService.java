@@ -20,10 +20,7 @@ public class CriResponseService {
     @ExcludeFromGeneratedCoverageReport
     public CriResponseService(ConfigService configService) {
         this.dataStore =
-                DataStore.create(
-                        configService.getEnvironmentVariable(CRI_RESPONSE_TABLE_NAME),
-                        CriResponseItem.class,
-                        configService);
+                DataStore.create(CRI_RESPONSE_TABLE_NAME, CriResponseItem.class, configService);
     }
 
     public CriResponseService(DataStore<CriResponseItem> dataStore) {

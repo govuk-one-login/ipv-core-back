@@ -49,7 +49,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -130,7 +129,7 @@ public class BuildCriOauthRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.signerFactory = new KmsEs256SignerFactory();
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);

@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -90,7 +89,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessAsyncCriCredentialHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
