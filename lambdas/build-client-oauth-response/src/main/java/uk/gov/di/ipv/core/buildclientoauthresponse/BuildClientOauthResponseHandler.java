@@ -184,6 +184,8 @@ public class BuildClientOauthResponseHandler
 
             var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
             if (Boolean.TRUE.equals(isReproveIdentity)) {
+                Vot vot = ipvSessionItem.getVot();
+                List<String> vtr = clientOAuthSessionItem.getVtr();
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
@@ -191,7 +193,7 @@ public class BuildClientOauthResponseHandler
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity(
                                         ipvSessionItem.getErrorCode() == null
-                                                && Vot.P2.equals(ipvSessionItem.getVot()))));
+                                                && vtr.contains(vot.toString()))));
             }
 
             var message =
