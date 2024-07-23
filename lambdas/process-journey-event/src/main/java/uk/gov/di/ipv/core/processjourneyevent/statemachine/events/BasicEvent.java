@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+
 @Data
 public class BasicEvent implements Event {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -32,7 +34,12 @@ public class BasicEvent implements Event {
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
-                            .filter(id -> !journeyContext.configService().isEnabled(id))
+                            .filter(
+                                    id ->
+                                            !journeyContext
+                                                    .configService()
+                                                    .getBooleanParameter(
+                                                            CREDENTIAL_ISSUER_ENABLED, id))
                             .findFirst();
             if (firstDisabledCri.isPresent()) {
                 String disabledCriId = firstDisabledCri.get();

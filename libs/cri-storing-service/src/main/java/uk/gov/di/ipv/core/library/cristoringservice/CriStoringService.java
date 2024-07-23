@@ -154,7 +154,7 @@ public class CriStoringService {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_VC_RECEIVED,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
@@ -207,7 +207,7 @@ public class CriStoringService {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionsCriResRetrieved(criId, criResourceRetrievedType),
                         new AuditRestrictedDeviceInformation(deviceInformation)));

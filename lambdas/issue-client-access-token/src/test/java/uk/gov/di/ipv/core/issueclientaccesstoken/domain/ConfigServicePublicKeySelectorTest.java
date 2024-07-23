@@ -44,12 +44,11 @@ class ConfigServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldReturnKeys() throws Exception {
-        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
-        when(configServiceMock.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
+        when(configServiceMock.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(configServiceMock.getSsmParameter(
+        when(configServiceMock.getParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "misconfiguredClient"))
                 .thenReturn("some nonsense");
 
@@ -95,7 +94,7 @@ class ConfigServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfUnsupportedAlgorithm() {
-        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
 
         InvalidClientException exception =
@@ -116,10 +115,9 @@ class ConfigServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfKeyMaterialDoesNotMatchAlgo() {
-        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(configServiceMock.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
+        when(configServiceMock.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
 
         assertThrows(

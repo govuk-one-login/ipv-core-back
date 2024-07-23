@@ -100,7 +100,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -122,7 +122,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -144,7 +144,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -166,7 +166,7 @@ class CriCheckingServiceTest {
                         .errorDescription(TEST_ERROR_DESCRIPTION)
                         .build();
         var clientOauthSessionItem = ClientOAuthSessionItem.builder().build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
 
         // Act
@@ -192,7 +192,7 @@ class CriCheckingServiceTest {
                         .userId(TEST_USER_ID)
                         .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
                         .build();
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(TEST_COMPONENT_ID);
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
 

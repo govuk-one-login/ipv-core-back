@@ -43,7 +43,7 @@ public class CiMitUtilityService {
 
     private boolean isScoreBreachingCiThreshold(int score, Vot vot) {
         return score
-                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD, vot.name()));
+                > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD, vot.name()));
     }
 
     public Optional<JourneyResponse> getMitigationJourneyIfBreaching(

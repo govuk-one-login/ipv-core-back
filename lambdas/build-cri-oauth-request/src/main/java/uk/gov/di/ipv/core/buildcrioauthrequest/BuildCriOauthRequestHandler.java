@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -129,7 +130,7 @@ public class BuildCriOauthRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.signerFactory = new KmsEs256SignerFactory();
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
@@ -204,7 +205,7 @@ public class BuildCriOauthRequestHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -319,7 +320,8 @@ public class BuildCriOauthRequestHandler
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
-                        signerFactory.getSigner(configService.getSigningKeyId()),
+                        signerFactory.getSigner(
+                                configService.getParameter(ConfigurationVariable.SIGNING_KEY_ID)),
                         oauthCriConfig,
                         configService,
                         oauthState,
@@ -377,8 +379,6 @@ public class BuildCriOauthRequestHandler
         boolean hasAddressVc = false;
         for (var vc : vcs) {
             try {
-                String credentialIss = vc.getClaimsSet().getIssuer();
-
                 if (VcHelper.isSuccessfulVc(vc)) {
                     JsonNode credentialSubject =
                             OBJECT_MAPPER
@@ -399,7 +399,7 @@ public class BuildCriOauthRequestHandler
                     SharedClaims credentialsSharedClaims =
                             OBJECT_MAPPER.readValue(
                                     credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(configService.getComponentId(ADDRESS))) {
+                    if (ADDRESS.equals(vc.getCri())) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -450,7 +450,9 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
-        String allowedSharedAttributes = configService.getAllowedSharedAttributes(cri);
+        String allowedSharedAttributes =
+                configService.getParameter(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, cri.getId());
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));

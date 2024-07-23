@@ -97,7 +97,7 @@ public class UserIdentityService {
         var profileType = acheivedVot.getProfileType();
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
-        var vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
+        var vtm = configService.getParameter(CORE_VTM_CLAIM);
 
         var userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(acheivedVot).vtm(vtm);
@@ -420,7 +420,7 @@ public class UserIdentityService {
                                         familyName,
                                         0,
                                         Integer.parseInt(
-                                                configService.getSsmParameter(
+                                                configService.getParameter(
                                                         COI_CHECK_FAMILY_NAME_CHARS))))
                 .toList();
     }
@@ -449,7 +449,7 @@ public class UserIdentityService {
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(
-                                configService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
+                                configService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
     }
 
     private List<ReturnCode> getSuccessReturnCode(ContraIndicators contraIndicators)
@@ -458,7 +458,7 @@ public class UserIdentityService {
                 .filter(
                         returnCode ->
                                 configService
-                                        .getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)
+                                        .getParameter(RETURN_CODES_ALWAYS_REQUIRED)
                                         .contains(returnCode.code()))
                 .toList();
     }

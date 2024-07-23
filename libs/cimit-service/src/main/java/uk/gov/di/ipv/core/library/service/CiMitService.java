@@ -213,9 +213,9 @@ public class CiMitService {
     private VerifiableCredential extractAndValidateContraIndicatorsJwt(
             String contraIndicatorsVC, String userId) throws CiRetrievalException {
         final String cimitComponentId =
-                configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
+                configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID);
         final String cimitSigningKey =
-                configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
+                configService.getParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
         try {
             LOGGER.info(
                     LogHelper.buildLogMessage(

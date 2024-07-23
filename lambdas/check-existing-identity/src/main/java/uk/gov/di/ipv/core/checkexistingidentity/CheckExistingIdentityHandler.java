@@ -51,6 +51,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -176,7 +177,7 @@ public class CheckExistingIdentityHandler
     @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
@@ -497,22 +498,62 @@ public class CheckExistingIdentityHandler
         if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Unmigrated tactical credentials found alongside migrated credentials"));
+                                    "Unmigrated tactical credentials found alongside migrated credentials")
+                            .with(
+                                    "migratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(vc -> vc.getMigrated() != null)
+                                                    .toList()))
+                            .with(
+                                    "unmigratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(vc -> vc.getMigrated() == null)
+                                                    .toList())));
         }
 
         // check all the tactical vcs are in the selected evcs vcs
         if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Failed to find corresponding evcs credential for migrated tactical credential"));
+                                    "Failed to find corresponding evcs credential for migrated tactical credential")
+                            .with(
+                                    "migratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(
+                                                            vc ->
+                                                                    evcsVcStrings.contains(
+                                                                            vc.getVcString()))
+                                                    .toList()))
+                            .with(
+                                    "unmigratedCris",
+                                    getCriListString(
+                                            tacticalVcs.stream()
+                                                    .filter(
+                                                            vc ->
+                                                                    !evcsVcStrings.contains(
+                                                                            vc.getVcString()))
+                                                    .toList())));
         }
 
         // check all the evcs vcs are in the tactical store
         if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
-                            "Failed to find corresponding tactical credential for evcs credential"));
+                                    "Failed to find corresponding tactical credential for evcs credential")
+                            .with("pendingEvcsCris", getCriListString(evcsVcs.get(PENDING_RETURN)))
+                            .with("currentEvcsCris", getCriListString(evcsVcs.get(CURRENT)))
+                            .with("tacticalCris", getCriListString(tacticalVcs)));
         }
+    }
+
+    private static String getCriListString(List<VerifiableCredential> vcs) {
+        if (vcs == null) {
+            return "<none>";
+        }
+        return vcs.stream().map(vc -> vc.getCri().getId()).collect(Collectors.joining(","));
     }
 
     @Tracing
@@ -724,7 +765,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
@@ -738,7 +779,7 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_VCS_MIGRATED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionsEvcsMigration(
                                 extractSignaturesFromCredentials(credentials)),
@@ -869,7 +910,7 @@ public class CheckExistingIdentityHandler
         var auditEvent =
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionGpg45ProfileMatched(
                                 gpg45Profile,

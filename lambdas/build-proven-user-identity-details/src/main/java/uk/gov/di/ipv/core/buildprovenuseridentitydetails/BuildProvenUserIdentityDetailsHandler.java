@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -62,7 +63,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildProvenUserIdentityDetailsHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

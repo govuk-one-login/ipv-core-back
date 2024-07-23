@@ -49,7 +49,7 @@ public class EmailService {
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
         final String templateId =
-                configService.getSsmParameter(
+                configService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
         LOGGER.debug("Got template ID {}", templateId);
@@ -67,7 +67,7 @@ public class EmailService {
         // This template ID can vary between production and the other environments, so it can't be
         // hardcoded
         final String templateId =
-                configService.getSsmParameter(
+                configService.getParameter(
                         ConfigurationVariable
                                 .GOV_UK_NOTIFY_TEMPLATE_ID_F2F_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION);
         LOGGER.debug("Got template ID {}", templateId);

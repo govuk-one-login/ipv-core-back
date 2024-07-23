@@ -900,7 +900,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -995,7 +994,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1976,7 +1974,6 @@ Resources:
         Variables:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl

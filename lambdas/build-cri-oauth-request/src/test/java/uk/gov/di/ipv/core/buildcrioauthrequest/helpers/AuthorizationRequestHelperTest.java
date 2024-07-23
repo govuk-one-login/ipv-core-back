@@ -327,8 +327,8 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()

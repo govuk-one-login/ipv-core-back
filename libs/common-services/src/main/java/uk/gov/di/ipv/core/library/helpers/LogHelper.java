@@ -92,7 +92,7 @@ public class LogHelper {
     public static void attachComponentId(ConfigService configService) {
         attachFieldToLogs(
                 LogField.LOG_COMPONENT_ID,
-                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID));
+                configService.getParameter(ConfigurationVariable.COMPONENT_ID));
     }
 
     public static void attachClientIdToLogs(String clientId) {

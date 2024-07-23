@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -89,7 +90,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessAsyncCriCredentialHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
@@ -259,7 +260,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getExtensionsForAudit(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
@@ -271,7 +272,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
                         getRestrictedAuditDataForF2F(vc));
@@ -293,7 +294,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_ERROR,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         extensionErrorParams);
         LOGGER.info(LogHelper.buildLogMessage("Sending audit event IPV_F2F_CRI_VC_ERROR message."));

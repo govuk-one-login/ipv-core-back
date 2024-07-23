@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.NoSuchElementException;
@@ -68,7 +69,7 @@ public class IssueClientAccessTokenHandler
 
     @ExcludeFromGeneratedCoverageReport
     public IssueClientAccessTokenHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.accessTokenService = new AccessTokenService(configService);
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
@@ -127,7 +128,7 @@ public class IssueClientAccessTokenHandler
 
             if (authorizationCodeMetadata.isExpired(
                     Long.parseLong(
-                            configService.getSsmParameter(
+                            configService.getParameter(
                                     ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
