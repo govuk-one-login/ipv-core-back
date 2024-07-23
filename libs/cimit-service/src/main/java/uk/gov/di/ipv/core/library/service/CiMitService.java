@@ -70,7 +70,7 @@ public class CiMitService {
 
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "govuk-signin-journey-id";
     private static final String IP_ADDRESS = "ip-address";
-    private static final String USER_ID_PARAMETER = "userId";
+    private static final String USER_ID_PARAMETER = "user_id";
     private static final String X_API_KEY_HEADER = "x-api-key";
 
     private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
