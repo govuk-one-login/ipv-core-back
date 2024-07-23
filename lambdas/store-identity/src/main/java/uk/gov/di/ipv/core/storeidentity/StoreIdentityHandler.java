@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -78,7 +79,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
     @ExcludeFromGeneratedCoverageReport
     public StoreIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
@@ -177,7 +178,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         new AuditEventUser(
                                 clientOAuthSessionItem.getUserId(),
                                 ipvSessionItem.getIpvSessionId(),

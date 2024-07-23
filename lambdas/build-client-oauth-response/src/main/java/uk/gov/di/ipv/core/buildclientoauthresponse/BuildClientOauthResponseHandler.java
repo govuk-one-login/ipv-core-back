@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -69,7 +70,7 @@ public class BuildClientOauthResponseHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
@@ -178,7 +179,7 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_END,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -189,7 +190,7 @@ public class BuildClientOauthResponseHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_END,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity(
                                         ipvSessionItem.getErrorCode() == null

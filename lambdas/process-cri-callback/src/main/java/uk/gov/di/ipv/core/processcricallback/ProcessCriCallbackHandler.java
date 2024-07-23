@@ -47,6 +47,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -108,7 +109,7 @@ public class ProcessCriCallbackHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCriCallbackHandler() {
-        configService = new ConfigService();
+        configService = new SsmConfigService();
         ipvSessionService = new IpvSessionService(configService);
         criOAuthSessionService = new CriOAuthSessionService(configService);
         verifiableCredentialValidator = new VerifiableCredentialValidator(configService);

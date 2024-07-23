@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -46,7 +45,6 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +138,6 @@ class UserIdentityServiceTest {
         var vcs = List.of(passportVc, fraudVc);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -164,7 +161,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -195,7 +191,6 @@ class UserIdentityServiceTest {
                                 BAV.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -221,7 +216,6 @@ class UserIdentityServiceTest {
                                 PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -243,7 +237,6 @@ class UserIdentityServiceTest {
                                 createCredentialWithNameAndBirthDate(
                                         "Jimmy", "Jones",
                                         ""))); // BAV cri doesn't provide birthdate
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -266,7 +259,6 @@ class UserIdentityServiceTest {
                                 PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         missingName, "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -295,7 +287,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -324,7 +315,6 @@ class UserIdentityServiceTest {
                                 ADDRESS.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         missing, missing, "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -351,7 +341,6 @@ class UserIdentityServiceTest {
                                 USER_ID_1,
                                 BAV.getId(),
                                 createCredentialWithNameAndBirthDate(missing, "Jones", missing)));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -383,7 +372,6 @@ class UserIdentityServiceTest {
                                 BAV.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -409,7 +397,6 @@ class UserIdentityServiceTest {
                                 PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -436,7 +423,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -469,7 +455,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -496,7 +481,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -522,7 +506,6 @@ class UserIdentityServiceTest {
                                 BAV.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -548,7 +531,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -574,7 +556,6 @@ class UserIdentityServiceTest {
                                 EXPERIAN_FRAUD.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01", false)));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -600,7 +581,6 @@ class UserIdentityServiceTest {
                                 PASSPORT.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01"))));
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertFalse(userIdentityService.areVcsCorrelated(vcs));
@@ -628,7 +608,6 @@ class UserIdentityServiceTest {
                                     DCMAW.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertTrue(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
@@ -654,7 +633,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
@@ -680,7 +658,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Dimbo", "Bones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
@@ -706,7 +683,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", "2000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
@@ -733,7 +709,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             missingName, "Bones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
@@ -767,7 +742,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", missingDob)));
-            mockCredentialIssuerConfig();
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
@@ -786,7 +760,7 @@ class UserIdentityServiceTest {
     class AreFamilyNameAndDobCorrelated {
         @BeforeEach
         void setup() {
-            when(mockConfigService.getSsmParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
+            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
         }
 
         @Test
@@ -809,7 +783,6 @@ class UserIdentityServiceTest {
                                     DCMAW.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
@@ -818,7 +791,7 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
             // Arrange
-            when(mockConfigService.getSsmParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
+            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
             var vcs =
                     List.of(
                             TestFixtures.createVerifiableCredential(
@@ -836,7 +809,6 @@ class UserIdentityServiceTest {
                                     DCMAW.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
@@ -862,7 +834,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
@@ -888,7 +859,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "2000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act & Assert
             assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
@@ -916,7 +886,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", missingName, "1000-01-01")));
-            mockCredentialIssuerConfig();
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
@@ -952,7 +921,6 @@ class UserIdentityServiceTest {
                                     PASSPORT.getId(),
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", missingDob)));
-            mockCredentialIssuerConfig();
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
@@ -980,7 +948,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1010,7 +977,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1080,8 +1046,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -1105,8 +1070,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreOne(),
                         vcExperianFraudScoreTwo());
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownError =
@@ -1125,7 +1089,6 @@ class UserIdentityServiceTest {
     void shouldSetPassportClaimWhenVotIsP2() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         var vcs =
                 List.of(
@@ -1173,7 +1136,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1195,7 +1157,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1229,7 +1190,6 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetNinoClaimWhenVotIsP2() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         var vcs =
                 List.of(
@@ -1277,7 +1237,6 @@ class UserIdentityServiceTest {
                         vcNinoMissingSocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1299,7 +1258,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1322,7 +1280,6 @@ class UserIdentityServiceTest {
                         vcNinoUnsuccessful());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1345,7 +1302,6 @@ class UserIdentityServiceTest {
                         vcNinoEmptySocialSecurityRecord());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1368,7 +1324,6 @@ class UserIdentityServiceTest {
                         vcNinoInvalidVcType());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1418,7 +1373,6 @@ class UserIdentityServiceTest {
                         vcAddressTwo());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var userIdentity =
@@ -1446,8 +1400,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressEmpty());
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
@@ -1472,8 +1425,7 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo(),
                         vcAddressNoCredentialSubject());
 
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        mockCredentialIssuerConfig();
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         // Act & Assert
         HttpResponseExceptionWithErrorBody thrownException =
@@ -1510,7 +1462,6 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1554,7 +1505,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1579,7 +1529,6 @@ class UserIdentityServiceTest {
                         vcExperianFraudScoreTwo());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1598,7 +1547,6 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermitMissingDrivingPermit());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1615,7 +1563,6 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermitEmptyDrivingPermit());
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1638,7 +1585,6 @@ class UserIdentityServiceTest {
                         VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         // Act
         var credentials =
@@ -1653,7 +1599,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetExitCodeWhenP2AndAlwaysRequiredCiPresent() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP2);
-        when(mockConfigService.getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("🦆,🐧");
+        when(mockConfigService.getParameter(RETURN_CODES_ALWAYS_REQUIRED)).thenReturn("🦆,🐧");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1697,7 +1643,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenP2AndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1757,7 +1703,7 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowWhenBreachingAndCiCodeNotFound() {
         // Arrange
         var emptyList = new ArrayList<VerifiableCredential>();
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
@@ -1811,9 +1757,9 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetRequiredExitCodeWhenP0AndNotBreachingCiThreshold()
             throws Exception {
         // Arrange
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
-        when(mockConfigService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
+        when(mockConfigService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
@@ -1831,7 +1777,7 @@ class UserIdentityServiceTest {
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
-        verify(mockConfigService, never()).getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED);
+        verify(mockConfigService, never()).getParameter(RETURN_CODES_ALWAYS_REQUIRED);
     }
 
     @Test
@@ -1921,7 +1867,6 @@ class UserIdentityServiceTest {
         var vcs = List.of(passportVc, fraudVc);
 
         mockParamStoreCalls(paramsToMockForP2);
-        mockCredentialIssuerConfig();
 
         var credentials =
                 userIdentityService.generateUserIdentity(
@@ -1982,7 +1927,6 @@ class UserIdentityServiceTest {
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         vcHmrcMigration());
-        mockCredentialIssuerConfig();
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -2026,17 +1970,8 @@ class UserIdentityServiceTest {
         assertFalse(result.isEmpty());
     }
 
-    private void mockCredentialIssuerConfig() {
-        Arrays.stream(Cri.values())
-                .forEach(
-                        credentialIssuer ->
-                                when(mockConfigService.getComponentId(credentialIssuer))
-                                        .thenReturn(credentialIssuer.getId()));
-    }
-
     private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
-        params.forEach(
-                (key, value) -> when(mockConfigService.getSsmParameter(key)).thenReturn(value));
+        params.forEach((key, value) -> when(mockConfigService.getParameter(key)).thenReturn(value));
     }
 
     private String createCredentialWithNameAndBirthDate(

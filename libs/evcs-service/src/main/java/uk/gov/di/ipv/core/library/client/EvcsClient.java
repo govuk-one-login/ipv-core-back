@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
@@ -41,7 +42,6 @@ import java.util.stream.Collectors;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APP_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
@@ -83,7 +83,8 @@ public class EvcsClient {
                             .GET()
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                                    configService.getApiKeySecret(
+                                            ConfigurationVariable.EVCS_API_KEY))
                             .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
@@ -122,7 +123,8 @@ public class EvcsClient {
                                             OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                                    configService.getApiKeySecret(
+                                            ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             sendHttpRequest(httpRequestBuilder.build());
@@ -151,7 +153,8 @@ public class EvcsClient {
                                             OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getAppApiKey(EVCS_APP_ID.getPath()))
+                                    configService.getApiKeySecret(
+                                            ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             sendHttpRequest(httpRequestBuilder.build());
@@ -169,7 +172,7 @@ public class EvcsClient {
         var baseUri =
                 "%s/vcs/%s"
                         .formatted(
-                                configService.getSsmParameter(EVCS_APPLICATION_URL),
+                                configService.getParameter(EVCS_APPLICATION_URL),
                                 URLEncoder.encode(userId, StandardCharsets.UTF_8));
         var uriBuilder = new URIBuilder(baseUri);
         if (vcStatesToQueryFor != null) {

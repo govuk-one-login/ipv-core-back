@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -95,7 +96,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
     @ExcludeFromGeneratedCoverageReport
     public CheckCoiHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
@@ -242,7 +243,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditExtensionCoiCheck(coiCheckType, coiCheckSuccess),
                         restrictedData));

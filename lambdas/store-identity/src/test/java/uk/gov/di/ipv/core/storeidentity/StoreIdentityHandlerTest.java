@@ -136,7 +136,7 @@ class StoreIdentityHandlerTest {
         Mockito.lenient()
                 .when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID))
                 .thenReturn(VCS);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID))
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
     }
 

@@ -19,8 +19,7 @@ public class EmailServiceFactory {
     }
 
     public EmailService getEmailService() {
-        final var apiKey =
-                configService.getCoreSecretValue(ConfigurationVariable.GOV_UK_NOTIFY_API_KEY);
+        final var apiKey = configService.getSecret(ConfigurationVariable.GOV_UK_NOTIFY_API_KEY);
 
         return new EmailService(configService, new NotificationClient(apiKey));
     }

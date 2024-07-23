@@ -73,13 +73,13 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(oauthCriConfig.getComponentId())
-                        .issuer(configService.getSsmParameter(COMPONENT_ID))
+                        .issuer(configService.getParameter(COMPONENT_ID))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
-                                                        configService.getSsmParameter(
+                                                        configService.getParameter(
                                                                 JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))

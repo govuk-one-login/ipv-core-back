@@ -20,7 +20,7 @@ public class CiMitUtilityService {
 
     public boolean isBreachingCiThreshold(ContraIndicators contraIndicators) {
         return contraIndicators.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
-                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+                > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD));
     }
 
     public boolean isBreachingCiThresholdIfMitigated(ContraIndicator ci, ContraIndicators cis) {
@@ -31,7 +31,7 @@ public class CiMitUtilityService {
                                 .get(ci.getCode())
                                 .getCheckedScore();
         return scoreOnceMitigated
-                > Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+                > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD));
     }
 
     public Optional<JourneyResponse> getCiMitigationJourneyResponse(

@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.util.Map;
@@ -63,7 +64,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
-        this.configService = new ConfigService();
+        this.configService = new SsmConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ticfCriService = new TicfCriService(configService);
