@@ -677,32 +677,32 @@ states:
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
-        CRI_HMRC_KBV_NO_PHOTO_ID:
-          response:
-            type: cri
-            criId: hmrcKbv
-          parent: CRI_STATE
-          events:
-            next:
-              targetJourney: EVALUATE_SCORES
-              targetState: START
-            enhanced-verification:
-              targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
-              auditEvents:
-                - IPV_MITIGATION_START
-              auditContext:
-                mitigationType: enhanced-verification
-              checkIfDisabled:
-                f2f:
-                  targetState: MITIGATION_02_OPTIONS
-                  auditEvents:
-                    - IPV_MITIGATION_START
-                  auditContext:
-                    mitigationType: enhanced-verification
-            invalid-request:
-              targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-            access-denied:
-              targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+  CRI_HMRC_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: hmrcKbv
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
   # DWP KBV journey (J7)
   CRI_DWP_KBV_J7:
