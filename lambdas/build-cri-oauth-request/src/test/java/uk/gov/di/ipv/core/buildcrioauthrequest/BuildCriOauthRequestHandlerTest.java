@@ -86,7 +86,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -137,7 +136,6 @@ class BuildCriOauthRequestHandlerTest {
 
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static final String TEST_SIGNING_KEY_ID = "test-signing-key-id";
     public static final String MAIN_CONNECTION = "main";
 
     @Mock private Context context;
@@ -322,7 +320,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -405,7 +402,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -491,7 +487,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -574,7 +569,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -656,7 +650,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(dcmawOauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -829,7 +822,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -895,7 +887,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -959,7 +950,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1042,7 +1032,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1113,7 +1102,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1180,7 +1168,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(oauthCriConfig);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn("name,birthDate,address,emailAddress");
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
@@ -1250,7 +1237,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
@@ -1324,7 +1310,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
@@ -1399,7 +1384,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
@@ -1416,8 +1400,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1457,7 +1440,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
@@ -1474,8 +1456,7 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1515,7 +1496,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
@@ -1590,7 +1570,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getParameter(
                         CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, CLAIMED_IDENTITY.getId()))
                 .thenReturn(null);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
         when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("5000");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))

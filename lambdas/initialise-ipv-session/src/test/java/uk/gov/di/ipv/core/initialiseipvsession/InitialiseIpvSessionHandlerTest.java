@@ -39,7 +39,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -157,7 +156,6 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private ConfigService mockConfigService;
-    @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
     @Mock private UserIdentityService mockUserIdentityService;

@@ -125,10 +125,7 @@ class TokenTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockSignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -195,10 +192,7 @@ class TokenTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockSignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =

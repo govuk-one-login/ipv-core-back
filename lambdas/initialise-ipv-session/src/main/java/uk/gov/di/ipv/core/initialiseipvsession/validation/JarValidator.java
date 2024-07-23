@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.initialiseipvsession.validation;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -17,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
@@ -55,19 +55,17 @@ public class JarValidator {
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
     private static final List<String> ONE_OF_REQUIRED_SCOPES = List.of(OPENID, REVERIFICATION);
 
-    private final KmsRsaDecrypter kmsRsaDecrypter;
+    private final JWEDecrypter jweDecrypter;
     private final ConfigService configService;
 
-    public JarValidator(KmsRsaDecrypter kmsRsaDecrypter, ConfigService configService) {
-        this.kmsRsaDecrypter = kmsRsaDecrypter;
+    public JarValidator(JWEDecrypter jweDecrypter, ConfigService configService) {
+        this.jweDecrypter = jweDecrypter;
         this.configService = configService;
     }
 
-    public SignedJWT decryptJWE(JWEObject jweObject, String keyId) throws JarValidationException {
+    public SignedJWT decryptJWE(JWEObject jweObject) throws JarValidationException {
         try {
-            kmsRsaDecrypter.setKeyId(keyId);
-            jweObject.decrypt(kmsRsaDecrypter);
-
+            jweObject.decrypt(jweDecrypter);
             return jweObject.getPayload().toSignedJWT();
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to decrypt the JWE", e));
