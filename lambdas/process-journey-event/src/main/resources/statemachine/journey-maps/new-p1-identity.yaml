@@ -303,7 +303,6 @@ states:
     response:
       type: cri
       criId: kbv
-      # requires verification score 1
     parent: CRI_STATE
     events:
       fail-with-no-ci:
@@ -495,7 +494,6 @@ states:
     response:
       type: cri
       criId: hmrcKbv
-      # need verification score 1
     parent: CRI_STATE
     events:
       next:
@@ -523,7 +521,6 @@ states:
     response:
       type: cri
       criId: hmrcKbv
-      # need verification score 1
     parent: CRI_STATE
     events:
       next:
@@ -552,7 +549,6 @@ states:
     response:
       type: cri
       criId: dwpKbv
-      # need verification score 1
     parent: CRI_STATE
     events:
       next:
@@ -580,7 +576,6 @@ states:
     response:
       type: cri
       criId: dwpKbv
-      # need verification score 1
     parent: CRI_STATE
     events:
       next:
@@ -666,7 +661,6 @@ states:
     response:
       type: cri
       criId: kbv
-      # requires verification score 1
     parent: CRI_STATE
     events:
       fail-with-no-ci:
@@ -1140,7 +1134,6 @@ states:
     response:
       type: cri
       criId: kbv
-      # requires verification score 1
     parent: CRI_STATE
     events:
       fail-with-no-ci:
@@ -1157,7 +1150,6 @@ states:
     response:
       type: cri
       criId: hmrcKbv
-      # requires verification score 1
     parent: CRI_STATE
     events:
       next:
@@ -1175,7 +1167,6 @@ states:
     response:
       type: cri
       criId: dwpKbv
-      # requires verification score 1
     parent: CRI_STATE
     events:
       next:
