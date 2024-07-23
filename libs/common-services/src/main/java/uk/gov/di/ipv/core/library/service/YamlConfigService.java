@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
-import static java.util.Collections.emptyMap;
 
 public class YamlConfigService extends ConfigService {
     private static final File PARAMETERS_FILE = new File("./core.local.params.yaml");
@@ -25,7 +24,6 @@ public class YamlConfigService extends ConfigService {
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
     private final Map<String, String> parameters = new HashMap<>();
-    private final Map<String, Map<String, String>> featureSetParameters = new HashMap<>();
     private final Map<String, String> secrets = new HashMap<>();
 
     public YamlConfigService() {
@@ -39,16 +37,6 @@ public class YamlConfigService extends ConfigService {
 
             addConfig(parameters, paramsYaml);
             addConfig(secrets, secretsYaml);
-
-            paramsYaml
-                    .get(FEATURE_SETS)
-                    .fields()
-                    .forEachRemaining(
-                            entry -> {
-                                var map = new HashMap<String, String>();
-                                addConfig(map, entry.getValue());
-                                featureSetParameters.put(entry.getKey(), map);
-                            });
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameter files", e);
         }
@@ -77,9 +65,9 @@ public class YamlConfigService extends ConfigService {
     protected String getParameter(String path) {
         if (getFeatureSet() != null) {
             for (String featureSet : getFeatureSet()) {
-                var override = featureSetParameters.getOrDefault(featureSet, emptyMap()).get(path);
-                if (override != null) {
-                    return override;
+                var featurePath = String.format("%s/%s/%s", FEATURE_SETS, featureSet, path);
+                if (parameters.containsKey(featurePath)) {
+                    return parameters.get(featurePath);
                 }
             }
         }
