@@ -299,7 +299,7 @@ public class ProcessCriCallbackHandler
                         ipvSessionItem);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem.getIpvSessionId());
+                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(

@@ -219,7 +219,7 @@ public class CriCheckingService {
             List<VerifiableCredential> newVcs,
             CriCallbackRequest callbackRequest,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String ipvSessionId)
+            IpvSessionItem ipvSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     VerifiableCredentialException {
 
@@ -231,15 +231,11 @@ public class CriCheckingService {
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             callbackRequest.getIpAddress());
 
-            // Check CI levels against the lowest confidence identity requested so we don't send the
-            // user on an unnecessary mitigation journey.
-            var lowestConfidenceRequested =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedGpg45Vot(configService);
+            // Check CIs only against the target Vot so we don't send the user on an unnecessary
+            // mitigation journey.
+            var targetVot = ipvSessionItem.getTargetVot();
             var journeyResponse =
-                    ciMitUtilityService.getMitigationJourneyIfBreaching(
-                            cis, lowestConfidenceRequested);
+                    ciMitUtilityService.getMitigationJourneyIfBreaching(cis, targetVot);
             if (journeyResponse.isPresent()) {
                 return journeyResponse.get();
             }
@@ -247,7 +243,7 @@ public class CriCheckingService {
 
         if (!userIdentityService.areVcsCorrelated(
                 sessionCredentialsService.getCredentials(
-                        ipvSessionId, clientOAuthSessionItem.getUserId()))) {
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
