@@ -89,21 +89,21 @@ public class UserIdentityService {
     public UserIdentity generateUserIdentity(
             List<VerifiableCredential> vcs,
             String sub,
-            Vot acheivedVot,
+            Vot achievedVot,
             Vot targetVot,
             ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        var profileType = acheivedVot.getProfileType();
+        var profileType = achievedVot.getProfileType();
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
         var vtm = configService.getParameter(CORE_VTM_CLAIM);
 
         var userIdentityBuilder =
-                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(acheivedVot).vtm(vtm);
+                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
 
         buildUserIdentityBasedOnProfileType(
-                acheivedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
+                achievedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }

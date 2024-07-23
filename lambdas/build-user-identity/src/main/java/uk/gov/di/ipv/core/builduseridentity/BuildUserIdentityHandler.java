@@ -118,10 +118,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
             var targetVot = ipvSessionItem.getTargetVot();
-            var acheivedVot = ipvSessionItem.getVot();
+            var achievedVot = ipvSessionItem.getVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, acheivedVot, targetVot, contraIndicators);
+                            vcs, userId, achievedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
             if (configService.enabled(TICF_CRI_BETA)
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -129,7 +129,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             }
 
             sendIdentityIssuedAuditEvent(
-                    acheivedVot, targetVot, auditEventUser, contraIndicators, userIdentity);
+                    achievedVot, targetVot, auditEventUser, contraIndicators, userIdentity);
 
             closeSession(ipvSessionItem);
 
