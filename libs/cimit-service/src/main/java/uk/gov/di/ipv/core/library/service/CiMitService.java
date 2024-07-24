@@ -68,10 +68,10 @@ public class CiMitService {
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private static final String FAILED_API_REQUEST = "API request failed";
 
-    private static final String GOVUK_SIGNIN_JOURNEY_ID = "govuk-signin-journey-id";
-    private static final String IP_ADDRESS = "ip-address";
+    public static final String GOVUK_SIGNIN_JOURNEY_ID_HEADER = "govuk-signin-journey-id";
+    public static final String IP_ADDRESS_HEADER = "ip-address";
     private static final String USER_ID_PARAMETER = "user_id";
-    private static final String X_API_KEY_HEADER = "x-api-key";
+    public static final String X_API_KEY_HEADER = "x-api-key";
 
     private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
     private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
@@ -106,6 +106,18 @@ public class CiMitService {
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.httpClient = HttpClient.newHttpClient();
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CiMitService(
+            LambdaClient lambdaClient,
+            ConfigService configService,
+            VerifiableCredentialValidator verifiableCredentialValidator,
+            HttpClient httpClient) {
+        this.lambdaClient = lambdaClient;
+        this.configService = configService;
+        this.verifiableCredentialValidator = verifiableCredentialValidator;
+        this.httpClient = httpClient;
     }
 
     @Tracing
@@ -411,14 +423,19 @@ public class CiMitService {
 
     private HttpRequest.Builder buildHttpRequest(
             URI uri, String govukSigninJourneyId, String ipAddress) {
-        return HttpRequest.newBuilder()
-                .uri(uri)
-                .header(GOVUK_SIGNIN_JOURNEY_ID, govukSigninJourneyId)
-                .header(IP_ADDRESS, ipAddress)
-                .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                .header(
-                        X_API_KEY_HEADER,
-                        configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()));
+        var requestBuilder =
+                HttpRequest.newBuilder()
+                        .uri(uri)
+                        .header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId)
+                        .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .header(
+                                X_API_KEY_HEADER,
+                                configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()));
+
+        if (ipAddress != null) {
+            requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
+        }
+        return requestBuilder;
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
