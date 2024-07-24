@@ -50,8 +50,6 @@ class DynamoDataStoreTest {
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
 
-    private final long ttl = 7200;
-
     @BeforeEach
     void setUp() {
         when(mockDynamoDbEnhancedClient.table(
