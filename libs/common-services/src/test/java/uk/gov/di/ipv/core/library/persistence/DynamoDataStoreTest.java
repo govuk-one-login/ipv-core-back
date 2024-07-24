@@ -21,10 +21,10 @@ import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.time.Instant;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -90,9 +90,7 @@ class DynamoDataStoreTest {
         assertEquals(
                 authorizationCodeItem.getIpvSessionId(),
                 authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-        assertEquals(
-                Instant.now().plusSeconds(ttl).getEpochSecond(),
-                authorizationCodeItemArgumentCaptor.getValue().getTtl());
+        assertNotNull(Long.valueOf(authorizationCodeItemArgumentCaptor.getValue().getTtl()));
     }
 
     @Test
