@@ -6,7 +6,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
 import java.text.ParseException;
-import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
@@ -48,15 +47,7 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
-
-        // This is a temporary fix to handle the case where the vtr claim is not present in the JWT
-        // Reverification featureSet scenario.
-        List<String> vtr = claimsSet.getStringListClaim("vtr");
-        if (vtr == null || vtr.isEmpty()) {
-            vtr = List.of("P2");
-        }
-
-        clientOAuthSessionItem.setVtr(vtr);
+        clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
         clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
         clientOAuthSessionItem.setReproveIdentity(claimsSet.getBooleanClaim("reprove_identity"));
         clientOAuthSessionItem.setEvcsAccessToken(evcsAccessToken);

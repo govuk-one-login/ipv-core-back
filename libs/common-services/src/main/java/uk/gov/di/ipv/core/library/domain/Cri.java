@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.library.domain;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.Set;
+
 @Getter
 @ExcludeFromGeneratedCoverageReport
 public enum Cri {
@@ -25,6 +27,7 @@ public enum Cri {
 
     private final String id;
     private final boolean isOperationalCri;
+    private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV, HMRC_KBV);
 
     Cri(String id) {
         this(id, false);
@@ -33,6 +36,10 @@ public enum Cri {
     Cri(String id, boolean isOperational) {
         this.id = id;
         this.isOperationalCri = isOperational;
+    }
+
+    public boolean isKbvCri() {
+        return KBV_CRIS.contains(this);
     }
 
     public static Cri fromId(String id) {

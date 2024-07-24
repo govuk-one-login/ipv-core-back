@@ -16,13 +16,15 @@ import java.util.Base64;
 @Jacksonized
 @AllArgsConstructor
 @ExcludeFromGeneratedCoverageReport
-public class EvidenceRequest {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class EvidenceRequest extends BaseClaim {
+    public static final String SCORING_POLICY_GPG45 = "gpg45";
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String scoringPolicy;
-
-    private final int strengthScore;
+    private final Integer strengthScore;
+    private final Integer verificationScore;
 
     public String toBase64() throws JsonProcessingException {
         var jsonString = objectMapper.writeValueAsString(this);

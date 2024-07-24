@@ -9,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -22,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -44,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -85,6 +86,7 @@ class CriCheckingServiceTest {
     @Mock private CiMitService mockCiMitService;
     @Mock private CiMitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
+    @Mock private MockedStatic<VcHelper> mockedVcHelper;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @Test
@@ -470,22 +472,47 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(M1A_ADDRESS_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        try (MockedStatic<VcHelper> mockedVcHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
-            // Act
-            JourneyResponse result =
-                    criCheckingService.checkVcResponse(
-                            vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
-            // Assert
-            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-            verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
-        }
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
+    }
+
+    @Test
+    void checkVcResponseShouldReturnNextWhenAllChecksPassForLowerConfidenceVot() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var vcs = List.of(M1A_ADDRESS_VC);
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        ipvSessionItem.setTargetVot(Vot.P1);
+        when(mockCiMitService.getContraIndicators(any(), any(), any()))
+                .thenReturn(TEST_CONTRA_INDICATORS);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
+                .thenReturn(Optional.empty());
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
+
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -493,14 +520,16 @@ class CriCheckingServiceTest {
         // Arrange for CI threshold breach
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
@@ -511,18 +540,19 @@ class CriCheckingServiceTest {
         // Arrange and set scope to reverification
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockCiMitService, never()).getContraIndicators(any(), any(), any());
-        verify(mockCimitUtilityService, never()).isBreachingCiThreshold(any());
+        verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
     }
 
     @Test
@@ -530,16 +560,16 @@ class CriCheckingServiceTest {
         // Arrange for CI mitigation possibility
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCimitUtilityService.getCiMitigationJourneyResponse(any()))
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
@@ -550,15 +580,17 @@ class CriCheckingServiceTest {
         // Arrange for VCs not correlated
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
@@ -571,22 +603,22 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(M1A_ADDRESS_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCiMitService.getContraIndicators(any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.isBreachingCiThreshold(any())).thenReturn(false);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.empty());
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        try (MockedStatic<VcHelper> mockedJwtHelper = Mockito.mockStatic(VcHelper.class)) {
-            mockedJwtHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
 
-            // Act
-            JourneyResponse result =
-                    criCheckingService.checkVcResponse(
-                            vcs, callbackRequest, clientOAuthSessionItem, TEST_IPV_SESSION_ID);
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
 
-            // Assert
-            assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
-            verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
-        }
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
+        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
@@ -604,6 +636,8 @@ class CriCheckingServiceTest {
 
     private IpvSessionItem buildValidIpvSessionItem() {
         var ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setTargetVot(Vot.P2);
+        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID);
         return ipvSessionItem;
     }
@@ -612,6 +646,7 @@ class CriCheckingServiceTest {
         return ClientOAuthSessionItem.builder()
                 .userId(TEST_USER_ID)
                 .scope(ScopeConstants.OPENID)
+                .vtr(List.of("P2"))
                 .build();
     }
 }

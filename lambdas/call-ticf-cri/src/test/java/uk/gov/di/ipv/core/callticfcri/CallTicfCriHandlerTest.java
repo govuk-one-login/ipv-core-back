@@ -47,6 +47,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
@@ -66,6 +67,8 @@ class CallTicfCriHandlerTest {
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
@@ -149,7 +152,8 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
@@ -168,8 +172,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(mockCiMitUtilityService.getCiMitigationJourneyResponse(any()))
+        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

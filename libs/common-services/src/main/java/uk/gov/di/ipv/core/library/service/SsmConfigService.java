@@ -94,6 +94,7 @@ public class SsmConfigService extends ConfigService {
                 }
             }
         }
+
         try {
             return ssmProvider.get(resolveSsmPath(path));
         } catch (ParameterNotFoundException e) {

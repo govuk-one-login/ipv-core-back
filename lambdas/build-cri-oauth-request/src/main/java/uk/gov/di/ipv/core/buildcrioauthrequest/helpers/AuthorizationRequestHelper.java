@@ -108,7 +108,7 @@ public class AuthorizationRequestHelper {
         }
 
         if (Objects.nonNull(evidenceRequest)) {
-            claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidenceRequest);
+            claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidenceRequest.toMapWithNoNulls());
         }
 
         if (Objects.nonNull(context)) {

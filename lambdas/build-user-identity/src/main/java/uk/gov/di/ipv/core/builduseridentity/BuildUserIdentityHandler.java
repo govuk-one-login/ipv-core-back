@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
@@ -34,7 +35,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
@@ -101,11 +101,11 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             var clientOAuthSessionItem =
                     super.getClientOAuthSessionItem(ipvSessionItem.getClientOAuthSessionId());
 
-            String ipvSessionId = ipvSessionItem.getIpvSessionId();
-            String userId = clientOAuthSessionItem.getUserId();
-            AuditEventUser auditEventUser =
+            var ipvSessionId = ipvSessionItem.getIpvSessionId();
+            var userId = clientOAuthSessionItem.getUserId();
+            var auditEventUser =
                     new AuditEventUser(
-                            clientOAuthSessionItem.getUserId(),
+                            userId,
                             ipvSessionId,
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
@@ -118,9 +118,12 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            UserIdentity userIdentity =
+            var targetVot = ipvSessionItem.getTargetVot();
+            var achievedVot = ipvSessionItem.getVot();
+            var thresholdVot = ipvSessionItem.getThresholdVot();
+            var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, ipvSessionItem.getVot(), contraIndicators);
+                            vcs, userId, achievedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
             if (configService.enabled(TICF_CRI_BETA)
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -128,7 +131,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             }
 
             sendIdentityIssuedAuditEvent(
-                    ipvSessionItem, auditEventUser, contraIndicators, userIdentity);
+                    achievedVot, thresholdVot, auditEventUser, contraIndicators, userIdentity);
 
             closeSession(ipvSessionItem);
 
@@ -171,13 +174,14 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     }
 
     private void sendIdentityIssuedAuditEvent(
-            IpvSessionItem ipvSessionItem,
+            Vot achievedVot,
+            Vot thresholdVot,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators,
             UserIdentity userIdentity)
             throws SqsException {
 
-        Map<String, ContraIndicatorConfig> configMap = configService.getContraIndicatorConfigMap();
+        var configMap = configService.getContraIndicatorConfigMap();
         var auditEventReturnCodes =
                 userIdentity.getReturnCode().stream()
                         .map(
@@ -186,10 +190,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                                                 returnCode, contraIndicators, configMap))
                         .toList();
 
-        AuditExtensionsUserIdentity extensions =
+        var extensions =
                 new AuditExtensionsUserIdentity(
-                        ipvSessionItem.getVot(),
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators),
+                        achievedVot,
+                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, thresholdVot),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 

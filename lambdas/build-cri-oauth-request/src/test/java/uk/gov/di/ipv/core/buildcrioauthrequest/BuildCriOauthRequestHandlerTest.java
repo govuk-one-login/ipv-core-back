@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -86,13 +87,14 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -128,7 +130,8 @@ class BuildCriOauthRequestHandlerTest {
             String.format("%s?%s=%s", CLAIMED_IDENTITY.getId(), CONTEXT, TEST_CONTEXT);
     private static final String EVIDENCE_REQUEST = "evidenceRequest";
     private static final String EVIDENCE_REQUESTED = "evidence_requested";
-    private static final EvidenceRequest TEST_EVIDENCE_REQUESTED = new EvidenceRequest("gpg45", 2);
+    private static final EvidenceRequest TEST_EVIDENCE_REQUESTED =
+            new EvidenceRequest("gpg45", 2, null);
     private static String CRI_WITH_EVIDENCE_REQUEST;
     private static String CRI_WITH_CONTEXT_AND_EVIDENCE_REQUEST;
 
@@ -263,6 +266,7 @@ class BuildCriOauthRequestHandlerTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
+        ipvSessionItem.setTargetVot(Vot.P2);
     }
 
     @AfterEach
@@ -1328,6 +1332,7 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
+        ipvSessionItem.setTargetVot(Vot.P1);
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
@@ -1336,7 +1341,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
                 .thenReturn("name,birthDate,address,emailAddress");
-        when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
         when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
@@ -1402,8 +1406,125 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
+    void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
+        // Arrange
+        ipvSessionItem.setTargetVot(P2);
+        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
+                .thenReturn(hmrcKbvOauthCriConfig);
+        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
+        when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
+                .thenReturn("name,birthDate,address,emailAddress");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
+        assertEquals(2, evidenceRequested.get("verificationScore").asInt());
+    }
+
+    @Test
+    void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
+        // Arrange
+        ipvSessionItem.setTargetVot(P1);
+        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
+                .thenReturn(hmrcKbvOauthCriConfig);
+        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(TEST_SIGNING_KEY_ID);
+        when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
+                .thenReturn("name,birthDate,address,emailAddress");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockKmsEs256SignerFactory.getSigner(any()))
+                .thenReturn(new ECDSASigner(getSigningPrivateKey()));
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
+        assertEquals(1, evidenceRequested.get("verificationScore").asInt());
+    }
+
+    @Test
     void shouldIncludeSocialSecurityRecordInSharedClaimsIfConfigured() throws Exception {
         // Arrange
+        ipvSessionItem.setTargetVot(P2);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);

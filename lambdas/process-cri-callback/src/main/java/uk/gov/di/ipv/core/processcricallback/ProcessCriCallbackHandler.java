@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -211,11 +210,6 @@ public class ProcessCriCallbackHandler
         } catch (ConfigException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
-        } catch (CredentialParseException e) {
-            return buildErrorResponse(
-                    e,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS);
         } catch (CriApiException e) {
             if (DCMAW.equals(callbackRequest.getCredentialIssuer())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
@@ -250,8 +244,7 @@ public class ProcessCriCallbackHandler
             throws SqsException, JsonProcessingException, HttpResponseExceptionWithErrorBody,
                     ConfigException, CiRetrievalException, CriApiException,
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    CredentialParseException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException {
+                    InvalidCriCallbackRequestException, UnrecognisedVotException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -298,7 +291,7 @@ public class ProcessCriCallbackHandler
                         ipvSessionItem);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem.getIpvSessionId());
+                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(
@@ -309,7 +302,7 @@ public class ProcessCriCallbackHandler
             IpvSessionItem ipvSessionItem)
             throws VerifiableCredentialException, JsonProcessingException, SqsException,
                     InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
-                    UnrecognisedVotException, CredentialParseException {
+                    UnrecognisedVotException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem);

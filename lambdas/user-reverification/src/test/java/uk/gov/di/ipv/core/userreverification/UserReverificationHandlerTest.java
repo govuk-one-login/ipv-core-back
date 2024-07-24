@@ -208,7 +208,6 @@ class UserReverificationHandlerTest {
     void shouldReturnErrorResponseWhenTokenIsInvalid() throws Exception {
 
         // Arrange
-
         APIGatewayProxyRequestEvent event = testEvent.clone();
         event.setHeaders(
                 Map.of("Authorization", "invalid-bearer-token", "ip-address", TEST_IP_ADDRESS));
@@ -225,7 +224,8 @@ class UserReverificationHandlerTest {
                 OAuth2Error.INVALID_REQUEST.getDescription(),
                 responseBody.get("error_description"));
 
-        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockUserIdentityService, never())
+                .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
@@ -257,7 +257,8 @@ class UserReverificationHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
 
-        verify(mockUserIdentityService, never()).generateUserIdentity(any(), any(), any(), any());
+        verify(mockUserIdentityService, never())
+                .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
