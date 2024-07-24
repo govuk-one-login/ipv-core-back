@@ -729,11 +729,9 @@ public class CheckExistingIdentityHandler
         if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
             try {
                 evcsMigrationService.migrateExistingIdentity(
-                        auditEventUser.getUserId(),
-                        vcBundle.credentials.stream()
-                                .filter(vc -> vc.getMigrated() == null)
-                                .toList());
-                sendVCsMigratedAuditEvent(auditEventUser, vcBundle.credentials, deviceInformation);
+                        auditEventUser.getUserId(), vcBundle.credentials());
+                sendVCsMigratedAuditEvent(
+                        auditEventUser, vcBundle.credentials(), deviceInformation);
             } catch (EvcsServiceException e) {
                 if (configService.enabled(EVCS_READ_ENABLED)) {
                     throw e;
