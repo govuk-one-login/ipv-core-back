@@ -138,7 +138,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       end:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
@@ -167,7 +167,7 @@ states:
     response:
       type: page
       pageId: prove-identity-no-photo-id
-      context: nino-only
+      context: nino
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
@@ -188,22 +188,22 @@ states:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
       not-found:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       access-denied:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       temporarily-unavailable:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       fail-with-no-ci:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
@@ -211,7 +211,7 @@ states:
   MULTIPLE_DOC_CHECK_PAGE:
     response:
       type: page
-      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+      pageId: page-multiple-doc-check
     events:
       ukPassport:
         targetState: CRI_UK_PASSPORT_J2
@@ -223,11 +223,11 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  MULTIPLE_DOC_F2F_CHECK_PAGE:
+  MULTIPLE_DOC_F2F_NINO_CHECK_PAGE:
     response:
       type: page
-      context: f2f
-      pageId: page-multiple-doc-check # PYIC-7016: Update so can produce nino event
+      context: nino
+      pageId: page-multiple-doc-check
     events:
       ukPassport:
         targetState: CRI_UK_PASSPORT_J2
