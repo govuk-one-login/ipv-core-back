@@ -12,22 +12,18 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH
 
 public class ClientOAuthSessionDetailsService {
     private final DataStore<ClientOAuthSessionItem> dataStore;
-    private final ConfigService configService;
+
+    public ClientOAuthSessionDetailsService(DataStore<ClientOAuthSessionItem> dataStore) {
+        this.dataStore = dataStore;
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public ClientOAuthSessionDetailsService(ConfigService configService) {
-        this.configService = configService;
         dataStore =
                 DataStore.create(
-                        this.configService.getEnvironmentVariable(CLIENT_OAUTH_SESSIONS_TABLE_NAME),
+                        CLIENT_OAUTH_SESSIONS_TABLE_NAME,
                         ClientOAuthSessionItem.class,
                         configService);
-    }
-
-    public ClientOAuthSessionDetailsService(
-            DataStore<ClientOAuthSessionItem> dataStore, ConfigService configService) {
-        this.dataStore = dataStore;
-        this.configService = configService;
     }
 
     public ClientOAuthSessionItem getClientOAuthSession(String clientOAuthSessionId) {

@@ -11,10 +11,12 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.nio.file.Path;
@@ -93,17 +95,10 @@ public class SsmConfigService extends ConfigService {
             }
         }
 
-        String resolvedPath = resolveSsmPath(path);
         try {
-            return ssmProvider.get(resolvedPath);
-        } catch (RuntimeException e) {
-            LOGGER.error(
-                    (new StringMapMessage())
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Error retrieving SSM parameter")
-                            .with(LOG_PARAMETER_PATH.getFieldName(), resolvedPath));
-            throw e;
+            return ssmProvider.get(resolveSsmPath(path));
+        } catch (ParameterNotFoundException e) {
+            throw new ConfigParameterNotFoundException(path);
         }
     }
 

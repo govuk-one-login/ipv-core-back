@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.NoSuchElementException;
@@ -69,7 +68,7 @@ public class IssueClientAccessTokenHandler
 
     @ExcludeFromGeneratedCoverageReport
     public IssueClientAccessTokenHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.accessTokenService = new AccessTokenService(configService);
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);

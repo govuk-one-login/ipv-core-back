@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -70,7 +69,7 @@ public class BuildClientOauthResponseHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);

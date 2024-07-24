@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.helpers.ListHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.ciMitService = new CiMitService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }

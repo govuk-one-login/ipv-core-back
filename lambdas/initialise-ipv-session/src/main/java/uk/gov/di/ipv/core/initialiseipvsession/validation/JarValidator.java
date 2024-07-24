@@ -15,11 +15,11 @@ import com.nimbusds.oauth2.sdk.Scope;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -128,7 +128,7 @@ public class JarValidator {
                                         "Client not allowed to issue a request with this scope")
                                 .setHTTPStatusCode(SC_FORBIDDEN));
             }
-        } catch (ParameterNotFoundException e) {
+        } catch (ConfigParameterNotFoundException e) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(
@@ -166,7 +166,7 @@ public class JarValidator {
         try {
             configService.getParameter(CLIENT_ISSUER, clientId);
             LogHelper.attachClientIdToLogs(clientId);
-        } catch (ParameterNotFoundException e) {
+        } catch (ConfigParameterNotFoundException e) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(

@@ -51,6 +51,11 @@ uuid_results
 libs/pact-test-helpers/bin
 local-running/bin/
 
+# Local config files (excluding template)
+local-running/core.*.yaml
+!local-running/core.local.secrets.template.yaml
+!local-running/core.local.params.template.yaml
+
 # User-specific secrets
 secrets.gradle
 

@@ -14,8 +14,7 @@ public enum IpvJourneyTypes {
 
     // Successful journeys
     REUSE_EXISTING_IDENTITY("reuse-existing-identity"),
-    // PYIC-6911 decide where the P1 journeys should actually be defined.
-    NEW_P1_IDENTITY("new-p2-identity"),
+    NEW_P1_IDENTITY("new-p1-identity"),
     NEW_P2_IDENTITY("new-p2-identity"),
     REPEAT_FRAUD_CHECK("repeat-fraud-check"),
     EVALUATE_SCORES("evaluate-scores"),

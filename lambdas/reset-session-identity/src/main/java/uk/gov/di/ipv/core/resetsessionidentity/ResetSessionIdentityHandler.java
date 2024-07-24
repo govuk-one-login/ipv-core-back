@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.SsmConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -74,7 +73,7 @@ public class ResetSessionIdentityHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ResetSessionIdentityHandler() {
-        this.configService = new SsmConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

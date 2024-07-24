@@ -46,11 +46,7 @@ public class IpvSessionService {
 
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionService(ConfigService configService) {
-        dataStore =
-                DataStore.create(
-                        configService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
-                        IpvSessionItem.class,
-                        configService);
+        dataStore = DataStore.create(IPV_SESSIONS_TABLE_NAME, IpvSessionItem.class, configService);
         this.sleeper = new Sleeper();
     }
 
