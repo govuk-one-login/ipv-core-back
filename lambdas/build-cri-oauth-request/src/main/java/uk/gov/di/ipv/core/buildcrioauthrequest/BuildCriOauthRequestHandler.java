@@ -176,10 +176,7 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            Vot minimumRequestedVotByStrength =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedGpg45Vot(configService);
+            Vot targetVot = ipvSessionItem.getTargetVot();
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -194,7 +191,7 @@ public class BuildCriOauthRequestHandler
                             cri,
                             criContext,
                             criEvidenceRequest,
-                            minimumRequestedVotByStrength);
+                            targetVot);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
 
@@ -337,11 +334,11 @@ public class BuildCriOauthRequestHandler
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
-            List<VerifiableCredential> vcs, Vot minimumRequestedVotsByStrength) {
+            List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        minimumRequestedVotsByStrength.getSupportedGpg45Profiles());
+                        requestedVot.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()

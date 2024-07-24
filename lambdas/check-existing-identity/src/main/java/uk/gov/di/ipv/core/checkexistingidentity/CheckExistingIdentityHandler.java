@@ -85,7 +85,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCE
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -119,8 +118,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
             new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -281,7 +278,6 @@ public class CheckExistingIdentityHandler
                     ciMitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var ciScoringCheckResponse = checkForCIScoringFailure(contraIndicators);
             Optional<Boolean> reproveIdentity =
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
@@ -295,6 +291,13 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
+            // PYIC-6901 Currently we just check against the lowest Vot requested for this journey.
+            // That might cause an issue if a user needs to mitigate a P2 journey but comes back to
+            // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
+            // though.
+            var ciScoringCheckResponse =
+                    ciMitUtilityService.getMitigationJourneyIfBreaching(
+                            contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
@@ -312,7 +315,8 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             vcs,
-                            areGpg45VcsCorrelated);
+                            areGpg45VcsCorrelated,
+                            contraIndicators);
             if (profileMatchResponse.isPresent()) {
                 // We are re-using an existing Vot so it might not be a GPG45 vot
                 ipvSessionItem.setTargetVot(
@@ -572,27 +576,14 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private Optional<JourneyResponse> checkForCIScoringFailure(ContraIndicators contraIndicators)
-            throws ConfigException {
-
-        // CI scoring failure
-        if (ciMitUtilityService.isBreachingCiThreshold(contraIndicators)) {
-            return Optional.of(
-                    ciMitUtilityService
-                            .getCiMitigationJourneyResponse(contraIndicators)
-                            .orElse(JOURNEY_FAIL_WITH_CI));
-        }
-        return Optional.empty();
-    }
-
-    @Tracing
     private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation,
             VerifiableCredentialBundle vcBundle,
-            boolean areGpg45VcsCorrelated)
+            boolean areGpg45VcsCorrelated,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException, VerifiableCredentialException,
                     EvcsServiceException {
         // Check for attained vot from requested vots
@@ -604,7 +595,8 @@ public class CheckExistingIdentityHandler
                         vcBundle.credentials,
                         auditEventUser,
                         deviceInformation,
-                        areGpg45VcsCorrelated);
+                        areGpg45VcsCorrelated,
+                        contraIndicators);
 
         // vot achieved for vtr
         if (strongestAttainedVotFromVtr.isPresent()) {
@@ -809,7 +801,8 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            boolean areGpg45VcsCorrelated)
+            boolean areGpg45VcsCorrelated,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException {
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
@@ -820,10 +813,11 @@ public class CheckExistingIdentityHandler
                                     requestedVot,
                                     VcHelper.filterVCBasedOnProfileType(vcs, GPG45),
                                     auditEventUser,
-                                    deviceInformation);
+                                    deviceInformation,
+                                    contraIndicators);
                 }
             } else {
-                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);
+                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs, contraIndicators);
             }
 
             if (requestedVotAttained) {
@@ -837,7 +831,8 @@ public class CheckExistingIdentityHandler
             Vot requestedVot,
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
-            String deviceInformation)
+            String deviceInformation,
+            ContraIndicators contraIndicators)
             throws ParseException, SqsException {
 
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
@@ -847,8 +842,11 @@ public class CheckExistingIdentityHandler
                                 gpg45Scores, requestedVot.getSupportedGpg45Profiles())
                         : Optional.empty();
 
+        var isBreaching =
+                ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+
         // Successful match
-        if (matchedGpg45Profile.isPresent()) {
+        if (matchedGpg45Profile.isPresent() && !isBreaching) {
             // remove weaker operational profile
             if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
                 verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
@@ -872,7 +870,8 @@ public class CheckExistingIdentityHandler
         return false;
     }
 
-    private boolean hasOperationalProfileVc(Vot requestedVot, List<VerifiableCredential> vcs)
+    private boolean hasOperationalProfileVc(
+            Vot requestedVot, List<VerifiableCredential> vcs, ContraIndicators contraIndicators)
             throws ParseException {
         for (var vc : vcs) {
             String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
@@ -882,8 +881,11 @@ public class CheckExistingIdentityHandler
                             .filter(profileName -> profileName.equals(credentialVot))
                             .findFirst();
 
+            var isBreaching =
+                    ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+
             // Successful match
-            if (matchedOperationalProfile.isPresent()) {
+            if (matchedOperationalProfile.isPresent() && !isBreaching) {
                 LOGGER.info(
                         new StringMapMessage()
                                 .with(

@@ -8,7 +8,7 @@ public enum ConfigurationVariable {
     CIMIT_CONFIG("cimit/config"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CI_CONFIG("self/ci-config"),
-    CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
+    CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_VALID_SCOPES("clients/%s/validScopes"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),

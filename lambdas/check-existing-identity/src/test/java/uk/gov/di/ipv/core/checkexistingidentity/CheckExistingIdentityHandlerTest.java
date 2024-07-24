@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -68,6 +69,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,6 +146,9 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
+    private static final Vot TEST_VOT = P2;
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
@@ -629,6 +634,53 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
+        void shouldMatchWeakerVotIfStrongerVotHasBreachingCi() throws Exception {
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1B));
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P1.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.L1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
+            when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+
+            var testContraIndicators = ContraIndicators.builder().build();
+            when(ciMitService.getContraIndicators(
+                            TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                    .thenReturn(testContraIndicators);
+            when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P2))
+                    .thenReturn(true);
+            when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P1))
+                    .thenReturn(false);
+
+            clientOAuthSessionItem.setVtr(List.of(Vot.P1.name(), P2.name()));
+
+            JourneyResponse journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(
+                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                    auditEventArgumentCaptor.getValue().getEventName());
+            verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+            verify(ipvSessionService, times(3)).updateIpvSession(ipvSessionItem);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P1);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P1, ipvSessionItem.getVot());
+            assertEquals(P1, ipvSessionItem.getTargetVot());
+        }
+
+        @Test
         void shouldReturnErrorResponseIfVcCanNotBeStoredInSessionCredentialTable()
                 throws Exception {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -715,12 +767,18 @@ class CheckExistingIdentityHandlerTest {
     @ParameterizedTest
     @MethodSource("votAndVtrCombinationsThatShouldStartIpvJourney")
     void shouldReturnJourneyIpvGpg45MediumResponseIfNoProfileAttainsVot(
-            Map<String, Object> votAndVtr) {
+            List<String> vtr, Optional<Vot> vot) throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+
+        List<VerifiableCredential> credentials = new ArrayList<>();
+        if (vot.isPresent()) {
+            credentials.add(createOperationalProfileVc(vot.get()));
+        }
+        when(mockVerifiableCredentialService.getVcs(any())).thenReturn(credentials);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        clientOAuthSessionItem.setVtr((List<String>) votAndVtr.get("vtr"));
+        clientOAuthSessionItem.setVtr(vtr);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -826,13 +884,15 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi() {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
+            throws ConfigException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -948,8 +1008,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -971,9 +1030,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyResponse(testContraIndicators))
-                .thenReturn(Optional.empty());
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1011,8 +1069,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
@@ -1154,9 +1211,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(any())).thenReturn(true);
-        when(ciMitUtilityService.getCiMitigationJourneyResponse(any()))
-                .thenReturn(Optional.empty());
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -1222,7 +1278,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
@@ -1251,7 +1308,8 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
@@ -1282,7 +1340,8 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
@@ -1316,7 +1375,8 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(ciMitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
-        when(ciMitUtilityService.isBreachingCiThreshold(testContraIndicators)).thenReturn(false);
+        when(ciMitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(Optional.empty());
 
         when(ciMitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
                 .thenReturn(Optional.of(mitigatedCI));
@@ -1465,26 +1525,14 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
-    private static Stream<Map<String, Object>> votAndVtrCombinationsThatShouldStartIpvJourney() {
+    private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {
         return Stream.of(
-                Map.of("vtr", List.of(P2.name()), "operationalCredVot", Optional.empty()),
-                Map.of("vtr", List.of(P2.name()), "operationalCredVot", Optional.of(Vot.PCL200)),
-                Map.of("vtr", List.of(P2.name()), "operationalCredVot", Optional.of(Vot.PCL250)),
-                Map.of(
-                        "vtr",
-                        List.of(P2.name(), Vot.PCL250.name()),
-                        "operationalCredVot",
-                        Optional.empty()),
-                Map.of(
-                        "vtr",
-                        List.of(P2.name(), Vot.PCL250.name()),
-                        "operationalCredVot",
-                        Optional.of(Vot.PCL200)),
-                Map.of(
-                        "vtr",
-                        List.of(P2.name(), Vot.PCL250.name(), Vot.PCL200.name()),
-                        "operationalCredVot",
-                        Optional.empty()));
+                Arguments.of(List.of("P2"), Optional.empty()),
+                Arguments.of(List.of("P2"), Optional.of(Vot.PCL200)),
+                Arguments.of(List.of("P2"), Optional.of(Vot.PCL250)),
+                Arguments.of(List.of("P2", "PCL250"), Optional.empty()),
+                Arguments.of(List.of("P2", "PCL250"), Optional.of(Vot.PCL200)),
+                Arguments.of(List.of("P2", "PCL250", "PCL200"), Optional.empty()));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

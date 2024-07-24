@@ -97,15 +97,9 @@ class UserIdentityServiceTest {
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
-            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", CI_SCORING_THRESHOLD, "0");
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0WithNoCi =
-            Map.of(
-                    CORE_VTM_CLAIM,
-                    "mock-vtm-claim",
-                    CI_SCORING_THRESHOLD,
-                    "0",
-                    RETURN_CODES_NON_CI_BREACHING_P0,
-                    "🐧");
+            Map.of(CORE_VTM_CLAIM, "mock-vtm-claim", RETURN_CODES_NON_CI_BREACHING_P0, "🐧");
 
     public static OauthCriConfig claimedIdentityConfig;
 
@@ -142,7 +136,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals(passportVc.getVcString(), credentials.getVcs().get(0));
@@ -165,7 +159,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals(Vot.P2, credentials.getVot());
@@ -952,7 +946,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
@@ -981,7 +975,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
@@ -1000,11 +994,12 @@ class UserIdentityServiceTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getIdentityClaim());
@@ -1054,7 +1049,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -1078,7 +1073,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -1100,7 +1095,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         PassportDetails passportClaim = credentials.getPassportClaim().get(0);
@@ -1115,11 +1110,12 @@ class UserIdentityServiceTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, vcExperianFraudScoreOne());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1140,7 +1136,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1161,7 +1157,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1180,7 +1176,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getPassportClaim());
@@ -1202,7 +1198,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         SocialSecurityRecordDetails ninoClaim = credentials.getNinoClaim().get(0);
@@ -1215,11 +1211,12 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), vcNinoSuccessful());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1241,7 +1238,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1262,7 +1259,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1284,7 +1281,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1306,7 +1303,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1328,7 +1325,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getNinoClaim());
@@ -1342,7 +1339,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals("test-sub", credentials.getSub());
@@ -1356,7 +1353,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals("mock-vtm-claim", credentials.getVtm());
@@ -1377,7 +1374,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         // There is one address in the claims set
@@ -1408,7 +1405,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1433,7 +1430,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        vcs, "test-sub", Vot.P2, emptyContraIndicators));
+                                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -1446,11 +1443,12 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcExperianFraudScoreOne(), vcExperianFraudScoreTwo(), vcAddressTwo());
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getAddressClaim());
@@ -1466,7 +1464,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         DrivingPermitDetails drivingPermitClaim = credentials.getDrivingPermitClaim().get(0);
@@ -1482,11 +1480,12 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcDrivingPermit(), vcExperianFraudScoreOne(), VC_ADDRESS);
 
         mockParamStoreCalls(paramsToMockForP0WithNoCi);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
 
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P0, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P0, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1509,7 +1508,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1533,7 +1532,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         List<DrivingPermitDetails> drivingPermitClaim = credentials.getDrivingPermitClaim();
@@ -1551,7 +1550,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1567,7 +1566,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1589,7 +1588,7 @@ class UserIdentityServiceTest {
         // Act
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertNull(credentials.getDrivingPermitClaim());
@@ -1619,7 +1618,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, contraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(List.of(new ReturnCode("🦆")), userIdentity.getReturnCode());
@@ -1634,7 +1633,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P2, emptyContraIndicators);
+                        List.of(), "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         assertEquals(List.of(), userIdentity.getReturnCode());
     }
@@ -1658,13 +1657,14 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                emptyList, "test-sub", Vot.P2, contraIndicators));
+                                emptyList, "test-sub", Vot.P2, Vot.P2, contraIndicators));
     }
 
     @Test
     void generateUserIdentityShouldSetExitCodeWhenBreachingCiThreshold() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1691,7 +1691,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(
@@ -1717,13 +1717,14 @@ class UserIdentityServiceTest {
                 UnrecognisedCiException.class,
                 () ->
                         userIdentityService.generateUserIdentity(
-                                emptyList, "test-sub", Vot.P0, contraIndicators));
+                                emptyList, "test-sub", Vot.P0, Vot.P2, contraIndicators));
     }
 
     @Test
     void generateUserIdentityShouldDeduplicateExitCodes() throws Exception {
         // Arrange
         mockParamStoreCalls(paramsToMockForP0);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("0");
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(
                         Map.of(
@@ -1745,7 +1746,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(
@@ -1758,7 +1759,7 @@ class UserIdentityServiceTest {
             throws Exception {
         // Arrange
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD)).thenReturn("10");
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, "P2")).thenReturn("10");
         when(mockConfigService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)).thenReturn("🐧");
 
         when(mockConfigService.getContraIndicatorConfigMap())
@@ -1773,7 +1774,7 @@ class UserIdentityServiceTest {
         // Act
         var userIdentity =
                 userIdentityService.generateUserIdentity(
-                        List.of(), "test-sub", Vot.P0, contraIndicators);
+                        List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
@@ -1870,7 +1871,7 @@ class UserIdentityServiceTest {
 
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, emptyContraIndicators);
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         assertEquals(2, credentials.getVcs().size());
         assertEquals(passportVc.getVcString(), credentials.getVcs().get(0));
@@ -1892,7 +1893,7 @@ class UserIdentityServiceTest {
 
         var credentials =
                 userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.PCL200, emptyContraIndicators);
+                        vcs, "test-sub", Vot.PCL200, Vot.PCL200, emptyContraIndicators);
 
         assertEquals(1, credentials.getVcs().size());
         assertEquals(hmrcVc.getVcString(), credentials.getVcs().get(0));
