@@ -46,7 +46,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ciMitService = new CiMitService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }

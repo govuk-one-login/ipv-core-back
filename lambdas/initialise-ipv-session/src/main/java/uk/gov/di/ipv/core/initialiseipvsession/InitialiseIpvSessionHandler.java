@@ -104,7 +104,7 @@ public class InitialiseIpvSessionHandler
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
@@ -164,7 +164,7 @@ public class InitialiseIpvSessionHandler
             SignedJWT signedJWT =
                     jarValidator.decryptJWE(
                             JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)),
-                            configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
+                            configService.getParameter(JAR_KMS_ENCRYPTION_KEY_ID));
 
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(
@@ -228,7 +228,7 @@ public class InitialiseIpvSessionHandler
             AuditEvent auditEvent =
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_START,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             extensionsIpvJourneyStart,
                             new AuditRestrictedDeviceInformation(deviceInformation));
@@ -239,7 +239,7 @@ public class InitialiseIpvSessionHandler
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(
                                 AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
-                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser,
                                 AuditExtensionAccountIntervention.newReproveIdentity()));
             }
@@ -509,7 +509,7 @@ public class InitialiseIpvSessionHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             getExtensionsForAudit(inheritedIdentityVc, null),
                             getRestrictedAuditDataForInheritedIdentity(

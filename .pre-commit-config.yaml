@@ -19,7 +19,7 @@ repos:
     rev: v0.86.3 # The version of cfn-lint to use
     hooks:
       - id: cfn-python-lint
-        files: .template\.yaml$
+        files: .\/template\.yaml$
 
   - repo: https://github.com/bridgecrewio/checkov.git
     rev: '3.2.73'

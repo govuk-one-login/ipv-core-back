@@ -23,6 +23,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /core-back
 
 COPY --from=build /core-back/untarred/local-running .
+COPY --from=build /core-back/local-running/*.yaml .
 
 ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 ENV PORT 3000

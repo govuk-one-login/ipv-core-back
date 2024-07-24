@@ -7,6 +7,8 @@ import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
 import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
+import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,6 +80,11 @@ class BuildUserIdentityHandlerTest {
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private Sleeper mockSleeper;
 
+    @PactBrokerConsumerVersionSelectors
+    public static SelectorBuilder consumerVersionSelectors() {
+        return new SelectorBuilder().mainBranch();
+    }
+
     @BeforeAll
     static void setupServer() {
         System.setProperty("pact.content_type.override.application/jwt", "text");
@@ -90,7 +97,7 @@ class BuildUserIdentityHandlerTest {
         var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
+                new ClientOAuthSessionDetailsService(mockOAuthSessionStore);
 
         // Configure CIMIT service to return VC and no CIs
         var jwtBuilder =
@@ -104,7 +111,7 @@ class BuildUserIdentityHandlerTest {
         when(mockCiMitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
 
         // Configure the config service
-        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
+        when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
 
         var passportVcBuilder =
                 new PactJwtBuilder(
@@ -167,6 +174,7 @@ class BuildUserIdentityHandlerTest {
         oAuthSession.setClientId("dummyOAuthClientId");
         oAuthSession.setGovukSigninJourneyId("dummySigninJourneyId");
         oAuthSession.setScope("openid");
+        oAuthSession.setVtr(List.of("P2"));
         when(mockOAuthSessionStore.getItem("dummyClientOAuthSessionId")).thenReturn(oAuthSession);
         ipvSession.setAccessTokenMetadata(accessTokenMetaData);
 

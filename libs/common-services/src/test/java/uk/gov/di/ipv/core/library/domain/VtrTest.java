@@ -23,7 +23,7 @@ class VtrTest {
 
     @ParameterizedTest
     @MethodSource("vtrRequestedVotsByStrength")
-    void getRequestedVotsByStrengthShouldReturnCorrectVots(
+    void getRequestedVotsByStrength_ShouldReturnCorrectVots(
             List<String> vtr, List<Vot> expectedRequestedVots) {
         // Arrange
         var underTest = new Vtr(vtr);

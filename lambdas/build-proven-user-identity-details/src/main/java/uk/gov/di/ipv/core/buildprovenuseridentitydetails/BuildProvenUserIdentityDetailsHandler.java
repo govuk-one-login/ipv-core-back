@@ -62,7 +62,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildProvenUserIdentityDetailsHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

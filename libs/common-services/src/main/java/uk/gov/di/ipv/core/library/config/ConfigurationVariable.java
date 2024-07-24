@@ -8,16 +8,23 @@ public enum ConfigurationVariable {
     CIMIT_CONFIG("cimit/config"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CI_CONFIG("self/ci-config"),
-    CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
+    CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
     CLIENT_VALID_SCOPES("clients/%s/validScopes"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     COI_CHECK_FAMILY_NAME_CHARS("self/coi/familyNameChars"),
     COMPONENT_ID("self/componentId"),
     CORE_VTM_CLAIM("self/coreVtmClaim"),
-    CREDENTIAL_ISSUERS("credentialIssuers"),
+    CREDENTIAL_ISSUER_ACTIVE_CONNECTION("credentialIssuers/%s/activeConnection"),
+    CREDENTIAL_ISSUER_CONNECTION_PREFIX("credentialIssuers/%s/connections"),
+    CREDENTIAL_ISSUER_CONFIG("credentialIssuers/%s/connections/%s"),
+    CREDENTIAL_ISSUER_ENABLED("credentialIssuers/%s/enabled"),
+    CREDENTIAL_ISSUER_SHARED_ATTRIBUTES("credentialIssuers/%s/allowedSharedAttributes"),
+    CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET(
+            "credential-issuers/%s/connections/%s/oauth-client-secret"),
+    CREDENTIAL_ISSUER_API_KEY("credential-issuers/%s/connections/%s/api-key"),
     CRI_RESPONSE_TTL("self/criResponseTtl"),
-    EVCS_APP_ID("evcs"),
+    EVCS_API_KEY("evcs/api-key"),
     EVCS_APPLICATION_URL("evcs/applicationUrl"),
     FEATURE_FLAGS("featureFlags/%s"),
     FRAUD_CHECK_EXPIRY_PERIOD_HOURS("self/fraudCheckExpiryPeriodHours"),
@@ -32,7 +39,8 @@ public enum ConfigurationVariable {
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
-    SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl");
+    SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
+    SIGNING_KEY_ID("self/signingKeyId");
 
     private final String path;
 

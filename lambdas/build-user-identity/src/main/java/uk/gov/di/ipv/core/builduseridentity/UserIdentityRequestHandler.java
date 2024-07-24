@@ -42,7 +42,7 @@ public abstract class UserIdentityRequestHandler {
     @ExcludeFromGeneratedCoverageReport
     protected UserIdentityRequestHandler(String allowedScope) {
         this.allowedScope = allowedScope;
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);

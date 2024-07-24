@@ -61,5 +61,4 @@ else
 fi
 
 export ENVIRONMENT=$env
-export DEV_ACCOUNT_NUM=$dev_no
 aws-vault exec $profile -- docker compose up $attach

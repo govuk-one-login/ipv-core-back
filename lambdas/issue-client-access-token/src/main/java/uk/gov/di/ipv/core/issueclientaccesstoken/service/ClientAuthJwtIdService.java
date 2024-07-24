@@ -22,9 +22,7 @@ public class ClientAuthJwtIdService {
     public ClientAuthJwtIdService(ConfigService configService) {
         this.dataStore =
                 DataStore.create(
-                        configService.getEnvironmentVariable(CLIENT_AUTH_JWT_IDS_TABLE_NAME),
-                        ClientAuthJwtIdItem.class,
-                        configService);
+                        CLIENT_AUTH_JWT_IDS_TABLE_NAME, ClientAuthJwtIdItem.class, configService);
     }
 
     public ClientAuthJwtIdItem getClientAuthJwtIdItem(String jwtId) {

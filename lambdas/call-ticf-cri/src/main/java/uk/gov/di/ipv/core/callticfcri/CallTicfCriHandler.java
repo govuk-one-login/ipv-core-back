@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -42,13 +41,11 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
+
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
 
@@ -63,7 +60,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ticfCriService = new TicfCriService(configService);
@@ -147,7 +144,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     ConfigException, UnrecognisedVotException, CredentialParseException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
-        ClientOAuthSessionItem clientOAuthSessionItem =
+        var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
         LogHelper.attachGovukSigninJourneyIdToLogs(
@@ -174,16 +171,17 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         request.getIpAddress());
 
-        if (ciMitUtilityService.isBreachingCiThreshold(cis)) {
+        var thresholdVot = ipvSessionItem.getThresholdVot();
+
+        var journeyResponse =
+                ciMitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
+        if (journeyResponse.isPresent()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "CI score is breaching threshold - setting VOT to P0"));
             ipvSessionItem.setVot(Vot.P0);
 
-            return ciMitUtilityService
-                    .getCiMitigationJourneyResponse(cis)
-                    .orElse(JOURNEY_FAIL_WITH_CI)
-                    .toObjectMap();
+            return journeyResponse.get().toObjectMap();
         }
 
         LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));

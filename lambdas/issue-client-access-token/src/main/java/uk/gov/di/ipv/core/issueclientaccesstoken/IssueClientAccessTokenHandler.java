@@ -68,7 +68,7 @@ public class IssueClientAccessTokenHandler
 
     @ExcludeFromGeneratedCoverageReport
     public IssueClientAccessTokenHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.accessTokenService = new AccessTokenService(configService);
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
@@ -127,7 +127,7 @@ public class IssueClientAccessTokenHandler
 
             if (authorizationCodeMetadata.isExpired(
                     Long.parseLong(
-                            configService.getSsmParameter(
+                            configService.getParameter(
                                     ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");

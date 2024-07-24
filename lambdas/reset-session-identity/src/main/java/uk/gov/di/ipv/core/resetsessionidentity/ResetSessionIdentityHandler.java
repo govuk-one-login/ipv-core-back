@@ -73,7 +73,7 @@ public class ResetSessionIdentityHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ResetSessionIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

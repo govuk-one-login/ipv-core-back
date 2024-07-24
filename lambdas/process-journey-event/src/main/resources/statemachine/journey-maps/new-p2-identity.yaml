@@ -1,6 +1,6 @@
 name: New P2 Identity
 description: >-
-  The routes a user can take to prove their identity to a medium
+  The routes a user so they can prove their identity to a medium
   confidence level (P2).
 
 states:
@@ -182,48 +182,11 @@ states:
       pageId: prove-identity-no-photo-id
     events:
       next:
-        targetState: CRI_CLAIMED_IDENTITY_M2B
+        targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
         auditEvents:
           - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
-        targetState: PYI_ESCAPE_M2B
-
-  CRI_F2F:
-    response:
-      type: cri
-      criId: f2f
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-      enhanced-verification:
-        targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
-      access-denied:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_NO_TICF
-      not-found:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      temporarily-unavailable:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  F2F_HANDOFF_PAGE:
-    response:
-      type: page
-      pageId: page-face-to-face-handoff
+        targetState: PYI_ESCAPE_NO_PHOTO_ID
 
   CRI_DCMAW:
     response:
@@ -306,10 +269,8 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
 
   PYI_CRI_ESCAPE_NO_F2F:
     response:
@@ -329,93 +290,10 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  EVALUATE_GPG45_SCORES:
-    response:
-      type: process
-      lambda: evaluate-gpg45-scores
-    events:
-      met:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_SUCCESS
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  STORE_IDENTITY_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: NEW
-    events:
-      identity-stored:
-        targetState: IPV_SUCCESS_PAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  STORE_IDENTITY_BEFORE_F2F_HANDOFF:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: PENDING
-    events:
-      identity-stored:
-        targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  RESET_SESSION_BEFORE_F2F_HANDOFF:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: F2F_HANDOFF_PAGE
-      error:
-        targetState: F2F_HANDOFF_PAGE
-
-  IPV_SUCCESS_PAGE:
-    response:
-      type: page
-      pageId: page-ipv-success
-    events:
-      next:
-        targetState: RETURN_TO_RP
-
   RETURN_TO_RP:
     response:
       type: process
       lambda: build-client-oauth-response
-
-  CRI_TICF_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-
-  CRI_TICF_BEFORE_F2F:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    parent: CRI_TICF_STATE
-    events:
-      next:
-        targetState: CRI_F2F
-      enhanced-verification:
-        targetState: CRI_F2F
 
   # Common pages
   PRE_EXPERIAN_KBV_TRANSITION_PAGE:
@@ -438,7 +316,8 @@ states:
           f2f:
             targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
@@ -466,7 +345,8 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -605,15 +485,11 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       enhanced-verification:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
 
   # HMRC KBV journey (J6)
   CRI_NINO_J6:
@@ -634,7 +510,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
@@ -653,16 +530,44 @@ states:
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
 
-  CRI_HMRC_KBV_M2B:
+  CRI_HMRC_KBV_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: hmrcKbv
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  CRI_HMRC_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: hmrcKbv
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
@@ -687,7 +592,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
@@ -706,20 +612,48 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
-  CRI_DWP_KBV_M2B:
+  CRI_DWP_KBV_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: dwpKbv
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F_M2B
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+
+  CRI_DWP_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: dwpKbv
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      invalid-request:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+      access-denied:
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
@@ -733,7 +667,7 @@ states:
               mitigationType: enhanced-verification
 
   # No photo id journey (M2B)
-  CRI_CLAIMED_IDENTITY_M2B:
+  CRI_CLAIMED_IDENTITY_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: claimedIdentity
@@ -741,25 +675,51 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: CRI_BANK_ACCOUNT_M2B
+        targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
       enhanced-verification:
-        targetState: CRI_BANK_ACCOUNT_M2B
+        targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
 
-  CRI_BANK_ACCOUNT_M2B:
+  CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: claimedIdentity
+      context: bank_account
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
+      enhanced-verification:
+        targetState: CRI_BANK_ACCOUNT_NO_PHOTO_ID
+
+  CRI_BANK_ACCOUNT_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: bav
     parent: CRI_STATE
     events:
       next:
-        targetState: CRI_NINO_WITH_SCOPE_M2B
+        targetState: CRI_NINO_WITH_SCOPE_NO_PHOTO_ID
       access-denied:
-        targetState: PYI_ESCAPE_ABANDON_M2B
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_BAV
 
-  CRI_NINO_WITH_SCOPE_M2B:
+  CRI_BANK_ACCOUNT_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: bav
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_NINO_WITH_SCOPE_NO_PHOTO_ID
+      access-denied:
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_BAV
+
+  CRI_NINO_WITH_SCOPE_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: nino
@@ -769,56 +729,102 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: ADDRESS_AND_FRAUD_M2B
+        targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID
       access-denied:
-        targetState: PYI_ESCAPE_ABANDON_M2B
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NINO
 
-  ADDRESS_AND_FRAUD_M2B:
+  CRI_NINO_WITH_SCOPE_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: nino
+      evidenceRequest:
+        scoringPolicy: gpg45
+        strengthScore: 2
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_NO_PHOTO_ID
+      access-denied:
+        targetState: PYI_ESCAPE_ABANDON_NO_PHOTO_ID
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NINO
+
+  ADDRESS_AND_FRAUD_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_M2B
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
-            targetState: CRI_HMRC_KBV_M2B
+            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
             checkIfDisabled:
               hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       enhanced-verification:
-        targetState: CRI_DWP_KBV_M2B
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
-            targetState: CRI_HMRC_KBV_M2B
+            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
             checkIfDisabled:
               hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
 
-  PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B:
+  ADDRESS_AND_FRAUD_NO_PHOTO_ID:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+      enhanced-verification:
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+
+  PRE_EXPERIAN_KBV_TRANSITION_PAGE_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       pageId: page-pre-experian-kbv-transition
     events:
       next:
-        targetState: CRI_EXPERIAN_KBV_M2B
+        targetState: CRI_EXPERIAN_KBV_NO_PHOTO_ID
 
-  CRI_EXPERIAN_KBV_M2B:
+  PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: CRI_EXPERIAN_KBV_NO_PHOTO_ID
+
+  CRI_EXPERIAN_KBV_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: cri
       criId: kbv
     parent: CRI_STATE
     events:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_M2B
+        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
             targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
-        targetState: MITIGATION_KBV_FAIL_M2B
+        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
             targetState: MITIGATION_02_OPTIONS
@@ -831,16 +837,42 @@ states:
         auditContext:
           mitigationType: enhanced-verification
 
-  MITIGATION_KBV_FAIL_M2B:
+  CRI_EXPERIAN_KBV_NO_PHOTO_ID:
+    response:
+      type: cri
+      criId: kbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_CRI_ESCAPE_NO_F2F
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+
+  MITIGATION_KBV_FAIL_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -854,7 +886,28 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
 
-  PYI_ESCAPE_M2B:
+  MITIGATION_KBV_FAIL_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: no-photo-id-security-questions-find-another-way
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  PYI_ESCAPE_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       pageId: no-photo-id-exit-find-another-way
@@ -867,7 +920,20 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  PYI_ESCAPE_ABANDON_M2B:
+  PYI_ESCAPE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: no-photo-id-exit-find-another-way
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+      bankAccount:
+        targetState: BANK_ACCOUNT_START_PAGE
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  PYI_ESCAPE_ABANDON_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       context: abandon
@@ -879,17 +945,49 @@ states:
       next:
         targetState: RESET_SESSION_IDENTITY
 
-  PYI_KBV_DROPOUT_M2B:
+  PYI_ESCAPE_ABANDON_NO_PHOTO_ID:
+    response:
+      type: page
+      context: abandon
+      pageId: no-photo-id-exit-find-another-way
+    events:
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+      next:
+        targetState: RESET_SESSION_IDENTITY
+
+  PYI_KBV_DROPOUT_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
       context: dropout
     events:
       f2f:
-        targetState: CRI_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  PYI_KBV_DROPOUT_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: no-photo-id-security-questions-find-another-way
+      context: dropout
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1041,7 +1139,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       not-found:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -1079,10 +1178,8 @@ states:
       pageId: pyi-suggest-other-options
     events:
       f2f:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1093,17 +1190,34 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
-  MITIGATION_02_OPTIONS_WITH_F2F_M2B:
+  MITIGATION_02_OPTIONS_WITH_F2F_M2B: # PYIC-7018: Cleanup after while of redirecting users to _NO_PHOTO_ID
     response:
       type: page
       pageId: pyi-suggest-other-options
       context: no-photo-id
     events:
       f2f:
-        targetState: CRI_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
+      appTriage:
+        targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+
+  MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: pyi-suggest-other-options
+      context: no-photo-id
+    events:
+      f2f:
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       appTriage:
         targetState: CRI_DCMAW_PYI_ESCAPE
         checkFeatureFlag:
@@ -1120,10 +1234,8 @@ states:
       pageId: pyi-post-office
     events:
       next:
-        targetState: CRI_F2F
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_F2F
+        targetJourney: F2F_HAND_OFF
+        targetState: START
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -1322,7 +1434,8 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1334,7 +1447,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -1350,7 +1464,8 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       invalid-request:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:

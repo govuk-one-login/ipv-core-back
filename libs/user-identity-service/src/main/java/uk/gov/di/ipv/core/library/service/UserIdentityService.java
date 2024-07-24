@@ -87,18 +87,23 @@ public class UserIdentityService {
     }
 
     public UserIdentity generateUserIdentity(
-            List<VerifiableCredential> vcs, String sub, Vot vot, ContraIndicators contraIndicators)
+            List<VerifiableCredential> vcs,
+            String sub,
+            Vot achievedVot,
+            Vot targetVot,
+            ContraIndicators contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
-        var profileType = vot.getProfileType();
+        var profileType = achievedVot.getProfileType();
         var vcJwts = vcs.stream().map(VerifiableCredential::getVcString).toList();
 
-        var vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
+        var vtm = configService.getParameter(CORE_VTM_CLAIM);
 
-        var userIdentityBuilder = UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
+        var userIdentityBuilder =
+                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(achievedVot).vtm(vtm);
 
         buildUserIdentityBasedOnProfileType(
-                vot, contraIndicators, profileType, vcs, userIdentityBuilder);
+                achievedVot, targetVot, contraIndicators, profileType, vcs, userIdentityBuilder);
 
         return userIdentityBuilder.build();
     }
@@ -271,14 +276,15 @@ public class UserIdentityService {
     }
 
     private void buildUserIdentityBasedOnProfileType(
-            Vot vot,
+            Vot achievedVot,
+            Vot targetVot,
             ContraIndicators contraIndicators,
             ProfileType profileType,
             List<VerifiableCredential> vcs,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        if (Vot.P0.equals(vot)) {
-            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators));
+        if (Vot.P0.equals(achievedVot)) {
+            userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
             var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
             addUserIdentityClaims(profileType, successfulVcs, userIdentityBuilder);
@@ -414,7 +420,7 @@ public class UserIdentityService {
                                         familyName,
                                         0,
                                         Integer.parseInt(
-                                                configService.getSsmParameter(
+                                                configService.getParameter(
                                                         COI_CHECK_FAMILY_NAME_CHARS))))
                 .toList();
     }
@@ -437,13 +443,13 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators)
+    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot targetVot)
             throws UnrecognisedCiException {
-        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators)
+        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(
-                                configService.getSsmParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
+                                configService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
     }
 
     private List<ReturnCode> getSuccessReturnCode(ContraIndicators contraIndicators)
@@ -452,7 +458,7 @@ public class UserIdentityService {
                 .filter(
                         returnCode ->
                                 configService
-                                        .getSsmParameter(RETURN_CODES_ALWAYS_REQUIRED)
+                                        .getParameter(RETURN_CODES_ALWAYS_REQUIRED)
                                         .contains(returnCode.code()))
                 .toList();
     }

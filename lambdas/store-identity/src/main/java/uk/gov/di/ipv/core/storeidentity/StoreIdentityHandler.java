@@ -78,7 +78,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
     @ExcludeFromGeneratedCoverageReport
     public StoreIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
@@ -177,7 +177,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
-                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         new AuditEventUser(
                                 clientOAuthSessionItem.getUserId(),
                                 ipvSessionItem.getIpvSessionId(),

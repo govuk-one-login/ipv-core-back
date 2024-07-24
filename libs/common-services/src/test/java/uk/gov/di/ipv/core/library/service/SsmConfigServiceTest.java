@@ -31,6 +31,8 @@ import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -67,7 +69,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
-class ConfigServiceTest {
+class SsmConfigServiceTest {
 
     public static final CriOAuthSessionItem CRI_OAUTH_SESSION_ITEM =
             CriOAuthSessionItem.builder().criId("ukPassport").connection("main").build();
@@ -89,7 +91,29 @@ class ConfigServiceTest {
 
     @BeforeEach
     void setUp() {
-        configService = new ConfigService(ssmProvider, secretsProvider);
+        configService = new SsmConfigService(ssmProvider, secretsProvider);
+    }
+
+    @Test
+    void getParameterShouldGetParameterFromSsm() {
+        var testComponentId = "test-component-id";
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/componentId")).thenReturn(testComponentId);
+
+        var value = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
+
+        assertEquals(testComponentId, value);
+    }
+
+    @Test
+    void getParameterShouldThrowIfMissingInSsm() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/componentId"))
+                .thenThrow(ParameterNotFoundException.class);
+
+        assertThrows(
+                ConfigParameterNotFoundException.class,
+                () -> configService.getParameter(ConfigurationVariable.COMPONENT_ID));
     }
 
     @Nested
@@ -162,7 +186,7 @@ class ConfigServiceTest {
         void getOauthCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
             environmentVariables.set("ENVIRONMENT", "test");
             when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenThrow(ParameterNotFoundException.builder().build());
+                    .thenThrow(ConfigParameterNotFoundException.class);
 
             assertThrows(
                     NoConfigForConnectionException.class,
@@ -170,18 +194,28 @@ class ConfigServiceTest {
         }
 
         @Test
+        void getOauthCriConfigForConnectionShouldThrowIfCriConfigMalformed() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
+                    .thenReturn("not-json");
+
+            assertThrows(
+                    ConfigParseException.class,
+                    () -> configService.getOauthCriConfigForConnection("stub", Cri.PASSPORT));
+        }
+
+        @Test
         void getRestCriConfigShouldReturnARestCriConfig() throws Exception {
             environmentVariables.set("ENVIRONMENT", "test");
 
-            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                    .thenReturn("stub");
             when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub"))
                     .thenReturn(
                             String.format(
                                     "{\"credentialUrl\":\"https://testCredentialUrl\",\"signingKey\":%s,\"componentId\":\"https://testComponentId\",\"requiresApiKey\":\"true\"}",
                                     EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED));
 
-            RestCriConfig restCriConfig = configService.getRestCriConfig(Cri.ADDRESS);
+            RestCriConfig restCriConfig =
+                    configService.getRestCriConfigForConnection("stub", ADDRESS);
 
             var expectedRestCriConfig =
                     RestCriConfig.builder()
@@ -215,22 +249,6 @@ class ConfigServiceTest {
                             .build();
 
             assertEquals(expectedCriConfig, criConfig);
-        }
-
-        @Test
-        void shouldGetComponentIdForActiveConnection() {
-            environmentVariables.set("ENVIRONMENT", "test");
-
-            final String testComponentId = "testComponentId";
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
-                    .thenReturn("stub");
-            when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/connections/stub"))
-                    .thenReturn(
-                            String.format(
-                                    "{\"signingKey\":%s,\"componentId\":\"%s\"}",
-                                    EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED, testComponentId));
-
-            assertEquals(testComponentId, configService.getComponentId(Cri.PASSPORT));
         }
     }
 
@@ -290,45 +308,6 @@ class ConfigServiceTest {
             assertEquals(
                     expectedActiveConnection, configService.getActiveConnection(credentialIssuer));
         }
-
-        @ParameterizedTest
-        @CsvSource({"true,false,,true", "true,false,fs01,false"})
-        void shouldReturnIsEnabled(
-                String baseIsEnabled,
-                String featureSetIsEnabled,
-                String featureSet,
-                String expectedIsEnabled) {
-            final var credentialIssuer = Cri.PASSPORT;
-            setupTestData(
-                    credentialIssuer, "enabled", baseIsEnabled, featureSet, featureSetIsEnabled);
-            assertEquals(
-                    Boolean.parseBoolean(expectedIsEnabled),
-                    configService.isEnabled(credentialIssuer.getId()));
-        }
-
-        @ParameterizedTest
-        @CsvSource(
-                delimiter = '|',
-                value = {
-                    "address,name|address,name,dob||address,name",
-                    "address,name|address,name,dob|fs01|address,name,dob"
-                })
-        void shouldReturnAllowedSharedAttributes(
-                String baseAllowedSharedAttributes,
-                String featureSetAllowedSharedAttributes,
-                String featureSet,
-                String expectedIAllowedSharedAttributes) {
-            final var credentialIssuer = Cri.PASSPORT;
-            setupTestData(
-                    credentialIssuer,
-                    "allowedSharedAttributes",
-                    baseAllowedSharedAttributes,
-                    featureSet,
-                    featureSetAllowedSharedAttributes);
-            assertEquals(
-                    expectedIAllowedSharedAttributes,
-                    configService.getAllowedSharedAttributes(credentialIssuer));
-        }
     }
 
     @ParameterizedTest
@@ -337,14 +316,15 @@ class ConfigServiceTest {
         "CLIENT_VALID_REDIRECT_URLS,FS05",
         "CLIENT_VALID_REDIRECT_URLS,FS06_NO_OVERRIDE"
     })
-    void shouldReturnListOfClientRedirectUrls(String testDataSet, String featureSet) {
+    void shouldReturnStringListParameter(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
         configService.setFeatureSet(getFeatureSet(featureSet));
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
                 Arrays.asList(testConfiguration.getExpectedValue(featureSet).split(",")),
-                configService.getClientRedirectUrls("aClientId"));
+                configService.getStringListParameter(
+                        ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, "aClientId"));
     }
 
     @ParameterizedTest
@@ -380,7 +360,7 @@ class ConfigServiceTest {
     void shouldGetFalseForMissingNamedFeatureFlag() {
         String env = System.getenv(ENVIRONMENT.name());
         when(ssmProvider.get("/" + env + "/core/featureFlags/testFeature"))
-                .thenThrow(ParameterNotFoundException.builder().build());
+                .thenThrow(ConfigParameterNotFoundException.class);
         assertEquals(Boolean.FALSE, configService.enabled(TestFeatureFlag.TEST_FEATURE));
     }
 
@@ -394,7 +374,7 @@ class ConfigServiceTest {
     }
 
     @Test
-    void getCriPrivateApiKeyForActiveConnectionShouldReturnApiKeySecret() {
+    void getApiKeySecretShouldReturnApiKeySecret() {
         environmentVariables.set("ENVIRONMENT", "test");
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
 
@@ -406,41 +386,12 @@ class ConfigServiceTest {
 
         when(secretsProvider.get("/test/credential-issuers/ukPassport/connections/stub/api-key"))
                 .thenReturn(json);
-        when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/activeConnection"))
-                .thenReturn("stub");
 
-        String apiKey = configService.getCriPrivateApiKeyForActiveConnection(Cri.PASSPORT);
-
-        assertEquals("api-key-value", apiKey);
-    }
-
-    @Test
-    void shouldGetSecretValueFromSecretsManager() {
-        Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
-
-        String json =
-                assertDoesNotThrow(
-                        () -> {
-                            return OBJECT_MAPPER.writeValueAsString(apiKeySecret);
-                        });
-
-        when(secretsProvider.get(any())).thenReturn(json);
-
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertEquals("api-key-value", apiKey);
-    }
-
-    @Test
-    void getCriOAuthClientSecretShouldReturnOAuthClientSecret() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(secretsProvider.get(
-                        "/test/credential-issuers/ukPassport/connections/main/oauth-client-secret"))
-                .thenReturn("oauth-client-secret-value");
-
-        String oauthSecret = configService.getCriOAuthClientSecret(CRI_OAUTH_SESSION_ITEM);
-
-        assertEquals("oauth-client-secret-value", oauthSecret);
     }
 
     @Test
@@ -449,7 +400,9 @@ class ConfigServiceTest {
                 DecryptionFailureException.builder().message("Test decryption error").build();
         when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
 
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
     }
@@ -462,7 +415,9 @@ class ConfigServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
 
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
     }
@@ -473,7 +428,9 @@ class ConfigServiceTest {
                 InvalidParameterException.builder().message("Test invalid parameter error").build();
         when(secretsProvider.get(any())).thenThrow(invalidParameterException);
 
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
     }
@@ -484,7 +441,9 @@ class ConfigServiceTest {
                 InvalidRequestException.builder().message("Test invalid request error").build();
         when(secretsProvider.get(any())).thenThrow(invalidRequestException);
 
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
     }
@@ -497,7 +456,9 @@ class ConfigServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
 
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
     }
@@ -505,7 +466,11 @@ class ConfigServiceTest {
     @Test
     void shouldReturnNullOnInvalidApiKeyJsonFromSecretsManager() {
         when(secretsProvider.get(any())).thenReturn("{\"apiKey\":\"invalidJson}");
-        String apiKey = configService.getCriPrivateApiKey(CRI_OAUTH_SESSION_ITEM);
+
+        String apiKey =
+                configService.getApiKeySecret(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
+
         assertNull(apiKey);
     }
 
@@ -546,15 +511,6 @@ class ConfigServiceTest {
         assertEquals(3600L, configService.getBearerAccessTokenTtl());
     }
 
-    @Test
-    void shouldGetSigningKeyIdParamNamedByEnvironmentVariable() {
-        final String signingKeyIdPath = "/test/core/self/signingKeyId";
-        final String testSigningKeyId = "6CA2A18E-AFAD-41B4-95EC-53F967A290BE";
-        environmentVariables.set("SIGNING_KEY_ID_PARAM", signingKeyIdPath);
-        when(ssmProvider.get(signingKeyIdPath)).thenReturn(testSigningKeyId);
-        assertEquals(testSigningKeyId, configService.getSigningKeyId());
-    }
-
     @ParameterizedTest
     @CsvSource({
         "PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,",
@@ -565,7 +521,8 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameterForClient(
             String configVariableName, String featureSet) {
-        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
+        configService =
+                new SsmConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -573,7 +530,7 @@ class ConfigServiceTest {
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
                 testConfiguration.getExpectedValue(featureSet),
-                configService.getSsmParameter(configurationVariable, "aClientId"));
+                configService.getParameter(configurationVariable, "aClientId"));
     }
 
     @ParameterizedTest
@@ -590,7 +547,8 @@ class ConfigServiceTest {
     })
     void shouldAccountForFeatureSetWhenRetrievingParameter(
             String configVariableName, String featureSet) {
-        configService = new ConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
+        configService =
+                new SsmConfigService(ssmProvider, secretsProvider, getFeatureSet(featureSet));
         environmentVariables.set("ENVIRONMENT", "test");
         ConfigurationVariable configurationVariable =
                 ConfigurationVariable.valueOf(configVariableName);
@@ -598,7 +556,7 @@ class ConfigServiceTest {
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
                 testConfiguration.getExpectedValue(featureSet),
-                configService.getSsmParameter(configurationVariable));
+                configService.getParameter(configurationVariable));
     }
 
     private enum TestConfiguration {
@@ -750,7 +708,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouleReturnCriForValidIssuers() throws NoCriForIssuerException {
+        void shouldReturnCriForValidIssuers() throws NoCriForIssuerException {
             assertEquals(
                     PASSPORT, configService.getCriByIssuer("https://main-ukPassport-component-id"));
             assertEquals(
@@ -763,7 +721,7 @@ class ConfigServiceTest {
         }
 
         @Test
-        void shouleErrorForInvalidIssuer() {
+        void shouldErrorForInvalidIssuer() {
             assertThrows(
                     NoCriForIssuerException.class,
                     () -> configService.getCriByIssuer("https://non-existant-component-id"));

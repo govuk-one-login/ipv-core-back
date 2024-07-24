@@ -35,8 +35,7 @@ public class VerifiableCredentialService {
     public VerifiableCredentialService(ConfigService configService) {
         this.dataStore =
                 DataStore.create(
-                        configService.getEnvironmentVariable(
-                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                        EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME,
                         VcStoreItem.class,
                         configService);
     }

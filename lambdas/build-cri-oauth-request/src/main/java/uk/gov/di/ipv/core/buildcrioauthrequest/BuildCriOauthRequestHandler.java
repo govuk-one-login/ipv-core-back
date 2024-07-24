@@ -131,7 +131,7 @@ public class BuildCriOauthRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.create();
         this.signerFactory = new KmsEs256SignerFactory();
         this.auditService = new AuditService(AuditService.getSqsClients(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
@@ -178,10 +178,7 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            Vot minimumRequestedVotByStrength =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedGpg45Vot(configService);
+            Vot targetVot = ipvSessionItem.getTargetVot();
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -196,7 +193,7 @@ public class BuildCriOauthRequestHandler
                             cri,
                             criContext,
                             criEvidenceRequest,
-                            minimumRequestedVotByStrength);
+                            targetVot);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
 
@@ -209,7 +206,7 @@ public class BuildCriOauthRequestHandler
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
@@ -326,7 +323,8 @@ public class BuildCriOauthRequestHandler
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
-                        signerFactory.getSigner(configService.getSigningKeyId()),
+                        signerFactory.getSigner(
+                                configService.getParameter(ConfigurationVariable.SIGNING_KEY_ID)),
                         oauthCriConfig,
                         configService,
                         oauthState,
@@ -340,11 +338,11 @@ public class BuildCriOauthRequestHandler
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
-            List<VerifiableCredential> vcs, Vot minimumRequestedVotsByStrength) {
+            List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         List<Gpg45Scores> requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        minimumRequestedVotsByStrength.getSupportedGpg45Profiles());
+                        requestedVot.getSupportedGpg45Profiles());
 
         OptionalInt minViableStrengthOpt =
                 requiredEvidences.stream()
@@ -396,8 +394,6 @@ public class BuildCriOauthRequestHandler
         boolean hasAddressVc = false;
         for (var vc : vcs) {
             try {
-                String credentialIss = vc.getClaimsSet().getIssuer();
-
                 if (VcHelper.isSuccessfulVc(vc)) {
                     JsonNode credentialSubject =
                             OBJECT_MAPPER
@@ -418,7 +414,7 @@ public class BuildCriOauthRequestHandler
                     SharedClaims credentialsSharedClaims =
                             OBJECT_MAPPER.readValue(
                                     credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(configService.getComponentId(ADDRESS))) {
+                    if (ADDRESS.equals(vc.getCri())) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -469,7 +465,9 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
-        String allowedSharedAttributes = configService.getAllowedSharedAttributes(cri);
+        String allowedSharedAttributes =
+                configService.getParameter(
+                        ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, cri.getId());
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));

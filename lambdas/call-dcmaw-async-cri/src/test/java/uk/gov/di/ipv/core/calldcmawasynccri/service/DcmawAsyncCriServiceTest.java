@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,6 +79,7 @@ class DcmawAsyncCriServiceTest {
                         .criId(DCMAW_ASYNC.getId())
                         .criOAuthSessionId(CRI_OAUTH_STATE)
                         .clientOAuthSessionId(CLIENT_OAUTH_SESSION_ID)
+                        .connection(CONNECTION)
                         .build();
 
         when(mockCriOAuthSessionService.persistCriOAuthSession(
@@ -85,7 +87,8 @@ class DcmawAsyncCriServiceTest {
                 .thenReturn(criOAuthSessionItem);
 
         when(mockConfigService.getOauthCriConfig(criOAuthSessionItem)).thenReturn(criConfig);
-        when(mockConfigService.getCriOAuthClientSecret(criOAuthSessionItem))
+        when(mockConfigService.getSecret(
+                        CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET, DCMAW_ASYNC.getId(), CONNECTION))
                 .thenReturn(TEST_SECRET);
         when(mockConfigService.getActiveConnection(DCMAW_ASYNC)).thenReturn(CONNECTION);
 
