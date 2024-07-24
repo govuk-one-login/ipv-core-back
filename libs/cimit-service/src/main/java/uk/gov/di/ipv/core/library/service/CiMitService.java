@@ -77,8 +77,7 @@ public class CiMitService {
     private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
     private static final String GET_VCS_ENDPOINT = "/contra-indicators";
 
-    private static final String SUCCESS_RESPONSE = "success";
-    private static final String FAILED_RESPONSE = "fail";
+    public static final String FAILED_RESPONSE = "fail";
 
     private final LambdaClient lambdaClient;
     private static final String LIVE_ALIAS = "live";
@@ -166,6 +165,8 @@ public class CiMitService {
             }
         } catch (JsonProcessingException e) {
             throw new CiPutException("Failed to serialize payload for post CI request.");
+        } catch (CiPutException e) {
+            throw e;
         } catch (Exception e) {
             throw new CiPutException(FAILED_LAMBDA_MESSAGE);
         }
@@ -194,7 +195,7 @@ public class CiMitService {
 
                 if (FAILED_RESPONSE.equals(parsedResponse.result())) {
                     logApiRequestError(parsedResponse);
-                    throw new CiPutException(FAILED_API_REQUEST);
+                    throw new CiPostMitigationsException(FAILED_API_REQUEST);
                 }
 
             } else {
@@ -229,7 +230,7 @@ public class CiMitService {
         } catch (CiPostMitigationsException e) {
             throw e;
         } catch (Exception e) {
-            throw new CiPostMitigationsException("Failed to submit mitigating VC list.");
+            throw new CiPostMitigationsException("Failed to submit mitigating VCs list.");
         }
     }
 
@@ -285,7 +286,7 @@ public class CiMitService {
                     var parsedResponse =
                             OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
                     logApiRequestError(parsedResponse);
-                    throw new CiPutException(FAILED_API_REQUEST);
+                    throw new CiRetrievalException(FAILED_API_REQUEST);
                 }
                 return response.body();
             } else {
