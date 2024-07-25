@@ -8,7 +8,7 @@ public enum ConfigurationVariable {
     CIMIT_CONFIG("cimit/config"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
     CIMIT_INTERNAL_API_BASE_URL("cimit/internalApiBaseUrl"),
-    CIMIT_INTERNAL_API_KEY("cimit-internal-api"),
+    CIMIT_INTERNAL_API_KEY("cimitInternalApi"),
     CI_CONFIG("self/ci-config"),
     CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
