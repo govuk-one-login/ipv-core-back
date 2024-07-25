@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -112,7 +111,7 @@ public class ProcessCriCallbackHandler
         criOAuthSessionService = new CriOAuthSessionService(configService);
         verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        auditService = new AuditService(AuditService.getSqsClients(), configService);
+        auditService = AuditService.create(configService);
 
         var sessionCredentialsService = new SessionCredentialsService(configService);
         var ciMitService = new CiMitService(configService);
@@ -189,7 +188,7 @@ public class ProcessCriCallbackHandler
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
-        } catch (JsonProcessingException | SqsException e) {
+        } catch (JsonProcessingException e) {
             return buildErrorResponse(
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -241,10 +240,10 @@ public class ProcessCriCallbackHandler
     }
 
     private JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
-            throws SqsException, JsonProcessingException, HttpResponseExceptionWithErrorBody,
-                    ConfigException, CiRetrievalException, CriApiException,
-                    VerifiableCredentialException, CiPostMitigationsException, CiPutException,
-                    InvalidCriCallbackRequestException, UnrecognisedVotException {
+            throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
+                    CiRetrievalException, CriApiException, VerifiableCredentialException,
+                    CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
+                    UnrecognisedVotException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -300,7 +299,7 @@ public class ProcessCriCallbackHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws VerifiableCredentialException, JsonProcessingException, SqsException,
+            throws VerifiableCredentialException, JsonProcessingException,
                     InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
                     UnrecognisedVotException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {

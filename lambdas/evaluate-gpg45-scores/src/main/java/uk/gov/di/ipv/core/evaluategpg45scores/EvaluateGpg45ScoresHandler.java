@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -110,7 +109,7 @@ public class EvaluateGpg45ScoresHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
@@ -182,9 +181,6 @@ public class EvaluateGpg45ScoresHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (SqsException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event to SQS queue", e));
-            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (CiRetrievalException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -208,8 +204,7 @@ public class EvaluateGpg45ScoresHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
             String deviceInformation,
-            ContraIndicators contraIndicators)
-            throws SqsException {
+            ContraIndicators contraIndicators) {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 

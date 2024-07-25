@@ -16,6 +16,7 @@ type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
   subject: string,
+  journeyId: string,
   journeyType: string,
 ): Promise<AuthRequestBody> => {
   return {
@@ -24,7 +25,7 @@ export const generateInitialiseIpvSessionBody = async (
     redirectUri: config.ORCHESTRATOR_REDIRECT_URL,
     state: "api-tests-state",
     scope: "openid",
-    request: await generateJar(subject, journeyType),
+    request: await generateJar(subject, journeyId, journeyType),
   };
 };
 

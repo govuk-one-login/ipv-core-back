@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -90,7 +89,7 @@ class CriCheckingServiceTest {
     @InjectMocks private CriCheckingService criCheckingService;
 
     @Test
-    void handleCallbackErrorShouldReturnJourneyErrorByDefault() throws SqsException {
+    void handleCallbackErrorShouldReturnJourneyErrorByDefault() {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
@@ -111,8 +110,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void handleCallbackErrorShouldReturnJourneyAccessDeniedIfInCallbackRequest()
-            throws SqsException {
+    void handleCallbackErrorShouldReturnJourneyAccessDeniedIfInCallbackRequest() {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
@@ -133,8 +131,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void handleCallbackErrorShouldReturnJourneyInvalidRequestIfInCallbackRequest()
-            throws SqsException {
+    void handleCallbackErrorShouldReturnJourneyInvalidRequestIfInCallbackRequest() {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
@@ -155,8 +152,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void handleCallbackErrorShouldReturnJourneyTemporarilyAvailableIfInCallbackRequest()
-            throws SqsException {
+    void handleCallbackErrorShouldReturnJourneyTemporarilyAvailableIfInCallbackRequest() {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()
@@ -177,7 +173,7 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void handleCallbackErrorShouldReturnSendCorrectAuditEvent() throws SqsException {
+    void handleCallbackErrorShouldReturnSendCorrectAuditEvent() {
         // Arrange
         var callbackRequest =
                 CriCallbackRequest.builder()

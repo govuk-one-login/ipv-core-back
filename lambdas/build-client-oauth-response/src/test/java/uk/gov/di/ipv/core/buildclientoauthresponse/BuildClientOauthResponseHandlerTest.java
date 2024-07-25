@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -94,7 +93,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest() throws SqsException, URISyntaxException {
+    void shouldReturn200OnSuccessfulOauthRequest() throws URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
@@ -140,7 +139,7 @@ class BuildClientOauthResponseHandlerTest {
     @ParameterizedTest
     @MethodSource("testParamsForSuccessfulOauthRequestForReproveIdentity")
     void shouldReturn200OnSuccessfulOauthRequestForReproveIdentity(
-            Vot vot, String vtr, boolean success) throws SqsException, URISyntaxException {
+            Vot vot, String vtr, boolean success) throws URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
@@ -377,8 +376,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequestForJsonRequest()
-            throws SqsException, URISyntaxException {
+    void shouldReturn200OnSuccessfulOauthRequestForJsonRequest() throws URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = generateIpvSessionItem();

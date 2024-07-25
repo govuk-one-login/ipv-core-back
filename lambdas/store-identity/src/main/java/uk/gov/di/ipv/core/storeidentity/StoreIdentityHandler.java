@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -38,11 +37,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IDENTITY_STORED_PATH;
@@ -83,7 +80,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.evcsService = new EvcsService(configService);
     }
 
@@ -122,11 +119,6 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
-                    .toObjectMap();
-        } catch (SqsException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to send audit event", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_SERVER_ERROR, FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
         } finally {
             auditService.awaitAuditEvents();
@@ -171,8 +163,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,
             String ipAddress,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
         Vot vot = ipvSessionItem.getVot();
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(

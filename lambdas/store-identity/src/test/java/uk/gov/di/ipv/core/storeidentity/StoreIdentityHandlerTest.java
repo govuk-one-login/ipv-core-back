@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -60,7 +59,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABL
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
@@ -344,22 +342,6 @@ class StoreIdentityHandlerTest {
         assertEquals(418, response.get(STATUS_CODE));
         assertEquals(FAILED_TO_STORE_IDENTITY.getCode(), response.get(CODE));
         assertEquals(FAILED_TO_STORE_IDENTITY.getMessage(), response.get(MESSAGE));
-    }
-
-    @Test
-    void shouldReturnAnErrorJourneyIfCantSendAuditEvent() throws Exception {
-        doThrow(new SqsException("oops"))
-                .when(mockAuditService)
-                .sendAuditEvent(any(AuditEvent.class));
-
-        var response =
-                storeIdentityHandler.handleRequest(
-                        PROCESS_REQUEST_FOR_COMPLETED_IDENTITY, mockContext);
-
-        assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
-        assertEquals(500, response.get(STATUS_CODE));
-        assertEquals(FAILED_TO_SEND_AUDIT_EVENT.getCode(), response.get(CODE));
-        assertEquals(FAILED_TO_SEND_AUDIT_EVENT.getMessage(), response.get(MESSAGE));
     }
 
     @Test

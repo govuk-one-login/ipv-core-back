@@ -17,6 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateJar = async (
   subject: string,
+  journeyId: string,
   journeyType: string,
 ): Promise<string> => {
   const payloadData = JSON.parse(
@@ -29,7 +30,7 @@ export const generateJar = async (
     ...payloadData,
     ...{
       sub: subject,
-      govuk_signin_journey_id: getRandomString(8),
+      govuk_signin_journey_id: journeyId,
       state: getRandomString(16),
       redirect_uri: config.ORCHESTRATOR_REDIRECT_URL,
     },

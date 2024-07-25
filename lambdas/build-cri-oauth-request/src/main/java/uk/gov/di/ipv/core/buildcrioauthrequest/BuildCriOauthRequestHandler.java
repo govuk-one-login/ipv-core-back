@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -72,7 +71,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT;
 import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -133,7 +131,7 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.configService = ConfigService.create();
         this.signerFactory = new KmsEs256SignerFactory();
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
@@ -225,12 +223,6 @@ public class BuildCriOauthRequestHandler
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildJourneyErrorResponse(
                     e.getErrorReason(), e, e.getResponseCode(), e.getErrorResponse());
-        } catch (SqsException e) {
-            return buildJourneyErrorResponse(
-                    "Failed to send audit event to SQS queue",
-                    e,
-                    SC_INTERNAL_SERVER_ERROR,
-                    FAILED_TO_SEND_AUDIT_EVENT);
         } catch (ParseException | JOSEException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse encryption public JWK",

@@ -60,7 +60,7 @@ public class CallDcmawAsyncCriHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.dcmawAsyncCriService = new DcmawAsyncCriService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.criStoringService =
                 new CriStoringService(
                         configService,

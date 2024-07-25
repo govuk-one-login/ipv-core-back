@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -550,7 +549,7 @@ class CheckCoiHandlerTest {
     class Errors {
         @Test
         @MockitoSettings(strictness = LENIENT)
-        void shouldReturnErrorIfIpvSessionIdNotFound() throws SqsException {
+        void shouldReturnErrorIfIpvSessionIdNotFound() {
             var request = ProcessRequest.processRequestBuilder().ipvSessionId(null).build();
 
             var responseMap = checkCoiHandler.handleRequest(request, mockContext);
