@@ -4,12 +4,14 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.RSAKey;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_ENCRYPTION_KEY_JWK;
 
+@ExcludeFromGeneratedCoverageReport
 public class JweDecrypterFactory {
     private JweDecrypterFactory() {
         throw new IllegalStateException("Utility class");

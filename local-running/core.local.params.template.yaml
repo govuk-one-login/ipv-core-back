@@ -4,7 +4,6 @@
 core:
   self:
     componentId: "https://identity.local.account.gov.uk"
-    signingKeyId: "TODO: PYIC-6992"
     audienceForClients: "https://identity.local.account.gov.uk"
     jwtTtlSeconds: 3600
     maxAllowedAuthClientTtl: 3600
