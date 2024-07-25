@@ -4,7 +4,7 @@ import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
-import { getAuditEvents } from "../clients/local-audit-client.js";
+import * as auditClient from "../clients/local-audit-client.js";
 import config from "../config/config.js";
 import {
   generateCriStubBody,
@@ -127,10 +127,10 @@ Then("I get a {string} identity", function (this: World, vot: string): void {
 });
 
 Then(
-  "a(n) {string} audit event was recorded",
+  "a(n) {string} audit event was recorded [local only]",
   async function (this: World, eventName: string): Promise<void> {
     if (config.LOCAL_AUDIT_EVENTS) {
-      const auditEvents = await getAuditEvents(this.journeyId);
+      const auditEvents = await auditClient.getAuditEvents(this.journeyId);
       const event = auditEvents.find((e) => e.event_name === eventName);
       if (!event) {
         assert.fail(

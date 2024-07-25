@@ -18,7 +18,7 @@ Feature: App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded
+    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   @Build
   Scenario: Successful P2 identity using Passport
@@ -38,4 +38,4 @@ Feature: App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded
+    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
