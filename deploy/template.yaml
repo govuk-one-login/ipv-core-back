@@ -1939,7 +1939,7 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimit-internal-api/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitInternalApi/api-key-*
       AutoPublishAlias: live
 
   CheckExistingIdentityFunctionLogGroup:
