@@ -18,9 +18,9 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exception.AuditException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -71,7 +71,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME,
                         VcStoreItem.class,
                         configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
     }
 
     @Override
@@ -95,7 +95,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                             String.format(
                                     "Finished attempt to restore %s VCs.",
                                     userIdCriIdPairs.size())));
-        } catch (SqsException e) {
+        } catch (AuditException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped restoring VCs because of failure to send audit event", e));
@@ -104,7 +104,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void restore(List<UserIdCriIdPair> userIdCriIdPairs) throws SqsException {
+    private void restore(List<UserIdCriIdPair> userIdCriIdPairs) {
         var numberOfVcs = userIdCriIdPairs.size();
 
         // Iterate over each VC
@@ -120,11 +120,12 @@ public class RestoreVcsHandler implements RequestStreamHandler {
                         LogHelper.buildLogMessage(
                                 String.format(
                                         "Successfully restored VC (%s / %s)", i + 1, numberOfVcs)));
-            } catch (SqsException e) {
-                throw new SqsException(
+            } catch (AuditException e) {
+                throw new AuditException(
                         String.format(
                                 "Failed to send audit event IPV_VC_RESTORED (%s / %s): %s",
-                                i + 1, numberOfVcs, e.getMessage()));
+                                i + 1, numberOfVcs, e.getMessage()),
+                        e.getCause());
             } catch (ItemAlreadyExistsException e) {
                 LOGGER.info(
                         LogHelper.buildErrorMessage(
@@ -143,8 +144,8 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void restore(UserIdCriIdPair userIdCriIdPair)
-            throws VerifiableCredentialException, ItemAlreadyExistsException, SqsException,
-                    RestoreVcException, UnrecognisedVotException, CredentialParseException {
+            throws VerifiableCredentialException, ItemAlreadyExistsException, RestoreVcException,
+                    UnrecognisedVotException, CredentialParseException {
         // Read VC with userId and CriId
         var archivedVc =
                 archivedVcDataStore.getItem(
@@ -179,7 +180,7 @@ public class RestoreVcsHandler implements RequestStreamHandler {
     }
 
     private void sendVcRestoredAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws SqsException, UnrecognisedVotException, CredentialParseException {
+            throws UnrecognisedVotException, CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         var vc = VerifiableCredential.fromVcStoreItem(vcStoreItem);

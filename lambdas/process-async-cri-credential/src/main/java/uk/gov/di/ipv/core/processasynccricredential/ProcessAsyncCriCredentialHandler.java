@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -92,7 +91,7 @@ public class ProcessAsyncCriCredentialHandler
         this.configService = ConfigService.create();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.evcsService = new EvcsService(configService);
@@ -128,7 +127,6 @@ public class ProcessAsyncCriCredentialHandler
             }
         } catch (JsonProcessingException
                 | ParseException
-                | SqsException
                 | CiPutException
                 | AsyncVerifiableCredentialException
                 | UnrecognisedVotException
@@ -150,8 +148,7 @@ public class ProcessAsyncCriCredentialHandler
         return List.of();
     }
 
-    private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse)
-            throws SqsException {
+    private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse) {
         CriResponseItem responseItem =
                 criResponseService.getCriResponseItem(
                         errorAsyncCriResponse.getUserId(),
@@ -180,7 +177,7 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException, SqsException, CiPutException, AsyncVerifiableCredentialException,
+            throws ParseException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
                     UnrecognisedVotException, CredentialParseException, EvcsServiceException,
                     HttpResponseExceptionWithErrorBody {
@@ -255,7 +252,7 @@ public class ProcessAsyncCriCredentialHandler
             AuditEventUser auditEventUser,
             VerifiableCredential verifiableCredential,
             boolean isSuccessful)
-            throws SqsException, UnrecognisedVotException {
+            throws UnrecognisedVotException {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
@@ -266,8 +263,7 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     @Tracing
-    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc)
-            throws SqsException {
+    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc) {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
@@ -279,8 +275,7 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     @Tracing
-    private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse)
-            throws SqsException {
+    private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse) {
         AuditEventUser auditEventUser =
                 new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
 

@@ -4,7 +4,7 @@ export default {
     "html:reports/api-tests-cucumber-report.html",
     "json:reports/api-tests-cucumber-report.json",
   ],
-  publish: true,
+  publish: false,
   retry: 1,
   loader: ["ts-node/esm"],
   import: ["src/steps/**/*.ts", "src/config/**/*.ts"],

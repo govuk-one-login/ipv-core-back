@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -112,7 +111,7 @@ public class InitialiseIpvSessionHandler
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter();
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -289,11 +288,6 @@ public class InitialiseIpvSessionHandler
                             "Jar validation failed.", e.getErrorObject().getDescription()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
-        } catch (SqsException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException | IllegalArgumentException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body into map.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -340,8 +334,7 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws RecoverableJarValidationException, ParseException, CredentialParseException,
-                    SqsException {
+            throws RecoverableJarValidationException, ParseException, CredentialParseException {
         try {
             var inheritedIdentityVc =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
@@ -504,7 +497,7 @@ public class InitialiseIpvSessionHandler
             VerifiableCredential inheritedIdentityVc,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws SqsException, CredentialParseException, UnrecognisedVotException {
+            throws CredentialParseException, UnrecognisedVotException {
         try {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(

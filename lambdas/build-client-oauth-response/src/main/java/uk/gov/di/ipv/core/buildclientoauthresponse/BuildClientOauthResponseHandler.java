@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -73,7 +72,7 @@ public class BuildClientOauthResponseHandler
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
     }
 
     public BuildClientOauthResponseHandler(
@@ -213,11 +212,6 @@ public class BuildClientOauthResponseHandler
             return buildJourneyErrorResponse(
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
-        } catch (SqsException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to send audit event to SQS queue.", e));
-            return buildJourneyErrorResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (URISyntaxException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to construct redirect uri.", e));
             return buildJourneyErrorResponse(

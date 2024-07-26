@@ -100,7 +100,7 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
 
         for (var item : records.values()) {
             try {
-                if (indexMethod.invoke(item).toString().equals(value)) {
+                if (value.equals(indexMethod.invoke(item))) {
                     return item;
                 }
             } catch (IllegalAccessException | InvocationTargetException e) {

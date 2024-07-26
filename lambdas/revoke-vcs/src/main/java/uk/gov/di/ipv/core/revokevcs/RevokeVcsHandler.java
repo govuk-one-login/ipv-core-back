@@ -19,8 +19,8 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdCriIdPair;
 import uk.gov.di.ipv.core.library.domain.VcsActionRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exception.AuditException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -74,7 +74,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         EnvironmentVariable.REVOKED_USER_CREDENTIALS_TABLE_NAME,
                         VcStoreItem.class,
                         configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                             String.format(
                                     "Finished attempt to revoke %s VCs.",
                                     userIdCriIdPairs.size())));
-        } catch (SqsException e) {
+        } catch (AuditException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped revoking VCs because of failure to send audit event.", e));
@@ -110,8 +110,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         }
     }
 
-    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs, RevokeVcsResult result)
-            throws SqsException {
+    private void revoke(List<UserIdCriIdPair> userIdCriIdPairs, RevokeVcsResult result) {
         var numberOfVcs = userIdCriIdPairs.size();
 
         // Iterate over each VC
@@ -142,8 +141,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void revoke(UserIdCriIdPair userIdCriIdPair)
-            throws SqsException, RevokeVcException, UnrecognisedVotException,
-                    CredentialParseException {
+            throws RevokeVcException, UnrecognisedVotException, CredentialParseException {
         // Read VC with userId and CriId
         var vcStoreItem =
                 vcDataStore.getItem(userIdCriIdPair.getUserId(), userIdCriIdPair.getCriId());
@@ -163,7 +161,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
     }
 
     private void sendVcRevokedAuditEvent(String userId, VcStoreItem vcStoreItem)
-            throws SqsException, UnrecognisedVotException, CredentialParseException {
+            throws UnrecognisedVotException, CredentialParseException {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         AuditExtensionsVcEvidence auditExtensions =
@@ -177,8 +175,7 @@ public class RevokeVcsHandler implements RequestStreamHandler {
         auditService.sendAuditEvent(auditEvent);
     }
 
-    private void sendRevokedFailureAuditEvent(String userId, String criId, int i, int numberOfVcs)
-            throws SqsException {
+    private void sendRevokedFailureAuditEvent(String userId, String criId, int i, int numberOfVcs) {
         var auditEventUser = new AuditEventUser(userId, null, null, null);
 
         var auditExtensions = new AuditExtensionCriId(criId);
@@ -190,11 +187,12 @@ public class RevokeVcsHandler implements RequestStreamHandler {
                         auditExtensions);
         try {
             auditService.sendAuditEvent(auditEvent);
-        } catch (SqsException e) {
-            throw new SqsException(
+        } catch (AuditException e) {
+            throw new AuditException(
                     String.format(
                             "Failed to send audit event IPV_VC_REVOKED_FAILURE (%s / %s): %s",
-                            i + 1, numberOfVcs, e.getMessage()));
+                            i + 1, numberOfVcs, e.getMessage()),
+                    e.getCause());
         }
     }
 }

@@ -9,6 +9,7 @@ const config: Record<string, string> = {
     .CORE_BACK_PUBLIC_ENCRYPTION_KEY as string,
   ORCHESTRATOR_REDIRECT_URL: process.env.ORCHESTRATOR_REDIRECT_URL as string,
   JAR_SIGNING_KEY: process.env.JAR_SIGNING_KEY as string,
+  LOCAL_AUDIT_EVENTS: process.env.LOCAL_AUDIT_EVENTS as string,
 };
 
 export default config;

@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -85,7 +84,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     public BuildUserIdentityHandler() {
         super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
     }
@@ -148,8 +147,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
-        } catch (SqsException e) {
-            return serverErrorJsonResponse("Failed to send audit event to SQS queue.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiRetrievalException e) {
@@ -178,8 +175,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             Vot thresholdVot,
             AuditEventUser auditEventUser,
             ContraIndicators contraIndicators,
-            UserIdentity userIdentity)
-            throws SqsException {
+            UserIdentity userIdentity) {
 
         var configMap = configService.getContraIndicatorConfigMap();
         var auditEventReturnCodes =

@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -97,7 +96,7 @@ public class ProcessJourneyEventHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyEventHandler() throws IOException {
         this.configService = ConfigService.create();
-        this.auditService = new AuditService(AuditService.getSqsClients(), configService);
+        this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.stateMachines =
@@ -168,9 +167,6 @@ public class ProcessJourneyEventHandler
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
-        } catch (SqsException e) {
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -183,7 +179,7 @@ public class ProcessJourneyEventHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             String currentPage)
-            throws JourneyEngineException, SqsException {
+            throws JourneyEngineException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(ipvSessionItem, auditEventUser, deviceInformation);
             journeyEvent = NEXT_EVENT;
@@ -265,8 +261,7 @@ public class ProcessJourneyEventHandler
             String currentPage,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws StateMachineNotFoundException, SqsException, UnknownEventException,
-                    UnknownStateException {
+            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
@@ -340,8 +335,9 @@ public class ProcessJourneyEventHandler
 
     @Tracing
     private void updateUserSessionForTimeout(
-            IpvSessionItem ipvSessionItem, AuditEventUser auditEventUser, String deviceInformation)
-            throws SqsException {
+            IpvSessionItem ipvSessionItem,
+            AuditEventUser auditEventUser,
+            String deviceInformation) {
         var oldJourneyState = ipvSessionItem.getState();
 
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
@@ -384,8 +380,7 @@ public class ProcessJourneyEventHandler
             AuditEventTypes auditEventType,
             Map<String, String> auditContext,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws SqsException {
+            String deviceInformation) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         auditEventType,
@@ -412,8 +407,7 @@ public class ProcessJourneyEventHandler
     }
 
     private void sendSubJourneyStartAuditEvent(
-            AuditEventUser auditEventUser, IpvJourneyTypes journeyType, String deviceInformation)
-            throws SqsException {
+            AuditEventUser auditEventUser, IpvJourneyTypes journeyType, String deviceInformation) {
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_SUBJOURNEY_START,

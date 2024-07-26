@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -68,8 +67,7 @@ class CriStoringServiceTest {
     @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
 
     @Test
-    void storeCriResponseShouldStoreResponseAndSendAuditEvent()
-            throws SqsException, JsonProcessingException {
+    void storeCriResponseShouldStoreResponseAndSendAuditEvent() throws JsonProcessingException {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -82,7 +80,7 @@ class CriStoringServiceTest {
 
     @Test
     void storeCriResponseShouldStoreResponseAndSendAuditEvent_forJourneyReq()
-            throws SqsException, JsonProcessingException {
+            throws JsonProcessingException {
         // Arrange
         var journeyRequest = new JourneyRequest();
         journeyRequest.setIpvSessionId(TEST_IPV_SESSION_ID);
@@ -104,7 +102,7 @@ class CriStoringServiceTest {
 
     private void verifyAndAssert(
             List<String> featureSets, ClientOAuthSessionItem clientOAuthSessionItem)
-            throws SqsException, JsonProcessingException {
+            throws JsonProcessingException {
         // verify
         verify(mockCriResponseService)
                 .persistCriResponse(
@@ -134,19 +132,6 @@ class CriStoringServiceTest {
         var sentAuditEvent = auditEventCaptor.getValue();
         assertEquals(
                 AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, sentAuditEvent.getEventName());
-    }
-
-    @Test
-    void storeCriResponseShouldThrowSqsException() throws SqsException {
-        // Arrange
-        var callbackRequest = buildValidCallbackRequest();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
-
-        // Act & Assert
-        assertThrows(
-                SqsException.class,
-                () -> criStoringService.recordCriResponse(callbackRequest, clientOAuthSessionItem));
     }
 
     @Test
@@ -344,26 +329,6 @@ class CriStoringServiceTest {
         // Act & Assert
         assertThrows(
                 CiPostMitigationsException.class,
-                () ->
-                        criStoringService.storeVcs(
-                                callbackRequest.getCredentialIssuer(),
-                                callbackRequest.getIpAddress(),
-                                callbackRequest.getDeviceInformation(),
-                                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
-                                clientOAuthSessionItem,
-                                mockIpvSessionItem));
-    }
-
-    @Test
-    void storeVcsShouldThrowSqsExceptionWhenAuditEventFailsToSend() throws SqsException {
-        // Arrange
-        var callbackRequest = buildValidCallbackRequest();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        doThrow(new SqsException("")).when(mockAuditService).sendAuditEvent(any(AuditEvent.class));
-
-        // Act & Assert
-        assertThrows(
-                SqsException.class,
                 () ->
                         criStoringService.storeVcs(
                                 callbackRequest.getCredentialIssuer(),

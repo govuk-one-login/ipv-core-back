@@ -10,12 +10,7 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -23,12 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
@@ -46,443 +39,28 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_KBV;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EXAMPLE_GENERATED_SECURE_TOKEN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
-@PactTestFor(providerName = "ExperianKbvCriProvider")
+@PactTestFor(providerName = "ExperianKbvCriVcProvider")
 @MockServerConfig(hostInterface = "localhost")
-class ContractTest {
-    private static final String TEST_USER = "test-subject";
-    private static final String TEST_ISSUER = "dummyExperianKbvComponentId";
-    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
-    private static final String PRIVATE_API_KEY = "dummyApiKey";
-    private static final Clock CURRENT_TIME =
-            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    private static final String CLIENT_ASSERTION_HEADER = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9";
-    private static final String CLIENT_ASSERTION_BODY =
-            "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlFeHBlcmlhbktidkNvbXBvbmVudElkIiwiZXhwIjo0MDcwOTA5NzAwLCJqdGkiOiJTY25GNGRHWHRoWllYU181azg1T2JFb1NVMDRXLUgzcWFfcDZucHYyWlVZIn0"; // pragma: allowlist secret
-    // Signature generated using JWT.io
-    private static final String CLIENT_ASSERTION_SIGNATURE =
-            "aJOEpvnBRpaptv_2T7L5aCzhTdvlNaGNh3uwuK1f5cC9he9izuIr60s2_Y6-DIPEWLE0_L6ckgdIsy9G7yj8jA"; // pragma: allowlist secret
-    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
-    // sent by the CRI team
-    private static final String VALID_VC_HEADER =
-            """
-            {
-              "alg": "ES256",
-              "typ": "JWT"
-            }
-            """;
-
-    private static final String VALID_VC_BODY =
-            """
-                {
-                  "iss": "dummyExperianKbvComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "vc": {
-                    "type": [
-                      "VerifiableCredential",
-                      "IdentityCheckCredential"
-                    ],
-                    "credentialSubject": {
-                      "name": [
-                        {
-                          "nameParts": [
-                            {
-                              "type": "GivenName",
-                              "value": "Mary"
-                            },
-                            {
-                              "type": "FamilyName",
-                              "value": "Watson"
-                            }
-                          ]
-                        }
-                      ],
-                      "birthDate": [
-                        {
-                          "value": "1932-02-25"
-                        }
-                      ],
-                      "address": [
-                        {
-                          "uprn": "10022812929",
-                          "organisationName": "FINCH GROUP",
-                          "subBuildingName": "UNIT 2B",
-                          "buildingNumber": "16",
-                          "buildingName": "COY POND BUSINESS PARK",
-                          "dependentStreetName": "KINGS PARK",
-                          "streetName": "BIG STREET",
-                          "doubleDependentAddressLocality": "SOME DISTRICT",
-                          "dependentAddressLocality": "LONG EATON",
-                          "addressLocality": "GREAT MISSENDEN",
-                          "postalCode": "HP16 0AL",
-                          "addressCountry": "GB"
-                        }
-                      ]
-                    },
-                "evidence": [
-                    {
-                      "checkDetails": [
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 2,
-                          "kbvResponseMode": "multiple_choice"
-                        },
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 2,
-                          "kbvResponseMode": "multiple_choice"
-                        },
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 1,
-                          "kbvResponseMode": "multiple_choice"
-                        }
-                      ],
-                      "verificationScore": 2,
-                      "txn": "dummyTxn",
-                      "type": "IdentityCheck"
-                    }]
-                  }
-                }
-                """;
-
-    private static final String VALID_THIN_FILE_VC_BODY =
-            """
-            {
-               "iss": "dummyExperianKbvComponentId",
-               "sub": "test-subject",
-               "nbf": 4070908800,
-               "vc": {
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ],
-                 "credentialSubject": {
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Mary"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Watson"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1932-02-25"
-                     }
-                   ],
-               "address": [
-                     {
-                       "uprn": "10022812929",
-                       "organisationName": "FINCH GROUP",
-                       "subBuildingName": "UNIT 2B",
-                       "buildingNumber": "16",
-                       "buildingName": "COY POND BUSINESS PARK",
-                       "dependentStreetName": "KINGS PARK",
-                       "streetName": "BIG STREET",
-                       "doubleDependentAddressLocality": "SOME DISTRICT",
-                       "dependentAddressLocality": "LONG EATON",
-                       "addressLocality": "GREAT MISSENDEN",
-                       "postalCode": "HP16 0AL",
-                       "addressCountry": "GB"
-                     }
-                   ]
-             },
-             "evidence": [
-                 {
-                   "type": "IdentityCheck",
-                   "txn": "dummyTxn",
-                   "verificationScore": 0,
-                   "checkDetails": [
-                     {
-                       "checkMethod": "kbv",
-                       "kbvQuality": 3,
-                       "kbvResponseMode": "multiple_choice"
-                     },
-                     {
-                       "checkMethod": "kbv",
-                       "kbvQuality": 2,
-                       "kbvResponseMode": "multiple_choice"
-                     }
-                   ]
-                 }
-               ]
-               }
-             }
-            """;
-
-    private static final String FAILED_VC_BODY =
-            """
-            {
-              "iss": "dummyExperianKbvComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                        {
-                          "uprn": "10022812929",
-                          "organisationName": "FINCH GROUP",
-                          "subBuildingName": "UNIT 2B",
-                          "buildingNumber": "16",
-                          "buildingName": "COY POND BUSINESS PARK",
-                          "dependentStreetName": "KINGS PARK",
-                          "streetName": "BIG STREET",
-                          "doubleDependentAddressLocality": "SOME DISTRICT",
-                          "dependentAddressLocality": "LONG EATON",
-                          "addressLocality": "GREAT MISSENDEN",
-                          "postalCode": "HP16 0AL",
-                          "addressCountry": "GB"
-                        }
-                      ]
-                },
-                "evidence": [
-                    {
-                        "type": "IdentityCheck",
-                        "txn": "dummyTxn",
-                        "verificationScore": 0,
-                        "checkDetails": [
-                            {
-                                "checkMethod": "kbv",
-                                "kbvQuality": 3,
-                                "kbvResponseMode": "multiple_choice"
-                            }
-                        ],
-                        "failedCheckDetails": [
-                            {
-                                "kbvResponseMode": "multiple_choice",
-                                "checkMethod": "kbv"
-                            },
-                            {
-                                "kbvResponseMode": "multiple_choice",
-                                "checkMethod": "kbv"
-                            }],
-                            "ci": ["A03"]
-                    }
-                  ]
-              }
-            }
-            """;
-
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_VC_SIGNATURE =
-            "ar6tKitq-mO854GDVKKXMfNFaYUOeMY2SZeqgByDRFGhno2dae4VR3AE2yFx798y6vUbTeFfcZ9jsRs37lZ65A"; // pragma: allowlist secret
-
-    private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "GIJxbgGgu57fydU-7Qnu7-9PN7QdOK4Lg_TvP7vSHvhhSA16k8dvbfiQpT45fZ-Hs9CrOzGCe3jCgaQAlAnOQA"; // pragma: allowlist secret
-
-    private static final String FAILED_VC_SIGNATURE =
-            "7sZ4VzYx1Sa-dtopqcEWptXoH2YVdbsyO41bujquBmujbovRI6F9QJAEt5eYOGTyJ-sro_6yfpEWR14uxLAycg"; // pragma: allowlist secret
-
+class CredentialTests {
     @Mock private ConfigService mockConfigService;
     @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
-    @Mock private JWSSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsValidAccessToken(PactDslWithProvider builder) {
-        return builder.given("dummyAuthCode is a valid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyExperianKbvComponentId is the experianKbv CRI component ID")
-                .given(
-                        "ExperianKbv CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Valid auth code")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Dkbv&client_assertion=" // pragma: allowlist secret
-                                + CLIENT_ASSERTION_HEADER
-                                + "."
-                                + CLIENT_ASSERTION_BODY
-                                + "."
-                                + CLIENT_ASSERTION_SIGNATURE)
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(200)
-                .body(
-                        newJsonBody(
-                                        body -> {
-                                            body.stringType("access_token");
-                                            body.stringValue("token_type", "Bearer");
-                                            body.integerType("expires_in");
-                                        })
-                                .build())
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "validRequestReturnsValidAccessToken")
-    void fetchAccessToken_whenCalledAgainstExperianKbvCri_retrievesAValidAccessToken(
-            MockServer mockServer) throws URISyntaxException, JOSEException, CriApiException {
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
-        when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn("900");
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
-
-        // Signature generated by jwt.io by debugging the test and getting the client assertion JWT
-        // generated by the test as mocking out the AWSKMS class inside the real signer would be
-        // painful.
-        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
-        when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
-        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
-
-        // Act
-        BearerAccessToken accessToken =
-                underTest.fetchAccessToken(
-                        getCallbackRequest("dummyAuthCode"), getCriOAuthSessionItem());
-        // Assert
-        assertThat(accessToken.getType(), is(AccessTokenType.BEARER));
-        assertThat(accessToken.getValue(), notNullValue());
-        assertThat(accessToken.getLifetime(), greaterThan(0L));
-    }
-
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
-        return builder.given("dummyInvalidAuthCode is an invalid authorization code")
-                .given("dummyApiKey is a valid api key")
-                .given("dummyExperianKbvComponentId is the experianKbv CRI component ID")
-                .given(
-                        "ExperianKbv CRI uses CORE_BACK_SIGNING_PRIVATE_KEY_JWK to validate core signatures")
-                .uponReceiving("Invalid authorization code")
-                .path("/token")
-                .method("POST")
-                .body(
-                        "client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&code=dummyInvalidAuthCode&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fidentity.staging.account.gov.uk%2Fcredential-issuer%2Fcallback%3Fid%3Dkbv&client_assertion="
-                                + CLIENT_ASSERTION_HEADER
-                                + "."
-                                + CLIENT_ASSERTION_BODY
-                                + "."
-                                + CLIENT_ASSERTION_SIGNATURE)
-                .headers(
-                        "x-api-key",
-                        PRIVATE_API_KEY,
-                        "Content-Type",
-                        "application/x-www-form-urlencoded; charset=UTF-8")
-                .willRespondWith()
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
-    void fetchAccessToken_whenCalledAgainstExperianKbvCriWithInvalidAuthCode_throwsAnException(
-            MockServer mockServer) throws URISyntaxException, JOSEException {
-
-        // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
-
-        when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn("900");
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
-
-        // Signature generated by jwt.io by debugging the test and getting the client assertion
-        // JWT
-        // generated by the test as mocking out the AWSKMS class inside the real signer would be
-        // painful.
-        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
-        when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
-        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
-        when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
-
-        // We need to generate a fixed request, so we set the secure token and expiry to
-        // constant
-        // values.
-        var underTest =
-                new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
-
-        // Act
-        CriApiException exception =
-                assertThrows(
-                        CriApiException.class,
-                        () ->
-                                underTest.fetchAccessToken(
-                                        getCallbackRequest("dummyInvalidAuthCode"),
-                                        getCriOAuthSessionItem()));
-
-        // Assert
-        assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(400, exception.getHttpStatusCode());
-    }
-
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "ExperianKbvCriVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredential(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyAccessToken is a valid access token")
@@ -615,7 +193,7 @@ class ContractTest {
                         });
     }
 
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "ExperianKbvCriVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredentialWithFailedAnswer(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
@@ -743,7 +321,7 @@ class ContractTest {
                         });
     }
 
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "ExperianKbvCriVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidAccessTokenReturns401(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
@@ -797,7 +375,7 @@ class ContractTest {
         assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_SERVER_ERROR));
     }
 
-    @Pact(provider = "ExperianKbvCriProvider", consumer = "IpvCoreBack")
+    @Pact(provider = "ExperianKbvCriVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsIssuedCredentialWithCi(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
@@ -989,21 +567,6 @@ class ContractTest {
     }
 
     @NotNull
-    private static CriCallbackRequest getCallbackRequest(String authCode) {
-        return new CriCallbackRequest(
-                authCode,
-                EXPERIAN_KBV.getId(),
-                "dummySessionId",
-                "https://identity.staging.account.gov.uk/credential-issuer/callback?id=kbv",
-                "dummyState",
-                null,
-                null,
-                "dummyIpAddress",
-                "dummyDeviceInformation",
-                List.of("dummyFeatureSet"));
-    }
-
-    @NotNull
     private static OauthCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
         return OauthCriConfig.builder()
@@ -1021,4 +584,263 @@ class ContractTest {
                 .requiresAdditionalEvidence(false)
                 .build();
     }
+
+    private static final String TEST_USER = "test-subject";
+    private static final String TEST_ISSUER = "dummyExperianKbvComponentId";
+    private static final String IPV_CORE_CLIENT_ID = "ipv-core";
+    private static final String PRIVATE_API_KEY = "dummyApiKey";
+    private static final Clock CURRENT_TIME =
+            Clock.fixed(Instant.parse("2099-01-01T00:00:00.00Z"), ZoneOffset.UTC);
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    // We hardcode the VC headers and bodies like this so that it is easy to update them from JSON
+    // sent by the CRI team
+    private static final String VALID_VC_HEADER =
+            """
+            {
+              "alg": "ES256",
+              "typ": "JWT"
+            }
+            """;
+
+    private static final String VALID_VC_BODY =
+            """
+                {
+                  "iss": "dummyExperianKbvComponentId",
+                  "sub": "test-subject",
+                  "nbf": 4070908800,
+                  "vc": {
+                    "type": [
+                      "VerifiableCredential",
+                      "IdentityCheckCredential"
+                    ],
+                    "credentialSubject": {
+                      "name": [
+                        {
+                          "nameParts": [
+                            {
+                              "type": "GivenName",
+                              "value": "Mary"
+                            },
+                            {
+                              "type": "FamilyName",
+                              "value": "Watson"
+                            }
+                          ]
+                        }
+                      ],
+                      "birthDate": [
+                        {
+                          "value": "1932-02-25"
+                        }
+                      ],
+                      "address": [
+                        {
+                          "uprn": "10022812929",
+                          "organisationName": "FINCH GROUP",
+                          "subBuildingName": "UNIT 2B",
+                          "buildingNumber": "16",
+                          "buildingName": "COY POND BUSINESS PARK",
+                          "dependentStreetName": "KINGS PARK",
+                          "streetName": "BIG STREET",
+                          "doubleDependentAddressLocality": "SOME DISTRICT",
+                          "dependentAddressLocality": "LONG EATON",
+                          "addressLocality": "GREAT MISSENDEN",
+                          "postalCode": "HP16 0AL",
+                          "addressCountry": "GB"
+                        }
+                      ]
+                    },
+                "evidence": [
+                    {
+                      "checkDetails": [
+                        {
+                          "checkMethod": "kbv",
+                          "kbvQuality": 2,
+                          "kbvResponseMode": "multiple_choice"
+                        },
+                        {
+                          "checkMethod": "kbv",
+                          "kbvQuality": 2,
+                          "kbvResponseMode": "multiple_choice"
+                        },
+                        {
+                          "checkMethod": "kbv",
+                          "kbvQuality": 1,
+                          "kbvResponseMode": "multiple_choice"
+                        }
+                      ],
+                      "verificationScore": 2,
+                      "txn": "dummyTxn",
+                      "type": "IdentityCheck"
+                    }]
+                  }
+                }
+                """;
+
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_SIGNATURE =
+            "ar6tKitq-mO854GDVKKXMfNFaYUOeMY2SZeqgByDRFGhno2dae4VR3AE2yFx798y6vUbTeFfcZ9jsRs37lZ65A"; // pragma: allowlist secret
+
+    private static final String VALID_THIN_FILE_VC_BODY =
+            """
+            {
+               "iss": "dummyExperianKbvComponentId",
+               "sub": "test-subject",
+               "nbf": 4070908800,
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Mary"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Watson"
+                         }
+                       ]
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1932-02-25"
+                     }
+                   ],
+               "address": [
+                     {
+                       "uprn": "10022812929",
+                       "organisationName": "FINCH GROUP",
+                       "subBuildingName": "UNIT 2B",
+                       "buildingNumber": "16",
+                       "buildingName": "COY POND BUSINESS PARK",
+                       "dependentStreetName": "KINGS PARK",
+                       "streetName": "BIG STREET",
+                       "doubleDependentAddressLocality": "SOME DISTRICT",
+                       "dependentAddressLocality": "LONG EATON",
+                       "addressLocality": "GREAT MISSENDEN",
+                       "postalCode": "HP16 0AL",
+                       "addressCountry": "GB"
+                     }
+                   ]
+             },
+             "evidence": [
+                 {
+                   "type": "IdentityCheck",
+                   "txn": "dummyTxn",
+                   "verificationScore": 0,
+                   "checkDetails": [
+                     {
+                       "checkMethod": "kbv",
+                       "kbvQuality": 3,
+                       "kbvResponseMode": "multiple_choice"
+                     },
+                     {
+                       "checkMethod": "kbv",
+                       "kbvQuality": 2,
+                       "kbvResponseMode": "multiple_choice"
+                     }
+                   ]
+                 }
+               ]
+               }
+             }
+            """;
+
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_THIN_FILE_VC_SIGNATURE =
+            "GIJxbgGgu57fydU-7Qnu7-9PN7QdOK4Lg_TvP7vSHvhhSA16k8dvbfiQpT45fZ-Hs9CrOzGCe3jCgaQAlAnOQA"; // pragma: allowlist secret
+
+    private static final String FAILED_VC_BODY =
+            """
+            {
+              "iss": "dummyExperianKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "address": [
+                        {
+                          "uprn": "10022812929",
+                          "organisationName": "FINCH GROUP",
+                          "subBuildingName": "UNIT 2B",
+                          "buildingNumber": "16",
+                          "buildingName": "COY POND BUSINESS PARK",
+                          "dependentStreetName": "KINGS PARK",
+                          "streetName": "BIG STREET",
+                          "doubleDependentAddressLocality": "SOME DISTRICT",
+                          "dependentAddressLocality": "LONG EATON",
+                          "addressLocality": "GREAT MISSENDEN",
+                          "postalCode": "HP16 0AL",
+                          "addressCountry": "GB"
+                        }
+                      ]
+                },
+                "evidence": [
+                    {
+                        "type": "IdentityCheck",
+                        "txn": "dummyTxn",
+                        "verificationScore": 0,
+                        "checkDetails": [
+                            {
+                                "checkMethod": "kbv",
+                                "kbvQuality": 3,
+                                "kbvResponseMode": "multiple_choice"
+                            }
+                        ],
+                        "failedCheckDetails": [
+                            {
+                                "kbvResponseMode": "multiple_choice",
+                                "checkMethod": "kbv"
+                            },
+                            {
+                                "kbvResponseMode": "multiple_choice",
+                                "checkMethod": "kbv"
+                            }],
+                            "ci": ["A03"]
+                    }
+                  ]
+              }
+            }
+            """;
+
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_VC_SIGNATURE =
+            "7sZ4VzYx1Sa-dtopqcEWptXoH2YVdbsyO41bujquBmujbovRI6F9QJAEt5eYOGTyJ-sro_6yfpEWR14uxLAycg"; // pragma: allowlist secret
 }
