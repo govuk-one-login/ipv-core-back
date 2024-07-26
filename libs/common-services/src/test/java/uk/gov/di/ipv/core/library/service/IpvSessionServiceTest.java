@@ -82,7 +82,7 @@ class IpvSessionServiceTest {
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
 
-        IpvSessionItem result = ipvSessionService.getIpvSession(ipvSessionID, true);
+        IpvSessionItem result = ipvSessionService.getIpvSessionWithRetry(ipvSessionID);
 
         ArgumentCaptor<String> ipvSessionIDArgumentCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockDataStore).getItem(ipvSessionIDArgumentCaptor.capture());
@@ -106,7 +106,7 @@ class IpvSessionServiceTest {
 
         assertThrows(
                 IpvSessionNotFoundException.class,
-                () -> ipvSessionService.getIpvSession(ipvSessionID, true));
+                () -> ipvSessionService.getIpvSessionWithRetry(ipvSessionID));
     }
 
     @Test
@@ -119,7 +119,7 @@ class IpvSessionServiceTest {
 
         assertThrows(
                 IpvSessionNotFoundException.class,
-                () -> ipvSessionService.getIpvSession(ipvSessionID, true));
+                () -> ipvSessionService.getIpvSessionWithRetry(ipvSessionID));
     }
 
     @Test

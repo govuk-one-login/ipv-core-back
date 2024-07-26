@@ -51,25 +51,26 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId) throws IpvSessionNotFoundException {
-        return getIpvSession(ipvSessionId, false);
+        IpvSessionItem ipvSessionItem = dataStore.getItem(ipvSessionId);
+        if (ipvSessionItem == null) {
+            throw new IpvSessionNotFoundException(
+                    "The session not found in the database for the supplied session Id");
+        }
+        return ipvSessionItem;
     }
 
-    public IpvSessionItem getIpvSession(String ipvSessionId, boolean withRetry)
+    public IpvSessionItem getIpvSessionWithRetry(String ipvSessionId)
             throws IpvSessionNotFoundException {
-        if (withRetry) {
-            return callRunTaskWithBackoff(
-                    () -> {
-                        var item = dataStore.getItem(ipvSessionId);
-                        if (item == null) {
-                            throw new RetryableException(
-                                    new IpvSessionNotFoundException(
-                                            "The session not found in the database for the supplied session Id"));
-                        }
-                        return item;
-                    });
-        } else {
-            return dataStore.getItem(ipvSessionId);
-        }
+        return callRunTaskWithBackoff(
+                () -> {
+                    var item = dataStore.getItem(ipvSessionId);
+                    if (item == null) {
+                        throw new RetryableException(
+                                new IpvSessionNotFoundException(
+                                        "The session not found in the database for the supplied session Id"));
+                    }
+                    return item;
+                });
     }
 
     public IpvSessionItem getIpvSessionByAuthorizationCode(String authorizationCode)

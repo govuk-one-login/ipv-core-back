@@ -214,7 +214,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation = event.getDeviceInformation();
             configService.setFeatureSet(RequestHelper.getFeatureSet(event));
 
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId, true);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
