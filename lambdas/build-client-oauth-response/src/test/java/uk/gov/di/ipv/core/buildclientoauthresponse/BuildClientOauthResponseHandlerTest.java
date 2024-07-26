@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -93,7 +94,8 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest() throws URISyntaxException {
+    void shouldReturn200OnSuccessfulOauthRequest()
+            throws URISyntaxException, IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
@@ -139,7 +141,8 @@ class BuildClientOauthResponseHandlerTest {
     @ParameterizedTest
     @MethodSource("testParamsForSuccessfulOauthRequestForReproveIdentity")
     void shouldReturn200OnSuccessfulOauthRequestForReproveIdentity(
-            Vot vot, String vtr, boolean success) throws URISyntaxException {
+            Vot vot, String vtr, boolean success)
+            throws URISyntaxException, IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = spy(generateIpvSessionItem());
@@ -232,7 +235,8 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200WhenStateNotInSession() throws URISyntaxException {
+    void shouldReturn200WhenStateNotInSession()
+            throws URISyntaxException, IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -263,7 +267,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfRequestFailsValidation() {
+    void shouldReturn400IfRequestFailsValidation() throws IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS));
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -289,7 +293,8 @@ class BuildClientOauthResponseHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {OAuth2RequestParams.CLIENT_ID, OAuth2RequestParams.RESPONSE_TYPE})
-    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams(String param) {
+    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams(String param)
+            throws IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -376,7 +381,8 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequestForJsonRequest() throws URISyntaxException {
+    void shouldReturn200OnSuccessfulOauthRequestForJsonRequest()
+            throws URISyntaxException, IpvSessionNotFoundException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = generateIpvSessionItem();

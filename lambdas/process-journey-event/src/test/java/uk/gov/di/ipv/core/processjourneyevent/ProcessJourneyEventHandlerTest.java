@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -177,7 +178,8 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfNoStateMachineMatchingJourneyType() throws IOException {
+    void shouldReturn500IfNoStateMachineMatchingJourneyType()
+            throws IOException, IpvSessionNotFoundException {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -219,7 +221,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnCurrentStateIfPageOutOfSync() throws IOException {
+    void shouldReturnCurrentStateIfPageOutOfSync() throws IOException, IpvSessionNotFoundException {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -244,7 +246,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnNextStateIfInSync() throws IOException {
+    void shouldReturnNextStateIfInSync() throws IOException, IpvSessionNotFoundException {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -274,7 +276,8 @@ class ProcessJourneyEventHandlerTest {
     @ParameterizedTest()
     @MethodSource("journeyUrisWithCurrentPageForCri")
     void shouldTransitionCriStateIfCurrentPageMatchesCriId(
-            String journeyUri, String expectedNewJourneyState) throws IOException {
+            String journeyUri, String expectedNewJourneyState)
+            throws IOException, IpvSessionNotFoundException {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -315,7 +318,8 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldThrowErrorIfJourneyEventDuringProcess() throws IOException {
+    void shouldThrowErrorIfJourneyEventDuringProcess()
+            throws IOException, IpvSessionNotFoundException {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -944,7 +948,7 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
 
-    private void mockIpvSessionItemAndTimeout(String userState) {
+    private void mockIpvSessionItemAndTimeout(String userState) throws IpvSessionNotFoundException {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());

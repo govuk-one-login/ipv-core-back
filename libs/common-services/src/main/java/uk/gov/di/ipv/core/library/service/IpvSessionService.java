@@ -11,7 +11,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.retry.RetryableTask;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 
 import java.time.Instant;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
@@ -51,19 +50,19 @@ public class IpvSessionService {
         this.sleeper = new Sleeper();
     }
 
-    public IpvSessionItem getIpvSession(String ipvSessionId) {
+    public IpvSessionItem getIpvSession(String ipvSessionId) throws IpvSessionNotFoundException {
         return getIpvSession(ipvSessionId, false);
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId, boolean withRetry)
-            throws GetIpvSessionException {
+            throws IpvSessionNotFoundException {
         if (withRetry) {
             return callRunTaskWithBackoff(
                     () -> {
                         var item = dataStore.getItem(ipvSessionId);
                         if (item == null) {
                             throw new RetryableException(
-                                    new GetIpvSessionException(
+                                    new IpvSessionNotFoundException(
                                             "The session not found in the database for the supplied session Id"));
                         }
                         return item;
@@ -73,19 +72,24 @@ public class IpvSessionService {
         }
     }
 
-    public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode)
-            throws GetIpvSessionException {
+    public IpvSessionItem getIpvSessionByAuthorizationCode(String authorizationCode)
+            throws IpvSessionNotFoundException {
         return callRunTaskWithBackoff(
                 () -> {
-                    IpvSessionItem ipvSessionItem =
+                    var ipvSessionItem =
                             dataStore.getItemByIndex(
                                     "authorizationCode", DigestUtils.sha256Hex(authorizationCode));
-                    return Optional.ofNullable(ipvSessionItem);
+                    if (ipvSessionItem == null) {
+                        throw new RetryableException(
+                                new IpvSessionNotFoundException(
+                                        "The session not found in the database for the supplied authorization code"));
+                    }
+                    return ipvSessionItem;
                 });
     }
 
     public IpvSessionItem getIpvSessionByAccessToken(String accessToken)
-            throws GetIpvSessionException, UnknownAccessTokenException {
+            throws IpvSessionNotFoundException {
         return callRunTaskWithBackoff(
                 () -> {
                     var item =
@@ -93,8 +97,8 @@ public class IpvSessionService {
                                     "accessToken", DigestUtils.sha256Hex(accessToken));
                     if (item == null) {
                         throw new RetryableException(
-                                new UnknownAccessTokenException(
-                                        "The supplied access token was not found in the database"));
+                                new IpvSessionNotFoundException(
+                                        "The session not found in the database for the supplied access token"));
                     }
                     return item;
                 });
@@ -179,21 +183,21 @@ public class IpvSessionService {
     }
 
     private <T> T callRunTaskWithBackoff(RetryableTask<T> task)
-            throws GetIpvSessionException, UnknownAccessTokenException {
+            throws IpvSessionNotFoundException, UnknownAccessTokenException {
         try {
             return Retry.runTaskWithBackoff(sleeper, 7, 10, task);
         } catch (InterruptedException e) {
             LOGGER.warn(LogHelper.buildLogMessage("backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();
-            throw new GetIpvSessionException("Failed to get ipv session", e);
+            throw new IpvSessionNotFoundException("Failed to find ipv session", e);
         } catch (NonRetryableException e) {
             LOGGER.warn(
                     LogHelper.buildErrorMessage(
                             "exception occurred while retrying to get ipv session", e));
-            if (e.getCause() instanceof UnknownAccessTokenException uatException) {
-                throw uatException;
+            if (e.getCause() instanceof IpvSessionNotFoundException isnfe) {
+                throw isnfe;
             }
-            throw new GetIpvSessionException("Failed to get ipv session", e);
+            throw new IpvSessionNotFoundException("Failed to find ipv session", e);
         }
     }
 }

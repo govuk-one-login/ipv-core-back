@@ -25,9 +25,9 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -163,8 +163,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
-        } catch (GetIpvSessionException e) {
-            return serverErrorJsonResponse("Error getting Ipv session for access token", e);
+        } catch (IpvSessionNotFoundException e) {
+            return serverErrorJsonResponse("Error finding Ipv session for access token", e);
         } finally {
             auditService.awaitAuditEvents();
         }

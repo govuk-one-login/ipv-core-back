@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -219,6 +220,9 @@ public class ProcessCriCallbackHandler
                         HttpStatus.SC_OK, JOURNEY_NOT_FOUND);
             }
             return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+        } catch (IpvSessionNotFoundException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -243,7 +247,7 @@ public class ProcessCriCallbackHandler
             throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
                     CiRetrievalException, CriApiException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException {
+                    UnrecognisedVotException, IpvSessionNotFoundException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

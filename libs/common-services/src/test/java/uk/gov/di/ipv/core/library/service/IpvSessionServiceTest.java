@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -50,7 +50,7 @@ class IpvSessionServiceTest {
     @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test
-    void shouldReturnSessionItem() throws UnknownAccessTokenException {
+    void shouldReturnSessionItem() throws UnknownAccessTokenException, IpvSessionNotFoundException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -72,7 +72,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItemWithRetry()
-            throws UnknownAccessTokenException, GetIpvSessionException {
+            throws UnknownAccessTokenException, IpvSessionNotFoundException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -105,7 +105,7 @@ class IpvSessionServiceTest {
                 .thenReturn(null, null, null, null, null, null, null);
 
         assertThrows(
-                GetIpvSessionException.class,
+                IpvSessionNotFoundException.class,
                 () -> ipvSessionService.getIpvSession(ipvSessionID, true));
     }
 
@@ -118,12 +118,12 @@ class IpvSessionServiceTest {
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(null, null, null);
 
         assertThrows(
-                GetIpvSessionException.class,
+                IpvSessionNotFoundException.class,
                 () -> ipvSessionService.getIpvSession(ipvSessionID, true));
     }
 
     @Test
-    void shouldReturnSessionItemByAuthorizationCode() {
+    void shouldReturnSessionItemByAuthorizationCode() throws IpvSessionNotFoundException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String authorizationCode = "12345";
 
@@ -134,14 +134,14 @@ class IpvSessionServiceTest {
                 .thenReturn(ipvSessionItem);
 
         IpvSessionItem result =
-                ipvSessionService.getIpvSessionByAuthorizationCode(authorizationCode).orElseThrow();
+                ipvSessionService.getIpvSessionByAuthorizationCode(authorizationCode);
 
         assertEquals(result, ipvSessionItem);
     }
 
     @Test
     void shouldReturnSessionItemByAccessToken()
-            throws UnknownAccessTokenException, GetIpvSessionException {
+            throws UnknownAccessTokenException, IpvSessionNotFoundException {
         String ipvSessionID = SecureTokenHelper.getInstance().generate();
         String accessToken = "56789";
 

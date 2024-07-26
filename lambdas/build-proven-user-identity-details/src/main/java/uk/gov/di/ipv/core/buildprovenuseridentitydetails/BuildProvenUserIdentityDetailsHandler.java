@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -116,6 +117,8 @@ public class BuildProvenUserIdentityDetailsHandler
         } catch (ProvenUserIdentityDetailsException e) {
             return buildJourneyErrorResponse(
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
+        } catch (IpvSessionNotFoundException e) {
+            return buildJourneyErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND);
         }
     }
 

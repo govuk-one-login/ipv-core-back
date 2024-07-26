@@ -44,8 +44,8 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -287,7 +287,7 @@ class CheckExistingIdentityHandlerTest {
     @DisplayName("reuse journeys")
     class ReuseJourneys {
         @BeforeEach
-        public void reuseSetup() throws GetIpvSessionException {
+        public void reuseSetup() throws IpvSessionNotFoundException {
             when(ipvSessionService.getIpvSession(TEST_SESSION_ID, true)).thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
@@ -864,7 +864,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending()
-            throws GetIpvSessionException {
+            throws IpvSessionNotFoundException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID, true)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -885,7 +885,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-            throws ConfigException {
+            throws ConfigException, IpvSessionNotFoundException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID, true)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -907,7 +907,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws GetIpvSessionException {
+    void shouldReturnFailResponseIfFaceToFaceVerificationIsError()
+            throws IpvSessionNotFoundException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID, true)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriErrorResponseStoreItem(Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -981,7 +982,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F()
-            throws CredentialParseException, GetIpvSessionException {
+            throws CredentialParseException, IpvSessionNotFoundException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID, true)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);

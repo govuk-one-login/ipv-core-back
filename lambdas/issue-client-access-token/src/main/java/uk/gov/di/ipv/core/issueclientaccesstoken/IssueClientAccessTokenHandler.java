@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -100,10 +100,8 @@ public class IssueClientAccessTokenHandler
             }
 
             IpvSessionItem ipvSessionItem =
-                    sessionService
-                            .getIpvSessionByAuthorizationCode(
-                                    authorizationGrant.getAuthorizationCode().getValue())
-                            .orElseThrow();
+                    sessionService.getIpvSessionByAuthorizationCode(
+                            authorizationGrant.getAuthorizationCode().getValue());
 
             configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
 
@@ -214,10 +212,12 @@ public class IssueClientAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
-        } catch (GetIpvSessionException e) {
+        } catch (IpvSessionNotFoundException e) {
             ErrorObject error = OAuth2Error.INVALID_GRANT.setDescription(e.getMessage());
 
-            LOGGER.error(LogHelper.buildErrorMessage(e.getMessage(), error));
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error finding Ipv session for authorisation code", error));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());

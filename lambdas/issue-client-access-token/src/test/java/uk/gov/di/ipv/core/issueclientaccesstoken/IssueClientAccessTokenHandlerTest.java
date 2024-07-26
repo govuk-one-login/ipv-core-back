@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationE
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -113,7 +112,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -200,7 +199,9 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.empty());
+                .thenThrow(
+                        new IpvSessionNotFoundException(
+                                "The supplied authorization code was not found in the database"));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -224,7 +225,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenThrow(new GetIpvSessionException("Error"));
+                .thenThrow(new IpvSessionNotFoundException("Error"));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -247,7 +248,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
@@ -271,7 +272,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         doThrow(new ClientAuthenticationException("error"))
                 .when(mockTokenRequestValidator)
                 .authenticateClient(any());
@@ -318,7 +319,7 @@ class IssueClientAccessTokenHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
         mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
@@ -345,7 +346,7 @@ class IssueClientAccessTokenHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
         mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
@@ -372,7 +373,7 @@ class IssueClientAccessTokenHandlerTest {
         event.setBody(tokenRequestBody);
 
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(Optional.of(mockSessionItem));
+                .thenReturn(mockSessionItem);
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))

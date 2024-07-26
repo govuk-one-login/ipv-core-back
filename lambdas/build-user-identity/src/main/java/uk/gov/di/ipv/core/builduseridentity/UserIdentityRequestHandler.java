@@ -11,8 +11,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.GetIpvSessionException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -63,7 +63,7 @@ public abstract class UserIdentityRequestHandler {
 
     protected IpvSessionItem validateAccessTokenAndGetIpvSession(APIGatewayProxyRequestEvent input)
             throws ParseException, UnknownAccessTokenException, RevokedAccessTokenException,
-                    ExpiredAccessTokenException, GetIpvSessionException {
+                    ExpiredAccessTokenException, IpvSessionNotFoundException {
 
         LogHelper.attachComponentId(configService);
 

@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -119,7 +120,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 | CiPutException
                 | CiRetrievalException
                 | ConfigException
-                | UnrecognisedVotException e) {
+                | UnrecognisedVotException
+                | IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
