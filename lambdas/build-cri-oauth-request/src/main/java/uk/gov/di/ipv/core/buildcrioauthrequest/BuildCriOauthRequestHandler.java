@@ -40,7 +40,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -98,7 +98,7 @@ public class BuildCriOauthRequestHandler
     public static final String EVIDENCE_REQUESTED = "evidenceRequest";
 
     private final ConfigService configService;
-    private final KmsEs256SignerFactory signerFactory;
+    private final SignerFactory signerFactory;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
@@ -109,7 +109,7 @@ public class BuildCriOauthRequestHandler
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
             ConfigService configService,
-            KmsEs256SignerFactory signerFactory,
+            SignerFactory signerFactory,
             AuditService auditService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
@@ -130,7 +130,7 @@ public class BuildCriOauthRequestHandler
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
         this.configService = ConfigService.create();
-        this.signerFactory = new KmsEs256SignerFactory();
+        this.signerFactory = new SignerFactory(configService);
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
@@ -315,8 +315,7 @@ public class BuildCriOauthRequestHandler
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
-                        signerFactory.getSigner(
-                                configService.getParameter(ConfigurationVariable.SIGNING_KEY_ID)),
+                        signerFactory.getSigner(),
                         oauthCriConfig,
                         configService,
                         oauthState,

@@ -10,7 +10,7 @@ import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDt
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -38,7 +38,7 @@ public class DcmawAsyncCriService {
         this.criApiService =
                 new CriApiService(
                         configService,
-                        new KmsEs256SignerFactory(),
+                        new SignerFactory(configService),
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
         this.ipvSessionService = new IpvSessionService(configService);

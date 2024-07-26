@@ -26,7 +26,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -58,7 +58,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 class TokenTests {
     @Mock private ConfigService mockConfigService;
     @Mock private JWSSigner mockSigner;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "FraudTokenProvider", consumer = "IpvCoreBack")
@@ -111,7 +111,7 @@ class TokenTests {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
-        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
+        when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
@@ -120,10 +120,7 @@ class TokenTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         BearerAccessToken accessToken =
@@ -177,7 +174,7 @@ class TokenTests {
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
-        when(mockKmsEs256SignerFactory.getSigner(any())).thenReturn(mockSigner);
+        when(mockSignerFactory.getSigner()).thenReturn(mockSigner);
         when(mockSigner.sign(any(), any())).thenReturn(new Base64URL(CLIENT_ASSERTION_SIGNATURE));
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
@@ -186,10 +183,7 @@ class TokenTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =

@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
-import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
+import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
 import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -66,7 +66,6 @@ import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CL
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
@@ -96,8 +95,6 @@ public class InitialiseIpvSessionHandler
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final VerifiableCredentialService verifiableCredentialService;
-
-    private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
     private final AuditService auditService;
 
@@ -109,8 +106,8 @@ public class InitialiseIpvSessionHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.kmsRsaDecrypter = new KmsRsaDecrypter();
-        this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
+        this.jarValidator =
+                new JarValidator(JweDecrypterFactory.create(configService), configService);
         this.auditService = AuditService.create(configService);
     }
 
@@ -122,7 +119,6 @@ public class InitialiseIpvSessionHandler
             UserIdentityService userIdentityService,
             VerifiableCredentialValidator verifiableCredentialValidator,
             VerifiableCredentialService verifiableCredentialService,
-            KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
             AuditService auditService) {
         this.configService = configService;
@@ -131,7 +127,6 @@ public class InitialiseIpvSessionHandler
         this.userIdentityService = userIdentityService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.verifiableCredentialService = verifiableCredentialService;
-        this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
     }
@@ -161,9 +156,7 @@ public class InitialiseIpvSessionHandler
             }
 
             SignedJWT signedJWT =
-                    jarValidator.decryptJWE(
-                            JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)),
-                            configService.getParameter(JAR_KMS_ENCRYPTION_KEY_ID));
+                    jarValidator.decryptJWE(JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)));
 
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(

@@ -26,7 +26,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -58,7 +58,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
     @Mock private ConfigService mockConfigService;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "HmrcKbvCriVcProvider", consumer = "IpvCoreBack")
@@ -100,10 +100,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -193,10 +190,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -294,10 +288,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =
@@ -356,10 +347,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =

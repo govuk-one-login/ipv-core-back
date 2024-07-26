@@ -34,13 +34,15 @@ public enum ConfigurationVariable {
     GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
             "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
     JAR_KMS_ENCRYPTION_KEY_ID("self/jarKmsEncryptionKeyId"),
+    JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
     JWT_TTL_SECONDS("self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
-    SIGNING_KEY_ID("self/signingKeyId");
+    SIGNING_KEY_ID("self/signingKeyId"),
+    SIGNING_KEY_JWK("self/signingKey");
 
     private final String path;
 

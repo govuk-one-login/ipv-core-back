@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -119,7 +119,7 @@ public class ProcessCriCallbackHandler
         criApiService =
                 new CriApiService(
                         configService,
-                        new KmsEs256SignerFactory(),
+                        new SignerFactory(configService),
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
         criCheckingService =

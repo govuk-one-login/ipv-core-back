@@ -14,6 +14,7 @@ import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.model.DecryptRequest;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import javax.crypto.spec.SecretKeySpec;
 
@@ -23,6 +24,7 @@ import java.util.Set;
 import static com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256;
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 import static software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec.RSAES_OAEP_SHA_256;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 
 @ExcludeFromGeneratedCoverageReport
 public class KmsRsaDecrypter implements JWEDecrypter {
@@ -30,20 +32,17 @@ public class KmsRsaDecrypter implements JWEDecrypter {
     private static final Set<EncryptionMethod> SUPPORTED_ENCRYPTION_METHODS =
             Set.of(EncryptionMethod.A256GCM);
 
+    private final ConfigService configService;
     private final KmsClient kmsClient;
-    private String keyId;
     private final JWEJCAContext jwejcaContext = new JWEJCAContext();
 
-    public KmsRsaDecrypter() {
+    public KmsRsaDecrypter(ConfigService configService) {
+        this.configService = configService;
         this.kmsClient =
                 KmsClient.builder()
                         .region(EU_WEST_2)
                         .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
-    }
-
-    public void setKeyId(String keyId) {
-        this.keyId = keyId;
     }
 
     @Override
@@ -73,6 +72,8 @@ public class KmsRsaDecrypter implements JWEDecrypter {
             throw new JOSEException(
                     AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, supportedJWEAlgorithms()));
         }
+
+        var keyId = configService.getParameter(JAR_KMS_ENCRYPTION_KEY_ID);
 
         var encryptedKeyDecryptRequest =
                 DecryptRequest.builder()
