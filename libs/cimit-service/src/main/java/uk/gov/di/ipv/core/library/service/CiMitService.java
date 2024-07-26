@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.cimit.exception.CimitHttpRequestException;
 import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
@@ -156,7 +157,7 @@ public class CiMitService {
             }
         } catch (JsonProcessingException e) {
             throw new CiPutException("Failed to serialize payload for post CI request.");
-        } catch (InterruptedException | PostApiException | IOException | URISyntaxException e) {
+        } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
             throw new CiPutException(FAILED_API_REQUEST);
         }
     }
@@ -209,7 +210,7 @@ public class CiMitService {
         } catch (JsonProcessingException e) {
             throw new CiPostMitigationsException(
                     "Failed to serialize payload for post mitigations request");
-        } catch (PostApiException | IOException | URISyntaxException | InterruptedException e) {
+        } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
             throw new CiPostMitigationsException(FAILED_API_REQUEST);
         }
     }
@@ -289,7 +290,7 @@ public class CiMitService {
         } catch (LambdaException e) {
             LOGGER.error(LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
             throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
-        } catch (IOException | URISyntaxException | InterruptedException e) {
+        } catch (CimitHttpRequestException | URISyntaxException | JsonProcessingException e) {
             throw new CiRetrievalException(FAILED_API_REQUEST);
         }
     }
@@ -383,7 +384,8 @@ public class CiMitService {
 
     private void sendPostHttpRequest(
             String endpoint, String govukSigninJourneyId, String ipAddress, String payload)
-            throws PostApiException, URISyntaxException, IOException, InterruptedException {
+            throws PostApiException, URISyntaxException, CimitHttpRequestException,
+                    JsonProcessingException {
         var uri = getUriBuilderWithBaseApiUrl(endpoint).build();
 
         var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress);
@@ -401,7 +403,7 @@ public class CiMitService {
 
     private HttpResponse<String> sendGetHttpRequest(
             String userId, String govukSigninJourneyId, String ipAddress)
-            throws URISyntaxException, IOException, InterruptedException {
+            throws URISyntaxException, CimitHttpRequestException {
         var uriBuilder = getUriBuilderWithBaseApiUrl(GET_VCS_ENDPOINT);
         var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
 
@@ -430,9 +432,16 @@ public class CiMitService {
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
-            throws IOException, InterruptedException {
-        LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
-        return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
+            throws CimitHttpRequestException {
+        try {
+            LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
+            return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
+        } catch (InterruptedException | IOException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            throw new CimitHttpRequestException(FAILED_API_REQUEST);
+        }
     }
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
