@@ -44,6 +44,7 @@ core:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
     config: PLACEHOLDER
+    apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
   credentialIssuers:
@@ -339,6 +340,7 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
+    cimitApiGatewayEnabled: true
   features:
     mfaReset:
       featureFlags:
