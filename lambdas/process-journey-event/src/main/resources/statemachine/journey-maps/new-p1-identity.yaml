@@ -146,6 +146,7 @@ states:
   F2F_START_PAGE:
     response:
       type: page
+      context: lastChoice
       pageId: page-ipv-identity-postoffice-start
     events:
       next:
