@@ -4,5 +4,4 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-public record PostMitigationsPrivateApiRequest(
-        @JsonProperty("signed_jwts") List<String> signedJwts) {}
+public record PostMitigationsApiRequest(@JsonProperty("signed_jwts") List<String> signedJwts) {}

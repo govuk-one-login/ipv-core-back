@@ -15,16 +15,17 @@ import software.amazon.awssdk.services.lambda.model.InvokeResponse;
 import software.amazon.awssdk.services.lambda.model.LambdaException;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.cimit.domain.CimitApiResponse;
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiRequest;
+import uk.gov.di.ipv.core.library.cimit.domain.PostCiApiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiMitigationRequest;
-import uk.gov.di.ipv.core.library.cimit.domain.PostCiPrivateApiRequest;
-import uk.gov.di.ipv.core.library.cimit.domain.PostMitigationsPrivateApiRequest;
-import uk.gov.di.ipv.core.library.cimit.domain.PrivateApiResponse;
+import uk.gov.di.ipv.core.library.cimit.domain.PostMitigationsApiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PutCiRequest;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
@@ -51,7 +52,7 @@ import java.util.Objects;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_INTERNAL_API_KEY;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.CIMIT_API_GATEWAY_ENABLED;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
@@ -127,19 +128,9 @@ public class CiMitService {
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var payload =
-                        OBJECT_MAPPER.writeValueAsString(
-                                new PostCiPrivateApiRequest(vc.getVcString()));
+                        OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
 
-                var uri = getUriBuilderWithBaseApiUrl(POST_CI_ENDPOINT).build();
-
-                var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
-                var parsedResponse =
-                        OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
-
-                if (FAILED_RESPONSE.equals(parsedResponse.result())) {
-                    logApiRequestError(parsedResponse);
-                    throw new CiPutException(FAILED_API_REQUEST);
-                }
+                sendPostHttpRequest(POST_CI_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
 
             } else {
                 var payload =
@@ -165,10 +156,8 @@ public class CiMitService {
             }
         } catch (JsonProcessingException e) {
             throw new CiPutException("Failed to serialize payload for post CI request.");
-        } catch (CiPutException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CiPutException(FAILED_LAMBDA_MESSAGE);
+        } catch (NonRetryableException | PostApiException | IOException | URISyntaxException e) {
+            throw new CiPutException(FAILED_API_REQUEST);
         }
     }
 
@@ -182,21 +171,13 @@ public class CiMitService {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(
-                                new PostMitigationsPrivateApiRequest(
+                                new PostMitigationsApiRequest(
                                         vcs.stream()
                                                 .map(VerifiableCredential::getVcString)
                                                 .toList()));
 
-                var uri = getUriBuilderWithBaseApiUrl(POST_MITIGATIONS_ENDPOINT).build();
-
-                var response = sendPostHttpRequest(uri, govukSigninJourneyId, ipAddress, payload);
-                var parsedResponse =
-                        OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
-
-                if (FAILED_RESPONSE.equals(parsedResponse.result())) {
-                    logApiRequestError(parsedResponse);
-                    throw new CiPostMitigationsException(FAILED_API_REQUEST);
-                }
+                sendPostHttpRequest(
+                        POST_MITIGATIONS_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
 
             } else {
                 String payload =
@@ -227,10 +208,8 @@ public class CiMitService {
         } catch (JsonProcessingException e) {
             throw new CiPostMitigationsException(
                     "Failed to serialize payload for post mitigations request");
-        } catch (CiPostMitigationsException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CiPostMitigationsException("Failed to submit mitigating VCs list.");
+        } catch (NonRetryableException | PostApiException | IOException | URISyntaxException e) {
+            throw new CiPostMitigationsException(FAILED_API_REQUEST);
         }
     }
 
@@ -276,15 +255,11 @@ public class CiMitService {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
         try {
             if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
-                var uriBuilder = getUriBuilderWithBaseApiUrl(GET_VCS_ENDPOINT);
-
-                var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
-
-                var response = sendGetHttpRequest(uri, govukSigninJourneyId, ipAddress);
+                var response = sendGetHttpRequest(userId, govukSigninJourneyId, ipAddress);
 
                 if (response.statusCode() != SC_OK) {
                     var parsedResponse =
-                            OBJECT_MAPPER.readValue(response.body(), PrivateApiResponse.class);
+                            OBJECT_MAPPER.readValue(response.body(), CimitApiResponse.class);
                     logApiRequestError(parsedResponse);
                     throw new CiRetrievalException(FAILED_API_REQUEST);
                 }
@@ -402,21 +377,34 @@ public class CiMitService {
         LOGGER.error(new StringMapMessage(message));
     }
 
-    private void logApiRequestError(PrivateApiResponse failedResponse) {
+    private void logApiRequestError(CimitApiResponse failedResponse) {
         LOGGER.error(LogHelper.buildErrorMessage(FAILED_API_REQUEST, failedResponse.reason()));
     }
 
-    private HttpResponse<String> sendPostHttpRequest(
-            URI uri, String govukSigninJourneyId, String ipAddress, String payload)
-            throws NonRetryableException {
+    private void sendPostHttpRequest(
+            String endpoint, String govukSigninJourneyId, String ipAddress, String payload)
+            throws NonRetryableException, PostApiException, URISyntaxException, IOException {
+        var uri = getUriBuilderWithBaseApiUrl(endpoint).build();
+
         var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress);
         httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(payload));
 
-        return sendHttpRequest(httpRequestBuilder.build());
+        var response = sendHttpRequest(httpRequestBuilder.build());
+
+        var parsedResponse = OBJECT_MAPPER.readValue(response.body(), CimitApiResponse.class);
+
+        if (FAILED_RESPONSE.equals(parsedResponse.result())) {
+            logApiRequestError(parsedResponse);
+            throw new PostApiException(FAILED_API_REQUEST);
+        }
     }
 
     private HttpResponse<String> sendGetHttpRequest(
-            URI uri, String govukSigninJourneyId, String ipAddress) throws NonRetryableException {
+            String userId, String govukSigninJourneyId, String ipAddress)
+            throws NonRetryableException, URISyntaxException, IOException {
+        var uriBuilder = getUriBuilderWithBaseApiUrl(GET_VCS_ENDPOINT);
+        var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
+
         var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress).GET();
 
         return sendHttpRequest(httpRequestBuilder.build());
@@ -429,9 +417,7 @@ public class CiMitService {
                         .uri(uri)
                         .header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId)
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .header(
-                                X_API_KEY_HEADER,
-                                configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY));
+                        .header(X_API_KEY_HEADER, configService.getApiKeySecret(CIMIT_API_KEY));
 
         if (ipAddress != null) {
             requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
@@ -440,12 +426,10 @@ public class CiMitService {
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
-            throws NonRetryableException {
+            throws NonRetryableException, IOException {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
             return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            throw new NonRetryableException(e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new NonRetryableException(e);
@@ -454,8 +438,7 @@ public class CiMitService {
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
         var baseUri =
-                configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL)
-                        + endpointUrl;
+                configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL) + endpointUrl;
 
         return new URIBuilder(baseUri);
     }
