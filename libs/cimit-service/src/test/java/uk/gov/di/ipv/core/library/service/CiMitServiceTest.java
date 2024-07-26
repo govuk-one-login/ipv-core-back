@@ -126,10 +126,9 @@ class CiMitServiceTest {
     void submitVcSendsHttpRequestToApi() throws Exception {
         // Arrange
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
@@ -163,10 +162,9 @@ class CiMitServiceTest {
     void submitVCThrowsIfHttpRequestReturnsFailResponse() throws Exception {
         // Arrange
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
@@ -235,10 +233,9 @@ class CiMitServiceTest {
     @Test
     void submitMitigationVCListSendsHttpRequestToApi() throws Exception {
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
@@ -274,10 +271,9 @@ class CiMitServiceTest {
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
 
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
@@ -366,10 +362,9 @@ class CiMitServiceTest {
     void getContraIndicatorsSendsHttpRequestToCimitApi() throws Exception {
         // Arrange
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
@@ -385,9 +380,9 @@ class CiMitServiceTest {
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
                 .thenReturn(TEST_EC_PUBLIC_JWK);
 
         // Act
@@ -415,10 +410,9 @@ class CiMitServiceTest {
     void getContraIndicatorsVCThrowsExceptionIfHttpRequestReturnsFailedResponse() throws Exception {
         // Arrange
         when(configService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
+        when(configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
-        when(configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()))
-                .thenReturn(MOCK_CIMIT_API_KEY);
+        when(configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_INTERNAL_SERVER_ERROR);

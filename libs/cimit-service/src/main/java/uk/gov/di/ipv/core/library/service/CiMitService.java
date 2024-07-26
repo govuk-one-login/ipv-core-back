@@ -431,7 +431,7 @@ public class CiMitService {
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .header(
                                 X_API_KEY_HEADER,
-                                configService.getAppApiKey(CIMIT_INTERNAL_API_KEY.getPath()));
+                                configService.getApiKeySecret(CIMIT_INTERNAL_API_KEY));
 
         if (ipAddress != null) {
             requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
@@ -456,7 +456,7 @@ public class CiMitService {
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
         var baseUri =
-                configService.getSsmParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL)
+                configService.getParameter(ConfigurationVariable.CIMIT_INTERNAL_API_BASE_URL)
                         + endpointUrl;
 
         return new URIBuilder(baseUri);
