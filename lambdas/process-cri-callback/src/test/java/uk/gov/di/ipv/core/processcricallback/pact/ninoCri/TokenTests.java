@@ -222,32 +222,6 @@ class TokenTests {
     }
 
     @NotNull
-    private VerifiableCredentialValidator getVerifiableCredentialJwtValidator() {
-        return new VerifiableCredentialValidator(
-                mockConfigService,
-                ((exactMatchClaims, requiredClaims) ->
-                        new FixedTimeJWTClaimsVerifier<>(
-                                exactMatchClaims,
-                                requiredClaims,
-                                Date.from(CURRENT_TIME.instant()))));
-    }
-
-    private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
-        ContraIndicatorConfig ciConfig1 = new ContraIndicatorConfig(null, 4, null, null);
-        Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("D02", ciConfig1);
-
-        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
-        // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
-        // it
-        Mockito.lenient()
-                .when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(ciConfigMap);
-    }
-
-    @NotNull
     private static OauthCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
         return OauthCriConfig.builder()
