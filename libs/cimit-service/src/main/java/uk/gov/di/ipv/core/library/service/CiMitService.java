@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
-import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -157,7 +156,7 @@ public class CiMitService {
             }
         } catch (JsonProcessingException e) {
             throw new CiPutException("Failed to serialize payload for post CI request.");
-        } catch (NonRetryableException | PostApiException | IOException | URISyntaxException e) {
+        } catch (InterruptedException | PostApiException | IOException | URISyntaxException e) {
             throw new CiPutException(FAILED_API_REQUEST);
         }
     }
@@ -210,7 +209,7 @@ public class CiMitService {
         } catch (JsonProcessingException e) {
             throw new CiPostMitigationsException(
                     "Failed to serialize payload for post mitigations request");
-        } catch (NonRetryableException | PostApiException | IOException | URISyntaxException e) {
+        } catch (PostApiException | IOException | URISyntaxException | InterruptedException e) {
             throw new CiPostMitigationsException(FAILED_API_REQUEST);
         }
     }
@@ -290,10 +289,8 @@ public class CiMitService {
         } catch (LambdaException e) {
             LOGGER.error(LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
             throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
-        } catch (CiRetrievalException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new CiRetrievalException("Failed to get CI from CIMIT");
+        } catch (IOException | URISyntaxException | InterruptedException e) {
+            throw new CiRetrievalException(FAILED_API_REQUEST);
         }
     }
 
@@ -386,7 +383,7 @@ public class CiMitService {
 
     private void sendPostHttpRequest(
             String endpoint, String govukSigninJourneyId, String ipAddress, String payload)
-            throws NonRetryableException, PostApiException, URISyntaxException, IOException {
+            throws PostApiException, URISyntaxException, IOException, InterruptedException {
         var uri = getUriBuilderWithBaseApiUrl(endpoint).build();
 
         var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress);
@@ -404,7 +401,7 @@ public class CiMitService {
 
     private HttpResponse<String> sendGetHttpRequest(
             String userId, String govukSigninJourneyId, String ipAddress)
-            throws NonRetryableException, URISyntaxException, IOException {
+            throws URISyntaxException, IOException, InterruptedException {
         var uriBuilder = getUriBuilderWithBaseApiUrl(GET_VCS_ENDPOINT);
         var uri = uriBuilder.addParameter(USER_ID_PARAMETER, userId).build();
 
@@ -419,8 +416,12 @@ public class CiMitService {
                 HttpRequest.newBuilder()
                         .uri(uri)
                         .header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId)
-                        .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
+                        .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
+
+        var apiKey = configService.getSecret(CIMIT_API_KEY);
+        if (apiKey != null) {
+            requestBuilder.header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
+        }
 
         if (ipAddress != null) {
             requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
@@ -429,14 +430,9 @@ public class CiMitService {
     }
 
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
-            throws NonRetryableException, IOException {
-        try {
-            LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
-            return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new NonRetryableException(e);
-        }
+            throws IOException, InterruptedException {
+        LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
+        return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
     }
 
     private URIBuilder getUriBuilderWithBaseApiUrl(String endpointUrl) throws URISyntaxException {
