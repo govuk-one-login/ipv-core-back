@@ -126,7 +126,8 @@ public class CiMitService {
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
+                    && configService.getSecret(CIMIT_API_KEY) != null) {
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
 
@@ -168,7 +169,8 @@ public class CiMitService {
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
+                    && configService.getSecret(CIMIT_API_KEY) != null) {
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(
                                 new PostMitigationsApiRequest(
@@ -254,7 +256,8 @@ public class CiMitService {
             throws CiRetrievalException {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
+                    && configService.getSecret(CIMIT_API_KEY) != null) {
                 var response = sendGetHttpRequest(userId, govukSigninJourneyId, ipAddress);
 
                 if (response.statusCode() != SC_OK) {
@@ -417,7 +420,7 @@ public class CiMitService {
                         .uri(uri)
                         .header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId)
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .header(X_API_KEY_HEADER, configService.getApiKeySecret(CIMIT_API_KEY));
+                        .header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
 
         if (ipAddress != null) {
             requestBuilder.header(IP_ADDRESS_HEADER, ipAddress);
