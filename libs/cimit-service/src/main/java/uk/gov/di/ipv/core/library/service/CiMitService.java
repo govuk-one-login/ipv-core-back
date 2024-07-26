@@ -290,14 +290,7 @@ public class CiMitService {
                 }
                 return response.body();
             } else {
-                String payload;
-                try {
-                    payload =
-                            OBJECT_MAPPER.writeValueAsString(
-                                    new GetCiRequest(govukSigninJourneyId, ipAddress, userId));
-                } catch (JsonProcessingException e) {
-                    throw new CiRetrievalException("Failed to serialize GetCiRequest");
-                }
+                var payload = getPayloadForGetCiRequest(govukSigninJourneyId, ipAddress, userId);
 
                 var invokeRequest =
                         InvokeRequest.builder()
@@ -308,14 +301,7 @@ public class CiMitService {
                                 .qualifier(LIVE_ALIAS)
                                 .build();
 
-                InvokeResponse response;
-                try {
-                    response = lambdaClient.invoke(invokeRequest);
-                } catch (LambdaException e) {
-                    LOGGER.error(
-                            LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
-                    throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
-                }
+                InvokeResponse response = lambdaClient.invoke(invokeRequest);
 
                 if (lambdaExecutionFailed(response)) {
                     logLambdaExecutionError(response, CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN);
@@ -323,10 +309,24 @@ public class CiMitService {
                 }
                 return response.payload().asUtf8String();
             }
+        } catch (LambdaException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("AWSLambda client invocation failed.", e));
+            throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
         } catch (CiRetrievalException e) {
             throw e;
         } catch (Exception e) {
             throw new CiRetrievalException("Failed to get CI from CIMIT");
+        }
+    }
+
+    private String getPayloadForGetCiRequest(
+            String govukSigninJourneyId, String ipAddress, String userId)
+            throws CiRetrievalException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(
+                    new GetCiRequest(govukSigninJourneyId, ipAddress, userId));
+        } catch (JsonProcessingException e) {
+            throw new CiRetrievalException("Failed to serialize GetCiRequest");
         }
     }
 
@@ -443,9 +443,7 @@ public class CiMitService {
             throws NonRetryableException {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
-            var response = httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
-
-            return response;
+            return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
             throw new NonRetryableException(e);
         } catch (InterruptedException e) {
