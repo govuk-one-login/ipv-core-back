@@ -436,10 +436,10 @@ public class CiMitService {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
             return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (InterruptedException | IOException e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new CimitHttpRequestException(FAILED_API_REQUEST);
+        } catch (IOException e) {
             throw new CimitHttpRequestException(FAILED_API_REQUEST);
         }
     }
