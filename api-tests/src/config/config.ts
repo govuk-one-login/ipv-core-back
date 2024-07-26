@@ -1,15 +1,41 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 
-const config: Record<string, string> = {
-  CORE_BACK_COMPONENT_ID: process.env.CORE_BACK_COMPONENT_ID as string,
-  CORE_BACK_INTERNAL_API_URL: process.env.CORE_BACK_INTERNAL_API_URL as string,
-  CORE_BACK_INTERNAL_API_KEY: process.env.CORE_BACK_INTERNAL_API_KEY as string,
-  CORE_BACK_EXTERNAL_API_URL: process.env.CORE_BACK_EXTERNAL_API_URL as string,
-  CORE_BACK_PUBLIC_ENCRYPTION_KEY: process.env
-    .CORE_BACK_PUBLIC_ENCRYPTION_KEY as string,
-  ORCHESTRATOR_REDIRECT_URL: process.env.ORCHESTRATOR_REDIRECT_URL as string,
-  JAR_SIGNING_KEY: process.env.JAR_SIGNING_KEY as string,
-  LOCAL_AUDIT_EVENTS: process.env.LOCAL_AUDIT_EVENTS as string,
+const CORE_ENV = process.env.CORE_ENV;
+
+if (!CORE_ENV) {
+  dotenv.config();
+} else {
+  dotenv.config({
+    path: `.env.${CORE_ENV}`,
+  });
+}
+
+const getMandatoryConfig = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing mandatory config ${key}`);
+  }
+  return value;
+};
+
+const getOptionalConfig = (key: string): string | undefined => {
+  return process.env[key];
+};
+
+const config = {
+  core: {
+    componentId: getMandatoryConfig("CORE_BACK_COMPONENT_ID"),
+    internalApiUrl: getMandatoryConfig("CORE_BACK_INTERNAL_API_URL"),
+    internalApiKey: getOptionalConfig("CORE_BACK_INTERNAL_API_KEY"),
+    externalApiUrl: getMandatoryConfig("CORE_BACK_EXTERNAL_API_URL"),
+    encryptionkey: getMandatoryConfig("CORE_BACK_PUBLIC_ENCRYPTION_KEY"),
+  },
+  orch: {
+    redirectUrl: getMandatoryConfig("ORCHESTRATOR_REDIRECT_URL"),
+    signingKey: getMandatoryConfig("JAR_SIGNING_KEY"),
+  },
+  localAuditEvents:
+    getOptionalConfig("process.env.LOCAL_AUDIT_EVENTS") === "true",
 };
 
 export default config;

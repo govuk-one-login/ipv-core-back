@@ -5,7 +5,7 @@ export const getAuditEvents = async (
   journeyId: string,
 ): Promise<AuditEvent[]> => {
   const response = await fetch(
-    `${config.CORE_BACK_EXTERNAL_API_URL}/audit-events?${new URLSearchParams({
+    `${config.core.externalApiUrl}/audit-events?${new URLSearchParams({
       govuk_signin_journey_id: journeyId,
     }).toString()}`,
   );
