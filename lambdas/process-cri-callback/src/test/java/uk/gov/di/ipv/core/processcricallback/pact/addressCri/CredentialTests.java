@@ -24,7 +24,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -52,7 +52,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 class CredentialTests {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
-    @Mock private KmsEs256SignerFactory mockKmsEs256SignerFactory;
+    @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "AddressCriVcProvider", consumer = "IpvCoreBack")
@@ -106,10 +106,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -201,10 +198,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -271,15 +265,18 @@ class CredentialTests {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_CHANGED_ADDRESS_BODY, VALID_VC_CHANGED_ADDRESS_SIGNATURE))
+                                VALID_VC_HEADER,
+                                VALID_VC_CHANGED_ADDRESS_BODY,
+                                VALID_VC_CHANGED_ADDRESS_SIGNATURE))
                 .toPact();
     }
 
     @Test
     @PactTestFor(pactMethod = "validRequestForChangedAddressReturnsIssuedAddressCredential")
-    void fetchVerifiableCredential_whenCalledAgainstAddressCriForChangedAddress_retrievesAnAddressVc(
-            MockServer mockServer)
-            throws URISyntaxException, CriApiException, JsonProcessingException {
+    void
+            fetchVerifiableCredential_whenCalledAgainstAddressCriForChangedAddress_retrievesAnAddressVc(
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
@@ -300,10 +297,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         var verifiableCredentialResponse =
@@ -345,7 +339,8 @@ class CredentialTests {
                                 assertEquals(
                                         "BURNS CRESCENT", addressNode2.get("streetName").asText());
                                 assertEquals("EH1 9GP", addressNode2.get("postalCode").asText());
-                                assertEquals("EDINBURGH", addressNode2.get("addressLocality").asText());
+                                assertEquals(
+                                        "EDINBURGH", addressNode2.get("addressLocality").asText());
                                 assertEquals("2017-01-01", addressNode2.get("validFrom").asText());
 
                             } catch (VerifiableCredentialException | JsonProcessingException e) {
@@ -387,10 +382,7 @@ class CredentialTests {
         // values.
         var underTest =
                 new CriApiService(
-                        mockConfigService,
-                        mockKmsEs256SignerFactory,
-                        mockSecureTokenHelper,
-                        CURRENT_TIME);
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
 
         // Act
         CriApiException exception =

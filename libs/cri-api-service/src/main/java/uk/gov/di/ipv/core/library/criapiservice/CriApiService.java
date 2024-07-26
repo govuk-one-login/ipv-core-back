@@ -36,7 +36,7 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256SignerFactory;
+import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -60,14 +60,14 @@ public class CriApiService {
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
-    private final KmsEs256SignerFactory signerFactory;
+    private final SignerFactory signerFactory;
     private final SecureTokenHelper secureTokenHelper;
     private final Clock clock;
 
     @ExcludeFromGeneratedCoverageReport
     public CriApiService(
             ConfigService configService,
-            KmsEs256SignerFactory signerFactory,
+            SignerFactory signerFactory,
             SecureTokenHelper secureTokenHelper,
             Clock clock) {
         this.configService = configService;
@@ -172,10 +172,7 @@ public class CriApiService {
 
             var signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(
-                            clientAuthClaims,
-                            signerFactory.getSigner(
-                                    configService.getParameter(
-                                            ConfigurationVariable.SIGNING_KEY_ID)));
+                            clientAuthClaims, signerFactory.getSigner());
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 
