@@ -41,9 +41,8 @@ services:
     environment:
       <<: *aws_creds
       API_BASE_URL: http://host.docker.internal:3002
-      SESSION_TABLE_NAME: core-front-sessions-${ENVIRONMENT}
       SESSION_SECRET: no-secret # pragma: allowlist secret
-      NODE_ENV: development
+      NODE_ENV: local
       EXTERNAL_WEBSITE_HOST: http://localhost:3001
       PORT: 3001
       CDN_DOMAIN:
@@ -68,7 +67,6 @@ services:
       CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
       CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
-      F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
       ENVIRONMENT: local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002

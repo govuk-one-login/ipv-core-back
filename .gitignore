@@ -62,4 +62,6 @@ secrets.gradle
 api-tests/reports/*
 !api-tests/reports/.gitkeep
 api-tests/.npmrc
-api-tests/.env
+api-tests/.env*
+!api-tests/.env.template
+!api-tests/.env.local

@@ -16,11 +16,14 @@
 
 ## Running the tests
 
-Tags are optional
+Run using the main `.env` file by using `npm test`.
 
-```
-    npm test -- --tags '@Build'
-```
+Additional arguments can be passed to cucumber, e.g. to include specific tags: `npm test -- --tags '@Build'`
+
+You can also run against locally by using the presets:
+
+- `npm run test:local` - runs against an already-running local instance of core-back
+- `npm run test:ci` - starts a new local instance of core-back and tests against it
 
 ### Environment variables
 
@@ -41,6 +44,14 @@ The value for `JAR_SIGNING_KEY` will probably be the same as for the build env.
 - CORE_BACK_PUBLIC_ENCRYPTION_KEY='{"kty":"RSA","e":"AQAB","kid":"b454ac07-e188-415d-a3c8-f1d0d38aaecd","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs\*-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"}'
 - ORCHESTRATOR_REDIRECT_URL="https://orch-dev-chrisw.01.core.dev.stubs.account.gov.uk/callback"
 - JAR_SIGNING_KEY='{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' // pragma: allowlist secret
+
+#### Environment-specific files
+
+For convenience, it is also possible to keep multiple `.env.<name>` files for different environments,
+which are selected by setting `CORE_ENV=<name>` when running the tests.
+
+There is a `.env.local` file containing config for a local instance of core-back,
+which is useful for running tests locally or in the pre-merge tests.
 
 ## Working on the tests
 
