@@ -22,7 +22,9 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.EXTERNAL;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
 
@@ -76,6 +78,28 @@ public class EvcsService {
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(), CURRENT, null, ONLINE))
                         .toList());
+    }
+
+    @Tracing
+    public void storeInheritedIdentity(
+            String userId,
+            VerifiableCredential incomingInheritedIdentity,
+            VerifiableCredential existingInheritedIdentity)
+            throws EvcsServiceException {
+        if (existingInheritedIdentity != null) {
+            evcsClient.updateUserVCs(
+                    userId,
+                    List.of(
+                            new EvcsUpdateUserVCsDto(
+                                    getVcSignature(existingInheritedIdentity.getVcString()),
+                                    HISTORIC,
+                                    null)));
+        }
+        evcsClient.storeUserVCs(
+                userId,
+                List.of(
+                        new EvcsCreateUserVCsDto(
+                                incomingInheritedIdentity.getVcString(), CURRENT, null, EXTERNAL)));
     }
 
     @Tracing

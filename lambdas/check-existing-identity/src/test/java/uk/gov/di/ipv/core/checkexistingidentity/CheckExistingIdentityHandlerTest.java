@@ -116,7 +116,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
@@ -295,7 +295,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldUseEvcsServiceWhenEnabled() throws Exception {
-            var vc = vcHmrcMigration();
+            var vc = vcHmrcMigrationPCL200();
             vc.setMigrated(Instant.now());
             when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(vc));
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
@@ -339,7 +339,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile_alsoStoreVcsInEvcs()
                 throws Exception {
             Mockito.lenient().when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            VerifiableCredential hmrcMigrationVC = vcHmrcMigration();
+            VerifiableCredential hmrcMigrationVC = vcHmrcMigrationPCL200();
 
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, hmrcMigrationVC));

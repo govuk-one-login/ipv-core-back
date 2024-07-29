@@ -23,6 +23,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
+import uk.gov.di.ipv.core.initialiseipvsession.exception.InheritedIdentityException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -52,6 +54,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -72,7 +75,10 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
+import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
 public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -84,7 +90,7 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_GOV_UK_SIGN_IN_JOURNEY_ID_KEY = "govuk_signin_journey_id";
     private static final String REQUEST_EMAIL_ADDRESS_KEY = "email_address";
     private static final String REQUEST_VTR_KEY = "vtr";
-    private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL250, Vot.PCL200);
+    private static final List<Vot> HMRC_PROFILES_BY_STRENGTH = List.of(Vot.PCL200, Vot.PCL250);
     private static final ErrorObject INVALID_INHERITED_IDENTITY_ERROR_OBJECT =
             new ErrorObject("invalid_inherited_identity");
     private static final ErrorObject EVCS_ACCESS_TOKEN_ERROR_OBJECT =
@@ -94,7 +100,8 @@ public class InitialiseIpvSessionHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialValidator verifiableCredentialValidator;
-    private final VerifiableCredentialService verifiableCredentialService;
+    private final EvcsService evcsService;
+
     private final JarValidator jarValidator;
     private final AuditService auditService;
 
@@ -105,10 +112,10 @@ public class InitialiseIpvSessionHandler
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.jarValidator =
                 new JarValidator(JweDecrypterFactory.create(configService), configService);
         this.auditService = AuditService.create(configService);
+        this.evcsService = new EvcsService(configService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -120,15 +127,16 @@ public class InitialiseIpvSessionHandler
             VerifiableCredentialValidator verifiableCredentialValidator,
             VerifiableCredentialService verifiableCredentialService,
             JarValidator jarValidator,
-            AuditService auditService) {
+            AuditService auditService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.userIdentityService = userIdentityService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
+        this.evcsService = evcsService;
     }
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
@@ -204,7 +212,7 @@ public class InitialiseIpvSessionHandler
                         getJarUserInfo(claimsSet).map(JarUserInfo::inheritedIdentityClaim);
                 if (inheritedIdentityJwtClaim.isPresent()) {
                     validateAndStoreHMRCInheritedIdentity(
-                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem,
                             inheritedIdentityJwtClaim.get(),
                             claimsSet,
                             ipvSessionItem,
@@ -321,7 +329,7 @@ public class InitialiseIpvSessionHandler
 
     @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
-            String userId,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             StringListClaim inheritedIdentityJwtClaim,
             JWTClaimsSet claimsSet,
             IpvSessionItem ipvSessionItem,
@@ -329,14 +337,17 @@ public class InitialiseIpvSessionHandler
             String deviceInformation)
             throws RecoverableJarValidationException, ParseException, CredentialParseException {
         try {
+            var userId = clientOAuthSessionItem.getUserId();
             var inheritedIdentityVc =
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
             sendInheritedIdentityReceivedAuditEvent(
                     inheritedIdentityVc, auditEventUser, deviceInformation);
-            if (!isHmrcInheritedIdentityWithStrongerVotPresent(inheritedIdentityVc, userId)) {
-                storeHmrcInheritedIdentity(claimsSet, ipvSessionItem, inheritedIdentityVc);
+            if (configService.enabled(EVCS_READ_ENABLED)
+                    && configService.enabled(EVCS_WRITE_ENABLED)) {
+                storeInheritedIdentity(
+                        userId, ipvSessionItem, clientOAuthSessionItem, inheritedIdentityVc);
             }
-        } catch (VerifiableCredentialException | ParseException | UnrecognisedVotException e) {
+        } catch (VerifiableCredentialException | UnrecognisedVotException e) {
             throw new RecoverableJarValidationException(
                     INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
                             "Inherited identity JWT failed to validate"),
@@ -344,6 +355,72 @@ public class InitialiseIpvSessionHandler
                     e);
         } catch (JarValidationException e) {
             throw new RecoverableJarValidationException(e.getErrorObject(), claimsSet, e);
+        } catch (EvcsServiceException e) {
+            throw new RecoverableJarValidationException(
+                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
+                            "Inherited identity VC failed to store"),
+                    claimsSet,
+                    e);
+        } catch (InheritedIdentityException e) {
+            throw new RecoverableJarValidationException(
+                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
+                            "Too many current inherited identities found in EVCS"),
+                    claimsSet,
+                    e);
+        }
+    }
+
+    @Tracing
+    private void storeInheritedIdentity(
+            String userId,
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            VerifiableCredential inheritedIdentityVc)
+            throws EvcsServiceException, CredentialParseException, InheritedIdentityException {
+        var existingInheritedIdentity =
+                evcsService
+                        .getVerifiableCredentials(
+                                userId, clientOAuthSessionItem.getEvcsAccessToken(), CURRENT)
+                        .stream()
+                        .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
+                        .toList();
+
+        if (existingInheritedIdentity.size() > 1) {
+            throw new InheritedIdentityException(
+                    String.format(
+                            "Too many current inherited identities found - %d",
+                            existingInheritedIdentity.size()));
+        }
+
+        if (existingInheritedIdentity.isEmpty()) {
+            LOGGER.info("No existing inherited identity found - storing new one");
+
+            evcsService.storeInheritedIdentity(userId, inheritedIdentityVc, null);
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+        } else if (incomingInheritedIdHasStrongerOrEqualVot(
+                inheritedIdentityVc, existingInheritedIdentity.get(0))) {
+            LOGGER.info(
+                    "New inherited identity has stronger or equal VOT - replacing existing one");
+
+            evcsService.storeInheritedIdentity(
+                    userId, inheritedIdentityVc, existingInheritedIdentity.get(0));
+            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+        } else {
+            LOGGER.info("Existing inherited identity has stronger VOT - discarding new one");
+        }
+    }
+
+    @Tracing
+    private boolean incomingInheritedIdHasStrongerOrEqualVot(
+            VerifiableCredential incoming, VerifiableCredential existing)
+            throws CredentialParseException {
+        try {
+            return HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(incoming))
+                    >= HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(existing));
+        } catch (IllegalArgumentException | ParseException e) {
+            throw new CredentialParseException("Problem parsing VOTs from inherited identities");
         }
     }
 
@@ -432,58 +509,31 @@ public class InitialiseIpvSessionHandler
                         true);
         LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully validated"));
 
+        // Validate the VOT
+        try {
+            if (!HMRC_PROFILES_BY_STRENGTH.contains(
+                    userIdentityService.getVot(inheritedIdentityVc))) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage("Unexpected VOT in inherited identity VC")
+                                .with(
+                                        LOG_VOT.getFieldName(),
+                                        userIdentityService.getVot(inheritedIdentityVc)));
+                throw new JarValidationException(
+                        INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
+                                "Unexpected VOT in inherited identity VC"));
+            }
+        } catch (IllegalArgumentException | ParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Problem parsing VOT in inherited identity VC", e)
+                            .with(
+                                    LOG_VOT.getFieldName(),
+                                    inheritedIdentityVc.getClaimsSet().getClaim(VOT_CLAIM_NAME)));
+            throw new JarValidationException(
+                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
+                            "Problem parsing VOT in inherited identity VC"));
+        }
+
         return inheritedIdentityVc;
-    }
-
-    private void storeHmrcInheritedIdentity(
-            JWTClaimsSet claimsSet,
-            IpvSessionItem ipvSessionItem,
-            VerifiableCredential inheritedIdentityVc)
-            throws RecoverableJarValidationException, ParseException {
-        try {
-            verifiableCredentialService.persistUserCredentials(inheritedIdentityVc);
-            ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-            LOGGER.info(LogHelper.buildLogMessage("Migration VC successfully persisted"));
-        } catch (VerifiableCredentialException e) {
-            throw new RecoverableJarValidationException(
-                    OAuth2Error.SERVER_ERROR.setDescription(
-                            "Failed to persist inherited identity JWT"),
-                    claimsSet,
-                    e);
-        }
-    }
-
-    private boolean isHmrcInheritedIdentityWithStrongerVotPresent(
-            VerifiableCredential incomingInheritedIdentity, String userId)
-            throws CredentialParseException {
-        try {
-            var hmrcMigrationVc = verifiableCredentialService.getVc(userId, HMRC_MIGRATION.getId());
-            if (hmrcMigrationVc == null) {
-                return false;
-            }
-
-            var existingInheritedIdentityVot = userIdentityService.getVot(hmrcMigrationVc);
-            var incomingInheritedIdentityVot =
-                    userIdentityService.getVot(incomingInheritedIdentity);
-
-            var indexOfExistingVot =
-                    HMRC_PROFILES_BY_STRENGTH.indexOf(existingInheritedIdentityVot);
-            var indexOfIncomingVot =
-                    HMRC_PROFILES_BY_STRENGTH.indexOf(incomingInheritedIdentityVot);
-
-            if (indexOfExistingVot == -1 || indexOfIncomingVot == -1) {
-                throw new IllegalArgumentException(
-                        String.format(
-                                "At least one of the existing (%s) or incoming (%s) VoTs from hmrc aren't expected",
-                                existingInheritedIdentityVot, incomingInheritedIdentityVot));
-            }
-
-            return indexOfIncomingVot > indexOfExistingVot;
-        } catch (ParseException | IllegalArgumentException e) {
-            throw new CredentialParseException(
-                    "Encountered a parsing error while attempting to parse credentials", e);
-        }
     }
 
     private void sendInheritedIdentityReceivedAuditEvent(
