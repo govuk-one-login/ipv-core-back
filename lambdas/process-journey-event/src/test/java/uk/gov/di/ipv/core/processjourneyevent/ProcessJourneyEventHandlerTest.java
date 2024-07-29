@@ -130,13 +130,15 @@ class ProcessJourneyEventHandlerTest {
                         .journey(JOURNEY_NEXT)
                         .ipvSessionId(TEST_IP)
                         .build();
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new IpvSessionNotFoundException("Not found"));
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getMessage(), output.get(MESSAGE));
+        assertEquals(ErrorResponse.IPV_SESSION_NOT_FOUND.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.IPV_SESSION_NOT_FOUND.getMessage(), output.get(MESSAGE));
     }
 
     @Test

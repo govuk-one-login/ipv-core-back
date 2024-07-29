@@ -34,9 +34,6 @@ public enum ErrorResponse {
     INVALID_REQUEST_PARAM(1018, "Invalid request param"),
     FAILED_TO_PARSE_JWK(1019, "Failed to parse JWK"),
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL(1020, "Failed to validate verifiable credential"),
-    INVALID_SESSION_ID(
-            1021,
-            "Invalid ipv-session-id has been provided, could not record of that requested session"),
     FAILED_JOURNEY_ENGINE_STEP(1022, "Failed to execute journey engine step"),
     MISSING_JOURNEY_EVENT(1023, "Missing journey event in input"),
     FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),
@@ -107,7 +104,8 @@ public enum ErrorResponse {
     FAILED_TO_UPDATE_IDENTITY(1090, "Failed to update identity"),
     INVALID_SIGNING_KEY_TYPE(1091, "Signing key is invalid type. Must be EC or RSA"),
     UNEXPECTED_CREDENTIAL_TYPE(1092, "Unexpected credential type"),
-    IPV_SESSION_NOT_FOUND(1093, "Ipv session not found in db");
+    IPV_SESSION_NOT_FOUND(
+            1093, "Invalid IPV session id provided, corresponding session not found in db");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

@@ -102,7 +102,6 @@ class CheckCoiHandlerTest {
     @BeforeEach
     void setup() throws Exception {
         when(mockIpvSessionService.getIpvSession(IPV_SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getIpvSessionId()).thenReturn(IPV_SESSION_ID);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(CLIENT_SESSION_ID);
 
         when(mockClientSessionService.getClientOAuthSession(CLIENT_SESSION_ID))

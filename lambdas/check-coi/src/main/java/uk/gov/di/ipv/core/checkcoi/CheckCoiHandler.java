@@ -114,10 +114,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         try {
             var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
-            var ipvSession =
-                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
-            var ipvSessionId = ipvSession.getIpvSessionId();
-
+            String ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var ipvSession = ipvSessionService.getIpvSession(ipvSessionId);
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSession.getClientOAuthSessionId());
