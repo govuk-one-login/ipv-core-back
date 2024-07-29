@@ -48,7 +48,7 @@ If you only need to run a core-back process, then you can run directly as a grad
 
 This might be useful if you are only running the API tests, or are running orch-stub and core-front independently.
 
-Core-back will now be running on http://localhost:3002 (for both internal and external APIs).
+Core-back will now be running on http://localhost:4502 (for both internal and external APIs).
 
 ### Core-back, Core-front and Orch-stub together
 
@@ -62,8 +62,8 @@ Next, spin up the containers with Docker compose: `docker-compose up`.
 If you need to rebuild containers, either pass `--build` to the docker-compose command,
 or build a specific container: `docker-compose build core-back`
 
-You can now visit the orch-stub at http://localhost:3000 and start a journey.
-Core-front will run on http://localhost:3001 and core-back will run on http://localhost:3002.
+You can now visit the orch-stub at http://localhost:4500 and start a journey.
+Core-front will run on http://localhost:4501 and core-back will run on http://localhost:4502.
 
 ### Logging
 

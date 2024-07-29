@@ -12,7 +12,7 @@ import uk.gov.di.ipv.coreback.sqs.SqsPoller;
 import java.io.IOException;
 
 public class CoreBack {
-    private static final int DEFAULT_PORT = 3002;
+    private static final int DEFAULT_PORT = 4502;
 
     public CoreBack() throws IOException {
         ConfigService.setLocal(true);
