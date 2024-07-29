@@ -11,10 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -62,8 +61,8 @@ public abstract class UserIdentityRequestHandler {
     }
 
     protected IpvSessionItem validateAccessTokenAndGetIpvSession(APIGatewayProxyRequestEvent input)
-            throws ParseException, UnknownAccessTokenException, RevokedAccessTokenException,
-                    ExpiredAccessTokenException, GetAccessTokenException {
+            throws ParseException, RevokedAccessTokenException, ExpiredAccessTokenException,
+                    IpvSessionNotFoundException {
 
         LogHelper.attachComponentId(configService);
 
@@ -97,11 +96,10 @@ public abstract class UserIdentityRequestHandler {
         return ipvSessionItem;
     }
 
-    protected ClientOAuthSessionItem getClientOAuthSessionItem(IpvSessionItem ipvSessionItem)
+    protected ClientOAuthSessionItem getClientOAuthSessionItem(String clientOAuthSessionId)
             throws InvalidScopeException {
         var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.getClientOAuthSession(
-                        ipvSessionItem.getClientOAuthSessionId());
+                clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
         LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
         LogHelper.attachGovukSigninJourneyIdToLogs(

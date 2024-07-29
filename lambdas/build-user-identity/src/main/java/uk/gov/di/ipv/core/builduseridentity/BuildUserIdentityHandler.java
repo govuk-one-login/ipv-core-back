@@ -25,11 +25,10 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -97,7 +96,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
-            var clientOAuthSessionItem = super.getClientOAuthSessionItem(ipvSessionItem);
+            var clientOAuthSessionItem =
+                    super.getClientOAuthSessionItem(ipvSessionItem.getClientOAuthSessionId());
 
             var ipvSessionId = ipvSessionItem.getIpvSessionId();
             var userId = clientOAuthSessionItem.getUserId();
@@ -154,16 +154,14 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
-        } catch (UnknownAccessTokenException e) {
-            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } catch (RevokedAccessTokenException e) {
             return getRevokedAccessTokenApiGatewayProxyResponseEvent(e.getRevokedAt());
         } catch (ExpiredAccessTokenException e) {
             return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
-        } catch (GetAccessTokenException e) {
-            return serverErrorJsonResponse("Error getting access token", e);
+        } catch (IpvSessionNotFoundException e) {
+            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } finally {
             auditService.awaitAuditEvents();
         }

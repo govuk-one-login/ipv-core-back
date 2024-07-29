@@ -163,11 +163,11 @@ class BuildUserIdentityHandlerTest {
 
     @State("accessToken is a valid access token")
     public void setAccessToken() {
-        var accessTokenMetaData = new AccessTokenMetadata();
         var ipvSession = new IpvSessionItem();
         ipvSession.setIpvSessionId(IPV_SESSION_ID);
         ipvSession.setClientOAuthSessionId("dummyClientOAuthSessionId");
         ipvSession.setVot(Vot.P2);
+        ipvSession.setAccessTokenMetadata(new AccessTokenMetadata());
 
         var oAuthSession = new ClientOAuthSessionItem();
         oAuthSession.setUserId("dummyOAuthUserId");
@@ -175,9 +175,8 @@ class BuildUserIdentityHandlerTest {
         oAuthSession.setGovukSigninJourneyId("dummySigninJourneyId");
         oAuthSession.setScope("openid");
         oAuthSession.setVtr(List.of("P2"));
-        when(mockOAuthSessionStore.getItem("dummyClientOAuthSessionId")).thenReturn(oAuthSession);
-        ipvSession.setAccessTokenMetadata(accessTokenMetaData);
 
+        when(mockOAuthSessionStore.getItem("dummyClientOAuthSessionId")).thenReturn(oAuthSession);
         when(mockIpvSessionDataStore.getItemByIndex(
                         "accessToken", DigestUtils.sha256Hex("accessToken")))
                 .thenReturn(ipvSession);

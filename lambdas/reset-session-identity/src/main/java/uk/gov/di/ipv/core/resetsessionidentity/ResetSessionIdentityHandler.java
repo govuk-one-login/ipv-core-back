@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -33,6 +34,7 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
@@ -126,6 +128,11 @@ public class ResetSessionIdentityHandler
                             .with(LOG_RESET_TYPE.getFieldName(), e.getResetType()));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_RESET_TYPE)
+                    .toObjectMap();
+        } catch (IpvSessionNotFoundException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
         }
     }

@@ -15,10 +15,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.GetAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -60,7 +59,8 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
 
         try {
             var ipvSessionItem = super.validateAccessTokenAndGetIpvSession(input);
-            var clientOAuthSessionItem = super.getClientOAuthSessionItem(ipvSessionItem);
+            var clientOAuthSessionItem =
+                    super.getClientOAuthSessionItem(ipvSessionItem.getClientOAuthSessionId());
             String userId = clientOAuthSessionItem.getUserId();
 
             closeSession(ipvSessionItem);
@@ -85,16 +85,14 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
-        } catch (UnknownAccessTokenException e) {
-            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } catch (RevokedAccessTokenException e) {
             return getRevokedAccessTokenApiGatewayProxyResponseEvent(e.getRevokedAt());
         } catch (ExpiredAccessTokenException e) {
             return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
-        } catch (GetAccessTokenException e) {
-            return serverErrorJsonResponse("Error getting access token", e);
+        } catch (IpvSessionNotFoundException e) {
+            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         }
     }
 }

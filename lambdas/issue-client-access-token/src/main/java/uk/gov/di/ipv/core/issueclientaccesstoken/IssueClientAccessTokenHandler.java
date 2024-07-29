@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -99,10 +100,8 @@ public class IssueClientAccessTokenHandler
             }
 
             IpvSessionItem ipvSessionItem =
-                    sessionService
-                            .getIpvSessionByAuthorizationCode(
-                                    authorizationGrant.getAuthorizationCode().getValue())
-                            .orElseThrow();
+                    sessionService.getIpvSessionByAuthorizationCode(
+                            authorizationGrant.getAuthorizationCode().getValue());
 
             configService.setFeatureSet(ipvSessionItem.getFeatureSetAsList());
 
@@ -210,6 +209,15 @@ public class IssueClientAccessTokenHandler
                     OAuth2Error.INVALID_CLIENT.setDescription("Client authentication failed");
 
             LOGGER.error(LogHelper.buildErrorMessage("Client authentication failed", error));
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    error.getHTTPStatusCode(), error.toJSONObject());
+        } catch (IpvSessionNotFoundException e) {
+            ErrorObject error = OAuth2Error.INVALID_GRANT.setDescription(e.getMessage());
+
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Error finding Ipv session for authorisation code", error));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());

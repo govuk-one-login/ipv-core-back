@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -221,6 +222,9 @@ public class BuildClientOauthResponseHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
+        } catch (IpvSessionNotFoundException e) {
+            return buildJourneyErrorResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } finally {
             auditService.awaitAuditEvents();
         }

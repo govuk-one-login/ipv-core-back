@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -103,7 +102,6 @@ class CheckCoiHandlerTest {
     @BeforeEach
     void setup() throws Exception {
         when(mockIpvSessionService.getIpvSession(IPV_SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getIpvSessionId()).thenReturn(IPV_SESSION_ID);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(CLIENT_SESSION_ID);
 
         when(mockClientSessionService.getClientOAuthSession(CLIENT_SESSION_ID))
@@ -309,7 +307,7 @@ class CheckCoiHandlerTest {
                 when(mockClientSessionItem.getScopeClaims())
                         .thenReturn(List.of(ScopeConstants.OPENID));
                 when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
-                        .thenReturn(new ArrayList<VerifiableCredential>());
+                        .thenReturn(new ArrayList<>());
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -324,6 +322,7 @@ class CheckCoiHandlerTest {
                 verify(mockVerifiableCredentialService, times(1)).getVcs(USER_ID);
             }
 
+            @Test
             void
                     shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
                             throws Exception {

@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -47,6 +48,7 @@ import java.util.stream.Stream;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
@@ -112,10 +114,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         try {
             var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
-            var ipvSession =
-                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
-            var ipvSessionId = ipvSession.getIpvSessionId();
-
+            String ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var ipvSession = ipvSessionService.getIpvSession(ipvSessionId);
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSession.getClientOAuthSessionId());
@@ -203,6 +203,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                             .with(LOG_CHECK_TYPE.getFieldName(), e.getCheckType()));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
+                    .toObjectMap();
+        } catch (IpvSessionNotFoundException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
         } finally {
             auditService.awaitAuditEvents();

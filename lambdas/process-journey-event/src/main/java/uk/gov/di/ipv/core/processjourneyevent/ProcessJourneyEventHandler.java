@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -129,12 +130,6 @@ public class ProcessJourneyEventHandler
             // Get/ set session items/ config
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            if (ipvSessionItem == null) {
-                LOGGER.error(LogHelper.buildLogMessage("Failed to find ipv-session"));
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
-            }
-
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
@@ -167,6 +162,9 @@ public class ProcessJourneyEventHandler
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+        } catch (IpvSessionNotFoundException e) {
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } finally {
             auditService.awaitAuditEvents();
         }

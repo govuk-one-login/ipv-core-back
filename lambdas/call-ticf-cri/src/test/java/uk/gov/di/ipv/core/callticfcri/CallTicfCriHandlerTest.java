@@ -222,7 +222,7 @@ class CallTicfCriHandlerTest {
         return Stream.of(
                 new CiPutException("Oops"),
                 new CiPostMitigationsException("Oops"),
-                new VerifiableCredentialException(1, ErrorResponse.INVALID_SESSION_ID));
+                new VerifiableCredentialException(1, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL));
     }
 
     @ParameterizedTest
