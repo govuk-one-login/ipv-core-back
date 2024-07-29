@@ -62,9 +62,6 @@ class CredentialTests {
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyAddressComponentId is a valid issuer")
-                .given("VC givenName is Kenneth")
-                .given("VC familyName is Decerqueira")
-                .given("VC birthDate is 1965-07-08")
                 .given("addressCountry is GB")
                 .given("streetName is HADLEY ROAD")
                 .given("buildingNumber is 8")
@@ -136,15 +133,7 @@ class CredentialTests {
                                                 .get("vc")
                                                 .get("credentialSubject");
 
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("Kenneth", nameParts.get(0).get("value").asText());
-                                assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
 
                                 assertEquals("GB", addressNode.get("addressCountry").asText());
                                 assertEquals("", addressNode.get("buildingName").asText());
@@ -154,7 +143,6 @@ class CredentialTests {
                                 assertEquals("BATH", addressNode.get("addressLocality").asText());
                                 assertEquals("2000-01-01", addressNode.get("validFrom").asText());
 
-                                assertEquals("1965-07-08", birthDateNode.get("value").asText());
                             } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
@@ -168,9 +156,6 @@ class CredentialTests {
                 .given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyAddressComponentId is a valid issuer")
-                .given("VC givenName is Mary")
-                .given("VC familyName is Watson")
-                .given("VC birthDate is 1932-02-25")
                 .given("buildingName is 221B")
                 .given("streetName is BAKER STREET")
                 .given("postalCode is NW1 6XE")
@@ -184,7 +169,7 @@ class CredentialTests {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_ADDRESS_BODY, VALID_VC_ADDRESS_SIGNATURE))
+                                VALID_VC_HEADER, VALID_VC_ADDRESS_BODY, VALID_VC_ADDRESS_SIGNATURE))
                 .toPact();
     }
 
@@ -240,15 +225,7 @@ class CredentialTests {
                                                 .get("vc")
                                                 .get("credentialSubject");
 
-                                JsonNode nameParts =
-                                        credentialSubject.get("name").get(0).get("nameParts");
-                                JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
-
-                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
-                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
-                                assertEquals("Mary", nameParts.get(0).get("value").asText());
-                                assertEquals("Watson", nameParts.get(1).get("value").asText());
 
                                 assertEquals("221B", addressNode.get("buildingName").asText());
                                 assertEquals(
@@ -257,7 +234,115 @@ class CredentialTests {
                                 assertEquals("LONDON", addressNode.get("addressLocality").asText());
                                 assertEquals("1887-01-01", addressNode.get("validFrom").asText());
 
-                                assertEquals("1932-02-25", birthDateNode.get("value").asText());
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "AddressCriVcProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestForChangedAddressReturnsIssuedAddressCredential(
+            PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyAddressComponentId is a valid issuer")
+                .given("buildingName is 221B")
+                .given("streetName is BAKER STREET")
+                .given("postalCode is NW1 6XE")
+                .given("addressLocality is LONDON")
+                .given("validFrom is 1987-01-01")
+                .given("second buildingName is 122")
+                .given("second streetName is BURNS CRESCENT")
+                .given("second postalCode is EH1 9GP")
+                .given("second addressLocality is EDINBURGH")
+                .given("second validFrom is 2017-01-01")
+                .uponReceiving("Valid credential request for VC")
+                .path("/credential/issue")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER,
+                                VALID_VC_CHANGED_ADDRESS_BODY,
+                                VALID_VC_CHANGED_ADDRESS_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestForChangedAddressReturnsIssuedAddressCredential")
+    void
+            fetchVerifiableCredential_whenCalledAgainstAddressCriForChangedAddress_retrievesAnAddressVc(
+                    MockServer mockServer)
+                    throws URISyntaxException, CriApiException, JsonProcessingException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
+                .thenReturn(PRIVATE_API_KEY);
+
+        var verifiableCredentialJwtValidator =
+                new VerifiableCredentialValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
+
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                ADDRESS,
+                                                credential,
+                                                EC_PRIVATE_KEY_JWK,
+                                                TEST_ISSUER,
+                                                false);
+
+                                JsonNode credentialSubject =
+                                        objectMapper
+                                                .readTree(vc.getClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+
+                                assertEquals("221B", addressNode.get("buildingName").asText());
+                                assertEquals(
+                                        "BAKER STREET", addressNode.get("streetName").asText());
+                                assertEquals("NW1 6XE", addressNode.get("postalCode").asText());
+                                assertEquals("LONDON", addressNode.get("addressLocality").asText());
+                                assertEquals("1987-01-01", addressNode.get("validFrom").asText());
+
+                                JsonNode addressNode2 = credentialSubject.get("address").get(1);
+
+                                assertEquals("122", addressNode2.get("buildingName").asText());
+                                assertEquals(
+                                        "BURNS CRESCENT", addressNode2.get("streetName").asText());
+                                assertEquals("EH1 9GP", addressNode2.get("postalCode").asText());
+                                assertEquals(
+                                        "EDINBURGH", addressNode2.get("addressLocality").asText());
+                                assertEquals("2017-01-01", addressNode2.get("validFrom").asText());
+
                             } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
@@ -361,107 +446,109 @@ class CredentialTests {
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_EXPERIAN_ADDRESS_VC_BODY =
             """
-                {
-                  "iss": "dummyAddressComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "exp": 4070909400,
-                  "vc": {
-                     "type": [
-                       "VerifiableCredential",
-                       "AddressCredential"
-                     ],
-                     "credentialSubject": {
-                       "name": [
-                         {
-                           "nameParts": [
-                             {
-                               "type": "GivenName",
-                               "value": "Kenneth"
-                             },
-                             {
-                               "type": "FamilyName",
-                               "value": "Decerqueira"
-                             }
-                           ]
-                         }
-                       ],
-                       "birthDate": [
-                         {
-                           "value": "1965-07-08"
-                         }
-                       ],
-                       "address": [
-                         {
-                           "addressCountry": "GB",
-                           "buildingName": "",
-                           "streetName": "HADLEY ROAD",
-                           "postalCode": "BA2 5AA",
-                           "buildingNumber": "8",
-                           "addressLocality": "BATH",
-                           "validFrom": "2000-01-01"
-                         }
-                       ]
-                     }
-                   },
-                   "jti": "dummyJti"
-                 }
+              {
+                "iss": "dummyAddressComponentId",
+                "sub": "test-subject",
+                "nbf": 4070908800,
+                "exp": 4070909400,
+                "vc": {
+                  "type": [
+                    "VerifiableCredential",
+                    "AddressCredential"
+                  ],
+                  "credentialSubject": {
+                    "address": [
+                      {
+                        "addressCountry": "GB",
+                        "buildingName": "",
+                        "streetName": "HADLEY ROAD",
+                        "postalCode": "BA2 5AA",
+                        "buildingNumber": "8",
+                        "addressLocality": "BATH",
+                        "validFrom": "2000-01-01"
+                      }
+                    ]
+                  }
+                },
+                "jti": "dummyJti"
+               }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "JYSqzC1Ga54CmBAQtdLMA3-RBeiXBjF5I_LjozTuiIfD9gal7htp_HB1ErNEKI_zAZesFHBVhuOB1Klxta1uPg"; // pragma: allowlist secret
+            "NK7NIClo3q8TPhrozPGfosrtP9xeg2d6tn205wfncHtwLRiNgfgoGlgViuqJjK70uErS29hSCKDU5z_qEA7faA"; // pragma: allowlist secret
 
-    private static final String VALID_ADDRESS_BODY =
+    private static final String VALID_VC_ADDRESS_BODY =
             """
-                {
-                  "iss": "dummyAddressComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "exp": 4070909400,
-                  "vc": {
-                     "type": [
-                       "VerifiableCredential",
-                       "AddressCredential"
-                     ],
-                     "credentialSubject": {
-                       "name": [
-                         {
-                           "nameParts": [
-                             {
-                               "type": "GivenName",
-                               "value": "Mary"
-                             },
-                             {
-                               "type": "FamilyName",
-                               "value": "Watson"
-                             }
-                           ]
-                         }
-                       ],
-                       "birthDate": [
-                         {
-                           "value": "1932-02-25"
-                         }
-                       ],
-                       "address": [
-                         {
-                            "buildingName": "221B",
-                            "streetName": "BAKER STREET",
-                            "postalCode": "NW1 6XE",
-                            "addressLocality": "LONDON",
-                            "validFrom": "1887-01-01"
-                          }
-                       ]
-                     }
-                   },
-                   "jti": "dummyJti"
-                 }
-                    """;
+              {
+                "iss": "dummyAddressComponentId",
+                "sub": "test-subject",
+                "nbf": 4070908800,
+                "exp": 4070909400,
+                "vc": {
+                  "type": [
+                    "VerifiableCredential",
+                    "AddressCredential"
+                  ],
+                  "credentialSubject": {
+                    "address": [
+                      {
+                        "buildingName": "221B",
+                        "streetName": "BAKER STREET",
+                        "postalCode": "NW1 6XE",
+                        "addressLocality": "LONDON",
+                        "validFrom": "1887-01-01"
+                       }
+                    ]
+                }
+              },
+              "jti": "dummyJti"
+              }
+            """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "WyJwkhYzdfqGddOSEhFGuQdL_FWUj9A63TRsc8kTL0gHtt4HwuyMFAdwNW6AFmVYOVSCEi_gUEZcFUkrzll_ig"; // pragma: allowlist secret
+            "GHexgsYflMN1Z3oTMrr3Bljg2Wix-B_BnvzPAYqDevBOlziEXPePYw5JSAomKzv1BXRYYLUflvV_lyyt8XU-dw"; // pragma: allowlist secret
+
+    private static final String VALID_VC_CHANGED_ADDRESS_BODY =
+            """
+              {
+                "iss": "dummyAddressComponentId",
+                "sub": "test-subject",
+                "nbf": 4070908800,
+                "exp": 4070909400,
+                "vc": {
+                  "type": [
+                    "VerifiableCredential",
+                    "AddressCredential"
+                  ],
+                  "credentialSubject": {
+                    "address": [
+                      {
+                        "buildingName": "221B",
+                        "streetName": "BAKER STREET",
+                        "postalCode": "NW1 6XE",
+                        "addressLocality": "LONDON",
+                        "validFrom": "1987-01-01"
+                      },
+                      {
+                        "buildingName": "122",
+                        "streetName": "BURNS CRESCENT",
+                        "postalCode": "EH1 9GP",
+                        "addressLocality": "EDINBURGH",
+                        "validFrom": "2017-01-01"
+                      }
+                    ]
+                  }
+                },
+                "jti": "dummyJti"
+              }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_CHANGED_ADDRESS_SIGNATURE =
+            "xxQ1Bkkb8UW4DPk5AjaIX0GAL_f0XaWX8ofFj1FVhG5o2qRFv4JpvrRoRijt2B8DZLCuVOsG9ITHxp_6zV_dFA"; // pragma: allowlist secret
 }
