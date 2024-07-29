@@ -21,12 +21,11 @@ There are two ways of using the local-running setup, but both require setting up
 ### Configuration
 
 You'll need to set up config and secrets for your local-running core-back,
-this involves updating the params and secrets files, copying the template versions and updating any placeholders:
+this involves updating the secrets files, copying the template version and updating any placeholders:
 
 - `core.local.secrets.template.yaml` -> `core.local.secrets.yaml`
-- `core.local.params.template.yaml` -> `core.local.params.yaml`
 
-Values for the placeholders can be found in SSM/Secrets Manager in your dev account, or in the config repo.
+Values for the placeholders can be found in Secrets Manager in your dev account, or in the config repo.
 
 If you want to run F2F journeys, you'll also need to stop the event source mapping that feeds the
 process-async-cri-credential lambda. This is to allow the local deployment to read messages from the SQS queue.

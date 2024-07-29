@@ -143,6 +143,12 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Setup app secrets
+        run: |
+          cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
+          sed -i s/CIMIT_API_KEY/${{ secrets.CIMIT_API_KEY }}/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/EVCS_API_KEY/${{ secrets.EVCS_API_KEY }}/ ../local-running/core.local.secrets.yaml
+
       - name: Local API tests
         run: npm run test:ci
 
