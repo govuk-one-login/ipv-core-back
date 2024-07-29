@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -155,8 +154,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
-        } catch (UnknownAccessTokenException e) {
-            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } catch (RevokedAccessTokenException e) {
             return getRevokedAccessTokenApiGatewayProxyResponseEvent(e.getRevokedAt());
         } catch (ExpiredAccessTokenException e) {
@@ -164,7 +161,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
-            return serverErrorJsonResponse("Error finding Ipv session for access token", e);
+            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } finally {
             auditService.awaitAuditEvents();
         }

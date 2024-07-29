@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -86,8 +85,6 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (UnrecognisedCiException e) {
             return serverErrorJsonResponse("CI error.", e);
-        } catch (UnknownAccessTokenException e) {
-            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         } catch (RevokedAccessTokenException e) {
             return getRevokedAccessTokenApiGatewayProxyResponseEvent(e.getRevokedAt());
         } catch (ExpiredAccessTokenException e) {
@@ -95,7 +92,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
-            return serverErrorJsonResponse("Error getting Ipv session for access token", e);
+            return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         }
     }
 }

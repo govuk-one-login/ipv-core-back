@@ -40,7 +40,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -826,9 +825,9 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenThrow(new UnknownAccessTokenException("error"));
+                .thenThrow(new IpvSessionNotFoundException("error"));
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -850,7 +849,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
@@ -875,7 +874,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -898,10 +897,9 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn500ErrorResponseWhenGetAccessTokenThrown()
+    void shouldReturn403ErrorResponseWhenIpvSessionNotFoundExceptionThrown()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
-
+                    IpvSessionNotFoundException {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenThrow(new IpvSessionNotFoundException("err", new Exception()));
 
@@ -909,8 +907,8 @@ class BuildUserIdentityHandlerTest {
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
         responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals(OAuth2Error.SERVER_ERROR.getCode(), responseBody.get("error"));
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
@@ -989,7 +987,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenIpvSessionIsNull() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenThrow(new UnknownAccessTokenException("error"));
+                .thenThrow(new IpvSessionNotFoundException("error"));
 
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);

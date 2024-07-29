@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -134,7 +133,7 @@ class UserReverificationHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasExpired()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -158,9 +157,9 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenGetAccessTokenExceptionThrown()
+    void shouldReturnErrorResponseWhenIpvSessionNotFoundExceptionThrown()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -172,8 +171,8 @@ class UserReverificationHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals(OAuth2Error.SERVER_ERROR.getCode(), responseBody.get("error"));
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
@@ -181,7 +180,7 @@ class UserReverificationHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
             throws JsonProcessingException, VerifiableCredentialException,
-                    UnknownAccessTokenException, IpvSessionNotFoundException {
+                    IpvSessionNotFoundException {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);

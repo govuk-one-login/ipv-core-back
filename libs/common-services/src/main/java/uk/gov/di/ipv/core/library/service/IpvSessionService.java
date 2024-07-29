@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownAccessTokenException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -183,8 +182,7 @@ public class IpvSessionService {
         return Instant.now().plusSeconds(expirySeconds).toString();
     }
 
-    private <T> T callRunTaskWithBackoff(RetryableTask<T> task)
-            throws IpvSessionNotFoundException, UnknownAccessTokenException {
+    private <T> T callRunTaskWithBackoff(RetryableTask<T> task) throws IpvSessionNotFoundException {
         try {
             return Retry.runTaskWithBackoff(sleeper, 7, 10, task);
         } catch (InterruptedException e) {
