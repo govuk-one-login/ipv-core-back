@@ -126,8 +126,7 @@ public class CiMitService {
 
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
-                    && configService.getSecret(CIMIT_API_KEY) != null) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
 
@@ -169,8 +168,7 @@ public class CiMitService {
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
-                    && configService.getSecret(CIMIT_API_KEY) != null) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var payload =
                         OBJECT_MAPPER.writeValueAsString(
                                 new PostMitigationsApiRequest(
@@ -256,8 +254,7 @@ public class CiMitService {
             throws CiRetrievalException {
         LOGGER.info(LogHelper.buildLogMessage("Retrieving CIs from CIMIT system"));
         try {
-            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)
-                    && configService.getSecret(CIMIT_API_KEY) != null) {
+            if (configService.enabled(CIMIT_API_GATEWAY_ENABLED)) {
                 var response = sendGetHttpRequest(userId, govukSigninJourneyId, ipAddress);
 
                 if (response.statusCode() != SC_OK) {
