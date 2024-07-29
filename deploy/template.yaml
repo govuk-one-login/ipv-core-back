@@ -1689,8 +1689,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBReadPolicy:

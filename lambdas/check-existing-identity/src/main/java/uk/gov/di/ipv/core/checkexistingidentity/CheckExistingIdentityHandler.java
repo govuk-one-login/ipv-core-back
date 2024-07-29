@@ -68,7 +68,6 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -844,11 +843,6 @@ public class CheckExistingIdentityHandler
 
         // Successful match
         if (matchedGpg45Profile.isPresent() && !isBreaching) {
-            // remove weaker operational profile
-            if (configService.enabled(INHERITED_IDENTITY) && requestedVot.equals(Vot.P2)) {
-                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
-            }
-
             var gpg45Credentials = new ArrayList<VerifiableCredential>();
             for (var vc : vcs) {
                 if (!VcHelper.isOperationalProfileVc(vc)) {

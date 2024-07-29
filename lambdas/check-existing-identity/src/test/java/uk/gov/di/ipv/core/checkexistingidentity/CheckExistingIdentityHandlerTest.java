@@ -93,7 +93,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -104,7 +103,6 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
-import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
@@ -117,7 +115,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
@@ -1166,40 +1163,6 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldRemoveOperationalProfileIfMatchingGpg45ProfileIsPresent() throws Exception {
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        clientOAuthSessionItem.setVtr(List.of(P2.name(), PCL250.name()));
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
-                .thenReturn(
-                        Stream.concat(
-                                        VCS_FROM_STORE.stream(),
-                                        Stream.of(vcHmrcMigrationPCL250NoEvidence()))
-                                .toList());
-
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(P2.getSupportedGpg45Profiles())))
-                .thenReturn(Optional.of(Gpg45Profile.M1B));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
-        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-        assertEquals(JOURNEY_REUSE, journeyResponse);
-        verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
-        assertEquals(PCL250, ipvSessionItem.getTargetVot());
-    }
-
-    @Test
     void
             shouldReturnJourneyFailedWithCiIfTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
                     throws Exception {
@@ -1414,7 +1377,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
@@ -1457,7 +1419,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
@@ -1500,7 +1461,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))

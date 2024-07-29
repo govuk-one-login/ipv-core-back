@@ -24,13 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
@@ -38,9 +36,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIA
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialServiceTest {
@@ -123,41 +118,6 @@ class VerifiableCredentialServiceTest {
         ArgumentCaptor<String> userIdCaptor = ArgumentCaptor.forClass(String.class);
         verify(mockDataStore).deleteAllByPartition(userIdCaptor.capture());
         assertEquals(TEST_SUBJECT, userIdCaptor.getValue());
-    }
-
-    @Test
-    void shouldDeleteInheritedIdentityIfPresent() throws Exception {
-        // Arrange
-        var inheritedIdentityVc = vcHmrcMigrationPCL250NoEvidence();
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcExperianFraudScoreOne(),
-                        vcExperianFraudScoreTwo(),
-                        inheritedIdentityVc);
-
-        // Act
-        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
-
-        // Assert
-        verify(mockDataStore, times(1))
-                .delete(inheritedIdentityVc.getUserId(), inheritedIdentityVc.getCri().getId());
-    }
-
-    @Test
-    void shouldNotDeleteInheritedIdentityIfNotPresent() {
-        // Arrange
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcExperianFraudScoreOne(),
-                        vcExperianFraudScoreTwo());
-
-        // Act
-        verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
-
-        // Assert
-        verify(mockDataStore, times(0)).delete(any(), eq(HMRC_MIGRATION.getId()));
     }
 
     @Test
