@@ -7,7 +7,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -32,6 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -118,7 +119,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -147,7 +148,7 @@ class EvcsServiceTest {
         evcsService.storePendingIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -173,7 +174,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -223,7 +224,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -257,7 +258,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -299,7 +300,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, Collections.emptyList(), TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -313,6 +314,31 @@ class EvcsServiceTest {
                         .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
                         .count()));
         mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+    }
+
+    @Test
+    void storeCompletedIdentityShouldNotUpdateInheritedIdentity() throws Exception {
+        var vcsInEvcs =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        vcHmrcMigrationPCL200().getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId()))));
+        when(mockEvcsClient.getUserVcs(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
+                .thenReturn(vcsInEvcs);
+        // Act
+        evcsService.storeCompletedIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
+        // Assert
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
+
+        mockOrderVerifier.verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+        mockOrderVerifier.verify(mockEvcsClient, times(1)).storeUserVCs(any(), any());
     }
 
     @Test
@@ -363,7 +389,7 @@ class EvcsServiceTest {
                 .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
         evcsService.abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN);
 
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN));

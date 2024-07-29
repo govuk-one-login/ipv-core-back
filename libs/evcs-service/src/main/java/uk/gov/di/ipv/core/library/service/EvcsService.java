@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
+import uk.gov.di.ipv.core.library.metadata.InheritedIdentityMetadata;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -99,7 +100,11 @@ public class EvcsService {
                 userId,
                 List.of(
                         new EvcsCreateUserVCsDto(
-                                incomingInheritedIdentity.getVcString(), CURRENT, null, EXTERNAL)));
+                                incomingInheritedIdentity.getVcString(),
+                                CURRENT,
+                                new InheritedIdentityMetadata(
+                                        incomingInheritedIdentity.getCri().getId()),
+                                EXTERNAL)));
     }
 
     @Tracing
@@ -244,6 +249,10 @@ public class EvcsService {
             var existingCurrentUserVcsNotInSessionToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
+                            .filter(
+                                    vc ->
+                                            vc.metadata().get("inheritedIdentity")
+                                                    == null) // Don't update inherited identity VCs
                             .filter(
                                     vc ->
                                             credentials.stream()
