@@ -499,7 +499,7 @@ class CredentialTests {
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
                     }
                   ],
                   "name": [
@@ -523,25 +523,25 @@ class CredentialTests {
                   ]
                 },
                 "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }
-                    ],
-                    "verificationScore": 2,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }
+                  ],
+                  "verificationScore": 2,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
                 }]
               }
             }
@@ -566,7 +566,7 @@ class CredentialTests {
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
                     }
                   ],
                   "name": [
@@ -590,29 +590,29 @@ class CredentialTests {
                   ]
                 },
                 "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    }],
-                    "failedCheckDetails": [{
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }],
-                    "verificationScore": 2,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  }],
+                  "failedCheckDetails": [{
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }],
+                  "verificationScore": 2,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
                 }]
               }
             }
@@ -637,7 +637,7 @@ class CredentialTests {
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
                     }
                   ],
                   "name": [
@@ -661,25 +661,25 @@ class CredentialTests {
                   ]
                 },
                 "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    }],
-                    "failedCheckDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }],
-                    "ci": ["V03"],
-                    "verificationScore": 0,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  }],
+                  "failedCheckDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }],
+                  "ci": ["V03"],
+                  "verificationScore": 0,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
                 }]
               }
             }

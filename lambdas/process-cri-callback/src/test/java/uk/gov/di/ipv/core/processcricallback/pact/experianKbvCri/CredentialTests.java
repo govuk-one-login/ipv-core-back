@@ -594,78 +594,79 @@ class CredentialTests {
 
     private static final String VALID_VC_BODY =
             """
-                {
-                  "iss": "dummyExperianKbvComponentId",
-                  "sub": "test-subject",
-                  "nbf": 4070908800,
-                  "vc": {
-                    "type": [
-                      "VerifiableCredential",
-                      "IdentityCheckCredential"
-                    ],
-                    "credentialSubject": {
-                      "name": [
+            {
+              "iss": "dummyExperianKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
                         {
-                          "nameParts": [
-                            {
-                              "type": "GivenName",
-                              "value": "Mary"
-                            },
-                            {
-                              "type": "FamilyName",
-                              "value": "Watson"
-                            }
-                          ]
-                        }
-                      ],
-                      "birthDate": [
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
                         {
-                          "value": "1932-02-25"
-                        }
-                      ],
-                      "address": [
-                        {
-                          "uprn": "10022812929",
-                          "organisationName": "FINCH GROUP",
-                          "subBuildingName": "UNIT 2B",
-                          "buildingNumber": "16",
-                          "buildingName": "COY POND BUSINESS PARK",
-                          "dependentStreetName": "KINGS PARK",
-                          "streetName": "BIG STREET",
-                          "doubleDependentAddressLocality": "SOME DISTRICT",
-                          "dependentAddressLocality": "LONG EATON",
-                          "addressLocality": "GREAT MISSENDEN",
-                          "postalCode": "HP16 0AL",
-                          "addressCountry": "GB"
+                          "type": "FamilyName",
+                          "value": "Watson"
                         }
                       ]
-                    },
-                "evidence": [
+                    }
+                  ],
+                  "birthDate": [
                     {
-                      "checkDetails": [
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 2,
-                          "kbvResponseMode": "multiple_choice"
-                        },
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 2,
-                          "kbvResponseMode": "multiple_choice"
-                        },
-                        {
-                          "checkMethod": "kbv",
-                          "kbvQuality": 1,
-                          "kbvResponseMode": "multiple_choice"
-                        }
-                      ],
-                      "verificationScore": 2,
-                      "txn": "dummyTxn",
-                      "type": "IdentityCheck"
-                    }]
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": "10022812929",
+                      "organisationName": "FINCH GROUP",
+                      "subBuildingName": "UNIT 2B",
+                      "buildingNumber": "16",
+                      "buildingName": "COY POND BUSINESS PARK",
+                      "dependentStreetName": "KINGS PARK",
+                      "streetName": "BIG STREET",
+                      "doubleDependentAddressLocality": "SOME DISTRICT",
+                      "dependentAddressLocality": "LONG EATON",
+                      "addressLocality": "GREAT MISSENDEN",
+                      "postalCode": "HP16 0AL",
+                      "addressCountry": "GB"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "checkDetails": [
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 2,
+                        "kbvResponseMode": "multiple_choice"
+                      },
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 2,
+                        "kbvResponseMode": "multiple_choice"
+                      },
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 1,
+                        "kbvResponseMode": "multiple_choice"
+                      }
+                    ],
+                    "verificationScore": 2,
+                    "txn": "dummyTxn",
+                    "type": "IdentityCheck"
                   }
-                }
-                """;
+                ]
+              }
+            }
+            """;
 
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
@@ -676,72 +677,72 @@ class CredentialTests {
     private static final String VALID_THIN_FILE_VC_BODY =
             """
             {
-               "iss": "dummyExperianKbvComponentId",
-               "sub": "test-subject",
-               "nbf": 4070908800,
-               "vc": {
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ],
-                 "credentialSubject": {
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Mary"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Watson"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1932-02-25"
-                     }
-                   ],
-               "address": [
-                     {
-                       "uprn": "10022812929",
-                       "organisationName": "FINCH GROUP",
-                       "subBuildingName": "UNIT 2B",
-                       "buildingNumber": "16",
-                       "buildingName": "COY POND BUSINESS PARK",
-                       "dependentStreetName": "KINGS PARK",
-                       "streetName": "BIG STREET",
-                       "doubleDependentAddressLocality": "SOME DISTRICT",
-                       "dependentAddressLocality": "LONG EATON",
-                       "addressLocality": "GREAT MISSENDEN",
-                       "postalCode": "HP16 0AL",
-                       "addressCountry": "GB"
-                     }
-                   ]
-             },
-             "evidence": [
-                 {
-                   "type": "IdentityCheck",
-                   "txn": "dummyTxn",
-                   "verificationScore": 0,
-                   "checkDetails": [
-                     {
-                       "checkMethod": "kbv",
-                       "kbvQuality": 3,
-                       "kbvResponseMode": "multiple_choice"
-                     },
-                     {
-                       "checkMethod": "kbv",
-                       "kbvQuality": 2,
-                       "kbvResponseMode": "multiple_choice"
-                     }
-                   ]
-                 }
-               ]
-               }
-             }
+              "iss": "dummyExperianKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": "10022812929",
+                      "organisationName": "FINCH GROUP",
+                      "subBuildingName": "UNIT 2B",
+                      "buildingNumber": "16",
+                      "buildingName": "COY POND BUSINESS PARK",
+                      "dependentStreetName": "KINGS PARK",
+                      "streetName": "BIG STREET",
+                      "doubleDependentAddressLocality": "SOME DISTRICT",
+                      "dependentAddressLocality": "LONG EATON",
+                      "addressLocality": "GREAT MISSENDEN",
+                      "postalCode": "HP16 0AL",
+                      "addressCountry": "GB"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "verificationScore": 0,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 3,
+                        "kbvResponseMode": "multiple_choice"
+                      },
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 2,
+                        "kbvResponseMode": "multiple_choice"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
             """;
 
     // If we generate the signature in code it will be different each time, so we need to generate a
@@ -782,46 +783,46 @@ class CredentialTests {
                     }
                   ],
                   "address": [
-                        {
-                          "uprn": "10022812929",
-                          "organisationName": "FINCH GROUP",
-                          "subBuildingName": "UNIT 2B",
-                          "buildingNumber": "16",
-                          "buildingName": "COY POND BUSINESS PARK",
-                          "dependentStreetName": "KINGS PARK",
-                          "streetName": "BIG STREET",
-                          "doubleDependentAddressLocality": "SOME DISTRICT",
-                          "dependentAddressLocality": "LONG EATON",
-                          "addressLocality": "GREAT MISSENDEN",
-                          "postalCode": "HP16 0AL",
-                          "addressCountry": "GB"
-                        }
-                      ]
-                },
-                "evidence": [
                     {
-                        "type": "IdentityCheck",
-                        "txn": "dummyTxn",
-                        "verificationScore": 0,
-                        "checkDetails": [
-                            {
-                                "checkMethod": "kbv",
-                                "kbvQuality": 3,
-                                "kbvResponseMode": "multiple_choice"
-                            }
-                        ],
-                        "failedCheckDetails": [
-                            {
-                                "kbvResponseMode": "multiple_choice",
-                                "checkMethod": "kbv"
-                            },
-                            {
-                                "kbvResponseMode": "multiple_choice",
-                                "checkMethod": "kbv"
-                            }],
-                            "ci": ["A03"]
+                      "uprn": "10022812929",
+                      "organisationName": "FINCH GROUP",
+                      "subBuildingName": "UNIT 2B",
+                      "buildingNumber": "16",
+                      "buildingName": "COY POND BUSINESS PARK",
+                      "dependentStreetName": "KINGS PARK",
+                      "streetName": "BIG STREET",
+                      "doubleDependentAddressLocality": "SOME DISTRICT",
+                      "dependentAddressLocality": "LONG EATON",
+                      "addressLocality": "GREAT MISSENDEN",
+                      "postalCode": "HP16 0AL",
+                      "addressCountry": "GB"
                     }
                   ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn",
+                    "verificationScore": 0,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "kbv",
+                        "kbvQuality": 3,
+                        "kbvResponseMode": "multiple_choice"
+                      }
+                    ],
+                    "failedCheckDetails": [
+                      {
+                        "kbvResponseMode": "multiple_choice",
+                        "checkMethod": "kbv"
+                      },
+                      {
+                        "kbvResponseMode": "multiple_choice",
+                        "checkMethod": "kbv"
+                      }],
+                      "ci": ["A03"]
+                  }
+                ]
               }
             }
             """;

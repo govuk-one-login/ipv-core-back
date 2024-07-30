@@ -446,32 +446,32 @@ class CredentialTests {
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_EXPERIAN_ADDRESS_VC_BODY =
             """
-              {
-                "iss": "dummyAddressComponentId",
-                "sub": "test-subject",
-                "nbf": 4070908800,
-                "exp": 4070909400,
-                "vc": {
-                  "type": [
-                    "VerifiableCredential",
-                    "AddressCredential"
-                  ],
-                  "credentialSubject": {
-                    "address": [
-                      {
-                        "addressCountry": "GB",
-                        "buildingName": "",
-                        "streetName": "HADLEY ROAD",
-                        "postalCode": "BA2 5AA",
-                        "buildingNumber": "8",
-                        "addressLocality": "BATH",
-                        "validFrom": "2000-01-01"
-                      }
-                    ]
-                  }
-                },
-                "jti": "dummyJti"
-               }
+            {
+              "iss": "dummyAddressComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "AddressCredential"
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "addressCountry": "GB",
+                      "buildingName": "",
+                      "streetName": "HADLEY ROAD",
+                      "postalCode": "BA2 5AA",
+                      "buildingNumber": "8",
+                      "addressLocality": "BATH",
+                      "validFrom": "2000-01-01"
+                    }
+                  ]
+                }
+              },
+              "jti": "dummyJti"
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
@@ -481,30 +481,30 @@ class CredentialTests {
 
     private static final String VALID_VC_ADDRESS_BODY =
             """
-              {
-                "iss": "dummyAddressComponentId",
-                "sub": "test-subject",
-                "nbf": 4070908800,
-                "exp": 4070909400,
-                "vc": {
-                  "type": [
-                    "VerifiableCredential",
-                    "AddressCredential"
-                  ],
-                  "credentialSubject": {
-                    "address": [
-                      {
-                        "buildingName": "221B",
-                        "streetName": "BAKER STREET",
-                        "postalCode": "NW1 6XE",
-                        "addressLocality": "LONDON",
-                        "validFrom": "1887-01-01"
-                       }
-                    ]
+            {
+              "iss": "dummyAddressComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "AddressCredential"
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "buildingName": "221B",
+                      "streetName": "BAKER STREET",
+                      "postalCode": "NW1 6XE",
+                      "addressLocality": "LONDON",
+                      "validFrom": "1887-01-01"
+                     }
+                  ]
                 }
               },
               "jti": "dummyJti"
-              }
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
@@ -514,37 +514,37 @@ class CredentialTests {
 
     private static final String VALID_VC_CHANGED_ADDRESS_BODY =
             """
-              {
-                "iss": "dummyAddressComponentId",
-                "sub": "test-subject",
-                "nbf": 4070908800,
-                "exp": 4070909400,
-                "vc": {
-                  "type": [
-                    "VerifiableCredential",
-                    "AddressCredential"
-                  ],
-                  "credentialSubject": {
-                    "address": [
-                      {
-                        "buildingName": "221B",
-                        "streetName": "BAKER STREET",
-                        "postalCode": "NW1 6XE",
-                        "addressLocality": "LONDON",
-                        "validFrom": "1987-01-01"
-                      },
-                      {
-                        "buildingName": "122",
-                        "streetName": "BURNS CRESCENT",
-                        "postalCode": "EH1 9GP",
-                        "addressLocality": "EDINBURGH",
-                        "validFrom": "2017-01-01"
-                      }
-                    ]
-                  }
-                },
-                "jti": "dummyJti"
-              }
+            {
+              "iss": "dummyAddressComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "AddressCredential"
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "buildingName": "221B",
+                      "streetName": "BAKER STREET",
+                      "postalCode": "NW1 6XE",
+                      "addressLocality": "LONDON",
+                      "validFrom": "1987-01-01"
+                    },
+                    {
+                      "buildingName": "122",
+                      "streetName": "BURNS CRESCENT",
+                      "postalCode": "EH1 9GP",
+                      "addressLocality": "EDINBURGH",
+                      "validFrom": "2017-01-01"
+                    }
+                  ]
+                }
+              },
+              "jti": "dummyJti"
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
