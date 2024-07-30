@@ -75,6 +75,7 @@ class CredentialTests {
                 .given("VC evidence txn is dummyTxn")
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails are free_text, multiple_choice, multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -163,6 +164,7 @@ class CredentialTests {
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails are free_text, free_text, multiple_choice")
                 .given("VC evidence failedCheckDetails is multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -322,6 +324,7 @@ class CredentialTests {
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails is free_text")
                 .given("VC evidence failedCheckDetails are free_text, multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
@@ -492,36 +495,6 @@ class CredentialTests {
               "sub": "test-subject",
               "nbf": 4070908800,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "socialSecurityRecord": [
-                    {
-                      "personalNumber": "AA000003D"
-                    }
-                  ],
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ]
-                },
                 "evidence": [{
                   "checkDetails": [{
                     "kbvResponseMode": "free_text",
@@ -542,31 +515,16 @@ class CredentialTests {
                   "verificationScore": 2,
                   "txn": "dummyTxn",
                   "type": "IdentityCheck"
-                }]
-              }
-            }
-            """;
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_VC_SIGNATURE =
-            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg"; // pragma: allowlist secret
-
-    private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
-            """
-            {
-              "iss": "dummyHmrcKbvComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
+                }],
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
                     }
                   ],
                   "name": [
@@ -582,13 +540,33 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_SIGNATURE =
+            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg"; // pragma: allowlist secret
+
+    private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
+            """
+            {
+              "iss": "dummyHmrcKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
                 "evidence": [{
                   "checkDetails": [{
                     "kbvResponseMode": "free_text",
@@ -613,31 +591,16 @@ class CredentialTests {
                   "verificationScore": 2,
                   "txn": "dummyTxn",
                   "type": "IdentityCheck"
-                }]
-              }
-            }
-            """;
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
-            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew"; // pragma: allowlist secret
-
-    private static final String FAILED_VC_BODY =
-            """
-            {
-              "iss": "dummyHmrcKbvComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
+                }],
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
                     }
                   ],
                   "name": [
@@ -653,13 +616,33 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
                   ]
                 },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
+            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew"; // pragma: allowlist secret
+
+    private static final String FAILED_VC_BODY =
+            """
+            {
+              "iss": "dummyHmrcKbvComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "vc": {
                 "evidence": [{
                   "checkDetails": [{
                     "kbvResponseMode": "free_text",
@@ -680,8 +663,43 @@ class CredentialTests {
                   "verificationScore": 0,
                   "txn": "dummyTxn",
                   "type": "IdentityCheck"
-                }]
-              }
+                }],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Mary"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Watson"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
