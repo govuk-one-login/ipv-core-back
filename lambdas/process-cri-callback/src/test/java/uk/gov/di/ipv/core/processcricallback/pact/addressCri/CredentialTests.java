@@ -161,7 +161,7 @@ class CredentialTests {
                 .given("postalCode is NW1 6XE")
                 .given("addressLocality is LONDON")
                 .given("validFrom is 1887-01-01")
-                .uponReceiving("Valid credential request for VC")
+                .uponReceiving("Valid credential request for old single address")
                 .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -257,7 +257,7 @@ class CredentialTests {
                 .given("second postalCode is EH1 9GP")
                 .given("second addressLocality is EDINBURGH")
                 .given("second validFrom is 2017-01-01")
-                .uponReceiving("Valid credential request for VC")
+                .uponReceiving("Valid credential request for multiple addresses")
                 .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
@@ -456,6 +456,10 @@ class CredentialTests {
                   "VerifiableCredential",
                   "AddressCredential"
                 ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
                 "credentialSubject": {
                   "address": [
                     {
@@ -491,6 +495,10 @@ class CredentialTests {
                   "VerifiableCredential",
                   "AddressCredential"
                 ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
                 "credentialSubject": {
                   "address": [
                     {
@@ -523,6 +531,10 @@ class CredentialTests {
                 "type": [
                   "VerifiableCredential",
                   "AddressCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
                 "credentialSubject": {
                   "address": [

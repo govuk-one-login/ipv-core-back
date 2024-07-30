@@ -603,6 +603,10 @@ class CredentialTests {
                   "VerifiableCredential",
                   "IdentityCheckCredential"
                 ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
                 "credentialSubject": {
                   "name": [
                     {
@@ -685,6 +689,10 @@ class CredentialTests {
                   "VerifiableCredential",
                   "IdentityCheckCredential"
                 ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
                 "credentialSubject": {
                   "name": [
                     {
@@ -761,6 +769,10 @@ class CredentialTests {
                 "type": [
                   "VerifiableCredential",
                   "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
                 ],
                 "credentialSubject": {
                   "name": [
