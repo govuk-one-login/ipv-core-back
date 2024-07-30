@@ -1,13 +1,13 @@
 package uk.gov.di.ipv.coreback.handlers;
 
-import spark.Request;
-import spark.Response;
-import spark.Route;
+import io.javalin.http.Context;
 
 public class HomeHandler {
     private HomeHandler() {
         throw new IllegalStateException("Utility class");
     }
 
-    public static final Route serveHomePage = (Request request, Response response) -> "🐧";
+    public static void serveHomePage(Context ctx) {
+        ctx.result("IPV Core Back local-running");
+    }
 }

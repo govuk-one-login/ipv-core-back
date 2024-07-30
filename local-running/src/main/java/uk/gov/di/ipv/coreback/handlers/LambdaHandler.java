@@ -3,9 +3,7 @@ package uk.gov.di.ipv.coreback.handlers;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import spark.Request;
-import spark.Response;
-import spark.Route;
+import io.javalin.http.Context;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
@@ -14,71 +12,54 @@ import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
 import uk.gov.di.ipv.core.userreverification.UserReverificationHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class LambdaHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
-    public static final String APPLICATION_JSON = "application/json";
 
-    private final Route initialiseSession = apiGatewayProxyRoute(new InitialiseIpvSessionHandler());
+    private final InitialiseIpvSessionHandler initialiseSessionHandler =
+            new InitialiseIpvSessionHandler();
+    private final BuildProvenUserIdentityDetailsHandler provenUserIdentityHandler =
+            new BuildProvenUserIdentityDetailsHandler();
+    private final ProcessCriCallbackHandler criCallbackHandler = new ProcessCriCallbackHandler();
+    private final IssueClientAccessTokenHandler tokenHandler = new IssueClientAccessTokenHandler();
+    private final BuildUserIdentityHandler userIdentityHandler = new BuildUserIdentityHandler();
+    private final UserReverificationHandler userReverificationHandler =
+            new UserReverificationHandler();
 
-    private final Route buildProvenUserIdentityDetails =
-            apiGatewayProxyRoute(new BuildProvenUserIdentityDetailsHandler());
-
-    private final Route criCallBack = apiGatewayProxyRoute(new ProcessCriCallbackHandler());
-
-    private final Route token = apiGatewayProxyRoute(new IssueClientAccessTokenHandler());
-
-    private final Route userIdentity = apiGatewayProxyRoute(new BuildUserIdentityHandler());
-
-    private final Route userReverification = apiGatewayProxyRoute(new UserReverificationHandler());
-
-    private Route apiGatewayProxyRoute(
+    private void handleApiGatewayProxyRoute(
+            Context ctx,
             RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> handler) {
-        return (Request request, Response response) -> {
-            APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent =
-                    new APIGatewayProxyRequestEvent();
-            apiGatewayProxyRequestEvent.setBody(request.body());
-            apiGatewayProxyRequestEvent.setHeaders(getHeadersMap(request));
-            apiGatewayProxyRequestEvent.setPath(request.pathInfo());
+        APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent = new APIGatewayProxyRequestEvent();
+        apiGatewayProxyRequestEvent.setBody(ctx.body());
+        apiGatewayProxyRequestEvent.setHeaders(ctx.headerMap());
+        apiGatewayProxyRequestEvent.setPath(ctx.path());
 
-            APIGatewayProxyResponseEvent responseEvent =
-                    handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
+        APIGatewayProxyResponseEvent responseEvent =
+                handler.handleRequest(apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
 
-            response.type(APPLICATION_JSON);
-            return responseEvent.getBody();
-        };
+        ctx.status(responseEvent.getStatusCode()).json(responseEvent.getBody());
     }
 
-    private Map<String, String> getHeadersMap(Request request) {
-        Map<String, String> headers = new HashMap<>();
-        request.headers().forEach(header -> headers.put(header, request.headers(header)));
-
-        return headers;
+    public void initialiseSession(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.initialiseSessionHandler);
     }
 
-    public Route getInitialiseSession() {
-        return this.initialiseSession;
+    public void getProvenUserIdentityDetails(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.provenUserIdentityHandler);
     }
 
-    public Route getBuildProvenUserIdentityDetails() {
-        return this.buildProvenUserIdentityDetails;
+    public void getUserReverification(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.userReverificationHandler);
     }
 
-    public Route getUserReverification() {
-        return this.userReverification;
+    public void criCallback(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.criCallbackHandler);
     }
 
-    public Route getCriCallBack() {
-        return this.criCallBack;
+    public void getToken(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.tokenHandler);
     }
 
-    public Route getToken() {
-        return this.token;
-    }
-
-    public Route getUserIdentity() {
-        return this.userIdentity;
+    public void getUserIdentity(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.userIdentityHandler);
     }
 }

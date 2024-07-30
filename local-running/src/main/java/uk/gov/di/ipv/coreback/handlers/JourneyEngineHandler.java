@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.coreback.handlers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import spark.Request;
-import spark.Response;
-import spark.Route;
+import io.javalin.http.Context;
 import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler;
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler;
@@ -24,10 +21,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class JourneyEngineHandler {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
-    public static final String APPLICATION_JSON = "application/json";
 
     public static final String JOURNEY = "journey";
     public static final String IPV_SESSION_ID = "ipv-session-id";
@@ -62,67 +56,62 @@ public class JourneyEngineHandler {
         this.checkCoiHandler = new CheckCoiHandler();
     }
 
-    private final Route journeyEngine =
-            (Request request, Response response) -> {
-                response.type(APPLICATION_JSON);
-                String journeyEvent = request.pathInfo();
+    public void journeyEngine(Context ctx) {
+        String journeyEvent = ctx.pathParam("event");
 
-                while (true) {
-                    var processJourneyEventOutput = processJourneyEvent(request, journeyEvent);
+        while (true) {
+            var processJourneyEventOutput = processJourneyEvent(ctx, journeyEvent);
 
-                    if (!processJourneyEventOutput.containsKey(JOURNEY)) {
-                        return OBJECT_MAPPER.writeValueAsString(processJourneyEventOutput);
-                    }
+            if (!processJourneyEventOutput.containsKey(JOURNEY)) {
+                ctx.json(processJourneyEventOutput);
+                return;
+            }
 
-                    var processJourneyStepOutput =
-                            processJourneyStep(request, processJourneyEventOutput);
+            var processJourneyStepOutput = processJourneyStep(ctx, processJourneyEventOutput);
 
-                    if (!processJourneyStepOutput.containsKey(JOURNEY)) {
-                        return OBJECT_MAPPER.writeValueAsString(processJourneyStepOutput);
-                    }
+            if (!processJourneyStepOutput.containsKey(JOURNEY)) {
+                ctx.json(processJourneyStepOutput);
+                return;
+            }
 
-                    journeyEvent = (String) processJourneyStepOutput.get(JOURNEY);
-                }
-            };
-
-    public Route getJourneyEngine() {
-        return journeyEngine;
+            journeyEvent = (String) processJourneyStepOutput.get(JOURNEY);
+        }
     }
 
     // Corresponds to the ProcessJourneyStep state in the step function
-    private Map<String, Object> processJourneyEvent(Request request, String journeyEvent) {
+    private Map<String, Object> processJourneyEvent(Context ctx, String journeyEvent) {
         return processJourneyEventHandler.handleRequest(
-                buildJourneyRequest(request, journeyEvent), EMPTY_CONTEXT);
+                buildJourneyRequest(ctx, journeyEvent), EMPTY_CONTEXT);
     }
 
     // Corresponds to the ProcessJourneyStepResult state in the step function
     private Map<String, Object> processJourneyStep(
-            Request request, Map<String, Object> processJourneyEventOutput) {
+            Context ctx, Map<String, Object> processJourneyEventOutput) {
         var journeyStep = (String) processJourneyEventOutput.get(JOURNEY);
 
         return switch (journeyStep) {
             case "/journey/check-existing-identity" -> checkExistingIdentityHandler.handleRequest(
-                    buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
+                    buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
             case "/journey/reset-session-identity" -> resetSessionIdentityHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
-                    .handleRequest(buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
+                    .handleRequest(buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
             case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/check-gpg45-score" -> checkGpg45ScoreHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-dcmaw-async-cri" -> callDcmawAsyncHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/check-coi" -> checkCoiHandler.handleRequest(
-                    buildProcessRequest(request, processJourneyEventOutput), EMPTY_CONTEXT);
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
                     yield buildCriOauthRequestHandler.handleRequest(
-                            buildJourneyRequest(request, journeyStep), EMPTY_CONTEXT);
+                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
                 } else {
                     throw new UnrecognisedJourneyException(
                             String.format("Journey not configured: %s", journeyStep));
@@ -131,25 +120,25 @@ public class JourneyEngineHandler {
         };
     }
 
-    private JourneyRequest buildJourneyRequest(Request request, String journey) {
+    private JourneyRequest buildJourneyRequest(Context ctx, String journey) {
         return JourneyRequest.builder()
-                .ipvSessionId(request.headers(IPV_SESSION_ID))
-                .ipAddress(request.headers(IP_ADDRESS))
-                .deviceInformation(request.headers(ENCODED_DEVICE_INFORMATION))
-                .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
-                .featureSet(request.headers(FEATURE_SET))
+                .ipvSessionId(ctx.header(IPV_SESSION_ID))
+                .ipAddress(ctx.header(IP_ADDRESS))
+                .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
+                .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
+                .featureSet(ctx.header(FEATURE_SET))
                 .journey(journey)
                 .build();
     }
 
     private ProcessRequest buildProcessRequest(
-            Request request, Map<String, Object> processJourneyEventOutput) {
+            Context ctx, Map<String, Object> processJourneyEventOutput) {
         return ProcessRequest.processRequestBuilder()
-                .ipvSessionId(request.headers(IPV_SESSION_ID))
-                .ipAddress(request.headers(IP_ADDRESS))
-                .deviceInformation(request.headers(ENCODED_DEVICE_INFORMATION))
-                .clientOAuthSessionId(request.headers(CLIENT_SESSION_ID))
-                .featureSet(request.headers(FEATURE_SET))
+                .ipvSessionId(ctx.header(IPV_SESSION_ID))
+                .ipAddress(ctx.header(IP_ADDRESS))
+                .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
+                .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
+                .featureSet(ctx.header(FEATURE_SET))
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
                 .lambdaInput((Map<String, Object>) processJourneyEventOutput.get("lambdaInput"))
                 .build();

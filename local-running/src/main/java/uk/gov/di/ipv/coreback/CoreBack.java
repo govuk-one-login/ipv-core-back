@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.coreback;
 
-import spark.Spark;
+import io.javalin.Javalin;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler;
 import uk.gov.di.ipv.coreback.handlers.AuditHandler;
@@ -23,22 +23,22 @@ public class CoreBack {
 
         new SqsPoller().start(new ProcessAsyncCriCredentialHandler());
 
-        Spark.port(getPort());
-        Spark.get("/", HomeHandler.serveHomePage);
+        var app = Javalin.create().start(getPort());
 
-        Spark.post("/session/initialise", lambdaHandler.getInitialiseSession());
-        Spark.post("/journey/:event", journeyEngineHandler.getJourneyEngine());
-        Spark.post("/cri/callback", lambdaHandler.getCriCallBack());
-        Spark.get(
-                "/user/proven-identity-details", lambdaHandler.getBuildProvenUserIdentityDetails());
+        // Test APIs
+        app.get("/", HomeHandler::serveHomePage);
+        app.get("/audit-events", auditHandler::getAuditEvents);
 
-        Spark.post("/token", lambdaHandler.getToken());
-        Spark.get("/user-identity", lambdaHandler.getUserIdentity());
+        // Internal APIs
+        app.post("/session/initialise", lambdaHandler::initialiseSession);
+        app.post("/journey/{event}", journeyEngineHandler::journeyEngine);
+        app.post("/cri/callback", lambdaHandler::criCallback);
+        app.get("/user/proven-identity-details", lambdaHandler::getProvenUserIdentityDetails);
 
-        Spark.get("/reverification", lambdaHandler.getUserReverification());
-        Spark.get("/audit-events", auditHandler.getAuditEvents());
-
-        Spark.internalServerError("🤮");
+        // External APIs
+        app.post("/token", lambdaHandler::getToken);
+        app.get("/user-identity", lambdaHandler::getUserIdentity);
+        app.get("/reverification", lambdaHandler::getUserReverification);
     }
 
     private int getPort() {
