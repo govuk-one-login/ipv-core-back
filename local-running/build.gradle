@@ -12,7 +12,7 @@ dependencies {
 			libs.bundles.log4j,
 			libs.jacksonDatabind,
 			libs.log4j12Api,
-			libs.spark,
+			libs.javalin,
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-cri-oauth-request"),
