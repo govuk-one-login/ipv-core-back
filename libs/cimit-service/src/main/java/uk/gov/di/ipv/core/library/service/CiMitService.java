@@ -77,6 +77,7 @@ public class CiMitService {
     private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
     private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
     private static final String GET_VCS_ENDPOINT = "/contra-indicators";
+    private static final String DUMMY_CIMIT_API_KEY = "dummyApiKey";
 
     public static final String FAILED_RESPONSE = "fail";
 
@@ -418,7 +419,7 @@ public class CiMitService {
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
         var apiKey = configService.getSecret(CIMIT_API_KEY);
-        if (apiKey != null) {
+        if (apiKey != null && !apiKey.equals(DUMMY_CIMIT_API_KEY)) {
             requestBuilder.header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
         }
 
