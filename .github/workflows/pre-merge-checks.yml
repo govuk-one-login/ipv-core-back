@@ -98,6 +98,60 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar
 
+  api-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+    defaults:
+      run:
+        working-directory: ./api-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup .npmrc
+        run: |
+          cp .npmrc.template .npmrc && \
+          sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/${{ secrets.GITHUB_TOKEN }}/ .npmrc
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Linting
+        run: npm run lint
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: gradle
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+
+      - name: Setup app secrets
+        run: |
+          cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
+          sed -i s/CIMIT_API_KEY/${{ secrets.CIMIT_API_KEY }}/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/EVCS_API_KEY/${{ secrets.EVCS_API_KEY }}/ ../local-running/core.local.secrets.yaml
+
+      - name: Local API tests
+        run: npm run test:ci
+
   sam-build:
     runs-on: ubuntu-latest
     timeout-minutes: 15

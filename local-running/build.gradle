@@ -43,6 +43,10 @@ dependencies {
 			project(":libs:verifiable-credentials")
 }
 
+run.doFirst {
+	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
+}
+
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17

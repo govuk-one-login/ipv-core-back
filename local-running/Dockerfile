@@ -14,9 +14,8 @@ COPY lambdas ./lambdas
 COPY libs ./libs
 COPY local-running ./local-running
 
-RUN ./gradlew :local-running:build --no-daemon; \
-    mkdir untarred; \
-    tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
+RUN --mount=type=cache,target=/root/.gradle ./gradlew :local-running:build --no-daemon
+RUN mkdir untarred && tar -xvf local-running/build/distributions/local-running.tar -C ./untarred
 
 FROM openjdk:17-jdk-slim
 

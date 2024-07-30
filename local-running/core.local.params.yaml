@@ -1,5 +1,5 @@
-# Local running config params - copy this file to `core.local.params.yaml` and update PLACEHOLDER values accordingly
-# This should match the core format of the configuration in the main config-mgmt utility
+# Local running config params
+# Note that this should only non-sensitive test values
 ---
 core:
   self:
@@ -14,19 +14,21 @@ core:
     criResponseTtl: 3600
     sessionCredentialTtl: 3600
     authCodeExpirySeconds: 3600
-    ciScoringThreshold: PLACEHOLDER
+    # Test CI scoring values
+    ciScoringThreshold: 10
     ciScoringThresholdByVot:
-      P1: PLACEHOLDER
-      P2: PLACEHOLDER
+      P1: 5
+      P2: 10
     returnCodes:
-      alwaysRequired: PLACEHOLDER
-      nonCiBreachingP0: PLACEHOLDER
+      alwaysRequired: always-required
+      nonCiBreachingP0: non-ci-breaching
     govUkNotify:
       emailTemplates:
         UserTriggeredIdentityResetConfirmation: "dummy-value"
         UserTriggeredIdentityResetConfirmationF2f: "dummy-value"
     coi:
-      familyNameChars: PLACEHOLDER
+      # Test COI config
+      familyNameChars: 5
   clients:
     orchestrator:
       id: orchestrator
@@ -43,7 +45,17 @@ core:
   cimit:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
-    config: PLACEHOLDER
+    # Test CIMIT config
+    config: '{
+      "needs-enhanced-verification":[
+        {"event":"/journey/enhanced-verification"}
+      ],
+      "needs-alternate-doc":[
+        {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"},
+        {"event":"/journey/alternate-doc-invalid-passport","document":"passport"}
+      ]
+    }'
+    apiBaseUrl: "https://cimit-api.stubs.account.gov.uk"
   evcs:
     applicationUrl: "https://evcs.stubs.account.gov.uk"
   credentialIssuers:
@@ -339,6 +351,7 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
+    cimitApiGatewayEnabled: true
   features:
     mfaReset:
       featureFlags:
