@@ -41,7 +41,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
           cache-dependency-path: '**/package-lock.json'  # Need this so it looks in lambdas/delete-user-data for the package-lock
 
@@ -114,7 +114,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
           cache-dependency-path: '**/package-lock.json'
 
