@@ -655,7 +655,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "WHEg4EooDiCdT676GPVE4l4z5YY-Tvl3FTY4bYI_nCzx8mqrg2rTYJUM4SG8azbyBjdSG8UQFyfAuLPeYlMTwg"; // pragma: allowlist secret
+            "We13lVYrjNQto5P7XcCJiLgNpFPaagXM1NxHDjK_jNUwHK16WOAHS3KEL3vB246gYmmQ55LpVoOIQqc9CfF-dw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
@@ -723,7 +723,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "GdAM1VaIj5fPZD-8mosORKfbqazER2xNzS2wJ-3ksq2HsCLujvK6kTSjER1OxMHTXH4T8wEROVbGIVeaK9vY9A"; // pragma: allowlist secret
+            "zPwCdVETzGGYaXaNtYL5-3Px3tVjLLjaQ-Ot0bzhD9DD_Qvf7sIwGvbdKYx1PkMiJKZBp28E7dd1uRo2n3FPkQ"; // pragma: allowlist secret
 
     private static final String VALID_NINO_VC_BODY =
             """
@@ -786,7 +786,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "WjlFHK3oFx1Wbi1aQ380OJs3Br-aZWCjUsa-BXOg-LnTzdhExZnS2OQ-fckweGzfvZFnuZcC0R8IML6axALGpg"; // pragma: allowlist secret
+            "RcpJc_xtZriNrqGTjK_eFWoz1SkA4uaGVQAPgfo0lzEAiw3jS0uTlhF3U6DOoMo4VefaShfOYgb46gFqUUCsOw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_VC_BODY =
             """
@@ -852,5 +852,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw"; // pragma: allowlist secret
+            "-A_yvG1Z5XE70MnUdnYn4lB-MhFd1Ic28dd1bZ7GDDgMHKEEhjG1NABPaEQV0s9of7k6I4Q1yjVlBPrIum6zKA"; // pragma: allowlist secret
 }
