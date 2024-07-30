@@ -100,6 +100,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
@@ -111,6 +112,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -383,7 +385,7 @@ class CheckExistingIdentityHandlerTest {
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-            var vcs = List.of(gpg45Vc, vcF2fM1a());
+            var vcs = new ArrayList<>(List.of(gpg45Vc, vcF2fM1a()));
             when(mockVerifiableCredentialService.getVcs(any())).thenReturn(vcs);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
@@ -406,6 +408,28 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
+        void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+
+            var inheritedIdentityVc = vcHmrcMigrationPCL200();
+            var f2fVc = vcF2fM1a();
+            var currentVcs = List.of(inheritedIdentityVc, vcExperianFraudFailed());
+            var pendingReturnVcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
+            var allVcs = Stream.concat(pendingReturnVcs.stream(), currentVcs.stream()).toList();
+
+            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(allVcs);
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
+                    .thenReturn(Map.of(PENDING_RETURN, pendingReturnVcs, CURRENT, currentVcs));
+
+            checkExistingIdentityHandler.handleRequest(event, context);
+
+            verify(userIdentityService)
+                    .areVcsCorrelated(List.of(gpg45Vc, f2fVc, inheritedIdentityVc));
+        }
+
+        @Test
         void shouldReturnJourneyReuseStoreResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
@@ -420,7 +444,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of(f2fVc1, f2fVc2, f2fVc3));
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
-                    .thenReturn(Map.of(PENDING_RETURN, List.of(f2fVc1, f2fVc2)));
+                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc1, f2fVc2))));
 
             when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(

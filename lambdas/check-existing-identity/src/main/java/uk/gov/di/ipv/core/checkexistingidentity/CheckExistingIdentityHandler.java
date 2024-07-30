@@ -72,6 +72,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
@@ -394,6 +395,12 @@ public class CheckExistingIdentityHandler
             if (isNullOrEmpty(evcsIdentityVcs)) {
                 evcsIdentityVcs = evcsVcs.get(CURRENT);
                 isPendingEvcs = false;
+            } else {
+                // Ensure we keep any inherited ID VCs in the bundle
+                evcsIdentityVcs.addAll(
+                        evcsVcs.getOrDefault(CURRENT, List.of()).stream()
+                                .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
+                                .toList());
             }
 
             // Check for partially migrated pending identity
@@ -801,6 +808,7 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated,
             ContraIndicators contraIndicators)
             throws ParseException {
+
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
