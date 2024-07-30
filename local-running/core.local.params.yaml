@@ -1,5 +1,5 @@
 # Local running config params
-# Note that this should only non-sensitive test values
+# Note that this should only contain non-sensitive test values
 ---
 core:
   self:
