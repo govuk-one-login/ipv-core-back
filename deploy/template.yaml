@@ -8,7 +8,7 @@ Globals:
     Timeout: 40
     SnapStart:
       ApplyOn: PublishedVersions
-    MemorySize: !If [IsDevelopment, 1024, 3072]
+    MemorySize: !If [IsDevelopment, 3072, 3072]
     Runtime: java17
     Environment:
       Variables:
