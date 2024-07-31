@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.persistence;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -11,9 +12,11 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -36,6 +39,7 @@ import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final int MAX_ITEMS_IN_WRITE_BATCH = 25;
     private final Class<T> typeParameterClass;
     private final ConfigService configService;
     private final DynamoDbTable<T> table;
@@ -73,6 +77,12 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public void create(T item) {
         table.putItem(item);
+    }
+
+    @Override
+    @ExcludeFromGeneratedCoverageReport
+    public void createOrUpdate(List<T> items) throws BatchDeleteException {
+        processBatchOperation(items, false);
     }
 
     @Override
@@ -138,6 +148,13 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     }
 
     @Override
+    public List<T> getItems() {
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        PageIterable<T> pagedResults = table.scan(scanRequest);
+        return pagedResults.items().stream().toList();
+    }
+
+    @Override
     public List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value) {
         var queryConditional =
                 QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build());
@@ -180,21 +197,42 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     @ExcludeFromGeneratedCoverageReport
     public void delete(List<T> items) throws BatchDeleteException {
-        if (!items.isEmpty()) {
-            BatchWriteResult batchWriteResult =
-                    processBatchWrite(createWriteBatchForDeleteItems(items));
-            // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
-            // process.
-            List<Key> unprocessedItems =
-                    batchWriteResult.unprocessedDeleteItemsForTable(this.table);
-            if (!unprocessedItems.isEmpty()) {
-                String errMessage = "Failed during batch deletion.";
-                LOGGER.error(LogHelper.buildLogMessage(errMessage));
-                throw new BatchDeleteException(errMessage);
+        processBatchOperation(items, true);
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private void processBatchOperation(List<T> items, boolean isForDeletion)
+            throws BatchDeleteException {
+        for (List<T> subItems : ListUtils.partition(items, MAX_ITEMS_IN_WRITE_BATCH)) {
+            if (!subItems.isEmpty()) {
+                BatchWriteResult batchWriteResult =
+                        processBatchWrite(
+                                isForDeletion
+                                        ? createWriteBatchForDeleteItems(subItems)
+                                        : createWriteBatchForPutItems(subItems));
+                // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
+                // process.
+                List<Key> unprocessedItems =
+                        batchWriteResult.unprocessedDeleteItemsForTable(this.table);
+                if (!unprocessedItems.isEmpty()) {
+                    String errMessage = "Failed during batch deletion.";
+                    LOGGER.error(LogHelper.buildLogMessage(errMessage));
+                    throw new BatchDeleteException(errMessage);
+                }
+            } else {
+                LOGGER.info(LogHelper.buildLogMessage("No items to delete"));
             }
-        } else {
-            LOGGER.info(LogHelper.buildLogMessage("No items to delete"));
         }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private WriteBatch createWriteBatchForPutItems(List<T> items) {
+        WriteBatch.Builder<T> builder =
+                WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
+        for (T item : items) {
+            builder.addPutItem(item).build();
+        }
+        return builder.build();
     }
 
     @ExcludeFromGeneratedCoverageReport

@@ -3090,6 +3090,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub report-user-identity-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          REPORT_USER_IDENTITY_TABLE_NAME: !Ref ReportUserIdentityTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -3114,6 +3115,8 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReportUserIdentityTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
       AutoPublishAlias: live
@@ -3370,6 +3373,32 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+
+  ReportUserIdentityTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
+      TableName: !Sub "report-user-identity-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If
+          - IsProduction
+          - true
+          - false
+      AttributeDefinitions:
+        - AttributeName: "userId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "userId"
+          KeyType: "HASH"
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS

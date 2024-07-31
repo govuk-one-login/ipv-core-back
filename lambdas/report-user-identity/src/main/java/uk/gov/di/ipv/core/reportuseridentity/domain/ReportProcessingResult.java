@@ -1,11 +1,10 @@
 package uk.gov.di.ipv.core.reportuseridentity.domain;
 
+import lombok.Builder;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.util.List;
-
+@Builder
 @ExcludeFromGeneratedCoverageReport
-public class ReportProcessingResult {
-    private ReportSummary summary;
-    private List<ReportUserIdentity> users;
+public record ReportProcessingResult(ReportSummary summary) {
+    //    private List<ReportUserIdentityItem> users;
 }

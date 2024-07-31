@@ -61,6 +61,13 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     @Override
+    public void createOrUpdate(List<T> items) {
+        for (T item : items) {
+            records.put(getKey(item), item);
+        }
+    }
+
+    @Override
     public void createIfNotExists(T item) throws ItemAlreadyExistsException {
         var key = getKey(item);
         if (records.putIfAbsent(key, item) != null) {
@@ -115,6 +122,11 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
         return records.values().stream()
                 .filter(i -> getPartitionKey(i).equals(partitionValue))
                 .toList();
+    }
+
+    @Override
+    public List<T> getItems() {
+        return records.values().stream().toList();
     }
 
     @SuppressWarnings(

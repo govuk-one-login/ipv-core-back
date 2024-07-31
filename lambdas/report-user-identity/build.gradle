@@ -9,7 +9,11 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
-			project(":libs:common-services")
+			libs.diVocab,
+			project(":libs:common-services"),
+			project(":libs:gpg45-evaluator"),
+			project(":libs:verifiable-credentials"),
+			project(":libs:user-identity-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

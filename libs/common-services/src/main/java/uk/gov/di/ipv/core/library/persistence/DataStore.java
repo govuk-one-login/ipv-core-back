@@ -26,6 +26,8 @@ public interface DataStore<T extends PersistenceItem> {
 
     void create(T item);
 
+    void createOrUpdate(List<T> items) throws BatchDeleteException;
+
     void createIfNotExists(T item) throws ItemAlreadyExistsException;
 
     T getItem(String partitionValue, String sortValue);
@@ -37,6 +39,8 @@ public interface DataStore<T extends PersistenceItem> {
     T getItemByIndex(String indexName, String value);
 
     List<T> getItems(String partitionValue);
+
+    List<T> getItems();
 
     List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value);
 

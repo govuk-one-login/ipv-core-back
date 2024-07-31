@@ -1,16 +1,12 @@
 package uk.gov.di.ipv.core.reportuseridentity.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@Builder
 @ExcludeFromGeneratedCoverageReport
-public class ReportSummary {
-    @JsonProperty("Total P2")
-    private int totalP2Identities;
-
-    @JsonProperty("Total P1")
-    private int totalP1Identities;
-
-    @JsonProperty("Total P0")
-    private int totalP0Identities;
-}
+public record ReportSummary(
+        @JsonProperty("Total P2") int totalP2Identities,
+        @JsonProperty("Total P1") int totalP1Identities,
+        @JsonProperty("Total P0") int totalP0Identities) {}
