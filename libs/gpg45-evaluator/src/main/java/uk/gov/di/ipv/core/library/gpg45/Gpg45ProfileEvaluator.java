@@ -50,9 +50,15 @@ public class Gpg45ProfileEvaluator {
                 vcs.stream()
                         .filter(vc -> vc.getCredential() instanceof IdentityCheckCredential)
                         .flatMap(
-                                vc ->
-                                        ((IdentityCheckCredential) vc.getCredential())
-                                                .getEvidence().stream())
+                                vc -> {
+                                    IdentityCheckCredential credential =
+                                            (IdentityCheckCredential) vc.getCredential();
+                                    if (credential.getEvidence() != null) {
+                                        return credential.getEvidence().stream();
+                                    } else {
+                                        return Stream.empty();
+                                    }
+                                })
                         .toList();
 
         return Gpg45Scores.builder()
