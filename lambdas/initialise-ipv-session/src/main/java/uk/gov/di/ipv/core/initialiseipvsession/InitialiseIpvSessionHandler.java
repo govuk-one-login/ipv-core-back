@@ -342,8 +342,7 @@ public class InitialiseIpvSessionHandler
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
             sendInheritedIdentityReceivedAuditEvent(
                     inheritedIdentityVc, auditEventUser, deviceInformation);
-            if (configService.enabled(EVCS_READ_ENABLED)
-                    && configService.enabled(EVCS_WRITE_ENABLED)) {
+            if (configService.enabled(EVCS_WRITE_ENABLED)) {
                 storeInheritedIdentity(
                         userId, ipvSessionItem, clientOAuthSessionItem, inheritedIdentityVc);
             }
@@ -393,7 +392,9 @@ public class InitialiseIpvSessionHandler
         }
 
         if (existingInheritedIdentity.isEmpty()) {
-            LOGGER.info("No existing inherited identity found - storing new one");
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "No existing inherited identity found - storing new one"));
 
             evcsService.storeInheritedIdentity(userId, inheritedIdentityVc, null);
             ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
@@ -401,18 +402,20 @@ public class InitialiseIpvSessionHandler
         } else if (incomingInheritedIdHasStrongerOrEqualVot(
                 inheritedIdentityVc, existingInheritedIdentity.get(0))) {
             LOGGER.info(
-                    "New inherited identity has stronger or equal VOT - replacing existing one");
+                    LogHelper.buildLogMessage(
+                            "New inherited identity has stronger or equal VOT - replacing existing one"));
 
             evcsService.storeInheritedIdentity(
                     userId, inheritedIdentityVc, existingInheritedIdentity.get(0));
             ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             ipvSessionService.updateIpvSession(ipvSessionItem);
         } else {
-            LOGGER.info("Existing inherited identity has stronger VOT - discarding new one");
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Existing inherited identity has stronger VOT - discarding new one"));
         }
     }
 
-    @Tracing
     private boolean incomingInheritedIdHasStrongerOrEqualVot(
             VerifiableCredential incoming, VerifiableCredential existing)
             throws CredentialParseException {

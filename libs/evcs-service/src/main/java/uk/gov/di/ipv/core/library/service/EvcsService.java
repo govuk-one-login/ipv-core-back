@@ -251,8 +251,10 @@ public class EvcsService {
                             .filter(vc -> vc.state().equals(CURRENT))
                             .filter(
                                     vc ->
-                                            vc.metadata().get("inheritedIdentity")
-                                                    == null) // Don't update inherited identity VCs
+                                            vc.metadata() == null
+                                                    || vc.metadata().get("inheritedIdentity")
+                                                            == null) // Don't update inherited
+                            // identity VCs
                             .filter(
                                     vc ->
                                             credentials.stream()

@@ -105,7 +105,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -658,7 +657,6 @@ class InitialiseIpvSessionHandlerTest {
         class EvcsTurnedOn {
             @BeforeEach
             void setUp() {
-                when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
                 when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             }
 
