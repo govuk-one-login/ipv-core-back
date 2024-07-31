@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -49,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -86,8 +84,6 @@ class SsmConfigServiceTest {
     @Mock SecretsProvider secretsProvider;
 
     private ConfigService configService;
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -374,34 +370,13 @@ class SsmConfigServiceTest {
     }
 
     @Test
-    void getApiKeySecretShouldReturnApiKeySecret() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
-
-        String json =
-                assertDoesNotThrow(
-                        () -> {
-                            return OBJECT_MAPPER.writeValueAsString(apiKeySecret);
-                        });
-
-        when(secretsProvider.get("/test/credential-issuers/ukPassport/connections/stub/api-key"))
-                .thenReturn(json);
-
-        String apiKey =
-                configService.getApiKeySecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertEquals("api-key-value", apiKey);
-    }
-
-    @Test
     void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
         DecryptionFailureException decryptionFailureException =
                 DecryptionFailureException.builder().message("Test decryption error").build();
         when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
 
         String apiKey =
-                configService.getApiKeySecret(
+                configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
@@ -416,7 +391,7 @@ class SsmConfigServiceTest {
         when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
 
         String apiKey =
-                configService.getApiKeySecret(
+                configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
@@ -429,7 +404,7 @@ class SsmConfigServiceTest {
         when(secretsProvider.get(any())).thenThrow(invalidParameterException);
 
         String apiKey =
-                configService.getApiKeySecret(
+                configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
@@ -442,7 +417,7 @@ class SsmConfigServiceTest {
         when(secretsProvider.get(any())).thenThrow(invalidRequestException);
 
         String apiKey =
-                configService.getApiKeySecret(
+                configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);
@@ -457,18 +432,7 @@ class SsmConfigServiceTest {
         when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
 
         String apiKey =
-                configService.getApiKeySecret(
-                        ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
-
-        assertNull(apiKey);
-    }
-
-    @Test
-    void shouldReturnNullOnInvalidApiKeyJsonFromSecretsManager() {
-        when(secretsProvider.get(any())).thenReturn("{\"apiKey\":\"invalidJson}");
-
-        String apiKey =
-                configService.getApiKeySecret(
+                configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY, PASSPORT.getId(), "stub");
 
         assertNull(apiKey);

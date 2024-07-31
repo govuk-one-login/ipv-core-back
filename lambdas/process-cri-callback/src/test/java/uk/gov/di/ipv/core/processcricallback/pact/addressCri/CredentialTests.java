@@ -90,8 +90,7 @@ class CredentialTests {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialValidator(
@@ -182,8 +181,7 @@ class CredentialTests {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialValidator(
@@ -281,8 +279,7 @@ class CredentialTests {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         var verifiableCredentialJwtValidator =
                 new VerifiableCredentialValidator(
@@ -375,8 +372,7 @@ class CredentialTests {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         // We need to generate a fixed request, so we set the secure token and expiry to constant
         // values.

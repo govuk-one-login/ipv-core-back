@@ -112,7 +112,7 @@ class TicfCriServiceTest {
                         .build();
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfConfigWithApiKeyRequired);
-        when(mockConfigService.getApiKeySecret(CREDENTIAL_ISSUER_API_KEY, TICF.getId(), null))
+        when(mockConfigService.getSecret(CREDENTIAL_ISSUER_API_KEY, TICF.getId(), null))
                 .thenReturn("api-key");
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
                 .thenReturn(List.of(M1B_DCMAW_VC));

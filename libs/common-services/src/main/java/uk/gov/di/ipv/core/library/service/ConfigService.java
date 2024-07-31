@@ -34,12 +34,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PARAMETER_PATH;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String API_KEY = "apiKey";
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
     @Getter @Setter private static boolean local = false;
@@ -81,33 +79,6 @@ public abstract class ConfigService {
 
     public String getSecret(ConfigurationVariable secretVariable, String... pathProperties) {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
-    }
-
-    public String getApiKeySecret(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        try {
-            var secretValue = getSecret(configurationVariable, pathProperties);
-
-            if (secretValue != null) {
-                Map<String, String> secret =
-                        OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
-                return secret.get(API_KEY);
-            }
-            LOGGER.warn(
-                    LogHelper.buildLogMessage("API key not found")
-                            .with(
-                                    LOG_PARAMETER_PATH.getFieldName(),
-                                    formatPath(configurationVariable.getPath(), pathProperties)));
-            return null;
-        } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                                    "Failed to parse the api key secret from secrets manager")
-                            .with(
-                                    LOG_PARAMETER_PATH.getFieldName(),
-                                    formatPath(configurationVariable.getPath(), pathProperties)));
-            return null;
-        }
     }
 
     private String formatPath(String path, String... pathProperties) {
