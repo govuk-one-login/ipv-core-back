@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -126,7 +127,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
 
     private int getScore(String ipvSessionId, String scoreType)
             throws UnknownScoreTypeException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+                    IpvSessionNotFoundException, ClientOauthSessionNotFoundException {
         var vcs = getParsedCredentials(ipvSessionId);
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         return switch (scoreType) {
@@ -138,7 +139,8 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     }
 
     private List<VerifiableCredential> getParsedCredentials(String ipvSessionId)
-            throws VerifiableCredentialException, IpvSessionNotFoundException {
+            throws VerifiableCredentialException, IpvSessionNotFoundException,
+                    ClientOauthSessionNotFoundException {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(

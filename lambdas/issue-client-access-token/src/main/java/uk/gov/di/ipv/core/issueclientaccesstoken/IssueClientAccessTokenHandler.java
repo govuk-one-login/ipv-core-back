@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -212,7 +213,7 @@ public class IssueClientAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     error.getHTTPStatusCode(), error.toJSONObject());
-        } catch (IpvSessionNotFoundException e) {
+        } catch (IpvSessionNotFoundException | ClientOauthSessionNotFoundException e) {
             ErrorObject error = OAuth2Error.INVALID_GRANT.setDescription(e.getMessage());
 
             LOGGER.error(

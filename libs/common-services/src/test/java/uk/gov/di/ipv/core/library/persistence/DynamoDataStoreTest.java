@@ -16,8 +16,6 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.internal.conditional.BeginsWithConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.*;
-import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
-import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -114,16 +112,6 @@ class DynamoDataStoreTest {
 
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
-        TableDescription tableDescription =
-                TableDescription.builder().tableName(TEST_TABLE_NAME).build();
-        DescribeTableResponse describeTableResponse =
-                DescribeTableResponse.builder().table(tableDescription).build();
-        when(mockDynamoDbTable.describeTable())
-                .thenReturn(
-                        new DescribeTableEnhancedResponse.Builder()
-                                .response(describeTableResponse)
-                                .build());
-
         dataStore.getItem(PARTITION_VALUE, SORT_KEY_VALUE);
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
@@ -139,16 +127,6 @@ class DynamoDataStoreTest {
 
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKey() {
-        TableDescription tableDescription =
-                TableDescription.builder().tableName(TEST_TABLE_NAME).build();
-        DescribeTableResponse describeTableResponse =
-                DescribeTableResponse.builder().table(tableDescription).build();
-        when(mockDynamoDbTable.describeTable())
-                .thenReturn(
-                        new DescribeTableEnhancedResponse.Builder()
-                                .response(describeTableResponse)
-                                .build());
-
         dataStore.getItem(PARTITION_VALUE);
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);

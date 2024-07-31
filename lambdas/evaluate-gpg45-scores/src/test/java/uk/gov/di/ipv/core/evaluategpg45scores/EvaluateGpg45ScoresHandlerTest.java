@@ -288,7 +288,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInRequest() {
+    void shouldReturn400IfSessionIdNotInRequest() throws Exception {
         JourneyRequest requestWithoutSessionId =
                 JourneyRequest.builder().ipAddress(TEST_CLIENT_SOURCE_IP).build();
 

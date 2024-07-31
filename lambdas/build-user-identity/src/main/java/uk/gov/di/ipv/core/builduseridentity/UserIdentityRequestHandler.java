@@ -10,6 +10,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -97,7 +98,7 @@ public abstract class UserIdentityRequestHandler {
     }
 
     protected ClientOAuthSessionItem getClientOAuthSessionItem(String clientOAuthSessionId)
-            throws InvalidScopeException {
+            throws InvalidScopeException, ClientOauthSessionNotFoundException {
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 

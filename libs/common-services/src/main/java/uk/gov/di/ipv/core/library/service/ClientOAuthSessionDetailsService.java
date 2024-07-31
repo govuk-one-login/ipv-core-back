@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
@@ -26,8 +27,13 @@ public class ClientOAuthSessionDetailsService {
                         configService);
     }
 
-    public ClientOAuthSessionItem getClientOAuthSession(String clientOAuthSessionId) {
-        return dataStore.getItem(clientOAuthSessionId);
+    public ClientOAuthSessionItem getClientOAuthSession(String clientOAuthSessionId)
+            throws ClientOauthSessionNotFoundException {
+        var clientOauthSession = dataStore.getItem(clientOAuthSessionId);
+        if (clientOauthSession == null) {
+            throw new ClientOauthSessionNotFoundException();
+        }
+        return clientOauthSession;
     }
 
     public ClientOAuthSessionItem generateClientSessionDetails(

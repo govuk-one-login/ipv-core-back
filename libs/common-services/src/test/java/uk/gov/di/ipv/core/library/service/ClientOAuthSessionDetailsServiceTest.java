@@ -7,6 +7,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,7 +32,7 @@ class ClientOAuthSessionDetailsServiceTest {
     @InjectMocks private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     @Test
-    void shouldReturnClientOAuthSessionItem() {
+    void shouldReturnClientOAuthSessionItem() throws Exception {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
@@ -62,6 +64,16 @@ class ClientOAuthSessionDetailsServiceTest {
         assertEquals(
                 clientOAuthSessionItem.getGovukSigninJourneyId(), result.getGovukSigninJourneyId());
         assertEquals(clientOAuthSessionItem.getReproveIdentity(), result.getReproveIdentity());
+    }
+
+    @Test
+    void shouldThrowIfNoClientOauthSessionItem() {
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+        when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(null);
+
+        assertThrows(
+                ClientOauthSessionNotFoundException.class,
+                () -> clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId));
     }
 
     @Test
