@@ -180,8 +180,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfNoStateMachineMatchingJourneyType()
-            throws IOException, IpvSessionNotFoundException {
+    void shouldReturn500IfNoStateMachineMatchingJourneyType() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -223,7 +222,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnCurrentStateIfPageOutOfSync() throws IOException, IpvSessionNotFoundException {
+    void shouldReturnCurrentStateIfPageOutOfSync() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -248,7 +247,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnNextStateIfInSync() throws IOException, IpvSessionNotFoundException {
+    void shouldReturnNextStateIfInSync() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -278,8 +277,7 @@ class ProcessJourneyEventHandlerTest {
     @ParameterizedTest()
     @MethodSource("journeyUrisWithCurrentPageForCri")
     void shouldTransitionCriStateIfCurrentPageMatchesCriId(
-            String journeyUri, String expectedNewJourneyState)
-            throws IOException, IpvSessionNotFoundException {
+            String journeyUri, String expectedNewJourneyState) throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -320,8 +318,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldThrowErrorIfJourneyEventDuringProcess()
-            throws IOException, IpvSessionNotFoundException {
+    void shouldThrowErrorIfJourneyEventDuringProcess() throws Exception {
         var input =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
@@ -950,7 +947,7 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
 
-    private void mockIpvSessionItemAndTimeout(String userState) throws IpvSessionNotFoundException {
+    private void mockIpvSessionItemAndTimeout(String userState) throws Exception {
         IpvSessionItem ipvSessionItem = spy(IpvSessionItem.class);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());

@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
@@ -30,7 +31,11 @@ public class CriOAuthSessionService {
     }
 
     public CriOAuthSessionItem getCriOauthSessionItem(String criOAuthSessionId) {
-        return dataStore.getItem(criOAuthSessionId);
+        var criOauthSessionItem = dataStore.getItem(criOAuthSessionId);
+        if (criOauthSessionItem == null) {
+            LOGGER.warn(LogHelper.buildLogMessage("CRI OAuth session not found"));
+        }
+        return criOauthSessionItem;
     }
 
     public CriOAuthSessionItem persistCriOAuthSession(

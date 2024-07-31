@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.builduseridentity.UserIdentityRequestHandler;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -91,7 +92,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             return getExpiredAccessTokenApiGatewayProxyResponseEvent(e.getExpiredAt());
         } catch (InvalidScopeException e) {
             return getAccessDeniedApiGatewayProxyResponseEvent();
-        } catch (IpvSessionNotFoundException e) {
+        } catch (IpvSessionNotFoundException | ClientOauthSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
         }
     }
