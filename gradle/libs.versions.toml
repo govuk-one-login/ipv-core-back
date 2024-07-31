@@ -23,7 +23,7 @@ hamcrest = "org.hamcrest:hamcrest:2.2"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-javalin = "io.javalin:javalin:6.1.3"
+javalin = "io.javalin:javalin:6.2.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
