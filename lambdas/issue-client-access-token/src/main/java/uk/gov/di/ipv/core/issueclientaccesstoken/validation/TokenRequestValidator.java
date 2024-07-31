@@ -61,8 +61,7 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
-        long maxAllowedTtlSeconds =
-                Long.parseLong(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+        long maxAllowedTtlSeconds = configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
 
         OffsetDateTime offsetDateTime = OffsetDateTime.now().plusSeconds(maxAllowedTtlSeconds);
         if (expirationTime.getTime() / 1000L > offsetDateTime.toEpochSecond()) {

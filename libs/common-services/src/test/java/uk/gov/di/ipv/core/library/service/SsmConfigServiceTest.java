@@ -465,14 +465,10 @@ class SsmConfigServiceTest {
     }
 
     @Test
-    void shouldGetBearerAccessTokenTtlFromEnvironmentVariableIfSet() {
-        environmentVariables.set("BEARER_TOKEN_TTL", "1800");
-        assertEquals(1800L, configService.getBearerAccessTokenTtl());
-    }
-
-    @Test
-    void shouldDefaultBearerAccessTokenTtlIfEnvironmentVariableNotSet() {
-        assertEquals(3600L, configService.getBearerAccessTokenTtl());
+    void shouldGetLongValueFromConfigIfSet() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/self/bearerTokenTtl")).thenReturn("1800");
+        assertEquals(1800L, configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL));
     }
 
     @ParameterizedTest

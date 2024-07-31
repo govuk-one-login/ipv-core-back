@@ -96,10 +96,6 @@ The application is configured as a Gradle project with a sub-project for each La
 | lib & libs | Shared sources used by each of the Lambdas |
 | openAPI | Open API Definition used by the Internal and External API Gateway |
 
-## Environment variables
-
-* BEARER_TOKEN_TTL - The bearer token time to live in seconds. If not set this defaulted to a value in `ConfigurationService`
-
 ### DynamoDB table name variables:
 Each environment has a specific table name prefix e.g. `dev-{dynamo-table-name}`
 

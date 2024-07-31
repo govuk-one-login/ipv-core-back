@@ -70,7 +70,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 class JarValidatorTest {
     private static final String CLAIMS_CLAIM = "claims";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String TWENTY_FIVE_MINUTES_IN_SECONDS = "1500";
+    private static final long TWENTY_FIVE_MINUTES_IN_SECONDS = 1500L;
 
     @Mock private ConfigService configService;
     @Mock private JWEDecrypter jweDecrypter;
@@ -128,7 +128,7 @@ class JarValidatorTest {
                 .thenReturn(TEST_EC_PUBLIC_JWK);
         when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -201,7 +201,7 @@ class JarValidatorTest {
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
@@ -224,7 +224,7 @@ class JarValidatorTest {
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                     .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -252,7 +252,7 @@ class JarValidatorTest {
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
@@ -282,7 +282,7 @@ class JarValidatorTest {
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
@@ -311,7 +311,7 @@ class JarValidatorTest {
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
@@ -340,7 +340,7 @@ class JarValidatorTest {
                             eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                     .thenReturn(TEST_EC_PUBLIC_JWK);
             when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
-            when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+            when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                     .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
             when(configService.getParameter(eq(CLIENT_ISSUER), anyString()))
                     .thenReturn(issuerClaim);
@@ -625,7 +625,7 @@ class JarValidatorTest {
                 .thenReturn(TEST_EC_PUBLIC_JWK);
         when(configService.getParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn(TWENTY_FIVE_MINUTES_IN_SECONDS);
         when(configService.getStringListParameter(CLIENT_VALID_REDIRECT_URLS, clientIdClaim))
                 .thenReturn(Collections.singletonList(redirectUriClaim));

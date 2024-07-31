@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum EnvironmentVariable {
-    BEARER_TOKEN_TTL,
     CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN,
     CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN,
     CI_STORAGE_PUT_LAMBDA_ARN,

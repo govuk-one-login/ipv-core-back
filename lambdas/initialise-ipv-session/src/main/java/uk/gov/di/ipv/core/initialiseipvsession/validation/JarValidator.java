@@ -271,8 +271,9 @@ public class JarValidator {
     }
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
-        String maxAllowedTtl = configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
-        Instant maximumExpirationTime = Instant.now().plusSeconds(Long.parseLong(maxAllowedTtl));
+        Instant maximumExpirationTime =
+                Instant.now()
+                        .plusSeconds(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
         Instant expirationTime = claimsSet.getExpirationTime().toInstant();
 
         if (expirationTime.isAfter(maximumExpirationTime)) {

@@ -64,7 +64,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     public void create(T item, ConfigurationVariable tableTtl) {
         item.setTtl(
                 Instant.now()
-                        .plusSeconds(Long.parseLong(configService.getParameter(tableTtl)))
+                        .plusSeconds(configService.getLongParameter(tableTtl))
                         .getEpochSecond());
         create(item);
     }

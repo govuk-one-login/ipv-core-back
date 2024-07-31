@@ -78,9 +78,7 @@ public class AuthorizationRequestHelper {
                         .expirationTime(
                                 Date.from(
                                         now.plus(
-                                                Long.parseLong(
-                                                        configService.getParameter(
-                                                                JWT_TTL_SECONDS)),
+                                                configService.getLongParameter(JWT_TTL_SECONDS),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(userId)

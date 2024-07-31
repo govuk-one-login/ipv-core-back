@@ -126,9 +126,8 @@ public class IssueClientAccessTokenHandler
                     ipvSessionItem.getAuthorizationCodeMetadata();
 
             if (authorizationCodeMetadata.isExpired(
-                    Long.parseLong(
-                            configService.getParameter(
-                                    ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
+                    configService.getLongParameter(
+                            ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
                 LOGGER.error(
