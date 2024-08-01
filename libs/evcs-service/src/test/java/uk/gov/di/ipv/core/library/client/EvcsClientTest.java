@@ -128,7 +128,7 @@ class EvcsClientTest {
         when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn(EVCS_APPLICATION_URL);
         lenient()
-                .when(mockConfigService.getApiKeySecret(ConfigurationVariable.EVCS_API_KEY))
+                .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                 .thenReturn(EVCS_API_KEY);
     }
 

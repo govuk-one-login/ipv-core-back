@@ -78,7 +78,7 @@ public class CriApiService {
 
     private String getApiKey(OauthCriConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
         return criConfig.isRequiresApiKey()
-                ? configService.getApiKeySecret(
+                ? configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY,
                         criOAuthSessionItem.getCriId(),
                         criOAuthSessionItem.getConnection())

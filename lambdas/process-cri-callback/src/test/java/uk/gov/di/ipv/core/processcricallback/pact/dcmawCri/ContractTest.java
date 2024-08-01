@@ -123,8 +123,7 @@ class ContractTest {
         when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
@@ -185,8 +184,7 @@ class ContractTest {
         when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
                 .thenReturn("900");
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
@@ -1779,8 +1777,7 @@ class ContractTest {
         ciConfigMap.put("V01", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
         Mockito.lenient()

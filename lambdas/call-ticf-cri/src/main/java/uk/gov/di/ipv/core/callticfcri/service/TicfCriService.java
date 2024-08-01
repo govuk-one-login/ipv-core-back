@@ -101,7 +101,7 @@ public class TicfCriService {
             if (ticfCriConfig.isRequiresApiKey()) {
                 httpRequestBuilder.header(
                         X_API_KEY_HEADER,
-                        configService.getApiKeySecret(
+                        configService.getSecret(
                                 ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY,
                                 TICF.getId(),
                                 connection));

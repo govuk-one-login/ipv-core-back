@@ -83,8 +83,7 @@ public class EvcsClient {
                             .GET()
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getApiKeySecret(
-                                            ConfigurationVariable.EVCS_API_KEY))
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(AUTHORIZATION, "Bearer " + evcsAccessToken);
 
             var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
@@ -123,8 +122,7 @@ public class EvcsClient {
                                             OBJECT_MAPPER.writeValueAsString(userVCsForEvcs)))
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getApiKeySecret(
-                                            ConfigurationVariable.EVCS_API_KEY))
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             sendHttpRequest(httpRequestBuilder.build());
@@ -153,8 +151,7 @@ public class EvcsClient {
                                             OBJECT_MAPPER.writeValueAsString(evcsUserVCsToUpdate)))
                             .header(
                                     X_API_KEY_HEADER,
-                                    configService.getApiKeySecret(
-                                            ConfigurationVariable.EVCS_API_KEY))
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY))
                             .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
             sendHttpRequest(httpRequestBuilder.build());
