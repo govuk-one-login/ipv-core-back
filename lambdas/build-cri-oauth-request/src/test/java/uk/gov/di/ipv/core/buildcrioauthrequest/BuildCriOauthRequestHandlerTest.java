@@ -1169,7 +1169,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        ;
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         ipvSessionItem.setEmailAddress(null);
