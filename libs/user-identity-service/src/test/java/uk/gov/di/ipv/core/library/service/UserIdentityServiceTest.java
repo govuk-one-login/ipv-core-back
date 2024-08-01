@@ -1008,7 +1008,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldGetCorrectVot() throws Exception {
         // Arrange
-        var vc = vcHmrcMigration();
+        var vc = vcHmrcMigrationPCL250();
 
         // Act
         var vot = userIdentityService.getVot(vc);
@@ -1888,7 +1888,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnCredentialsFromDataStoreForOperationalProfile() throws Exception {
-        var hmrcVc = vcHmrcMigration();
+        var hmrcVc = vcHmrcMigrationPCL200();
         var vcs = List.of(hmrcVc);
 
         var credentials =
@@ -1927,7 +1927,7 @@ class UserIdentityServiceTest {
                                 BAV.getId(),
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        vcHmrcMigration());
+                        vcHmrcMigrationPCL200());
 
         // Act & Assert
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
@@ -1959,7 +1959,7 @@ class UserIdentityServiceTest {
 
     @Test
     void findIdentityReturnsIdentityClaimForOperationalVC() throws Exception {
-        var vcs = List.of(vcHmrcMigration());
+        var vcs = List.of(vcHmrcMigrationPCL200());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs);
         assertFalse(result.isEmpty());
     }

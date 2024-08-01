@@ -10,10 +10,11 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.awsSdkKms,
 			libs.powertoolsParameters,
-			project(":libs:common-services"),
-			project(":libs:verifiable-credentials"),
 			project(":libs:audit-service"),
-			project(":libs:user-identity-service")
+			project(":libs:common-services"),
+			project(":libs:evcs-service"),
+			project(":libs:user-identity-service"),
+			project(":libs:verifiable-credentials")
 
 	compileOnly	libs.lombok
 	annotationProcessor libs.lombok

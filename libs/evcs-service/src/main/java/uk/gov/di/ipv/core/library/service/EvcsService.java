@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
+import uk.gov.di.ipv.core.library.metadata.InheritedIdentityMetadata;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -22,7 +23,9 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.ABANDONED;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.EXTERNAL;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
 
@@ -76,6 +79,35 @@ public class EvcsService {
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(), CURRENT, null, ONLINE))
                         .toList());
+    }
+
+    @Tracing
+    public void storeInheritedIdentity(
+            String userId,
+            VerifiableCredential incomingInheritedIdentity,
+            List<VerifiableCredential> existingInheritedIdentity)
+            throws EvcsServiceException {
+        if (!existingInheritedIdentity.isEmpty()) {
+            evcsClient.updateUserVCs(
+                    userId,
+                    existingInheritedIdentity.stream()
+                            .map(
+                                    id ->
+                                            new EvcsUpdateUserVCsDto(
+                                                    getVcSignature(id.getVcString()),
+                                                    HISTORIC,
+                                                    null))
+                            .toList());
+        }
+        evcsClient.storeUserVCs(
+                userId,
+                List.of(
+                        new EvcsCreateUserVCsDto(
+                                incomingInheritedIdentity.getVcString(),
+                                CURRENT,
+                                new InheritedIdentityMetadata(
+                                        incomingInheritedIdentity.getCri().getId()),
+                                EXTERNAL)));
     }
 
     @Tracing
@@ -220,6 +252,12 @@ public class EvcsService {
             var existingCurrentUserVcsNotInSessionToUpdate =
                     existingEvcsUserVCs.stream()
                             .filter(vc -> vc.state().equals(CURRENT))
+                            .filter(
+                                    vc ->
+                                            vc.metadata() == null
+                                                    || vc.metadata().get("inheritedIdentity")
+                                                            == null) // Don't update inherited
+                            // identity VCs
                             .filter(
                                     vc ->
                                             credentials.stream()

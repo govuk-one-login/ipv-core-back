@@ -1045,7 +1045,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1652953080));
     }
 
-    static VerifiableCredential vcHmrcMigration() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL200() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .socialSecurityRecord(
@@ -1069,30 +1069,12 @@ public interface VcFixtures {
                         .evidence(List.of(evidence))
                         .build(),
                 "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL250.toString(),
+                Vot.PCL200.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
     }
 
-    static VerifiableCredential vcHmrcMigrationNoEvidence() throws Exception {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .socialSecurityRecord(
-                                List.of(
-                                        createSocialSecurityRecordDetails(
-                                                "AB123456C"))) // pragma: allowlist secret
-                        .build();
-        return generateVerifiableCredential(
-                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
-                HMRC_MIGRATION,
-                TestVc.builder().evidence(null).credentialSubject(credentialSubject).build(),
-                "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL250.toString(),
-                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
-                "https://hmrc.gov.uk/trustmark");
-    }
-
-    static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() throws Exception {
+    static VerifiableCredential vcHmrcMigrationPCL250() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .passport(PASSPORT_DETAILS)
@@ -1117,7 +1099,7 @@ public interface VcFixtures {
                         .evidence(List.of(evidence))
                         .build(),
                 "https://orch.stubs.account.gov.uk/migration/v1",
-                Vot.PCL200.toString(),
+                Vot.PCL250.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
     }
@@ -1140,6 +1122,24 @@ public interface VcFixtures {
                         .build(),
                 "https://orch.stubs.account.gov.uk/migration/v1",
                 Vot.PCL200.toString(),
+                "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
+                "https://hmrc.gov.uk/trustmark");
+    }
+
+    static VerifiableCredential vcHmrcMigrationPCL250NoEvidence() throws Exception {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .socialSecurityRecord(
+                                List.of(
+                                        createSocialSecurityRecordDetails(
+                                                "AB123456C"))) // pragma: allowlist secret
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                HMRC_MIGRATION,
+                TestVc.builder().evidence(null).credentialSubject(credentialSubject).build(),
+                "https://orch.stubs.account.gov.uk/migration/v1",
+                Vot.PCL250.toString(),
                 "urn:uuid:db2481c0-8131-4ac2-b4d6-904c7de71a27",
                 "https://hmrc.gov.uk/trustmark");
     }

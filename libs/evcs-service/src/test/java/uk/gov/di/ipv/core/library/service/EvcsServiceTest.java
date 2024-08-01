@@ -7,7 +7,6 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -25,14 +24,22 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVCS_REQUEST_BODY;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.HISTORIC;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
@@ -44,6 +51,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 
 @ExtendWith(MockitoExtension.class)
 class EvcsServiceTest {
@@ -110,7 +120,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -139,7 +149,7 @@ class EvcsServiceTest {
         evcsService.storePendingIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -165,7 +175,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ONE_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -215,7 +225,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -249,7 +259,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -291,7 +301,7 @@ class EvcsServiceTest {
         evcsService.storeCompletedIdentity(
                 TEST_USER_ID, Collections.emptyList(), TEST_EVCS_ACCESS_TOKEN);
         // Assert
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
@@ -305,6 +315,31 @@ class EvcsServiceTest {
                         .filter(dto -> dto.state().equals(EvcsVCState.ABANDONED))
                         .count()));
         mockOrderVerifier.verify(mockEvcsClient, times(0)).storeUserVCs(any(), any());
+    }
+
+    @Test
+    void storeCompletedIdentityShouldNotUpdateInheritedIdentity() throws Exception {
+        var vcsInEvcs =
+                new EvcsGetUserVCsDto(
+                        List.of(
+                                new EvcsGetUserVCDto(
+                                        vcHmrcMigrationPCL200().getVcString(),
+                                        EvcsVCState.CURRENT,
+                                        Map.of("inheritedIdentity", Cri.HMRC_MIGRATION.getId()))));
+        when(mockEvcsClient.getUserVcs(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR))
+                .thenReturn(vcsInEvcs);
+        // Act
+        evcsService.storeCompletedIdentity(
+                TEST_USER_ID, VERIFIABLE_CREDENTIALS_ALL_EXIST_IN_EVCS, TEST_EVCS_ACCESS_TOKEN);
+        // Assert
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
+        mockOrderVerifier
+                .verify(mockEvcsClient)
+                .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_TO_QUERY_FOR);
+
+        mockOrderVerifier.verify(mockEvcsClient, never()).updateUserVCs(any(), any());
+        mockOrderVerifier.verify(mockEvcsClient, times(1)).storeUserVCs(any(), any());
     }
 
     @Test
@@ -355,7 +390,7 @@ class EvcsServiceTest {
                 .thenReturn(evcsGetUserVcsWithPendingAllExistingDto);
         evcsService.abandonPendingIdentity(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN);
 
-        InOrder mockOrderVerifier = Mockito.inOrder(mockEvcsClient);
+        InOrder mockOrderVerifier = inOrder(mockEvcsClient);
         mockOrderVerifier
                 .verify(mockEvcsClient)
                 .getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, List.of(PENDING_RETURN));
@@ -435,5 +470,83 @@ class EvcsServiceTest {
                 () ->
                         evcsService.getVerifiableCredentials(
                                 TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT));
+    }
+
+    @Test
+    void storeInheritedIdentityShouldStoreCurrentVc() throws Exception {
+        var inheritedId = vcHmrcMigrationPCL200();
+
+        evcsService.storeInheritedIdentity(TEST_USER_ID, inheritedId, List.of());
+
+        verify(mockEvcsClient)
+                .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
+
+        var createDto = evcsCreateUserVCsDtosCaptor.getValue().get(0);
+        assertEquals(inheritedId.getVcString(), createDto.vc());
+        assertEquals(CURRENT, createDto.state());
+    }
+
+    @Test
+    void storeInheritedIdentityShouldMoveExistingIdentitiesToHistoric() throws Exception {
+        var existingInheritedIds =
+                List.of(vcHmrcMigrationPCL200(), vcHmrcMigrationPCL200NoEvidence());
+        var incomingInheritedId = vcHmrcMigrationPCL250();
+
+        evcsService.storeInheritedIdentity(TEST_USER_ID, incomingInheritedId, existingInheritedIds);
+
+        verify(mockEvcsClient)
+                .updateUserVCs(eq(TEST_USER_ID), evcsUpdateUserVCsDtosCaptor.capture());
+        verify(mockEvcsClient)
+                .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
+
+        var updateDtos = evcsUpdateUserVCsDtosCaptor.getValue();
+
+        assertEquals(
+                existingInheritedIds.get(0).getSignedJwt().getSignature().toString(),
+                updateDtos.get(0).signature());
+        assertEquals(HISTORIC, updateDtos.get(0).state());
+
+        assertEquals(
+                existingInheritedIds.get(1).getSignedJwt().getSignature().toString(),
+                updateDtos.get(1).signature());
+        assertEquals(HISTORIC, updateDtos.get(1).state());
+
+        var createDto = evcsCreateUserVCsDtosCaptor.getValue().get(0);
+        assertEquals(incomingInheritedId.getVcString(), createDto.vc());
+        assertEquals(CURRENT, createDto.state());
+    }
+
+    @Test
+    void storeInheritedIdentityShouldThrowIfFailsToCreate() throws Exception {
+        doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_CONSTRUCT_EVCS_URI))
+                .when(mockEvcsClient)
+                .storeUserVCs(any(), any());
+
+        var evcsServiceException =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () ->
+                                evcsService.storeInheritedIdentity(
+                                        TEST_USER_ID, vcHmrcMigrationPCL200(), List.of()));
+
+        assertEquals(FAILED_TO_CONSTRUCT_EVCS_URI, evcsServiceException.getErrorResponse());
+    }
+
+    @Test
+    void storeInheritedIdentityShouldThrowIfFailsToUpdate() throws Exception {
+        doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_PARSE_EVCS_REQUEST_BODY))
+                .when(mockEvcsClient)
+                .updateUserVCs(any(), any());
+
+        var evcsServiceException =
+                assertThrows(
+                        EvcsServiceException.class,
+                        () ->
+                                evcsService.storeInheritedIdentity(
+                                        TEST_USER_ID,
+                                        vcHmrcMigrationPCL200(),
+                                        List.of(vcHmrcMigrationPCL250())));
+
+        assertEquals(FAILED_TO_PARSE_EVCS_REQUEST_BODY, evcsServiceException.getErrorResponse());
     }
 }
