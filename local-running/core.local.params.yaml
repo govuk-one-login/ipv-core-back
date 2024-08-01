@@ -1,4 +1,4 @@
-# Local running config params
+œ# Local running config params
 # Note that this should only contain non-sensitive test values
 ---
 core:
@@ -11,6 +11,7 @@ core:
     coreVtmClaim: "https://oidc.local.account.gov.uk/trustmark"
     backendSessionTimeout: 3600
     backendSessionTtl: 3600
+    bearerTokenTtl: 3600
     criResponseTtl: 3600
     sessionCredentialTtl: 3600
     authCodeExpirySeconds: 3600
