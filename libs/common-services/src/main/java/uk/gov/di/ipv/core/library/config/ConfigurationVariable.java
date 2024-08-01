@@ -4,6 +4,7 @@ public enum ConfigurationVariable {
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     BACKEND_SESSION_TIMEOUT("self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("self/backendSessionTtl"),
+    BEARER_TOKEN_TTL("self/bearerTokenTtl"),
     CIMIT_COMPONENT_ID("cimit/componentId"),
     CIMIT_CONFIG("cimit/config"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),

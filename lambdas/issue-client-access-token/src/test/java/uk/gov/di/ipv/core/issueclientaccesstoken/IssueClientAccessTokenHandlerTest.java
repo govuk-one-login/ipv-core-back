@@ -70,7 +70,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
 
         mockConfigService = mock(ConfigService.class);
-        when(mockConfigService.getParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("3600");
+        when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn(3600L);
 
         mockSessionService = mock(IpvSessionService.class);
         mockClientOAuthSessionService = mock(ClientOAuthSessionDetailsService.class);
@@ -244,7 +244,7 @@ class IssueClientAccessTokenHandlerTest {
                         + "&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
-        when(mockConfigService.getParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("0");
+        when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn(0L);
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))

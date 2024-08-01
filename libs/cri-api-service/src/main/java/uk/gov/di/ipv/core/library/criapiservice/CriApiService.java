@@ -164,9 +164,8 @@ public class CriApiService {
                             criConfig.getClientId(),
                             criConfig.getComponentId(),
                             dateTime.plusSeconds(
-                                            Long.parseLong(
-                                                    configService.getParameter(
-                                                            ConfigurationVariable.JWT_TTL_SECONDS)))
+                                            configService.getLongParameter(
+                                                    ConfigurationVariable.JWT_TTL_SECONDS))
                                     .toEpochSecond(),
                             secureTokenHelper.generate());
 

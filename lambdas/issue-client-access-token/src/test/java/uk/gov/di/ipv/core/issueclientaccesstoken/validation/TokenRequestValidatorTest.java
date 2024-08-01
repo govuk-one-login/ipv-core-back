@@ -72,7 +72,7 @@ class TokenRequestValidatorTest {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -85,7 +85,7 @@ class TokenRequestValidatorTest {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
-        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -186,7 +186,7 @@ class TokenRequestValidatorTest {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -239,7 +239,7 @@ class TokenRequestValidatorTest {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 
@@ -253,7 +253,7 @@ class TokenRequestValidatorTest {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 

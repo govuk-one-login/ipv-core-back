@@ -73,7 +73,7 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_CONTEXT = "test_context";
     private static final EvidenceRequest TEST_EVIDENCE_REQUEST =
             new EvidenceRequest("gpg45", 2, null);
-    private static final String IPV_TOKEN_TTL = "900";
+    private static final Long IPV_TOKEN_TTL = 900L;
     private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
     private static final String CRI_ID = "cri_id";
@@ -328,7 +328,7 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configService.getParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
+        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
         when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
     }
 

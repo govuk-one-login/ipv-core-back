@@ -31,14 +31,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
     @Getter @Setter private static boolean local = false;
 
@@ -72,6 +68,11 @@ public abstract class ConfigService {
         return Boolean.parseBoolean(getParameter(configurationVariable, pathProperties));
     }
 
+    public long getLongParameter(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        return Long.parseLong(getParameter(configurationVariable, pathProperties));
+    }
+
     public List<String> getStringListParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
@@ -83,13 +84,6 @@ public abstract class ConfigService {
 
     private String formatPath(String path, String... pathProperties) {
         return String.format(path, (Object[]) pathProperties);
-    }
-
-    // PYIC-7048 Replace this with proper config
-    public long getBearerAccessTokenTtl() {
-        return Optional.ofNullable(getEnvironmentVariable(BEARER_TOKEN_TTL))
-                .map(Long::valueOf)
-                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
 
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {

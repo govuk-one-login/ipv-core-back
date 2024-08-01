@@ -91,11 +91,12 @@ class IssueClientAccessTokenHandlerTest {
         authorizationCodeMetadata.setCreationDateTime(
                 "2024-02-01T00:00:00.000Z"); // Ensure that the metadata isn't flagged as expired
 
-        when(configService.getParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("3153600000"); // 100 years
-        when(configService.getParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
-                .thenReturn("3153600000"); // 100 years
-        when(configService.getBearerAccessTokenTtl()).thenReturn(3153600000L); // 100 years
+        when(configService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn(3153600000L); // 100 years
+        when(configService.getLongParameter(ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS))
+                .thenReturn(3153600000L); // 100 years
+        when(configService.getLongParameter(ConfigurationVariable.BEARER_TOKEN_TTL))
+                .thenReturn(3153600000L); // 100 years
         ipvSessionItem.setClientOAuthSessionId("dummyOuthSessionId");
         when(oAuthDataStore.getItem("dummyOuthSessionId")).thenReturn(clientOAuthSessionItem);
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
