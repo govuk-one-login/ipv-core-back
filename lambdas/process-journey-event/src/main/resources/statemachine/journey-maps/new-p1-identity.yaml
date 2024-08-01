@@ -484,6 +484,7 @@ states:
     response:
       type: cri
       criId: nino
+      scope: identityCheck
     parent: CRI_STATE
     events:
       next:
