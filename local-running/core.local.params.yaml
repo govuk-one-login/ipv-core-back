@@ -1,4 +1,4 @@
-œ# Local running config params
+# Local running config params
 # Note that this should only contain non-sensitive test values
 ---
 core:
