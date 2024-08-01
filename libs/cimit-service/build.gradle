@@ -13,6 +13,7 @@ dependencies {
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			libs.powertoolsTracing,
+			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 
@@ -21,7 +22,9 @@ dependencies {
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			libs.pactConsumerJunit,
+			project(path: ':libs:pact-test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }
