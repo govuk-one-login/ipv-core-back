@@ -52,6 +52,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 
 @ExtendWith(MockitoExtension.class)
@@ -475,7 +476,7 @@ class EvcsServiceTest {
     void storeInheritedIdentityShouldStoreCurrentVc() throws Exception {
         var inheritedId = vcHmrcMigrationPCL200();
 
-        evcsService.storeInheritedIdentity(TEST_USER_ID, inheritedId, null);
+        evcsService.storeInheritedIdentity(TEST_USER_ID, inheritedId, List.of());
 
         verify(mockEvcsClient)
                 .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
@@ -486,22 +487,29 @@ class EvcsServiceTest {
     }
 
     @Test
-    void storeInheritedIdentityShouldMoveExistingIdentityToHistoric() throws Exception {
-        var existingInheritedId = vcHmrcMigrationPCL200();
+    void storeInheritedIdentityShouldMoveExistingIdentitiesToHistoric() throws Exception {
+        var existingInheritedIds =
+                List.of(vcHmrcMigrationPCL200(), vcHmrcMigrationPCL200NoEvidence());
         var incomingInheritedId = vcHmrcMigrationPCL250();
 
-        evcsService.storeInheritedIdentity(TEST_USER_ID, incomingInheritedId, existingInheritedId);
+        evcsService.storeInheritedIdentity(TEST_USER_ID, incomingInheritedId, existingInheritedIds);
 
         verify(mockEvcsClient)
                 .updateUserVCs(eq(TEST_USER_ID), evcsUpdateUserVCsDtosCaptor.capture());
         verify(mockEvcsClient)
                 .storeUserVCs(eq(TEST_USER_ID), evcsCreateUserVCsDtosCaptor.capture());
 
-        var updateDto = evcsUpdateUserVCsDtosCaptor.getValue().get(0);
+        var updateDtos = evcsUpdateUserVCsDtosCaptor.getValue();
+
         assertEquals(
-                existingInheritedId.getSignedJwt().getSignature().toString(),
-                updateDto.signature());
-        assertEquals(HISTORIC, updateDto.state());
+                existingInheritedIds.get(0).getSignedJwt().getSignature().toString(),
+                updateDtos.get(0).signature());
+        assertEquals(HISTORIC, updateDtos.get(0).state());
+
+        assertEquals(
+                existingInheritedIds.get(1).getSignedJwt().getSignature().toString(),
+                updateDtos.get(1).signature());
+        assertEquals(HISTORIC, updateDtos.get(1).state());
 
         var createDto = evcsCreateUserVCsDtosCaptor.getValue().get(0);
         assertEquals(incomingInheritedId.getVcString(), createDto.vc());
@@ -519,7 +527,7 @@ class EvcsServiceTest {
                         EvcsServiceException.class,
                         () ->
                                 evcsService.storeInheritedIdentity(
-                                        TEST_USER_ID, vcHmrcMigrationPCL200(), null));
+                                        TEST_USER_ID, vcHmrcMigrationPCL200(), List.of()));
 
         assertEquals(FAILED_TO_CONSTRUCT_EVCS_URI, evcsServiceException.getErrorResponse());
     }
@@ -537,7 +545,7 @@ class EvcsServiceTest {
                                 evcsService.storeInheritedIdentity(
                                         TEST_USER_ID,
                                         vcHmrcMigrationPCL200(),
-                                        vcHmrcMigrationPCL250()));
+                                        List.of(vcHmrcMigrationPCL250())));
 
         assertEquals(FAILED_TO_PARSE_EVCS_REQUEST_BODY, evcsServiceException.getErrorResponse());
     }

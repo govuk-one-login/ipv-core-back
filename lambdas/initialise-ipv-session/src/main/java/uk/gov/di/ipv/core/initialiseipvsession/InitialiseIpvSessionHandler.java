@@ -23,7 +23,6 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
-import uk.gov.di.ipv.core.initialiseipvsession.exception.InheritedIdentityException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.service.JweDecrypterFactory;
@@ -77,6 +76,7 @@ import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.SCOPE;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_COUNT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
@@ -360,12 +360,6 @@ public class InitialiseIpvSessionHandler
                             "Inherited identity VC failed to store"),
                     claimsSet,
                     e);
-        } catch (InheritedIdentityException e) {
-            throw new RecoverableJarValidationException(
-                    INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
-                            "Too many current inherited identities found in EVCS"),
-                    claimsSet,
-                    e);
         }
     }
 
@@ -375,7 +369,7 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             VerifiableCredential inheritedIdentityVc)
-            throws EvcsServiceException, CredentialParseException, InheritedIdentityException {
+            throws EvcsServiceException, CredentialParseException {
         var existingInheritedIdentity =
                 evcsService
                         .getVerifiableCredentials(
@@ -384,29 +378,22 @@ public class InitialiseIpvSessionHandler
                         .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                         .toList();
 
-        if (existingInheritedIdentity.size() > 1) {
-            throw new InheritedIdentityException(
-                    String.format(
-                            "Too many current inherited identities found - %d",
-                            existingInheritedIdentity.size()));
-        }
-
         if (existingInheritedIdentity.isEmpty()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "No existing inherited identity found - storing new one"));
 
-            evcsService.storeInheritedIdentity(userId, inheritedIdentityVc, null);
+            evcsService.storeInheritedIdentity(userId, inheritedIdentityVc, List.of());
             ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             ipvSessionService.updateIpvSession(ipvSessionItem);
         } else if (incomingInheritedIdHasStrongerOrEqualVot(
-                inheritedIdentityVc, existingInheritedIdentity.get(0))) {
+                inheritedIdentityVc, existingInheritedIdentity)) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            "New inherited identity has stronger or equal VOT - replacing existing one"));
+                            "New inherited identity has stronger or equal VOT - replacing existing"));
 
             evcsService.storeInheritedIdentity(
-                    userId, inheritedIdentityVc, existingInheritedIdentity.get(0));
+                    userId, inheritedIdentityVc, existingInheritedIdentity);
             ipvSessionItem.setInheritedIdentityReceivedThisSession(true);
             ipvSessionService.updateIpvSession(ipvSessionItem);
         } else {
@@ -417,14 +404,27 @@ public class InitialiseIpvSessionHandler
     }
 
     private boolean incomingInheritedIdHasStrongerOrEqualVot(
-            VerifiableCredential incoming, VerifiableCredential existing)
+            VerifiableCredential incoming, List<VerifiableCredential> allExisting)
             throws CredentialParseException {
-        try {
-            return HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(incoming))
-                    >= HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(existing));
-        } catch (IllegalArgumentException | ParseException e) {
-            throw new CredentialParseException("Problem parsing VOTs from inherited identities");
+        if (allExisting.size() > 1) {
+            LOGGER.warn(
+                    LogHelper.buildLogMessage("More than one current inherited identities found")
+                            .with(LOG_COUNT.getFieldName(), allExisting.size()));
         }
+
+        for (var existing : allExisting) {
+            try {
+                if (HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(incoming))
+                        < HMRC_PROFILES_BY_STRENGTH.indexOf(userIdentityService.getVot(existing))) {
+                    return false;
+                }
+            } catch (IllegalArgumentException | ParseException e) {
+                throw new CredentialParseException(
+                        "Problem parsing VOTs from inherited identities");
+            }
+        }
+
+        return true;
     }
 
     @Tracing

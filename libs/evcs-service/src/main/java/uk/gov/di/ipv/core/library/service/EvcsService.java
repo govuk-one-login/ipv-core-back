@@ -85,16 +85,19 @@ public class EvcsService {
     public void storeInheritedIdentity(
             String userId,
             VerifiableCredential incomingInheritedIdentity,
-            VerifiableCredential existingInheritedIdentity)
+            List<VerifiableCredential> existingInheritedIdentity)
             throws EvcsServiceException {
-        if (existingInheritedIdentity != null) {
+        if (!existingInheritedIdentity.isEmpty()) {
             evcsClient.updateUserVCs(
                     userId,
-                    List.of(
-                            new EvcsUpdateUserVCsDto(
-                                    getVcSignature(existingInheritedIdentity.getVcString()),
-                                    HISTORIC,
-                                    null)));
+                    existingInheritedIdentity.stream()
+                            .map(
+                                    id ->
+                                            new EvcsUpdateUserVCsDto(
+                                                    getVcSignature(id.getVcString()),
+                                                    HISTORIC,
+                                                    null))
+                            .toList());
         }
         evcsClient.storeUserVCs(
                 userId,
