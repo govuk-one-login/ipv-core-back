@@ -62,7 +62,7 @@ public class YamlConfigService extends ConfigService {
     }
 
     @Override
-    protected String getParameter(String path) {
+    public String getParameter(String path) {
         if (getFeatureSet() != null) {
             for (String featureSet : getFeatureSet()) {
                 var featurePath = String.format("%s/%s/%s", FEATURE_SETS, featureSet, path);
@@ -87,7 +87,7 @@ public class YamlConfigService extends ConfigService {
     }
 
     @Override
-    protected String getSecret(String path) {
+    public String getSecret(String path) {
         return secrets.get(path);
     }
 }
