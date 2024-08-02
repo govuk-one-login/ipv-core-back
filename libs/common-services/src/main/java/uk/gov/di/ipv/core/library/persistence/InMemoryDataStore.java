@@ -129,6 +129,27 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
         return records.values().stream().toList();
     }
 
+    @Override
+    public List<T> getItems(String attrName, String attrValue) {
+        try {
+            var field = klass.getDeclaredField(attrName);
+            field.setAccessible(true);
+            return records.values().stream()
+                    .filter(
+                            i -> {
+                                try {
+                                    return String.valueOf(attrValue).equals(field.get(i));
+                                } catch (IllegalAccessException e) {
+                                    throw new IllegalArgumentException(
+                                            "Could not access attribute " + attrName, e);
+                                }
+                            })
+                    .toList();
+        } catch (NoSuchFieldException e) {
+            throw new IllegalArgumentException("Could not find attribute " + attrName, e);
+        }
+    }
+
     @SuppressWarnings(
             "java:S3011") // We rely on field access to avoid needing to search for a getter
     @Override

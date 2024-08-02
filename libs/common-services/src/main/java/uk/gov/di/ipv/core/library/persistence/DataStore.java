@@ -42,6 +42,8 @@ public interface DataStore<T extends PersistenceItem> {
 
     List<T> getItems();
 
+    List<T> getItems(String attrName, String attrValue);
+
     List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value);
 
     List<T> getItemsBySortKeyPrefix(String partitionValue, String sortPrefix);

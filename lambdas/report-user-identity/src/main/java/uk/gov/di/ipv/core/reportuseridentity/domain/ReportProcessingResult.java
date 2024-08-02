@@ -5,6 +5,4 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @Builder
 @ExcludeFromGeneratedCoverageReport
-public record ReportProcessingResult(ReportSummary summary) {
-    //    private List<ReportUserIdentityItem> users;
-}
+public record ReportProcessingResult(ReportSummary summary) {}

@@ -36,7 +36,8 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static final String ATTR_NAME_TO_SUMMARISE_ON = "identity";
+    private final ObjectMapper objectMapper;
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -46,12 +47,14 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     @SuppressWarnings("unused") // Used through dependency injection
     public ReportUserIdentityHandler(
+            ObjectMapper objectMapper,
             ConfigService configService,
             UserIdentityService userIdentityService,
             VerifiableCredentialService verifiableCredentialService,
             ReportUserIdentityService reportUserIdentityService,
             DataStore<VcStoreItem> vcStoreItemDataStore,
             DataStore<ReportUserIdentityItem> reportUserIdentityDataStore) {
+        this.objectMapper = objectMapper;
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.verifiableCredentialService = verifiableCredentialService;
@@ -62,6 +65,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     @SuppressWarnings("unused") // Used by AWS
     public ReportUserIdentityHandler() {
+        this.objectMapper = new ObjectMapper();
         this.configService = ConfigService.create();
         this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
@@ -86,7 +90,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         LogHelper.attachComponentId(configService);
 
         LOGGER.info(LogHelper.buildLogMessage("Processing report."));
-        ReportProcessingResult result = null;
 
         try {
             var userIds =
@@ -99,12 +102,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             .map(
                                     usrId ->
                                             new ReportUserIdentityItem(
-                                                    usrId, Vot.P0.name(), Collections.emptyList()))
+                                                    usrId,
+                                                    Vot.P0.name(),
+                                                    Collections.emptyList(),
+                                                    null))
                             .toList();
             reportUserIdentityDataStore.createOrUpdate(reportUserIdentities);
-            int totalP2 = 0;
-            int totalP1 = 0;
-            int totalP0 = 0;
 
             List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
             LOGGER.info(
@@ -119,29 +122,20 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                     String.format("User (%s) VCs not correlated.", userId)));
                     continue;
                 }
+                boolean migrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
                 var votAttained =
                         reportUserIdentityService.getStrongestAttainedVotForVtr(tacticalVcs);
-                List<String> constitute = null;
-                if (votAttained.isPresent()) {
-                    if (votAttained.get().equals(Vot.P2)) {
-                        totalP2++;
-                    } else if (votAttained.get().equals(Vot.P1)) {
-                        totalP1++;
-                    } else {
-                        totalP0++;
-                    }
-                    constitute = reportUserIdentityService.getIdentityConstituent(tacticalVcs);
-                }
-                LOGGER.info(LogHelper.buildLogMessage("Storing processed user's identity."));
+
                 reportUserIdentityItems.add(
                         new ReportUserIdentityItem(
-                                userId, votAttained.orElse(Vot.P0).name(), constitute));
+                                userId,
+                                votAttained.orElse(Vot.P0).name(),
+                                reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                                migrated));
             }
+            LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
             reportUserIdentityDataStore.createOrUpdate(reportUserIdentityItems);
-            result =
-                    ReportProcessingResult.builder()
-                            .summary(new ReportSummary(totalP2, totalP1, totalP0))
-                            .build();
+
             LOGGER.info(
                     LogHelper.buildLogMessage("Completed report processing for user's identity."));
         } catch (HttpResponseExceptionWithErrorBody | CredentialParseException | ParseException e) {
@@ -153,7 +147,42 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         } finally {
             LOGGER.info(LogHelper.buildLogMessage("Write output with result summary."));
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            objectMapper.writeValue(outputStream, result);
+            objectMapper.writeValue(outputStream, buildReportProcessingResult());
         }
+    }
+
+    private ReportProcessingResult buildReportProcessingResult() {
+        LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
+        List<ReportUserIdentityItem> totalP2Identities =
+                reportUserIdentityDataStore.getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P2.name());
+        long totalP2 = totalP2Identities.size();
+        long totalP2Migrated =
+                totalP2Identities.stream().filter(ReportUserIdentityItem::getMigrated).count();
+        long totalPCL250 =
+                reportUserIdentityDataStore
+                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.PCL250.name())
+                        .size();
+        long totalPCL200 =
+                reportUserIdentityDataStore
+                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.PCL200.name())
+                        .size();
+        long totalP1 =
+                reportUserIdentityDataStore
+                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P1.name())
+                        .size();
+        long totalP0 =
+                reportUserIdentityDataStore
+                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P0.name())
+                        .size();
+        return ReportProcessingResult.builder()
+                .summary(
+                        new ReportSummary(
+                                totalP2,
+                                totalP2Migrated,
+                                totalPCL250,
+                                totalPCL200,
+                                totalP1,
+                                totalP0))
+                .build();
     }
 }

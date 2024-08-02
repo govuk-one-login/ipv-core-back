@@ -150,6 +150,23 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public List<T> getItems() {
         ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        return getTableScan(scanRequest);
+    }
+
+    @Override
+    public List<T> getItems(String attrName, String attrValue) {
+        var filterExpression =
+                Expression.builder()
+                        .expression("#a = :b")
+                        .putExpressionName("#a", attrName)
+                        .putExpressionValue(":b", AttributeValue.builder().s(attrValue).build())
+                        .build();
+        ScanEnhancedRequest scanRequest =
+                ScanEnhancedRequest.builder().filterExpression(filterExpression).build();
+        return getTableScan(scanRequest);
+    }
+
+    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
         PageIterable<T> pagedResults = table.scan(scanRequest);
         return pagedResults.items().stream().toList();
     }

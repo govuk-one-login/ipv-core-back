@@ -23,6 +23,8 @@ public class ReportUserIdentityItem implements PersistenceItem {
     @JsonProperty("constitute")
     private List<String> constituteCriDocumentType;
 
+    private Boolean migrated;
+
     @DynamoDbPartitionKey
     public String getUserId() {
         return userId;

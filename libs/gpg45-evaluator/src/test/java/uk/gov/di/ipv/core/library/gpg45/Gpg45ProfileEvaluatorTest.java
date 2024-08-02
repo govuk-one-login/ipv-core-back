@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
@@ -151,7 +153,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void buildScoreShouldReturnCorrectScoreForDcmawCredential() throws Exception {
+    void buildScoreShouldReturnCorrectScoreForDcmawCredential() {
         Gpg45Scores builtScores = evaluator.buildScore(List.of(M1B_DCMAW_VC));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 2);
 
@@ -159,7 +161,15 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void buildScoreShouldReturnCorrectScoreForF2FCredential() throws Exception {
+    void buildScoreShouldReturnCorrectScoreForInheritedCredentialWithNoEvidence() throws Exception {
+        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcHmrcMigrationNoEvidence()));
+        Gpg45Scores expectedScores = new Gpg45Scores(Collections.emptyList(), 0, 0, 0);
+
+        assertEquals(expectedScores, builtScores);
+    }
+
+    @Test
+    void buildScoreShouldReturnCorrectScoreForF2FCredential() {
         Gpg45Scores builtScores = evaluator.buildScore(List.of(vcF2fM1a()));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 2);
 
