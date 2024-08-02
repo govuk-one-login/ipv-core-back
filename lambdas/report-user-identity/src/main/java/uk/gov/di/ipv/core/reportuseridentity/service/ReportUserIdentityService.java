@@ -39,7 +39,7 @@ public class ReportUserIdentityService {
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
     }
 
-    public Optional<Vot> getStrongestAttainedVotForVtr(List<VerifiableCredential> vcs)
+    public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs)
             throws ParseException {
         for (Vot requestedVot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
             boolean requestedVotAttained;

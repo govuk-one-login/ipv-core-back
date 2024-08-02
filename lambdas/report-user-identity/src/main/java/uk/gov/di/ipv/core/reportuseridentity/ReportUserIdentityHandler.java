@@ -105,36 +105,11 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                                     usrId,
                                                     Vot.P0.name(),
                                                     Collections.emptyList(),
-                                                    null))
+                                                    false))
                             .toList();
             reportUserIdentityDataStore.createOrUpdate(reportUserIdentities);
 
-            List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Checking identity for total (%s) users.", userIds.size())));
-            for (String userId : userIds) {
-                var tacticalVcs = verifiableCredentialService.getVcs(userId);
-                if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
-                    LOGGER.info(
-                            LogHelper.buildLogMessage(
-                                    String.format("User (%s) VCs not correlated.", userId)));
-                    continue;
-                }
-                boolean migrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
-                var votAttained =
-                        reportUserIdentityService.getStrongestAttainedVotForVtr(tacticalVcs);
-
-                reportUserIdentityItems.add(
-                        new ReportUserIdentityItem(
-                                userId,
-                                votAttained.orElse(Vot.P0).name(),
-                                reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                                migrated));
-            }
-            LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
-            reportUserIdentityDataStore.createOrUpdate(reportUserIdentityItems);
+            processUsersToFindLOCAndUpdateDb(userIds);
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Completed report processing for user's identity."));
@@ -151,13 +126,46 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         }
     }
 
+    private void processUsersToFindLOCAndUpdateDb(List<String> userIds)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException,
+                    BatchDeleteException {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format("Checking identity for total (%s) users.", userIds.size())));
+        List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
+        for (String userId : userIds) {
+            var tacticalVcs = verifiableCredentialService.getVcs(userId);
+            if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format("User (%s) VCs not correlated.", userId)));
+                continue;
+            }
+            boolean migrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+            var votAttained =
+                    reportUserIdentityService.getStrongestAttainedVotForCredentials(tacticalVcs);
+
+            reportUserIdentityItems.add(
+                    new ReportUserIdentityItem(
+                            userId,
+                            votAttained.orElse(Vot.P0).name(),
+                            reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                            migrated));
+        }
+        LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
+        reportUserIdentityDataStore.createOrUpdate(reportUserIdentityItems);
+    }
+
     private ReportProcessingResult buildReportProcessingResult() {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
         List<ReportUserIdentityItem> totalP2Identities =
                 reportUserIdentityDataStore.getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P2.name());
         long totalP2 = totalP2Identities.size();
         long totalP2Migrated =
-                totalP2Identities.stream().filter(ReportUserIdentityItem::getMigrated).count();
+                totalP2Identities.stream()
+                        .filter(ReportUserIdentityItem::isMigrated)
+                        .toList()
+                        .size();
         long totalPCL250 =
                 reportUserIdentityDataStore
                         .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.PCL250.name())

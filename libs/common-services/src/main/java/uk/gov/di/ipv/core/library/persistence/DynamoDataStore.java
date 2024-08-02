@@ -166,11 +166,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return getTableScan(scanRequest);
     }
 
-    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
-        PageIterable<T> pagedResults = table.scan(scanRequest);
-        return pagedResults.items().stream().toList();
-    }
-
     @Override
     public List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value) {
         var queryConditional =
@@ -215,6 +210,11 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @ExcludeFromGeneratedCoverageReport
     public void delete(List<T> items) throws BatchDeleteException {
         processBatchOperation(items, true);
+    }
+
+    @Override
+    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
+        delete(getItems(partitionValue));
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -269,9 +269,9 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
                         BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
     }
 
-    @Override
-    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
-        delete(getItems(partitionValue));
+    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
+        PageIterable<T> pagedResults = table.scan(scanRequest);
+        return pagedResults.items().stream().toList();
     }
 
     private T getItemByKey(Key key, boolean warnOnNull) {
