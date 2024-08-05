@@ -102,9 +102,8 @@ class CriApiServiceTest {
     void fetchAccessTokenShouldReturnAccessTokenForValidTokenResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(TEST_API_KEY);
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
@@ -132,7 +131,7 @@ class CriApiServiceTest {
     void fetchAccessTokenShouldReturnAccessTokenForNoApiKey() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
@@ -160,9 +159,8 @@ class CriApiServiceTest {
     void fetchAccessTokenThrowsCriApiExceptionForErrorTokenResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(TEST_API_KEY);
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
@@ -189,9 +187,8 @@ class CriApiServiceTest {
     void fetchAccessTokenThrowsCriApiExceptionForInvalidHeaderResponse() throws Exception {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(TEST_API_KEY);
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         stubFor(
@@ -217,9 +214,8 @@ class CriApiServiceTest {
     void buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldGetApiKeyIfPresent()
             throws Exception {
         // Arrange
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(TEST_API_KEY);
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
@@ -236,7 +232,7 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldUseCorrectTokenEndpoint(
                     WireMockRuntimeInfo wmRuntimeInfo) throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
@@ -258,7 +254,7 @@ class CriApiServiceTest {
             mockedJwtHelper
                     .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
-            when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+            when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
             when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
             // Act & Assert
@@ -276,9 +272,8 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldFailGracefullyWithInvalidApiKey()
                     throws Exception {
         // Arrange
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn("InvalidApiKey");
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn("InvalidApiKey");
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
@@ -295,7 +290,7 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeAuthorizationCodeInRequestBody()
                     throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
@@ -312,7 +307,7 @@ class CriApiServiceTest {
             buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCodeShouldIncludeRedirectionUriInRequestBody()
                     throws Exception {
         // Arrange
-        when(mockConfigService.getParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
 
         // Act
@@ -550,8 +545,7 @@ class CriApiServiceTest {
     void buildFetchVerifiableCredentialRequestShouldSetApiKeyHeader()
             throws JsonProcessingException {
         // Arrange
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(TEST_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
 
         // Act
         var request =

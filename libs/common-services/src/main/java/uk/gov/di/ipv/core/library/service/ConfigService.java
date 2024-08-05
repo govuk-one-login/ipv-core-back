@@ -31,16 +31,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PARAMETER_PATH;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String API_KEY = "apiKey";
-    private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
 
     @Getter @Setter private static boolean local = false;
 
@@ -74,6 +68,11 @@ public abstract class ConfigService {
         return Boolean.parseBoolean(getParameter(configurationVariable, pathProperties));
     }
 
+    public long getLongParameter(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        return Long.parseLong(getParameter(configurationVariable, pathProperties));
+    }
+
     public List<String> getStringListParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
@@ -83,42 +82,8 @@ public abstract class ConfigService {
         return getSecret(formatPath(secretVariable.getPath(), pathProperties));
     }
 
-    public String getApiKeySecret(
-            ConfigurationVariable configurationVariable, String... pathProperties) {
-        try {
-            var secretValue = getSecret(configurationVariable, pathProperties);
-
-            if (secretValue != null) {
-                Map<String, String> secret =
-                        OBJECT_MAPPER.readValue(secretValue, new TypeReference<>() {});
-                return secret.get(API_KEY);
-            }
-            LOGGER.warn(
-                    LogHelper.buildLogMessage("API key not found")
-                            .with(
-                                    LOG_PARAMETER_PATH.getFieldName(),
-                                    formatPath(configurationVariable.getPath(), pathProperties)));
-            return null;
-        } catch (JsonProcessingException e) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                                    "Failed to parse the api key secret from secrets manager")
-                            .with(
-                                    LOG_PARAMETER_PATH.getFieldName(),
-                                    formatPath(configurationVariable.getPath(), pathProperties)));
-            return null;
-        }
-    }
-
     private String formatPath(String path, String... pathProperties) {
         return String.format(path, (Object[]) pathProperties);
-    }
-
-    // PYIC-7048 Replace this with proper config
-    public long getBearerAccessTokenTtl() {
-        return Optional.ofNullable(getEnvironmentVariable(BEARER_TOKEN_TTL))
-                .map(Long::valueOf)
-                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
 
     public OauthCriConfig getOauthCriActiveConnectionConfig(Cri cri) {

@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.userreverification;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -19,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -131,9 +129,7 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenAccessTokenHasExpired()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturnErrorResponseWhenAccessTokenHasExpired() throws Exception {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -157,9 +153,7 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenIpvSessionNotFoundExceptionThrown()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturnErrorResponseWhenIpvSessionNotFoundExceptionThrown() throws Exception {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -178,9 +172,7 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked() throws Exception {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);

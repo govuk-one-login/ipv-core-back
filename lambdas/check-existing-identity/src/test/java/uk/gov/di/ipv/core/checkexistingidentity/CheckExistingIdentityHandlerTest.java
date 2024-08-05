@@ -45,7 +45,6 @@ import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -94,7 +93,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.INHERITED_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
@@ -102,10 +100,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
-import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_EVIDENCE_VRI_CHECK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.EXPIRED_M1A_EXPERIAN_FRAUD_VC;
@@ -114,11 +112,11 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
@@ -287,7 +285,7 @@ class CheckExistingIdentityHandlerTest {
     @DisplayName("reuse journeys")
     class ReuseJourneys {
         @BeforeEach
-        public void reuseSetup() throws IpvSessionNotFoundException {
+        public void reuseSetup() throws Exception {
             when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
                     .thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -296,7 +294,7 @@ class CheckExistingIdentityHandlerTest {
 
         @Test
         void shouldUseEvcsServiceWhenEnabled() throws Exception {
-            var vc = vcHmrcMigration();
+            var vc = vcHmrcMigrationPCL200();
             vc.setMigrated(Instant.now());
             when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(vc));
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
@@ -340,7 +338,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile_alsoStoreVcsInEvcs()
                 throws Exception {
             Mockito.lenient().when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            VerifiableCredential hmrcMigrationVC = vcHmrcMigration();
+            VerifiableCredential hmrcMigrationVC = vcHmrcMigrationPCL200();
 
             when(mockVerifiableCredentialService.getVcs(any()))
                     .thenReturn(List.of(gpg45Vc, hmrcMigrationVC));
@@ -387,7 +385,7 @@ class CheckExistingIdentityHandlerTest {
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
             when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-            var vcs = List.of(gpg45Vc, vcF2fM1a());
+            var vcs = new ArrayList<>(List.of(gpg45Vc, vcF2fM1a()));
             when(mockVerifiableCredentialService.getVcs(any())).thenReturn(vcs);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
@@ -410,6 +408,28 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
+        void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+            when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
+
+            var inheritedIdentityVc = vcHmrcMigrationPCL200();
+            var f2fVc = vcF2fM1a();
+            var currentVcs = List.of(inheritedIdentityVc, vcExperianFraudFailed());
+            var pendingReturnVcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
+            var allVcs = Stream.concat(pendingReturnVcs.stream(), currentVcs.stream()).toList();
+
+            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(allVcs);
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
+                    .thenReturn(Map.of(PENDING_RETURN, pendingReturnVcs, CURRENT, currentVcs));
+
+            checkExistingIdentityHandler.handleRequest(event, context);
+
+            verify(userIdentityService)
+                    .areVcsCorrelated(List.of(gpg45Vc, f2fVc, inheritedIdentityVc));
+        }
+
+        @Test
         void shouldReturnJourneyReuseStoreResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
@@ -424,7 +444,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of(f2fVc1, f2fVc2, f2fVc3));
             when(mockEvcsService.getVerifiableCredentialsByState(
                             any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
-                    .thenReturn(Map.of(PENDING_RETURN, List.of(f2fVc1, f2fVc2)));
+                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc1, f2fVc2))));
 
             when(criResponseService.getFaceToFaceRequest(any())).thenReturn(new CriResponseItem());
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -841,7 +861,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInHeader() {
+    void shouldReturn400IfSessionIdNotInHeader() throws Exception {
         JourneyRequest eventWithoutHeaders = JourneyRequest.builder().build();
 
         JourneyErrorResponse journeyResponse =
@@ -864,8 +884,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending()
-            throws IpvSessionNotFoundException {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -886,7 +905,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
-            throws ConfigException, IpvSessionNotFoundException {
+            throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriResponseStoreItem();
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -908,8 +927,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnFailResponseIfFaceToFaceVerificationIsError()
-            throws IpvSessionNotFoundException {
+    void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         CriResponseItem criResponseItem = createCriErrorResponseStoreItem(Instant.now());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
@@ -982,8 +1000,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F()
-            throws CredentialParseException, IpvSessionNotFoundException {
+    void shouldReturnJourneyIpvGpg45MediumIfDataDoesNotCorrelateAndNotF2F() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
@@ -1167,40 +1184,6 @@ class CheckExistingIdentityHandlerTest {
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
         assertEquals(P2, ipvSessionItem.getTargetVot());
-    }
-
-    @Test
-    void shouldRemoveOperationalProfileIfMatchingGpg45ProfileIsPresent() throws Exception {
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        clientOAuthSessionItem.setVtr(List.of(P2.name(), PCL250.name()));
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
-                .thenReturn(
-                        Stream.concat(
-                                        VCS_FROM_STORE.stream(),
-                                        Stream.of(vcHmrcMigrationPCL250NoEvidence()))
-                                .toList());
-
-        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        any(), eq(P2.getSupportedGpg45Profiles())))
-                .thenReturn(Optional.of(Gpg45Profile.M1B));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
-        when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
-        when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(true);
-        when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
-
-        JourneyResponse journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-        assertEquals(JOURNEY_REUSE, journeyResponse);
-        verify(mockVerifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(any());
-        assertEquals(PCL250, ipvSessionItem.getTargetVot());
     }
 
     @Test
@@ -1418,7 +1401,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
@@ -1461,7 +1443,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
@@ -1504,7 +1485,6 @@ class CheckExistingIdentityHandlerTest {
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-        when(configService.enabled(INHERITED_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))

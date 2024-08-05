@@ -1,34 +1,31 @@
-# Local running of ipv-core and the CRIs
+# Local running of ipv-core
 
-This is an attempt at running core-front, core-back and the CRIs locally. They run in containers and are orchestrated by
-docker compose. The benefits of this are quick(er) deployments and being able to get a debugger into the lambdas.
+This is a way of running core-back (and optionally core-front and orch-stub) locally, without an AWS environment.
+The benefits of this are quick(er) deployments and being able to debug the core-back Java code.
 
 ## What it's not
 
 A replacement for deploying your stack to AWS and making sure things work properly in that environment.
+In particular, any changes that involve changes to real AWS resources should be deployed and tested in AWS.
 
 ## How it works
 
-Core-front, orch-stub, and the CRI stubs are pretty straight forward and just use the current Dockerfiles we have to build
-images and run them.
-
-Core-back has some extra code to replace the AWS step functions we use and the API gateways. A Spark application is spun
-up with endpoints the same as the API gateways. The lamdbas are called from here, with the required inputs constructed
-appropriately.
-
-All other AWS services are still used - Dynamo, SSM, SQS etc. They're called by the lambdas as usual.
+Core-back normally runs distributed across multiple AWS components (API Gateway, Step Function and Lambda).
+Instead, the local-running app runs a web-server with some extra code to replace those AWS resources and execute
+the lambda code directly.
 
 ## How to use it
 
-You need to have the core-front and stubs repos checked out and on the same level as the core-back repo.
+There are two ways of using the local-running setup, but both require setting up appropriate configuration.
+
+### Configuration
 
 You'll need to set up config and secrets for your local-running core-back,
-this involves updating the params and secrets files, copying the template versions and updating any placeholders:
+this involves updating the secrets files, copying the template version and updating any placeholders:
 
 - `core.local.secrets.template.yaml` -> `core.local.secrets.yaml`
-- `core.local.params.template.yaml` -> `core.local.params.yaml`
 
-Values for the placeholders can be found in SSM/Secrets Manager in your dev account, or in the config repo.
+Values for the placeholders can be found in Secrets Manager in your dev account, or in the config repo.
 
 If you want to run F2F journeys, you'll also need to stop the event source mapping that feeds the
 process-async-cri-credential lambda. This is to allow the local deployment to read messages from the SQS queue.
@@ -43,15 +40,30 @@ You can add the `--dry-run` flag at the end to just show what would get written.
 aws-vault exec core-dev01 -- ./setConfigForLocalOrCloudRunning.py dev-chrisw local
 ```
 
-Next, spin up the containers with Docker compose, there is a shell script to sort out some bits that vary between dev
-environments. You will need to provide your dev env and an AWS profile.
-Here's how I do it.
+### Core-back only
 
-```
-./runLocalStack.sh -e dev-chrisw -p core-dev01
-```
+If you only need to run a core-back process, then you can run directly as a gradle task:
+- `./gradlew :local-running:run`
+- or set up a run configuration in your IDE that executes the gradle task
 
-You can now visit the orch-stub at http://localhost:3000 and start a journey.
+This might be useful if you are only running the API tests, or are running orch-stub and core-front independently.
+
+Core-back will now be running on http://localhost:4502 (for both internal and external APIs).
+
+### Core-back, Core-front and Orch-stub together
+
+This allows you to run minimal resources to actually run through a journey.
+
+You need to have the `ipv-core-front` and `ipv-stubs` repos checked out and on the same level as the core-back repo,
+as well as the configuration described above.
+
+Next, spin up the containers with Docker compose: `docker-compose up`.
+
+If you need to rebuild containers, either pass `--build` to the docker-compose command,
+or build a specific container: `docker-compose build core-back`
+
+You can now visit the orch-stub at http://localhost:4500 and start a journey.
+Core-front will run on http://localhost:4501 and core-back will run on http://localhost:4502.
 
 ### Logging
 

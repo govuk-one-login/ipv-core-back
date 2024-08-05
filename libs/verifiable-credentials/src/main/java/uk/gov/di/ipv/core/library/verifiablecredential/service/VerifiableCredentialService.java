@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_STORE_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
@@ -63,24 +62,12 @@ public class VerifiableCredentialService {
         return VerifiableCredential.fromVcStoreItem(dataStore.getItem(userId, criId));
     }
 
-    public void deleteHmrcInheritedIdentityIfPresent(List<VerifiableCredential> vcs) {
-        for (var vc : vcs) {
-            if (HMRC_MIGRATION.equals(vc.getCri())) {
-                deleteVcStoreItem(vc.getUserId(), vc.getCri().getId());
-            }
-        }
-    }
-
     public void deleteVCs(String userId) throws VerifiableCredentialException {
         try {
             dataStore.deleteAllByPartition(userId);
         } catch (Exception e) {
             throw new VerifiableCredentialException(SC_SERVER_ERROR, FAILED_TO_DELETE_CREDENTIAL);
         }
-    }
-
-    private void deleteVcStoreItem(String userId, String criId) {
-        dataStore.delete(userId, criId);
     }
 
     public void storeIdentity(List<VerifiableCredential> vcs, String userId)

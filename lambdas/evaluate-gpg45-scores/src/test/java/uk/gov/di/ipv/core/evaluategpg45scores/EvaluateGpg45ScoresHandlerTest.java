@@ -18,13 +18,11 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -43,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
@@ -62,10 +59,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -78,7 +72,6 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static JourneyRequest request;
-    private static List<VerifiableCredential> VCS_IN_STORE;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
     private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
@@ -98,7 +91,6 @@ class EvaluateGpg45ScoresHandlerTest {
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @Mock private CiMitService ciMitService;
     @Mock private CiMitUtilityService ciMitUtilityService;
@@ -108,20 +100,12 @@ class EvaluateGpg45ScoresHandlerTest {
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeAll
-    static void setUp() throws Exception {
+    static void setUp() {
         request =
                 JourneyRequest.builder()
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_CLIENT_SOURCE_IP)
                         .build();
-        VCS_IN_STORE =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        M1A_ADDRESS_VC,
-                        M1A_EXPERIAN_FRAUD_VC,
-                        vcVerificationM1a(),
-                        M1B_DCMAW_VC,
-                        vcHmrcMigration());
     }
 
     @BeforeEach
@@ -247,48 +231,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldRemoveOperationalProfileIfGpg45ProfileMatched() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
-                .thenReturn(VCS_IN_STORE);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
-                .thenReturn(Optional.of(M1A));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)).thenReturn(true);
-        JourneyResponse response =
-                toResponseClass(
-                        evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyResponse.class);
-
-        verify(verifiableCredentialService).deleteHmrcInheritedIdentityIfPresent(VCS_IN_STORE);
-
-        assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
-    }
-
-    @Test
-    void shouldNotRemoveOperationalProfileIfGpg45ProfileNotMatched() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
-                .thenReturn(List.of(vcHmrcMigrationPCL250NoEvidence()));
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
-                .thenReturn(Optional.empty());
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        JourneyResponse response =
-                toResponseClass(
-                        evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyResponse.class);
-
-        verify(verifiableCredentialService, never()).deleteHmrcInheritedIdentityIfPresent(any());
-
-        assertEquals(JOURNEY_UNMET.getJourney(), response.getJourney());
-    }
-
-    @Test
-    void shouldReturn400IfSessionIdNotInRequest() {
+    void shouldReturn400IfSessionIdNotInRequest() throws Exception {
         JourneyRequest requestWithoutSessionId =
                 JourneyRequest.builder().ipAddress(TEST_CLIENT_SOURCE_IP).build();
 

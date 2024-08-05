@@ -103,11 +103,11 @@ class TokenTests {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
-        when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn("900");
+        when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn(900L);
+
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.
@@ -166,11 +166,10 @@ class TokenTests {
         // Arrange
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
 
-        when(mockConfigService.getParameter(ConfigurationVariable.JWT_TTL_SECONDS))
-                .thenReturn("900");
+        when(mockConfigService.getLongParameter(ConfigurationVariable.JWT_TTL_SECONDS))
+                .thenReturn(900L);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
 
         // Fix the signature here as mocking out the AWSKMS class inside the real signer would be
         // painful.

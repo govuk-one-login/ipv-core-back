@@ -46,7 +46,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddresses;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressMultipleAddressesNoValidFrom;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportM1aFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingBirthDate;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcPassportMissingName;
@@ -373,7 +373,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 M1A_ADDRESS_VC,
                                 M1A_EXPERIAN_FRAUD_VC,
                                 vcVerificationM1a(),
-                                vcHmrcMigration()));
+                                vcHmrcMigrationPCL200NoEvidence()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -404,7 +404,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 M1A_ADDRESS_VC,
                                 M1A_EXPERIAN_FRAUD_VC,
                                 vcVerificationM1a(),
-                                vcHmrcMigration()));
+                                vcHmrcMigrationPCL200NoEvidence()));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

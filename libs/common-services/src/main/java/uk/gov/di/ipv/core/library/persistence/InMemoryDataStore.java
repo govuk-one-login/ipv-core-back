@@ -86,11 +86,6 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     @Override
-    public T getItem(String partitionValue, boolean warnOnNull) {
-        return getItem(partitionValue);
-    }
-
-    @Override
     public T getItemByIndex(String indexName, String value) {
         Method indexMethod = null;
         for (var method : klass.getMethods()) {

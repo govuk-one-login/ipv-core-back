@@ -353,9 +353,8 @@ public class ProcessJourneyEventHandler
                         .isBefore(
                                 Instant.now()
                                         .minusSeconds(
-                                                Long.parseLong(
-                                                        configService.getParameter(
-                                                                BACKEND_SESSION_TIMEOUT))));
+                                                configService.getLongParameter(
+                                                        BACKEND_SESSION_TIMEOUT)));
     }
 
     @Tracing

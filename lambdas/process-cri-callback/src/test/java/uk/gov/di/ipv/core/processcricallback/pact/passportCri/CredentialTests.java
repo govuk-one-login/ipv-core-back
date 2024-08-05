@@ -424,8 +424,7 @@ class CredentialTests {
         ciConfigMap.put("CI01", ciConfig2);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
         Mockito.lenient()

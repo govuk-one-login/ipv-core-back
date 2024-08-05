@@ -96,7 +96,7 @@ public class SsmConfigService extends ConfigService {
         }
 
         try {
-            return ssmProvider.get(resolveSsmPath(path));
+            return ssmProvider.get(resolvePath(path));
         } catch (ParameterNotFoundException e) {
             throw new ConfigParameterNotFoundException(path);
         }
@@ -105,7 +105,7 @@ public class SsmConfigService extends ConfigService {
     @Override
     protected String getSecret(String path) {
         try {
-            return secretsProvider.get(resolveSecretPath(path));
+            return secretsProvider.get(resolvePath(path));
         } catch (DecryptionFailureException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -137,22 +137,14 @@ public class SsmConfigService extends ConfigService {
 
     @Override
     protected Map<String, String> getParametersByPrefix(String path) {
-        return ssmProvider.getMultiple(resolveSsmPath(path));
+        return ssmProvider.getMultiple(resolvePath(path));
     }
 
-    private String resolveSsmPath(String path) {
+    private String resolvePath(String path) {
         return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT)) + path;
     }
 
     private String resolveFeatureSetSsmPath(String featureSet, String path) {
-        return resolveSsmPath(String.format("features/%s/", featureSet) + path);
-    }
-
-    private String resolveSecretPath(String path) {
-        // PYIC-7047 Remove this special case
-        if (path.startsWith("credential-issuers")) {
-            return String.format("/%s/", getEnvironmentVariable(ENVIRONMENT)) + path;
-        }
-        return resolveSsmPath(path);
+        return resolvePath(String.format("features/%s/", featureSet) + path);
     }
 }

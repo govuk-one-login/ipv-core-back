@@ -34,8 +34,6 @@ public interface DataStore<T extends PersistenceItem> {
 
     T getItem(String partitionValue);
 
-    T getItem(String partitionValue, boolean warnOnNull);
-
     T getItemByIndex(String indexName, String value);
 
     List<T> getItems(String partitionValue);

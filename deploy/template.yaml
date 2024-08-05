@@ -138,8 +138,8 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_F2FQueue"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
@@ -151,8 +151,8 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_F2FQueue"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "457601271792": # Build
@@ -162,8 +162,8 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
-      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_F2FQueue_build"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
     "335257547869": # Staging
@@ -828,10 +828,10 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1079,11 +1079,11 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/*/connections/*/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/*/connections/*/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
@@ -1278,9 +1278,9 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
@@ -1389,7 +1389,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
       Events:
         IPVCoreExternalAPIReverification:
           Type: Api
@@ -1689,8 +1689,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBReadPolicy:
@@ -1700,7 +1698,9 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: invokeGetContraIndicatorCredentialFunction
               Effect: Allow
@@ -1935,15 +1935,13 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
       AutoPublishAlias: live
 
   CheckExistingIdentityFunctionLogGroup:
@@ -2048,11 +2046,11 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: kmsSigningKeyPermission
               Effect: Allow
@@ -2318,13 +2316,13 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-config-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/ticf/connections/*/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/ticf/connections/*/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
         - Statement:
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
@@ -2475,7 +2473,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/credential-issuers/dcmawAsync/connections/*/oauth-client-secret-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/dcmawAsync/connections/*/oAuthClientSecret-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -2641,7 +2639,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
       AutoPublishAlias: live
 
   ReplayCimitVcsFunctionLogGroup:
@@ -2658,164 +2656,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ReplayCimitVcsFunctionLogGroup
-
-  RevokeVcsFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - RevokeVcsFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "revoke-vcs-${Environment}"
-      Handler: uk.gov.di.ipv.core.revokevcs.RevokeVcsHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/revoke-vcs
-      Timeout: 600
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub revoke-vcs-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
-          REVOKED_USER_CREDENTIALS_TABLE_NAME: !Ref RevokedUserCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBCrudPolicy:
-            TableName: !Ref RevokedUserCredentialsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-      AutoPublishAlias: live
-
-  RevokeVcsFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/revoke-vcs-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  RevokeVcsFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref RevokeVcsFunctionLogGroup
-
-  RestoreVcsFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - RestoreVcsFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "restore-vcs-${Environment}"
-      Handler: uk.gov.di.ipv.core.restorevcs.RestoreVcsHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/restore-vcs
-      Timeout: 600
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub restore-vcs-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
-          REVOKED_USER_CREDENTIALS_TABLE_NAME: !Ref RevokedUserCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBCrudPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBCrudPolicy:
-            TableName: !Ref RevokedUserCredentialsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-      AutoPublishAlias: live
-
-  RestoreVcsFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/restore-vcs-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  RestoreVcsFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref RestoreVcsFunctionLogGroup
 
   StoreIdentityFunction:
     Type: AWS::Serverless::Function
@@ -2872,7 +2712,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - DynamoDBCrudPolicy:
@@ -2957,7 +2797,7 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBCrudPolicy:
@@ -3052,7 +2892,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/api-key-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
       AutoPublishAlias: live
 
   CheckCoiFunctionLogGroup:
@@ -3200,10 +3040,7 @@ Resources:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "revoked-user-credentials-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
-      DeletionProtectionEnabled: !If
-        - IsProduction
-        - true
-        - false
+      DeletionProtectionEnabled: false
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If
           - IsProduction

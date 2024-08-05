@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileM
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -44,7 +43,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
@@ -74,7 +72,6 @@ public class EvaluateGpg45ScoresHandler
     private final CiMitService ciMitService;
     private final CiMitUtilityService ciMitUtilityService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings({
@@ -88,7 +85,6 @@ public class EvaluateGpg45ScoresHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             CiMitService ciMitService,
             CiMitUtilityService ciMitUtilityService) {
@@ -98,7 +94,6 @@ public class EvaluateGpg45ScoresHandler
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.ciMitService = ciMitService;
         this.ciMitUtilityService = ciMitUtilityService;
@@ -114,7 +109,6 @@ public class EvaluateGpg45ScoresHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.ciMitService = new CiMitService(configService);
         this.ciMitUtilityService = new CiMitUtilityService(configService);
@@ -172,10 +166,6 @@ public class EvaluateGpg45ScoresHandler
 
             ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
             ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            if (configService.enabled(CoreFeatureFlag.INHERITED_IDENTITY)) {
-                verifiableCredentialService.deleteHmrcInheritedIdentityIfPresent(vcs);
-            }
 
             logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
             return JOURNEY_MET.toObjectMap();

@@ -78,7 +78,7 @@ public class CriApiService {
 
     private String getApiKey(OauthCriConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
         return criConfig.isRequiresApiKey()
-                ? configService.getApiKeySecret(
+                ? configService.getSecret(
                         ConfigurationVariable.CREDENTIAL_ISSUER_API_KEY,
                         criOAuthSessionItem.getCriId(),
                         criOAuthSessionItem.getConnection())
@@ -164,9 +164,8 @@ public class CriApiService {
                             criConfig.getClientId(),
                             criConfig.getComponentId(),
                             dateTime.plusSeconds(
-                                            Long.parseLong(
-                                                    configService.getParameter(
-                                                            ConfigurationVariable.JWT_TTL_SECONDS)))
+                                            configService.getLongParameter(
+                                                    ConfigurationVariable.JWT_TTL_SECONDS))
                                     .toEpochSecond(),
                             secureTokenHelper.generate());
 

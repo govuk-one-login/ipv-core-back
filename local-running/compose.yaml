@@ -13,23 +13,23 @@ services:
       dockerfile: core-dev-deploy/Dockerfile
     environment:
       INHERITED_IDENTITY_JWT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO # pragma: allowlist secret
-      IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:3002/
+      IPV_BACKCHANNEL_ENDPOINT: http://host.docker.internal:4502/
       IPV_BACKCHANNEL_TOKEN_PATH: token
       IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity
       IPV_CORE_AUDIENCE: https://identity.local.account.gov.uk
-      IPV_ENDPOINT: http://localhost:3001/
+      IPV_ENDPOINT: http://localhost:4501/
       ORCHESTRATOR_CLIENT_ID: orchestrator # pragma: allowlist secret
       ORCHESTRATOR_CLIENT_JWT_TTL: 900
       ORCHESTRATOR_CLIENT_SIGNING_KEY: MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO # pragma: allowlist secret
       ORCHESTRATOR_DEFAULT_JAR_ENCRYPTION_PUBLIC_KEY: eyJrdHkiOiAiUlNBIiwibiI6ICIwNDY1cUp3bzhuQ2tDMnR2VjRuaXVXRjZJTTZwTmptZVlzemhUd0hQWTYwOS1IVkF0TzhQb1JMVXlBODZyelEtUXpiVDdYeGJ6Q2pmeVJYb1JGT0dsZVpxVHV3bGMyNWV6RHhWNThiaGVjUGlXRk1hRllPUzFXN3pJRHNWRm8zN2dqanZ0a2NENk9xSzhQS0F2Nm41dFVwaGpEQ2Nubm1wVE1JeUdBbnptUUNiU2tKV3U2Vl9nYzN0aXJBdWdYb1p1a01Db2h4dzNfLWM2cHJoTU4wc21ETnYwcVdtdmEzb3Fva2FiZVB3ZTFPUzcyRFh5WFItVFBkX0R0ejQtdFJyOWp2WndIdWxYNFpjczFCQmJqQnBJaW0zV05ZOGFzdjl5amxCeGtkdC1uY2toQ01aZWtQdVQ3eFdTVHJ2Y2NCX2ZublNVZ0VRV181aXJMTmRucjVNV1EiLCJlIjogIkFRQUIiLCJhbGciOiAiUlMyNTYifQ== # pragma: allowlist secret
-      ORCHESTRATOR_PORT: 3000
-      ORCHESTRATOR_REDIRECT_URL: http://localhost:3000/callback
+      ORCHESTRATOR_PORT: 4500
+      ORCHESTRATOR_REDIRECT_URL: http://localhost:4500/callback
       EVCS_ACCESS_TOKEN_ENDPOINT: https://mock.credential-store.build.account.gov.uk/generate
       EVCS_ACCESS_TOKEN_TTL: 60
       EVCS_ACCESS_TOKEN_SIGNING_KEY_JWK: '{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
     ports:
-      - "3000:3000"
+      - "4500:4500"
       - "5000:5000"
 
   core-front:
@@ -40,15 +40,14 @@ services:
       dockerfile: dev-deploy/Dockerfile
     environment:
       <<: *aws_creds
-      API_BASE_URL: http://host.docker.internal:3002
-      SESSION_TABLE_NAME: core-front-sessions-${ENVIRONMENT}
+      API_BASE_URL: http://host.docker.internal:4502
       SESSION_SECRET: no-secret # pragma: allowlist secret
-      NODE_ENV: development
-      EXTERNAL_WEBSITE_HOST: http://localhost:3001
-      PORT: 3001
+      NODE_ENV: local
+      EXTERNAL_WEBSITE_HOST: http://localhost:4501
+      PORT: 4501
       CDN_DOMAIN:
     ports:
-      - "3001:3001"
+      - "4501:4501"
       - "5001:9229"
     command:
       - node
@@ -63,15 +62,14 @@ services:
       dockerfile:  local-running/Dockerfile
     environment:
       <<: *aws_creds
-      PORT: 3002
+      PORT: 4502
       CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicatorCredential-production
       CI_STORAGE_GET_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:getContraIndicators-production
       CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
-      F2F_STUB_QUEUE_NAME: stubQueue_F2FQueue_${ENVIRONMENT}
       ENVIRONMENT: local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:
-      - "3002:3002"
+      - "4502:4502"
       - "5002:5002"

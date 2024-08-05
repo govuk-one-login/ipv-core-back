@@ -542,8 +542,7 @@ class CredentialTests {
         ciConfigMap.put("D02", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
         Mockito.lenient()
@@ -593,248 +592,264 @@ class CredentialTests {
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     private static final String VALID_NINO_IDENTITY_CHECK_VC_BODY =
             """
-        {
-           "sub": "test-subject",
-           "iss": "dummyNinoComponentId",
-           "nbf": 4070908800,
-           "exp": 4070909400,
-           "vc": {
-             "evidence": [
-               {
-                 "activityHistoryScore": 1,
-                 "checkDetails": [
-                   {
-                     "checkMethod": "data"
-                   }
-                 ],
-                 "validityScore": 2,
-                 "strengthScore": 2,
-                 "type": "IdentityCheck",
-                 "txn": "dummyTxn"
-               }
-             ],
-             "credentialSubject": {
-               "socialSecurityRecord": [
-                 {
-                   "personalNumber": "AA000003D"
-                 }
-               ],
-               "name": [
-                 {
-                   "nameParts": [
-                     {
-                       "type": "GivenName",
-                       "value": "Kenneth"
-                     },
-                     {
-                       "type": "FamilyName",
-                       "value": "Decerqueira"
-                     }
-                   ]
-                 }
-               ],
-               "birthDate": [
-                 {
-                   "value": "1965-07-08"
-                 }
-               ]
-             },
-             "type": [
-               "VerifiableCredential",
-               "IdentityCheckCredential"
-             ]
-           },
-           "jti":"dummyJti"
-         }
-    """;
+            {
+              "sub": "test-subject",
+              "iss": "dummyNinoComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "activityHistoryScore": 1,
+                    "checkDetails": [
+                      {
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "validityScore": 2,
+                    "strengthScore": 2,
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn"
+                  }
+                ],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Kenneth"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Decerqueira"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti":"dummyJti"
+            }
+            """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "WHEg4EooDiCdT676GPVE4l4z5YY-Tvl3FTY4bYI_nCzx8mqrg2rTYJUM4SG8azbyBjdSG8UQFyfAuLPeYlMTwg"; // pragma: allowlist secret
+            "We13lVYrjNQto5P7XcCJiLgNpFPaagXM1NxHDjK_jNUwHK16WOAHS3KEL3vB246gYmmQ55LpVoOIQqc9CfF-dw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
             {
-                "sub": "test-subject",
-                "iss": "dummyNinoComponentId",
-                "nbf": 4070908800,
-                "exp": 4070909400,
-                "vc": {
-                 "evidence": [
-                   {
-                     "failedCheckDetails": [
-                       {
-                         "checkMethod": "data"
-                       }
-                     ],
-                     "validityScore": 0,
-                     "strengthScore": 2,
-                     "ci": [
-                        "D02"
-                     ],
-                     "type": "IdentityCheck",
-                     "txn": "dummyTxn"
-                   }
-                 ],
-                 "credentialSubject": {
-                   "socialSecurityRecord": [
-                     {
-                       "personalNumber": "AA000003D"
-                     }
-                   ],
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Kenneth"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Decerqueira"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1965-07-08"
-                     }
-                   ]
-                 },
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ]
+              "sub": "test-subject",
+              "iss": "dummyNinoComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "validityScore": 0,
+                    "strengthScore": 2,
+                    "ci": [
+                       "D02"
+                    ],
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn"
+                  }
+                ],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Kenneth"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Decerqueira"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
+                    }
+                  ]
                 },
-                "jti":"dummyJti"
-                }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti":"dummyJti"
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "GdAM1VaIj5fPZD-8mosORKfbqazER2xNzS2wJ-3ksq2HsCLujvK6kTSjER1OxMHTXH4T8wEROVbGIVeaK9vY9A"; // pragma: allowlist secret
+            "zPwCdVETzGGYaXaNtYL5-3Px3tVjLLjaQ-Ot0bzhD9DD_Qvf7sIwGvbdKYx1PkMiJKZBp28E7dd1uRo2n3FPkQ"; // pragma: allowlist secret
 
     private static final String VALID_NINO_VC_BODY =
             """
-        {
-           "sub": "test-subject",
-           "iss": "dummyNinoComponentId",
-           "nbf": 4070908800,
-           "exp": 4070909400,
-           "vc": {
-             "evidence": [
-               {
-                 "checkDetails": [
-                   {
-                     "checkMethod": "data"
-                   }
-                 ],
-                 "type": "IdentityCheck",
-                 "txn": "dummyTxn"
-               }
-             ],
-             "credentialSubject": {
-               "socialSecurityRecord": [
-                 {
-                   "personalNumber": "AA000003D"
-                 }
-               ],
-               "name": [
-                 {
-                   "nameParts": [
-                     {
-                       "type": "GivenName",
-                       "value": "Kenneth"
-                     },
-                     {
-                       "type": "FamilyName",
-                       "value": "Decerqueira"
-                     }
-                   ]
-                 }
-               ],
-               "birthDate": [
-                 {
-                   "value": "1965-07-08"
-                 }
-               ]
-             },
-             "type": [
-               "VerifiableCredential",
-               "IdentityCheckCredential"
-             ]
-           },
-           "jti":"dummyJti"
-         }
-    """;
+            {
+              "sub": "test-subject",
+              "iss": "dummyNinoComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "checkDetails": [
+                      {
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn"
+                  }
+                ],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Kenneth"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Decerqueira"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
+                    }
+                  ]
+                },
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti":"dummyJti"
+            }
+            """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "WjlFHK3oFx1Wbi1aQ380OJs3Br-aZWCjUsa-BXOg-LnTzdhExZnS2OQ-fckweGzfvZFnuZcC0R8IML6axALGpg"; // pragma: allowlist secret
+            "RcpJc_xtZriNrqGTjK_eFWoz1SkA4uaGVQAPgfo0lzEAiw3jS0uTlhF3U6DOoMo4VefaShfOYgb46gFqUUCsOw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_VC_BODY =
             """
             {
-                "sub": "test-subject",
-                "iss": "dummyNinoComponentId",
-                "nbf": 4070908800,
-                "exp": 4070909400,
-                "vc": {
-                 "evidence": [
-                   {
-                     "failedCheckDetails": [
-                       {
-                         "checkMethod": "data"
-                       }
-                     ],
-                     "ci": [
-                        "D02"
-                     ],
-                     "type": "IdentityCheck",
-                     "txn": "dummyTxn"
-                   }
-                 ],
-                 "credentialSubject": {
-                   "socialSecurityRecord": [
-                     {
-                       "personalNumber": "AA000003D"
-                     }
-                   ],
-                   "name": [
-                     {
-                       "nameParts": [
-                         {
-                           "type": "GivenName",
-                           "value": "Kenneth"
-                         },
-                         {
-                           "type": "FamilyName",
-                           "value": "Decerqueira"
-                         }
-                       ]
-                     }
-                   ],
-                   "birthDate": [
-                     {
-                       "value": "1965-07-08"
-                     }
-                   ]
-                 },
-                 "type": [
-                   "VerifiableCredential",
-                   "IdentityCheckCredential"
-                 ]
+              "sub": "test-subject",
+              "iss": "dummyNinoComponentId",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "evidence": [
+                  {
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data"
+                      }
+                    ],
+                    "ci": [
+                       "D02"
+                    ],
+                    "type": "IdentityCheck",
+                    "txn": "dummyTxn"
+                  }
+                ],
+                "credentialSubject": {
+                  "socialSecurityRecord": [
+                    {
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Kenneth"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Decerqueira"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
+                    }
+                  ]
                 },
-                "jti":"dummyJti"
-                }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti":"dummyJti"
+            }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "oC40cHPwnkvFecAzGDpR_Ht6wL34YDmMcTn05pi2mkP19BRgnjIw47ccZqbjYfYdEVEv6IzyYclEVgBd66G-Aw"; // pragma: allowlist secret
+            "-A_yvG1Z5XE70MnUdnYn4lB-MhFd1Ic28dd1bZ7GDDgMHKEEhjG1NABPaEQV0s9of7k6I4Q1yjVlBPrIum6zKA"; // pragma: allowlist secret
 }

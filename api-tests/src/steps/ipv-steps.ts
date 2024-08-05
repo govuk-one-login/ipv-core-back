@@ -102,7 +102,7 @@ Then("I get an OAuth response", function (this: World): void {
   assert.ok(isClientResponse(this.lastJourneyEngineResponse));
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
-    config.ORCHESTRATOR_REDIRECT_URL,
+    config.orch.redirectUrl,
     `${url.protocol}//${url.host}${url.pathname}`,
   );
 });
@@ -129,7 +129,7 @@ Then("I get a {string} identity", function (this: World, vot: string): void {
 Then(
   "a(n) {string} audit event was recorded [local only]",
   async function (this: World, eventName: string): Promise<void> {
-    if (config.LOCAL_AUDIT_EVENTS) {
+    if (config.localAuditEvents) {
       const auditEvents = await auditClient.getAuditEvents(this.journeyId);
       const event = auditEvents.find((e) => e.event_name === eventName);
       if (!event) {

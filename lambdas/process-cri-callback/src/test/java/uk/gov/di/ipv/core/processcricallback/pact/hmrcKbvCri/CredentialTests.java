@@ -75,6 +75,7 @@ class CredentialTests {
                 .given("VC evidence txn is dummyTxn")
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails are free_text, multiple_choice, multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -163,6 +164,7 @@ class CredentialTests {
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails are free_text, free_text, multiple_choice")
                 .given("VC evidence failedCheckDetails is multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential")
                 .method("POST")
@@ -322,6 +324,7 @@ class CredentialTests {
                 .given("VC personalNumber is AA000003D")
                 .given("VC evidence checkDetails is free_text")
                 .given("VC evidence failedCheckDetails are free_text, multiple_choice")
+                .given("VC jti is test-jti")
                 .uponReceiving("Valid credential request for VC with CI")
                 .path("/credential")
                 .method("POST")
@@ -420,8 +423,7 @@ class CredentialTests {
         ciConfigMap.put("V03", ciConfig1);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
-        when(mockConfigService.getApiKeySecret(any(), any(String[].class)))
-                .thenReturn(PRIVATE_API_KEY);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
         // This mock doesn't get reached in error cases, but it would be messy to explicitly not set
         // it
         Mockito.lenient()
@@ -492,14 +494,36 @@ class CredentialTests {
               "sub": "test-subject",
               "nbf": 4070908800,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
+                "evidence": [{
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }
+                  ],
+                  "verificationScore": 2,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
+                }],
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
                     }
                   ],
                   "name": [
@@ -515,42 +539,25 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
                   ]
                 },
-                "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }
-                    ],
-                    "verificationScore": 2,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
-                }]
-              }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "daukVnLVHulydZBmQfNSNBpO7HxuHR8Yrt5Y34aW0QdTu2ne2iSdNGprMu126UJWh5Oos_axgAFdqzkLH1fRXg"; // pragma: allowlist secret
+            "V_UjPKzCPWi3dMokCPk2TCahyyRU2P3V1ZoGD5-cCdOyq_Hx-1tCSfRC387kw-KSW8sHhxRUlCXY3Nbghwvu9w"; // pragma: allowlist secret
 
     private static final String VALID_VC_BODY_WITH_WRONG_ANSWER =
             """
@@ -559,14 +566,40 @@ class CredentialTests {
               "sub": "test-subject",
               "nbf": 4070908800,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
+                "evidence": [{
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  }],
+                  "failedCheckDetails": [{
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }],
+                  "verificationScore": 2,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
+                }],
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
                     }
                   ],
                   "name": [
@@ -582,46 +615,25 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
                   ]
                 },
-                "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    }],
-                    "failedCheckDetails": [{
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }],
-                    "verificationScore": 2,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
-                }]
-              }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_WRONG_ANSWER_SIGNATURE =
-            "22nceda_KGDsSEUmyKX37OvyBOxUk_Q2HRujbYBYAcyBy9N8SininSTV4uHg_vTjgznW1C8i_9pT4D8me0k5Ew"; // pragma: allowlist secret
+            "w-RBzC28PrsMJKe-2W_dLOYYlAskkXm4-jmUeThOy33h3ZYoDdJa_0dTcHaLStjL82ryfcYKLjplaQZ0Z1vINA"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -630,14 +642,36 @@ class CredentialTests {
               "sub": "test-subject",
               "nbf": 4070908800,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
+                "evidence": [{
+                  "checkDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  }],
+                  "failedCheckDetails": [{
+                    "kbvResponseMode": "free_text",
+                    "kbvQuality": 3,
+                    "checkMethod": "kbv"
+                  },
+                  {
+                    "kbvResponseMode": "multiple_choice",
+                    "kbvQuality": 2,
+                    "checkMethod": "kbv"
+                  }],
+                  "ci": ["V03"],
+                  "verificationScore": 0,
+                  "txn": "dummyTxn",
+                  "type": "IdentityCheck"
+                }],
                 "credentialSubject": {
                   "socialSecurityRecord": [
                     {
-                       "personalNumber": "AA000003D"
+                      "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1932-02-25"
                     }
                   ],
                   "name": [
@@ -653,40 +687,23 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
                   ]
                 },
-                "evidence": [{
-                    "checkDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    }],
-                    "failedCheckDetails": [{
-                        "kbvResponseMode": "free_text",
-                        "kbvQuality": 3,
-                        "checkMethod": "kbv"
-                    },
-                    {
-                        "kbvResponseMode": "multiple_choice",
-                        "kbvQuality": 2,
-                        "checkMethod": "kbv"
-                    }],
-                    "ci": ["V03"],
-                    "verificationScore": 0,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
-                }]
-              }
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ]
+              },
+              "jti": "test-jti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "GiT_2V56s3llPzNGZ7aXMZG6Tj9IvA-PUCID3s42XCjeX4c9bp3SyIOAhEFMccIUmf4TebsV_WBmghaVRds7Kw"; // pragma: allowlist secret
+            "Fm6ARQEa45XugCHysgvGvo8HqSbZpVok0q8I708ejTwDUIbf7ya7PvoN4mAT4PR-ZMe1KnZVbFN2lZ_aVw9TRw"; // pragma: allowlist secret
 }

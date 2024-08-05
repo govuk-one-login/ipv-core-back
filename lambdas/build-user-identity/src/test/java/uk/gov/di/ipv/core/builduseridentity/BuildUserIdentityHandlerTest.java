@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.builduseridentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -689,8 +688,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsNull()
-            throws JsonProcessingException, VerifiableCredentialException {
+    void shouldReturnErrorResponseWhenTokenIsNull() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = new HashMap<>(Collections.emptyMap());
         headers.put("Authorization", null);
@@ -779,8 +777,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix()
-            throws JsonProcessingException, VerifiableCredentialException {
+    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers =
                 Map.of("Authorization", "11111111", "ip-address", TEST_IP_ADDRESS);
@@ -802,8 +799,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsMissing()
-            throws JsonProcessingException, VerifiableCredentialException {
+    void shouldReturnErrorResponseWhenTokenIsMissing() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = Map.of("ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
@@ -823,9 +819,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenThrow(new IpvSessionNotFoundException("error"));
 
@@ -847,9 +841,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked() throws Exception {
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
         revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
         ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
@@ -872,9 +864,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired() throws Exception {
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
         expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
         ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
@@ -897,9 +887,7 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn403ErrorResponseWhenIpvSessionNotFoundExceptionThrown()
-            throws JsonProcessingException, VerifiableCredentialException,
-                    IpvSessionNotFoundException {
+    void shouldReturn403ErrorResponseWhenIpvSessionNotFoundExceptionThrown() throws Exception {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenThrow(new IpvSessionNotFoundException("err", new Exception()));
 

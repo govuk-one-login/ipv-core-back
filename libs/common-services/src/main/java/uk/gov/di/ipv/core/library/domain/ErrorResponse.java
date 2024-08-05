@@ -105,7 +105,8 @@ public enum ErrorResponse {
     INVALID_SIGNING_KEY_TYPE(1091, "Signing key is invalid type. Must be EC or RSA"),
     UNEXPECTED_CREDENTIAL_TYPE(1092, "Unexpected credential type"),
     IPV_SESSION_NOT_FOUND(
-            1093, "Invalid IPV session id provided, corresponding session not found in db");
+            1093, "Invalid IPV session id provided, corresponding session not found in db"),
+    CLIENT_OAUTH_SESSION_NOT_FOUND(1093, "Client OAuth session not found");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

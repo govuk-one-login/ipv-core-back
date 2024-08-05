@@ -39,8 +39,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScor
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
@@ -87,7 +88,7 @@ class VcHelperTest {
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
                         vcTicf(),
-                        vcHmrcMigration());
+                        vcHmrcMigrationPCL200());
         assertEquals(3, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45).size());
     }
 
@@ -97,7 +98,7 @@ class VcHelperTest {
                 List.of(
                         PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                         vcExperianFraudScoreOne(),
-                        vcHmrcMigration());
+                        vcHmrcMigrationPCL200());
         assertEquals(
                 1, VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.OPERATIONAL_HMRC).size());
     }
@@ -114,7 +115,7 @@ class VcHelperTest {
     void shouldExtractTxIdDespiteNullEvidence() throws Exception {
         var txns =
                 VcHelper.extractTxnIdsFromCredentials(
-                        List.of(vcNinoSuccessful(), vcHmrcMigrationNoEvidence()));
+                        List.of(vcNinoSuccessful(), vcHmrcMigrationPCL200NoEvidence()));
 
         assertEquals(1, txns.size());
         assertEquals("e5b22348-c866-4b25-bb50-ca2106af7874", txns.get(0));
@@ -189,13 +190,13 @@ class VcHelperTest {
 
     @Test
     void shouldCheckIsItOperationalVC() throws Exception {
-        assertTrue(VcHelper.isOperationalProfileVc(vcHmrcMigration()));
+        assertTrue(VcHelper.isOperationalProfileVc(vcHmrcMigrationPCL200()));
         assertFalse(VcHelper.isOperationalProfileVc(PASSPORT_NON_DCMAW_SUCCESSFUL_VC));
     }
 
     @Test
     void shouldGetVcVot() throws Exception {
-        assertEquals(Vot.PCL250, VcHelper.getVcVot(vcHmrcMigration()));
+        assertEquals(Vot.PCL250, VcHelper.getVcVot(vcHmrcMigrationPCL250()));
     }
 
     @Test

@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -140,7 +141,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,
-                    UnrecognisedVotException {
+                    UnrecognisedVotException, ClientOauthSessionNotFoundException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(

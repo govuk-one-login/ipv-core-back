@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.persistence;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -69,7 +68,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     public void create(T item, ConfigurationVariable tableTtl) {
         item.setTtl(
                 Instant.now()
-                        .plusSeconds(Long.parseLong(configService.getParameter(tableTtl)))
+                        .plusSeconds(configService.getLongParameter(tableTtl))
                         .getEpochSecond());
         create(item);
     }
@@ -106,18 +105,13 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public T getItem(String partitionValue, String sortValue) {
         var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return getItemByKey(key, true);
+        return getItemByKey(key);
     }
 
     @Override
     public T getItem(String partitionValue) {
-        return getItem(partitionValue, true);
-    }
-
-    @Override
-    public T getItem(String partitionValue, boolean warnOnNull) {
         var key = Key.builder().partitionValue(partitionValue).build();
-        return getItemByKey(key, warnOnNull);
+        return getItemByKey(key);
     }
 
     @Override
@@ -274,15 +268,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return pagedResults.items().stream().toList();
     }
 
-    private T getItemByKey(Key key, boolean warnOnNull) {
-        T result = table.getItem(key);
-        if (warnOnNull && result == null) {
-            var message =
-                    new StringMapMessage()
-                            .with("datastore", "Null result retrieved from DynamoDB")
-                            .with("table", table.describeTable().table().tableName());
-            LOGGER.warn(message);
-        }
-        return result;
+    private T getItemByKey(Key key) {
+        return table.getItem(key);
     }
 }

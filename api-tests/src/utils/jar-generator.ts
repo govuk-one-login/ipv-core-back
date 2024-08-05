@@ -9,7 +9,7 @@ import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
 const encKey = await jose.importJWK(
-  JSON.parse(config.CORE_BACK_PUBLIC_ENCRYPTION_KEY) as jose.JWK,
+  JSON.parse(config.core.encryptionkey) as jose.JWK,
   encAlg,
 );
 
@@ -32,7 +32,7 @@ export const generateJar = async (
       sub: subject,
       govuk_signin_journey_id: journeyId,
       state: getRandomString(16),
-      redirect_uri: config.ORCHESTRATOR_REDIRECT_URL,
+      redirect_uri: config.orch.redirectUrl,
     },
   };
 

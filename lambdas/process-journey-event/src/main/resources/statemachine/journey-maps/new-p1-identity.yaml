@@ -605,7 +605,6 @@ states:
     response:
       type: cri
       criId: claimedIdentity
-      context: hmrc_check
     parent: CRI_STATE
     events:
       next:
@@ -690,6 +689,7 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
+      context: p1
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
@@ -723,7 +723,7 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
-      context: dropout
+      context: p1Dropout
     events:
       f2f:
         targetJourney: F2F_HAND_OFF

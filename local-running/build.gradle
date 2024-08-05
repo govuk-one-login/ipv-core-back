@@ -12,7 +12,7 @@ dependencies {
 			libs.bundles.log4j,
 			libs.jacksonDatabind,
 			libs.log4j12Api,
-			libs.spark,
+			libs.javalin,
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-client-oauth-response"),
 			project(":lambdas:build-cri-oauth-request"),
@@ -41,6 +41,10 @@ dependencies {
 			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
+}
+
+run.doFirst {
+	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
 }
 
 java {

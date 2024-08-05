@@ -22,7 +22,7 @@ export const generateInitialiseIpvSessionBody = async (
   return {
     responseType: "code",
     clientId: "orchestrator",
-    redirectUri: config.ORCHESTRATOR_REDIRECT_URL,
+    redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
     scope: "openid",
     request: await generateJar(subject, journeyId, journeyType),
@@ -79,7 +79,7 @@ export const generateTokenExchangeBody = async (
   const params = new URLSearchParams();
   params.set("grant_type", "authorization_code");
   params.set("code", code);
-  params.set("redirect_uri", config.ORCHESTRATOR_REDIRECT_URL);
+  params.set("redirect_uri", config.orch.redirectUrl);
   params.set("client_id", ORCHESTRATOR_CLIENT_ID);
   params.set(
     "client_assertion_type",

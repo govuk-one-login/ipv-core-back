@@ -30,7 +30,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNoCr
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fBrp;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigration;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 
 @ExtendWith(MockitoExtension.class)
@@ -148,7 +148,8 @@ class AuditExtensionsHelperTest {
     @Test
     void getAuditRestrictedInheritedIdentityShouldReturnTheRightStuff() throws Exception {
         var restricted =
-                getRestrictedAuditDataForInheritedIdentity(vcHmrcMigration(), "test_device_data");
+                getRestrictedAuditDataForInheritedIdentity(
+                        vcHmrcMigrationPCL200(), "test_device_data");
 
         var expectedName =
                 List.of(

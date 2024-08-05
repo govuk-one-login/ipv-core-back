@@ -77,6 +77,7 @@ public class CiMitService {
     private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
     private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
     private static final String GET_VCS_ENDPOINT = "/contra-indicators";
+    private static final String NOT_REQUIRED = "notRequired";
 
     public static final String FAILED_RESPONSE = "fail";
 
@@ -414,12 +415,15 @@ public class CiMitService {
         var requestBuilder =
                 HttpRequest.newBuilder()
                         .uri(uri)
-                        .header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId)
                         .header(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString());
 
         var apiKey = configService.getSecret(CIMIT_API_KEY);
-        if (apiKey != null) {
+        if (apiKey != null && !apiKey.equals(NOT_REQUIRED)) {
             requestBuilder.header(X_API_KEY_HEADER, configService.getSecret(CIMIT_API_KEY));
+        }
+
+        if (govukSigninJourneyId != null) {
+            requestBuilder.header(GOVUK_SIGNIN_JOURNEY_ID_HEADER, govukSigninJourneyId);
         }
 
         if (ipAddress != null) {
