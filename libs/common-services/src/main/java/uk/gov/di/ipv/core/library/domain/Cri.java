@@ -28,6 +28,8 @@ public enum Cri {
     private final String id;
     private final boolean isOperationalCri;
     private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV, HMRC_KBV);
+    private static final Set<Cri> PASSPORT_CRIS = Set.of(DCMAW, PASSPORT);
+    private static final Set<Cri> DRIVING_PERMIT_CRIS = Set.of(DCMAW, DRIVING_LICENCE);
 
     Cri(String id) {
         this(id, false);
@@ -40,6 +42,14 @@ public enum Cri {
 
     public boolean isKbvCri() {
         return KBV_CRIS.contains(this);
+    }
+
+    public boolean isPassportCri() {
+        return PASSPORT_CRIS.contains(this);
+    }
+
+    public boolean isDrivingPermitCri() {
+        return DRIVING_PERMIT_CRIS.contains(this);
     }
 
     public static Cri fromId(String id) {

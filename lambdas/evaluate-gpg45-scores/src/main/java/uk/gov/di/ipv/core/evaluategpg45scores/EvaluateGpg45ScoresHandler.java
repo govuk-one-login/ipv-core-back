@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,12 +46,18 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_DRIVING_PERMIT;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_PASSPORT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -64,6 +72,7 @@ public class EvaluateGpg45ScoresHandler
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
@@ -152,7 +161,7 @@ public class EvaluateGpg45ScoresHandler
 
             var matchingGpg45Profile =
                     findMatchingGpg45Profile(
-                            vcs,
+                            deduplicateVcsByDocumentType(vcs),
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             ipAddress,
@@ -275,5 +284,40 @@ public class EvaluateGpg45ScoresHandler
                         gpg45Scores,
                         VcHelper.extractTxnIdsFromCredentials(credentials)),
                 new AuditRestrictedDeviceInformation(deviceInformation));
+    }
+
+    private List<VerifiableCredential> deduplicateVcsByDocumentType(
+            List<VerifiableCredential> vcs) {
+        var deduplicatedVcs = new HashMap<String, VerifiableCredential>();
+        for (var vc : vcs) {
+            var docType = getVcDocumentType(vc);
+            deduplicatedVcs.put(docType, vc);
+        }
+        return new ArrayList<>(deduplicatedVcs.values());
+    }
+
+    private String getVcDocumentType(VerifiableCredential vc) {
+        if (vc.getCri().isDrivingPermitCri()
+                && vcHasCredentialSubjectClaim(vc, VC_DRIVING_PERMIT)) {
+            return VC_DRIVING_PERMIT;
+        }
+        if (vc.getCri().isPassportCri() && vcHasCredentialSubjectClaim(vc, VC_PASSPORT)) {
+            return VC_PASSPORT;
+        }
+        return vc.getCri().name();
+    }
+
+    private boolean vcHasCredentialSubjectClaim(VerifiableCredential vc, String claim) {
+        try {
+            var node =
+                    OBJECT_MAPPER
+                            .readTree(vc.getSignedJwt().getPayload().toString())
+                            .path(VC_CLAIM)
+                            .path(VC_CREDENTIAL_SUBJECT)
+                            .path(claim);
+            return !node.isMissingNode();
+        } catch (JsonProcessingException e) {
+            return false;
+        }
     }
 }
