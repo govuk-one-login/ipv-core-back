@@ -32,6 +32,7 @@ import java.text.ParseException;
 import java.util.List;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -217,7 +218,7 @@ public class ContractTest {
     @Test
     @PactTestFor(pactMethod = "successfullyPostsContraIndicators")
     void successfullyPostCis_whenCalledWithSignedJwtAgainstCimiApi_returns200(MockServer mockServer)
-            throws CiPutException, ParseException, CredentialParseException {
+            throws ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
@@ -229,9 +230,7 @@ public class ContractTest {
         var underTest = new CiMitService(mockConfigService);
 
         // Act
-        underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
-
-        // Assert
+        assertDoesNotThrow(() -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS));
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
@@ -534,6 +533,58 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact successfullyReceivesMitigations(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "success");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is a valid user_id")
+                .uponReceiving(
+                        "Request for contra-indicators for specific user with existing  contra-indicators.")
+                .path(POST_MITIGATIONS_ENDPOINT)
+                .method("POST")
+                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(200)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "successfullyReceivesMitigations")
+    void successfullyPostsMitigations_whenCalledWithSignedJwtAgainstCimiApi_returns200(
+            MockServer mockServer) throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                VerifiableCredential.fromValidJwt(
+                        MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act
+        assertDoesNotThrow(
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS));
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
         var response =
                 newJsonBody(
@@ -833,36 +884,6 @@ public class ContractTest {
                                 List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
                 FAILED_API_REQUEST);
     }
-
-    //    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    //    public RequestResponsePact successfullyReceivesMitigations(PactDslWithProvider builder) {
-    //        var responseForPostMi =
-    //                newJsonBody(
-    //                        body -> {
-    //                            body.stringValue("result", "success");
-    //                        })
-    //                        .build();
-    //
-    //        return builder.given("mockApiKey is a valid api key")
-    //                .given("mockUserId is a valid user_id")
-    //                .uponReceiving(
-    //                        "Request for contra-indicators for specific user with existing
-    // contra-indicators.")
-    //                .path(POST_MITIGATIONS_ENDPOINT)
-    //                .headers(
-    //                        X_API_KEY_HEADER,
-    //                        MOCK_API_KEY,
-    //                        IP_ADDRESS_HEADER,
-    //                        MOCK_IP_ADDRESS,
-    //                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-    //                        MOCK_GOVUK_SIGNIN_ID,
-    //                        PactDslRequestBase.CONTENT_TYPE,
-    //                        "application/json")
-    //                .willRespondWith()
-    //                .status(200)
-    //                .body(responseForPostMi)
-    //                .toPact();
-    //    }
 
     private String getMockApiBaseUrl(MockServer mockServer) {
         return MOCK_SERVER_BASE_URL + mockServer.getPort();
