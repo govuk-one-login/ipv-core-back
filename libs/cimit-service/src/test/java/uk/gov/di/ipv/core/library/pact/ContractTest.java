@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -26,14 +27,15 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.SecurityCheck;
 import uk.gov.di.model.SecurityCheckCredential;
 
-import java.io.IOException;
 import java.net.http.HttpRequest;
 import java.text.ParseException;
+import java.util.List;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
@@ -46,6 +48,7 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.GET_VCS_ENDPOINT;
 import static uk.gov.di.ipv.core.library.service.CiMitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER;
 import static uk.gov.di.ipv.core.library.service.CiMitService.IP_ADDRESS_HEADER;
 import static uk.gov.di.ipv.core.library.service.CiMitService.POST_CI_ENDPOINT;
+import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_ENDPOINT;
 import static uk.gov.di.ipv.core.library.service.CiMitService.X_API_KEY_HEADER;
 
 @ExtendWith(PactConsumerTestExt.class)
@@ -170,7 +173,7 @@ public class ContractTest {
     @Test
     @PactTestFor(pactMethod = "failsToReceiveContraIndicatorsDueToInternalServerError")
     void fetchContraIndicators_whenCalledAgainstCimiApi_failsToReturnContraIndicators(
-            MockServer mockServer) throws CiRetrievalException {
+            MockServer mockServer) {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
@@ -186,7 +189,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact successfullyReceivesContraIndicators(PactDslWithProvider builder) {
+    public RequestResponsePact successfullyPostsContraIndicators(PactDslWithProvider builder) {
         var responseForPostCi = newJsonBody(body -> body.stringValue("result", "success")).build();
 
         return builder.given("mockApiKey is a valid api key")
@@ -195,7 +198,7 @@ public class ContractTest {
                         "Request for contra-indicators for specific user with existing contra-indicators.")
                 .path(POST_CI_ENDPOINT)
                 .method("POST")
-                .body(String.format("{\"signed_jwt\": \"%s\"}", VALID_SIGNED_CI_VC_JWT))
+                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_BODY_JWT))
                 .headers(
                         X_API_KEY_HEADER,
                         MOCK_API_KEY,
@@ -212,23 +215,496 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "successfullyReceivesContraIndicators")
-    void successfullyPostCis_whenCalledWithSignedJwtAgainstCimiApi(MockServer mockServer)
-            throws CiPutException, ParseException, CredentialParseException, IOException,
-                    InterruptedException {
+    @PactTestFor(pactMethod = "successfullyPostsContraIndicators")
+    void successfullyPostCis_whenCalledWithSignedJwtAgainstCimiApi_returns200(MockServer mockServer)
+            throws CiPutException, ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
-        var underTest = new CiMitService(mockConfigService);
 
         var testVc =
                 VerifiableCredential.fromValidJwt(
-                        MOCK_USER_ID, null, SignedJWT.parse(VALID_SIGNED_CI_VC_JWT));
+                        MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT));
+
+        var underTest = new CiMitService(mockConfigService);
 
         // Act
         underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
 
         // Assert
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidJwtReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_REQUEST");
+                                })
+                        .build();
+
+        return builder.given("invalid jwt is ")
+                .given("mockApiKey is a valid api key")
+                .given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Invalid request due to invalid jwt")
+                .method("POST")
+                .path(POST_CI_ENDPOINT)
+                .body(String.format("{\"signed_jwt\": \"%s\"}", INVALID_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .body(response)
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidJwtReturns400")
+    void failsToPostCis_whenCalledWithInvalidJwtAgainstCimiApi_returns400(MockServer mockServer)
+            throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        // an invalid jwt shouldn't be passed to CiMitService as it would be handled by the
+        // VerifiableCredential class
+        // but to test CiMit's response to an invalid jwt without errors from VerifiableCredential,
+        // we create a test VC
+        // from a valid jwt then mock out the call to get the vcString
+        var spyTestVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT)));
+        when(spyTestVc.getVcString()).thenReturn(INVALID_JWT);
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPutException.class,
+                () -> underTest.submitVC(spyTestVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidIssuerReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_VC_ISSUER");
+                                })
+                        .build();
+
+        return builder.given("invalid jwt is ")
+                .given("mockApiKey is a valid api key")
+                .given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Invalid request due to invalid issuer")
+                .method("POST")
+                .path(POST_CI_ENDPOINT)
+                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_BODY_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .body(response)
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidIssuerReturns400")
+    void failsToPostCis_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(MockServer mockServer)
+            throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPutException.class,
+                () -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidCiCodeReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_CI_CODE");
+                                })
+                        .build();
+
+        return builder.given("invalid jwt is ")
+                .given("mockApiKey is a valid api key")
+                .given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Invalid request due to invalid CI codes")
+                .method("POST")
+                .path(POST_CI_ENDPOINT)
+                .body(
+                        String.format(
+                                "{\"signed_jwt\": \"%s\"}",
+                                DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .body(response)
+                .status(400)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidCiCodeReturns400")
+    void failsToPostCis_whenCalledWithInvalidCiCodesAgainstCimiApi_returns400(MockServer mockServer)
+            throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPutException.class,
+                () -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact postCiInternalServerErrorReturns500(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "INTERNAL_SERVER_ERROR");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Request with valid JWT but results in internal server error.")
+                .path(POST_CI_ENDPOINT)
+                .method("POST")
+                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_BODY_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(500)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "postCiInternalServerErrorReturns500")
+    void failsToPostCis_whenCalledAgainstCimiApi_returns500(MockServer mockServer)
+            throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPutException.class,
+                () -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_REQUEST");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Request with valid JWT but results in internal server error.")
+                .path(POST_MITIGATIONS_ENDPOINT)
+                .method("POST")
+                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_BODY_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(400)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "postMitigationsInvalidJwtReturns400")
+    void failsToPostMitigations_whenCalledWithInvalidJwtAgainstCimiApi_returns400(
+            MockServer mockServer) throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact postMitigationsInvalidCiCodeReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_CI_CODE");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Request with valid JWT but results in internal server error.")
+                .path(POST_MITIGATIONS_ENDPOINT)
+                .method("POST")
+                .body(
+                        String.format(
+                                "{\"signed_jwts\": [\"%s\"]}",
+                                DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(400)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "postMitigationsInvalidCiCodeReturns400")
+    void failsToPostMitigations_whenCalledAgainstCimiApiResultsInInvalidCiCode_returns400(
+            MockServer mockServer) throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "BAD_VC_ISSUER");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Request with valid JWT but results in internal server error.")
+                .path(POST_MITIGATIONS_ENDPOINT)
+                .method("POST")
+                .body(
+                        String.format(
+                                "{\"signed_jwts\": [\"%s\"]}",
+                                DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(400)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "postMitigationsInvalidIssuerReturns400")
+    void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(
+            MockServer mockServer) throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact postMitigationsInternalServerErrorReturns500(
+            PactDslWithProvider builder) {
+        var response =
+                newJsonBody(
+                                body -> {
+                                    body.stringValue("result", "fail");
+                                    body.stringValue("reason", "INTERNAL_SERVER_ERROR");
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .uponReceiving("Request with valid JWTs but results in internal server error.")
+                .path(POST_MITIGATIONS_ENDPOINT)
+                .method("POST")
+                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_BODY_JWT))
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(500)
+                .body(response)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "postMitigationsInternalServerErrorReturns500")
+    void failsToPostMitigations_whenCalledAgainstCimiApi_returns500(MockServer mockServer)
+            throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_BODY_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
     }
 
     //    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
@@ -267,10 +743,11 @@ public class ContractTest {
 
     private static final String MOCK_IP_ADDRESS = "mockIpAddress";
     private static final String MOCK_USER_ID = "mockUserId";
-    private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigningId";
+    private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigninJourneyId";
     private static final String MOCK_API_KEY = "mockApiKey"; // pragma: allowlist secret
     private static final String MOCK_SERVER_BASE_URL = "http://localhost:";
     private static final String TEST_ISSUER = "mockCimitComponentId";
+    private static final String INVALID_JWT = "invalidJwt";
 
     private static final String VALID_VC_HEADER =
             """
@@ -352,6 +829,318 @@ public class ContractTest {
     private static final String VALID_CI_VC_SIGNATURE =
             "sQxm1obDLvcytC1SxyZZABYLpPvWG15tYmAGYTv8KrPhfB7oAut04AH1TumrTmjuQmkzgyEVgYms9YtH-f6Fkg"; // pragma: allowlist secret
 
-    private static final String VALID_SIGNED_CI_VC_JWT =
-            "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJtb2NrVXNlcklkIiwibmJmIjoxMjYyMzA0MDAwLCJpc3MiOiJtb2NrQ2ltaXRDb21wb25lbnRJZCIsImV4cCI6MjAwNTMwMzE2OCwiaWF0IjoxMjYyMzA0MDAwLCJ2YyI6eyJldmlkZW5jZSI6W3siY29udHJhSW5kaWNhdG9yIjpbeyJtaXRpZ2F0aW9uIjpbeyJtaXRpZ2F0aW5nQ3JlZGVudGlhbCI6W3sidmFsaWRGcm9tIjoiMjAxMC0wMS0wMVQwMDowMDowMC4wMDBaIiwidHhuIjoiZ2hpaiIsImlkIjoidXJuOnV1aWQ6ZjgxZDRmYWUtN2RlYy0xMWQwLWE3NjUtMDBhMGM5MWU2YmY2IiwiaXNzdWVyIjoiaHR0cHM6Ly9jcmVkZW50aWFsLWlzc3Vlci5leGFtcGxlLyJ9XSwiY29kZSI6InNvbWUtY29kZSJ9XSwiY29kZSI6InNvbWUtY29kZSIsImlzc3VlcnMiOlsiaHR0cHM6Ly9pc3N1aW5nLWNyaS5leGFtcGxlIl0sImluY29tcGxldGVNaXRpZ2F0aW9uIjpbeyJtaXRpZ2F0aW5nQ3JlZGVudGlhbCI6W3sidmFsaWRGcm9tIjoiMjAxMC0wMS0wMVQwMDowMDowMC4wMDBaIiwidHhuIjoiY2RlZWYiLCJpZCI6InVybjp1dWlkOmY1YzlmZjQwLTFkY2QtNGE4Yi1iZjkyLTk0NTYwNDdjMTMyZiIsImlzc3VlciI6Imh0dHBzOi8vYW5vdGhlci1jcmVkZW50aWFsLWlzc3Vlci5leGFtcGxlLyJ9XSwiY29kZSI6InNvbWUtY29kZSJ9XSwiaXNzdWFuY2VEYXRlIjoiMjAyMi0wOS0yMFQxNTo1NDo1MC4wMDBaIiwiZG9jdW1lbnQiOiJwYXNzcG9ydC9HQlIvODI0MTU5MTIxIiwidHhuIjpbImFiY2RlZiJdfV0sInR4biI6WyJma2ZrZCJdLCJ0eXBlIjoiU2VjdXJpdHlDaGVjayJ9XSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlNlY3VyaXR5Q2hlY2tDcmVkZW50aWFsIl19fQ.AEt6i6mZ1mLcOVuSDdKISHcUzKSQ68q0ySPIABzbYM1cJ4Ir8naySMVJxasIaI72Uaw96UEzKPXhKg9IM2IVDw"; // pragma: allowlist secret
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-5477-AC1
+    private static final String FAILED_DVLA_VC_WITH_CI_BODY =
+            """
+            {
+              "iat": 1712228728,
+              "iss": "mockCimitComponentId",
+              "aud": "issuer",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "value": "Jane",
+                          "type": "GivenName"
+                        },
+                        {
+                          "value": "Doe",
+                          "type": "FamilyName"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1981-11-28"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": null,
+                      "organisationName": null,
+                      "subBuildingName": null,
+                      "buildingNumber": null,
+                      "buildingName": null,
+                      "dependentStreetName": null,
+                      "streetName": null,
+                      "doubleDependentAddressLocality": null,
+                      "dependentAddressLocality": null,
+                      "addressLocality": null,
+                      "postalCode": "CH62 6AQ",
+                      "addressCountry": null
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOEDO861281JF9DH",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "issueDate": null,
+                      "expiryDate": "2028-08-07",
+                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "bcd2346",
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "ci": [
+                      "TEST-CI-CODE"
+                    ],
+                    "activityHistoryScore": 0,
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "vri",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": null
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              "exp": 4070909400
+            }
+            """;
+
+    private static final String FAILED_DVLA_VC_WITH_CI_BODY_SIGNATURE =
+            "PR1jYFN4AfDlkXBQQgnOqMDtTtS7QH_-xGn15lGXy1Nz8gdrhs0wEyIHf7xIPUA-j1ZqRiJF9kudmHfRwXOyqg"; // pragma: allowlist secret
+    private static final String FAILED_DVLA_VC_WITH_CI_BODY_JWT =
+            new PactJwtBuilder(
+                            VALID_VC_HEADER,
+                            FAILED_DVLA_VC_WITH_CI_BODY,
+                            FAILED_DVLA_VC_WITH_CI_BODY_SIGNATURE)
+                    .buildJwt();
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-5477-AC1
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER =
+            """
+            {
+              "iat": 1712228728,
+              "iss": "invalidIssuer",
+              "aud": "issuer",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "value": "Jane",
+                          "type": "GivenName"
+                        },
+                        {
+                          "value": "Doe",
+                          "type": "FamilyName"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1981-11-28"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": null,
+                      "organisationName": null,
+                      "subBuildingName": null,
+                      "buildingNumber": null,
+                      "buildingName": null,
+                      "dependentStreetName": null,
+                      "streetName": null,
+                      "doubleDependentAddressLocality": null,
+                      "dependentAddressLocality": null,
+                      "addressLocality": null,
+                      "postalCode": "CH62 6AQ",
+                      "addressCountry": null
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOEDO861281JF9DH",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "issueDate": null,
+                      "expiryDate": "2028-08-07",
+                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "bcd2346",
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "ci": [
+                      "TEST-CI-CODE"
+                    ],
+                    "activityHistoryScore": 0,
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "vri",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": null
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              "exp": 4070909400
+            }
+            """;
+
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_SIGNATURE =
+            "w0P6_uhj1wOo5EFSi5_I1bLAe0zwpIvw_w8mSdV9DhXKdcHcRWGI6sd4TlvmekI88hJgIhyGs08OECTgPCtOmw"; // pragma: allowlist secret
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT =
+            new PactJwtBuilder(
+                            VALID_VC_HEADER,
+                            DVLA_VC_WITH_CI_AND_INVALID_ISSUER,
+                            DVLA_VC_WITH_CI_AND_INVALID_ISSUER_SIGNATURE)
+                    .buildJwt();
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // From DCMAW-5477-AC1
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE =
+            """
+            {
+              "iat": 1712228728,
+              "iss": "invalidIssuer",
+              "aud": "issuer",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "value": "Jane",
+                          "type": "GivenName"
+                        },
+                        {
+                          "value": "Doe",
+                          "type": "FamilyName"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1981-11-28"
+                    }
+                  ],
+                  "deviceId": [
+                    {
+                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
+                    }
+                  ],
+                  "address": [
+                    {
+                      "uprn": null,
+                      "organisationName": null,
+                      "subBuildingName": null,
+                      "buildingNumber": null,
+                      "buildingName": null,
+                      "dependentStreetName": null,
+                      "streetName": null,
+                      "doubleDependentAddressLocality": null,
+                      "dependentAddressLocality": null,
+                      "addressLocality": null,
+                      "postalCode": "CH62 6AQ",
+                      "addressCountry": null
+                    }
+                  ],
+                  "drivingPermit": [
+                    {
+                      "personalNumber": "DOEDO861281JF9DH",
+                      "issueNumber": null,
+                      "issuedBy": "DVLA",
+                      "issueDate": null,
+                      "expiryDate": "2028-08-07",
+                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "txn": "bcd2346",
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "ci": [
+                      "INVALID-CI-CODE"
+                    ],
+                    "activityHistoryScore": 0,
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "vri",
+                        "identityCheckPolicy": "published",
+                        "activityFrom": null
+                      },
+                      {
+                        "checkMethod": "bvr",
+                        "biometricVerificationProcessLevel": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              "exp": 4070909400
+            }
+            """;
+
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_SIGNATURE =
+            "35BYZ0S4B4up9NebIyeC4Tz09Xd-A1IuGDCjyhEDeesALdc1MO3tkrR_McXo8gn9xnJxWB4s_E1NUW8I7altUQ"; // pragma: allowlist secret
+    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT =
+            new PactJwtBuilder(
+                            VALID_VC_HEADER,
+                            DVLA_VC_WITH_CI_AND_INVALID_CI_CODE,
+                            DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_SIGNATURE)
+                    .buildJwt();
 }
