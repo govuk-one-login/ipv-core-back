@@ -1,5 +1,11 @@
 import * as assert from "assert";
-import { Then, When } from "@cucumber/cucumber";
+import {
+  After,
+  ITestCaseHookParameter,
+  Then,
+  When,
+  Status,
+} from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
@@ -19,6 +25,16 @@ import {
   isJourneyResponse,
   isPageResponse,
 } from "../types/internal-api.js";
+
+After(function (this: World, options: ITestCaseHookParameter) {
+  if (options.result?.status === Status.FAILED) {
+    // Log world details if the test fails
+    this.attach(JSON.stringify(this, undefined, 2), {
+      fileName: "world.json",
+      mediaType: "application/json",
+    });
+  }
+});
 
 When(
   "I start a new {string} journey",

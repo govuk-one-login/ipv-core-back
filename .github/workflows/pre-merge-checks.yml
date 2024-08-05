@@ -152,6 +152,14 @@ jobs:
       - name: Local API tests
         run: npm run test:ci
 
+      - name: Upload API test report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: API test report
+          path: api-tests/reports/
+          retention-days: 7
+
   sam-build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
