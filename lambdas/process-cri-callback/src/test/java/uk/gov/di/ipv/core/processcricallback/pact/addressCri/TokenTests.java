@@ -116,7 +116,7 @@ class TokenTests {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
+                                "VF8z0VUz9JDmMC57xa0WO76WIHSFEyHNteApGzbID1bRbq8E8Lf5aoSH_dE2O28neQmgk4_Fvt7RLGn2zIsrLQ")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
@@ -182,7 +182,7 @@ class TokenTests {
         when(mockSigner.sign(any(), any()))
                 .thenReturn(
                         new Base64URL(
-                                "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw")); // pragma: allowlist secret
+                                "VF8z0VUz9JDmMC57xa0WO76WIHSFEyHNteApGzbID1bRbq8E8Lf5aoSH_dE2O28neQmgk4_Fvt7RLGn2zIsrLQ")); // pragma: allowlist secret
         when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.ES256));
         when(mockSecureTokenHelper.generate()).thenReturn(EXAMPLE_GENERATED_SECURE_TOKEN);
 
@@ -258,5 +258,5 @@ class TokenTests {
             "eyJpc3MiOiJpcHYtY29yZSIsInN1YiI6Imlwdi1jb3JlIiwiYXVkIjoiZHVtbXlBZGRyZXNzQ29tcG9uZW50SWQiLCJleHAiOjQwNzA5MDk3MDAsImp0aSI6IlNjbkY0ZEdYdGhaWVhTXzVrODVPYkVvU1UwNFctSDNxYV9wNm5wdjJaVVkifQ"; // pragma: allowlist secret
     // Signature generated using JWT.io
     private static final String CLIENT_ASSERTION_SIGNATURE =
-            "hXYrKJ_W9YItUbZxu3T63gQgScVoSMqHZ43UPfdB8im8L4d0mZPLC6BlwMJSsfjiAyU1y3c37vm-rV8kZo2uyw"; // pragma: allowlist secret
+            "VF8z0VUz9JDmMC57xa0WO76WIHSFEyHNteApGzbID1bRbq8E8Lf5aoSH_dE2O28neQmgk4_Fvt7RLGn2zIsrLQ"; // pragma: allowlist secret
 }
