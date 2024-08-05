@@ -55,8 +55,10 @@ export const isClientResponse = (
 };
 
 export interface ProcessCriCallbackRequest {
-  authorizationCode: string;
+  authorizationCode?: string;
   credentialIssuerId: string;
+  error?: string;
+  errorDescription?: string;
   redirectUri: string;
-  state: string;
+  state?: string;
 }
