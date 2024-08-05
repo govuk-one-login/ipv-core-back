@@ -3231,10 +3231,10 @@ Resources:
           - true
           - false
       AttributeDefinitions:
-        - AttributeName: "userId"
+        - AttributeName: "hashUserId"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "userId"
+        - AttributeName: "hashUserId"
           KeyType: "HASH"
       SSESpecification:
         SSEEnabled: true

@@ -58,6 +58,36 @@ public class ReportUserIdentityService {
         return Optional.empty();
     }
 
+    public List<String> getIdentityConstituent(List<VerifiableCredential> tacticalVcs) {
+        return tacticalVcs.stream()
+                .map(
+                        vc -> {
+                            Cri cri = vc.getCri();
+                            if (cri.equals(Cri.DCMAW) || cri.equals(Cri.F2F)) {
+                                var credentialSubject = vc.getCredential().getCredentialSubject();
+                                if (credentialSubject instanceof PersonWithDocuments person) {
+                                    if (isNotEmpty(person.getBankAccount())) {
+                                        return cri.getId() + "-bankAccount";
+                                    } else if (isNotEmpty(person.getDrivingPermit())) {
+                                        return cri.getId() + "-drivingPermit";
+                                    } else if (isNotEmpty(person.getIdCard())) {
+                                        return cri.getId() + "-idCard";
+                                    } else if (isNotEmpty(person.getPassport())) {
+                                        return cri.getId() + "-passport";
+                                    } else if (isNotEmpty(person.getResidencePermit())) {
+                                        return cri.getId() + "-residencePermit";
+                                    } else if (isNotEmpty(person.getSocialSecurityRecord())) {
+                                        return cri.getId() + "-socialSecurityRecord";
+                                    }
+                                }
+                                return cri.getId();
+                            } else {
+                                return cri.getId();
+                            }
+                        })
+                .toList();
+    }
+
     private boolean achievedWithGpg45Profile(Vot requestedVot, List<VerifiableCredential> vcs) {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
@@ -97,34 +127,5 @@ public class ReportUserIdentityService {
             }
         }
         return false;
-    }
-
-    public List<String> getIdentityConstituent(List<VerifiableCredential> tacticalVcs) {
-        return tacticalVcs.stream()
-                .map(
-                        vc -> {
-                            if (vc.getCri().equals(Cri.DCMAW)) {
-                                var credentialSubject = vc.getCredential().getCredentialSubject();
-                                if (credentialSubject instanceof PersonWithDocuments person) {
-                                    if (isNotEmpty(person.getBankAccount())) {
-                                        return "dcmaw-bankAccount";
-                                    } else if (isNotEmpty(person.getDrivingPermit())) {
-                                        return "dcmaw-drivingPermit";
-                                    } else if (isNotEmpty(person.getIdCard())) {
-                                        return "dcmaw-idCard";
-                                    } else if (isNotEmpty(person.getPassport())) {
-                                        return "dcmaw-passport";
-                                    } else if (isNotEmpty(person.getResidencePermit())) {
-                                        return "dcmaw-residencePermit";
-                                    } else if (isNotEmpty(person.getSocialSecurityRecord())) {
-                                        return "dcmaw-socialSecurityRecord";
-                                    }
-                                }
-                                return "dcmaw";
-                            } else {
-                                return vc.getCri().getId();
-                            }
-                        })
-                .toList();
     }
 }

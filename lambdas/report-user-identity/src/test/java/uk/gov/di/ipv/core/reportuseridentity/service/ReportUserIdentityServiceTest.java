@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +42,10 @@ class ReportUserIdentityServiceTest {
 
     @Test
     void shouldReturnIdentityConstituent() {
-        var credentials = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, M1B_DCMAW_VC, VC_ADDRESS);
+        var credentials =
+                List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, M1B_DCMAW_VC, VC_ADDRESS, vcF2fM1a());
         assertEquals(
-                List.of("ukPassport", "dcmaw-drivingPermit", "address"),
+                List.of("ukPassport", "dcmaw-drivingPermit", "address", "f2f-passport"),
                 classToTest.getIdentityConstituent(credentials));
     }
 }

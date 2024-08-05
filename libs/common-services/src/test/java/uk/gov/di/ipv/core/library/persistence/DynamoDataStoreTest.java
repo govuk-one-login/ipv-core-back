@@ -196,28 +196,6 @@ class DynamoDataStoreTest {
     }
 
     @Test
-    void shouldGetItemsFromDynamoDbTableViaScanRequest() {
-        when(mockDynamoDbTable.scan(any(ScanEnhancedRequest.class))).thenReturn(mockPageIterable);
-        when(mockPageIterable.items()).thenReturn(mockSdkIterable);
-        when(mockSdkIterable.stream()).thenReturn(Stream.empty());
-        //
-        dataStore.getItems();
-        //
-        verify(mockDynamoDbTable).scan(any(ScanEnhancedRequest.class));
-    }
-
-    @Test
-    void shouldGetItemsWithFilterFromDynamoDbTableViaScanRequest() {
-        when(mockDynamoDbTable.scan(any(ScanEnhancedRequest.class))).thenReturn(mockPageIterable);
-        when(mockPageIterable.items()).thenReturn(mockSdkIterable);
-        when(mockSdkIterable.stream()).thenReturn(Stream.empty());
-        //
-        dataStore.getItems("attrName", "attrValue");
-        //
-        verify(mockDynamoDbTable).scan(any(ScanEnhancedRequest.class));
-    }
-
-    @Test
     void shouldUpdateItemInDynamoDbTable() {
         dataStore.update(authorizationCodeItem);
 

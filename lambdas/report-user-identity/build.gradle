@@ -9,6 +9,8 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
+			libs.awsSdkUrlConnectionClient,
+			libs.commonsCollections,
 			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator"),

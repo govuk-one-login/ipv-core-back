@@ -9,13 +9,13 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
-import uk.gov.di.ipv.core.reportuseridentity.domain.item.ReportUserIdentityItem;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.DataStore;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.InputStream;
@@ -87,8 +87,9 @@ class ReportUserIdentityHandlerTest {
         List<ReportUserIdentityItem> totalP2Identities =
                 List.of(
                         new ReportUserIdentityItem(
-                                TEST_SUBJECT, "P2", Collections.emptyList(), true),
-                        new ReportUserIdentityItem(userId2, "P2", Collections.emptyList(), false));
+                                TEST_SUBJECT, "P2", 0, Collections.emptyList(), true),
+                        new ReportUserIdentityItem(
+                                userId2, "P2", 0, Collections.emptyList(), false));
         when(mockReportUserIdentityDataStore.getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P2.name()))
                 .thenReturn(totalP2Identities);
         // Act

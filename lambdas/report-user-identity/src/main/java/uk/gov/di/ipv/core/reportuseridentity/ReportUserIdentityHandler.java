@@ -15,14 +15,14 @@ import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
-import uk.gov.di.ipv.core.reportuseridentity.domain.item.ReportUserIdentityItem;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.DataStore;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.IOException;
@@ -71,15 +71,17 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.reportUserIdentityService = new ReportUserIdentityService();
         this.vcStoreItemDataStore =
-                DataStore.create(
-                        EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME,
+                new DataStore<>(
+                        configService.getEnvironmentVariable(
+                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
-                        configService);
+                        DataStore.getClient());
         this.reportUserIdentityDataStore =
-                DataStore.create(
-                        EnvironmentVariable.REPORT_USER_IDENTITY_TABLE_NAME,
+                new DataStore<>(
+                        configService.getEnvironmentVariable(
+                                EnvironmentVariable.REPORT_USER_IDENTITY_TABLE_NAME),
                         ReportUserIdentityItem.class,
-                        configService);
+                        DataStore.getClient());
     }
 
     @Override
@@ -102,10 +104,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             .map(
                                     usrId ->
                                             new ReportUserIdentityItem(
-                                                    usrId,
-                                                    Vot.P0.name(),
-                                                    Collections.emptyList(),
-                                                    false))
+                                                    usrId, null, 0, Collections.emptyList(), false))
                             .toList();
             reportUserIdentityDataStore.createOrUpdate(reportUserIdentities);
 
@@ -138,7 +137,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
                 LOGGER.info(
                         LogHelper.buildLogMessage(
-                                String.format("User (%s) VCs not correlated.", userId)));
+                                String.format("User (hash-%s) VCs not correlated.", userId)));
                 continue;
             }
             boolean migrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
@@ -149,6 +148,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                     new ReportUserIdentityItem(
                             userId,
                             votAttained.orElse(Vot.P0).name(),
+                            tacticalVcs.size(),
                             reportUserIdentityService.getIdentityConstituent(tacticalVcs),
                             migrated));
         }
@@ -163,7 +163,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         long totalP2 = totalP2Identities.size();
         long totalP2Migrated =
                 totalP2Identities.stream()
-                        .filter(ReportUserIdentityItem::isMigrated)
+                        .filter(item -> (Boolean.TRUE.equals(item.getMigrated())))
                         .toList()
                         .size();
         long totalPCL250 =

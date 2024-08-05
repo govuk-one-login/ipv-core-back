@@ -1,9 +1,8 @@
-package uk.gov.di.ipv.core.reportuseridentity.domain.item;
+package uk.gov.di.ipv.core.reportuseridentity.persistence.item;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.codec.digest.DigestUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -14,20 +13,32 @@ import java.util.List;
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
-@AllArgsConstructor
 @Data
 public class ReportUserIdentityItem implements PersistenceItem {
+    public ReportUserIdentityItem(
+            String userId,
+            String identity,
+            int vcCount,
+            List<String> constituentVcs,
+            Boolean migrated) {
+        this.hashUserId = DigestUtils.sha256Hex(userId);
+        this.userId = userId;
+        this.identity = identity;
+        this.vcCount = vcCount;
+        this.constituentVcs = constituentVcs;
+        this.migrated = migrated;
+    }
+
+    private String hashUserId;
     private String userId;
     private String identity;
-
-    @JsonProperty("constitute")
-    private List<String> constituteCriDocumentType;
-
-    private boolean migrated;
+    private int vcCount;
+    private List<String> constituentVcs;
+    private Boolean migrated;
 
     @DynamoDbPartitionKey
-    public String getUserId() {
-        return userId;
+    public String getHashUserId() {
+        return hashUserId;
     }
 
     @Override

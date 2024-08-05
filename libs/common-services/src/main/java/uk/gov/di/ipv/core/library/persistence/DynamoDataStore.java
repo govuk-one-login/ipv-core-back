@@ -11,11 +11,9 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -79,12 +77,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     }
 
     @Override
-    @ExcludeFromGeneratedCoverageReport
-    public void createOrUpdate(List<T> items) throws BatchDeleteException {
-        processBatchOperation(items, false);
-    }
-
-    @Override
     public void createIfNotExists(T item) throws ItemAlreadyExistsException {
         try {
             PutItemEnhancedRequest<T> enhancedRequest =
@@ -139,25 +131,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return table.query(QueryConditional.keyEqualTo(key)).stream()
                 .flatMap(page -> page.items().stream())
                 .toList();
-    }
-
-    @Override
-    public List<T> getItems() {
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
-        return getTableScan(scanRequest);
-    }
-
-    @Override
-    public List<T> getItems(String attrName, String attrValue) {
-        var filterExpression =
-                Expression.builder()
-                        .expression("#a = :b")
-                        .putExpressionName("#a", attrName)
-                        .putExpressionValue(":b", AttributeValue.builder().s(attrValue).build())
-                        .build();
-        ScanEnhancedRequest scanRequest =
-                ScanEnhancedRequest.builder().filterExpression(filterExpression).build();
-        return getTableScan(scanRequest);
     }
 
     @Override
@@ -261,11 +234,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return getClient()
                 .batchWriteItem(
                         BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
-    }
-
-    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
-        PageIterable<T> pagedResults = table.scan(scanRequest);
-        return pagedResults.items().stream().toList();
     }
 
     private T getItemByKey(Key key) {
