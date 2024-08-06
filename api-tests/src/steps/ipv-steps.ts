@@ -9,13 +9,10 @@ import {
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
-import * as criStubClient from "../clients/cri-stub-client.js";
 import * as auditClient from "../clients/local-audit-client.js";
 import config from "../config/config.js";
 import {
-  generateCriStubBody,
   generateInitialiseIpvSessionBody,
-  generateProcessCriCallbackBody,
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
@@ -24,7 +21,23 @@ import {
   isCriResponse,
   isJourneyResponse,
   isPageResponse,
+  JourneyEngineResponse,
 } from "../types/internal-api.js";
+
+const describeResponse = (response: JourneyEngineResponse): string => {
+  if (!response) {
+    return "none";
+  } else if (isJourneyResponse(response)) {
+    return `journey response '${response.journey}'`;
+  } else if (isPageResponse(response)) {
+    return `page response '${response.page}'`;
+  } else if (isCriResponse(response)) {
+    return `cri response '${response.cri.id}'`;
+  } else if (isClientResponse(response)) {
+    return `client response`;
+  }
+  return `unknown ${JSON.stringify(response)}`;
+};
 
 After(function (this: World, options: ITestCaseHookParameter) {
   if (options.result?.status === Status.FAILED) {
@@ -58,7 +71,10 @@ When(
 Then(
   "I get a(n) {string} page response",
   function (this: World, expectedPage: string): void {
-    assert.ok(isPageResponse(this.lastJourneyEngineResponse));
+    assert.ok(
+      isPageResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
     assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
   },
 );
@@ -76,46 +92,19 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
-    assert.ok(isCriResponse(this.lastJourneyEngineResponse));
+    assert.ok(
+      isCriResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
     assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
   },
 );
 
-When(
-  "I submit {string} details to the CRI stub",
-  async function (this: World, scenario: string): Promise<void> {
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
-    const criResponse = this.lastJourneyEngineResponse.cri;
-    const criStubResponse = await criStubClient.callHeadlessApi(
-      criResponse.redirectUrl,
-      await generateCriStubBody(
-        criResponse.id,
-        scenario,
-        criResponse.redirectUrl,
-      ),
-    );
-    const journeyResponse = await internalClient.processCriCallback(
-      generateProcessCriCallbackBody(criStubResponse),
-      this.ipvSessionId,
-    );
-
-    if (!isJourneyResponse(journeyResponse)) {
-      throw new Error(
-        "response from process CRI callback is not a journey response",
-      );
-    }
-
-    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-      journeyResponse.journey,
-      this.ipvSessionId,
-    );
-  },
-);
-
 Then("I get an OAuth response", function (this: World): void {
-  assert.ok(isClientResponse(this.lastJourneyEngineResponse));
+  assert.ok(
+    isClientResponse(this.lastJourneyEngineResponse),
+    `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+  );
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
     config.orch.redirectUrl,
