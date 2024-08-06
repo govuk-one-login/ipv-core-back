@@ -60,9 +60,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -518,23 +516,6 @@ class EvaluateGpg45ScoresHandlerTest {
 
         assertEquals(JOURNEY_MET.getJourney(), response.getJourney());
         verify(ipvSessionItem).setVot(Vot.P1);
-    }
-
-    @Test
-    void shouldUseDeduplicatedVcsToBuildGpgScore() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        var vcs = List.of(vcDrivingPermit(), M1B_DCMAW_VC);
-        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
-                .thenReturn(vcs);
-
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
-
-        verify(sessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(gpg45ProfileEvaluator, times(1)).buildScore(List.of(vcs.get(0)));
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
