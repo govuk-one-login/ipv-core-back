@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.pact;
 
 import au.com.dius.pact.consumer.MockServer;
+import au.com.dius.pact.consumer.dsl.DslPart;
 import au.com.dius.pact.consumer.dsl.PactDslRequestBase;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
 import au.com.dius.pact.consumer.junit.MockServerConfig;
@@ -67,19 +68,8 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact userIdReturnsContraIndicators(PactDslWithProvider builder) {
-        var responseForGetCi =
-                newJsonBody(
-                                body -> {
-                                    var jwtBuilder =
-                                            new PactJwtBuilder(
-                                                    VALID_VC_HEADER,
-                                                    VALID_CI_VC_BODY,
-                                                    VALID_CI_VC_SIGNATURE);
-
-                                    body.stringValue("vc", jwtBuilder.buildJwt());
-                                })
-                        .build();
+    public RequestResponsePact getCisUserIdReturnsContraIndicators(PactDslWithProvider builder) {
+        var responseForGetCi = newJsonBody(body -> body.stringValue("vc", VALID_CI_VC_JWT)).build();
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -88,13 +78,13 @@ public class ContractTest {
                 .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
                 .given("the passport has issue date 2024-08-05T14:59:03.000Z")
                 .given("the passport has document number 12345678")
-                .given("the mitigation with code TEST02")
+                .given("the mitigation has code TEST02")
                 .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
                 .given("the mitigation has no incomplete mitigations")
                 .given("a contra-indicator is returned with code TEST-CI-CODE-1 for an id card")
                 .given("the id card has issue date 2024-08-05T14:59:04.000Z")
                 .given("the id card has document number 852654")
-                .given("the mitigation with code TEST01")
+                .given("the mitigation has code TEST01")
                 .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
                 .given("the mitigation has no incomplete mitigations")
                 .uponReceiving(
@@ -118,7 +108,7 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "userIdReturnsContraIndicators")
+    @PactTestFor(pactMethod = "getCisUserIdReturnsContraIndicators")
     void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
@@ -155,19 +145,9 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact getCisReturnsNoCisVc(PactDslWithProvider builder) {
+    public RequestResponsePact getCisUserIdReturnsNoCisVc(PactDslWithProvider builder) {
         var responseForGetCi =
-                newJsonBody(
-                                body -> {
-                                    var jwtBuilder =
-                                            new PactJwtBuilder(
-                                                    VALID_VC_HEADER,
-                                                    VALID_NO_CI_VC_BODY,
-                                                    VALID_NO_CI_VC_SIGNATURE);
-
-                                    body.stringValue("vc", jwtBuilder.buildJwt());
-                                })
-                        .build();
+                newJsonBody(body -> body.stringValue("vc", VALID_NO_CI_VC_JWT)).build();
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -196,7 +176,7 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "getCisReturnsNoCisVc")
+    @PactTestFor(pactMethod = "getCisUserIdReturnsNoCisVc")
     void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesEmptyContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
@@ -223,13 +203,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact getCisInternalServerErrorReturns500(PactDslWithProvider builder) {
-        var responseForGetCi =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "INTERNAL_ERROR");
-                                })
-                        .build();
+        var responseForGetCi = getFailedApiResponse("INTERNAL_ERROR");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -336,13 +310,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInvalidJwtReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_REQUEST");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_REQUEST");
 
         return builder.given("invalid jwt is invalidJwt")
                 .given("mockApiKey is a valid api key")
@@ -398,13 +366,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInvalidSignatureReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_VC_SIGNATURE");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
         return builder.given("jwt has invalid signature invalidSignature")
                 .given("mockApiKey is a valid api key")
@@ -466,13 +428,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInvalidIssuerReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_VC_ISSUER");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_VC_ISSUER");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
@@ -524,13 +480,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInvalidCiCodeReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_CI_CODE");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_CI_CODE");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
@@ -587,13 +537,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInternalServerErrorReturns500(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "INTERNAL_SERVER_ERROR");
-                                })
-                        .build();
+        var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
@@ -697,13 +641,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_REQUEST");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_REQUEST");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -752,13 +690,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidCiCodeReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_CI_CODE");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_CI_CODE");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -812,13 +744,7 @@ public class ContractTest {
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_VC_ISSUER");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_VC_ISSUER");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -844,16 +770,36 @@ public class ContractTest {
                 .toPact();
     }
 
+    @Test
+    @PactTestFor(pactMethod = "postMitigationsInvalidIssuerReturns400")
+    void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(
+            MockServer mockServer) throws ParseException, CredentialParseException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+
+        var testVc =
+                spy(
+                        VerifiableCredential.fromValidJwt(
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
+
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act/Assert
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        underTest.submitMitigatingVcList(
+                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                FAILED_API_REQUEST);
+    }
+
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidSignatureReturns400(
             PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "BAD_VC_SIGNATURE");
-                                })
-                        .build();
+        var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
         return builder.given("invalid jwt is ")
                 .given("mockApiKey is a valid api key")
@@ -914,42 +860,10 @@ public class ContractTest {
                 FAILED_API_REQUEST);
     }
 
-    @Test
-    @PactTestFor(pactMethod = "postMitigationsInvalidIssuerReturns400")
-    void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(
-            MockServer mockServer) throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID,
-                                null,
-                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPostMitigationsException.class,
-                () ->
-                        underTest.submitMitigatingVcList(
-                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInternalServerErrorReturns500(
             PactDslWithProvider builder) {
-        var response =
-                newJsonBody(
-                                body -> {
-                                    body.stringValue("result", "fail");
-                                    body.stringValue("reason", "INTERNAL_SERVER_ERROR");
-                                })
-                        .build();
+        var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
 
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
@@ -1000,6 +914,15 @@ public class ContractTest {
         return MOCK_SERVER_BASE_URL + mockServer.getPort();
     }
 
+    private DslPart getFailedApiResponse(String reason) {
+        return newJsonBody(
+                        body -> {
+                            body.stringValue("result", "fail");
+                            body.stringValue("reason", reason);
+                        })
+                .build();
+    }
+
     private static final String MOCK_IP_ADDRESS = "mockIpAddress";
     private static final String MOCK_USER_ID = "mockUserId";
     private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigninJourneyId";
@@ -1045,6 +968,9 @@ public class ContractTest {
     // change each time we run the tests.
     private static final String VALID_NO_CI_VC_SIGNATURE =
             "WbKckUsr2ubiqKkYqYJJyk9CfO2KQe3MldE0QE3Y8woAJZHcP_WpH6bSca_L6z8rP_P-E9J9dY1qxQjpb3r2Mg"; // pragma: allowlist secret
+    private static final String VALID_NO_CI_VC_JWT =
+            new PactJwtBuilder(VALID_VC_HEADER, VALID_NO_CI_VC_BODY, VALID_NO_CI_VC_SIGNATURE)
+                    .buildJwt();
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // 2010-01-01 00:00:00 is 1262304000 in epoch seconds
@@ -1121,6 +1047,8 @@ public class ContractTest {
     // change each time we run the tests.
     private static final String VALID_CI_VC_SIGNATURE =
             "5tmZS7VGkci8y4WLYzDcIcDqnbJ4deAtZa_OAEBSxYAFYJQxlxEj_XEUOXa0t-lbn-OjM-hIdaf9uW3DyBPzwQ"; // pragma: allowlist secret
+    private static final String VALID_CI_VC_JWT =
+            new PactJwtBuilder(VALID_VC_HEADER, VALID_CI_VC_BODY, VALID_CI_VC_SIGNATURE).buildJwt();
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
