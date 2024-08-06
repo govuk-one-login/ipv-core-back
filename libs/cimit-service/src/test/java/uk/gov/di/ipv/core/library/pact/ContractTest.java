@@ -414,7 +414,6 @@ class ContractTest {
     private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigninJourneyId";
     private static final String MOCK_SERVER_BASE_URL = "http://localhost:";
     private static final String TEST_ISSUER = "mockCimitComponentId";
-    private static final String INVALID_SIGNATURE = "invalidSignature";
 
     private static final String VALID_VC_HEADER =
             """
