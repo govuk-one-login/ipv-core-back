@@ -40,7 +40,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_SIGNING_KEY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.CIMIT_API_GATEWAY_ENABLED;
@@ -51,7 +50,6 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.GOVUK_SIGNIN_JOURN
 import static uk.gov.di.ipv.core.library.service.CiMitService.IP_ADDRESS_HEADER;
 import static uk.gov.di.ipv.core.library.service.CiMitService.POST_CI_ENDPOINT;
 import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_ENDPOINT;
-import static uk.gov.di.ipv.core.library.service.CiMitService.X_API_KEY_HEADER;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -64,15 +62,13 @@ public class ContractTest {
     @BeforeEach
     void setUp() {
         when(mockConfigService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-        when(mockConfigService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_API_KEY);
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact getCisUserIdReturnsContraIndicators(PactDslWithProvider builder) {
         var responseForGetCi = newJsonBody(body -> body.stringValue("vc", VALID_CI_VC_JWT)).build();
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("mockCimitComponentId is the issuer")
                 .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
@@ -93,8 +89,6 @@ public class ContractTest {
                 .query("user_id=" + MOCK_USER_ID)
                 .method("GET")
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -149,8 +143,7 @@ public class ContractTest {
         var responseForGetCi =
                 newJsonBody(body -> body.stringValue("vc", VALID_NO_CI_VC_JWT)).build();
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("mockCimitComponentId is the issuer")
                 .given("there are no contra-indicators")
@@ -161,8 +154,6 @@ public class ContractTest {
                 .query("user_id=" + MOCK_USER_ID)
                 .method("GET")
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -205,8 +196,7 @@ public class ContractTest {
     public RequestResponsePact getCisInternalServerErrorReturns500(PactDslWithProvider builder) {
         var responseForGetCi = getFailedApiResponse("INTERNAL_ERROR");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("mockCimitComponentId is the issuer")
                 .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
@@ -227,8 +217,6 @@ public class ContractTest {
                 .query("user_id=" + MOCK_USER_ID)
                 .method("GET")
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -264,8 +252,7 @@ public class ContractTest {
     public RequestResponsePact postCiSuccessfullyPostsContraIndicator(PactDslWithProvider builder) {
         var responseForPostCi = newJsonBody(body -> body.stringValue("result", "success")).build();
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user")
+        return builder.given("mockUserId is the user")
                 .given("mockCimitComponentId is the issuer")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("the VC is from DCMAW-5477-AC1")
@@ -276,8 +263,6 @@ public class ContractTest {
                 .method("POST")
                 .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -313,7 +298,6 @@ public class ContractTest {
         var response = getFailedApiResponse("BAD_REQUEST");
 
         return builder.given("invalid jwt is invalidJwt")
-                .given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
@@ -322,8 +306,6 @@ public class ContractTest {
                 .path(POST_CI_ENDPOINT)
                 .body(String.format("{\"signed_jwt\": \"%s\"}", INVALID_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -369,7 +351,6 @@ public class ContractTest {
         var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
         return builder.given("jwt has invalid signature invalidSignature")
-                .given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockCimitComponentId is the issuer")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
@@ -382,8 +363,6 @@ public class ContractTest {
                                 "{\"signed_jwt\": \"%s\"}",
                                 FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -430,8 +409,7 @@ public class ContractTest {
     public RequestResponsePact postCiInvalidIssuerReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockIpAddress is the ip-address")
+        return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
                 .given("the VC is from DCMAW-5477-AC1")
@@ -442,8 +420,6 @@ public class ContractTest {
                 .path(POST_CI_ENDPOINT)
                 .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -482,8 +458,7 @@ public class ContractTest {
     public RequestResponsePact postCiInvalidCiCodeReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_CI_CODE");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockIpAddress is the ip-address")
+        return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
                 .given("the VC is from DCMAW-5477-AC1")
@@ -497,8 +472,6 @@ public class ContractTest {
                                 "{\"signed_jwt\": \"%s\"}",
                                 DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -539,8 +512,7 @@ public class ContractTest {
     public RequestResponsePact postCiInternalServerErrorReturns500(PactDslWithProvider builder) {
         var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockIpAddress is the ip-address")
+        return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
                 .given("the VC is from DCMAW-5477-AC1")
@@ -551,8 +523,6 @@ public class ContractTest {
                 .method("POST")
                 .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -596,16 +566,13 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is a valid user_id")
+        return builder.given("mockUserId is a valid user_id")
                 .uponReceiving(
                         "Request for contra-indicators for specific user with existing  contra-indicators.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -643,15 +610,12 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_REQUEST");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .uponReceiving("Request with valid JWT but results in internal server error.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -692,8 +656,7 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidCiCodeReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_CI_CODE");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .uponReceiving("Request with valid JWT but results in internal server error.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
@@ -702,8 +665,6 @@ public class ContractTest {
                                 "{\"signed_jwts\": [\"%s\"]}",
                                 DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -746,8 +707,7 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .uponReceiving("Request with valid JWT but results in internal server error.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
@@ -756,8 +716,6 @@ public class ContractTest {
                                 "{\"signed_jwts\": [\"%s\"]}",
                                 DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -802,7 +760,6 @@ public class ContractTest {
         var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
         return builder.given("invalid jwt is ")
-                .given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
@@ -814,8 +771,6 @@ public class ContractTest {
                                 "{\"signed_jwts\": [\"%s\"]}",
                                 FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -865,15 +820,12 @@ public class ContractTest {
             PactDslWithProvider builder) {
         var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
 
-        return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+        return builder.given("mockUserId is the user_id")
                 .uponReceiving("Request with valid JWTs but results in internal server error.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
                 .headers(
-                        X_API_KEY_HEADER,
-                        MOCK_API_KEY,
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
                         GOVUK_SIGNIN_JOURNEY_ID_HEADER,
@@ -926,7 +878,6 @@ public class ContractTest {
     private static final String MOCK_IP_ADDRESS = "mockIpAddress";
     private static final String MOCK_USER_ID = "mockUserId";
     private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigninJourneyId";
-    private static final String MOCK_API_KEY = "mockApiKey"; // pragma: allowlist secret
     private static final String MOCK_SERVER_BASE_URL = "http://localhost:";
     private static final String TEST_ISSUER = "mockCimitComponentId";
     private static final String INVALID_JWT = "invalidJwt";
