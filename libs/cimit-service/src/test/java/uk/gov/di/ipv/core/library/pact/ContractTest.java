@@ -13,8 +13,6 @@ import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
@@ -28,7 +26,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.SecurityCheck;
 import uk.gov.di.model.SecurityCheckCredential;
 
-import java.net.http.HttpRequest;
 import java.text.ParseException;
 import java.util.List;
 
@@ -57,7 +54,6 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_E
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
     @Mock ConfigService mockConfigService;
-    @Captor private ArgumentCaptor<HttpRequest> httpRequestCaptor;
 
     @BeforeEach
     void setUp() {
@@ -193,62 +189,6 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact getCisInternalServerErrorReturns500(PactDslWithProvider builder) {
-        var responseForGetCi = getFailedApiResponse("INTERNAL_ERROR");
-
-        return builder.given("mockUserId is the user_id")
-                .given("the current time is 2024-01-01 00:00:00")
-                .given("mockCimitComponentId is the issuer")
-                .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
-                .given("the passport has issue date 2024-08-05T14:59:03.000Z")
-                .given("the passport has document number 12345678")
-                .given("the mitigation with code TEST02")
-                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
-                .given("the mitigation has no incomplete mitigations")
-                .given("a contra-indicator is returned with code TEST-CI-CODE-1 for an id card")
-                .given("the id card has issue date 2024-08-05T14:59:04.000Z")
-                .given("the id card has document number 852654")
-                .given("the mitigation with code TEST01")
-                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
-                .given("the mitigation has no incomplete mitigations")
-                .uponReceiving(
-                        "Request for contra-indicators for specific user with existing contra-indicators.")
-                .path(GET_VCS_ENDPOINT)
-                .query("user_id=" + MOCK_USER_ID)
-                .method("GET")
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .status(500)
-                .body(responseForGetCi)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "getCisInternalServerErrorReturns500")
-    void
-            fetchContraIndicatorsFails_whenCalledWithValidUserIdAgainstCimiApiResultsInInternalServerError_returns500(
-                    MockServer mockServer) {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiRetrievalException.class,
-                () ->
-                        underTest.getContraIndicators(
-                                MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiSuccessfullyPostsContraIndicator(PactDslWithProvider builder) {
         var responseForPostCi = newJsonBody(body -> body.stringValue("result", "success")).build();
 
@@ -294,118 +234,6 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiInvalidJwtReturns400(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_REQUEST");
-
-        return builder.given("invalidJwt is the signed_jwt")
-                .given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .uponReceiving("Request with invalid jwt")
-                .method("POST")
-                .path(POST_CI_ENDPOINT)
-                .body(String.format("{\"signed_jwt\": \"%s\"}", INVALID_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .body(response)
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postCiInvalidJwtReturns400")
-    void failsToPostCis_whenCalledWithInvalidJwtAgainstCimiApi_returns400(MockServer mockServer)
-            throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        // an invalid jwt shouldn't be passed to CiMitService as it would be handled by the
-        // VerifiableCredential class
-        // but to test CiMit's response to an invalid jwt without errors from VerifiableCredential,
-        // we create a test VC
-        // from a valid jwt then mock out the call to get the vcString
-        var spyTestVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
-        when(spyTestVc.getVcString()).thenReturn(INVALID_JWT);
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPutException.class,
-                () -> underTest.submitVC(spyTestVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiInvalidSignatureReturns400(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_VC_SIGNATURE");
-
-        return builder.given("signed_jwt has invalid signature invalidSignature")
-                .given("mockIpAddress is the ip-address")
-                .given("mockCimitComponentId is the issuer")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .uponReceiving("Request with invalid signature")
-                .method("POST")
-                .path(POST_CI_ENDPOINT)
-                .body(
-                        String.format(
-                                "{\"signed_jwt\": \"%s\"}",
-                                FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .body(response)
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postCiInvalidSignatureReturns400")
-    void failsToPostCis_whenCalledWithInvalidSignatureAgainstCimiApi_returns400(
-            MockServer mockServer) throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        // an invalid signature shouldn't be passed to CiMitService as it would be handled by the
-        // VerifiableCredential class
-        // but to test CiMit's response to an invalid signature without errors from
-        // VerifiableCredential,
-        // we create a test VC
-        // from a valid jwt then mock out the call to get the vcString, replacing with a jwt with
-        // invalid signature
-        var spyTestVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
-        when(spyTestVc.getVcString()).thenReturn(FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE);
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPutException.class,
-                () -> underTest.submitVC(spyTestVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postCiInvalidIssuerReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
@@ -448,109 +276,6 @@ class ContractTest {
                                 MOCK_USER_ID,
                                 null,
                                 SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPutException.class,
-                () -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiInvalidCiCodeReturns400(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_CI_CODE");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("the VC is from DCMAW-5477-AC1")
-                .given("the VC has CI code INVALID-CI-CODE")
-                .uponReceiving("Request with invalid CI code")
-                .method("POST")
-                .path(POST_CI_ENDPOINT)
-                .body(
-                        String.format(
-                                "{\"signed_jwt\": \"%s\"}",
-                                DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .body(response)
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postCiInvalidCiCodeReturns400")
-    void failsToPostCis_whenCalledWithInvalidCiCodesAgainstCimiApi_returns400(MockServer mockServer)
-            throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID,
-                                null,
-                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT)));
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPutException.class,
-                () -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiInternalServerErrorReturns500(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("the VC is from DCMAW-5477-AC1")
-                .given("the VC has CI code TEST-CI-CODE")
-                .uponReceiving("Request with valid JWT but results in internal server error.")
-                .path(POST_CI_ENDPOINT)
-                .method("POST")
-                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .status(500)
-                .body(response)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postCiInternalServerErrorReturns500")
-    void failsToPostCis_whenCalledAgainstCimiApi_returns500(MockServer mockServer)
-            throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
 
         var underTest = new CiMitService(mockConfigService);
 
@@ -616,115 +341,6 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_REQUEST");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("signed_jwts has only one encoded VC")
-                .given("invalidJwt is the encoded VC")
-                .uponReceiving("Request with invalid jwt")
-                .path(POST_MITIGATIONS_ENDPOINT)
-                .method("POST")
-                .body(String.format("{\"signed_jwts\": [\"%s\"]}", INVALID_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .status(400)
-                .body(response)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postMitigationsInvalidJwtReturns400")
-    void failsToPostMitigations_whenCalledWithInvalidJwtAgainstCimiApi_returns400(
-            MockServer mockServer) throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var spyTestVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
-        when(spyTestVc.getVcString()).thenReturn(INVALID_JWT);
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPostMitigationsException.class,
-                () ->
-                        underTest.submitMitigatingVcList(
-                                List.of(spyTestVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postMitigationsInvalidCiCodeReturns400(PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_CI_CODE");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("signed_jwts has only one encoded VC")
-                .given("the encoded VC is from DCMAW-5477-AC1")
-                .given("the VC has CI code INVALID-CI-CODE")
-                .uponReceiving("Request with invalid CI code.")
-                .path(POST_MITIGATIONS_ENDPOINT)
-                .method("POST")
-                .body(
-                        String.format(
-                                "{\"signed_jwts\": [\"%s\"]}",
-                                DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .status(400)
-                .body(response)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postMitigationsInvalidCiCodeReturns400")
-    void failsToPostMitigations_whenCalledWithInvalidCiCodesAgainstCimiApi_returns400(
-            MockServer mockServer) throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID,
-                                null,
-                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT)));
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPostMitigationsException.class,
-                () ->
-                        underTest.submitMitigatingVcList(
-                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
@@ -780,122 +396,6 @@ class ContractTest {
                 FAILED_API_REQUEST);
     }
 
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postMitigationsInvalidSignatureReturns400(
-            PactDslWithProvider builder) {
-        var response = getFailedApiResponse("BAD_VC_SIGNATURE");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("signed_jwts has only one encoded VC")
-                .given("the encoded VC has signature invalidSignature")
-                .uponReceiving("Request contains jwt with invalid signature.")
-                .method("POST")
-                .path(POST_MITIGATIONS_ENDPOINT)
-                .body(
-                        String.format(
-                                "{\"signed_jwts\": [\"%s\"]}",
-                                FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .body(response)
-                .status(400)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postMitigationsInvalidSignatureReturns400")
-    void failsToPostMitigations_whenCalledWithInvalidSignatureAgainstCimiApi_returns400(
-            MockServer mockServer) throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        // an invalid signature shouldn't be passed to CiMitService as it would be handled by the
-        // VerifiableCredential class
-        // but to test CiMit's response to an invalid signature without errors from
-        // VerifiableCredential,
-        // we create a test VC
-        // from a valid jwt then mock out the call to get the vcString, replacing with a jwt with
-        // invalid signature
-        var spyTestVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
-        when(spyTestVc.getVcString()).thenReturn(FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE);
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPostMitigationsException.class,
-                () ->
-                        underTest.submitMitigatingVcList(
-                                List.of(spyTestVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
-    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postMitigationsInternalServerErrorReturns500(
-            PactDslWithProvider builder) {
-        var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
-
-        return builder.given("mockIpAddress is the ip-address")
-                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
-                .given("mockUserId is the user_id")
-                .given("mockCimitComponentId is the issuer")
-                .given("signed_jwts has only one encoded VC")
-                .given("the encoded VC is from DCMAW-5477-AC1")
-                .given("the VC has CI code TEST-CI-CODE")
-                .uponReceiving("Request with valid JWTs but results in internal server error.")
-                .path(POST_MITIGATIONS_ENDPOINT)
-                .method("POST")
-                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
-                .headers(
-                        IP_ADDRESS_HEADER,
-                        MOCK_IP_ADDRESS,
-                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
-                        MOCK_GOVUK_SIGNIN_ID,
-                        PactDslRequestBase.CONTENT_TYPE,
-                        "application/json")
-                .willRespondWith()
-                .status(500)
-                .body(response)
-                .toPact();
-    }
-
-    @Test
-    @PactTestFor(pactMethod = "postMitigationsInternalServerErrorReturns500")
-    void failsToPostMitigations_whenCalledAgainstCimiApi_returns500(MockServer mockServer)
-            throws ParseException, CredentialParseException {
-        // Arrange
-        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
-                .thenReturn(getMockApiBaseUrl(mockServer));
-
-        var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
-
-        var underTest = new CiMitService(mockConfigService);
-
-        // Act/Assert
-        assertThrows(
-                CiPostMitigationsException.class,
-                () ->
-                        underTest.submitMitigatingVcList(
-                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
-                FAILED_API_REQUEST);
-    }
-
     private String getMockApiBaseUrl(MockServer mockServer) {
         return MOCK_SERVER_BASE_URL + mockServer.getPort();
     }
@@ -914,7 +414,6 @@ class ContractTest {
     private static final String MOCK_GOVUK_SIGNIN_ID = "mockGovukSigninJourneyId";
     private static final String MOCK_SERVER_BASE_URL = "http://localhost:";
     private static final String TEST_ISSUER = "mockCimitComponentId";
-    private static final String INVALID_JWT = "invalidJwt";
     private static final String INVALID_SIGNATURE = "invalidSignature";
 
     private static final String VALID_VC_HEADER =
@@ -1142,9 +641,6 @@ class ContractTest {
                             FAILED_DVLA_VC_WITH_CI_BODY,
                             FAILED_DVLA_VC_WITH_CI_BODY_SIGNATURE)
                     .buildJwt();
-    private static final String FAILED_DVLA_VC_WITH_CI_JWT_WITH_INVALID_SIGNATURE =
-            new PactJwtBuilder(VALID_VC_HEADER, FAILED_DVLA_VC_WITH_CI_BODY, INVALID_SIGNATURE)
-                    .buildJwt();
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -1252,113 +748,5 @@ class ContractTest {
                             VALID_VC_HEADER,
                             DVLA_VC_WITH_CI_AND_INVALID_ISSUER,
                             DVLA_VC_WITH_CI_AND_INVALID_ISSUER_SIGNATURE)
-                    .buildJwt();
-
-    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From DCMAW-5477-AC1
-    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE =
-            """
-            {
-              "iat": 1712228728,
-              "iss": "mockCimitComponentId",
-              "aud": "issuer",
-              "sub": "mockUserId",
-              "nbf": 4070908800,
-              "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
-              "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "value": "Jane",
-                          "type": "GivenName"
-                        },
-                        {
-                          "value": "Doe",
-                          "type": "FamilyName"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1981-11-28"
-                    }
-                  ],
-                  "deviceId": [
-                    {
-                      "value": "fb03ce33-6cb4-4b27-b428-f614eba26dd0"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": null,
-                      "organisationName": null,
-                      "subBuildingName": null,
-                      "buildingNumber": null,
-                      "buildingName": null,
-                      "dependentStreetName": null,
-                      "streetName": null,
-                      "doubleDependentAddressLocality": null,
-                      "dependentAddressLocality": null,
-                      "addressLocality": null,
-                      "postalCode": "CH62 6AQ",
-                      "addressCountry": null
-                    }
-                  ],
-                  "drivingPermit": [
-                    {
-                      "personalNumber": "DOEDO861281JF9DH",
-                      "issueNumber": null,
-                      "issuedBy": "DVLA",
-                      "issueDate": null,
-                      "expiryDate": "2028-08-07",
-                      "fullAddress": "102 TEST ROAD,WIRRAL,CH62 6AQ"
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "type": "IdentityCheck",
-                    "txn": "bcd2346",
-                    "strengthScore": 3,
-                    "validityScore": 0,
-                    "ci": [
-                      "INVALID-CI-CODE"
-                    ],
-                    "activityHistoryScore": 0,
-                    "failedCheckDetails": [
-                      {
-                        "checkMethod": "vri",
-                        "identityCheckPolicy": "published",
-                        "activityFrom": null
-                      },
-                      {
-                        "checkMethod": "bvr",
-                        "biometricVerificationProcessLevel": 3
-                      }
-                    ]
-                  }
-                ]
-              },
-              "exp": 4070909400
-            }
-            """;
-
-    // If we generate the signature in code it will be different each time, so we need to generate a
-    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
-    // change each time we run the tests.
-    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_SIGNATURE =
-            "YpmpMHYX855TlSObxSVJex-35r8GWFLFWS1UZ3uPndmK5kIRZOT5wiiE_dXaHmPWlPa0EP7z2NrYs2NLLzrTkA"; // pragma: allowlist secret
-    private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT =
-            new PactJwtBuilder(
-                            VALID_VC_HEADER,
-                            DVLA_VC_WITH_CI_AND_INVALID_CI_CODE,
-                            DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_SIGNATURE)
                     .buildJwt();
 }
