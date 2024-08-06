@@ -33,7 +33,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.reportuseridentity.ReportUserIdentityHandler.ATTR_NAME_TO_SUMMARISE_ON;
+import static uk.gov.di.ipv.core.reportuseridentity.ReportUserIdentityHandler.ATTR_NAME_USER_ID;
 
 @ExtendWith(MockitoExtension.class)
 class ReportUserIdentityHandlerTest {
@@ -75,7 +75,7 @@ class ReportUserIdentityHandlerTest {
                         VC_ADDRESS.toVcStoreItem(),
                         vcExperianFraudScoreTwo().toVcStoreItem());
         // Arrange
-        when(mockVcStoreItemDataStore.getItems()).thenReturn(credentials);
+        when(mockVcStoreItemDataStore.getItems(ATTR_NAME_USER_ID)).thenReturn(credentials);
         when(mockVerifiableCredentialService.getVcs(TEST_SUBJECT))
                 .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, VC_ADDRESS));
         String userId2 = "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092";
@@ -84,14 +84,13 @@ class ReportUserIdentityHandlerTest {
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(Boolean.TRUE);
         when(mockReportUserIdentityService.getStrongestAttainedVotForCredentials(any()))
                 .thenReturn(Optional.of(Vot.P2));
-        List<ReportUserIdentityItem> totalP2Identities =
+        List<ReportUserIdentityItem> totalIdentities =
                 List.of(
                         new ReportUserIdentityItem(
                                 TEST_SUBJECT, "P2", 0, Collections.emptyList(), true),
                         new ReportUserIdentityItem(
                                 userId2, "P2", 0, Collections.emptyList(), false));
-        when(mockReportUserIdentityDataStore.getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P2.name()))
-                .thenReturn(totalP2Identities);
+        when(mockReportUserIdentityDataStore.getItems(any(), any())).thenReturn(totalIdentities);
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, null);
 
@@ -101,10 +100,11 @@ class ReportUserIdentityHandlerTest {
                 .writeValue(
                         any(OutputStream.class), reportProcessingResultArgumentCaptor.capture());
         var reportProcessingResult = reportProcessingResultArgumentCaptor.getValue();
+        long totalP2Identities =
+                totalIdentities.stream().filter(i -> Vot.P2.name().equals(i.getIdentity())).count();
+        assertEquals(totalP2Identities, reportProcessingResult.summary().totalP2Identities());
         assertEquals(
-                totalP2Identities.size(), reportProcessingResult.summary().totalP2Identities());
-        assertEquals(
-                (totalP2Identities.size() - 1),
+                (totalP2Identities - 1),
                 reportProcessingResult.summary().totalP2IdentitiesMigrated());
     }
 }

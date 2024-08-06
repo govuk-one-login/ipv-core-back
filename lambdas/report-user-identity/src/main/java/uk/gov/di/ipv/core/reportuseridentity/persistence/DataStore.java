@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.reportuseridentity.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,6 +12,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
@@ -20,7 +23,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static software.amazon.awssdk.regions.Region.EU_WEST_2;
 
@@ -28,6 +33,7 @@ public class DataStore<T> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final int MAX_ITEMS_IN_WRITE_BATCH = 25;
+    public static final int PAGE_SIZE_LIMIT = 50;
     private final Class<T> typeParameterClass;
     private final DynamoDbTable<T> table;
 
@@ -49,36 +55,58 @@ public class DataStore<T> {
 
     @ExcludeFromGeneratedCoverageReport
     public void createOrUpdate(List<T> items) throws BatchDeleteException {
-        processBatchOperation(items, false);
-    }
-
-    public List<T> getItems() {
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
-        return getTableScan(scanRequest);
-    }
-
-    public List<T> getItems(String attrName, String attrValue) {
-        var filterExpression =
-                Expression.builder()
-                        .expression("#a = :b")
-                        .putExpressionName("#a", attrName)
-                        .putExpressionValue(":b", AttributeValue.builder().s(attrValue).build())
-                        .build();
-        ScanEnhancedRequest scanRequest =
-                ScanEnhancedRequest.builder().filterExpression(filterExpression).build();
-        return getTableScan(scanRequest);
+        processBatchOperation(items);
     }
 
     @ExcludeFromGeneratedCoverageReport
-    private void processBatchOperation(List<T> items, boolean isForDeletion)
-            throws BatchDeleteException {
+    public List<T> getItems(String... attributesToProject) {
+        return getTableScanResult(null, attributesToProject);
+    }
+
+    private List<T> getTableScanResult(Expression filterExpression, String... attributesToProject) {
+        Map<String, AttributeValue> exclusiveStartKey = null;
+        List<T> returnItems = new ArrayList<>();
+        do {
+            try {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Scanning table with exclusiveStartKey as [%s]",
+                                        new ObjectMapper().writeValueAsString(exclusiveStartKey))));
+            } catch (JsonProcessingException e) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Parsing error while logging. Scanning table with exclusiveStartKey as [%s]",
+                                        exclusiveStartKey)));
+            }
+            ScanEnhancedRequest scanRequest =
+                    ScanEnhancedRequest.builder()
+                            .limit(PAGE_SIZE_LIMIT)
+                            .exclusiveStartKey(exclusiveStartKey)
+                            .filterExpression(filterExpression)
+                            .attributesToProject(attributesToProject)
+                            .build();
+            PageIterable<T> pagedResults = table.scan(scanRequest);
+
+            // Iterating through result pages items
+            returnItems.addAll(
+                    pagedResults.stream().map(Page::items).flatMap(List::stream).toList());
+
+            Page<T> lastPage = pagedResults.stream().reduce((first, second) -> second).orElse(null);
+            if (lastPage != null && lastPage.lastEvaluatedKey() != null) {
+                exclusiveStartKey = lastPage.lastEvaluatedKey();
+            }
+        } while (exclusiveStartKey != null);
+        return returnItems;
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    private void processBatchOperation(List<T> items) throws BatchDeleteException {
         for (List<T> subItems : ListUtils.partition(items, MAX_ITEMS_IN_WRITE_BATCH)) {
             if (!subItems.isEmpty()) {
                 BatchWriteResult batchWriteResult =
-                        processBatchWrite(
-                                isForDeletion
-                                        ? createWriteBatchForDeleteItems(subItems)
-                                        : createWriteBatchForPutItems(subItems));
+                        processBatchWrite(createWriteBatchForPutItems(subItems));
                 // 'unprocessedDeleteItemsForTable()' returns keys for delete requests that did not
                 // process.
                 List<Key> unprocessedItems =
@@ -105,24 +133,9 @@ public class DataStore<T> {
     }
 
     @ExcludeFromGeneratedCoverageReport
-    private WriteBatch createWriteBatchForDeleteItems(List<T> items) {
-        WriteBatch.Builder<T> builder =
-                WriteBatch.builder(this.typeParameterClass).mappedTableResource(this.table);
-        for (T item : items) {
-            builder.addDeleteItem(item).build();
-        }
-        return builder.build();
-    }
-
-    @ExcludeFromGeneratedCoverageReport
     private BatchWriteResult processBatchWrite(WriteBatch writeBatch) {
         return getClient()
                 .batchWriteItem(
                         BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
-    }
-
-    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
-        PageIterable<T> pagedResults = table.scan(scanRequest);
-        return pagedResults.items().stream().toList();
     }
 }

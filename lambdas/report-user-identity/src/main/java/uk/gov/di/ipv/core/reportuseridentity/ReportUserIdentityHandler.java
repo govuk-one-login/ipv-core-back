@@ -35,8 +35,8 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
+    public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String ATTR_NAME_TO_SUMMARISE_ON = "identity";
     private final ObjectMapper objectMapper;
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -94,8 +94,10 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         LOGGER.info(LogHelper.buildLogMessage("Processing report."));
 
         try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
             var userIds =
-                    vcStoreItemDataStore.getItems().stream()
+                    vcStoreItemDataStore.getItems(ATTR_NAME_USER_ID).stream()
                             .map(VcStoreItem::getUserId)
                             .distinct()
                             .toList();
@@ -137,10 +139,18 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
                 LOGGER.info(
                         LogHelper.buildLogMessage(
-                                String.format("User (hash-%s) VCs not correlated.", userId)));
+                                String.format("User (%s) VCs not correlated.", userId)));
                 continue;
             }
-            boolean migrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+            boolean anyVCsMigrated = tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
+            boolean allVCsMigrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+
+            if (anyVCsMigrated && !allVCsMigrated) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Not all VCs are migrated for this user (%s).", userId)));
+            }
             var votAttained =
                     reportUserIdentityService.getStrongestAttainedVotForCredentials(tacticalVcs);
 
@@ -150,7 +160,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             votAttained.orElse(Vot.P0).name(),
                             tacticalVcs.size(),
                             reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                            migrated));
+                            allVCsMigrated));
         }
         LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
         reportUserIdentityDataStore.createOrUpdate(reportUserIdentityItems);
@@ -158,8 +168,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     private ReportProcessingResult buildReportProcessingResult() {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
+        List<ReportUserIdentityItem> userIdentities =
+                reportUserIdentityDataStore.getItems("identity", "migrated");
         List<ReportUserIdentityItem> totalP2Identities =
-                reportUserIdentityDataStore.getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P2.name());
+                userIdentities.stream()
+                        .filter(ui -> Vot.P2.name().equals(ui.getIdentity()))
+                        .toList();
         long totalP2 = totalP2Identities.size();
         long totalP2Migrated =
                 totalP2Identities.stream()
@@ -167,20 +181,24 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         .toList()
                         .size();
         long totalPCL250 =
-                reportUserIdentityDataStore
-                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.PCL250.name())
+                userIdentities.stream()
+                        .filter(ui -> Vot.PCL250.name().equals(ui.getIdentity()))
+                        .toList()
                         .size();
         long totalPCL200 =
-                reportUserIdentityDataStore
-                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.PCL200.name())
+                userIdentities.stream()
+                        .filter(ui -> Vot.PCL200.name().equals(ui.getIdentity()))
+                        .toList()
                         .size();
         long totalP1 =
-                reportUserIdentityDataStore
-                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P1.name())
+                userIdentities.stream()
+                        .filter(ui -> Vot.P1.name().equals(ui.getIdentity()))
+                        .toList()
                         .size();
         long totalP0 =
-                reportUserIdentityDataStore
-                        .getItems(ATTR_NAME_TO_SUMMARISE_ON, Vot.P0.name())
+                userIdentities.stream()
+                        .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
+                        .toList()
                         .size();
         return ReportProcessingResult.builder()
                 .summary(
