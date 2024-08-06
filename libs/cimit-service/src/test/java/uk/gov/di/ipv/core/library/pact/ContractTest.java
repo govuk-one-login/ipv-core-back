@@ -183,7 +183,7 @@ class ContractTest {
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
 
         // Assert
-        assertEquals(contraIndicator.getUserId(), MOCK_USER_ID);
+        assertEquals(MOCK_USER_ID, contraIndicator.getUserId());
         assertInstanceOf(SecurityCheckCredential.class, contraIndicator.getCredential());
 
         var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
@@ -628,10 +628,7 @@ class ContractTest {
                 .uponReceiving("Request with invalid jwt")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
-                .body(
-                        String.format(
-                                "{\"signed_jwts\": [\"%s\"]}",
-                                DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
+                .body(String.format("{\"signed_jwts\": [\"%s\"]}", INVALID_JWT))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -653,12 +650,11 @@ class ContractTest {
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
 
-        var testVc =
+        var spyTestVc =
                 spy(
                         VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID,
-                                null,
-                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
+                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
+        when(spyTestVc.getVcString()).thenReturn(INVALID_JWT);
 
         var underTest = new CiMitService(mockConfigService);
 
@@ -667,7 +663,7 @@ class ContractTest {
                 CiPostMitigationsException.class,
                 () ->
                         underTest.submitMitigatingVcList(
-                                List.of(testVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
+                                List.of(spyTestVc), MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS),
                 FAILED_API_REQUEST);
     }
 
@@ -768,11 +764,10 @@ class ContractTest {
                 .thenReturn(getMockApiBaseUrl(mockServer));
 
         var testVc =
-                spy(
-                        VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID,
-                                null,
-                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
+                VerifiableCredential.fromValidJwt(
+                        MOCK_USER_ID,
+                        null,
+                        SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT));
 
         var underTest = new CiMitService(mockConfigService);
 
