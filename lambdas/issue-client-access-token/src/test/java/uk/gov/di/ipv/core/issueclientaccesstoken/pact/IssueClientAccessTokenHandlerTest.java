@@ -132,9 +132,19 @@ class IssueClientAccessTokenHandlerTest {
 
     @State(
             "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}") // pragma: allowlist secret
-    public void setSigningKey() {
+    public void setOrchSigningKey() {
         var signingKey =
                 "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
+
+        when(configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
+                .thenReturn(signingKey);
+    }
+
+    @State(
+            "the JWT is signed with {\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}") // pragma: allowlist secret
+    public void setAuthSigningKey() {
+        var signingKey =
+                "{\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
         when(configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
                 .thenReturn(signingKey);
