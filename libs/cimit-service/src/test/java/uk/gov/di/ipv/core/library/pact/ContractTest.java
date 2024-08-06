@@ -55,7 +55,7 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_E
 @ExtendWith(MockitoExtension.class)
 @PactTestFor(providerName = "CiMitProvider")
 @MockServerConfig(hostInterface = "localhost")
-public class ContractTest {
+class ContractTest {
     @Mock ConfigService mockConfigService;
     @Captor private ArgumentCaptor<HttpRequest> httpRequestCaptor;
 
@@ -118,24 +118,24 @@ public class ContractTest {
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
 
         // Assert
-        assertEquals(contraIndicator.getUserId(), MOCK_USER_ID);
+        assertEquals(MOCK_USER_ID, contraIndicator.getUserId());
         assertInstanceOf(SecurityCheckCredential.class, contraIndicator.getCredential());
 
         var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
         var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
 
-        assertEquals(evidence.getContraIndicator().size(), 2);
-        assertEquals(evidence.getContraIndicator().get(0).getDocument(), "idCard/FRE/852654");
-        assertEquals(evidence.getContraIndicator().get(0).getCode(), "TEST-CI-CODE-1");
-        assertEquals(evidence.getContraIndicator().get(0).getMitigation().size(), 1);
+        assertEquals(2, evidence.getContraIndicator().size());
+        assertEquals("idCard/FRE/852654", evidence.getContraIndicator().get(0).getDocument());
+        assertEquals("TEST-CI-CODE-1", evidence.getContraIndicator().get(0).getCode());
+        assertEquals(1, evidence.getContraIndicator().get(0).getMitigation().size());
         assertEquals(
-                evidence.getContraIndicator().get(0).getMitigation().get(0).getCode(), "TEST01");
+                "TEST01", evidence.getContraIndicator().get(0).getMitigation().get(0).getCode());
 
-        assertEquals(evidence.getContraIndicator().get(1).getDocument(), "passport/GBR/12345678");
-        assertEquals(evidence.getContraIndicator().get(1).getCode(), "TEST-CI-CODE-2");
-        assertEquals(evidence.getContraIndicator().get(1).getMitigation().size(), 1);
+        assertEquals("passport/GBR/12345678", evidence.getContraIndicator().get(1).getDocument());
+        assertEquals("TEST-CI-CODE-2", evidence.getContraIndicator().get(1).getCode());
+        assertEquals(1, evidence.getContraIndicator().get(1).getMitigation().size());
         assertEquals(
-                evidence.getContraIndicator().get(1).getMitigation().get(0).getCode(), "TEST02");
+                "TEST02", evidence.getContraIndicator().get(1).getMitigation().get(0).getCode());
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
@@ -189,7 +189,7 @@ public class ContractTest {
         var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
         var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
 
-        assertEquals(evidence.getContraIndicator().size(), 0);
+        assertEquals(0, evidence.getContraIndicator().size());
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
@@ -418,7 +418,9 @@ public class ContractTest {
                 .uponReceiving("Request with invalid issuer")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
-                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
+                .body(
+                        String.format(
+                                "{\"signed_jwt\": \"%s\"}", DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -443,7 +445,9 @@ public class ContractTest {
         var testVc =
                 spy(
                         VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
 
         var underTest = new CiMitService(mockConfigService);
 
@@ -624,7 +628,10 @@ public class ContractTest {
                 .uponReceiving("Request with invalid jwt")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
-                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
+                .body(
+                        String.format(
+                                "{\"signed_jwts\": [\"%s\"]}",
+                                DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -649,7 +656,9 @@ public class ContractTest {
         var testVc =
                 spy(
                         VerifiableCredential.fromValidJwt(
-                                MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT)));
+                                MOCK_USER_ID,
+                                null,
+                                SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
 
         var underTest = new CiMitService(mockConfigService);
 
