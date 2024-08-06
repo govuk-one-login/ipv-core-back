@@ -297,7 +297,7 @@ public class ContractTest {
     public RequestResponsePact postCiInvalidJwtReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_REQUEST");
 
-        return builder.given("invalid jwt is invalidJwt")
+        return builder.given("invalidJwt is the signed_jwt")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
@@ -350,7 +350,7 @@ public class ContractTest {
     public RequestResponsePact postCiInvalidSignatureReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
-        return builder.given("jwt has invalid signature invalidSignature")
+        return builder.given("signed_jwt has invalid signature invalidSignature")
                 .given("mockIpAddress is the ip-address")
                 .given("mockCimitComponentId is the issuer")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
@@ -412,9 +412,9 @@ public class ContractTest {
         return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
+                .given("invalidIssuer is the issuer")
                 .given("the VC is from DCMAW-5477-AC1")
                 .given("the VC has CI code TEST-CI-CODE")
-                .given("invalidIssuer is the issuer")
                 .uponReceiving("Request with invalid issuer")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
@@ -461,9 +461,9 @@ public class ContractTest {
         return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
                 .given("the VC is from DCMAW-5477-AC1")
                 .given("the VC has CI code INVALID-CI-CODE")
-                .given("mockCimitComponentId is the issuer")
                 .uponReceiving("Request with invalid CI code")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
@@ -515,9 +515,9 @@ public class ContractTest {
         return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
                 .given("the VC is from DCMAW-5477-AC1")
                 .given("the VC has CI code TEST-CI-CODE")
-                .given("mockCimitComponentId is the issuer")
                 .uponReceiving("Request with valid JWT but results in internal server error.")
                 .path(POST_CI_ENDPOINT)
                 .method("POST")
@@ -566,9 +566,14 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("mockUserId is a valid user_id")
-                .uponReceiving(
-                        "Request for contra-indicators for specific user with existing  contra-indicators.")
+        return builder.given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("the encoded VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
+                .uponReceiving("Valid request to post signed_jwts.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
@@ -610,8 +615,13 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidJwtReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_REQUEST");
 
-        return builder.given("mockUserId is the user_id")
-                .uponReceiving("Request with valid JWT but results in internal server error.")
+        return builder.given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("invalidJwt is the encoded VC")
+                .uponReceiving("Request with invalid jwt")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
@@ -656,8 +666,14 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidCiCodeReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_CI_CODE");
 
-        return builder.given("mockUserId is the user_id")
-                .uponReceiving("Request with valid JWT but results in internal server error.")
+        return builder.given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("the encoded VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code INVALID-CI-CODE")
+                .uponReceiving("Request with invalid CI code.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(
@@ -707,8 +723,14 @@ public class ContractTest {
     public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
-        return builder.given("mockUserId is the user_id")
-                .uponReceiving("Request with valid JWT but results in internal server error.")
+        return builder.given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .given("invalidIssuer is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("the encoded VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
+                .uponReceiving("Request with invalid issuer.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(
@@ -759,11 +781,13 @@ public class ContractTest {
             PactDslWithProvider builder) {
         var response = getFailedApiResponse("BAD_VC_SIGNATURE");
 
-        return builder.given("invalid jwt is ")
-                .given("mockIpAddress is the ip-address")
+        return builder.given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
-                .uponReceiving("Invalid request due to invalid jwt")
+                .given("mockCimitComponentId is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("the encoded VC has signature invalidSignature")
+                .uponReceiving("Request contains jwt with invalid signature.")
                 .method("POST")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .body(
@@ -820,7 +844,13 @@ public class ContractTest {
             PactDslWithProvider builder) {
         var response = getFailedApiResponse("INTERNAL_SERVER_ERROR");
 
-        return builder.given("mockUserId is the user_id")
+        return builder.given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
+                .given("mockUserId is the user_id")
+                .given("mockCimitComponentId is the issuer")
+                .given("signed_jwts has only one encoded VC")
+                .given("the encoded VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
                 .uponReceiving("Request with valid JWTs but results in internal server error.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
