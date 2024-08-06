@@ -49,7 +49,6 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -304,15 +303,9 @@ class EvaluateGpg45ScoresHandlerTest {
                 (AuditExtensionGpg45ProfileMatched) auditEvent.getExtensions();
         assertEquals(M1A, extension.getGpg45Profile());
         assertEquals(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2), extension.getGpg45Scores());
-        var txnIds = extension.getVcTxnIds();
-        assertEquals(3, txnIds.size());
-        assertTrue(
-                txnIds.containsAll(
-                        List.of(
-                                "1c04edf0-a205-4585-8877-be6bd1776a39",
-                                "RB000103490087",
-                                "abc1234")));
-
+        assertEquals(
+                List.of("1c04edf0-a205-4585-8877-be6bd1776a39", "RB000103490087", "abc1234"),
+                extension.getVcTxnIds());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
         inOrder.verify(ipvSessionItem).setVot(Vot.P2);
