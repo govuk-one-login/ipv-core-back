@@ -67,7 +67,7 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validUserIdReturnsContraIndicators(PactDslWithProvider builder) {
+    public RequestResponsePact userIdReturnsContraIndicators(PactDslWithProvider builder) {
         var responseForGetCi =
                 newJsonBody(
                                 body -> {
@@ -81,13 +81,22 @@ public class ContractTest {
                                 })
                         .build();
 
-        // TODO: these statements need to be updated to more accurately reflect the test data (test
-        // data must be confirmed with ticf team)
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("mockCimitComponentId is the issuer")
-                .given("there is one contra-indicator with an incomplete mitigation")
+                .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
+                .given("the passport has issue date 2024-08-05T14:59:03.000Z")
+                .given("the passport has document number 12345678")
+                .given("the mitigation with code TEST02")
+                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
+                .given("the mitigation has no incomplete mitigations")
+                .given("a contra-indicator is returned with code TEST-CI-CODE-1 for an id card")
+                .given("the id card has issue date 2024-08-05T14:59:04.000Z")
+                .given("the id card has document number 852654")
+                .given("the mitigation with code TEST01")
+                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
+                .given("the mitigation has no incomplete mitigations")
                 .uponReceiving(
                         "Request for contra-indicators for specific user with existing contra-indicators.")
                 .path(GET_VCS_ENDPOINT)
@@ -109,8 +118,8 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "validUserIdReturnsContraIndicators")
-    void fetchContraIndicators_whenCalledWithValidUserIdAgainstCimiApi_receivesContraIndicators(
+    @PactTestFor(pactMethod = "userIdReturnsContraIndicators")
+    void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
@@ -130,12 +139,90 @@ public class ContractTest {
 
         var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
         var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
-        assertEquals(evidence.getContraIndicator().size(), 1);
+
+        assertEquals(evidence.getContraIndicator().size(), 2);
+        assertEquals(evidence.getContraIndicator().get(0).getDocument(), "idCard/FRE/852654");
+        assertEquals(evidence.getContraIndicator().get(0).getCode(), "TEST-CI-CODE-1");
+        assertEquals(evidence.getContraIndicator().get(0).getMitigation().size(), 1);
+        assertEquals(
+                evidence.getContraIndicator().get(0).getMitigation().get(0).getCode(), "TEST01");
+
+        assertEquals(evidence.getContraIndicator().get(1).getDocument(), "passport/GBR/12345678");
+        assertEquals(evidence.getContraIndicator().get(1).getCode(), "TEST-CI-CODE-2");
+        assertEquals(evidence.getContraIndicator().get(1).getMitigation().size(), 1);
+        assertEquals(
+                evidence.getContraIndicator().get(1).getMitigation().get(0).getCode(), "TEST02");
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact failsToReceiveContraIndicatorsDueToInternalServerError(
-            PactDslWithProvider builder) {
+    public RequestResponsePact getCisReturnsNoCisVc(PactDslWithProvider builder) {
+        var responseForGetCi =
+                newJsonBody(
+                                body -> {
+                                    var jwtBuilder =
+                                            new PactJwtBuilder(
+                                                    VALID_VC_HEADER,
+                                                    VALID_NO_CI_VC_BODY,
+                                                    VALID_NO_CI_VC_SIGNATURE);
+
+                                    body.stringValue("vc", jwtBuilder.buildJwt());
+                                })
+                        .build();
+
+        return builder.given("mockApiKey is a valid api key")
+                .given("mockUserId is the user_id")
+                .given("the current time is 2024-01-01 00:00:00")
+                .given("mockCimitComponentId is the issuer")
+                .given("there are no contra-indicators")
+                .given("expiry is 2099-01-01 00:00:00")
+                .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
+                .uponReceiving("Request for contra-indicators for user with no contra-indicators.")
+                .path(GET_VCS_ENDPOINT)
+                .query("user_id=" + MOCK_USER_ID)
+                .method("GET")
+                .headers(
+                        X_API_KEY_HEADER,
+                        MOCK_API_KEY,
+                        IP_ADDRESS_HEADER,
+                        MOCK_IP_ADDRESS,
+                        GOVUK_SIGNIN_JOURNEY_ID_HEADER,
+                        MOCK_GOVUK_SIGNIN_ID,
+                        PactDslRequestBase.CONTENT_TYPE,
+                        "application/json")
+                .willRespondWith()
+                .status(200)
+                .body(responseForGetCi)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "getCisReturnsNoCisVc")
+    void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesEmptyContraIndicators(
+            MockServer mockServer) throws CiRetrievalException {
+        // Arrange
+        when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
+        when(mockConfigService.getParameter(CIMIT_SIGNING_KEY)).thenReturn(EC_PRIVATE_KEY_JWK);
+        when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
+                .thenReturn(getMockApiBaseUrl(mockServer));
+        var underTest = new CiMitService(mockConfigService);
+
+        // Act
+        var contraIndicator =
+                underTest.getContraIndicatorsVc(
+                        MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
+
+        // Assert
+        assertEquals(contraIndicator.getUserId(), MOCK_USER_ID);
+        assertInstanceOf(SecurityCheckCredential.class, contraIndicator.getCredential());
+
+        var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
+        var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
+
+        assertEquals(evidence.getContraIndicator().size(), 0);
+    }
+
+    @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact getCisInternalServerErrorReturns500(PactDslWithProvider builder) {
         var responseForGetCi =
                 newJsonBody(
                                 body -> {
@@ -144,13 +231,22 @@ public class ContractTest {
                                 })
                         .build();
 
-        // TODO: these statements need to be updated to more accurately reflect the test data (test
-        // data must be confirmed with ticf team)
         return builder.given("mockApiKey is a valid api key")
                 .given("mockUserId is the user_id")
                 .given("the current time is 2024-01-01 00:00:00")
                 .given("mockCimitComponentId is the issuer")
-                .given("there is one contra-indicator with an incomplete mitigation")
+                .given("a contra-indicator is returned with code TEST-CI-CODE-2 for a passport")
+                .given("the passport has issue date 2024-08-05T14:59:03.000Z")
+                .given("the passport has document number 12345678")
+                .given("the mitigation with code TEST02")
+                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
+                .given("the mitigation has no incomplete mitigations")
+                .given("a contra-indicator is returned with code TEST-CI-CODE-1 for an id card")
+                .given("the id card has issue date 2024-08-05T14:59:04.000Z")
+                .given("the id card has document number 852654")
+                .given("the mitigation with code TEST01")
+                .given("the mitigation is valid from 2024-08-05T14:59:05.000Z")
+                .given("the mitigation has no incomplete mitigations")
                 .uponReceiving(
                         "Request for contra-indicators for specific user with existing contra-indicators.")
                 .path(GET_VCS_ENDPOINT)
@@ -172,9 +268,10 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "failsToReceiveContraIndicatorsDueToInternalServerError")
-    void fetchContraIndicators_whenCalledAgainstCimiApi_failsToReturnContraIndicators(
-            MockServer mockServer) {
+    @PactTestFor(pactMethod = "getCisInternalServerErrorReturns500")
+    void
+            fetchContraIndicatorsFails_whenCalledWithValidUserIdAgainstCimiApiResultsInInternalServerError_returns500(
+                    MockServer mockServer) {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
@@ -190,11 +287,15 @@ public class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact successfullyPostsContraIndicators(PactDslWithProvider builder) {
+    public RequestResponsePact postCiSuccessfullyPostsContraIndicator(PactDslWithProvider builder) {
         var responseForPostCi = newJsonBody(body -> body.stringValue("result", "success")).build();
 
         return builder.given("mockApiKey is a valid api key")
-                .given("mockUserId is the user_id")
+                .given("mockUserId is the user")
+                .given("mockCimitComponentId is the issuer")
+                .given("the current time is 2024-01-01 00:00:00")
+                .given("the VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
                 .uponReceiving(
                         "Request for contra-indicators for specific user with existing contra-indicators.")
                 .path(POST_CI_ENDPOINT)
@@ -216,7 +317,7 @@ public class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "successfullyPostsContraIndicators")
+    @PactTestFor(pactMethod = "postCiSuccessfullyPostsContraIndicator")
     void successfullyPostCis_whenCalledWithSignedJwtAgainstCimiApi_returns200(MockServer mockServer)
             throws ParseException, CredentialParseException {
         // Arrange
@@ -243,12 +344,12 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("invalid jwt is ")
+        return builder.given("invalid jwt is invalidJwt")
                 .given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
-                .uponReceiving("Invalid request due to invalid jwt")
+                .uponReceiving("Request with invalid jwt")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
                 .body(String.format("{\"signed_jwt\": \"%s\"}", INVALID_JWT))
@@ -305,12 +406,13 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("invalid jwt is ")
+        return builder.given("jwt has invalid signature invalidSignature")
                 .given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
+                .given("mockCimitComponentId is the issuer")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
-                .uponReceiving("Invalid request due to invalid jwt")
+                .uponReceiving("Request with invalid signature")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
                 .body(
@@ -372,12 +474,14 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("invalid jwt is ")
-                .given("mockApiKey is a valid api key")
+        return builder.given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
-                .uponReceiving("Invalid request due to invalid issuer")
+                .given("the VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
+                .given("invalidIssuer is the issuer")
+                .uponReceiving("Request with invalid issuer")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
                 .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
@@ -428,12 +532,14 @@ public class ContractTest {
                                 })
                         .build();
 
-        return builder.given("invalid jwt is ")
-                .given("mockApiKey is a valid api key")
+        return builder.given("mockApiKey is a valid api key")
                 .given("mockIpAddress is the ip-address")
                 .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
-                .uponReceiving("Invalid request due to invalid CI codes")
+                .given("the VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code INVALID-CI-CODE")
+                .given("mockCimitComponentId is the issuer")
+                .uponReceiving("Request with invalid CI code")
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
                 .body(
@@ -490,7 +596,12 @@ public class ContractTest {
                         .build();
 
         return builder.given("mockApiKey is a valid api key")
+                .given("mockIpAddress is the ip-address")
+                .given("mockGovukSigninJourneyId is the govuk-signin-journey-id")
                 .given("mockUserId is the user_id")
+                .given("the VC is from DCMAW-5477-AC1")
+                .given("the VC has CI code TEST-CI-CODE")
+                .given("mockCimitComponentId is the issuer")
                 .uponReceiving("Request with valid JWT but results in internal server error.")
                 .path(POST_CI_ENDPOINT)
                 .method("POST")
@@ -906,61 +1017,18 @@ public class ContractTest {
             }
             """;
 
-    // TODO: confirm with ticf team if this is the shape of the data they expect
-    // 2010-01-01 00:00:00 is 1262304000 in epoch seconds
-    private static final String VALID_CI_VC_BODY =
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    private static final String VALID_NO_CI_VC_BODY =
             """
             {
-              "sub": "mockUserId",
-              "nbf": 1262304000,
               "iss": "mockCimitComponentId",
-              "exp": 2005303168,
-              "iat": 1262304000,
+              "sub": "mockUserId",
+              "nbf": 1721899627,
+              "exp": 4070908800,
               "vc": {
                 "evidence": [
                   {
-                    "contraIndicator": [
-                      {
-                        "mitigation": [
-                          {
-                            "mitigatingCredential": [
-                              {
-                                "validFrom": "2010-01-01T00:00:00.000Z",
-                                "txn": "ghij",
-                                "id": "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
-                                "issuer": "https://credential-issuer.example/"
-                              }
-                            ],
-                            "code": "some-code"
-                          }
-                        ],
-                        "code": "some-code",
-                        "issuers": [
-                          "https://issuing-cri.example"
-                        ],
-                        "incompleteMitigation": [
-                          {
-                            "mitigatingCredential": [
-                              {
-                                "validFrom": "2010-01-01T00:00:00.000Z",
-                                "txn": "cdeef",
-                                "id": "urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f",
-                                "issuer": "https://another-credential-issuer.example/"
-                              }
-                            ],
-                            "code": "some-code"
-                          }
-                        ],
-                        "issuanceDate": "2010-01-01T00:00:00.000Z",
-                        "document": "passport/GBR/824159121",
-                        "txn": [
-                          "abcdef"
-                        ]
-                      }
-                    ],
-                    "txn": [
-                      "fkfkd"
-                    ],
+                    "contraIndicator": [],
                     "type": "SecurityCheck"
                   }
                 ],
@@ -975,8 +1043,84 @@ public class ContractTest {
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
+    private static final String VALID_NO_CI_VC_SIGNATURE =
+            "WbKckUsr2ubiqKkYqYJJyk9CfO2KQe3MldE0QE3Y8woAJZHcP_WpH6bSca_L6z8rP_P-E9J9dY1qxQjpb3r2Mg"; // pragma: allowlist secret
+
+    // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
+    // 2010-01-01 00:00:00 is 1262304000 in epoch seconds
+    private static final String VALID_CI_VC_BODY =
+            """
+            {
+               "sub": "mockUserId",
+               "iss": "mockCimitComponentId",
+               "nbf": 1262304000,
+               "iat": 4070908800,
+               "exp": 4070908800,
+               "vc": {
+                 "type": [
+                   "VerifiableCredential",
+                   "SecurityCheckCredential"
+                 ],
+                 "evidence": [
+                   {
+                     "type": "SecurityCheck",
+                     "contraIndicator": [
+                       {
+                         "code": "TEST-CI-CODE-1",
+                         "issuers": [
+                           "core"
+                         ],
+                         "issuanceDate": "2024-08-05T14:59:04.000Z",
+                         "document": "idCard/FRE/852654",
+                         "txn": [],
+                         "mitigation": [
+                           {
+                             "mitigatingCredential": [
+                               {
+                                 "issuer": "core",
+                                 "txn": "",
+                                 "validFrom": "2024-08-05T14:59:05.000Z"
+                               }
+                             ],
+                             "code": "TEST01"
+                           }
+                         ],
+                         "incompleteMitigation": []
+                       },
+                       {
+                         "code": "TEST-CI-CODE-2",
+                         "issuers": [
+                           "core"
+                         ],
+                         "issuanceDate": "2024-08-05T14:59:03.000Z",
+                         "document": "passport/GBR/12345678",
+                         "txn": [],
+                         "mitigation": [
+                           {
+                             "mitigatingCredential": [
+                               {
+                                 "issuer": "core",
+                                 "txn": "",
+                                 "validFrom": "2024-08-05T14:59:05.000Z"
+                               }
+                             ],
+                             "code": "TEST02"
+                           }
+                         ],
+                         "incompleteMitigation": []
+                       }
+                     ]
+                   }
+                 ]
+               }
+             }
+            """;
+
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
     private static final String VALID_CI_VC_SIGNATURE =
-            "sQxm1obDLvcytC1SxyZZABYLpPvWG15tYmAGYTv8KrPhfB7oAut04AH1TumrTmjuQmkzgyEVgYms9YtH-f6Fkg"; // pragma: allowlist secret
+            "5tmZS7VGkci8y4WLYzDcIcDqnbJ4deAtZa_OAEBSxYAFYJQxlxEj_XEUOXa0t-lbn-OjM-hIdaf9uW3DyBPzwQ"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
     // From DCMAW-5477-AC1
@@ -986,7 +1130,7 @@ public class ContractTest {
               "iat": 1712228728,
               "iss": "mockCimitComponentId",
               "aud": "issuer",
-              "sub": "test-subject",
+              "sub": "mockUserId",
               "nbf": 4070908800,
               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
@@ -1097,7 +1241,7 @@ public class ContractTest {
               "iat": 1712228728,
               "iss": "invalidIssuer",
               "aud": "issuer",
-              "sub": "test-subject",
+              "sub": "mockUserId",
               "nbf": 4070908800,
               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
@@ -1189,7 +1333,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_SIGNATURE =
-            "w0P6_uhj1wOo5EFSi5_I1bLAe0zwpIvw_w8mSdV9DhXKdcHcRWGI6sd4TlvmekI88hJgIhyGs08OECTgPCtOmw"; // pragma: allowlist secret
+            "8c6iIjlh7JipvbhkOBesiumnFp_EcZpAkBuOpVxNIdAO68ZUmxMYW4MpVi7jz0-dbMGOgKHROIPQZ4yw-wsa_Q"; // pragma: allowlist secret
     private static final String DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT =
             new PactJwtBuilder(
                             VALID_VC_HEADER,
@@ -1203,9 +1347,9 @@ public class ContractTest {
             """
             {
               "iat": 1712228728,
-              "iss": "invalidIssuer",
+              "iss": "mockCimitComponentId",
               "aud": "issuer",
-              "sub": "test-subject",
+              "sub": "mockUserId",
               "nbf": 4070908800,
               "jti": "urn:uuid:c5b7c1b0-8262-4d57-b168-9bc94568af17",
               "vc": {
@@ -1297,7 +1441,7 @@ public class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_SIGNATURE =
-            "35BYZ0S4B4up9NebIyeC4Tz09Xd-A1IuGDCjyhEDeesALdc1MO3tkrR_McXo8gn9xnJxWB4s_E1NUW8I7altUQ"; // pragma: allowlist secret
+            "YpmpMHYX855TlSObxSVJex-35r8GWFLFWS1UZ3uPndmK5kIRZOT5wiiE_dXaHmPWlPa0EP7z2NrYs2NLLzrTkA"; // pragma: allowlist secret
     private static final String DVLA_VC_WITH_CI_AND_INVALID_CI_CODE_JWT =
             new PactJwtBuilder(
                             VALID_VC_HEADER,
