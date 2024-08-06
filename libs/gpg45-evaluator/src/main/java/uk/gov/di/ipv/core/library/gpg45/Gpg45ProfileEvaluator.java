@@ -105,7 +105,7 @@ public class Gpg45ProfileEvaluator {
                             .mapToInt(IdentityCheck::getStrengthScore)
                             .max()
                             .orElse(NO_SCORE);
-            if (maxStrength1 > maxStrength1) {
+            if (maxStrength1 > maxStrength2) {
                 return vc1;
             } else if (maxStrength2 > maxStrength1) {
                 return vc2;
