@@ -290,8 +290,7 @@ public class EvaluateGpg45ScoresHandler
             List<VerifiableCredential> vcs) {
         var deduplicatedVcs = new HashMap<String, VerifiableCredential>();
         for (var vc : vcs) {
-            var docType = getVcDocumentType(vc);
-            deduplicatedVcs.put(docType, vc);
+            deduplicatedVcs.putIfAbsent(getVcDocumentType(vc), vc);
         }
         return new ArrayList<>(deduplicatedVcs.values());
     }
