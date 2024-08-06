@@ -77,8 +77,12 @@ public class Gpg45ProfileEvaluator {
                 result.add(vc);
             } else {
                 var existing = deduplicatedVcs.get(docType);
-                deduplicatedVcs.putIfAbsent(
-                        docType, selectVerifiableCredentialWithSameDocumentType(existing, vc));
+                if (existing == null) {
+                    deduplicatedVcs.put(docType, vc);
+                } else {
+                    deduplicatedVcs.put(
+                            docType, selectVerifiableCredentialWithSameDocumentType(existing, vc));
+                }
             }
         }
         result.addAll(deduplicatedVcs.values());
@@ -87,12 +91,6 @@ public class Gpg45ProfileEvaluator {
 
     private VerifiableCredential selectVerifiableCredentialWithSameDocumentType(
             VerifiableCredential vc1, VerifiableCredential vc2) {
-        if (vc1 == null) {
-            return vc2;
-        }
-        if (vc2 == null) {
-            return vc1;
-        }
         if (vc1.getCredential() instanceof IdentityCheckCredential idCheck1
                 && vc2.getCredential() instanceof IdentityCheckCredential idCheck2) {
             var maxStrength1 =
