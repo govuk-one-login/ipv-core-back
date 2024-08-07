@@ -77,7 +77,7 @@ class ReportUserIdentityHandlerTest {
                         vcExperianFraudScoreTwo().toVcStoreItem());
         // Arrange
         when(objectMapper.readValue(inputStream, ReportProcessingRequest.class))
-                .thenReturn(new ReportProcessingRequest(false, null));
+                .thenReturn(new ReportProcessingRequest(false, null, null));
         when(mockVcStoreItemDataStore.getItems(any(), any()))
                 .thenReturn(new TableScanResult<>(credentials, null));
         when(mockVerifiableCredentialService.getVcs(TEST_SUBJECT))

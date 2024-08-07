@@ -7,4 +7,6 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ReportProcessingRequest(
-        boolean continueUserScan, Map<String, AttributeValue> lastEvaluatedKey) {}
+        boolean continueUserScan,
+        Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
+        Map<String, AttributeValue> userIdentitylastEvaluatedKey) {}

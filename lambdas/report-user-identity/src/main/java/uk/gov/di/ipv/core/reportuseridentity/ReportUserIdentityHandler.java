@@ -94,17 +94,19 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
         LogHelper.attachComponentId(configService);
-        LOGGER.info(LogHelper.buildLogMessage("Processing report." + inputStream));
+        LOGGER.info(LogHelper.buildLogMessage("Processing report."));
 
         ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult =
                 ReportProcessingResult.builder();
         try {
             ReportProcessingRequest reportProcessingRequest =
                     objectMapper.readValue(inputStream, ReportProcessingRequest.class);
-            LOGGER.info(LogHelper.buildLogMessage("request." + reportProcessingRequest.toString()));
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Request received-" + reportProcessingRequest.toString()));
             List<String> userIds = new ArrayList<>();
             if ((!reportProcessingRequest.continueUserScan()
-                            && (reportProcessingRequest.lastEvaluatedKey() == null))
+                            && (reportProcessingRequest.tacticalStoreLastEvaluatedKey() == null))
                     || reportProcessingRequest.continueUserScan()) {
                 LOGGER.info(
                         LogHelper.buildLogMessage(
@@ -112,7 +114,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
                 Map<String, AttributeValue> exclusiveStartKey =
                         reportProcessingRequest.continueUserScan()
-                                ? reportProcessingRequest.lastEvaluatedKey()
+                                ? reportProcessingRequest.tacticalStoreLastEvaluatedKey()
                                 : null;
 
                 do {
@@ -149,7 +151,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             //
             processUsersToFindLOCAndUpdateDb(userIds);
             //
-            reportProcessingResult = buildReportProcessingResult(reportProcessingResult);
+            reportProcessingResult =
+                    buildReportProcessingResult(reportProcessingRequest, reportProcessingResult);
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Completed report processing for user's identity."));
@@ -206,9 +209,13 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     }
 
     private ReportProcessingResult.ReportProcessingResultBuilder buildReportProcessingResult(
+            ReportProcessingRequest reportProcessingRequest,
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult) {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
         Map<String, AttributeValue> exclusiveStartKey = null;
+        if (reportProcessingRequest.userIdentitylastEvaluatedKey() != null) {
+            exclusiveStartKey = reportProcessingRequest.userIdentitylastEvaluatedKey();
+        }
         List<ReportUserIdentityItem> userIdentities = new ArrayList<>();
         do {
             TableScanResult<ReportUserIdentityItem> tableScanResult =
