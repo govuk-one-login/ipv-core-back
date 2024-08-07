@@ -11,11 +11,11 @@ import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNullElse;
@@ -85,10 +85,7 @@ public class Gpg45ProfileEvaluator {
                 }
             }
         }
-        result.addAll(
-                deduplicatedEvidences.values().stream()
-                        .flatMap(item -> item.stream())
-                        .collect(Collectors.toList()));
+        result.addAll(deduplicatedEvidences.values().stream().flatMap(Collection::stream).toList());
         return result;
     }
 
