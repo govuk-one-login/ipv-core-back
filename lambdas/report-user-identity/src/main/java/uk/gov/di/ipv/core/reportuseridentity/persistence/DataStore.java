@@ -22,6 +22,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.reportuseridentity.domain.TableScanResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,46 +60,49 @@ public class DataStore<T> {
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public List<T> getItems(String... attributesToProject) {
-        return getTableScanResult(null, attributesToProject);
+    public TableScanResult<T> getItems(
+            Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
+        return getTableScanResult(exclusiveStartKey, null, attributesToProject);
     }
 
-    private List<T> getTableScanResult(Expression filterExpression, String... attributesToProject) {
-        Map<String, AttributeValue> exclusiveStartKey = null;
-        List<T> returnItems = new ArrayList<>();
-        do {
-            try {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                String.format(
-                                        "Scanning table with exclusiveStartKey as [%s]",
-                                        new ObjectMapper().writeValueAsString(exclusiveStartKey))));
-            } catch (JsonProcessingException e) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                String.format(
-                                        "Parsing error while logging. Scanning table with exclusiveStartKey as [%s]",
-                                        exclusiveStartKey)));
-            }
-            ScanEnhancedRequest scanRequest =
-                    ScanEnhancedRequest.builder()
-                            .limit(PAGE_SIZE_LIMIT)
-                            .exclusiveStartKey(exclusiveStartKey)
-                            .filterExpression(filterExpression)
-                            .attributesToProject(attributesToProject)
-                            .build();
-            PageIterable<T> pagedResults = table.scan(scanRequest);
+    @ExcludeFromGeneratedCoverageReport
+    private TableScanResult<T> getTableScanResult(
+            Map<String, AttributeValue> exclusiveStartKey,
+            Expression filterExpression,
+            String... attributesToProject) {
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Scanning table with exclusiveStartKey as [%s]",
+                                    new ObjectMapper().writeValueAsString(exclusiveStartKey))));
+        } catch (JsonProcessingException e) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Parsing error while logging. Scanning table with exclusiveStartKey as [%s]",
+                                    exclusiveStartKey)));
+        }
+        ScanEnhancedRequest scanRequest =
+                ScanEnhancedRequest.builder()
+                        .limit(PAGE_SIZE_LIMIT)
+                        .exclusiveStartKey(exclusiveStartKey)
+                        .filterExpression(filterExpression)
+                        .attributesToProject(attributesToProject)
+                        .build();
+        PageIterable<T> pagedResults = table.scan(scanRequest);
 
-            // Iterating through result pages items
-            returnItems.addAll(
-                    pagedResults.stream().map(Page::items).flatMap(List::stream).toList());
+        // Iterating through result pages items
+        List<T> returnItems =
+                new ArrayList<>(
+                        pagedResults.stream().map(Page::items).flatMap(List::stream).toList());
 
-            Page<T> lastPage = pagedResults.stream().reduce((first, second) -> second).orElse(null);
-            if (lastPage != null && lastPage.lastEvaluatedKey() != null) {
-                exclusiveStartKey = lastPage.lastEvaluatedKey();
-            }
-        } while (exclusiveStartKey != null);
-        return returnItems;
+        Page<T> lastPage = pagedResults.stream().reduce((first, second) -> second).orElse(null);
+        if (lastPage != null && lastPage.lastEvaluatedKey() != null) {
+            exclusiveStartKey = lastPage.lastEvaluatedKey();
+        }
+
+        return new TableScanResult<>(returnItems, exclusiveStartKey);
     }
 
     @ExcludeFromGeneratedCoverageReport

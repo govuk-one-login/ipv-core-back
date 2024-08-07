@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -19,8 +20,10 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
+import uk.gov.di.ipv.core.reportuseridentity.domain.TableScanResult;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.DataStore;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
@@ -32,6 +35,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
@@ -90,27 +94,62 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
             throws IOException {
         LogHelper.attachComponentId(configService);
+        LOGGER.info(LogHelper.buildLogMessage("Processing report." + inputStream));
 
-        LOGGER.info(LogHelper.buildLogMessage("Processing report."));
-
+        ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult =
+                ReportProcessingResult.builder();
         try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
-            var userIds =
-                    vcStoreItemDataStore.getItems(ATTR_NAME_USER_ID).stream()
-                            .map(VcStoreItem::getUserId)
-                            .distinct()
-                            .toList();
-            List<ReportUserIdentityItem> reportUserIdentities =
-                    userIds.stream()
-                            .map(
-                                    usrId ->
-                                            new ReportUserIdentityItem(
-                                                    usrId, null, 0, Collections.emptyList(), false))
-                            .toList();
-            reportUserIdentityDataStore.createOrUpdate(reportUserIdentities);
+            ReportProcessingRequest reportProcessingRequest =
+                    objectMapper.readValue(inputStream, ReportProcessingRequest.class);
+            LOGGER.info(LogHelper.buildLogMessage("request." + reportProcessingRequest.toString()));
+            List<String> userIds = new ArrayList<>();
+            if ((!reportProcessingRequest.continueUserScan()
+                            && (reportProcessingRequest.lastEvaluatedKey() == null))
+                    || reportProcessingRequest.continueUserScan()) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Retrieving userIds from tactical store db table."));
 
+                Map<String, AttributeValue> exclusiveStartKey =
+                        reportProcessingRequest.continueUserScan()
+                                ? reportProcessingRequest.lastEvaluatedKey()
+                                : null;
+
+                do {
+                    TableScanResult<VcStoreItem> tableScanResult =
+                            vcStoreItemDataStore.getItems(exclusiveStartKey, ATTR_NAME_USER_ID);
+                    userIds.addAll(
+                            tableScanResult.items().stream()
+                                    .map(VcStoreItem::getUserId)
+                                    .distinct()
+                                    .toList());
+
+                    List<ReportUserIdentityItem> reportUserIdentities =
+                            userIds.stream()
+                                    .map(
+                                            usrId ->
+                                                    new ReportUserIdentityItem(
+                                                            usrId,
+                                                            null,
+                                                            0,
+                                                            Collections.emptyList(),
+                                                            false))
+                                    .toList();
+                    reportUserIdentityDataStore.createOrUpdate(reportUserIdentities);
+                    if (tableScanResult.lastEvaluatedKey() != null) {
+                        exclusiveStartKey = tableScanResult.lastEvaluatedKey();
+                        reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
+                    }
+                } while (exclusiveStartKey != null);
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Tactical storage scan completed to get unique users."));
+            }
+
+            //
             processUsersToFindLOCAndUpdateDb(userIds);
+            //
+            reportProcessingResult = buildReportProcessingResult(reportProcessingResult);
 
             LOGGER.info(
                     LogHelper.buildLogMessage("Completed report processing for user's identity."));
@@ -121,9 +160,9 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         } catch (BatchDeleteException e) {
             LOGGER.info(LogHelper.buildLogMessage("Error occurred during batch write process."));
         } finally {
-            LOGGER.info(LogHelper.buildLogMessage("Write output with result summary."));
+            LOGGER.info(LogHelper.buildLogMessage("Writing output with result summary."));
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            objectMapper.writeValue(outputStream, buildReportProcessingResult());
+            objectMapper.writeValue(outputStream, reportProcessingResult.build());
         }
     }
 
@@ -166,10 +205,20 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         reportUserIdentityDataStore.createOrUpdate(reportUserIdentityItems);
     }
 
-    private ReportProcessingResult buildReportProcessingResult() {
+    private ReportProcessingResult.ReportProcessingResultBuilder buildReportProcessingResult(
+            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult) {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
-        List<ReportUserIdentityItem> userIdentities =
-                reportUserIdentityDataStore.getItems("identity", "migrated");
+        Map<String, AttributeValue> exclusiveStartKey = null;
+        List<ReportUserIdentityItem> userIdentities = new ArrayList<>();
+        do {
+            TableScanResult<ReportUserIdentityItem> tableScanResult =
+                    reportUserIdentityDataStore.getItems(exclusiveStartKey, "identity", "migrated");
+            userIdentities.addAll(tableScanResult.items());
+            if (tableScanResult.lastEvaluatedKey() != null) {
+                exclusiveStartKey = tableScanResult.lastEvaluatedKey();
+            }
+        } while (exclusiveStartKey != null);
+
         List<ReportUserIdentityItem> totalP2Identities =
                 userIdentities.stream()
                         .filter(ui -> Vot.P2.name().equals(ui.getIdentity()))
@@ -200,15 +249,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
                         .toList()
                         .size();
-        return ReportProcessingResult.builder()
-                .summary(
-                        new ReportSummary(
-                                totalP2,
-                                totalP2Migrated,
-                                totalPCL250,
-                                totalPCL200,
-                                totalP1,
-                                totalP0))
-                .build();
+        return reportProcessingResult.summary(
+                new ReportSummary(
+                        totalP2, totalP2Migrated, totalPCL250, totalPCL200, totalP1, totalP0));
     }
 }

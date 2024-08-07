@@ -41,18 +41,18 @@ public class ReportUserIdentityService {
 
     public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs)
             throws ParseException {
-        for (Vot requestedVot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
+        for (Vot votToCheck : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
             boolean requestedVotAttained;
-            if (requestedVot.getProfileType().equals(GPG45)) {
+            if (votToCheck.getProfileType().equals(GPG45)) {
                 requestedVotAttained =
                         achievedWithGpg45Profile(
-                                requestedVot, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
+                                votToCheck, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
             } else {
-                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);
+                requestedVotAttained = hasOperationalProfileVc(votToCheck, vcs);
             }
 
             if (requestedVotAttained) {
-                return Optional.of(requestedVot);
+                return Optional.of(votToCheck);
             }
         }
         return Optional.empty();
@@ -80,37 +80,35 @@ public class ReportUserIdentityService {
                                         return cri.getId() + "-socialSecurityRecord";
                                     }
                                 }
-                                return cri.getId();
-                            } else {
-                                return cri.getId();
                             }
+                            return cri.getId();
                         })
                 .toList();
     }
 
-    private boolean achievedWithGpg45Profile(Vot requestedVot, List<VerifiableCredential> vcs) {
+    private boolean achievedWithGpg45Profile(Vot votToCheck, List<VerifiableCredential> vcs) {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45Scores, requestedVot.getSupportedGpg45Profiles());
+                        gpg45Scores, votToCheck.getSupportedGpg45Profiles());
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             LOGGER.info(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "GPG45 profile matched")
-                            .with(LOG_VOT.getFieldName(), requestedVot));
+                            .with(LOG_VOT.getFieldName(), votToCheck));
             return true;
         }
         return false;
     }
 
-    private boolean hasOperationalProfileVc(Vot requestedVot, List<VerifiableCredential> vcs)
+    private boolean hasOperationalProfileVc(Vot votToCheck, List<VerifiableCredential> vcs)
             throws ParseException {
         for (var vc : vcs) {
             String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
             Optional<String> matchedOperationalProfile =
-                    requestedVot.getSupportedOperationalProfiles().stream()
+                    votToCheck.getSupportedOperationalProfiles().stream()
                             .map(OperationalProfile::name)
                             .filter(profileName -> profileName.equals(credentialVot))
                             .findFirst();
@@ -122,7 +120,7 @@ public class ReportUserIdentityService {
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Operational profile matched")
-                                .with(LOG_VOT.getFieldName(), requestedVot));
+                                .with(LOG_VOT.getFieldName(), votToCheck));
                 return true;
             }
         }

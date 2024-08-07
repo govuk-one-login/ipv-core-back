@@ -40,7 +40,6 @@ class DynamoDataStoreTest {
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
-    @Mock private SdkIterable mockSdkIterable;
     @Mock private Page<AuthorizationCodeItem> mockPage;
     @Mock private DynamoDbIndex<AuthorizationCodeItem> mockIndex;
     @Mock private SdkIterable<Page<AuthorizationCodeItem>> mockIterable;

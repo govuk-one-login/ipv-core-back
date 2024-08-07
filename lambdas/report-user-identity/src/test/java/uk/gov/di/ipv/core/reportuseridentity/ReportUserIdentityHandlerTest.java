@@ -13,7 +13,9 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
+import uk.gov.di.ipv.core.reportuseridentity.domain.TableScanResult;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.DataStore;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
@@ -33,7 +35,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.reportuseridentity.ReportUserIdentityHandler.ATTR_NAME_USER_ID;
 
 @ExtendWith(MockitoExtension.class)
 class ReportUserIdentityHandlerTest {
@@ -75,7 +76,10 @@ class ReportUserIdentityHandlerTest {
                         VC_ADDRESS.toVcStoreItem(),
                         vcExperianFraudScoreTwo().toVcStoreItem());
         // Arrange
-        when(mockVcStoreItemDataStore.getItems(ATTR_NAME_USER_ID)).thenReturn(credentials);
+        when(objectMapper.readValue(inputStream, ReportProcessingRequest.class))
+                .thenReturn(new ReportProcessingRequest(false, null));
+        when(mockVcStoreItemDataStore.getItems(any(), any()))
+                .thenReturn(new TableScanResult<>(credentials, null));
         when(mockVerifiableCredentialService.getVcs(TEST_SUBJECT))
                 .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, VC_ADDRESS));
         String userId2 = "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092";
@@ -90,7 +94,8 @@ class ReportUserIdentityHandlerTest {
                                 TEST_SUBJECT, "P2", 0, Collections.emptyList(), true),
                         new ReportUserIdentityItem(
                                 userId2, "P2", 0, Collections.emptyList(), false));
-        when(mockReportUserIdentityDataStore.getItems(any(), any())).thenReturn(totalIdentities);
+        when(mockReportUserIdentityDataStore.getItems(any(), any(), any()))
+                .thenReturn(new TableScanResult<>(totalIdentities, null));
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, null);
 

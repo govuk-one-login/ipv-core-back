@@ -6,7 +6,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
 import java.util.List;
 
@@ -14,7 +13,7 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
 @Data
-public class ReportUserIdentityItem implements PersistenceItem {
+public class ReportUserIdentityItem {
     public ReportUserIdentityItem(
             String userId,
             String identity,
@@ -39,10 +38,5 @@ public class ReportUserIdentityItem implements PersistenceItem {
     @DynamoDbPartitionKey
     public String getHashUserId() {
         return hashUserId;
-    }
-
-    @Override
-    public void setTtl(long ttl) {
-        throw new UnsupportedOperationException("TTL not required here");
     }
 }
