@@ -11,9 +11,11 @@ import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNullElse;
@@ -49,9 +51,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Gpg45Scores buildScore(List<VerifiableCredential> vcs) {
-        var deduplicatedVcs = deduplicateVcsByDocumentType(vcs);
         var identityChecks =
-                deduplicatedVcs.stream()
+                vcs.stream()
                         .filter(vc -> vc.getCredential() instanceof IdentityCheckCredential)
                         .flatMap(
                                 vc ->
@@ -63,69 +64,37 @@ public class Gpg45ProfileEvaluator {
                 .withActivity(getMaxActivityScore(identityChecks))
                 .withFraud(getMaxFraudScore(identityChecks))
                 .withVerification(getMaxVerificationScore(identityChecks))
-                .withEvidences(getEvidences(identityChecks))
+                .withEvidences(deduplicateEvidences(vcs))
                 .build();
     }
 
-    private List<VerifiableCredential> deduplicateVcsByDocumentType(
-            List<VerifiableCredential> vcs) {
-        var result = new ArrayList<VerifiableCredential>();
-        var deduplicatedVcs = new HashMap<String, VerifiableCredential>();
+    private List<Gpg45Scores.Evidence> deduplicateEvidences(List<VerifiableCredential> vcs) {
+        var result = new ArrayList<Gpg45Scores.Evidence>();
+        var deduplicatedEvidences = new HashMap<String, List<Gpg45Scores.Evidence>>();
         for (var vc : vcs) {
-            var docType = getVcDocumentType(vc);
-            if (isEmpty(docType)) {
-                result.add(vc);
-            } else {
-                var existing = deduplicatedVcs.get(docType);
-                if (existing == null) {
-                    deduplicatedVcs.put(docType, vc);
+            if (vc.getCredential() instanceof IdentityCheckCredential idCheckVc) {
+                var docType = getVcDocumentType(vc);
+                var evidence = getEvidences(idCheckVc.getEvidence());
+                if (evidence.size() == 0) {
+                    continue;
+                }
+                if (isEmpty(docType)) {
+                    result.addAll(evidence);
                 } else {
-                    deduplicatedVcs.put(
-                            docType, selectVerifiableCredentialWithSameDocumentType(existing, vc));
+                    var existing = deduplicatedEvidences.get(docType);
+                    if (existing == null
+                            || existing.size() == 0
+                            || evidence.get(0).compareTo(existing.get(0)) > 0) {
+                        deduplicatedEvidences.put(docType, evidence);
+                    }
                 }
             }
         }
-        result.addAll(deduplicatedVcs.values());
+        result.addAll(
+                deduplicatedEvidences.values().stream()
+                        .flatMap(item -> item.stream())
+                        .collect(Collectors.toList()));
         return result;
-    }
-
-    private VerifiableCredential selectVerifiableCredentialWithSameDocumentType(
-            VerifiableCredential vc1, VerifiableCredential vc2) {
-        if (vc1.getCredential() instanceof IdentityCheckCredential idCheck1
-                && vc2.getCredential() instanceof IdentityCheckCredential idCheck2) {
-            var maxStrength1 =
-                    idCheck1.getEvidence().stream()
-                            .mapToInt(IdentityCheck::getStrengthScore)
-                            .max()
-                            .orElse(NO_SCORE);
-            var maxStrength2 =
-                    idCheck2.getEvidence().stream()
-                            .mapToInt(IdentityCheck::getStrengthScore)
-                            .max()
-                            .orElse(NO_SCORE);
-            if (maxStrength1 > maxStrength2) {
-                return vc1;
-            } else if (maxStrength2 > maxStrength1) {
-                return vc2;
-            } else {
-                var maxValidity1 =
-                        idCheck1.getEvidence().stream()
-                                .mapToInt(IdentityCheck::getValidityScore)
-                                .max()
-                                .orElse(NO_SCORE);
-                var maxValidity2 =
-                        idCheck2.getEvidence().stream()
-                                .mapToInt(IdentityCheck::getValidityScore)
-                                .max()
-                                .orElse(NO_SCORE);
-                if (maxValidity1 > maxValidity2) {
-                    return vc1;
-                } else if (maxValidity2 > maxValidity1) {
-                    return vc2;
-                }
-            }
-        }
-        return vc1;
     }
 
     private String getVcDocumentType(VerifiableCredential vc) {
@@ -202,6 +171,7 @@ public class Gpg45ProfileEvaluator {
                             }
                             return Stream.empty();
                         })
+                .sorted(Comparator.reverseOrder())
                 .toList();
     }
 }

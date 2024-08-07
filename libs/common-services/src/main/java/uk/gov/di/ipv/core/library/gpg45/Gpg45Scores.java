@@ -188,7 +188,7 @@ public class Gpg45Scores {
         }
     }
 
-    public static class Evidence {
+    public static class Evidence implements Comparable<Evidence> {
         private final int strength;
         private final int validity;
 
@@ -225,6 +225,23 @@ public class Gpg45Scores {
         @Override
         public int hashCode() {
             return Objects.hash(strength, validity);
+        }
+
+        @Override
+        public int compareTo(Evidence e) {
+            if (strength < e.getStrength()) {
+                return -1;
+            }
+            if (strength > e.getStrength()) {
+                return 1;
+            }
+            if (validity < e.getValidity()) {
+                return -1;
+            }
+            if (validity > e.getValidity()) {
+                return 1;
+            }
+            return 0;
         }
     }
 }
