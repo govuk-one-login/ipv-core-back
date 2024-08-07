@@ -12,7 +12,7 @@ export CORE_BACK_INTERNAL_API_KEY
 
 cd /api-tests
 
-npm test
+npm run test:build
 
 api_tests_exit_code=$?
 cp reports/api-tests-cucumber-report.json "$TEST_REPORT_ABSOLUTE_DIR"
