@@ -6,6 +6,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
 import java.util.List;
 
@@ -13,14 +14,14 @@ import java.util.List;
 @ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
 @Data
-public class ReportUserIdentityItem {
+public class ReportUserIdentityItem implements PersistenceItem {
     public ReportUserIdentityItem(
             String userId,
             String identity,
-            int vcCount,
+            Integer vcCount,
             List<String> constituentVcs,
             Boolean migrated) {
-        this.hashUserId = DigestUtils.sha256Hex(userId);
+        this.hashUserId = getUserHash(userId);
         this.userId = userId;
         this.identity = identity;
         this.vcCount = vcCount;
@@ -31,12 +32,21 @@ public class ReportUserIdentityItem {
     private String hashUserId;
     private String userId;
     private String identity;
-    private int vcCount;
+    private Integer vcCount;
     private List<String> constituentVcs;
     private Boolean migrated;
 
     @DynamoDbPartitionKey
     public String getHashUserId() {
         return hashUserId;
+    }
+
+    @Override
+    public void setTtl(long ttl) {
+        throw new UnsupportedOperationException("VC store items do not use TTL");
+    }
+
+    public static String getUserHash(String userId) {
+        return DigestUtils.sha256Hex(userId);
     }
 }

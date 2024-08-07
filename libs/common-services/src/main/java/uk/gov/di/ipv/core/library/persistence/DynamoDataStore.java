@@ -39,6 +39,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     public static final int MAX_ITEMS_IN_WRITE_BATCH = 25;
     private final Class<T> typeParameterClass;
     private final ConfigService configService;
+
     private final DynamoDbTable<T> table;
 
     public DynamoDataStore(
@@ -60,6 +61,10 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
                         .build();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
+    }
+
+    public DynamoDbTable<T> getTable() {
+        return table;
     }
 
     @Override
@@ -92,6 +97,12 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         } catch (ConditionalCheckFailedException e) {
             throw new ItemAlreadyExistsException(e);
         }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    @Override
+    public void createOrUpdate(List<T> items) throws BatchDeleteException {
+        processBatchOperation(items, false);
     }
 
     @Override

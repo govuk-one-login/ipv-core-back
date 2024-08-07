@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -16,18 +17,21 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.TableScanResult;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.DataStore;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
+import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportSummaryItem;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,10 +51,13 @@ class ReportUserIdentityHandlerTest {
     @Mock private ReportUserIdentityService mockReportUserIdentityService;
 
     @Mock(name = "vcStoreItemDataStore")
-    private DataStore<VcStoreItem> mockVcStoreItemDataStore;
+    private ScanDynamoDataStore<VcStoreItem> mockVcStoreItemScanDynamoDataStore;
 
     @Mock(name = "reportUserIdentityDataStore")
-    private DataStore<ReportUserIdentityItem> mockReportUserIdentityDataStore;
+    private ScanDynamoDataStore<ReportUserIdentityItem> mockReportUserIdentityScanDynamoDataStore;
+
+    @Mock(name = "reportSummaryDataStore")
+    private ScanDynamoDataStore<ReportSummaryItem> mockReportSummaryScanDynamoDataStore;
 
     @Captor private ArgumentCaptor<ReportProcessingResult> reportProcessingResultArgumentCaptor;
     private ReportUserIdentityHandler reportUserIdentityHandler;
@@ -64,8 +71,9 @@ class ReportUserIdentityHandlerTest {
                         mockUserIdentityService,
                         mockVerifiableCredentialService,
                         mockReportUserIdentityService,
-                        mockVcStoreItemDataStore,
-                        mockReportUserIdentityDataStore);
+                        mockVcStoreItemScanDynamoDataStore,
+                        mockReportUserIdentityScanDynamoDataStore,
+                        mockReportSummaryScanDynamoDataStore);
     }
 
     @Test
@@ -77,14 +85,17 @@ class ReportUserIdentityHandlerTest {
                         vcExperianFraudScoreTwo().toVcStoreItem());
         // Arrange
         when(objectMapper.readValue(inputStream, ReportProcessingRequest.class))
-                .thenReturn(new ReportProcessingRequest(false, null, null));
-        when(mockVcStoreItemDataStore.getItems(any(), any()))
+                .thenReturn(new ReportProcessingRequest(true, true, null, null));
+        when(mockVcStoreItemScanDynamoDataStore.getItems(any(), any()))
                 .thenReturn(new TableScanResult<>(credentials, null));
+        VerifiableCredential passportNonDcmawSuccessfulVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        passportNonDcmawSuccessfulVc.setMigrated(Instant.now());
         when(mockVerifiableCredentialService.getVcs(TEST_SUBJECT))
-                .thenReturn(List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, VC_ADDRESS));
+                .thenReturn(List.of(passportNonDcmawSuccessfulVc, VC_ADDRESS));
         String userId2 = "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092";
-        when(mockVerifiableCredentialService.getVcs(userId2))
-                .thenReturn(List.of(vcExperianFraudScoreTwo()));
+        VerifiableCredential fraudVC = vcExperianFraudScoreTwo();
+        fraudVC.setMigrated(Instant.now());
+        when(mockVerifiableCredentialService.getVcs(userId2)).thenReturn(List.of(fraudVC));
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(Boolean.TRUE);
         when(mockReportUserIdentityService.getStrongestAttainedVotForCredentials(any()))
                 .thenReturn(Optional.of(Vot.P2));
@@ -94,13 +105,21 @@ class ReportUserIdentityHandlerTest {
                                 TEST_SUBJECT, "P2", 0, Collections.emptyList(), true),
                         new ReportUserIdentityItem(
                                 userId2, "P2", 0, Collections.emptyList(), false));
-        when(mockReportUserIdentityDataStore.getItems(any(), any(), any()))
+        when(mockReportUserIdentityScanDynamoDataStore.getItems(
+                        any(), anyString(), anyString(), anyString()))
                 .thenReturn(new TableScanResult<>(totalIdentities, null));
+        when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
+                .thenReturn(new ReportSummaryItem());
+        //        when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
+        //                .thenReturn(new ReportSummaryItem(ScanDynamoDataStore.KEY_VALUE,
+        // 2L,1L,0L,0L));
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, null);
 
         // Assert
-        verify(mockReportUserIdentityDataStore, times(2)).createOrUpdate(any());
+        verify(mockReportUserIdentityScanDynamoDataStore, times(2)).createOrUpdate(any());
+        verify(mockReportSummaryScanDynamoDataStore, times(2)).getItem(any());
+        verify(mockReportSummaryScanDynamoDataStore).update(any());
         verify(objectMapper)
                 .writeValue(
                         any(OutputStream.class), reportProcessingResultArgumentCaptor.capture());
