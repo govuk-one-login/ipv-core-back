@@ -27,6 +27,12 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 class Gpg45ProfileEvaluatorTest {
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
+    private static final String L1A_DRVING_PERMIT_VC =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDo1NDg2YjhlNS1hY2ZiLTRmYzgtYWVhNS1hYjk2ZmI4NTQ5M2IiLCJhdWQiOiJodHRwczovL25vdC1jaGVja2VkLWJ5LWNvcmUuZXhhbXBsZS5jb20iLCJuYmYiOjE3MjI5NTAyNjUsImlzcyI6Imh0dHBzOi8vZGNtYXctY3JpLnN0dWJzLmFjY291bnQuZ292LnVrIiwidmMiOnsidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidmFsdWUiOiJBbGljZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiSmFuZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiUGFya2VyIiwidHlwZSI6IkZhbWlseU5hbWUifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5NzAtMDEtMDEifV0sImRyaXZpbmdQZXJtaXQiOlt7Imlzc3VlZEJ5IjoiRFZMQSIsImlzc3VlRGF0ZSI6IjIwMDUtMDItMDIiLCJwZXJzb25hbE51bWJlciI6IlBBUktFNzEwMTEyUEJGR0EiLCJleHBpcnlEYXRlIjoiMjAzMi0wMi0wMiJ9XX0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInZhbGlkaXR5U2NvcmUiOjEsInN0cmVuZ3RoU2NvcmUiOjEsImFjdGl2aXR5SGlzdG9yeVNjb3JlIjowLCJjaGVja0RldGFpbHMiOlt7ImNoZWNrTWV0aG9kIjoidnJpIn0seyJjaGVja01ldGhvZCI6ImJ2ciIsImJpb21ldHJpY1ZlcmlmaWNhdGlvblByb2Nlc3NMZXZlbCI6M31dLCJ0eG4iOiJlNDM4OTlmZi0yMmQyLTQyYTYtYTMzMC1kMmU1YmYzN2Y2NDEifV19LCJqdGkiOiJ1cm46dXVpZDpkMzIxYWZmOC03ZmQyLTRmYjctODEyZi01MTQ3NjM4OTllOWYifQ.DOdKbzka9pwgWm0wru-U0X1AdFV0XhHKZAhIGmLc4bMoARBCiC1ZRdMt2MctqkGvsamzjpx9ZUm3ObPJbj_Aaw"; // pragma: allowlist secret
+    private static final String M1A_DRIVING_PERMIT_VC =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDpmOGMyODU3MC00MGZhLTQyZjgtYjJhOS0xN2NjYTg3MDhjYzYiLCJhdWQiOiJodHRwczovL25vdC1jaGVja2VkLWJ5LWNvcmUuZXhhbXBsZS5jb20iLCJuYmYiOjE3MjI5NTA1NjQsImlzcyI6Imh0dHBzOi8vZGNtYXctY3JpLnN0dWJzLmFjY291bnQuZ292LnVrIiwidmMiOnsidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidmFsdWUiOiJBbGljZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiSmFuZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiUGFya2VyIiwidHlwZSI6IkZhbWlseU5hbWUifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5NzAtMDEtMDEifV0sImRyaXZpbmdQZXJtaXQiOlt7Imlzc3VlZEJ5IjoiRFZMQSIsImlzc3VlRGF0ZSI6IjIwMDUtMDItMDIiLCJwZXJzb25hbE51bWJlciI6IlBBUktFNzEwMTEyUEJGR0EiLCJleHBpcnlEYXRlIjoiMjAzMi0wMi0wMiJ9XX0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInZhbGlkaXR5U2NvcmUiOjIsInN0cmVuZ3RoU2NvcmUiOjMsImFjdGl2aXR5SGlzdG9yeVNjb3JlIjoxLCJjaGVja0RldGFpbHMiOlt7ImNoZWNrTWV0aG9kIjoidnJpIn0seyJjaGVja01ldGhvZCI6ImJ2ciIsImJpb21ldHJpY1ZlcmlmaWNhdGlvblByb2Nlc3NMZXZlbCI6M31dLCJ0eG4iOiI0ODA2NWE1ZC0zMTViLTQyYWMtODg1ZC0wZjZkMmUwOWFlNDMifV19LCJqdGkiOiJ1cm46dXVpZDplMjZiZjY1Ni01OTk3LTRmZDMtYjIyNC1mMGM2NDlhNjFhYWMifQ.Rjmp2Iyx9i6UjMfb1EVXneHcgqSQxETrt4dCoVwcWUiTekThbyD9a20bz9QNPowyE4bLFxDhwScmQjXKfiwgIA"; // pragma: allowlist secret
+    private static final String M1A_DRIVING_PERMIT_VC_LOW_VALIDITY =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDo0NjE5MjI0NC1kZmIwLTRjOTQtOWVhZi1kMTZlYmRhY2IzZDciLCJhdWQiOiJodHRwczovL25vdC1jaGVja2VkLWJ5LWNvcmUuZXhhbXBsZS5jb20iLCJuYmYiOjE3MjI5NTQ3MjAsImlzcyI6Imh0dHBzOi8vZGNtYXctY3JpLnN0dWJzLmFjY291bnQuZ292LnVrIiwidmMiOnsidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidmFsdWUiOiJBbGljZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiSmFuZSIsInR5cGUiOiJHaXZlbk5hbWUifSx7InZhbHVlIjoiUGFya2VyIiwidHlwZSI6IkZhbWlseU5hbWUifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5NzAtMDEtMDEifV0sImRyaXZpbmdQZXJtaXQiOlt7Imlzc3VlZEJ5IjoiRFZMQSIsImlzc3VlRGF0ZSI6IjIwMDUtMDItMDIiLCJwZXJzb25hbE51bWJlciI6IlBBUktFNzEwMTEyUEJGR0EiLCJleHBpcnlEYXRlIjoiMjAzMi0wMi0wMiJ9XX0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInZhbGlkaXR5U2NvcmUiOjEsInN0cmVuZ3RoU2NvcmUiOjMsImFjdGl2aXR5SGlzdG9yeVNjb3JlIjoxLCJjaGVja0RldGFpbHMiOlt7ImNoZWNrTWV0aG9kIjoidnJpIn0seyJjaGVja01ldGhvZCI6ImJ2ciIsImJpb21ldHJpY1ZlcmlmaWNhdGlvblByb2Nlc3NMZXZlbCI6M31dLCJ0eG4iOiI2OGUxZjRkMS01YjM3LTRlZDYtYWE5NS03YzcwODc2NDcyMWUifV19LCJqdGkiOiJ1cm46dXVpZDo0OTE5NjllZC01MTk5LTRhMDUtOGFiNS1kZWIxZTZhNDA5N2EifQ.O2uzRKbMRps1qb6ml0nj26Gb7WL4BjItoSQ34iFJtUAZ_7lflVTG4y441LLEPEuW2a4-8m56oEZTytqWztsv2g"; // pragma: allowlist secret
     private final String M1A_PASSPORT_VC =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDplNmUyZTMyNC01YjY2LTRhZDYtODMzOC04M2Y5ZjgzN2UzNDUiLCJhdWQiOiJodHRwczpcL1wvaWRlbnRpdHkuaW50ZWdyYXRpb24uYWNjb3VudC5nb3YudWsiLCJuYmYiOjE2NTg4Mjk2NDcsImlzcyI6Imh0dHBzOlwvXC9yZXZpZXctcC5pbnRlZ3JhdGlvbi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY1ODgzNjg0NywidmMiOnsiZXZpZGVuY2UiOlt7InZhbGlkaXR5U2NvcmUiOjIsInN0cmVuZ3RoU2NvcmUiOjQsImNpIjpudWxsLCJ0eG4iOiIxMjNhYjkzZC0zYTQzLTQ2ZWYtYTJjMS0zYzY0NDQyMDY0MDgiLCJ0eXBlIjoiSWRlbnRpdHlDaGVjayJ9XSwiY3JlZGVudGlhbFN1YmplY3QiOnsicGFzc3BvcnQiOlt7ImV4cGlyeURhdGUiOiIyMDMwLTAxLTAxIiwiZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODcifV0sIm5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidHlwZSI6IkdpdmVuTmFtZSIsInZhbHVlIjoiS0VOTkVUSCJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IkRFQ0VSUVVFSVJBIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTU5LTA4LTIzIn1dfSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl19fQ.MEYCIQC-2fwJVvFLM8SnCKk_5EHX_ZPdTN2-kaOxNjXky86LUgIhAIMZUuTztxyyqa3ZkyaqnkMl1vPl1HQ2FbQ9LxPQChn"; // pragma: allowlist secret
     private final String M1A_ADDRESS_VC =
@@ -72,6 +78,25 @@ class Gpg45ProfileEvaluatorTest {
                                 VerifiableCredential.fromValidJwt(
                                         null, null, SignedJWT.parse(M1A_PASSPORT_VC))));
         Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0);
+
+        assertEquals(expectedScores, builtScores);
+    }
+
+    @Test
+    void buildScoreShouldReturnCorrectScoreForDuplicateDrivingPermitCredential() throws Exception {
+        Gpg45Scores builtScores =
+                evaluator.buildScore(
+                        List.of(
+                                VerifiableCredential.fromValidJwt(
+                                        null,
+                                        null,
+                                        SignedJWT.parse(M1A_DRIVING_PERMIT_VC_LOW_VALIDITY)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(M1A_DRIVING_PERMIT_VC)),
+                                VerifiableCredential.fromValidJwt(
+                                        null, null, SignedJWT.parse(L1A_DRVING_PERMIT_VC))));
+
+        Gpg45Scores expectedScores = new Gpg45Scores(Gpg45Scores.EV_32, 1, 0, 3);
 
         assertEquals(expectedScores, builtScores);
     }
