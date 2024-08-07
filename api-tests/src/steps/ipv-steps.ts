@@ -16,6 +16,7 @@ import {
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
+import { doProvenDetailsMatchIdentity } from "../utils/proven-identity-helpers.js";
 import {
   isClientResponse,
   isCriResponse,
@@ -23,6 +24,7 @@ import {
   isPageResponse,
   JourneyEngineResponse,
 } from "../types/internal-api.js";
+import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -52,7 +54,7 @@ After(function (this: World, options: ITestCaseHookParameter) {
 When(
   "I start a new {string} journey",
   async function (this: World, journeyType: string): Promise<void> {
-    this.userId = getRandomString(16);
+    this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
@@ -143,5 +145,23 @@ Then(
         );
       }
     }
+  },
+);
+
+Then(
+  "my proven user details match",
+  async function (this: World): Promise<void> {
+    assert.ok(
+      isPageResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
+    assert.equal("page-ipv-reuse", this.lastJourneyEngineResponse.page);
+
+    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+
+    assert.ok(
+      doProvenDetailsMatchIdentity(provenIdentity, this.identity),
+      "Proven identity and current identity do not match.",
+    );
   },
 );
