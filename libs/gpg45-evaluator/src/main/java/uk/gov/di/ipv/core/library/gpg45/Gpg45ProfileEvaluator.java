@@ -75,16 +75,11 @@ public class Gpg45ProfileEvaluator {
             if (vc.getCredential() instanceof IdentityCheckCredential idCheckVc) {
                 var docType = getVcDocumentType(vc);
                 var evidence = getEvidences(idCheckVc.getEvidence());
-                if (evidence.size() == 0) {
-                    continue;
-                }
                 if (isEmpty(docType)) {
                     result.addAll(evidence);
                 } else {
                     var existing = deduplicatedEvidences.get(docType);
-                    if (existing == null
-                            || existing.size() == 0
-                            || evidence.get(0).compareTo(existing.get(0)) > 0) {
+                    if (isNullOrEmpty(existing) || evidence.get(0).compareTo(existing.get(0)) > 0) {
                         deduplicatedEvidences.put(docType, evidence);
                     }
                 }
