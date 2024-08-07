@@ -2,9 +2,8 @@ import dotenv from "dotenv";
 
 const CORE_ENV = process.env.CORE_ENV;
 
-if (!CORE_ENV) {
-  dotenv.config();
-} else {
+dotenv.config();
+if (CORE_ENV) {
   dotenv.config({
     path: `.env.${CORE_ENV}`,
   });
@@ -34,6 +33,7 @@ const config = {
     redirectUrl: getMandatoryConfig("ORCHESTRATOR_REDIRECT_URL"),
     signingKey: getMandatoryConfig("JAR_SIGNING_KEY"),
   },
+  asyncQueueName: getMandatoryConfig("ASYNC_QUEUE_NAME"),
   localAuditEvents:
     getOptionalConfig("process.env.LOCAL_AUDIT_EVENTS") === "true",
 };

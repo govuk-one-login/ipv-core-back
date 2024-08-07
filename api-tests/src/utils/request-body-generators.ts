@@ -65,8 +65,17 @@ export const generateCriStubBody = async (
   scenario: string,
   redirectUrl: string,
   nbf?: number,
+  f2f?: boolean,
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
+  const f2fRequest = f2f
+    ? {
+        sendVcToQueue: true,
+        sendErrorToQueue: false,
+        queueName: config.asyncQueueName,
+      }
+    : undefined;
+
   return {
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
@@ -77,6 +86,7 @@ export const generateCriStubBody = async (
     ),
     evidenceJson: await readJsonFile(criId, scenario, "evidence"),
     nbf,
+    f2f: f2fRequest,
   };
 };
 

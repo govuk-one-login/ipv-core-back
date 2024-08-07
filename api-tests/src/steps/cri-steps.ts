@@ -67,6 +67,24 @@ When(
 );
 
 When(
+  "I submit {string} details to the async CRI stub",
+  async function (this: World, scenario: string): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+      ),
+    );
+  },
+);
+
+When(
   "I get a(n) {string} OAuth error from the CRI stub",
   async function (this: World, error: string): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
