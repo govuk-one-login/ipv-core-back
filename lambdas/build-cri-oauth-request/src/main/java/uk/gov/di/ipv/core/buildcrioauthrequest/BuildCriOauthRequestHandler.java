@@ -69,6 +69,7 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
@@ -79,6 +80,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getCookies;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
@@ -151,6 +153,7 @@ public class BuildCriOauthRequestHandler
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
+            Map<String, String> cookies = getCookies(input);
             configService.setFeatureSet(getFeatureSet(input));
 
             var cri = getCriFromJourney(input.getJourneyUri().getPath());
@@ -196,7 +199,8 @@ public class BuildCriOauthRequestHandler
                             criEvidenceRequest,
                             targetVot);
 
-            CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
+            CriResponse criResponse =
+                    getCriResponse(criConfig, jweObject, cri, cookies.get("language"));
 
             persistOauthState(ipvSessionItem, oauthState);
 
@@ -281,7 +285,8 @@ public class BuildCriOauthRequestHandler
         return null;
     }
 
-    private CriResponse getCriResponse(OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri)
+    private CriResponse getCriResponse(
+            OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri, String language)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
@@ -291,6 +296,10 @@ public class BuildCriOauthRequestHandler
 
         if (cri.equals(DCMAW)) {
             redirectUri.addParameter("response_type", "code");
+        }
+
+        if (cri.equals(DWP_KBV)) {
+            redirectUri.addParameter("lng", language);
         }
 
         return new CriResponse(new CriDetails(cri.getId(), redirectUri.build().toString()));

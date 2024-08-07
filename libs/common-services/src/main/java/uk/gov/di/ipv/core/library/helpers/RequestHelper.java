@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +90,31 @@ public class RequestHelper {
         String ipAddress = request.getIpAddress();
         validateIpAddress(ipAddress, "ipAddress not present in request.");
         return ipAddress;
+    }
+
+    public static Map<String, String> getCookies(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody, JsonProcessingException {
+        String cookies = request.getLanguage();
+        System.out.printf(
+                "cookies1: %s", new ObjectMapper().writeValueAsString(request.getLanguage()));
+        System.out.printf(
+                "cookies2: %s", new ObjectMapper().writeValueAsString(request.getLanguage()));
+        System.out.printf(
+                "cookies3: %s", new ObjectMapper().writeValueAsString(request.getLanguage()));
+        System.out.printf(
+                "cookies4: %s", new ObjectMapper().writeValueAsString(request.getLanguage()));
+        System.out.printf(
+                "cookies5: %s", new ObjectMapper().writeValueAsString(request.getLanguage()));
+
+        if (cookies == null) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "cookies is missing from this request", IP_ADDRESS_HEADER));
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.MISSING_COOKIES);
+        }
+
+        return new ObjectMapper().readValue(cookies, new TypeReference<>() {});
     }
 
     public static String getClientOAuthSessionId(JourneyRequest event) {
