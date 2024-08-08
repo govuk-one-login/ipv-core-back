@@ -40,7 +40,7 @@ If only want to gather unique users from tactical storage (with no lastEvaluated
 ```json
 {
   "continueUniqueUserScan": true,
-  "continueUserIdentityScan": true
+  "continueUserIdentityScan": false
 }
 ```
 AWS lambda has got max timeout value of 900 seconds (15 minutes). And as in live we got around 2.5M VCs we'll need

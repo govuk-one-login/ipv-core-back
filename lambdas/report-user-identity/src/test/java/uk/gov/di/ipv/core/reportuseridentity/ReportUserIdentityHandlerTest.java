@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.reportuseridentity;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +40,14 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.TEST_SUBJECT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
+import static uk.gov.di.ipv.core.reportuseridentity.ReportUserIdentityHandler.STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT;
 
 @ExtendWith(MockitoExtension.class)
 class ReportUserIdentityHandlerTest {
     @Mock ObjectMapper objectMapper;
-    @Mock private InputStream inputStream;
-    @Mock private OutputStream outputStream;
+    @Mock private InputStream mockInputStream;
+    @Mock private Context mockContext;
+    @Mock private OutputStream mockOutputStream;
     @Mock private ConfigService mockConfigService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -84,7 +87,9 @@ class ReportUserIdentityHandlerTest {
                         VC_ADDRESS.toVcStoreItem(),
                         vcExperianFraudScoreTwo().toVcStoreItem());
         // Arrange
-        when(objectMapper.readValue(inputStream, ReportProcessingRequest.class))
+        when(mockContext.getRemainingTimeInMillis())
+                .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
+        when(objectMapper.readValue(mockInputStream, ReportProcessingRequest.class))
                 .thenReturn(new ReportProcessingRequest(true, true, null, null));
         when(mockVcStoreItemScanDynamoDataStore.getItems(any(), any()))
                 .thenReturn(new TableScanResult<>(credentials, null));
@@ -111,7 +116,7 @@ class ReportUserIdentityHandlerTest {
         when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
                 .thenReturn(new ReportSummaryItem());
         // Act
-        reportUserIdentityHandler.handleRequest(inputStream, outputStream, null);
+        reportUserIdentityHandler.handleRequest(mockInputStream, mockOutputStream, mockContext);
 
         // Assert
         verify(mockReportUserIdentityScanDynamoDataStore, times(2)).createOrUpdate(any());

@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
 import uk.gov.di.ipv.core.reportuseridentity.domain.TableScanResult;
+import uk.gov.di.ipv.core.reportuseridentity.exceptions.StopBeforeLambdaTimeoutException;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportSummaryItem;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
@@ -42,6 +43,7 @@ import java.util.Map;
 public class ReportUserIdentityHandler implements RequestStreamHandler {
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 1000;
     private final ObjectMapper objectMapper;
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -118,9 +120,10 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             "Request received- " + reportProcessingRequest.toString()));
             // Step-1
             scanToExtractUniqueUserIdFromTacticalStore(
-                    reportProcessingResult, reportProcessingRequest);
+                    reportProcessingResult, reportProcessingRequest, context);
             // Step-2
-            processUsersToFindLOCAndUpdateDb(reportProcessingRequest, reportProcessingResult);
+            processUsersToFindLOCAndUpdateDb(
+                    reportProcessingRequest, reportProcessingResult, context);
             // Step-3
             reportProcessingResult = buildReportProcessingResult(reportProcessingResult);
 
@@ -133,6 +136,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             "Stopped report processing of user's identities.", e));
         } catch (BatchDeleteException e) {
             LOGGER.info(LogHelper.buildLogMessage("Error occurred during batch write process."));
+        } catch (StopBeforeLambdaTimeoutException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Stopping as lambda about to timeout.", e));
         } finally {
             LOGGER.info(LogHelper.buildLogMessage("Writing output with result summary."));
             objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
@@ -142,15 +147,16 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     private void scanToExtractUniqueUserIdFromTacticalStore(
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
-            ReportProcessingRequest reportProcessingRequest)
-            throws BatchDeleteException {
+            ReportProcessingRequest reportProcessingRequest,
+            Context context)
+            throws BatchDeleteException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUniqueUserScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
 
             Map<String, AttributeValue> exclusiveStartKey =
                     reportProcessingRequest.tacticalStoreLastEvaluatedKey();
-
+            reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
             do {
                 TableScanResult<VcStoreItem> tableScanResult =
                         vcStoreItemScanDynamoDataStore.getItems(
@@ -169,6 +175,9 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                                         usrId, null, null, null, null))
                                 .toList();
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentities);
+
+                checkLambdaRemainingExecutionTime(context);
+
                 if (tableScanResult.lastEvaluatedKey() != null) {
                     exclusiveStartKey = tableScanResult.lastEvaluatedKey();
                     reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
@@ -183,9 +192,11 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     private void processUsersToFindLOCAndUpdateDb(
             ReportProcessingRequest reportProcessingRequest,
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult)
+            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
+            Context context)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException,
-                    BatchDeleteException {
+                    BatchDeleteException, StopBeforeLambdaTimeoutException {
+        List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
         if (reportProcessingRequest.continueUserIdentityScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -246,6 +257,15 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
                 aggregateAndPersistIdentities(reportUserIdentityItems);
 
+                totalReportUserIdentityItems.addAll(reportUserIdentityItems);
+
+                try {
+                    checkLambdaRemainingExecutionTime(context);
+                } catch (StopBeforeLambdaTimeoutException e) {
+                    reportProcessingResult.users(totalReportUserIdentityItems);
+                    throw e;
+                }
+
                 if (tableScanResult.lastEvaluatedKey() != null) {
                     exclusiveStartKey = tableScanResult.lastEvaluatedKey();
                     reportProcessingResult.userIdentitylastEvaluatedKey(exclusiveStartKey);
@@ -253,6 +273,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             } while (exclusiveStartKey != null);
             LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
             reportProcessingResult.userIdentitylastEvaluatedKey(null);
+            reportProcessingResult.users(totalReportUserIdentityItems);
         }
     }
 
@@ -303,5 +324,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         reportSummaryItem.getTotalP2Migrated(),
                         reportSummaryItem.getTotalP1(),
                         reportSummaryItem.getTotalP0()));
+    }
+
+    private void checkLambdaRemainingExecutionTime(Context context)
+            throws StopBeforeLambdaTimeoutException {
+        if (context.getRemainingTimeInMillis() < STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT) {
+            throw new StopBeforeLambdaTimeoutException("Stopping as lambda about to timeout.");
+        }
     }
 }
