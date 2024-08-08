@@ -340,10 +340,11 @@ core:
         }'
   local:
     asyncQueue:
-      apiBaseUrl: "https://queue.stubs.account.gov.uk/"
+      apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     resetIdentity: false
     deleteDetailsEnabled: false
+    pendingF2FResetEnabled: false
     strategicAppEnabled: false
     ticfCriBeta: false
     inheritedIdentity: true
@@ -407,6 +408,9 @@ core:
     deleteDetailsTestJourney:
       featureFlags:
         deleteDetailsEnabled: true
+    pendingF2FResetEnabled:
+      featureFlags:
+        pendingF2FResetEnabled: true
     ticfCriBeta:
       featureFlags:
         ticfCriBeta: true

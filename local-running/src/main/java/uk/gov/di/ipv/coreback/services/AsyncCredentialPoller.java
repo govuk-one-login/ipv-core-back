@@ -2,6 +2,7 @@ package uk.gov.di.ipv.coreback.services;
 
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -18,9 +19,23 @@ import java.util.List;
 
 public class AsyncCredentialPoller extends Thread {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER =
+            new ObjectMapper().setPropertyNamingStrategy(new AwsPropertyNamingStrategy());
     private static final String X_API_KEY_HEADER = "x-api-key";
+    private static final int POLL_WAIT_TIME_SECONDS = 15;
     private static final int SLEEP_AFTER_ERROR_MILLIS = 5000;
+
+    // AWS uppercases certain initialisms, e.g. MD5
+    private static class AwsPropertyNamingStrategy
+            extends PropertyNamingStrategies.UpperCamelCaseStrategy {
+        @Override
+        public String translate(String input) {
+            if (input != null && input.startsWith("md5")) {
+                return "MD5" + input.substring(3);
+            }
+            return super.translate(input);
+        }
+    }
 
     private final URI queueUri;
     private final String queueApiKey;
@@ -29,7 +44,8 @@ public class AsyncCredentialPoller extends Thread {
 
     public AsyncCredentialPoller(String queueUri, String queueApiKey, String queueName)
             throws URISyntaxException {
-        this.queueUri = new URI(queueUri + "/queues/" + queueName);
+        this.queueUri =
+                new URI(queueUri + "/queues/" + queueName + "?waitTime=" + POLL_WAIT_TIME_SECONDS);
         this.queueApiKey = queueApiKey;
         this.processAsyncCriCredentialHandler = new ProcessAsyncCriCredentialHandler();
         this.httpClient = HttpClient.newHttpClient();
@@ -64,7 +80,7 @@ public class AsyncCredentialPoller extends Thread {
                 sqsEvent.setRecords(List.of(message));
                 processAsyncCriCredentialHandler.handleRequest(sqsEvent, new CoreContext());
             } else if (response.statusCode() == 204) {
-                LOGGER.info(LogHelper.buildLogMessage("Poll received no messages"));
+                LOGGER.debug(LogHelper.buildLogMessage("Poll received no messages"));
             } else {
                 throw new IOException("Request failed with status code " + response.statusCode());
             }
