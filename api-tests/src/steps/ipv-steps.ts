@@ -24,6 +24,8 @@ import {
   JourneyEngineResponse,
 } from "../types/internal-api.js";
 
+const CORE_IDENTITY = "https://vocab.account.gov.uk/v1/coreIdentity";
+
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
     return "none";
@@ -54,11 +56,12 @@ When(
   async function (this: World, journeyType: string): Promise<void> {
     this.userId = getRandomString(16);
     this.journeyId = getRandomString(16);
+    this.journeyType = journeyType;
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
         this.userId,
         this.journeyId,
-        journeyType,
+        this.journeyType,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -132,6 +135,19 @@ Then("I get a {string} identity", function (this: World, vot: string): void {
 });
 
 Then(
+  "My identity {string} is {string}",
+  function (this: World, field: string, givenName: string): void {
+    assert.ok(this.identity[CORE_IDENTITY].name);
+    const namePart = this.identity[CORE_IDENTITY].name[0].nameParts.find(
+      (np) => {
+        return np.type === field;
+      },
+    );
+    assert.equal(givenName, namePart?.value);
+  },
+);
+
+Then(
   "a(n) {string} audit event was recorded [local only]",
   async function (this: World, eventName: string): Promise<void> {
     if (config.localAuditEvents) {
@@ -145,3 +161,17 @@ Then(
     }
   },
 );
+
+When("I return using my identity", async function (this: World): Promise<void> {
+  this.ipvSessionId = await internalClient.initialiseIpvSession(
+    await generateInitialiseIpvSessionBody(
+      this.userId,
+      this.journeyId,
+      this.journeyType,
+    ),
+  );
+  this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+    "/journey/next",
+    this.ipvSessionId,
+  );
+});

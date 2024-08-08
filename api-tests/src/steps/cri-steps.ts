@@ -42,7 +42,7 @@ const submitAndProcessCriAction = async (
 };
 
 When(
-  "I submit {string} details to the CRI stub",
+  "I submit {string} details to the CRI stub(:? with modified)",
   async function (this: World, scenario: string): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
@@ -56,6 +56,39 @@ When(
         this.lastJourneyEngineResponse.cri.redirectUrl,
       ),
     );
+  },
+);
+
+When(
+  "I submit {string} details to the CRI stub with modified {string} equal to {string}",
+  async function (
+    this: World,
+    scenario: string,
+    field: string,
+    value: string,
+  ): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+    const stubBody = await generateCriStubBody(
+      this.lastJourneyEngineResponse.cri.id,
+      scenario,
+      this.lastJourneyEngineResponse.cri.redirectUrl,
+    );
+    if (stubBody.credentialSubjectJson) {
+      const subject = JSON.parse(stubBody.credentialSubjectJson);
+      if (subject.name) {
+        for (const name of subject.name) {
+          for (const namePart of name.nameParts) {
+            if (namePart.type === field) {
+              namePart.value = value;
+            }
+          }
+        }
+      }
+      stubBody.credentialSubjectJson = JSON.stringify(subject);
+    }
+    await submitAndProcessCriAction(this, stubBody);
   },
 );
 
