@@ -76,10 +76,6 @@ When(
 When(
   "I modify the CRI stub request by setting {string} to {string}",
   async function (this: World, field: string, value: string): Promise<void> {
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
-
     if (this.criStubRequest.credentialSubjectJson) {
       const subject = JSON.parse(this.criStubRequest.credentialSubjectJson);
       if (field.endsWith("Name") && subject.name) {
@@ -103,9 +99,6 @@ When(
 When(
   "I submit the CRI stub request the CRI stub",
   async function (this: World): Promise<void> {
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
     await submitAndProcessCriAction(this, this.criStubRequest);
   },
 );
