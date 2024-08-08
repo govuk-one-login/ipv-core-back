@@ -8,13 +8,19 @@ import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
+import uk.gov.di.model.IdentityCheckSubject;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
+import static software.amazon.awssdk.utils.StringUtils.isEmpty;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -45,7 +51,6 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Gpg45Scores buildScore(List<VerifiableCredential> vcs) {
-
         var identityChecks =
                 vcs.stream()
                         .filter(vc -> vc.getCredential() instanceof IdentityCheckCredential)
@@ -59,8 +64,53 @@ public class Gpg45ProfileEvaluator {
                 .withActivity(getMaxActivityScore(identityChecks))
                 .withFraud(getMaxFraudScore(identityChecks))
                 .withVerification(getMaxVerificationScore(identityChecks))
-                .withEvidences(getEvidences(identityChecks))
+                .withEvidences(deduplicateEvidences(vcs))
                 .build();
+    }
+
+    private List<Gpg45Scores.Evidence> deduplicateEvidences(List<VerifiableCredential> vcs) {
+        var result = new ArrayList<Gpg45Scores.Evidence>();
+        var deduplicatedEvidences = new HashMap<String, List<Gpg45Scores.Evidence>>();
+        for (var vc : vcs) {
+            if (vc.getCredential() instanceof IdentityCheckCredential idCheckVc) {
+                var docType = getVcDocumentType(vc);
+                var evidence = getEvidences(idCheckVc.getEvidence());
+                if (isEmpty(docType)) {
+                    result.addAll(evidence);
+                } else {
+                    var existing = deduplicatedEvidences.get(docType);
+                    if (isNullOrEmpty(existing) || evidence.get(0).compareTo(existing.get(0)) > 0) {
+                        deduplicatedEvidences.put(docType, evidence);
+                    }
+                }
+            }
+        }
+        result.addAll(deduplicatedEvidences.values().stream().flatMap(Collection::stream).toList());
+        return result;
+    }
+
+    private String getVcDocumentType(VerifiableCredential vc) {
+        if (vc.getCredential().getCredentialSubject() instanceof IdentityCheckSubject subject) {
+            if (!isNullOrEmpty(subject.getDrivingPermit())) {
+                return "drivingPermit";
+            }
+            if (!isNullOrEmpty(subject.getPassport())) {
+                return "passport";
+            }
+            if (!isNullOrEmpty(subject.getBankAccount())) {
+                return "bankAccount";
+            }
+            if (!isNullOrEmpty(subject.getResidencePermit())) {
+                return "residencePermit";
+            }
+            if (!isNullOrEmpty(subject.getSocialSecurityRecord())) {
+                return "socialSecurity";
+            }
+            if (!isNullOrEmpty(subject.getIdCard())) {
+                return "idCard";
+            }
+        }
+        return null;
     }
 
     private int getMaxActivityScore(List<IdentityCheck> identityChecks) {
@@ -113,6 +163,7 @@ public class Gpg45ProfileEvaluator {
                             }
                             return Stream.empty();
                         })
+                .sorted(Comparator.reverseOrder())
                 .toList();
     }
 }
