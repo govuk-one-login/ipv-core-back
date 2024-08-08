@@ -180,7 +180,7 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyAccessToken")
                 .willRespondWith()
-                .status(200)
+                .status(201)
                 .body(
                         newJsonBody(
                                         body -> {
@@ -235,7 +235,7 @@ class ContractTest {
                         "Authorization",
                         "Bearer badAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(401)
                 .toPact();
     }
 
