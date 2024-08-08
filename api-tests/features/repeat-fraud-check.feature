@@ -18,9 +18,21 @@ Feature: Repeat fraud check journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-#    When I return using 'P2' identity
-#    Then I see 'confirm-your-details' with my details
-#    When I select update
-#    Then I see 'update-details' page response
-#    When I select Name change
-#    Then I should be successful in changing my name
+
+    # Repeat fraud check with update name
+    When I start a new 'medium-confidence' journey
+    Then I get a 'confirm-your-details' page response
+    When I submit a 'given-names-only' event
+    Then I get a 'page-update-name' page response
+    When I submit a 'update-name' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-changed-first-name-only-passport-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-changed-first-name-only-score-2-with-expiry' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
