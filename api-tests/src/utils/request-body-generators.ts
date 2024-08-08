@@ -72,7 +72,8 @@ export const generateCriStubBody = async (
     ? {
         sendVcToQueue: true,
         sendErrorToQueue: false,
-        queueName: config.asyncQueueName,
+        queueName: config.asyncQueue.name,
+        delaySeconds: config.asyncQueue.delaySeconds,
       }
     : undefined;
 

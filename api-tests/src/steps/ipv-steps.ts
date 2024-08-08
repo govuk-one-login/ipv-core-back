@@ -30,6 +30,9 @@ import {
 } from "@govuk-one-login/data-vocab/credentials.js";
 import { delay } from "../utils/delay.js";
 
+const RETRY_DELAY_MILLIS = 2000;
+const MAX_ATTEMPTS = 5;
+
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
@@ -93,14 +96,14 @@ When(
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
   "I start a new {string} journey and return to a {string} page response",
+  { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
     expectedPage: string,
   ): Promise<void> {
-    const maxAttempts = 5;
     let attempt = 1;
-    while (attempt <= maxAttempts) {
+    while (attempt <= MAX_ATTEMPTS) {
       await startNewJourney(this, journeyType, false);
 
       try {
@@ -111,12 +114,12 @@ When(
         assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
         return;
       } catch (e) {
-        if (attempt >= maxAttempts) {
+        if (attempt >= MAX_ATTEMPTS) {
           throw e;
         }
       }
 
-      await delay(3000);
+      await delay(RETRY_DELAY_MILLIS);
       attempt++;
     }
   },
