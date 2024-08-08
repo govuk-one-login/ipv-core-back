@@ -60,24 +60,28 @@ When(
 );
 
 When(
-  "I submit {string} details to the CRI stub with modified {string} equal to {string}",
-  async function (
-    this: World,
-    scenario: string,
-    field: string,
-    value: string,
-  ): Promise<void> {
+  "I create a CRI stub request with {string} details",
+  async function (this: World, scenario: string): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
-    const stubBody = await generateCriStubBody(
+    this.criStubRequest = await generateCriStubBody(
       this.lastJourneyEngineResponse.cri.id,
       scenario,
       this.lastJourneyEngineResponse.cri.redirectUrl,
     );
+  },
+);
 
-    if (stubBody.credentialSubjectJson) {
-      const subject = JSON.parse(stubBody.credentialSubjectJson);
+When(
+  "I modify the CRI stub request by setting {string} to {string}",
+  async function (this: World, field: string, value: string): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    if (this.criStubRequest.credentialSubjectJson) {
+      const subject = JSON.parse(this.criStubRequest.credentialSubjectJson);
       if (field.endsWith("Name") && subject.name) {
         for (const name of subject.name) {
           for (const namePart of name.nameParts) {
@@ -91,9 +95,18 @@ When(
           address[field] = value;
         }
       }
-      stubBody.credentialSubjectJson = JSON.stringify(subject);
+      this.criStubRequest.credentialSubjectJson = JSON.stringify(subject);
     }
-    await submitAndProcessCriAction(this, stubBody);
+  },
+);
+
+When(
+  "I submit the CRI stub request the CRI stub",
+  async function (this: World): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+    await submitAndProcessCriAction(this, this.criStubRequest);
   },
 );
 
