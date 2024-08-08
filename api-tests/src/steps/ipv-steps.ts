@@ -25,6 +25,7 @@ import {
 } from "../types/internal-api.js";
 
 const CORE_IDENTITY = "https://vocab.account.gov.uk/v1/coreIdentity";
+const ADDRESS_IDENTITY = "https://vocab.account.gov.uk/v1/address";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -135,19 +136,6 @@ Then("I get a {string} identity", function (this: World, vot: string): void {
 });
 
 Then(
-  "My identity {string} is {string}",
-  function (this: World, field: string, givenName: string): void {
-    assert.ok(this.identity[CORE_IDENTITY].name);
-    const namePart = this.identity[CORE_IDENTITY].name[0].nameParts.find(
-      (np) => {
-        return np.type === field;
-      },
-    );
-    assert.equal(givenName, namePart?.value);
-  },
-);
-
-Then(
   "a(n) {string} audit event was recorded [local only]",
   async function (this: World, eventName: string): Promise<void> {
     if (config.localAuditEvents) {
@@ -175,3 +163,59 @@ When("I return using my identity", async function (this: World): Promise<void> {
     this.ipvSessionId,
   );
 });
+
+Then(
+  "My identity {string} is {string}",
+  function (this: World, field: string, value: string): void {
+    let valueToMatch;
+    switch (field) {
+      case "GivenName":
+      case "FamilyName": {
+        const namePart = this.identity[CORE_IDENTITY].name?.[0].nameParts.find(
+          (np) => {
+            return np.type === field;
+          },
+        );
+        valueToMatch = namePart?.value;
+        break;
+      }
+      case "buildingNumber": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].buildingNumber;
+        break;
+      }
+      case "addressCountry": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].addressCountry;
+        break;
+      }
+      case "uprn": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].uprn;
+        break;
+      }
+      case "streetName": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].streetName;
+        break;
+      }
+      case "postalCode": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].postalCode;
+        break;
+      }
+      case "addressLocality": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].addressLocality;
+        break;
+      }
+      case "validFrom": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].validFrom;
+        break;
+      }
+      case "buildingName": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].buildingName;
+        break;
+      }
+      case "subBuildingName": {
+        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].subBuildingName;
+        break;
+      }
+    }
+    assert.equal(value, valueToMatch);
+  },
+);

@@ -42,7 +42,7 @@ const submitAndProcessCriAction = async (
 };
 
 When(
-  "I submit {string} details to the CRI stub(:? with modified)",
+  "I submit {string} details to the CRI stub",
   async function (this: World, scenario: string): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
@@ -75,15 +75,20 @@ When(
       scenario,
       this.lastJourneyEngineResponse.cri.redirectUrl,
     );
+
     if (stubBody.credentialSubjectJson) {
       const subject = JSON.parse(stubBody.credentialSubjectJson);
-      if (subject.name) {
+      if (field.endsWith("Name") && subject.name) {
         for (const name of subject.name) {
           for (const namePart of name.nameParts) {
             if (namePart.type === field) {
               namePart.value = value;
             }
           }
+        }
+      } else if (subject.address) {
+        for (const address of subject.address) {
+          address[field] = value;
         }
       }
       stubBody.credentialSubjectJson = JSON.stringify(subject);
