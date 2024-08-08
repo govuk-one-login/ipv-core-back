@@ -9,6 +9,8 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ import uk.gov.di.model.SecurityCheckCredential;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -53,6 +56,7 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_E
 @PactTestFor(providerName = "CiMitProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock ConfigService mockConfigService;
 
     @BeforeEach
@@ -99,7 +103,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "getCisUserIdReturnsContraIndicators")
-    void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesContraIndicators(
+    void fetchContraIndicators_whenCalledWithUserIdAgainstCimitApi_receivesContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
@@ -164,7 +168,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "getCisUserIdReturnsNoCisVc")
-    void fetchContraIndicators_whenCalledWithUserIdAgainstCimiApi_receivesEmptyContraIndicators(
+    void fetchContraIndicators_whenCalledWithUserIdAgainstCimitApi_receivesEmptyContraIndicators(
             MockServer mockServer) throws CiRetrievalException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_COMPONENT_ID)).thenReturn(TEST_ISSUER);
@@ -189,7 +193,8 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiSuccessfullyPostsContraIndicator(PactDslWithProvider builder) {
+    public RequestResponsePact postCiSuccessfullyPostsContraIndicator(PactDslWithProvider builder)
+            throws JsonProcessingException {
         var responseForPostCi = newJsonBody(body -> body.stringValue("result", "success")).build();
 
         return builder.given("mockUserId is the user")
@@ -201,7 +206,9 @@ class ContractTest {
                         "Request for contra-indicators for specific user with existing contra-indicators.")
                 .path(POST_CI_ENDPOINT)
                 .method("POST")
-                .body(String.format("{\"signed_jwt\": \"%s\"}", FAILED_DVLA_VC_WITH_CI_JWT))
+                .body(
+                        OBJECT_MAPPER.writeValueAsString(
+                                Map.of("signed_jwt", FAILED_DVLA_VC_WITH_CI_JWT)))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -217,8 +224,8 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "postCiSuccessfullyPostsContraIndicator")
-    void successfullyPostCis_whenCalledWithSignedJwtAgainstCimiApi_returns200(MockServer mockServer)
-            throws ParseException, CredentialParseException {
+    void successfullyPostCis_whenCalledWithSignedJwtAgainstCimitApi_returns200(
+            MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
@@ -234,7 +241,8 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postCiInvalidIssuerReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact postCiInvalidIssuerReturns400(PactDslWithProvider builder)
+            throws JsonProcessingException {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
         return builder.given("mockIpAddress is the ip-address")
@@ -247,8 +255,8 @@ class ContractTest {
                 .method("POST")
                 .path(POST_CI_ENDPOINT)
                 .body(
-                        String.format(
-                                "{\"signed_jwt\": \"%s\"}", DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
+                        OBJECT_MAPPER.writeValueAsString(
+                                Map.of("signed_jwt", DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -264,7 +272,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "postCiInvalidIssuerReturns400")
-    void failsToPostCis_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(MockServer mockServer)
+    void failsToPostCis_whenCalledWithInvalidIssuerAgainstCimitApi_returns400(MockServer mockServer)
             throws ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
@@ -287,7 +295,8 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact successfullyReceivesMitigations(PactDslWithProvider builder) {
+    public RequestResponsePact postMitigationsSuccessfullyReceivesMitigations(
+            PactDslWithProvider builder) throws JsonProcessingException {
         var response =
                 newJsonBody(
                                 body -> {
@@ -305,7 +314,9 @@ class ContractTest {
                 .uponReceiving("Valid request to post signed_jwts.")
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
-                .body(String.format("{\"signed_jwts\": [\"%s\"]}", FAILED_DVLA_VC_WITH_CI_JWT))
+                .body(
+                        OBJECT_MAPPER.writeValueAsString(
+                                Map.of("signed_jwts", List.of(FAILED_DVLA_VC_WITH_CI_JWT))))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -320,8 +331,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "successfullyReceivesMitigations")
-    void successfullyPostsMitigations_whenCalledWithSignedJwtAgainstCimiApi_returns200(
+    @PactTestFor(pactMethod = "postMitigationsSuccessfullyReceivesMitigations")
+    void successfullyPostsMitigations_whenCalledWithSignedJwtAgainstCimitApi_returns200(
             MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
@@ -341,7 +352,8 @@ class ContractTest {
     }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact postMitigationsInvalidIssuerReturns400(PactDslWithProvider builder)
+            throws JsonProcessingException {
         var response = getFailedApiResponse("BAD_VC_ISSUER");
 
         return builder.given("mockIpAddress is the ip-address")
@@ -355,9 +367,10 @@ class ContractTest {
                 .path(POST_MITIGATIONS_ENDPOINT)
                 .method("POST")
                 .body(
-                        String.format(
-                                "{\"signed_jwts\": [\"%s\"]}",
-                                DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))
+                        OBJECT_MAPPER.writeValueAsString(
+                                Map.of(
+                                        "signed_jwts",
+                                        List.of(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT))))
                 .headers(
                         IP_ADDRESS_HEADER,
                         MOCK_IP_ADDRESS,
@@ -373,7 +386,7 @@ class ContractTest {
 
     @Test
     @PactTestFor(pactMethod = "postMitigationsInvalidIssuerReturns400")
-    void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimiApi_returns400(
+    void failsToPostMitigations_whenCalledWithInvalidIssuerAgainstCimitApi_returns400(
             MockServer mockServer) throws ParseException, CredentialParseException {
         // Arrange
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
