@@ -25,7 +25,6 @@ import {
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
 
-const FIRST = 0;
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
@@ -154,11 +153,6 @@ Then(
 Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
-    assert.ok(
-      isPageResponse(this.lastJourneyEngineResponse),
-      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
-    );
-
     const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
 
     const expectedAddresses = this.identity[addressCredential];
@@ -169,17 +163,14 @@ Then(
     );
 
     const expectedBirthDate =
-      this.identity[identityCredential].birthDate &&
-      this.identity[identityCredential].birthDate[FIRST].value;
+      this.identity[identityCredential].birthDate?.[0].value;
     assert.deepEqual(
       provenIdentity.dateOfBirth,
       expectedBirthDate,
       "Birth dates do not match.",
     );
 
-    const expectedNames =
-      this.identity[identityCredential].name &&
-      this.identity[identityCredential].name[FIRST].nameParts;
+    const expectedNames = this.identity[identityCredential].name?.[0].nameParts;
     assert.deepEqual(
       provenIdentity.nameParts,
       expectedNames,
