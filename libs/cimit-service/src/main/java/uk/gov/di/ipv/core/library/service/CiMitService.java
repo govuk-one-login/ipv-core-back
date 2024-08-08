@@ -67,16 +67,16 @@ public class CiMitService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
-    private static final String FAILED_API_REQUEST = "API request failed";
+    public static final String FAILED_API_REQUEST = "API request failed";
 
     public static final String GOVUK_SIGNIN_JOURNEY_ID_HEADER = "govuk-signin-journey-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     private static final String USER_ID_PARAMETER = "user_id";
     public static final String X_API_KEY_HEADER = "x-api-key";
 
-    private static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
-    private static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
-    private static final String GET_VCS_ENDPOINT = "/contra-indicators";
+    public static final String POST_CI_ENDPOINT = "/contra-indicators/detect";
+    public static final String POST_MITIGATIONS_ENDPOINT = "/contra-indicators/mitigate";
+    public static final String GET_VCS_ENDPOINT = "/contra-indicators";
     private static final String NOT_REQUIRED = "notRequired";
 
     public static final String FAILED_RESPONSE = "fail";

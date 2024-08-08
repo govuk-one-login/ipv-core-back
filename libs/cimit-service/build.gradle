@@ -9,6 +9,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkLambda,
 			libs.awsSdkUrlConnectionClient,
+			libs.diVocab,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
@@ -21,7 +22,9 @@ dependencies {
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			libs.pactConsumerJunit,
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:pact-test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }
