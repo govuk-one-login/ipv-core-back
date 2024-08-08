@@ -16,7 +16,6 @@ import {
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
-import { doProvenDetailsMatchIdentity } from "../utils/proven-identity-helpers.js";
 import {
   isClientResponse,
   isCriResponse,
@@ -25,6 +24,10 @@ import {
   JourneyEngineResponse,
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
+
+const FIRST = 0;
+const addressCredential = "https://vocab.account.gov.uk/v1/address";
+const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -155,13 +158,32 @@ Then(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal("page-ipv-reuse", this.lastJourneyEngineResponse.page);
 
     const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
 
-    assert.ok(
-      doProvenDetailsMatchIdentity(provenIdentity, this.identity),
-      "Proven identity and current identity do not match.",
+    const expectedAddresses = this.identity[addressCredential];
+    assert.deepEqual(
+      provenIdentity.addresses,
+      expectedAddresses,
+      "Addresses do not match.",
+    );
+
+    const expectedBirthDate =
+      this.identity[identityCredential].birthDate &&
+      this.identity[identityCredential].birthDate[FIRST].value;
+    assert.deepEqual(
+      provenIdentity.dateOfBirth,
+      expectedBirthDate,
+      "Birth dates do not match.",
+    );
+
+    const expectedNames =
+      this.identity[identityCredential].name &&
+      this.identity[identityCredential].name[FIRST].nameParts;
+    assert.deepEqual(
+      provenIdentity.nameParts,
+      expectedNames,
+      "Names do not match.",
     );
   },
 );

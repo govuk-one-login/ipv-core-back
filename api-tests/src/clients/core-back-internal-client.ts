@@ -80,7 +80,9 @@ export const getProvenIdentityDetails = async (
   );
 
   if (!response.ok) {
-    throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
+    throw new Error(
+      `BuildProvenUserIdentityDetails request failed: ${response.statusText}`,
+    );
   }
 
   return await response.json();
