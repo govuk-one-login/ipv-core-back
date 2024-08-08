@@ -14,6 +14,8 @@ import {
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
 
+const EXPIRED_NBF = 1658829758;
+
 const submitAndProcessCriAction = async (
   world: World,
   criStubRequest: CriStubRequest,
@@ -48,12 +50,18 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const matchedRegex = /^(.*)-with-expiry$/.exec(scenario);
+    const nbf = matchedRegex === null ? undefined : EXPIRED_NBF;
+    const extractedScenario =
+      matchedRegex === null ? scenario : matchedRegex[1];
+
     await submitAndProcessCriAction(
       this,
       await generateCriStubBody(
         this.lastJourneyEngineResponse.cri.id,
-        scenario,
+        extractedScenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
+        nbf,
       ),
     );
   },
