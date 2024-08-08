@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.reportuseridentity.persistence.item;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -30,7 +31,7 @@ public class ReportUserIdentityItem implements PersistenceItem {
     }
 
     private String hashUserId;
-    private String userId;
+    @JsonIgnore private String userId;
     private String identity;
     private Integer vcCount;
     private List<String> constituentVcs;

@@ -27,6 +27,7 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
     private static final Logger LOGGER = LogManager.getLogger();
     public static final int PAGE_SIZE_LIMIT = 50;
 
+    @ExcludeFromGeneratedCoverageReport
     public ScanDynamoDataStore(
             String tableName,
             Class<T> typeParameterClass,

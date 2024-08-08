@@ -110,9 +110,6 @@ class ReportUserIdentityHandlerTest {
                 .thenReturn(new TableScanResult<>(totalIdentities, null));
         when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
                 .thenReturn(new ReportSummaryItem());
-        //        when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
-        //                .thenReturn(new ReportSummaryItem(ScanDynamoDataStore.KEY_VALUE,
-        // 2L,1L,0L,0L));
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, null);
 

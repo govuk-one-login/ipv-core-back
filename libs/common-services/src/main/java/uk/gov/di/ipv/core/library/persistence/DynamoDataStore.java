@@ -63,6 +63,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public DynamoDbTable<T> getTable() {
         return table;
     }

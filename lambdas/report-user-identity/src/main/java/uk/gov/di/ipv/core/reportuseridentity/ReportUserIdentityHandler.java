@@ -70,7 +70,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         this.reportSummaryScanDynamoDataStore = reportSummaryScanDynamoDataStore;
     }
 
-    @SuppressWarnings("unused") // Used by AWS
+    @SuppressWarnings({"unused", "java:S107"}) // Used by AWS
     public ReportUserIdentityHandler() {
         this.objectMapper = new ObjectMapper();
         this.configService = ConfigService.create();
@@ -223,7 +223,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
 
                     if (anyVCsMigrated && !allVCsMigrated) {
-                        LOGGER.info(
+                        LOGGER.warn(
                                 LogHelper.buildLogMessage(
                                         String.format(
                                                 "Not all VCs are migrated for this user (%s).",
