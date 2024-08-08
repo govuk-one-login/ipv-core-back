@@ -23,6 +23,10 @@ import {
   isPageResponse,
   JourneyEngineResponse,
 } from "../types/internal-api.js";
+import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
+
+const addressCredential = "https://vocab.account.gov.uk/v1/address";
+const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -52,7 +56,7 @@ After(function (this: World, options: ITestCaseHookParameter) {
 When(
   "I start a new {string} journey",
   async function (this: World, journeyType: string): Promise<void> {
-    this.userId = getRandomString(16);
+    this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
@@ -143,5 +147,34 @@ Then(
         );
       }
     }
+  },
+);
+
+Then(
+  "my proven user details match",
+  async function (this: World): Promise<void> {
+    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+
+    const expectedAddresses = this.identity[addressCredential];
+    assert.deepEqual(
+      provenIdentity.addresses,
+      expectedAddresses,
+      "Addresses do not match.",
+    );
+
+    const expectedBirthDate =
+      this.identity[identityCredential].birthDate?.[0].value;
+    assert.deepEqual(
+      provenIdentity.dateOfBirth,
+      expectedBirthDate,
+      "Birth dates do not match.",
+    );
+
+    const expectedNames = this.identity[identityCredential].name?.[0].nameParts;
+    assert.deepEqual(
+      provenIdentity.nameParts,
+      expectedNames,
+      "Names do not match.",
+    );
   },
 );

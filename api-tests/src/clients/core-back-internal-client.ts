@@ -6,9 +6,11 @@ import {
   PageResponse,
   ProcessCriCallbackRequest,
 } from "../types/internal-api.js";
+import { ProvenUserIdentity } from "../types/internal-api.js";
 
 const JOURNEY_PREFIX = "/journey/";
 const POST = "POST";
+const GET = "GET";
 
 export const initialiseIpvSession = async (
   requestBody: AuthRequestBody,
@@ -61,6 +63,26 @@ export const processCriCallback = async (
 
   if (!response.ok) {
     throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
+  }
+
+  return await response.json();
+};
+
+export const getProvenIdentityDetails = async (
+  ipvSessionId: string,
+): Promise<ProvenUserIdentity> => {
+  const response = await fetch(
+    `${config.core.internalApiUrl}/user/proven-identity-details`,
+    {
+      method: GET,
+      headers: { ...internalApiHeaders, ...{ "ipv-session-id": ipvSessionId } },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `BuildProvenUserIdentityDetails request failed: ${response.statusText}`,
+    );
   }
 
   return await response.json();
