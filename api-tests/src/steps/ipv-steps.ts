@@ -54,8 +54,12 @@ After(function (this: World, options: ITestCaseHookParameter) {
 });
 
 When(
-  "I start a new {string} journey",
-  async function (this: World, journeyType: string): Promise<void> {
+  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
+  async function (
+    this: World,
+    journeyType: string,
+    reproveIdentity: string,
+  ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
@@ -63,6 +67,7 @@ When(
         this.userId,
         this.journeyId,
         journeyType,
+        reproveIdentity ? true : false,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
