@@ -24,6 +24,7 @@ public class AsyncCredentialPoller extends Thread {
     private static final String X_API_KEY_HEADER = "x-api-key";
     private static final int POLL_WAIT_TIME_SECONDS = 15;
     private static final int SLEEP_AFTER_ERROR_MILLIS = 5000;
+    private static final int MAX_FAILURES = 5;
 
     // AWS uppercases certain initialisms, e.g. MD5
     private static class AwsPropertyNamingStrategy
@@ -42,6 +43,8 @@ public class AsyncCredentialPoller extends Thread {
     private final ProcessAsyncCriCredentialHandler processAsyncCriCredentialHandler;
     private final HttpClient httpClient;
 
+    private int failures;
+
     public AsyncCredentialPoller(String queueUri, String queueApiKey, String queueName)
             throws URISyntaxException {
         this.queueUri =
@@ -58,6 +61,7 @@ public class AsyncCredentialPoller extends Thread {
             try {
                 poll();
             } catch (InterruptedException e) {
+                LOGGER.error(LogHelper.buildLogMessage("Async credential poller interrupted"));
                 this.interrupt();
                 break;
             }
@@ -80,7 +84,7 @@ public class AsyncCredentialPoller extends Thread {
                 sqsEvent.setRecords(List.of(message));
                 processAsyncCriCredentialHandler.handleRequest(sqsEvent, new CoreContext());
             } else if (response.statusCode() == 204) {
-                LOGGER.debug(LogHelper.buildLogMessage("Poll received no messages"));
+                LOGGER.info(LogHelper.buildLogMessage("Poll received no messages"));
             } else {
                 throw new IOException("Request failed with status code " + response.statusCode());
             }
@@ -88,6 +92,10 @@ public class AsyncCredentialPoller extends Thread {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Exception polling from async credential queue", e));
+            failures++;
+            if (failures > MAX_FAILURES) {
+                throw new InterruptedException("Too many failures");
+            }
             sleep(SLEEP_AFTER_ERROR_MILLIS);
         }
     }

@@ -156,7 +156,7 @@ jobs:
           sed -i s/CIMIT_API_KEY/${{ secrets.API_KEY_CIMIT }}/ ../local-running/core.local.secrets.yaml && \
           sed -i s/EVCS_API_KEY/${{ secrets.API_KEY_EVCS }}/ ../local-running/core.local.secrets.yaml && \
           sed -i s/ASYNC_QUEUE_API_KEY/${{ secrets.ASYNC_QUEUE_API_KEY }}/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/ASYNC_QUEUE_NAME/${{ steps.extract_queue_name.outputs.queue_name }}/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/ASYNC_QUEUE_NAME/${{ steps.extract_queue_name.outputs.queue_name }}/ ../local-running/core.local.secrets.yaml
 
       - name: Local API tests
         env:
