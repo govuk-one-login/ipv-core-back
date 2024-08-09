@@ -13,6 +13,7 @@ export interface CriStubRequest {
     sendVcToQueue: boolean;
     sendErrorToQueue: boolean;
     queueName: string;
+    delaySeconds?: number;
   };
   requestedError?: {
     error: string;
