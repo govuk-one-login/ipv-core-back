@@ -1,0 +1,51 @@
+plugins {
+	id "java"
+	id "idea"
+	id "jacoco"
+	alias libs.plugins.postCompileWeaving
+}
+
+dependencies {
+	implementation platform(libs.awsSdkBom),
+			libs.awsSdkDynamodbEnhanced,
+			libs.bundles.awsLambda,
+			libs.awsSdkUrlConnectionClient,
+			libs.commonsCollections,
+			libs.diVocab,
+			project(":libs:common-services"),
+			project(":libs:gpg45-evaluator"),
+			project(":libs:verifiable-credentials"),
+			project(":libs:user-identity-service")
+
+	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
+			libs.aspectj
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests')
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

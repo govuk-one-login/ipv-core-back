@@ -13,6 +13,7 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.awsSdkLambda,
 			libs.commonsCodec,
+			libs.commonsCollections,
 			libs.diVocab,
 			libs.jacksonDatabind,
 			libs.jacksonDataformatYaml,
