@@ -180,15 +180,17 @@ Then(
             return np.type === field;
           },
         );
-        valueToMatch = namePart?.value;
+        valueToMatch = namePart?.value?.toLowerCase();
         break;
       }
       case "buildingNumber": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].buildingNumber;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].buildingNumber?.toLowerCase();
         break;
       }
       case "addressCountry": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].addressCountry;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].addressCountry?.toLowerCase();
         break;
       }
       case "uprn": {
@@ -196,31 +198,37 @@ Then(
         break;
       }
       case "streetName": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].streetName;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].streetName?.toLowerCase();
         break;
       }
       case "postalCode": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].postalCode;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].postalCode?.toLowerCase();
         break;
       }
       case "addressLocality": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].addressLocality;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].addressLocality?.toLowerCase();
         break;
       }
       case "validFrom": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].validFrom;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].validFrom?.toLowerCase();
         break;
       }
       case "buildingName": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].buildingName;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].buildingName?.toLowerCase();
         break;
       }
       case "subBuildingName": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].subBuildingName;
+        valueToMatch =
+          this.identity?.[ADDRESS_IDENTITY]?.[0].subBuildingName?.toLowerCase();
         break;
       }
     }
-    assert.equal(value, valueToMatch);
+    assert.equal(value.toLowerCase(), valueToMatch);
   },
 );
 

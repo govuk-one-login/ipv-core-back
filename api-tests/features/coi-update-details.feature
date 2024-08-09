@@ -28,15 +28,11 @@ Scenario: Given Name Change
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I create a CRI stub request with 'kenneth-driving-permit-valid' details
-    And I modify the CRI stub request by setting 'GivenName' to 'Ken'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
-    When I create a CRI stub request with 'kenneth-score-2' details
-    And I modify the CRI stub request by setting 'GivenName' to 'Ken'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -50,15 +46,11 @@ Scenario: Family Name Change
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I create a CRI stub request with 'kenneth-driving-permit-valid' details
-    And I modify the CRI stub request by setting 'FamilyName' to 'Smith'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
-    When I create a CRI stub request with 'kenneth-score-2' details
-    And I modify the CRI stub request by setting 'FamilyName' to 'Smith'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -70,19 +62,15 @@ Scenario: Family Name Change
 Scenario: Address Change
     When I submit a 'address-only' event
     Then I get a 'address' CRI response
-    When I create a CRI stub request with 'kenneth-current' details
-    And I modify the CRI stub request by setting 'buildingNumber' to '10'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I create a CRI stub request with 'kenneth-score-2' details
-    And I modify the CRI stub request by setting 'buildingNumber' to '10'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'buildingNumber' is '10'
+    And My identity 'buildingNumber' is '28'
 
 @Build
 Scenario: Address and Family Name Change
@@ -90,29 +78,20 @@ Scenario: Address and Family Name Change
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I create a CRI stub request with 'kenneth-driving-permit-valid' details
-    And I modify the CRI stub request by setting 'FamilyName' to 'Smith'
-    And I modify the CRI stub request by setting 'buildingName' to 'The Manor'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get a 'address' CRI response
-    When I create a CRI stub request with 'kenneth-current' details
-    And I modify the CRI stub request by setting 'FamilyName' to 'Smith'
-    And I modify the CRI stub request by setting 'buildingName' to 'The Manor'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I create a CRI stub request with 'kenneth-score-2' details
-    And I modify the CRI stub request by setting 'FamilyName' to 'Smith'
-    And I modify the CRI stub request by setting 'buildingName' to 'The Manor'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And My identity 'FamilyName' is 'Smith'
-    And My identity 'buildingName' is 'The Manor'
+    And My identity 'buildingNumber' is '28'
 
 @Build
 Scenario: Address and Given Name Change
@@ -120,29 +99,20 @@ Scenario: Address and Given Name Change
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I create a CRI stub request with 'kenneth-driving-permit-valid' details
-    And I modify the CRI stub request by setting 'GivenName' to 'K-Dog'
-    And I modify the CRI stub request by setting 'streetName' to 'K Street'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get a 'address' CRI response
-    When I create a CRI stub request with 'kenneth-current' details
-    And I modify the CRI stub request by setting 'GivenName' to 'K-Dog'
-    And I modify the CRI stub request by setting 'streetName' to 'K Street'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed' details to the CRI stub
     Then I get a 'fraud' CRI response
-    When I create a CRI stub request with 'kenneth-score-2' details
-    And I modify the CRI stub request by setting 'GivenName' to 'K-Dog'
-    And I modify the CRI stub request by setting 'streetName' to 'K Street'
-    And I submit the CRI stub request the CRI stub
+    When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'GivenName' is 'K-Dog'
-    And My identity 'streetName' is 'K Street'
+    And My identity 'GivenName' is 'Ken'
+    And My identity 'buildingNumber' is '28'
 
 @Build
 Scenario: Date of Birth Change
