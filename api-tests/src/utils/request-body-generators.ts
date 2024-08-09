@@ -18,7 +18,7 @@ export const generateInitialiseIpvSessionBody = async (
   subject: string,
   journeyId: string,
   journeyType: string,
-  reproveIdentity = false,
+  reproveIdentity: boolean,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",
