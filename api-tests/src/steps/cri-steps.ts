@@ -47,9 +47,9 @@ When(
   /I submit (expired )?'([\w-]+)' details to the (async )?CRI stub/,
   async function (
     this: World,
-    expired: 'expired ' | undefined,
+    expired: "expired " | undefined,
     scenario: string,
-    async: 'async ' | undefined,
+    async: "async " | undefined,
   ): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
@@ -62,7 +62,7 @@ When(
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
         expired ? EXPIRED_NBF : undefined,
-          !!async,
+        !!async,
       ),
     );
   },
