@@ -24,12 +24,13 @@ import {
   JourneyEngineResponse,
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
+import {
+  NamePartType,
+  PostalAddressClass,
+} from "@govuk-one-login/data-vocab/credentials.js";
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
-
-const CORE_IDENTITY = "https://vocab.account.gov.uk/v1/coreIdentity";
-const ADDRESS_IDENTITY = "https://vocab.account.gov.uk/v1/address";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -61,12 +62,11 @@ When(
   async function (this: World, journeyType: string): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
-    this.journeyType = journeyType;
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
         this.userId,
         this.journeyId,
-        this.journeyType,
+        journeyType,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -154,81 +154,25 @@ Then(
   },
 );
 
-When("I return using my identity", async function (this: World): Promise<void> {
-  this.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody(
-      this.userId,
-      this.journeyId,
-      this.journeyType,
-    ),
-  );
-  this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-    "/journey/next",
-    this.ipvSessionId,
-  );
-});
+Then(
+  "my address {string} is {string}",
+  function (this: World, field: keyof PostalAddressClass, value: string): void {
+    assert.equal(
+      value.toLowerCase(),
+      this.identity?.[addressCredential]?.[0][field]?.toString().toLowerCase(),
+    );
+  },
+);
 
 Then(
-  "My identity {string} is {string}",
-  function (this: World, field: string, value: string): void {
-    let valueToMatch;
-    switch (field) {
-      case "GivenName":
-      case "FamilyName": {
-        const namePart = this.identity[CORE_IDENTITY].name?.[0].nameParts.find(
-          (np) => {
-            return np.type === field;
-          },
-        );
-        valueToMatch = namePart?.value?.toLowerCase();
-        break;
-      }
-      case "buildingNumber": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].buildingNumber?.toLowerCase();
-        break;
-      }
-      case "addressCountry": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].addressCountry?.toLowerCase();
-        break;
-      }
-      case "uprn": {
-        valueToMatch = this.identity?.[ADDRESS_IDENTITY]?.[0].uprn;
-        break;
-      }
-      case "streetName": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].streetName?.toLowerCase();
-        break;
-      }
-      case "postalCode": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].postalCode?.toLowerCase();
-        break;
-      }
-      case "addressLocality": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].addressLocality?.toLowerCase();
-        break;
-      }
-      case "validFrom": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].validFrom?.toLowerCase();
-        break;
-      }
-      case "buildingName": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].buildingName?.toLowerCase();
-        break;
-      }
-      case "subBuildingName": {
-        valueToMatch =
-          this.identity?.[ADDRESS_IDENTITY]?.[0].subBuildingName?.toLowerCase();
-        break;
-      }
-    }
-    assert.equal(value.toLowerCase(), valueToMatch);
+  "my identity {string} is {string}",
+  function (this: World, field: NamePartType, value: string): void {
+    const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
+      (np) => {
+        return field === np.type;
+      },
+    );
+    assert.equal(value.toLowerCase(), namePart?.value.toLowerCase());
   },
 );
 

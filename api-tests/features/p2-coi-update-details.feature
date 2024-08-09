@@ -17,8 +17,9 @@ Background:
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    When I return using my identity
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
+    And my proven user details match
     When I submit a 'update-details' event
     Then I get a 'update-details' page response
 
@@ -38,7 +39,7 @@ Scenario: Given Name Change
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'GivenName' is 'Ken'
+    And my identity 'GivenName' is 'Ken'
 
 @Build
 Scenario: Family Name Change
@@ -56,7 +57,7 @@ Scenario: Family Name Change
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'FamilyName' is 'Smith'
+    And my identity 'FamilyName' is 'Smith'
 
 @Build
 Scenario: Address Change
@@ -70,7 +71,7 @@ Scenario: Address Change
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'buildingNumber' is '28'
+    And my address 'buildingNumber' is '28'
 
 @Build
 Scenario: Address and Family Name Change
@@ -90,8 +91,8 @@ Scenario: Address and Family Name Change
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'FamilyName' is 'Smith'
-    And My identity 'buildingNumber' is '28'
+    And my identity 'FamilyName' is 'Smith'
+    And my address 'addressLocality' is 'Bristol'
 
 @Build
 Scenario: Address and Given Name Change
@@ -111,55 +112,46 @@ Scenario: Address and Given Name Change
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And My identity 'GivenName' is 'Ken'
-    And My identity 'buildingNumber' is '28'
+    And my identity 'GivenName' is 'Ken'
+    And my address 'streetName' is 'King Road'
 
 @Build
-Scenario: Date of Birth Change
+Scenario: Unsupported Changes
     When I submit a 'dob' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Address and Date of Birth Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-dob' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Date of Birth Change and Family Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'dob-family' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Date of Birth Change and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'dob-given' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Family Name and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'family-given' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Address, Family Name and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-family-given' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Address, Date of Birth, Family Name and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-dob-family-given' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Address, Date of Birth and Family Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-dob-family' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Address, Date of Birth and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-dob-given' event
     Then I get a 'update-name-date-birth' page response
-
-@Build
-Scenario: Date of Birth, Family Name and Given Name Change
+    When I submit a 'back' event
+    Then I get a 'update-details' page response
     When I submit a 'address-family-given' event
     Then I get a 'update-name-date-birth' page response
