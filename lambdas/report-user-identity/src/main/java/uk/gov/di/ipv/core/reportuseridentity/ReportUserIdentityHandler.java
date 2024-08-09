@@ -178,10 +178,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
                 checkLambdaRemainingExecutionTime(context);
 
-                if (tableScanResult.lastEvaluatedKey() != null) {
-                    exclusiveStartKey = tableScanResult.lastEvaluatedKey();
-                    reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
-                }
+                exclusiveStartKey = tableScanResult.lastEvaluatedKey();
+                reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
             } while (exclusiveStartKey != null);
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -275,10 +273,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                     throw e;
                 }
 
-                if (tableScanResult.lastEvaluatedKey() != null) {
-                    exclusiveStartKey = tableScanResult.lastEvaluatedKey();
-                    reportProcessingResult.userIdentitylastEvaluatedKey(exclusiveStartKey);
-                }
+                exclusiveStartKey = tableScanResult.lastEvaluatedKey();
+                reportProcessingResult.userIdentitylastEvaluatedKey(exclusiveStartKey);
             } while (exclusiveStartKey != null);
             LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
             reportProcessingResult.userIdentitylastEvaluatedKey(null);
