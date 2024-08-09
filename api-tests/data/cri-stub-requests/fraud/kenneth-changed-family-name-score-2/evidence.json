@@ -1,0 +1,31 @@
+{
+  "activityHistoryScore": 1,
+  "checkDetails": [
+    {
+      "identityCheckPolicy": "none",
+      "activityFrom": "1963-01-01",
+      "checkMethod": "data"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "mortality_check"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "identity_theft_check"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "synthetic_identity_check"
+    },
+    {
+      "checkMethod": "data",
+      "fraudCheck": "impersonation_risk_check",
+      "txn": "RB000117397035"
+    }
+  ],
+  "ci": [],
+  "txn": "RB000117420948",
+  "identityFraudScore": 2,
+  "type": "IdentityCheck"
+}
