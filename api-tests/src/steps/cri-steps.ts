@@ -14,6 +14,8 @@ import {
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
 
+const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
+
 const submitAndProcessCriAction = async (
   world: World,
   criStubRequest: CriStubRequest,
@@ -42,8 +44,12 @@ const submitAndProcessCriAction = async (
 };
 
 When(
-  "I submit {string} details to the CRI stub",
-  async function (this: World, scenario: string): Promise<void> {
+  /I submit (expired )?'([\w-]+)' details to the CRI stub/,
+  async function (
+    this: World,
+    expired: string,
+    scenario: string,
+  ): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
@@ -54,6 +60,7 @@ When(
         this.lastJourneyEngineResponse.cri.id,
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
       ),
     );
   },

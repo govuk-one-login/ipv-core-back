@@ -58,6 +58,7 @@ export const generateCriStubBody = async (
   criId: string,
   scenario: string,
   redirectUrl: string,
+  nbf?: number,
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
   return {
@@ -69,6 +70,7 @@ export const generateCriStubBody = async (
       "credentialSubject",
     ),
     evidenceJson: await readJsonFile(criId, scenario, "evidence"),
+    nbf,
   };
 };
 
