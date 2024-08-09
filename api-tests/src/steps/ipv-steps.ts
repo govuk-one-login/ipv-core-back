@@ -54,11 +54,11 @@ After(function (this: World, options: ITestCaseHookParameter) {
 });
 
 When(
-  "I start a new {string} journey{}",
+  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
   async function (
     this: World,
     journeyType: string,
-    extra: string,
+    reproveIdentity: string,
   ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
@@ -67,7 +67,7 @@ When(
         this.userId,
         this.journeyId,
         journeyType,
-        extra?.indexOf("reprove identity") != -1,
+        reproveIdentity ? true : false,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
