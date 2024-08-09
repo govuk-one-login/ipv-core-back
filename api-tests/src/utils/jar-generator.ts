@@ -19,6 +19,7 @@ export const generateJar = async (
   subject: string,
   journeyId: string,
   journeyType: string,
+  reproveIdentity: boolean,
 ): Promise<string> => {
   const payloadData = JSON.parse(
     await fs.readFile(
@@ -29,6 +30,7 @@ export const generateJar = async (
   const payload = {
     ...payloadData,
     ...{
+      reprove_identity: reproveIdentity,
       sub: subject,
       govuk_signin_journey_id: journeyId,
       state: getRandomString(16),

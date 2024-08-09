@@ -58,11 +58,12 @@ When(
   async function (this: World, journeyType: string): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
+    this.journeyType = journeyType;
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
         this.userId,
         this.journeyId,
-        journeyType,
+        this.journeyType,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -175,6 +176,24 @@ Then(
       provenIdentity.nameParts,
       expectedNames,
       "Names do not match.",
+    );
+  },
+);
+
+When(
+  "I return using my identity and Reprove Identity",
+  async function (this: World): Promise<void> {
+    this.ipvSessionId = await internalClient.initialiseIpvSession(
+      await generateInitialiseIpvSessionBody(
+        this.userId,
+        this.journeyId,
+        this.journeyType,
+        true,
+      ),
+    );
+    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+      "/journey/next",
+      this.ipvSessionId,
     );
   },
 );
