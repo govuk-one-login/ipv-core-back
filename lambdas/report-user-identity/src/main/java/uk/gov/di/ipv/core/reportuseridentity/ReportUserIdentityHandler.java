@@ -41,9 +41,9 @@ import java.util.Map;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
+    public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 1000;
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 1000;
     private final ObjectMapper objectMapper;
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -226,31 +226,40 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         String.format(
                                                 "User (%s) VCs not correlated.",
                                                 ReportUserIdentityItem.getUserHash(userId))));
-                        continue;
-                    }
-                    boolean anyVCsMigrated =
-                            tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
-                    boolean allVCsMigrated =
-                            tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+                        reportUserIdentityItems.add(
+                                new ReportUserIdentityItem(
+                                        userId,
+                                        Vot.P0.name(),
+                                        tacticalVcs.size(),
+                                        reportUserIdentityService.getIdentityConstituent(
+                                                tacticalVcs),
+                                        false));
+                    } else {
+                        boolean anyVCsMigrated =
+                                tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
+                        boolean allVCsMigrated =
+                                tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
 
-                    if (anyVCsMigrated && !allVCsMigrated) {
-                        LOGGER.warn(
-                                LogHelper.buildLogMessage(
-                                        String.format(
-                                                "Not all VCs are migrated for this user (%s).",
-                                                ReportUserIdentityItem.getUserHash(userId))));
-                    }
-                    var votAttained =
-                            reportUserIdentityService.getStrongestAttainedVotForCredentials(
-                                    tacticalVcs);
+                        if (anyVCsMigrated && !allVCsMigrated) {
+                            LOGGER.warn(
+                                    LogHelper.buildLogMessage(
+                                            String.format(
+                                                    "Not all VCs are migrated for this user (%s).",
+                                                    ReportUserIdentityItem.getUserHash(userId))));
+                        }
+                        var votAttained =
+                                reportUserIdentityService.getStrongestAttainedVotForCredentials(
+                                        tacticalVcs);
 
-                    reportUserIdentityItems.add(
-                            new ReportUserIdentityItem(
-                                    userId,
-                                    votAttained.orElse(Vot.P0).name(),
-                                    tacticalVcs.size(),
-                                    reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                                    allVCsMigrated));
+                        reportUserIdentityItems.add(
+                                new ReportUserIdentityItem(
+                                        userId,
+                                        votAttained.orElse(Vot.P0).name(),
+                                        tacticalVcs.size(),
+                                        reportUserIdentityService.getIdentityConstituent(
+                                                tacticalVcs),
+                                        allVCsMigrated));
+                    }
                 }
                 LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
