@@ -1,7 +1,7 @@
  Feature: Reprove Identity Journey
 
 @Build
-Scenario: Successful Reprove Identity
+Scenario: User needs to reprove their identity
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -18,7 +18,7 @@ Scenario: Successful Reprove Identity
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    When I return using my identity and Reprove Identity
+    When I start a new 'medium-confidence' journey with reprove identity
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'page-ipv-identity-document-start' page response

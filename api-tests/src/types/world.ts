@@ -8,5 +8,4 @@ export interface World extends CucumberWorld {
   journeyId: string;
   lastJourneyEngineResponse: JourneyEngineResponse;
   identity: UserIdentity;
-  journeyType: string;
 }
