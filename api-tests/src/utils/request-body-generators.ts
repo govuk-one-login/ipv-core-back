@@ -18,6 +18,7 @@ export const generateInitialiseIpvSessionBody = async (
   subject: string,
   journeyId: string,
   journeyType: string,
+  reproveIdentity: boolean,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",
@@ -25,7 +26,12 @@ export const generateInitialiseIpvSessionBody = async (
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
     scope: "openid",
-    request: await generateJar(subject, journeyId, journeyType),
+    request: await generateJar(
+      subject,
+      journeyId,
+      journeyType,
+      reproveIdentity,
+    ),
   };
 };
 
