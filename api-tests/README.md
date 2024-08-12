@@ -50,6 +50,7 @@ ORCHESTRATOR_REDIRECT_URL="https://orch-dev-chrisw.01.core.dev.stubs.account.gov
 JAR_SIGNING_KEY='{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' // pragma: allowlist secret
 ASYNC_QUEUE_NAME="stubQueue_F2FQueue_dev-chrisw"
 ASYNC_QUEUE_DELAY=5
+MANAGEMENT_CIMIT_STUB_API_KEY="management-cimit-api-key"
 ```
 
 ## Working on the tests
