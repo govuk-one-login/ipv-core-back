@@ -66,6 +66,7 @@ export const generateCriStubBody = async (
   redirectUrl: string,
   nbf?: number,
   f2f?: boolean,
+  mitigatedCis?: string[]
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
   const f2fRequest = f2f
@@ -76,6 +77,7 @@ export const generateCriStubBody = async (
         delaySeconds: config.asyncQueue.delaySeconds,
       }
     : undefined;
+  const mitigations = mitigatedCis ? generateMitigations(mitigatedCis) : undefined;
 
   return {
     clientId: urlParams.get("client_id") as string,
@@ -88,6 +90,7 @@ export const generateCriStubBody = async (
     evidenceJson: await readJsonFile(criId, scenario, "evidence"),
     nbf,
     f2f: f2fRequest,
+    mitigations
   };
 };
 
@@ -149,3 +152,9 @@ const readJsonFile = async (
     "utf8",
   );
 };
+
+const generateMitigations = (mitigatedCi: string[]) => ({
+  mitigatedCi,
+  cimitStubUrl: config.cimit.managementCimitUrl,
+  cimitStubApiKey: config.cimit.managementCimitApiKey,
+});

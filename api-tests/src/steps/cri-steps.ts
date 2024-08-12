@@ -84,3 +84,22 @@ When(
     );
   },
 );
+
+When(
+  "I submit {string} details to the CRI stub with {string} CI(s) to mitigate",
+  async function (this: World, scenario: string, cis: string): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+        cis.split(","),
+      ),
+    );
+  },
+);
