@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -36,7 +35,6 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
@@ -52,6 +50,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
     private final ScanDynamoDataStore<ReportSummaryItem> reportSummaryScanDynamoDataStore;
 
+    @SuppressWarnings({"java:S107"}) // Used by AWS
     public ReportUserIdentityHandler(
             ObjectMapper objectMapper,
             ConfigService configService,
@@ -153,17 +152,15 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.info(
                     LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
 
-            Map<String, AttributeValue> exclusiveStartKey =
-                    reportProcessingRequest.tacticalStoreLastEvaluatedKey();
-            reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
-            var tableScanResult =
-                    vcStoreItemScanDynamoDataStore.getItems(exclusiveStartKey, ATTR_NAME_USER_ID);
+            for (var page :
+                    vcStoreItemScanDynamoDataStore.getItems(
+                            reportProcessingRequest.tacticalStoreLastEvaluatedKey(),
+                            ATTR_NAME_USER_ID)) {
 
-            for (var page : tableScanResult) {
-                var userIds = page.items().stream().map(VcStoreItem::getUserId).distinct().toList();
-
-                List<ReportUserIdentityItem> reportUserIdentities =
-                        userIds.stream()
+                var reportUserIdentities =
+                        page.items().stream()
+                                .map(VcStoreItem::getUserId)
+                                .distinct()
                                 .map(
                                         usrId ->
                                                 new ReportUserIdentityItem(
@@ -171,10 +168,9 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                 .toList();
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentities);
 
-                checkLambdaRemainingExecutionTime(context);
+                reportProcessingResult.tacticalStoreLastEvaluatedKey(page.lastEvaluatedKey());
 
-                exclusiveStartKey = page.lastEvaluatedKey();
-                reportProcessingResult.tacticalStoreLastEvaluatedKey(exclusiveStartKey);
+                checkLambdaRemainingExecutionTime(context);
             }
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -189,18 +185,18 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             Context context)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException,
                     BatchDeleteException, StopBeforeLambdaTimeoutException {
-        List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
         if (reportProcessingRequest.continueUserIdentityScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Processing unique users to update their aggregate identities."));
-            var exclusiveStartKey = reportProcessingRequest.userIdentitylastEvaluatedKey();
 
-            var tableScanResult =
+            List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
+            for (var page :
                     reportUserIdentityScanDynamoDataStore.getItems(
-                            exclusiveStartKey, ATTR_NAME_USER_ID, "identity", "migrated");
-
-            for (var page : tableScanResult) {
+                            reportProcessingRequest.userIdentitylastEvaluatedKey(),
+                            ATTR_NAME_USER_ID,
+                            "identity",
+                            "migrated")) {
                 var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
                 LOGGER.info(
                         LogHelper.buildLogMessage(
@@ -209,47 +205,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         userIds.size())));
                 List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
                 for (String userId : userIds) {
-                    var tacticalVcs = verifiableCredentialService.getVcs(userId);
-                    if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
-                        LOGGER.info(
-                                LogHelper.buildLogMessage(
-                                        String.format(
-                                                "User (%s) VCs not correlated.",
-                                                ReportUserIdentityItem.getUserHash(userId))));
-                        reportUserIdentityItems.add(
-                                new ReportUserIdentityItem(
-                                        userId,
-                                        Vot.P0.name(),
-                                        tacticalVcs.size(),
-                                        reportUserIdentityService.getIdentityConstituent(
-                                                tacticalVcs),
-                                        false));
-                    } else {
-                        boolean anyVCsMigrated =
-                                tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
-                        boolean allVCsMigrated =
-                                tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
-
-                        if (anyVCsMigrated && !allVCsMigrated) {
-                            LOGGER.warn(
-                                    LogHelper.buildLogMessage(
-                                            String.format(
-                                                    "Not all VCs are migrated for this user (%s).",
-                                                    ReportUserIdentityItem.getUserHash(userId))));
-                        }
-                        var votAttained =
-                                reportUserIdentityService.getStrongestAttainedVotForCredentials(
-                                        tacticalVcs);
-
-                        reportUserIdentityItems.add(
-                                new ReportUserIdentityItem(
-                                        userId,
-                                        votAttained.orElse(Vot.P0).name(),
-                                        tacticalVcs.size(),
-                                        reportUserIdentityService.getIdentityConstituent(
-                                                tacticalVcs),
-                                        allVCsMigrated));
-                    }
+                    evaluateUserIdentityDetail(reportUserIdentityItems, userId);
                 }
                 LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
@@ -257,6 +213,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 aggregateAndPersistIdentities(reportUserIdentityItems);
 
                 totalReportUserIdentityItems.addAll(reportUserIdentityItems);
+                reportProcessingResult.userIdentitylastEvaluatedKey(page.lastEvaluatedKey());
 
                 try {
                     checkLambdaRemainingExecutionTime(context);
@@ -264,13 +221,52 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                     reportProcessingResult.users(totalReportUserIdentityItems);
                     throw e;
                 }
-
-                exclusiveStartKey = page.lastEvaluatedKey();
-                reportProcessingResult.userIdentitylastEvaluatedKey(exclusiveStartKey);
             }
             LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
             reportProcessingResult.userIdentitylastEvaluatedKey(null);
             reportProcessingResult.users(totalReportUserIdentityItems);
+        }
+    }
+
+    private void evaluateUserIdentityDetail(
+            List<ReportUserIdentityItem> reportUserIdentityItems, String userId)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException {
+        var tacticalVcs = verifiableCredentialService.getVcs(userId);
+        if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "User (%s) VCs not correlated.",
+                                    ReportUserIdentityItem.getUserHash(userId))));
+            reportUserIdentityItems.add(
+                    new ReportUserIdentityItem(
+                            userId,
+                            Vot.P0.name(),
+                            tacticalVcs.size(),
+                            reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                            false));
+        } else {
+            boolean anyVCsMigrated = tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
+            boolean allVCsMigrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+
+            if (anyVCsMigrated && !allVCsMigrated) {
+                LOGGER.warn(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Not all VCs are migrated for this user (%s).",
+                                        ReportUserIdentityItem.getUserHash(userId))));
+            }
+
+            reportUserIdentityItems.add(
+                    new ReportUserIdentityItem(
+                            userId,
+                            reportUserIdentityService
+                                    .getStrongestAttainedVotForCredentials(tacticalVcs)
+                                    .orElse(Vot.P0)
+                                    .name(),
+                            tacticalVcs.size(),
+                            reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                            allVCsMigrated));
         }
     }
 
