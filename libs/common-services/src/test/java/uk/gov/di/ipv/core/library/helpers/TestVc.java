@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
+import uk.gov.di.model.BankAccountDetails;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdCardDetails;
@@ -68,6 +69,7 @@ public class TestVc {
         private List<DrivingPermitDetails> drivingPermit;
         private List<ResidencePermitDetails> residencePermit;
         private List<IdCardDetails> idCard;
+        private List<BankAccountDetails> bankAccount;
     }
 
     @AllArgsConstructor

@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.persistence;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
@@ -26,9 +27,10 @@ public interface DataStore<T extends PersistenceItem> {
 
     void create(T item);
 
-    void createOrUpdate(List<T> items) throws BatchDeleteException;
-
     void createIfNotExists(T item) throws ItemAlreadyExistsException;
+
+    @ExcludeFromGeneratedCoverageReport
+    void createOrUpdate(List<T> items) throws BatchDeleteException;
 
     T getItem(String partitionValue, String sortValue);
 
@@ -37,10 +39,6 @@ public interface DataStore<T extends PersistenceItem> {
     T getItemByIndex(String indexName, String value);
 
     List<T> getItems(String partitionValue);
-
-    List<T> getItems();
-
-    List<T> getItems(String attrName, String attrValue);
 
     List<T> getItemsWithBooleanAttribute(String partitionValue, String name, boolean value);
 

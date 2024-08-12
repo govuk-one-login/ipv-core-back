@@ -11,11 +11,9 @@ import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
-import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -41,6 +39,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     public static final int MAX_ITEMS_IN_WRITE_BATCH = 25;
     private final Class<T> typeParameterClass;
     private final ConfigService configService;
+
     private final DynamoDbTable<T> table;
 
     public DynamoDataStore(
@@ -64,6 +63,11 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
+    @ExcludeFromGeneratedCoverageReport
+    public DynamoDbTable<T> getTable() {
+        return table;
+    }
+
     @Override
     public void create(T item, ConfigurationVariable tableTtl) {
         item.setTtl(
@@ -76,12 +80,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
     @Override
     public void create(T item) {
         table.putItem(item);
-    }
-
-    @Override
-    @ExcludeFromGeneratedCoverageReport
-    public void createOrUpdate(List<T> items) throws BatchDeleteException {
-        processBatchOperation(items, false);
     }
 
     @Override
@@ -100,6 +98,12 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         } catch (ConditionalCheckFailedException e) {
             throw new ItemAlreadyExistsException(e);
         }
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    @Override
+    public void createOrUpdate(List<T> items) throws BatchDeleteException {
+        processBatchOperation(items, false);
     }
 
     @Override
@@ -139,25 +143,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return table.query(QueryConditional.keyEqualTo(key)).stream()
                 .flatMap(page -> page.items().stream())
                 .toList();
-    }
-
-    @Override
-    public List<T> getItems() {
-        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
-        return getTableScan(scanRequest);
-    }
-
-    @Override
-    public List<T> getItems(String attrName, String attrValue) {
-        var filterExpression =
-                Expression.builder()
-                        .expression("#a = :b")
-                        .putExpressionName("#a", attrName)
-                        .putExpressionValue(":b", AttributeValue.builder().s(attrValue).build())
-                        .build();
-        ScanEnhancedRequest scanRequest =
-                ScanEnhancedRequest.builder().filterExpression(filterExpression).build();
-        return getTableScan(scanRequest);
     }
 
     @Override
@@ -261,11 +246,6 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
         return getClient()
                 .batchWriteItem(
                         BatchWriteItemEnhancedRequest.builder().writeBatches(writeBatch).build());
-    }
-
-    private List<T> getTableScan(ScanEnhancedRequest scanRequest) {
-        PageIterable<T> pagedResults = table.scan(scanRequest);
-        return pagedResults.items().stream().toList();
     }
 
     private T getItemByKey(Key key) {

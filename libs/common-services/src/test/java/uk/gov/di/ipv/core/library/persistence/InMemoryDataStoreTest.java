@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class InMemoryStoreTest {
+class InMemoryDataStoreTest {
 
     @Test
     void createAndGetReturnsItemWithPartitionKey() {
@@ -310,5 +310,21 @@ class InMemoryStoreTest {
         assertNull(store.getItem(partitionKey, "one"));
         assertNull(store.getItem(partitionKey, "two"));
         assertEquals(item3, store.getItem("other", "three"));
+    }
+
+    @Test
+    void testCreateOrUpdate() {
+        var store = new InMemoryDataStore<>(UUID.randomUUID().toString(), IpvSessionItem.class);
+        var id = "test-id";
+        var item = new IpvSessionItem();
+        item.setIpvSessionId(id);
+        var id1 = "test-id1";
+        var item1 = new IpvSessionItem();
+        item1.setIpvSessionId(id1);
+
+        store.createOrUpdate(List.of(item, item1));
+
+        assertEquals(item, store.getItem(id));
+        assertEquals(item1, store.getItem(id1));
     }
 }

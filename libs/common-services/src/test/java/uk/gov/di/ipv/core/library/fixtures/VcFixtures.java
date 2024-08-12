@@ -31,6 +31,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.RI
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.vocab.BankAccountGenerator.createBankAccountDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.createBirthDate;
 import static uk.gov.di.ipv.core.library.helpers.vocab.DrivingPermitDetailsGenerator.createDrivingPermitDetails;
 import static uk.gov.di.ipv.core.library.helpers.vocab.IdCardDetailsGenerator.createIdCardDetails;
@@ -1029,6 +1030,55 @@ public interface VcFixtures {
                                 List.of(
                                         createIdCardDetails(
                                                 "SPEC12031", "2031-08-02", "NLD", "2021-08-02")))
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                F2F,
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("some-uuid")
+                                                .verificationScore(2)
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1652953080));
+    }
+
+    static VerifiableCredential vcF2fSocialSecurityCard() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .socialSecurityRecord(
+                                List.of(
+                                        createSocialSecurityRecordDetails(
+                                                "AB123456C"))) // pragma: allowlist secret
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                F2F,
+                TestVc.builder()
+                        .evidence(
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("some-uuid")
+                                                .verificationScore(2)
+                                                .build()))
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                Instant.ofEpochSecond(1652953080));
+    }
+
+    static VerifiableCredential vcF2fBankAccount() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .bankAccount(
+                                List.of(
+                                        createBankAccountDetails(
+                                                "123456323",
+                                                "20-55-77",
+                                                "20042020",
+                                                "20042025"))) // pragma: allowlist secret
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",

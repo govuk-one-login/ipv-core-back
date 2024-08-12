@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationNoEvidence;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
@@ -162,7 +162,7 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void buildScoreShouldReturnCorrectScoreForInheritedCredentialWithNoEvidence() throws Exception {
-        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcHmrcMigrationNoEvidence()));
+        Gpg45Scores builtScores = evaluator.buildScore(List.of(vcHmrcMigrationPCL250NoEvidence()));
         Gpg45Scores expectedScores = new Gpg45Scores(Collections.emptyList(), 0, 0, 0);
 
         assertEquals(expectedScores, builtScores);

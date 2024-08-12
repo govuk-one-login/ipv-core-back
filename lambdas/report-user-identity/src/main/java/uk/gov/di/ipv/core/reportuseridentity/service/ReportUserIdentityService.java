@@ -41,46 +41,74 @@ public class ReportUserIdentityService {
 
     public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs)
             throws ParseException {
-        for (Vot requestedVot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
+        for (Vot votToCheck : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
             boolean requestedVotAttained;
-            if (requestedVot.getProfileType().equals(GPG45)) {
+            if (votToCheck.getProfileType().equals(GPG45)) {
                 requestedVotAttained =
                         achievedWithGpg45Profile(
-                                requestedVot, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
+                                votToCheck, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
             } else {
-                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs);
+                requestedVotAttained = hasOperationalProfileVc(votToCheck, vcs);
             }
 
             if (requestedVotAttained) {
-                return Optional.of(requestedVot);
+                return Optional.of(votToCheck);
             }
         }
         return Optional.empty();
     }
 
-    private boolean achievedWithGpg45Profile(Vot requestedVot, List<VerifiableCredential> vcs) {
+    public List<String> getIdentityConstituent(List<VerifiableCredential> tacticalVcs) {
+        return tacticalVcs.stream()
+                .map(
+                        vc -> {
+                            Cri cri = vc.getCri();
+                            if (cri.equals(Cri.DCMAW) || cri.equals(Cri.F2F)) {
+                                var credentialSubject = vc.getCredential().getCredentialSubject();
+                                if (credentialSubject instanceof PersonWithDocuments person) {
+                                    if (isNotEmpty(person.getBankAccount())) {
+                                        return cri.getId() + "-bankAccount";
+                                    } else if (isNotEmpty(person.getDrivingPermit())) {
+                                        return cri.getId() + "-drivingPermit";
+                                    } else if (isNotEmpty(person.getIdCard())) {
+                                        return cri.getId() + "-idCard";
+                                    } else if (isNotEmpty(person.getPassport())) {
+                                        return cri.getId() + "-passport";
+                                    } else if (isNotEmpty(person.getResidencePermit())) {
+                                        return cri.getId() + "-residencePermit";
+                                    } else if (isNotEmpty(person.getSocialSecurityRecord())) {
+                                        return cri.getId() + "-socialSecurityRecord";
+                                    }
+                                }
+                            }
+                            return cri.getId();
+                        })
+                .toList();
+    }
+
+    private boolean achievedWithGpg45Profile(Vot votToCheck, List<VerifiableCredential> vcs) {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45Scores, requestedVot.getSupportedGpg45Profiles());
+                        gpg45Scores, votToCheck.getSupportedGpg45Profiles());
 
         // Successful match
         if (matchedGpg45Profile.isPresent()) {
             LOGGER.info(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "GPG45 profile matched")
-                            .with(LOG_VOT.getFieldName(), requestedVot));
+                            .with(LOG_VOT.getFieldName(), votToCheck));
             return true;
         }
         return false;
     }
 
-    private boolean hasOperationalProfileVc(Vot requestedVot, List<VerifiableCredential> vcs)
+    private boolean hasOperationalProfileVc(Vot votToCheck, List<VerifiableCredential> vcs)
             throws ParseException {
         for (var vc : vcs) {
             String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
             Optional<String> matchedOperationalProfile =
-                    requestedVot.getSupportedOperationalProfiles().stream()
+                    votToCheck.getSupportedOperationalProfiles().stream()
                             .map(OperationalProfile::name)
                             .filter(profileName -> profileName.equals(credentialVot))
                             .findFirst();
@@ -92,39 +120,10 @@ public class ReportUserIdentityService {
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Operational profile matched")
-                                .with(LOG_VOT.getFieldName(), requestedVot));
+                                .with(LOG_VOT.getFieldName(), votToCheck));
                 return true;
             }
         }
         return false;
-    }
-
-    public List<String> getIdentityConstituent(List<VerifiableCredential> tacticalVcs) {
-        return tacticalVcs.stream()
-                .map(
-                        vc -> {
-                            if (vc.getCri().equals(Cri.DCMAW)) {
-                                var credentialSubject = vc.getCredential().getCredentialSubject();
-                                if (credentialSubject instanceof PersonWithDocuments person) {
-                                    if (isNotEmpty(person.getBankAccount())) {
-                                        return "dcmaw-bankAccount";
-                                    } else if (isNotEmpty(person.getDrivingPermit())) {
-                                        return "dcmaw-drivingPermit";
-                                    } else if (isNotEmpty(person.getIdCard())) {
-                                        return "dcmaw-idCard";
-                                    } else if (isNotEmpty(person.getPassport())) {
-                                        return "dcmaw-passport";
-                                    } else if (isNotEmpty(person.getResidencePermit())) {
-                                        return "dcmaw-residencePermit";
-                                    } else if (isNotEmpty(person.getSocialSecurityRecord())) {
-                                        return "dcmaw-socialSecurityRecord";
-                                    }
-                                }
-                                return "dcmaw";
-                            } else {
-                                return vc.getCri().getId();
-                            }
-                        })
-                .toList();
     }
 }

@@ -40,7 +40,6 @@ class DynamoDataStoreTest {
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
-    @Mock private SdkIterable mockSdkIterable;
     @Mock private Page<AuthorizationCodeItem> mockPage;
     @Mock private DynamoDbIndex<AuthorizationCodeItem> mockIndex;
     @Mock private SdkIterable<Page<AuthorizationCodeItem>> mockIterable;
@@ -193,28 +192,6 @@ class DynamoDataStoreTest {
         verify(mockDynamoDbTable).query(queryConditional.capture());
 
         assertTrue(queryConditional.getValue() instanceof BeginsWithConditional);
-    }
-
-    @Test
-    void shouldGetItemsFromDynamoDbTableViaScanRequest() {
-        when(mockDynamoDbTable.scan(any(ScanEnhancedRequest.class))).thenReturn(mockPageIterable);
-        when(mockPageIterable.items()).thenReturn(mockSdkIterable);
-        when(mockSdkIterable.stream()).thenReturn(Stream.empty());
-        //
-        dataStore.getItems();
-        //
-        verify(mockDynamoDbTable).scan(any(ScanEnhancedRequest.class));
-    }
-
-    @Test
-    void shouldGetItemsWithFilterFromDynamoDbTableViaScanRequest() {
-        when(mockDynamoDbTable.scan(any(ScanEnhancedRequest.class))).thenReturn(mockPageIterable);
-        when(mockPageIterable.items()).thenReturn(mockSdkIterable);
-        when(mockSdkIterable.stream()).thenReturn(Stream.empty());
-        //
-        dataStore.getItems("attrName", "attrValue");
-        //
-        verify(mockDynamoDbTable).scan(any(ScanEnhancedRequest.class));
     }
 
     @Test

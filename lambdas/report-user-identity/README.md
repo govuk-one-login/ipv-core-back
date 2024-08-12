@@ -35,6 +35,54 @@ aws-vault exec PROFILE -- \
 
 NB: the read timeout is increased over the default to receive output file from lambda even after a long execution period.
 
+### Request payload
+If only want to gather unique users from tactical storage (with no lastEvaluatedKey).
+```json
+{
+  "continueUniqueUserScan": true,
+  "continueUserIdentityScan": false
+}
+```
+AWS lambda has got max timeout value of 900 seconds (15 minutes). And as in live we got around 2.5M VCs we'll need
+to run this number of times with lastEvaluatedKey from previous run scan to gather unique users.
+
+If only want to gather unique users from tactical storage (with lastEvaluatedKey from last run output result).
+```json
+{
+  "continueUniqueUserScan": true,
+  "tacticalStoreLastEvaluatedKey": {
+    "userId": {
+        "S": "4w8niZpiMy6qz1mntFA5u"
+    },
+   "credentialIssuer": {
+        "S": "4w8niZpiMy6qz1mntFA5u"
+    }
+  },
+  "continueUserIdentityScan": true
+}
+```
+If all unique users are gathered from tactical storage (there will be no tacticalStoreLastEvaluatedKey value in last run output result).
+```json
+{
+  "continueUniqueUserScan": false,
+  "continueUserIdentityScan": true
+}
+```
+As again to gather identity details for those unique users (in million), we need to run this number of times with lastEvaluatedKey
+from previous run scan for already gathered unique users. Run it n number of times till there be userIdentitylastEvaluatedKey
+value in last run output.
+```json
+{
+  "continueUniqueUserScan": false,
+  "continueUserIdentityScan": true,
+  "userIdentitylastEvaluatedKey": {
+    "hashUserId": {
+      "S": "4w8niZpiMy6qz1mntFA5u"
+    }
+  }
+}
+```
+
 ### Output
 
 - Logging statuses with progress level through the scan.
@@ -44,28 +92,71 @@ NB: the read timeout is increased over the default to receive output file from l
 ```json
 {
   "summary": {
-    "Total P2": 1,
+    "Total P2": 12,
+    "Total P2 migrated": 2,
+    "Total P1": 1,
+    "Total P0": 1
+  },
+  "tacticalStoreLastEvaluatedKey": {
+    "userId": {
+      "S": "4w8niZpiMy6qz1mntFA5u"
+    },
+    "credentialIssuer": {
+      "S": "4w8niZpiMy6qz1mntFA5u"
+    }
+  },
+  "userIdentitylastEvaluatedKey": {
+    "hashUserId": {
+      "S": "4w8niZpiMy6qz1mntFA5u"
+    }
+  }
+}
+```
+Output result when both process to gather unique users from tactical storage and then to find identity
+details for those gathered users completed.
+```json
+{
+  "summary": {
+    "Total P2": 12,
+    "Total P2 migrated": 2,
+    "Total P1": 1,
+    "Total P0": 1
+  }
+}
+```
+
+Can also generate users identity details output;
+```json
+{
+  "summary": {
+    "Total P2": 12,
+    "Total P2 migrated": 2,
     "Total P1": 1,
     "Total P0": 1
   },
   "users": [
     {
-      "userId": "urn:uuid:878e1871-8b7d-4a17-91ba-516bd86a0abc",
+      "hashUserId": "878e1871-8b7d-4a17-91ba-516bd86a0abc",
       "identity": "P2",
-      "constituteCriDocumentType": "drivingLicence, address, fraud, kbv"
+      "vcCount": 4,
+      "constituentVcs": "drivingLicence, address, fraud, kbv",
+      "migrated": false
     },
     {
-      "userId": "urn:uuid:0243cd17-f9b3-4617-9441-040b1860664e",
+      "hashUserId": "0243cd17-f9b3-4617-9441-040b1860664e",
       "identity": "P1",
-      "constituteCriDocumentType": "address, fraud, kbv"
+      "vcCount": 3,
+      "constituentVcs": "address, fraud, kbv",
+      "migrated": true
     },
     {
-      "userId": "urn:uuid:0243cb18-f9b3-4617-9441-040b1860688e",
+      "hashUserId": "0243cb18-f9b3-4617-9441-040b1860688e",
       "identity": "P0",
-      "constituteCriDocumentType": "address, fraud, kbv"
+      "vcCount": 3,
+      "constituentVcs": "address, fraud, kbv",
+      "migrated": false
     }
   ]
 }
 ```
-
 ### Error handling
