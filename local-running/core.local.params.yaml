@@ -48,10 +48,10 @@ core:
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
     # Test CIMIT config
     config: '{
-      "needs-enhanced-verification":[
+      "NEEDS-ENHANCED-VERIFICATION":[
         {"event":"/journey/enhanced-verification"}
       ],
-      "needs-alternate-doc":[
+      "NEEDS-ALTERNATE-DOC":[
         {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"},
         {"event":"/journey/alternate-doc-invalid-passport","document":"passport"}
       ]
