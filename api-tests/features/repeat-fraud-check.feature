@@ -18,7 +18,6 @@ Feature: Repeat fraud check journeys
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  @Build
   Scenario: Fraud 6 Months Expiry + No Update
     # Repeat fraud check with no update
     When I start a new 'medium-confidence' journey
@@ -32,7 +31,6 @@ Feature: Repeat fraud check journeys
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  @Build
   Scenario: Fraud 6 Months Expiry + Name Update
     # Repeat fraud check with update name
     When I start a new 'medium-confidence' journey

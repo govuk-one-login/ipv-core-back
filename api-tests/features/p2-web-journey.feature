@@ -1,6 +1,5 @@
 Feature: P2 Web document journey
 
-  @Build
   Scenario: Successful P2 identity via Web using DL
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -26,7 +25,6 @@ Feature: P2 Web document journey
     Then I get a 'P2' identity
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
-  @Build
   Scenario: Successful P2 identity via Web using Passport
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response

@@ -1,5 +1,5 @@
 export default {
-  parallel: 2,
+  parallel: 8,
   format: [
     "html:reports/api-tests-cucumber-report.html",
     "json:reports/api-tests-cucumber-report.json",
