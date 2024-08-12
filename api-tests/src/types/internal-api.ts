@@ -1,3 +1,8 @@
+import {
+  NamePartClass,
+  PostalAddressClass,
+} from "@govuk-one-login/data-vocab/credentials.js";
+
 export interface AuthRequestBody {
   responseType: string;
   clientId: string;
@@ -55,8 +60,17 @@ export const isClientResponse = (
 };
 
 export interface ProcessCriCallbackRequest {
-  authorizationCode: string;
+  authorizationCode?: string;
   credentialIssuerId: string;
+  error?: string;
+  errorDescription?: string;
   redirectUri: string;
-  state: string;
+  state?: string;
+}
+
+export interface ProvenUserIdentity {
+  name: string;
+  nameParts: NamePartClass[];
+  dateOfBirth: string;
+  addresses: PostalAddressClass[];
 }

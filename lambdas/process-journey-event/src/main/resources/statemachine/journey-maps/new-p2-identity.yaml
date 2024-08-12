@@ -1,6 +1,6 @@
 name: New P2 Identity
 description: >-
-  The routes a user so they can prove their identity to a medium
+  The routes a user can take to prove their identity to a medium
   confidence level (P2).
 
 states:

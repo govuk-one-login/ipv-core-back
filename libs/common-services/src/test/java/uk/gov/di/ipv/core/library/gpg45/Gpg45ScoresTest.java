@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.gpg45;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -100,5 +101,21 @@ class Gpg45ScoresTest {
                         .build();
 
         assertEquals("[[32, 22], 1, 2, 3]", scores.toString());
+    }
+
+    @Test
+    void shouldSortEvidenceByStrengthThenValidity() {
+        var evidence =
+                List.of(
+                                new Gpg45Scores.Evidence(1, 2),
+                                new Gpg45Scores.Evidence(1, 3),
+                                new Gpg45Scores.Evidence(2, 3),
+                                new Gpg45Scores.Evidence(4, 1),
+                                new Gpg45Scores.Evidence(1, 2),
+                                new Gpg45Scores.Evidence(1, 6))
+                        .stream()
+                        .sorted(Comparator.reverseOrder())
+                        .toList();
+        assertEquals("[41, 23, 16, 13, 12, 12]", evidence.toString());
     }
 }

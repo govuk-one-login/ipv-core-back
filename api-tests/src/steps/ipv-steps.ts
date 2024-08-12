@@ -1,15 +1,18 @@
 import * as assert from "assert";
-import { Then, When } from "@cucumber/cucumber";
+import {
+  After,
+  ITestCaseHookParameter,
+  Then,
+  When,
+  Status,
+} from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as externalClient from "../clients/core-back-external-client.js";
-import * as criStubClient from "../clients/cri-stub-client.js";
 import * as auditClient from "../clients/local-audit-client.js";
 import config from "../config/config.js";
 import {
-  generateCriStubBody,
   generateInitialiseIpvSessionBody,
-  generateProcessCriCallbackBody,
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
 import { getRandomString } from "../utils/random-string-generator.js";
@@ -18,18 +21,57 @@ import {
   isCriResponse,
   isJourneyResponse,
   isPageResponse,
+  JourneyEngineResponse,
 } from "../types/internal-api.js";
+import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
+import {
+  NamePartType,
+  PostalAddressClass,
+} from "@govuk-one-login/data-vocab/credentials.js";
+
+const addressCredential = "https://vocab.account.gov.uk/v1/address";
+const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
+
+const describeResponse = (response: JourneyEngineResponse): string => {
+  if (!response) {
+    return "none";
+  } else if (isJourneyResponse(response)) {
+    return `journey response '${response.journey}'`;
+  } else if (isPageResponse(response)) {
+    return `page response '${response.page}'`;
+  } else if (isCriResponse(response)) {
+    return `cri response '${response.cri.id}'`;
+  } else if (isClientResponse(response)) {
+    return `client response`;
+  }
+  return `unknown ${JSON.stringify(response)}`;
+};
+
+After(function (this: World, options: ITestCaseHookParameter) {
+  if (options.result?.status === Status.FAILED) {
+    // Log world details if the test fails
+    this.attach(JSON.stringify(this, undefined, 2), {
+      fileName: "world.json",
+      mediaType: "application/json",
+    });
+  }
+});
 
 When(
-  "I start a new {string} journey",
-  async function (this: World, journeyType: string): Promise<void> {
-    this.userId = getRandomString(16);
+  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
+  async function (
+    this: World,
+    journeyType: string,
+    reproveIdentity: string,
+  ): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
       await generateInitialiseIpvSessionBody(
         this.userId,
         this.journeyId,
         journeyType,
+        reproveIdentity ? true : false,
       ),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -42,7 +84,10 @@ When(
 Then(
   "I get a(n) {string} page response",
   function (this: World, expectedPage: string): void {
-    assert.ok(isPageResponse(this.lastJourneyEngineResponse));
+    assert.ok(
+      isPageResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
     assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
   },
 );
@@ -60,46 +105,19 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
-    assert.ok(isCriResponse(this.lastJourneyEngineResponse));
+    assert.ok(
+      isCriResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
     assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
   },
 );
 
-When(
-  "I submit {string} details to the CRI stub",
-  async function (this: World, scenario: string): Promise<void> {
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
-    const criResponse = this.lastJourneyEngineResponse.cri;
-    const criStubResponse = await criStubClient.callHeadlessApi(
-      criResponse.redirectUrl,
-      await generateCriStubBody(
-        criResponse.id,
-        scenario,
-        criResponse.redirectUrl,
-      ),
-    );
-    const journeyResponse = await internalClient.processCriCallback(
-      generateProcessCriCallbackBody(criStubResponse),
-      this.ipvSessionId,
-    );
-
-    if (!isJourneyResponse(journeyResponse)) {
-      throw new Error(
-        "response from process CRI callback is not a journey response",
-      );
-    }
-
-    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-      journeyResponse.journey,
-      this.ipvSessionId,
-    );
-  },
-);
-
 Then("I get an OAuth response", function (this: World): void {
-  assert.ok(isClientResponse(this.lastJourneyEngineResponse));
+  assert.ok(
+    isClientResponse(this.lastJourneyEngineResponse),
+    `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+  );
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
     config.orch.redirectUrl,
@@ -138,5 +156,56 @@ Then(
         );
       }
     }
+  },
+);
+
+Then(
+  "my address {string} is {string}",
+  function (this: World, field: keyof PostalAddressClass, value: string): void {
+    assert.equal(
+      value.toLowerCase(),
+      this.identity?.[addressCredential]?.[0][field]?.toString().toLowerCase(),
+    );
+  },
+);
+
+Then(
+  "my identity {string} is {string}",
+  function (this: World, field: NamePartType, value: string): void {
+    const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
+      (np) => {
+        return field === np.type;
+      },
+    );
+    assert.equal(value.toLowerCase(), namePart?.value.toLowerCase());
+  },
+);
+
+Then(
+  "my proven user details match",
+  async function (this: World): Promise<void> {
+    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+
+    const expectedAddresses = this.identity[addressCredential];
+    assert.deepEqual(
+      provenIdentity.addresses,
+      expectedAddresses,
+      "Addresses do not match.",
+    );
+
+    const expectedBirthDate =
+      this.identity[identityCredential].birthDate?.[0].value;
+    assert.deepEqual(
+      provenIdentity.dateOfBirth,
+      expectedBirthDate,
+      "Birth dates do not match.",
+    );
+
+    const expectedNames = this.identity[identityCredential].name?.[0].nameParts;
+    assert.deepEqual(
+      provenIdentity.nameParts,
+      expectedNames,
+      "Names do not match.",
+    );
   },
 );

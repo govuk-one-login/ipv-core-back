@@ -1,6 +1,6 @@
 name: New P1 Identity
 description: >-
-  The routes a user so they can prove their identity to a low
+  The routes a user can take to prove their identity to a low
   confidence level (P1).
 
 states:
