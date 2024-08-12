@@ -24,6 +24,10 @@ import {
   JourneyEngineResponse,
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
+import {
+  NamePartType,
+  PostalAddressClass,
+} from "@govuk-one-login/data-vocab/credentials.js";
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
@@ -147,6 +151,28 @@ Then(
         );
       }
     }
+  },
+);
+
+Then(
+  "my address {string} is {string}",
+  function (this: World, field: keyof PostalAddressClass, value: string): void {
+    assert.equal(
+      value.toLowerCase(),
+      this.identity?.[addressCredential]?.[0][field]?.toString().toLowerCase(),
+    );
+  },
+);
+
+Then(
+  "my identity {string} is {string}",
+  function (this: World, field: NamePartType, value: string): void {
+    const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
+      (np) => {
+        return field === np.type;
+      },
+    );
+    assert.equal(value.toLowerCase(), namePart?.value.toLowerCase());
   },
 );
 
