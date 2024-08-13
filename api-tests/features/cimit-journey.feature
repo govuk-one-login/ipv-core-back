@@ -2,7 +2,7 @@ Feature: CiMit Journeys
 
   Rule: CiMit - Enhanced verification route
     Background:
-      # Navigate to KBV CRI and apply needs enhanced verification CI
+      # Navigate to KBV CRI and apply NEEDS-ENHANCED-VERIFICATION CI
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -22,7 +22,6 @@ Feature: CiMit Journeys
       When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
       Then I get a 'pyi-suggest-other-options' page response
 
-    @Build
     Scenario:7 CIMIT - Enhanced verification mitigation via DCMAW (same session mitigation)
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -33,7 +32,6 @@ Feature: CiMit Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    @Build
     Scenario:7 CIMIT - Enhanced verification mitigation via DCMAW (separate session mitigation)
       # Start new session as the same user
       When I start a new 'medium-confidence' journey
@@ -54,7 +52,6 @@ Feature: CiMit Journeys
       Then I get a 'P2' identity
 
   Rule: CiMit - Alternate doc mitigation
-    @Build
     Scenario Outline: CiMit - Alternate doc mitigation via passport or DL
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
