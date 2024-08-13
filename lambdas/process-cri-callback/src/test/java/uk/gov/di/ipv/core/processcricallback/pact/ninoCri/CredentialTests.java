@@ -67,10 +67,9 @@ class CredentialTests {
     public RequestResponsePact validRequestReturnsNinoIdentityCheckIssuedCredential(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
+                .given("issue-credential-identity-passed is a valid access token")
+                .given("test is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
-                .given("VC evidence activityHistoryScore is 1")
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC evidence validityScore is 2")
                 .given("VC evidence strengthScore is 2")
@@ -82,7 +81,11 @@ class CredentialTests {
                 .uponReceiving("Valid credential request for identity check VC")
                 .path("/credential/issue")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer issue-credential-identity-passed")
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -111,7 +114,9 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("issue-credential-identity-passed"),
+                        NINO,
+                        CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -171,11 +176,10 @@ class CredentialTests {
     public RequestResponsePact validRequestReturnsNinoIdentityCheckResponseWithCi(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
+                .given("issue-credential-identity-failed is a valid access token")
+                .given("test is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
                 .given("VC has a CI of D02")
-                .given("VC evidence activityHistoryScore is 1")
                 .given("VC is for Kenneth Decerqueira")
                 .given("VC evidence validityScore is 0")
                 .given("VC evidence strengthScore is 2")
@@ -187,7 +191,11 @@ class CredentialTests {
                 .uponReceiving("Valid credential request for identity check VC with CI")
                 .path("/credential/issue")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer issue-credential-identity-failed")
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -216,7 +224,9 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("issue-credential-identity-failed"),
+                        NINO,
+                        CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -275,13 +285,10 @@ class CredentialTests {
     public RequestResponsePact validRequestReturnsNinoIssuedCredential(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
+                .given("issue-credential-passed is a valid access token")
+                .given("test is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
-                .given("VC evidence activityHistoryScore is 1")
                 .given("VC is for Kenneth Decerqueira")
-                .given("VC evidence validityScore is 2")
-                .given("VC evidence strengthScore is 2")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC contains a socialSecurityRecord")
                 .given("VC personalNumber is AA000003D")
@@ -290,7 +297,11 @@ class CredentialTests {
                 .uponReceiving("Valid credential request for VC")
                 .path("/credential/issue")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer issue-credential-passed")
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -316,7 +327,9 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("issue-credential-passed"),
+                        NINO,
+                        CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -363,25 +376,26 @@ class CredentialTests {
     }
 
     @Pact(provider = "NinoCriVcProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsNinoResponseWithCi(PactDslWithProvider builder) {
+    public RequestResponsePact validRequestReturnsNinoResponseWithFailureAndNoCi(
+            PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
-                .given("dummyAccessToken is a valid access token")
-                .given("test-subject is a valid subject")
+                .given("issue-credential-failed is a valid access token")
+                .given("test is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
-                .given("VC has a CI of D02")
-                .given("VC evidence activityHistoryScore is 1")
                 .given("VC is for Kenneth Decerqueira")
-                .given("VC evidence validityScore is 0")
-                .given("VC evidence strengthScore is 2")
                 .given("VC evidence txn is dummyTxn")
                 .given("VC contains a socialSecurityRecord")
                 .given("VC personalNumber is AA000003D")
                 .given("VC jti is dummyJti")
                 .given("VC birthDate is 1965-07-08")
-                .uponReceiving("Valid credential request for VC with CI")
+                .uponReceiving("Valid credential request for VC with failure and no CI")
                 .path("/credential/issue")
                 .method("POST")
-                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .headers(
+                        "x-api-key",
+                        PRIVATE_API_KEY,
+                        "Authorization",
+                        "Bearer issue-credential-failed")
                 .willRespondWith()
                 .status(200)
                 .body(
@@ -391,8 +405,8 @@ class CredentialTests {
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsNinoResponseWithCi")
-    void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesANinoVcWithACi(
+    @PactTestFor(pactMethod = "validRequestReturnsNinoResponseWithFailureAndNoCi")
+    void fetchVerifiableCredential_whenCalledAgainstNinoCri_retrievesANinoVcWithFailureAndNoCi(
             MockServer mockServer)
             throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
@@ -408,7 +422,9 @@ class CredentialTests {
         // Act
         var verifiableCredentialResponse =
                 underTest.fetchVerifiableCredential(
-                        new BearerAccessToken("dummyAccessToken"), NINO, CRI_OAUTH_SESSION_ITEM);
+                        new BearerAccessToken("issue-credential-failed"),
+                        NINO,
+                        CRI_OAUTH_SESSION_ITEM);
 
         // Assert
         var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
@@ -432,14 +448,10 @@ class CredentialTests {
                                                 .get("vc");
 
                                 JsonNode credentialSubject = vcClaim.get("credentialSubject");
-                                JsonNode evidence = vcClaim.get("evidence").get(0);
 
-                                JsonNode ciNode = evidence.get("ci");
                                 JsonNode nameParts =
                                         credentialSubject.get("name").get(0).get("nameParts");
                                 JsonNode birthDateNode = credentialSubject.get("birthDate").get(0);
-
-                                assertEquals("D02", ciNode.get(0).asText());
 
                                 JsonNode socialSecurityRecordNode =
                                         credentialSubject.get("socialSecurityRecord").get(0);
@@ -464,7 +476,7 @@ class CredentialTests {
     public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
-                .given("test-subject is a valid subject")
+                .given("test is a valid subject")
                 .given("dummyNinoComponentId is a valid issuer")
                 .uponReceiving("Invalid POST request due to invalid access token")
                 .path("/credential/issue")
@@ -475,7 +487,7 @@ class CredentialTests {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(400)
                 .toPact();
     }
 
@@ -570,7 +582,7 @@ class CredentialTests {
                 .build();
     }
 
-    private static final String TEST_USER = "test-subject";
+    private static final String TEST_USER = "test";
     private static final String TEST_ISSUER = "dummyNinoComponentId";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final String PRIVATE_API_KEY = "dummyApiKey";
@@ -593,22 +605,21 @@ class CredentialTests {
     private static final String VALID_NINO_IDENTITY_CHECK_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyNinoComponentId",
+              "sub": "test",
               "nbf": 4070908800,
+              "iss": "dummyNinoComponentId",
               "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
-                    "activityHistoryScore": 1,
+                    "type": "IdentityCheck",
+                    "strengthScore": 2,
+                    "validityScore": 2,
                     "checkDetails": [
                       {
                         "checkMethod": "data"
                       }
                     ],
-                    "validityScore": 2,
-                    "strengthScore": 2,
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn"
                   }
                 ],
@@ -616,6 +627,11 @@ class CredentialTests {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
                     }
                   ],
                   "name": [
@@ -631,11 +647,6 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1965-07-08"
-                    }
                   ]
                 },
                 "type": [
@@ -644,39 +655,39 @@ class CredentialTests {
                 ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
                 ]
               },
-              "jti":"dummyJti"
+              "jti": "dummyJti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "We13lVYrjNQto5P7XcCJiLgNpFPaagXM1NxHDjK_jNUwHK16WOAHS3KEL3vB246gYmmQ55LpVoOIQqc9CfF-dw"; // pragma: allowlist secret
+            "oN70YT7U5ot--Iku7KDo2H9ij1cY44cIBF-g6xqKR1ZxVS1CB5gZFyMIKIouvyoKtsbgPOejpQitttD_eaUHwg"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyNinoComponentId",
+              "sub": "test",
               "nbf": 4070908800,
+              "iss": "dummyNinoComponentId",
               "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
+                    "type": "IdentityCheck",
+                    "strengthScore": 2,
+                    "validityScore": 0,
                     "failedCheckDetails": [
                       {
                         "checkMethod": "data"
                       }
                     ],
-                    "validityScore": 0,
-                    "strengthScore": 2,
                     "ci": [
-                       "D02"
+                      "D02"
                     ],
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn"
                   }
                 ],
@@ -684,6 +695,11 @@ class CredentialTests {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
                     }
                   ],
                   "name": [
@@ -699,11 +715,6 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1965-07-08"
-                    }
                   ]
                 },
                 "type": [
@@ -712,34 +723,35 @@ class CredentialTests {
                 ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
                 ]
               },
-              "jti":"dummyJti"
+              "jti": "dummyJti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "zPwCdVETzGGYaXaNtYL5-3Px3tVjLLjaQ-Ot0bzhD9DD_Qvf7sIwGvbdKYx1PkMiJKZBp28E7dd1uRo2n3FPkQ"; // pragma: allowlist secret
+            "9cKlVt_-KZFc83uDRLSaS6K2jzVnMrfv2KqK6Q-4IHIBbiPieC5R-gcoEm85HIbnK82nX83XUcqrNxmVkQ9MDQ"; // pragma: allowlist secret
 
     private static final String VALID_NINO_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyNinoComponentId",
+              "sub": "test",
               "nbf": 4070908800,
+              "iss": "dummyNinoComponentId",
               "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
+                    "type": "IdentityCheck",
                     "checkDetails": [
                       {
-                        "checkMethod": "data"
+                        "checkMethod": "data",
+                        "dataCheck": "record_check"
                       }
                     ],
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn"
                   }
                 ],
@@ -747,6 +759,11 @@ class CredentialTests {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
                     }
                   ],
                   "name": [
@@ -762,11 +779,6 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1965-07-08"
-                    }
                   ]
                 },
                 "type": [
@@ -775,37 +787,35 @@ class CredentialTests {
                 ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
                 ]
               },
-              "jti":"dummyJti"
+              "jti": "dummyJti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "RcpJc_xtZriNrqGTjK_eFWoz1SkA4uaGVQAPgfo0lzEAiw3jS0uTlhF3U6DOoMo4VefaShfOYgb46gFqUUCsOw"; // pragma: allowlist secret
+            "LDMA4INOpUG9M7tYTCwOR3czkX3C2uityJ4aTbgpSarfVTa9cZSaBkSw69A7obDWd2uvtxdKwbHyu6JMoAJ_Xw"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_VC_BODY =
             """
             {
-              "sub": "test-subject",
-              "iss": "dummyNinoComponentId",
+              "sub": "test",
               "nbf": 4070908800,
+              "iss": "dummyNinoComponentId",
               "exp": 4070909400,
               "vc": {
                 "evidence": [
                   {
+                    "type": "IdentityCheck",
                     "failedCheckDetails": [
                       {
-                        "checkMethod": "data"
+                        "checkMethod": "data",
+                        "dataCheck": "record_check"
                       }
                     ],
-                    "ci": [
-                       "D02"
-                    ],
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn"
                   }
                 ],
@@ -813,6 +823,11 @@ class CredentialTests {
                   "socialSecurityRecord": [
                     {
                       "personalNumber": "AA000003D"
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1965-07-08"
                     }
                   ],
                   "name": [
@@ -828,11 +843,6 @@ class CredentialTests {
                         }
                       ]
                     }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1965-07-08"
-                    }
                   ]
                 },
                 "type": [
@@ -841,15 +851,15 @@ class CredentialTests {
                 ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                  "https://vocab.london.cloudapps.digital/contexts/identity-v1.jsonld"
                 ]
               },
-              "jti":"dummyJti"
+              "jti": "dummyJti"
             }
             """;
     // If we generate the signature in code it will be different each time, so we need to generate a
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "-A_yvG1Z5XE70MnUdnYn4lB-MhFd1Ic28dd1bZ7GDDgMHKEEhjG1NABPaEQV0s9of7k6I4Q1yjVlBPrIum6zKA"; // pragma: allowlist secret
+            "s6YXmDlZx_iMV-7k0VJlp5SD9CgReEQoF8WiOmqyiEUmoTELYI53cTL1puecV5QnW6-0SD90dwMuLelPIqukaw"; // pragma: allowlist secret
 }
