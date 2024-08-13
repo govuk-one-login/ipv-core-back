@@ -29,6 +29,7 @@ public class JourneyEngineHandler {
     public static final String ENCODED_DEVICE_INFORMATION = "txma-audit-encoded";
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
+    public static final String LANGUAGE = "language";
 
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
@@ -139,6 +140,7 @@ public class JourneyEngineHandler {
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
+                .language(ctx.header(LANGUAGE))
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
                 .lambdaInput((Map<String, Object>) processJourneyEventOutput.get("lambdaInput"))
                 .build();

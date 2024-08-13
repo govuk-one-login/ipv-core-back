@@ -12,6 +12,7 @@ import java.util.Map;
 @Data
 public class ProcessRequest extends JourneyRequest {
     private Map<String, Object> lambdaInput;
+    private String language;
 
     @Builder(builderMethodName = "processRequestBuilder")
     public ProcessRequest(
@@ -21,6 +22,7 @@ public class ProcessRequest extends JourneyRequest {
             String clientOAuthSessionId,
             String journey,
             String featureSet,
+            String language,
             Map<String, Object> lambdaInput) {
         super(
                 ipvSessionId,
@@ -30,5 +32,6 @@ public class ProcessRequest extends JourneyRequest {
                 journey,
                 featureSet);
         this.lambdaInput = lambdaInput;
+        this.language = language;
     }
 }
