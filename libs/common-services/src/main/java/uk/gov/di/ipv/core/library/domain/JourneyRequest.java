@@ -22,6 +22,22 @@ public class JourneyRequest {
     private String clientOAuthSessionId;
     private String journey;
     private String featureSet;
+    private String language;
+
+    public JourneyRequest(
+            String ipvSessionId,
+            String ipAddress,
+            String deviceInformation,
+            String clientOAuthSessionId,
+            String journey,
+            String featureSet) {
+        this.ipvSessionId = ipvSessionId;
+        this.ipAddress = ipAddress;
+        this.deviceInformation = deviceInformation;
+        this.clientOAuthSessionId = clientOAuthSessionId;
+        this.journey = journey;
+        this.featureSet = featureSet;
+    }
 
     public URI getJourneyUri() throws HttpResponseExceptionWithErrorBody {
         if (journey == null) {

@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -87,6 +88,21 @@ public class RequestHelper {
         String ipAddress = request.getIpAddress();
         validateIpAddress(ipAddress, "ipAddress not present in request.");
         return ipAddress;
+    }
+
+    public static String getLanguage(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody, JsonProcessingException {
+        String language = request.getLanguage();
+
+        if (language == null) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "cookies is missing from this request", IP_ADDRESS_HEADER));
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.MISSING_COOKIES);
+        }
+
+        return language;
     }
 
     public static String getClientOAuthSessionId(JourneyRequest event) {
