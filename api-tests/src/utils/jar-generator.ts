@@ -5,7 +5,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 import { getRandomString } from "./random-string-generator.js";
 import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
-import { IPVSessionDetails } from "./ipv-session.js";
+import { IpvSessionDetails } from "./ipv-session.js";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -17,7 +17,7 @@ const encKey = await jose.importJWK(
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateJar = async (
-  session: IPVSessionDetails,
+  session: IpvSessionDetails,
 ): Promise<string> => {
   const payloadData = JSON.parse(
     await fs.readFile(

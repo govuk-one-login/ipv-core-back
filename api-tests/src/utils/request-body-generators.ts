@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import { createSignedJwt } from "./jwt-signer.js";
 import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
-import { IPVSessionDetails } from "./ipv-session.js";
+import { IpvSessionDetails } from "./ipv-session.js";
 import {
   AuthRequestBody,
   ProcessCriCallbackRequest,
@@ -16,7 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
-  session: IPVSessionDetails,
+  session: IpvSessionDetails,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",

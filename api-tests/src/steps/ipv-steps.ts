@@ -15,8 +15,6 @@ import {
   generateInitialiseIpvSessionBody,
   generateTokenExchangeBody,
 } from "../utils/request-body-generators.js";
-import { IPVSessionDetails } from "../utils/ipv-session.js";
-
 import { getRandomString } from "../utils/random-string-generator.js";
 import {
   isClientResponse,
@@ -60,25 +58,23 @@ After(function (this: World, options: ITestCaseHookParameter) {
 });
 
 When(
-  /I start a new ?'([\w-]+)' journey( with reprove identity)?(:? with inherited identity '([\w-]+)')?/,
+  /I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?/,
   async function (
     this: World,
     journeyType: string,
-    reproveIdentity: string,
-    inheritedIdentityId: string,
+    reproveIdentity: string | undefined,
+    inheritedIdentityId: string | undefined,
   ): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.journeyId = getRandomString(16);
     this.ipvSessionId = await internalClient.initialiseIpvSession(
-      await generateInitialiseIpvSessionBody(
-        new IPVSessionDetails(
-          this.userId,
-          this.journeyId,
-          journeyType,
-          !!reproveIdentity,
-          inheritedIdentityId,
-        ),
-      ),
+      await generateInitialiseIpvSessionBody({
+        subject: this.userId,
+        journeyId: this.journeyId,
+        journeyType,
+        isReproveIdentity: !!reproveIdentity,
+        inheritedIdentityId,
+      }),
     );
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       "/journey/next",

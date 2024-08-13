@@ -1,3 +1,4 @@
+@Build
 Feature: Inherited Identity
   Scenario Outline: Inherited Identity Scenarios
     Given I start a new '<journey-type>' journey with inherited identity '<inherited-identity>'
