@@ -73,7 +73,7 @@ paths:
               \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",
               \"ipvSessionId\":\"$util.escapeJavaScript($input.params('ipv-session-id'))\",
               \"clientOAuthSessionId\":\"$util.escapeJavaScript($input.params('client-session-id'))\",
-              \"lng\":\"$util.escapeJavaScript($input.params('lng'))\"
+              \"language\":\"$util.escapeJavaScript($input.params('language'))\"
               }",
               "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }

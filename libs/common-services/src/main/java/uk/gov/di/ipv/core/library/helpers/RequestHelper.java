@@ -97,9 +97,9 @@ public class RequestHelper {
         if (language == null) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
-                            "cookies is missing from this request", IP_ADDRESS_HEADER));
+                            "Language choice is missing from this request", IP_ADDRESS_HEADER));
             throw new HttpResponseExceptionWithErrorBody(
-                    SC_BAD_REQUEST, ErrorResponse.MISSING_COOKIES);
+                    SC_BAD_REQUEST, ErrorResponse.MISSING_LANGUAGE);
         }
 
         return language;

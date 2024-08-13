@@ -107,7 +107,7 @@ public enum ErrorResponse {
     IPV_SESSION_NOT_FOUND(
             1093, "Invalid IPV session id provided, corresponding session not found in db"),
     CLIENT_OAUTH_SESSION_NOT_FOUND(1093, "Client OAuth session not found"),
-    MISSING_COOKIES(1093, "Missing cookies from the frontend");
+    MISSING_LANGUAGE(1093, "Missing language choice from the frontend");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
