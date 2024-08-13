@@ -22,6 +22,7 @@ public class JourneyRequest {
     private String clientOAuthSessionId;
     private String journey;
     private String featureSet;
+    private String language;
 
     public URI getJourneyUri() throws HttpResponseExceptionWithErrorBody {
         if (journey == null) {

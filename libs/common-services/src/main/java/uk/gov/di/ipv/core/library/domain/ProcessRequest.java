@@ -12,7 +12,6 @@ import java.util.Map;
 @Data
 public class ProcessRequest extends JourneyRequest {
     private Map<String, Object> lambdaInput;
-    private String language;
 
     @Builder(builderMethodName = "processRequestBuilder")
     public ProcessRequest(
@@ -30,8 +29,8 @@ public class ProcessRequest extends JourneyRequest {
                 deviceInformation,
                 clientOAuthSessionId,
                 journey,
-                featureSet);
+                featureSet,
+                language);
         this.lambdaInput = lambdaInput;
-        this.language = language;
     }
 }
