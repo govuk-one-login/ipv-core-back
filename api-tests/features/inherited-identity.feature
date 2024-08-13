@@ -12,8 +12,8 @@ Feature: Inherited Identity
 
     Examples:
       | journey-type                    | inherited-identity                | expected-identity |
-      | medium-confidence-pcl200-pcl250 | alice-vot-pcl200-no-evidence'     | PCL200            |
-      | medium-confidence-pcl200-pcl250 | alice-vot-pcl250-no-evidence'     | PCL250            |
+      | medium-confidence-pcl200-pcl250 | alice-vot-pcl200-no-evidence      | PCL200            |
+      | medium-confidence-pcl200-pcl250 | alice-vot-pcl250-no-evidence      | PCL250            |
       | medium-confidence-pcl250        | kenneth-vot-pcl250-passport       | PCL250            |
       | medium-confidence-pcl250        | kenneth-vot-pcl250-driving-permit | PCL250            |
 
