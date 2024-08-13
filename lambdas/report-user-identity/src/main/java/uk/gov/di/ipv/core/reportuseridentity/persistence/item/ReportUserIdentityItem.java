@@ -26,7 +26,7 @@ public class ReportUserIdentityItem implements PersistenceItem {
         this.userId = userId;
         this.identity = identity;
         this.vcCount = vcCount;
-        this.constituentVcs = constituentVcs;
+        this.constituentVcs = setConstituentVcsFromList(constituentVcs);
         this.migrated = migrated;
     }
 
@@ -34,7 +34,7 @@ public class ReportUserIdentityItem implements PersistenceItem {
     @JsonIgnore private String userId;
     private String identity;
     private Integer vcCount;
-    private List<String> constituentVcs;
+    private String constituentVcs;
     private Boolean migrated;
 
     @DynamoDbPartitionKey
@@ -49,5 +49,11 @@ public class ReportUserIdentityItem implements PersistenceItem {
 
     public static String getUserHash(String userId) {
         return DigestUtils.sha256Hex(userId);
+    }
+
+    private String setConstituentVcsFromList(List<String> constituentVcs) {
+        return (constituentVcs != null && !constituentVcs.isEmpty())
+                ? String.join(",", constituentVcs)
+                : null;
     }
 }

@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,7 +127,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Completed report processing for user's identities."));
-        } catch (HttpResponseExceptionWithErrorBody | CredentialParseException | ParseException e) {
+        } catch (HttpResponseExceptionWithErrorBody | CredentialParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped report processing of user's identities.", e));
@@ -157,7 +156,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             reportProcessingRequest.tacticalStoreLastEvaluatedKey(),
                             ATTR_NAME_USER_ID)) {
 
-                var reportUserIdentities =
+                reportUserIdentityScanDynamoDataStore.createOrUpdate(
                         page.items().stream()
                                 .map(VcStoreItem::getUserId)
                                 .distinct()
@@ -165,8 +164,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         usrId ->
                                                 new ReportUserIdentityItem(
                                                         usrId, null, null, null, null))
-                                .toList();
-                reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentities);
+                                .toList());
 
                 reportProcessingResult.tacticalStoreLastEvaluatedKey(page.lastEvaluatedKey());
 
@@ -183,7 +181,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             ReportProcessingRequest reportProcessingRequest,
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             Context context)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException,
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody,
                     BatchDeleteException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUserIdentityScan()) {
             LOGGER.info(
@@ -205,9 +203,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         userIds.size())));
                 List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
                 for (String userId : userIds) {
-                    evaluateUserIdentityDetail(reportUserIdentityItems, userId);
+                    reportUserIdentityItems.add(evaluateUserIdentityDetail(userId));
                 }
-                LOGGER.info(LogHelper.buildLogMessage("Updating processed user's identity."));
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Updating processed user's identity.-"
+                                        + reportUserIdentityItems.size()));
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
 
                 aggregateAndPersistIdentities(reportUserIdentityItems);
@@ -228,9 +229,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         }
     }
 
-    private void evaluateUserIdentityDetail(
-            List<ReportUserIdentityItem> reportUserIdentityItems, String userId)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody, ParseException {
+    private ReportUserIdentityItem evaluateUserIdentityDetail(String userId)
+            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
         if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
             LOGGER.info(
@@ -238,13 +238,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             String.format(
                                     "User (%s) VCs not correlated.",
                                     ReportUserIdentityItem.getUserHash(userId))));
-            reportUserIdentityItems.add(
-                    new ReportUserIdentityItem(
-                            userId,
-                            Vot.P0.name(),
-                            tacticalVcs.size(),
-                            reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                            false));
+            return new ReportUserIdentityItem(
+                    userId,
+                    Vot.P0.name(),
+                    tacticalVcs.size(),
+                    reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                    false);
         } else {
             boolean anyVCsMigrated = tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
             boolean allVCsMigrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
@@ -257,16 +256,15 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         ReportUserIdentityItem.getUserHash(userId))));
             }
 
-            reportUserIdentityItems.add(
-                    new ReportUserIdentityItem(
-                            userId,
-                            reportUserIdentityService
-                                    .getStrongestAttainedVotForCredentials(tacticalVcs)
-                                    .orElse(Vot.P0)
-                                    .name(),
-                            tacticalVcs.size(),
-                            reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                            allVCsMigrated));
+            return new ReportUserIdentityItem(
+                    userId,
+                    reportUserIdentityService
+                            .getStrongestAttainedVotForCredentials(tacticalVcs)
+                            .orElse(Vot.P0)
+                            .name(),
+                    tacticalVcs.size(),
+                    reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                    allVCsMigrated);
         }
     }
 
@@ -285,20 +283,17 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 reportSummaryItem.getTotalP2Migrated()
                         + totalP2Identities.stream()
                                 .filter(item -> (Boolean.TRUE.equals(item.getMigrated())))
-                                .toList()
-                                .size());
+                                .count());
         reportSummaryItem.setTotalP1(
                 reportSummaryItem.getTotalP1()
                         + items.stream()
                                 .filter(ui -> Vot.P1.name().equals(ui.getIdentity()))
-                                .toList()
-                                .size());
+                                .count());
         reportSummaryItem.setTotalP0(
                 reportSummaryItem.getTotalP0()
                         + items.stream()
                                 .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
-                                .toList()
-                                .size());
+                                .count());
         reportSummaryScanDynamoDataStore.update(reportSummaryItem);
     }
 

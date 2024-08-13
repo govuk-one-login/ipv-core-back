@@ -6,7 +6,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
@@ -14,13 +13,11 @@ import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.PersonWithDocuments;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.util.CollectionUtils.isNotEmpty;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -30,6 +27,7 @@ public class ReportUserIdentityService {
 
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
+    @ExcludeFromGeneratedCoverageReport
     public ReportUserIdentityService(Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
     }
@@ -39,17 +37,16 @@ public class ReportUserIdentityService {
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
     }
 
-    public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs)
-            throws ParseException {
-        for (Vot votToCheck : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
+    public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs) {
+        // Filter out since currently no operational profile in prod
+        for (Vot votToCheck :
+                SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
+                        .filter(vot -> vot.getProfileType().equals(GPG45))
+                        .toList()) {
             boolean requestedVotAttained;
-            if (votToCheck.getProfileType().equals(GPG45)) {
-                requestedVotAttained =
-                        achievedWithGpg45Profile(
-                                votToCheck, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
-            } else {
-                requestedVotAttained = hasOperationalProfileVc(votToCheck, vcs);
-            }
+            requestedVotAttained =
+                    achievedWithGpg45Profile(
+                            votToCheck, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
 
             if (requestedVotAttained) {
                 return Optional.of(votToCheck);
@@ -83,6 +80,7 @@ public class ReportUserIdentityService {
                             }
                             return cri.getId();
                         })
+                .sorted()
                 .toList();
     }
 
@@ -99,30 +97,6 @@ public class ReportUserIdentityService {
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "GPG45 profile matched")
                             .with(LOG_VOT.getFieldName(), votToCheck));
             return true;
-        }
-        return false;
-    }
-
-    private boolean hasOperationalProfileVc(Vot votToCheck, List<VerifiableCredential> vcs)
-            throws ParseException {
-        for (var vc : vcs) {
-            String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-            Optional<String> matchedOperationalProfile =
-                    votToCheck.getSupportedOperationalProfiles().stream()
-                            .map(OperationalProfile::name)
-                            .filter(profileName -> profileName.equals(credentialVot))
-                            .findFirst();
-
-            // Successful match
-            if (matchedOperationalProfile.isPresent()) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Operational profile matched")
-                                .with(LOG_VOT.getFieldName(), votToCheck));
-                return true;
-            }
         }
         return false;
     }
