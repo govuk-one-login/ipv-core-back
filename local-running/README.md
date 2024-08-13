@@ -29,7 +29,7 @@ Values for the placeholders can be found in Secrets Manager in your dev account,
 
 ### F2F journeys
 
-The async queue name should be something like `stubQueue_local_dev-joee`,
+The async queue name should be something like `stubQueue_F2FQueue_dev-joee`,
 and this should match the queue name you enter in the F2F stub.
 
 Leave the value as the placeholder `ASYNC_QUEUE_NAME` to skip polling for async credentials.
