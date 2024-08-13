@@ -73,7 +73,7 @@ const startNewJourney = async (
       world.userId,
       world.journeyId,
       journeyType,
-      reproveIdentity
+      reproveIdentity,
     ),
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -83,7 +83,7 @@ const startNewJourney = async (
 };
 
 When(
-  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?$/,
   async function (
     this: World,
     journeyType: string,

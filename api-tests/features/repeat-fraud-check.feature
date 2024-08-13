@@ -1,3 +1,4 @@
+@Build
 Feature: Repeat fraud check journeys
 
   Background:

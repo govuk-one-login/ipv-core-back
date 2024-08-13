@@ -1,3 +1,4 @@
+@Build
 Feature: P2 Reuse journey
 
   Scenario: Successful P2 reuse journey

@@ -38,7 +38,7 @@ Secret values are stored in `.env`: copy `.env.template` to `.env` and provide a
 It is also possible to set up other `.env.<name>` files,
 which can be selected by setting `CORE_ENV=<name>` when running the tests.
 
-As an example, to run against a deployment in the dev01 account you could create a `.env.dev02` file something like:
+As an example, to run against a deployment in the dev01 account you could create a `.env.dev01` file something like:
 
 ```
 CORE_BACK_COMPONENT_ID="https://dev-chrisw.01.dev.identity.account.gov.uk"
