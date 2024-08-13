@@ -22,7 +22,7 @@ Feature: CiMit Journeys
       When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
       Then I get a 'pyi-suggest-other-options' page response
 
-    Scenario:7 CIMIT - Enhanced verification mitigation via DCMAW (same session mitigation)
+    Scenario: CiMit - Enhanced verification mitigation via DCMAW (same session mitigation)
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub with 'NEEDS-ENHANCED-VERIFICATION' CI to mitigate
@@ -32,7 +32,7 @@ Feature: CiMit Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    Scenario:7 CIMIT - Enhanced verification mitigation via DCMAW (separate session mitigation)
+    Scenario: CiMit - Enhanced verification mitigation via DCMAW (separate session mitigation)
       # Start new session as the same user
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -50,6 +50,20 @@ Feature: CiMit Journeys
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+
+    Scenario: CiMit - Enhanced verification mitigation via F2F
+      When I submit a 'f2f' event
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the async CRI stub with 'NEEDS-ENHANCED-VERIFICATION' CI to mitigate
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+
 
   Rule: CiMit - Alternate doc mitigation
     Scenario Outline: CiMit - Alternate doc mitigation via passport or DL

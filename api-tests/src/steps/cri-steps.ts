@@ -86,8 +86,13 @@ When(
 );
 
 When(
-  "I submit {string} details to the CRI stub with {string} CI(s) to mitigate",
-  async function (this: World, scenario: string, cis: string): Promise<void> {
+  /^I submit '([\w-]+)' details to the (async )?CRI stub with '([\w-]+)' CI to mitigate$/,
+  async function (
+    this: World,
+    scenario: string,
+    async: "async " | undefined,
+    mitigatedCis: string,
+  ): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
@@ -98,7 +103,9 @@ When(
         this.lastJourneyEngineResponse.cri.id,
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
-        cis.split(","),
+        undefined,
+        !!async,
+        mitigatedCis.split(","),
       ),
     );
   },
