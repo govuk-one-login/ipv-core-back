@@ -28,6 +28,10 @@ import {
   NamePartType,
   PostalAddressClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
+import { delay } from "../utils/delay.js";
+
+const RETRY_DELAY_MILLIS = 2000;
+const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
@@ -57,27 +61,67 @@ After(function (this: World, options: ITestCaseHookParameter) {
   }
 });
 
+const startNewJourney = async (
+  world: World,
+  journeyType: string,
+  reproveIdentity: boolean,
+): Promise<void> => {
+  world.userId = world.userId ?? getRandomString(16);
+  world.journeyId = getRandomString(16);
+  world.ipvSessionId = await internalClient.initialiseIpvSession(
+    await generateInitialiseIpvSessionBody(
+      world.userId,
+      world.journeyId,
+      journeyType,
+      reproveIdentity,
+    ),
+  );
+  world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+    "/journey/next",
+    world.ipvSessionId,
+  );
+};
+
 When(
-  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?$/,
   async function (
     this: World,
     journeyType: string,
-    reproveIdentity: string,
+    reproveIdentity: " with reprove identity" | undefined,
   ): Promise<void> {
-    this.userId = this.userId ?? getRandomString(16);
-    this.journeyId = getRandomString(16);
-    this.ipvSessionId = await internalClient.initialiseIpvSession(
-      await generateInitialiseIpvSessionBody(
-        this.userId,
-        this.journeyId,
-        journeyType,
-        reproveIdentity ? true : false,
-      ),
-    );
-    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-      "/journey/next",
-      this.ipvSessionId,
-    );
+    await startNewJourney(this, journeyType, !!reproveIdentity);
+  },
+);
+
+// Variant of the journey start that retries, e.g. to wait for an async F2F request
+When(
+  "I start a new {string} journey and return to a {string} page response",
+  { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
+  async function (
+    this: World,
+    journeyType: string,
+    expectedPage: string,
+  ): Promise<void> {
+    let attempt = 1;
+    while (attempt <= MAX_ATTEMPTS) {
+      await startNewJourney(this, journeyType, false);
+
+      try {
+        assert.ok(
+          isPageResponse(this.lastJourneyEngineResponse),
+          `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+        );
+        assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
+        return;
+      } catch (e) {
+        if (attempt >= MAX_ATTEMPTS) {
+          throw e;
+        }
+      }
+
+      await delay(RETRY_DELAY_MILLIS);
+      attempt++;
+    }
   },
 );
 

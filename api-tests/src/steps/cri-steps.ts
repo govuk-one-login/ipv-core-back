@@ -44,11 +44,12 @@ const submitAndProcessCriAction = async (
 };
 
 When(
-  /I submit (expired )?'([\w-]+)' details to the CRI stub/,
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
   async function (
     this: World,
-    expired: string,
+    expired: "expired " | undefined,
     scenario: string,
+    async: "async " | undefined,
   ): Promise<void> {
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
@@ -61,6 +62,7 @@ When(
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
         expired ? EXPIRED_NBF : undefined,
+        !!async,
       ),
     );
   },

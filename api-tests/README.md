@@ -16,42 +16,41 @@
 
 ## Running the tests
 
-Run using the main `.env` file by using `npm test`.
+There are 3 presets that can be used:
 
-Additional arguments can be passed to cucumber, e.g. to include specific tags: `npm test -- --tags '@Build'`
-
-You can also run against locally by using the presets:
-
+- `npm run test:build` - runs against the deployed build environment
 - `npm run test:local` - runs against an already-running local instance of core-back
 - `npm run test:ci` - starts a new local instance of core-back and tests against it
 
+Additional arguments can be passed to cucumber, e.g. to include specific tests: `npm test:local -- --name 'F2F'`
+
+If you are using custom configuration, then you can use `npm test` to invoke cucumber without any presets.
+
 ### Environment variables
 
-- Env variables are provided by [dotenv][dotenv] and read from a `.env` file.
-- Copy `.env.template` to `.env` and provide values for your dev env (see below for an example)
-- You can comment out the build env values and have a new block for you dev env. This makes it easy to switch between the two.
+Env variables are provided by [dotenv][dotenv] and read from a `.env` file.
+Non-secret values are stored in `.env.build` and `.env.local` for the corresponding environments.
 
-As an example, to run against a deployment in the dev01 account you could set your env vars as below:
+Secret values are stored in `.env`: copy `.env.template` to `.env` and provide appropriate values.
 
-The value for `CORE_BACK_INTERNAL_API_KEY` has your dev-env appended to the end. This is because API keys must be unique in an account.
-The value for `CORE_BACK_PUBLIC_ENCRYPTION_KEY` for the dev environments can be found in [the dev config files][dev02-config] under `ORCHESTRATOR_DEFAULT_JAR_ENCRYPTION_PUBLIC_KEY`. It'll need base64 decoding.
-The value for `JAR_SIGNING_KEY` will probably be the same as for the build env.
+#### Other environments
 
-- CORE_BACK_COMPONENT_ID="https://dev-chrisw.01.dev.identity.account.gov.uk"
-- CORE_BACK_INTERNAL_API_URL="https://internal-test-api-dev-chrisw.01.dev.identity.account.gov.uk"
-- CORE_BACK_INTERNAL_API_KEY=<get from CoreBackInternalTestingApiKey secret in secrets manager>-dev-chrisw
-- CORE_BACK_EXTERNAL_API_URL="https://api-dev-chrisw.01.dev.identity.account.gov.uk"
-- CORE_BACK_PUBLIC_ENCRYPTION_KEY='{"kty":"RSA","e":"AQAB","kid":"b454ac07-e188-415d-a3c8-f1d0d38aaecd","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs\*-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"}'
-- ORCHESTRATOR_REDIRECT_URL="https://orch-dev-chrisw.01.core.dev.stubs.account.gov.uk/callback"
-- JAR_SIGNING_KEY='{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' // pragma: allowlist secret
+It is also possible to set up other `.env.<name>` files,
+which can be selected by setting `CORE_ENV=<name>` when running the tests.
 
-#### Environment-specific files
+As an example, to run against a deployment in the dev01 account you could create a `.env.dev01` file something like:
 
-For convenience, it is also possible to keep multiple `.env.<name>` files for different environments,
-which are selected by setting `CORE_ENV=<name>` when running the tests.
-
-There is a `.env.local` file containing config for a local instance of core-back,
-which is useful for running tests locally or in the pre-merge tests.
+```
+CORE_BACK_COMPONENT_ID="https://dev-chrisw.01.dev.identity.account.gov.uk"
+CORE_BACK_INTERNAL_API_URL="https://internal-test-api-dev-chrisw.01.dev.identity.account.gov.uk"
+CORE_BACK_INTERNAL_API_KEY=<get from CoreBackInternalTestingApiKey secret in secrets manager>-dev-chrisw
+CORE_BACK_EXTERNAL_API_URL="https://api-dev-chrisw.01.dev.identity.account.gov.uk"
+CORE_BACK_PUBLIC_ENCRYPTION_KEY='{"kty":"RSA","e":"AQAB","kid":"b454ac07-e188-415d-a3c8-f1d0d38aaecd","n":"loHeaSxvMgiHStKmb-ZK5ZPpwRWrhSSQ-nTyuKQj-mYWYFNGgGGNP-37Zvzo453bUGtEeFu1zdlLAoHyT3kgs1XdqXCvPinNccpJ8lWGXcFKGRhj5jxIiIMvEBHfLs\*-cMIWW0166ndTT93ocoXdXaP64mH2iF7WWDyKqOcrVjuaUnbFbS4X2fhJwwRPj_Kin5jpJCx3MJd9eIuYyJB4CltbLTpX25oCwLw9t-p2lzHfazJSITcfTzEbOZV40fPJIR6HlJi7ApXYfAQ-dlbjMsYinFQnY6ILJXkbsjD4JXWUYaB0RbK8WTTKyehFU7P_Q8vFb7qWU4Xj9MTEHc7W3Q"}'
+ORCHESTRATOR_REDIRECT_URL="https://orch-dev-chrisw.01.core.dev.stubs.account.gov.uk/callback"
+JAR_SIGNING_KEY='{"kty":"EC","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' // pragma: allowlist secret
+ASYNC_QUEUE_NAME="stubQueue_F2FQueue_dev-chrisw"
+ASYNC_QUEUE_DELAY=5
+```
 
 ## Working on the tests
 
