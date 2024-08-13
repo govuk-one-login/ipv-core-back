@@ -180,7 +180,7 @@ class ContractTest {
                         "Authorization",
                         "Bearer dummyAccessToken")
                 .willRespondWith()
-                .status(200)
+                .status(201)
                 .body(
                         newJsonBody(
                                         body -> {
@@ -222,7 +222,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder)
+    public RequestResponsePact invalidAccessTokenReturns400(PactDslWithProvider builder)
             throws Exception {
         return builder.given("badAccessToken is not a valid access token")
                 .uponReceiving("Valid credential request")
@@ -235,12 +235,12 @@ class ContractTest {
                         "Authorization",
                         "Bearer badAccessToken")
                 .willRespondWith()
-                .status(403)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns400")
     void
             fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriWithInvalidAccessToken_throwsAnException(
                     MockServer mockServer) throws URISyntaxException {
