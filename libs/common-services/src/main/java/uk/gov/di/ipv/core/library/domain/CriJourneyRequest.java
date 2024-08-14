@@ -5,23 +5,21 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
-public class ProcessRequest extends JourneyRequest {
-    private Map<String, Object> lambdaInput;
+public class CriJourneyRequest extends JourneyRequest {
+    private String language;
 
-    @Builder(builderMethodName = "processRequestBuilder")
-    public ProcessRequest(
+    @Builder(builderMethodName = "criJourneyRequestBuilder")
+    public CriJourneyRequest(
             String ipvSessionId,
             String ipAddress,
             String deviceInformation,
             String clientOAuthSessionId,
             String journey,
             String featureSet,
-            Map<String, Object> lambdaInput) {
+            String language) {
         super(
                 ipvSessionId,
                 ipAddress,
@@ -29,6 +27,6 @@ public class ProcessRequest extends JourneyRequest {
                 clientOAuthSessionId,
                 journey,
                 featureSet);
-        this.lambdaInput = lambdaInput;
+        this.language = language;
     }
 }

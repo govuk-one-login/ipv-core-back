@@ -26,10 +26,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -88,7 +88,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getLanguage;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<CriJourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
@@ -148,7 +148,7 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
             String ipvSessionId = getIpvSessionId(input);

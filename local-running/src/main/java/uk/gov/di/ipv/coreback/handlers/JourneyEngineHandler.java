@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.checkcoi.CheckCoiHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
@@ -112,7 +113,7 @@ public class JourneyEngineHandler {
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
                     yield buildCriOauthRequestHandler.handleRequest(
-                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+                            buildFrontendJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
                 } else {
                     throw new UnrecognisedJourneyException(
                             String.format("Journey not configured: %s", journeyStep));
@@ -122,7 +123,18 @@ public class JourneyEngineHandler {
     }
 
     private JourneyRequest buildJourneyRequest(Context ctx, String journey) {
-        return JourneyRequest.builder()
+        return CriJourneyRequest.builder()
+                .ipvSessionId(ctx.header(IPV_SESSION_ID))
+                .ipAddress(ctx.header(IP_ADDRESS))
+                .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
+                .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
+                .featureSet(ctx.header(FEATURE_SET))
+                .journey(journey)
+                .build();
+    }
+
+    private CriJourneyRequest buildFrontendJourneyRequest(Context ctx, String journey) {
+        return CriJourneyRequest.criJourneyRequestBuilder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
                 .ipAddress(ctx.header(IP_ADDRESS))
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
@@ -141,7 +153,6 @@ public class JourneyEngineHandler {
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
-                .language(ctx.header(LANGUAGE))
                 .journey((String) processJourneyEventOutput.get(JOURNEY))
                 .lambdaInput((Map<String, Object>) processJourneyEventOutput.get("lambdaInput"))
                 .build();
