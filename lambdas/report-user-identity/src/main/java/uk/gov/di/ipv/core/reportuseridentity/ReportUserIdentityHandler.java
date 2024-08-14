@@ -33,7 +33,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
@@ -274,7 +280,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 reportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE);
         if (reportSummaryItem == null) {
             reportSummaryItem =
-                    new ReportSummaryItem(ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L);
+                    new ReportSummaryItem(
+                            ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L, Collections.emptyMap());
         }
         List<ReportUserIdentityItem> totalP2Identities =
                 items.stream().filter(ui -> Vot.P2.name().equals(ui.getIdentity())).toList();
@@ -294,6 +301,18 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         + items.stream()
                                 .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
                                 .count());
+        var constituteVCsTotal =
+                items.stream()
+                        .map(ReportUserIdentityItem::getConstituentVcs)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        var mergedConstituteVCsTotal =
+                Stream.of(reportSummaryItem.getConstituentVcsTotal(), constituteVCsTotal)
+                        .flatMap(map -> map.entrySet().stream())
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey, Map.Entry::getValue, Long::sum));
+        reportSummaryItem.setConstituentVcsTotal(mergedConstituteVCsTotal);
         reportSummaryScanDynamoDataStore.update(reportSummaryItem);
     }
 
@@ -304,14 +323,16 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 reportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE);
         if (reportSummaryItem == null) {
             reportSummaryItem =
-                    new ReportSummaryItem(ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L);
+                    new ReportSummaryItem(
+                            ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L, Collections.emptyMap());
         }
         return reportProcessingResult.summary(
                 new ReportSummary(
                         reportSummaryItem.getTotalP2(),
                         reportSummaryItem.getTotalP2Migrated(),
                         reportSummaryItem.getTotalP1(),
-                        reportSummaryItem.getTotalP0()));
+                        reportSummaryItem.getTotalP0(),
+                        reportSummaryItem.getConstituentVcsTotal()));
     }
 
     private void checkLambdaRemainingExecutionTime(Context context)

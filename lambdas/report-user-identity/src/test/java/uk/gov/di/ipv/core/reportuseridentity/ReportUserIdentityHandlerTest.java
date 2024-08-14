@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,8 +54,8 @@ class ReportUserIdentityHandlerTest {
     @Mock private OutputStream mockOutputStream;
     @Mock private PageIterable<VcStoreItem> mockVcStoreItemPageIterable;
     @Mock private PageIterable<ReportUserIdentityItem> mockReportUserIdentityPageIterable;
-    @Mock private Iterator mockVCStoreItemIterator;
-    @Mock private Iterator mockReportUserIdentityIterator;
+    @Mock private Iterator<Page<VcStoreItem>> mockVCStoreItemIterator;
+    @Mock private Iterator<Page<ReportUserIdentityItem>> mockReportUserIdentityIterator;
     @Mock private ConfigService mockConfigService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -119,6 +120,9 @@ class ReportUserIdentityHandlerTest {
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(Boolean.TRUE);
         when(mockReportUserIdentityService.getStrongestAttainedVotForCredentials(any()))
                 .thenReturn(Optional.of(Vot.P2));
+        when(mockReportUserIdentityService.getIdentityConstituent(any()))
+                .thenReturn(List.of("address", "ukPassport"))
+                .thenReturn(List.of("fraud"));
         List<ReportUserIdentityItem> totalIdentitiesPage1 =
                 List.of(
                         new ReportUserIdentityItem(
@@ -150,7 +154,23 @@ class ReportUserIdentityHandlerTest {
                                 .build());
 
         when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
-                .thenReturn(new ReportSummaryItem());
+                .thenReturn(null)
+                .thenReturn(
+                        new ReportSummaryItem(
+                                ScanDynamoDataStore.KEY_VALUE,
+                                2L,
+                                1L,
+                                0L,
+                                0L,
+                                Map.of("address,passport", 1L)))
+                .thenReturn(
+                        new ReportSummaryItem(
+                                ScanDynamoDataStore.KEY_VALUE,
+                                3L,
+                                2L,
+                                0L,
+                                0L,
+                                Map.of("address,passport", 2L, "fraud", 1L)));
         // Act
         reportUserIdentityHandler.handleRequest(mockInputStream, mockOutputStream, mockContext);
 
@@ -171,5 +191,8 @@ class ReportUserIdentityHandlerTest {
                                 .count();
         assertEquals(totalP2Identities, reportProcessingResult.summary().totalP2Identities());
         assertEquals(2, reportProcessingResult.summary().totalP2IdentitiesMigrated());
+        assertEquals(
+                2, reportProcessingResult.summary().constituentVcsTotal().get("address,passport"));
+        assertEquals(1, reportProcessingResult.summary().constituentVcsTotal().get("fraud"));
     }
 }

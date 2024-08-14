@@ -10,6 +10,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
 
+import java.util.Map;
+
 @DynamoDbBean
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,6 +31,9 @@ public class ReportSummaryItem implements PersistenceItem {
 
     @JsonProperty("Total P0")
     long totalP0;
+
+    @JsonProperty("constituentVcsTotal")
+    private Map<String, Long> constituentVcsTotal;
 
     @DynamoDbPartitionKey
     public String getId() {
