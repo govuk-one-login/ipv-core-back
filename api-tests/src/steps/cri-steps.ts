@@ -86,7 +86,7 @@ When(
 );
 
 When(
-  /^I submit '([\w-]+)' details to the (async )?CRI stub with '([\w-]+)' CI to mitigate$/,
+  /^I submit '([\w-]+)' details to the (async )?CRI stub that mitigate the '([\w-]+)' CI$/,
   async function (
     this: World,
     scenario: string,
