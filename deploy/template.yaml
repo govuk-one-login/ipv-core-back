@@ -54,6 +54,12 @@ Globals:
           - IsDevelopment
           - 0
           - 3
+    AutoPublishAlias: live
+    DeploymentPreference:
+      Enabled: true
+      Type:
+        Fn::If: [IsProduction, Canary10Percent5Minutes, !Ref LambdaCanary10Percent2Minutes]
+      Role: !GetAtt CodeDeployServiceRole.Arn
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
@@ -205,6 +211,18 @@ Mappings:
       s3: "pl-7ca54015"
 
 Resources:
+  # Deployment config
+  LambdaCanary10Percent2Minutes:
+    Type: AWS::CodeDeploy::DeploymentConfig
+    Properties: 
+      ComputePlatform: Lambda
+      DeploymentConfigName: LambdaCanary10Percent2Minutes
+      TrafficRoutingConfig:
+        TimeBasedCanary: 
+          CanaryPercentage: 10
+          CanaryInterval: 2
+        Type: TimeBasedCanary
+
   # ssl cert
   DevSSLCert:
     Type: AWS::CertificateManager::Certificate
@@ -620,6 +638,84 @@ Resources:
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+      PermissionsBoundary:
+        !If [
+          UsePermissionsBoundary,
+          !Ref PermissionsBoundary,
+          !Ref AWS::NoValue,
+        ]
+
+  PreTrafficHook:
+    Type: AWS::Serverless::Function
+    # checkov:skip=CKV_AWS_116: DLQ is not appropriate for a Lambda invoked by an API
+    # checkov:skip=CKV_AWS_117: Internet access not required
+    Metadata:
+      checkov:
+        skip:
+          - id: "CKV_AWS_116"
+            comment: "DLQ is not appropriate for a Lambda invoked by an API"
+          - id: "CKV_AWS_117"
+            comment: "Internet access not required"
+    Properties:
+      FunctionName: !Join
+        - "_"
+        - - "CodeDeployHook"
+          - !Ref AWS::StackName
+          - "PreTrafficHook"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - /
+                          - Ref: AWS::StackId
+      Handler: PreTrafficHook.handler
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "codedeploy:PutLifecycleEventHookExecutionStatus"
+              Resource: !Sub "arn:aws:codedeploy:${AWS::Region}:${AWS::AccountId}"
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "lambda:InvokeFunction"
+              Resource: !Ref InitialiseIpvSessionFunction.Version
+      Runtime: nodejs18.x
+      # KmsKeyArn: !GetAtt HelloWorldKmsKey.Arn
+      Environment:
+        Variables:
+          NewVersion: !Ref InitialiseIpvSessionFunction.Version
+      ReservedConcurrentExecutions: 5
+      Tags:
+        Product: GOV.UK Sign In
+        System: Dev Platform
+        Environment: Demo
+        Service: backend
+        Name: PreTrafficHook
+        # Source: alphagov/di-devplatform-demo-sam-app/sam-app/template.yaml
+        CheckovRulesToSkip: CKV_AWS_116.CKV_AWS_117
+      DeploymentPreference:
+        Enabled: false
 
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function

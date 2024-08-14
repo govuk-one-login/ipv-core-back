@@ -119,7 +119,7 @@ When(
           isPageResponse(this.lastJourneyEngineResponse),
           `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
         );
-        assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
+        assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
         return;
       } catch (e) {
         if (attempt >= MAX_ATTEMPTS) {
@@ -140,7 +140,7 @@ Then(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
+    assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
   },
 );
 
@@ -161,7 +161,7 @@ Then(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
+    assert.equal(this.lastJourneyEngineResponse.cri.id, expectedCri);
   },
 );
 
@@ -172,8 +172,8 @@ Then("I get an OAuth response", function (this: World): void {
   );
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
-    config.orch.redirectUrl,
     `${url.protocol}//${url.host}${url.pathname}`,
+    config.orch.redirectUrl,
   );
 });
 
@@ -193,7 +193,7 @@ When(
 );
 
 Then("I get a {string} identity", function (this: World, vot: string): void {
-  assert.equal(vot, this.identity.vot);
+  assert.equal(this.identity.vot, vot);
 });
 
 Then(
@@ -215,8 +215,8 @@ Then(
   "my address {string} is {string}",
   function (this: World, field: keyof PostalAddressClass, value: string): void {
     assert.equal(
-      value.toLowerCase(),
       this.identity?.[addressCredential]?.[0][field]?.toString().toLowerCase(),
+      value.toLowerCase(),
     );
   },
 );

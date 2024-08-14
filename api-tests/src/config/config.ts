@@ -39,6 +39,10 @@ const config = {
   },
   localAuditEvents:
     getOptionalConfig("process.env.LOCAL_AUDIT_EVENTS") === "true",
+  cimit: {
+    managementCimitUrl: getMandatoryConfig("CIMIT_STUB_BASE_URL"),
+    managementCimitApiKey: getMandatoryConfig("MANAGEMENT_CIMIT_STUB_API_KEY"),
+  },
 };
 
 export default config;

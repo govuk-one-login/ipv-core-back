@@ -84,3 +84,29 @@ When(
     );
   },
 );
+
+When(
+  /^I submit '([\w-]+)' details to the (async )?CRI stub that mitigate the '([\w-]+)' CI$/,
+  async function (
+    this: World,
+    scenario: string,
+    async: "async " | undefined,
+    mitigatedCis: string,
+  ): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+        undefined,
+        !!async,
+        mitigatedCis.split(","),
+      ),
+    );
+  },
+);

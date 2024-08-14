@@ -1,0 +1,19 @@
+{
+  "type": "IdentityCheck",
+  "verificationScore": 0,
+  "failedCheckDetails": [
+    {
+      "kbvResponseMode": "multiple_choice",
+      "checkMethod": "kbv"
+    },
+    {
+      "kbvResponseMode": "multiple_choice",
+      "checkMethod": "kbv"
+    },
+    {
+      "kbvResponseMode": "multiple_choice",
+      "checkMethod": "kbv"
+    }
+  ],
+  "ci": ["NEEDS-ENHANCED-VERIFICATION"]
+}

@@ -1,0 +1,376 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  A stack to create cloudwatch alarms.
+
+Parameters:
+  Environment:
+    Description: "The environment name to deploy to"
+    Type: "String"
+
+Resources:
+  InitialiseIpvSessionFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "initialise-ipv-session-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        InitialiseIpvSessionFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "initialise-ipv-session-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "initialise-ipv-session-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  InitialiseIpvSessionFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "initialise-ipv-session-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the InitialiseIpvSessionFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "initialise-ipv-session-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "initialise-ipv-session-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckCiScoreFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "check-ci-score-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        CheckCiScoreFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "check-ci-score-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "check-ci-score-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckCiScoreFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "check-ci-score-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the CheckCiScoreFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "check-ci-score-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "check-ci-score-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  EvaluateGpg45ScoresFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "evaluate-gpg45-scores-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        EvaluateGpg45ScoresFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "evaluate-gpg45-scores-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "evaluate-gpg45-scores-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  EvaluateGpg45ScoresFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "evaluate-gpg45-scores-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the EvaluateGpg45ScoresFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "evaluate-gpg45-scores-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "evaluate-gpg45-scores-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildCriOauthRequestFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "build-cri-oauth-request-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        BuildCriOauthRequestFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "build-cri-oauth-request-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "build-cri-oauth-request-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildCriOauthRequestFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "build-cri-oauth-request-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the BuildCriOauthRequestFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "build-cri-oauth-request-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "build-cri-oauth-request-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessAsyncCriCredentialFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "process-async-cri-credential-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        ProcessAsyncCriCredentialFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "process-async-cri-credential-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "process-async-cri-credential-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessAsyncCriCredentialFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "process-async-cri-credential-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the ProcessAsyncCriCredentialFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "process-async-cri-credential-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "process-async-cri-credential-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  RetrieveCriOauthAccessTokenFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "retrieve-cri-oauth-access-token-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        RetrieveCriOauthAccessTokenFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "retrieve-cri-oauth-access-token-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "retrieve-cri-oauth-access-token-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  RetrieveCriOauthAccessTokenFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "retrieve-cri-oauth-access-token-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the RetrieveCriOauthAccessTokenFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "retrieve-cri-oauth-access-token-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "retrieve-cri-oauth-access-token-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  RetrieveCriCredentialFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "retrieve-cri-credential-${Environment}LambdaErrorAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if there are errors returned from the 
+        RetrieveCriCredentialFunction Lambda
+      MetricName: LambdaFailures
+      Dimensions: 
+      - Name: Resource
+        Value: !Sub "retrieve-cri-credential-${Environment}:live"
+      - Name: FunctionName
+        Value: !Sub "retrieve-cri-credential-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  RetrieveCriCredentialFunctionTooManyRequestsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "retrieve-cri-credential-${Environment}TooManyRequestsAlarm"
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if the RetrieveCriCredentialFunction Lambda receives 
+        too many requests within a specified time period.
+      MetricName: LambdaFailures
+      Dimensions:
+      - Name: Resource
+        Value: !Sub "retrieve-cri-credential-${Environment}:live" 
+      - Name: FunctionName
+        Value: !Sub "retrieve-cri-credential-${Environment}"
+      Namespace: LambdaMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '5'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+Outputs:
+  InitialiseIpvSessionFunctionErrorsAlarm:
+    Description: Core Back Initialise Ipv Session Lambda errors alarm
+    Value: !Ref InitialiseIpvSessionFunctionErrorsAlarm
+    Export: 
+      Name: InitialiseIpvSessionFunctionErrorsAlarm
+  InitialiseIpvSessionFunctionTooManyRequestsAlarm:
+    Description: Core Back Initialise Ipv Session Lambda too many requests alarm
+    Value: !Ref InitialiseIpvSessionFunctionTooManyRequestsAlarm
+    Export: 
+      Name: InitialiseIpvSessionFunctionTooManyRequestsAlarm
+  CheckCiScoreFunctionErrorsAlarm:
+    Description: Core Back Check Ci Score Lambda errors alarm
+    Value: !Ref CheckCiScoreFunctionErrorsAlarm
+    Export: 
+      Name: CheckCiScoreFunctionErrorsAlarm
+  CheckCiScoreFunctionTooManyRequestsAlarm:
+    Description: Core Back Check Ci Score Lambda too many requests alarm
+    Value: !Ref CheckCiScoreFunctionTooManyRequestsAlarm
+    Export: 
+      Name: CheckCiScoreFunctionTooManyRequestsAlarm
+  EvaluateGpg45ScoresFunctionErrorsAlarm:
+    Description: Core Back Evaluate Gpg45 Scores Lambda errors alarm
+    Value: !Ref EvaluateGpg45ScoresFunctionErrorsAlarm
+    Export: 
+      Name: EvaluateGpg45ScoresFunctionErrorsAlarm
+  EvaluateGpg45ScoresFunctionTooManyRequestsAlarm:
+    Description: Core Back Evaluate Gpg45 Scores Lambda too many requests alarm
+    Value: !Ref EvaluateGpg45ScoresFunctionTooManyRequestsAlarm
+    Export: 
+      Name: EvaluateGpg45ScoresFunctionTooManyRequestsAlarm
+  BuildCriOauthRequestFunctionErrorsAlarm:
+    Description: Core Back Build Cri Oauth Request Lambda errors alarm
+    Value: !Ref BuildCriOauthRequestFunctionErrorsAlarm
+    Export: 
+      Name: BuildCriOauthRequestFunctionErrorsAlarm
+  BuildCriOauthRequestFunctionTooManyRequestsAlarm:
+    Description: Core Back Build Cri Oauth Request Lambda too many requests alarm
+    Value: !Ref BuildCriOauthRequestFunctionTooManyRequestsAlarm
+    Export: 
+      Name: BuildCriOauthRequestFunctionTooManyRequestsAlarm
+  ProcessAsyncCriCredentialFunctionErrorsAlarm:
+    Description: Core Back Process Async Cri Credential Lambda errors alarm
+    Value: !Ref ProcessAsyncCriCredentialFunctionErrorsAlarm
+    Export: 
+      Name: ProcessAsyncCriCredentialFunctionErrorsAlarm
+  ProcessAsyncCriCredentialFunctionTooManyRequestsAlarm:
+    Description: Core Back Process Async Cri Credential Lambda too many requests alarm
+    Value: !Ref ProcessAsyncCriCredentialFunctionTooManyRequestsAlarm
+    Export: 
+      Name: ProcessAsyncCriCredentialFunctionTooManyRequestsAlarm
+  RetrieveCriOauthAccessTokenFunctionErrorsAlarm:
+    Description: Core Back Retrieve Cri Oauth Access Token Lambda errors alarm
+    Value: !Ref RetrieveCriOauthAccessTokenFunctionErrorsAlarm
+    Export: 
+      Name: RetrieveCriOauthAccessTokenFunctionErrorsAlarm
+  RetrieveCriOauthAccessTokenFunctionTooManyRequestsAlarm:
+    Description: Core Back Retrieve Cri Oauth Access Token Lambda too many requests alarm
+    Value: !Ref RetrieveCriOauthAccessTokenFunctionTooManyRequestsAlarm
+    Export: 
+      Name: RetrieveCriOauthAccessTokenFunctionTooManyRequestsAlarm
+  RetrieveCriCredentialFunctionErrorsAlarm:
+    Description: Core Back Retrieve Cri Credential Lambda errors alarm
+    Value: !Ref RetrieveCriCredentialFunctionErrorsAlarm
+    Export: 
+      Name: RetrieveCriCredentialFunctionErrorsAlarm
+  RetrieveCriCredentialFunctionTooManyRequestsAlarm:
+    Description: Core Back Retrieve Cri Credential Lambda too many requests alarm
+    Value: !Ref RetrieveCriCredentialFunctionTooManyRequestsAlarm
+    Export: 
+      Name: RetrieveCriCredentialFunctionTooManyRequestsAlarm
