@@ -65,16 +65,18 @@ const startNewJourney = async (
   world: World,
   journeyType: string,
   reproveIdentity: boolean,
+  inheritedIdentityId: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
   world.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody(
-      world.userId,
-      world.journeyId,
+    await generateInitialiseIpvSessionBody({
+      subject: world.userId,
+      journeyId: world.journeyId,
       journeyType,
-      reproveIdentity,
-    ),
+      isReproveIdentity: !!reproveIdentity,
+      inheritedIdentityId,
+    }),
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
@@ -83,13 +85,19 @@ const startNewJourney = async (
 };
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?$/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
+    inheritedIdentityId: string | undefined,
   ): Promise<void> {
-    await startNewJourney(this, journeyType, !!reproveIdentity);
+    await startNewJourney(
+      this,
+      journeyType,
+      !!reproveIdentity,
+      inheritedIdentityId,
+    );
   },
 );
 
@@ -104,7 +112,7 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false);
+      await startNewJourney(this, journeyType, false, undefined);
 
       try {
         assert.ok(

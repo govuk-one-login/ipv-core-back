@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import { createSignedJwt } from "./jwt-signer.js";
 import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
+import { IpvSessionDetails } from "./ipv-session.js";
 import {
   AuthRequestBody,
   ProcessCriCallbackRequest,
@@ -15,10 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
-  subject: string,
-  journeyId: string,
-  journeyType: string,
-  reproveIdentity: boolean,
+  session: IpvSessionDetails,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",
@@ -26,12 +24,7 @@ export const generateInitialiseIpvSessionBody = async (
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
     scope: "openid",
-    request: await generateJar(
-      subject,
-      journeyId,
-      journeyType,
-      reproveIdentity,
-    ),
+    request: await generateJar(session),
   };
 };
 

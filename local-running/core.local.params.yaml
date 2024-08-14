@@ -20,6 +20,8 @@ core:
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
+      PCL200: 3
+      PCL250: 3
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
