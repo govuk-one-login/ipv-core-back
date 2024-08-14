@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -91,7 +90,7 @@ public class RequestHelper {
     }
 
     public static String getLanguage(JourneyRequest request)
-            throws HttpResponseExceptionWithErrorBody, JsonProcessingException {
+            throws HttpResponseExceptionWithErrorBody {
         String language = request.getLanguage();
 
         if (language == null) {
