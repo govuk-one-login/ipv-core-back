@@ -123,7 +123,7 @@ public class JourneyEngineHandler {
     }
 
     private JourneyRequest buildJourneyRequest(Context ctx, String journey) {
-        return CriJourneyRequest.builder()
+        return JourneyRequest.builder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
                 .ipAddress(ctx.header(IP_ADDRESS))
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
