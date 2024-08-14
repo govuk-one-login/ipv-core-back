@@ -39,7 +39,11 @@ export const sendJourneyEvent = async (
   const url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
   const response = await fetch(url, {
     method: POST,
-    headers: { ...internalApiHeaders, ...{ "ipv-session-id": ipvSessionId } },
+    headers: {
+      ...internalApiHeaders,
+      "ipv-session-id": ipvSessionId,
+      language: "en",
+    },
   });
 
   if (!response.ok) {

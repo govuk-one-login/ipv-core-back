@@ -89,6 +89,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
@@ -729,6 +730,59 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockCriOAuthSessionService, times(1))
                 .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
+            throws Exception {
+        // Arrange
+        when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
+                .thenReturn(dcmawOauthCriConfig);
+        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DWP_KBV.getId()))
+                .thenReturn(null);
+        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+
+        CriJourneyRequest input =
+                CriJourneyRequest.criJourneyRequestBuilder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
+                        .journey(String.format(JOURNEY_BASE_URL, DWP_KBV.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> lng =
+                queryParams.stream().filter(param -> param.getName().equals("lng")).findFirst();
+        assertTrue(lng.isPresent());
+        assertEquals(TEST_LANGUAGE, lng.get().getValue());
     }
 
     @Test

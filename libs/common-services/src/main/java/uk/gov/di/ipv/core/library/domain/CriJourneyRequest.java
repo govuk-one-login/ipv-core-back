@@ -4,7 +4,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@ExcludeFromGeneratedCoverageReport
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
