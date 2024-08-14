@@ -1,6 +1,6 @@
+@Build
 Feature: P2 Reuse journey
 
-  @Build
   Scenario: Successful P2 reuse journey
     # First identity proving journey
     Given I start a new 'medium-confidence' journey
