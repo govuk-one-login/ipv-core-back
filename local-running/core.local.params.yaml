@@ -359,7 +359,6 @@ core:
     p1JourneysEnabled: false
     sqsAsync: true
     cimitApiGatewayEnabled: true
-    updateDetailsAccountDeletion: false
   features:
     mfaReset:
       featureFlags:
@@ -377,9 +376,6 @@ core:
     evcsRead:
       featureFlags:
         evcsReadEnabled: true
-    updateDetailsAccountDeletion:
-      featureFlags:
-        updateDetailsAccountDeletion: true
     hmrcKbvBeta:
       credentialIssuers:
         hmrcKbv:
