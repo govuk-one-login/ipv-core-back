@@ -13,7 +13,7 @@
     "lint-fix": "eslint --fix . && prettier . --write"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^10.8.0",
+    "@cucumber/cucumber": "^10.9.0",
     "@govuk-one-login/data-vocab": "^1.7.2",
     "@types/eslint__js": "^8.42.3",
     "dotenv": "^16.4.5",
