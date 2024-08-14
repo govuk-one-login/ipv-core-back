@@ -161,6 +161,7 @@ jobs:
       - name: Local API tests
         env:
           ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
+          MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
         run: npm run test:ci
 
       - name: Upload API test report
