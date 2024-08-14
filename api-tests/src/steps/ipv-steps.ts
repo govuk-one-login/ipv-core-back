@@ -153,7 +153,7 @@ Then(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
+    assert.equal(this.lastJourneyEngineResponse.cri.id, expectedCri);
   },
 );
 
