@@ -38,17 +38,14 @@ public class ReportUserIdentityService {
     }
 
     public Optional<Vot> getStrongestAttainedVotForCredentials(List<VerifiableCredential> vcs) {
+        Gpg45Scores gpg45Scores =
+                gpg45ProfileEvaluator.buildScore(VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
         // Filter out since currently no operational profile in prod
         for (Vot votToCheck :
                 SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                         .filter(vot -> vot.getProfileType().equals(GPG45))
                         .toList()) {
-            boolean requestedVotAttained;
-            requestedVotAttained =
-                    achievedWithGpg45Profile(
-                            votToCheck, VcHelper.filterVCBasedOnProfileType(vcs, GPG45));
-
-            if (requestedVotAttained) {
+            if (achievedWithGpg45Profile(votToCheck, gpg45Scores)) {
                 return Optional.of(votToCheck);
             }
         }
@@ -84,8 +81,7 @@ public class ReportUserIdentityService {
                 .toList();
     }
 
-    private boolean achievedWithGpg45Profile(Vot votToCheck, List<VerifiableCredential> vcs) {
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
+    private boolean achievedWithGpg45Profile(Vot votToCheck, Gpg45Scores gpg45Scores) {
         Optional<Gpg45Profile> matchedGpg45Profile =
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
                         gpg45Scores, votToCheck.getSupportedGpg45Profiles());

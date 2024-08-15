@@ -42,7 +42,7 @@ import java.util.stream.Stream;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
-    public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 1000;
+    public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 60000;
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
     private final ObjectMapper objectMapper;
@@ -107,9 +107,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         try {
             ReportProcessingRequest reportProcessingRequest =
                     objectMapper.readValue(inputStream, ReportProcessingRequest.class);
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Request received- " + reportProcessingRequest.toString()));
+
             // Step-1
             scanToExtractUniqueUserIdFromTacticalStore(
                     reportProcessingRequest, reportProcessingResult, context);
@@ -186,16 +184,15 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             for (var page :
                     reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
                             reportProcessingRequest.userIdentitylastEvaluatedKey(),
-                            ATTR_NAME_USER_ID,
-                            "identity",
-                            "migrated")) {
+                            ATTR_NAME_USER_ID)) {
                 var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
                 LOGGER.info(
                         LogHelper.buildLogMessage(
                                 String.format(
                                         "Checking user identity for total (%s) users.",
                                         userIds.size())));
-                List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>();
+                List<ReportUserIdentityItem> reportUserIdentityItems =
+                        new ArrayList<>(userIds.size());
                 for (String userId : userIds) {
                     reportUserIdentityItems.add(evaluateUserIdentityDetail(userId));
                 }
@@ -219,10 +216,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
         if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
             LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "User (%s) VCs not correlated.",
-                                    ReportUserIdentityItem.getUserHash(userId))));
+                    LogHelper.buildLogMessage("User VCs not correlated.")
+                            .with("user_hash", ReportUserIdentityItem.getUserHash(userId)));
             return new ReportUserIdentityItem(
                     userId,
                     Vot.P0.name(),
@@ -235,10 +230,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
             if (anyVCsMigrated && !allVCsMigrated) {
                 LOGGER.warn(
-                        LogHelper.buildLogMessage(
-                                String.format(
-                                        "Not all VCs are migrated for this user (%s).",
-                                        ReportUserIdentityItem.getUserHash(userId))));
+                        LogHelper.buildLogMessage("Not all VCs are migrated for this user.")
+                                .with("user_hash", ReportUserIdentityItem.getUserHash(userId)));
             }
 
             return new ReportUserIdentityItem(
@@ -265,7 +258,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         long totalP0Identities = 0L;
         Map<String, Long> previousConstituteVCsTotal = Collections.emptyMap();
         Map<String, Long> mergedConstituteVCsTotal = Collections.emptyMap();
-        List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
         for (var page :
                 reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
                         reportProcessingRequest.buildReportLastEvaluatedKey())) {
@@ -303,13 +295,11 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                     Collectors.toMap(
                                             Map.Entry::getKey, Map.Entry::getValue, Long::sum));
             previousConstituteVCsTotal = pageConstituteVCsTotal;
-            totalReportUserIdentityItems.addAll(page.items());
             reportProcessingResult.buildReportLastEvaluatedKey(page.lastEvaluatedKey());
 
             checkLambdaRemainingExecutionTime(context);
         }
         reportProcessingResult.userIdentitylastEvaluatedKey(null);
-        reportProcessingResult.users(totalReportUserIdentityItems);
         reportProcessingResult.summary(
                 new ReportSummary(
                         totalP2Identities,
@@ -323,7 +313,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     private void checkLambdaRemainingExecutionTime(Context context)
             throws StopBeforeLambdaTimeoutException {
-        if (context.getRemainingTimeInMillis() < STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT) {
+        if (context.getRemainingTimeInMillis() <= STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT) {
             throw new StopBeforeLambdaTimeoutException("Stopping as lambda about to timeout.");
         }
     }

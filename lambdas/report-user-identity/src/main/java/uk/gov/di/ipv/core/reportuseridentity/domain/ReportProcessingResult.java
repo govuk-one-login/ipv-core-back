@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 
-import java.util.List;
 import java.util.Map;
 
 @Builder
@@ -14,7 +12,6 @@ import java.util.Map;
 @ExcludeFromGeneratedCoverageReport
 public record ReportProcessingResult(
         ReportSummary summary,
-        List<ReportUserIdentityItem> users,
         Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
         Map<String, AttributeValue> userIdentitylastEvaluatedKey,
         Map<String, AttributeValue> buildReportLastEvaluatedKey) {}

@@ -126,8 +126,7 @@ class ReportUserIdentityHandlerTest {
                         new ReportUserIdentityItem(
                                 "userId3", "P2", 0, List.of("address,passport"), true));
         // for step-2
-        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(
-                        any(), anyString(), anyString(), anyString()))
+        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any(), anyString()))
                 .thenReturn(mockReportUserIdentityPageIterable);
         when(mockReportUserIdentityPageIterable.iterator())
                 .thenReturn(mockReportUserIdentityIterator)

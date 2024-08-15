@@ -6,7 +6,6 @@
 
 - `PROFILE` is the aws account profile you want to use for this call. E.g. if you were running it in `build` then it could be `core-build-admin`.
 - `ENVIRONMENT` is the environment to run it in, linked to `PROFILE` because in the same example it would have to be `build`.
-- `OUTPUT_FILE` is the path (from the working directory) which gets written to with the lambda output.
 
 ---
 
@@ -29,14 +28,13 @@ aws-vault exec PROFILE -- \
   aws lambda invoke \
     --function-name report-user-identity-ENVIRONMENT \
     --invocation-type RequestResponse \
-    OUTPUT_PATH \
     --cli-read-timeout 600
 ```
 
 NB: the read timeout is increased over the default to receive output file from lambda even after a long execution period.
 
 ### Request payload
-If only want to gather unique users from tactical storage (with no lastEvaluatedKey).
+Step-1 If only want to gather unique users from tactical storage (with no lastEvaluatedKey).
 ```json
 {
   "continueUniqueUserScan": true,
@@ -61,7 +59,7 @@ If only want to gather unique users from tactical storage (with lastEvaluatedKey
   "continueUserIdentityScan": true
 }
 ```
-If all unique users are gathered from tactical storage (there will be no tacticalStoreLastEvaluatedKey value in last run output result).
+Step-2 If all unique users are gathered from tactical storage (there will be no tacticalStoreLastEvaluatedKey value in last run output result).
 ```json
 {
   "continueUniqueUserScan": false,
@@ -82,12 +80,20 @@ value in last run output.
   }
 }
 ```
+Step-3 If all unique users are gathered from tactical storage (there will be no tacticalStoreLastEvaluatedKey value in last run output result).
+Also identity details are gathered for all unique users (there will be no userIdentitylastEvaluatedKey value in last run output result)
+
+Then we just need to generate report summary output.
+```json
+{
+  "continueUniqueUserScan": false,
+  "continueUserIdentityScan": false
+}
+```
 
 ### Output
 
-- Logging statuses with progress level through the scan.
-- The lambda also outputs to `OUTPUT_FILE` which contains the summary view of the run.
-  - e.g. summary at `OUTPUT_FILE`:
+- Logging statuses with progress level throughout the report processing.
 
 ```json
 {
@@ -95,7 +101,12 @@ value in last run output.
     "Total P2": 12,
     "Total P2 migrated": 2,
     "Total P1": 1,
-    "Total P0": 1
+    "Total P0": 1,
+    "constituentVcsTotal": {
+      "address,fraud,kbv,ukPassport": 1,
+      "address,dcmaw-passport,fraud": 3,
+      "address,claimedIdentity,f2f-passport,fraud": 1
+    }
   },
   "tacticalStoreLastEvaluatedKey": {
     "userId": {
@@ -106,6 +117,11 @@ value in last run output.
     }
   },
   "userIdentitylastEvaluatedKey": {
+    "hashUserId": {
+      "S": "4w8niZpiMy6qz1mntFA5u"
+    }
+  },
+  "buildReportLastEvaluatedKey": {
     "hashUserId": {
       "S": "4w8niZpiMy6qz1mntFA5u"
     }
@@ -120,43 +136,12 @@ details for those gathered users completed.
     "Total P2": 12,
     "Total P2 migrated": 2,
     "Total P1": 1,
-    "Total P0": 1
+    "Total P0": 1,
+    "constituentVcsTotal": {
+      "address,fraud,kbv,ukPassport": 1,
+      "address,dcmaw-passport,fraud": 3,
+      "address,claimedIdentity,f2f-passport,fraud": 1
+    }
   }
 }
 ```
-
-Can also generate users identity details output;
-```json
-{
-  "summary": {
-    "Total P2": 12,
-    "Total P2 migrated": 2,
-    "Total P1": 1,
-    "Total P0": 1
-  },
-  "users": [
-    {
-      "hashUserId": "878e1871-8b7d-4a17-91ba-516bd86a0abc",
-      "identity": "P2",
-      "vcCount": 4,
-      "constituentVcs": "drivingLicence, address, fraud, kbv",
-      "migrated": false
-    },
-    {
-      "hashUserId": "0243cd17-f9b3-4617-9441-040b1860664e",
-      "identity": "P1",
-      "vcCount": 3,
-      "constituentVcs": "address, fraud, kbv",
-      "migrated": true
-    },
-    {
-      "hashUserId": "0243cb18-f9b3-4617-9441-040b1860688e",
-      "identity": "P0",
-      "vcCount": 3,
-      "constituentVcs": "address, fraud, kbv",
-      "migrated": false
-    }
-  ]
-}
-```
-### Error handling
