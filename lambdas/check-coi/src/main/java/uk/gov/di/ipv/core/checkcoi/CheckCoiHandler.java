@@ -114,7 +114,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         try {
             var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
-            String ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipvSession = ipvSessionService.getIpvSession(ipvSessionId);
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -135,8 +135,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     null,
                     deviceInformation);
 
-            var oldVcs =
-                    getOldIdentity(userId, ipvSessionId, clientOAuthSession.getEvcsAccessToken());
+            var oldVcs = getOldIdentity(userId, clientOAuthSession.getEvcsAccessToken());
 
             var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
@@ -260,8 +259,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 new DeviceInformation(deviceInformation));
     }
 
-    private List<VerifiableCredential> getOldIdentity(
-            String userId, String ipvSessionId, String evcsAccessToken)
+    private List<VerifiableCredential> getOldIdentity(String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
 
         List<VerifiableCredential> credentials = null;
