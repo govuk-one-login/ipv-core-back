@@ -239,9 +239,6 @@ states:
     response:
       type: page
       pageId: delete-handover
-    events:
-      back:
-        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
 
   FRAUD_CHECK_RFC:
     response:
