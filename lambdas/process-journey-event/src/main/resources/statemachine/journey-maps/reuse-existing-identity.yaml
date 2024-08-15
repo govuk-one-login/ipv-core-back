@@ -174,7 +174,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -184,7 +184,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -194,7 +194,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -204,7 +204,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -214,7 +214,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -224,7 +224,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -234,7 +234,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -244,7 +244,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -254,7 +254,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -264,7 +264,7 @@ states:
         targetState: UPDATE_NAME_DOB_PAGE
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_REUSE
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_SELECTED
         auditContext:
@@ -296,7 +296,7 @@ states:
       end:
         targetState: UPDATE_DETAILS_PAGE
 
-  UPDATE_NAME_DOB_REUSE:
+  UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION:
     response:
       type: page
       pageId: update-name-date-birth
