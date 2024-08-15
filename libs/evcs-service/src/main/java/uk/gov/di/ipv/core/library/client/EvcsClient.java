@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.retry.Retry;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -60,7 +61,7 @@ public class EvcsClient {
     @ExcludeFromGeneratedCoverageReport
     public EvcsClient(ConfigService configService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
         this.sleeper = new Sleeper();
     }
 
@@ -218,7 +219,6 @@ public class EvcsClient {
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
     }
 
-    @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest evcsHttpRequest)
             throws EvcsServiceException {
 
