@@ -73,9 +73,8 @@ class CredentialTests {
                 .given("VC evidence txn is dummyTxn")
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
-                .given("VC address subBuildingName is UNIT 2B")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is COY POND BUSINESS PARK")
+                .given("VC address buildingName is UNIT 2B")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -87,7 +86,7 @@ class CredentialTests {
                         "VC evidence checkDetails are multiple_choice, multiple_choice, multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 2, 2 and 1")
                 .uponReceiving("Valid credential request for VC")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -161,12 +160,8 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals(
-                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
-                                assertEquals(
-                                        "COY POND BUSINESS PARK",
-                                        addressNode.get("buildingName").asText());
                                 assertEquals(
                                         "KINGS PARK",
                                         addressNode.get("dependentStreetName").asText());
@@ -204,9 +199,8 @@ class CredentialTests {
                 .given("VC evidence txn is dummyTxn")
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
-                .given("VC address subBuildingName is UNIT 2B")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is COY POND BUSINESS PARK")
+                .given("VC address buildingName is UNIT 2B")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -214,10 +208,8 @@ class CredentialTests {
                 .given("VC address addressLocality is GREAT MISSENDEN")
                 .given("VC address postalCode is HP16 0AL")
                 .given("VC address addressCountry is GB")
-                .given("VC evidence checkDetails are multiple_choice, multiple_choice")
-                .given("VC evidence checkDetails kbvQuality are 3 and 2")
-                .uponReceiving("Valid credential request for VC")
-                .path("/credential")
+                .uponReceiving("Valid credential request for VC with a Thin-file")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -287,12 +279,8 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals(
-                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
-                                assertEquals(
-                                        "COY POND BUSINESS PARK",
-                                        addressNode.get("buildingName").asText());
                                 assertEquals(
                                         "KINGS PARK",
                                         addressNode.get("dependentStreetName").asText());
@@ -316,13 +304,13 @@ class CredentialTests {
     }
 
     @Pact(provider = "ExperianKbvCriVcProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAccessTokenReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAccessTokenReturns403(PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
                 .given("dummyInvalidAccessToken is an invalid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyExperianKbvComponentId is a valid issuer")
                 .uponReceiving("Invalid credential request due to invalid access token")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers(
                         "x-api-key",
@@ -330,12 +318,12 @@ class CredentialTests {
                         "Authorization",
                         "Bearer dummyInvalidAccessToken")
                 .willRespondWith()
-                .status(401)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAccessTokenReturns401")
+    @PactTestFor(pactMethod = "invalidAccessTokenReturns403")
     void
             fetchVerifiableCredential_whenCalledAgainstExperianKbvCriWithInvalidAuthCode_throwsAnException(
                     MockServer mockServer) throws URISyntaxException {
@@ -380,9 +368,8 @@ class CredentialTests {
                 .given("VC evidence txn is dummyTxn")
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
-                .given("VC address subBuildingName is UNIT 2B")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is COY POND BUSINESS PARK")
+                .given("VC address buildingName is UNIT 2B")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -392,10 +379,11 @@ class CredentialTests {
                 .given("VC address addressCountry is GB")
                 .given("VC evidence checkDetails are multiple_choice")
                 .given("VC evidence checkDetails kbvQuality are 3")
-                .given("VC evidence failedCheckDetails are multiple_choice, multiple_choice")
-                .given("VC ci is A03")
+                .given(
+                        "VC evidence failedCheckDetails are multiple_choice, multiple_choice, multiple_choice")
+                .given("VC ci is V03")
                 .uponReceiving("Valid credential request for VC with CI")
-                .path("/credential")
+                .path("/credential/issue")
                 .method("POST")
                 .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
                 .willRespondWith()
@@ -473,12 +461,8 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals(
-                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
-                                assertEquals(
-                                        "COY POND BUSINESS PARK",
-                                        addressNode.get("buildingName").asText());
                                 assertEquals(
                                         "KINGS PARK",
                                         addressNode.get("dependentStreetName").asText());
@@ -495,7 +479,7 @@ class CredentialTests {
                                 assertEquals("HP16 0AL", addressNode.get("postalCode").asText());
                                 assertEquals("GB", addressNode.get("addressCountry").asText());
 
-                                assertEquals("A03", ciNode.get(0).asText());
+                                assertEquals("V03", ciNode.get(0).asText());
 
                                 assertEquals(
                                         "multiple_choice",
@@ -521,7 +505,7 @@ class CredentialTests {
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {
         ContraIndicatorConfig ciConfig = new ContraIndicatorConfig(null, 4, null, null);
         Map<String, ContraIndicatorConfig> ciConfigMap = new HashMap<>();
-        ciConfigMap.put("A03", ciConfig);
+        ciConfigMap.put("V03", ciConfig);
 
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
@@ -558,7 +542,8 @@ class CredentialTests {
             throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/token"))
-                .credentialUrl(new URI("http://localhost:" + mockServer.getPort() + "/credential"))
+                .credentialUrl(
+                        new URI("http://localhost:" + mockServer.getPort() + "/credential/issue"))
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .signingKey(EC_PRIVATE_KEY_JWK)
@@ -586,88 +571,90 @@ class CredentialTests {
     private static final String VALID_VC_HEADER =
             """
             {
+              "typ": "JWT",
               "alg": "ES256",
-              "typ": "JWT"
+              "kid": "did:web:dummyExperianKbvComponentId:5187377245dfa768c91884dba9eea7e7dbbd1ceec1ddb4b14b658c0c42b04432"
             }
             """;
 
     private static final String VALID_VC_BODY =
             """
             {
-              "iss": "dummyExperianKbvComponentId",
-              "sub": "test-subject",
-              "nbf": 4070908800,
-              "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
-                "@context": [
-                  "https://www.w3.org/2018/credentials/v1",
-                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
-                ],
-                "credentialSubject": {
-                  "name": [
-                    {
-                      "nameParts": [
-                        {
-                          "type": "GivenName",
-                          "value": "Mary"
-                        },
-                        {
-                          "type": "FamilyName",
-                          "value": "Watson"
-                        }
-                      ]
-                    }
-                  ],
-                  "birthDate": [
-                    {
-                      "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": "10022812929",
-                      "organisationName": "FINCH GROUP",
-                      "subBuildingName": "UNIT 2B",
-                      "buildingNumber": "16",
-                      "buildingName": "COY POND BUSINESS PARK",
-                      "dependentStreetName": "KINGS PARK",
-                      "streetName": "BIG STREET",
-                      "doubleDependentAddressLocality": "SOME DISTRICT",
-                      "dependentAddressLocality": "LONG EATON",
-                      "addressLocality": "GREAT MISSENDEN",
-                      "postalCode": "HP16 0AL",
-                      "addressCountry": "GB"
-                    }
-                  ]
-                },
-                "evidence": [
-                  {
-                    "checkDetails": [
-                      {
-                        "checkMethod": "kbv",
-                        "kbvQuality": 2,
-                        "kbvResponseMode": "multiple_choice"
-                      },
-                      {
-                        "checkMethod": "kbv",
-                        "kbvQuality": 2,
-                        "kbvResponseMode": "multiple_choice"
-                      },
-                      {
-                        "checkMethod": "kbv",
-                        "kbvQuality": 1,
-                        "kbvResponseMode": "multiple_choice"
-                      }
-                    ],
-                    "verificationScore": 2,
-                    "txn": "dummyTxn",
-                    "type": "IdentityCheck"
-                  }
-                ]
-              }
+               "iss": "dummyExperianKbvComponentId",
+               "sub": "test-subject",
+               "nbf": 4070908800,
+               "exp": 4070909400,
+               "vc": {
+                 "@context": [
+                   "https://www.w3.org/2018/credentials/v1",
+                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                 ],
+                 "type": [
+                   "VerifiableCredential",
+                   "IdentityCheckCredential"
+                 ],
+                 "credentialSubject": {
+                   "name": [
+                     {
+                       "nameParts": [
+                         {
+                           "type": "GivenName",
+                           "value": "Mary"
+                         },
+                         {
+                           "type": "FamilyName",
+                           "value": "Watson"
+                         }
+                       ]
+                     }
+                   ],
+                   "address": [
+                     {
+                       "addressCountry": "GB",
+                       "uprn": 10022812929,
+                       "buildingName": "UNIT 2B",
+                       "organisationName": "FINCH GROUP",
+                       "streetName": "BIG STREET",
+                       "dependentStreetName": "KINGS PARK",
+                       "postalCode": "HP16 0AL",
+                       "buildingNumber": "16",
+                       "dependentAddressLocality": "LONG EATON",
+                       "addressLocality": "GREAT MISSENDEN",
+                       "doubleDependentAddressLocality": "SOME DISTRICT"
+                     }
+                   ],
+                   "birthDate": [
+                     {
+                       "value": "1932-02-25"
+                     }
+                   ]
+                 },
+                 "evidence": [
+                   {
+                     "txn": "dummyTxn",
+                     "verificationScore": 2,
+                     "checkDetails": [
+                       {
+                         "checkMethod": "kbv",
+                         "kbvResponseMode": "multiple_choice",
+                         "kbvQuality": 2
+                       },
+                       {
+                         "checkMethod": "kbv",
+                         "kbvResponseMode": "multiple_choice",
+                         "kbvQuality": 2
+                       },
+                       {
+                         "checkMethod": "kbv",
+                         "kbvResponseMode": "multiple_choice",
+                         "kbvQuality": 1
+                       }
+                     ],
+                     "type": "IdentityCheck"
+                   }
+                 ]
+               },
+               "jti": "dummyJti"
             }
             """;
 
@@ -675,7 +662,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "h8G6I0rRITCYBmCK_X2Pz3k_P092jj6yDXBWBnHyQo9zj-W8KLiIImQwVuCjazjX6jXujIn41IUNapMkQUWmkg"; // pragma: allowlist secret
+            "jBz3o-aX_pL75h5S7GKnMitMdbuCveZZ9SWZRuKhsB4ysaXt83d7W721qWzbnXfx9T3zLU5piVGFkMu9Wm7s8Q"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_BODY =
             """
@@ -683,14 +670,15 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
+              "exp": 4070909400,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -707,48 +695,36 @@ class CredentialTests {
                       ]
                     }
                   ],
+                  "address": [
+                    {
+                      "addressCountry": "GB",
+                      "uprn": 10022812929,
+                      "buildingName": "UNIT 2B",
+                      "organisationName": "FINCH GROUP",
+                      "streetName": "BIG STREET",
+                      "dependentStreetName": "KINGS PARK",
+                      "postalCode": "HP16 0AL",
+                      "buildingNumber": "16",
+                      "dependentAddressLocality": "LONG EATON",
+                      "addressLocality": "GREAT MISSENDEN",
+                      "doubleDependentAddressLocality": "SOME DISTRICT"
+                    }
+                  ],
                   "birthDate": [
                     {
                       "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": "10022812929",
-                      "organisationName": "FINCH GROUP",
-                      "subBuildingName": "UNIT 2B",
-                      "buildingNumber": "16",
-                      "buildingName": "COY POND BUSINESS PARK",
-                      "dependentStreetName": "KINGS PARK",
-                      "streetName": "BIG STREET",
-                      "doubleDependentAddressLocality": "SOME DISTRICT",
-                      "dependentAddressLocality": "LONG EATON",
-                      "addressLocality": "GREAT MISSENDEN",
-                      "postalCode": "HP16 0AL",
-                      "addressCountry": "GB"
                     }
                   ]
                 },
                 "evidence": [
                   {
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn",
                     "verificationScore": 0,
-                    "checkDetails": [
-                      {
-                        "checkMethod": "kbv",
-                        "kbvQuality": 3,
-                        "kbvResponseMode": "multiple_choice"
-                      },
-                      {
-                        "checkMethod": "kbv",
-                        "kbvQuality": 2,
-                        "kbvResponseMode": "multiple_choice"
-                      }
-                    ]
+                    "type": "IdentityCheck"
                   }
                 ]
-              }
+              },
+              "jti": "dummyJti"
             }
             """;
 
@@ -756,7 +732,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "qVyWSUXD8BP0Fhybf488xqV37BrhRLFVy_ss8upCq7HLQBo1Q9J98zjDPDGeUKdIhsIHSD0hIjo0Fa54cAfoIw"; // pragma: allowlist secret
+            "yxuDK-br_sM6piXcRHm4KXu8iS7R8y0gZP6fLVJTzfMaXaj_-E78SF3FSJozgyswUXMQ5UGQbx2km_LBDcAS0A"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -764,14 +740,15 @@ class CredentialTests {
               "iss": "dummyExperianKbvComponentId",
               "sub": "test-subject",
               "nbf": 4070908800,
+              "exp": 4070909400,
               "vc": {
-                "type": [
-                  "VerifiableCredential",
-                  "IdentityCheckCredential"
-                ],
                 "@context": [
                   "https://www.w3.org/2018/credentials/v1",
                   "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
                 ],
                 "credentialSubject": {
                   "name": [
@@ -788,53 +765,60 @@ class CredentialTests {
                       ]
                     }
                   ],
+                  "address": [
+                    {
+                      "addressCountry": "GB",
+                      "uprn": 10022812929,
+                      "buildingName": "UNIT 2B",
+                      "organisationName": "FINCH GROUP",
+                      "streetName": "BIG STREET",
+                      "dependentStreetName": "KINGS PARK",
+                      "postalCode": "HP16 0AL",
+                      "buildingNumber": "16",
+                      "dependentAddressLocality": "LONG EATON",
+                      "addressLocality": "GREAT MISSENDEN",
+                      "doubleDependentAddressLocality": "SOME DISTRICT"
+                    }
+                  ],
                   "birthDate": [
                     {
                       "value": "1932-02-25"
-                    }
-                  ],
-                  "address": [
-                    {
-                      "uprn": "10022812929",
-                      "organisationName": "FINCH GROUP",
-                      "subBuildingName": "UNIT 2B",
-                      "buildingNumber": "16",
-                      "buildingName": "COY POND BUSINESS PARK",
-                      "dependentStreetName": "KINGS PARK",
-                      "streetName": "BIG STREET",
-                      "doubleDependentAddressLocality": "SOME DISTRICT",
-                      "dependentAddressLocality": "LONG EATON",
-                      "addressLocality": "GREAT MISSENDEN",
-                      "postalCode": "HP16 0AL",
-                      "addressCountry": "GB"
                     }
                   ]
                 },
                 "evidence": [
                   {
-                    "type": "IdentityCheck",
                     "txn": "dummyTxn",
                     "verificationScore": 0,
+                    "ci": [
+                      "V03"
+                    ],
                     "checkDetails": [
                       {
                         "checkMethod": "kbv",
-                        "kbvQuality": 3,
-                        "kbvResponseMode": "multiple_choice"
+                        "kbvResponseMode": "multiple_choice",
+                        "kbvQuality": 3
                       }
                     ],
                     "failedCheckDetails": [
                       {
-                        "kbvResponseMode": "multiple_choice",
-                        "checkMethod": "kbv"
+                        "checkMethod": "kbv",
+                        "kbvResponseMode": "multiple_choice"
                       },
                       {
-                        "kbvResponseMode": "multiple_choice",
-                        "checkMethod": "kbv"
-                      }],
-                      "ci": ["A03"]
+                        "checkMethod": "kbv",
+                        "kbvResponseMode": "multiple_choice"
+                      },
+                      {
+                        "checkMethod": "kbv",
+                        "kbvResponseMode": "multiple_choice"
+                      }
+                    ],
+                    "type": "IdentityCheck"
                   }
                 ]
-              }
+              },
+              "jti": "dummyJti"
             }
             """;
 
@@ -842,5 +826,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "ocnekFRfp1bd-65MDv9VH3eM0DkVlWpmKltT29TIBfU1fUcsW7x3XNKGQ3LVDRlwl9nPnLPF1oSWktWNc36hCg"; // pragma: allowlist secret
+            "I4eFjDkpEwlRZUkbBJEyj8-XXM5KWYISW897w0BQJaMECP0QLHnfKnIAfY4Ttfqj4FzmyW15qh0FkEfI2W5gQA"; // pragma: allowlist secret
 }
