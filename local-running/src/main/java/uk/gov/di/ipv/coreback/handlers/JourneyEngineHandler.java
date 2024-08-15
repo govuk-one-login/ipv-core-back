@@ -113,7 +113,7 @@ public class JourneyEngineHandler {
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
                     yield buildCriOauthRequestHandler.handleRequest(
-                            buildFrontendJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+                            buildCriJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
                 } else {
                     throw new UnrecognisedJourneyException(
                             String.format("Journey not configured: %s", journeyStep));
@@ -133,7 +133,7 @@ public class JourneyEngineHandler {
                 .build();
     }
 
-    private CriJourneyRequest buildFrontendJourneyRequest(Context ctx, String journey) {
+    private CriJourneyRequest buildCriJourneyRequest(Context ctx, String journey) {
         return CriJourneyRequest.criJourneyRequestBuilder()
                 .ipvSessionId(ctx.header(IPV_SESSION_ID))
                 .ipAddress(ctx.header(IP_ADDRESS))
