@@ -13,7 +13,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class CriJourneyRequest extends JourneyRequest {
     private String language;
 
-    @Builder(builderMethodName = "criJourneyRequestBuilder")
+    @Builder()
     public CriJourneyRequest(
             String ipvSessionId,
             String ipAddress,
