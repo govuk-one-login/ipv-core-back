@@ -436,7 +436,8 @@ class CredentialTests {
             """
             {
               "typ": "JWT",
-              "alg": "ES256"
+              "alg": "ES256",
+              "kid": "did:web:dummyAddressComponentId:1753cf0b1e3647d91719820b74cf0c4f08782d0f072ebaf5ec4ee0873436a7ab"
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
@@ -477,7 +478,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_EXPERIAN_SIGNATURE =
-            "UMGkHhmkeNC7HsJ5h9BpMAMBsk0jrUvkSDzQ8Xm7frlEpsZHvILSjmAUrSCWauGVe52-yG8ybIOrFaXZb8aV8Q"; // pragma: allowlist secret
+            "LUo2hSqSqnbviQdmYhTVEcTaAzLDHfZklZUPwHt39KejMITjQZeczbybJR7RTPXS_LezlSCshhRtXvw_UfCesA"; // pragma: allowlist secret
 
     private static final String VALID_VC_ADDRESS_BODY =
             """
@@ -514,7 +515,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_ADDRESS_SIGNATURE =
-            "vmJyIV_dtxJsmPb3DSFHSlf2EbsrxkVe1BjCaxcUGbdUW84iNkiZ_hxibmccVGwRTuwgAh9WDwYeQr5LYPhCbA"; // pragma: allowlist secret
+            "zbFSRyGdCD84DRWy7nBiAbAAdOuGbQtCqhqj8ncCvftgk0wpTMW4fDpE7cLApSOJ5px7d6jeLcnZ57z9_05Z8w"; // pragma: allowlist secret
 
     private static final String VALID_VC_CHANGED_ADDRESS_BODY =
             """
@@ -558,5 +559,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_CHANGED_ADDRESS_SIGNATURE =
-            "puYN8T_edkl0h_a7k4Zy3FtkNKB5J2Zp0TK7qraPl1WEwzs0ee46JAb0AgG_lYKHlmu3Hp5JCDzU_GSR6cKklA"; // pragma: allowlist secret
+            "sUnGrfjUuyDvH4P3-DOAc_tgPuChaUlxym-LcOt6sLtaYbouMf8iKPvcBKqRDJCO65aq0KkZKUy8v9q8bueXzQ"; // pragma: allowlist secret
 }
