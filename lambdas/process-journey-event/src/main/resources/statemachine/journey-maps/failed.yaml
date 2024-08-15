@@ -40,6 +40,28 @@ states:
             auditContext:
               successful: false
 
+  FAILED_UPDATE_DETAILS:
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_COULD_UPDATE_CONFIRM_DETAILS
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
+
   FAILED_BAV:
     events:
       next:
@@ -120,6 +142,25 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
+  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      enhanced-verification:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      fail-with-ci:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   CRI_TICF_BEFORE_NO_MATCH_BAV:
     response:
       type: process
@@ -165,6 +206,24 @@ states:
     events:
       end:
         targetState: RETURN_TO_RP
+
+  COULD_NOT_UPDATE_DETAILS_PAGE:
+    response:
+      type: page
+      pageId: update-details-failed
+    events:
+      continue:
+        targetState: RETURN_TO_RP
+      delete:
+        targetState: DELETE_HANDOVER_PAGE
+
+  DELETE_HANDOVER_PAGE:
+    response:
+      type: page
+      pageId: delete-handover
+    events:
+      back:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
 
   NO_MATCH_PAGE:
     response:

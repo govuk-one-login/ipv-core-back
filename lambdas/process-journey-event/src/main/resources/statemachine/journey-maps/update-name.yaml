@@ -179,13 +179,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   DCMAW_FAMILY_ONLY:
     response:
@@ -200,13 +200,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY:
     response:
