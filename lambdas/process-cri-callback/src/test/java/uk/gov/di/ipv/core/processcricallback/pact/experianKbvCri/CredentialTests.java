@@ -74,7 +74,8 @@ class CredentialTests {
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is UNIT 2B")
+                .given("VC address buildingName is COY POND BUSINESS PARK")
+                .given("VC address subBuildingName is UNIT 2B")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -160,7 +161,11 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
+                                assertEquals(
+                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals(
+                                        "COY POND BUSINESS PARK",
+                                        addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
                                 assertEquals(
                                         "KINGS PARK",
@@ -200,7 +205,8 @@ class CredentialTests {
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is UNIT 2B")
+                .given("VC address subBuildingName is UNIT 2B")
+                .given("VC address buildingName is COY POND BUSINESS PARK")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -279,7 +285,11 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
+                                assertEquals(
+                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals(
+                                        "COY POND BUSINESS PARK",
+                                        addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
                                 assertEquals(
                                         "KINGS PARK",
@@ -369,7 +379,8 @@ class CredentialTests {
                 .given("VC address uprn is 10022812929")
                 .given("VC address organisationName is FINCH GROUP")
                 .given("VC address buildingNumber is 16")
-                .given("VC address buildingName is UNIT 2B")
+                .given("VC address subBuildingName is UNIT 2B")
+                .given("VC address buildingName is COY POND BUSINESS PARK")
                 .given("VC address dependentStreetName is KINGS PARK")
                 .given("VC address streetName is BIG STREET")
                 .given("VC address doubleDependentAddressLocality is SOME DISTRICT")
@@ -461,7 +472,11 @@ class CredentialTests {
                                 assertEquals(
                                         "FINCH GROUP",
                                         addressNode.get("organisationName").asText());
-                                assertEquals("UNIT 2B", addressNode.get("buildingName").asText());
+                                assertEquals(
+                                        "UNIT 2B", addressNode.get("subBuildingName").asText());
+                                assertEquals(
+                                        "COY POND BUSINESS PARK",
+                                        addressNode.get("buildingName").asText());
                                 assertEquals("16", addressNode.get("buildingNumber").asText());
                                 assertEquals(
                                         "KINGS PARK",
@@ -612,7 +627,8 @@ class CredentialTests {
                      {
                        "addressCountry": "GB",
                        "uprn": 10022812929,
-                       "buildingName": "UNIT 2B",
+                       "buildingName": "COY POND BUSINESS PARK",
+                       "subBuildingName": "UNIT 2B",
                        "organisationName": "FINCH GROUP",
                        "streetName": "BIG STREET",
                        "dependentStreetName": "KINGS PARK",
@@ -662,7 +678,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "jBz3o-aX_pL75h5S7GKnMitMdbuCveZZ9SWZRuKhsB4ysaXt83d7W721qWzbnXfx9T3zLU5piVGFkMu9Wm7s8Q"; // pragma: allowlist secret
+            "ApoatTnd1s8uILZzZYUMMaTAtn9jVWfz9sg_AF3m5rcDVlQPb72smOZUHKhj8KRBZpp8TYzQ1sL87bqMyZhM6w"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_BODY =
             """
@@ -699,7 +715,8 @@ class CredentialTests {
                     {
                       "addressCountry": "GB",
                       "uprn": 10022812929,
-                      "buildingName": "UNIT 2B",
+                      "buildingName": "COY POND BUSINESS PARK",
+                      "subBuildingName": "UNIT 2B",
                       "organisationName": "FINCH GROUP",
                       "streetName": "BIG STREET",
                       "dependentStreetName": "KINGS PARK",
@@ -732,7 +749,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "yxuDK-br_sM6piXcRHm4KXu8iS7R8y0gZP6fLVJTzfMaXaj_-E78SF3FSJozgyswUXMQ5UGQbx2km_LBDcAS0A"; // pragma: allowlist secret
+            "3vjkGHuOgcI60DifKzoacgX8dnBheG05H-NHbibRYugvTyb9FosCm4YkY8BaJ4We23xC-msXBCUGyWEXTw4osw"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -769,7 +786,8 @@ class CredentialTests {
                     {
                       "addressCountry": "GB",
                       "uprn": 10022812929,
-                      "buildingName": "UNIT 2B",
+                      "buildingName": "COY POND BUSINESS PARK",
+                      "subBuildingName": "UNIT 2B",
                       "organisationName": "FINCH GROUP",
                       "streetName": "BIG STREET",
                       "dependentStreetName": "KINGS PARK",
@@ -826,5 +844,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "I4eFjDkpEwlRZUkbBJEyj8-XXM5KWYISW897w0BQJaMECP0QLHnfKnIAfY4Ttfqj4FzmyW15qh0FkEfI2W5gQA"; // pragma: allowlist secret
+            "q9dpoOoXjMqlHAd9M-BPd1mxF8dPofhez_J-ykxJ4QyAhDh8RecIXpcg8hCc_sfGHhfaJgVCfTbOuZuwwOrpig"; // pragma: allowlist secret
 }
