@@ -28,6 +28,10 @@ import {
   NamePartType,
   PostalAddressClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
+import { delay } from "../utils/delay.js";
+
+const RETRY_DELAY_MILLIS = 2000;
+const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
@@ -57,27 +61,75 @@ After(function (this: World, options: ITestCaseHookParameter) {
   }
 });
 
+const startNewJourney = async (
+  world: World,
+  journeyType: string,
+  reproveIdentity: boolean,
+  inheritedIdentityId: string | undefined,
+): Promise<void> => {
+  world.userId = world.userId ?? getRandomString(16);
+  world.journeyId = getRandomString(16);
+  world.ipvSessionId = await internalClient.initialiseIpvSession(
+    await generateInitialiseIpvSessionBody({
+      subject: world.userId,
+      journeyId: world.journeyId,
+      journeyType,
+      isReproveIdentity: !!reproveIdentity,
+      inheritedIdentityId,
+    }),
+  );
+  world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+    "/journey/next",
+    world.ipvSessionId,
+  );
+};
+
 When(
-  /I start a new ?'([\w-]+)' journey( with reprove identity)?/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
-    reproveIdentity: string,
+    reproveIdentity: " with reprove identity" | undefined,
+    inheritedIdentityId: string | undefined,
   ): Promise<void> {
-    this.userId = this.userId ?? getRandomString(16);
-    this.journeyId = getRandomString(16);
-    this.ipvSessionId = await internalClient.initialiseIpvSession(
-      await generateInitialiseIpvSessionBody(
-        this.userId,
-        this.journeyId,
-        journeyType,
-        reproveIdentity ? true : false,
-      ),
+    await startNewJourney(
+      this,
+      journeyType,
+      !!reproveIdentity,
+      inheritedIdentityId,
     );
-    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-      "/journey/next",
-      this.ipvSessionId,
-    );
+  },
+);
+
+// Variant of the journey start that retries, e.g. to wait for an async F2F request
+When(
+  "I start a new {string} journey and return to a {string} page response",
+  { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
+  async function (
+    this: World,
+    journeyType: string,
+    expectedPage: string,
+  ): Promise<void> {
+    let attempt = 1;
+    while (attempt <= MAX_ATTEMPTS) {
+      await startNewJourney(this, journeyType, false, undefined);
+
+      try {
+        assert.ok(
+          isPageResponse(this.lastJourneyEngineResponse),
+          `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+        );
+        assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
+        return;
+      } catch (e) {
+        if (attempt >= MAX_ATTEMPTS) {
+          throw e;
+        }
+      }
+
+      await delay(RETRY_DELAY_MILLIS);
+      attempt++;
+    }
   },
 );
 
@@ -88,7 +140,7 @@ Then(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(expectedPage, this.lastJourneyEngineResponse.page);
+    assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
   },
 );
 
@@ -109,7 +161,7 @@ Then(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(expectedCri, this.lastJourneyEngineResponse.cri.id);
+    assert.equal(this.lastJourneyEngineResponse.cri.id, expectedCri);
   },
 );
 
@@ -120,8 +172,8 @@ Then("I get an OAuth response", function (this: World): void {
   );
   const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
   assert.equal(
-    config.orch.redirectUrl,
     `${url.protocol}//${url.host}${url.pathname}`,
+    config.orch.redirectUrl,
   );
 });
 
@@ -141,7 +193,7 @@ When(
 );
 
 Then("I get a {string} identity", function (this: World, vot: string): void {
-  assert.equal(vot, this.identity.vot);
+  assert.equal(this.identity.vot, vot);
 });
 
 Then(
@@ -163,8 +215,8 @@ Then(
   "my address {string} is {string}",
   function (this: World, field: keyof PostalAddressClass, value: string): void {
     assert.equal(
-      value.toLowerCase(),
       this.identity?.[addressCredential]?.[0][field]?.toString().toLowerCase(),
+      value.toLowerCase(),
     );
   },
 );

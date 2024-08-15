@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import { createSignedJwt } from "./jwt-signer.js";
 import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
+import { IpvSessionDetails } from "./ipv-session.js";
 import {
   AuthRequestBody,
   ProcessCriCallbackRequest,
@@ -15,10 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
-  subject: string,
-  journeyId: string,
-  journeyType: string,
-  reproveIdentity: boolean,
+  session: IpvSessionDetails,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",
@@ -26,12 +24,7 @@ export const generateInitialiseIpvSessionBody = async (
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
     scope: "openid",
-    request: await generateJar(
-      subject,
-      journeyId,
-      journeyType,
-      reproveIdentity,
-    ),
+    request: await generateJar(session),
   };
 };
 
@@ -65,8 +58,22 @@ export const generateCriStubBody = async (
   scenario: string,
   redirectUrl: string,
   nbf?: number,
+  f2f?: boolean,
+  mitigatedCis?: string[],
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
+  const f2fRequest = f2f
+    ? {
+        sendVcToQueue: true,
+        sendErrorToQueue: false,
+        queueName: config.asyncQueue.name,
+        delaySeconds: config.asyncQueue.delaySeconds,
+      }
+    : undefined;
+  const mitigations = mitigatedCis
+    ? generateMitigations(mitigatedCis)
+    : undefined;
+
   return {
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
@@ -77,6 +84,8 @@ export const generateCriStubBody = async (
     ),
     evidenceJson: await readJsonFile(criId, scenario, "evidence"),
     nbf,
+    f2f: f2fRequest,
+    mitigations,
   };
 };
 
@@ -138,3 +147,9 @@ const readJsonFile = async (
     "utf8",
   );
 };
+
+const generateMitigations = (mitigatedCi: string[]) => ({
+  mitigatedCi,
+  cimitStubUrl: config.cimit.managementCimitUrl,
+  cimitStubApiKey: config.cimit.managementCimitApiKey,
+});

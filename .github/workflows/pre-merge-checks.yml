@@ -143,13 +143,26 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Calculate queue name
+        # SQS queue names have a max length of 80 and cannot contain special characters
+        run: |
+          branch_name=${{ github.head_ref || github.ref_name }}
+          queue_name=`echo $branch_name | sed 's/[^[:alnum:]-]/\_/g' | cut -c1-60`
+          echo "queue_name=stubQueue_branch_$queue_name" >> $GITHUB_OUTPUT
+        id: extract_queue_name
+
       - name: Setup app secrets
         run: |
           cp ../local-running/core.local.secrets.template.yaml ../local-running/core.local.secrets.yaml && \
           sed -i s/CIMIT_API_KEY/${{ secrets.API_KEY_CIMIT }}/ ../local-running/core.local.secrets.yaml && \
-          sed -i s/EVCS_API_KEY/${{ secrets.API_KEY_EVCS }}/ ../local-running/core.local.secrets.yaml
+          sed -i s/EVCS_API_KEY/${{ secrets.API_KEY_EVCS }}/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/ASYNC_QUEUE_API_KEY/${{ secrets.ASYNC_QUEUE_API_KEY }}/ ../local-running/core.local.secrets.yaml && \
+          sed -i s/ASYNC_QUEUE_NAME/${{ steps.extract_queue_name.outputs.queue_name }}/ ../local-running/core.local.secrets.yaml
 
       - name: Local API tests
+        env:
+          ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
+          MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
         run: npm run test:ci
 
       - name: Upload API test report

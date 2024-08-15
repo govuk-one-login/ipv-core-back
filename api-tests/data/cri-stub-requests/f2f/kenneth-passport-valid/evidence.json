@@ -1,0 +1,16 @@
+{
+  "checkDetails": [
+    {
+      "checkMethod": "vri",
+      "identityCheckPolicy": "published"
+    },
+    {
+      "checkMethod": "pvr",
+      "photoVerificationProcessLevel": 3
+    }
+  ],
+  "validityScore": 2,
+  "strengthScore": 4,
+  "verificationScore": 3,
+  "type": "IdentityCheck"
+}

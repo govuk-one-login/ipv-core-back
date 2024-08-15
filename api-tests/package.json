@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "cucumber-js",
+    "test:build": "CORE_ENV=build cucumber-js --tags '@Build'",
     "test:local": "CORE_ENV=local cucumber-js",
     "test:ci": "start-server-and-test run-local-core-back 'http://localhost:4502' test:local",
     "run-local-core-back": "../gradlew -p ../local-running run",
@@ -12,7 +13,7 @@
     "lint-fix": "eslint --fix . && prettier . --write"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^10.8.0",
+    "@cucumber/cucumber": "^10.9.0",
     "@govuk-one-login/data-vocab": "^1.7.2",
     "@types/eslint__js": "^8.42.3",
     "dotenv": "^16.4.5",

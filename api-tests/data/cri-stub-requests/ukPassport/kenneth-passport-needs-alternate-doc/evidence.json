@@ -1,0 +1,13 @@
+{
+  "type": "IdentityCheck",
+  "validityScore": 0,
+  "strengthScore": 3,
+  "activityHistoryScore": 0,
+  "ci": ["NEEDS-ALTERNATE-DOC"],
+  "failedCheckDetails": [
+    {
+      "identityCheckPolicy": "published",
+      "checkMethod": "data"
+    }
+  ]
+}

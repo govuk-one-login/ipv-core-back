@@ -2,13 +2,12 @@ import dotenv from "dotenv";
 
 const CORE_ENV = process.env.CORE_ENV;
 
-if (!CORE_ENV) {
-  dotenv.config();
-} else {
+if (CORE_ENV) {
   dotenv.config({
     path: `.env.${CORE_ENV}`,
   });
 }
+dotenv.config();
 
 const getMandatoryConfig = (key: string): string => {
   const value = process.env[key];
@@ -34,8 +33,16 @@ const config = {
     redirectUrl: getMandatoryConfig("ORCHESTRATOR_REDIRECT_URL"),
     signingKey: getMandatoryConfig("JAR_SIGNING_KEY"),
   },
+  asyncQueue: {
+    name: getMandatoryConfig("ASYNC_QUEUE_NAME"),
+    delaySeconds: parseInt(getMandatoryConfig("ASYNC_QUEUE_DELAY")),
+  },
   localAuditEvents:
     getOptionalConfig("process.env.LOCAL_AUDIT_EVENTS") === "true",
+  cimit: {
+    managementCimitUrl: getMandatoryConfig("CIMIT_STUB_BASE_URL"),
+    managementCimitApiKey: getMandatoryConfig("MANAGEMENT_CIMIT_STUB_API_KEY"),
+  },
 };
 
 export default config;

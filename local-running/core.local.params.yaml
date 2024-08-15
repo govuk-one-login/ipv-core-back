@@ -20,6 +20,8 @@ core:
     ciScoringThresholdByVot:
       P1: 5
       P2: 10
+      PCL200: 3
+      PCL250: 3
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
@@ -48,10 +50,10 @@ core:
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
     # Test CIMIT config
     config: '{
-      "needs-enhanced-verification":[
+      "NEEDS-ENHANCED-VERIFICATION":[
         {"event":"/journey/enhanced-verification"}
       ],
-      "needs-alternate-doc":[
+      "NEEDS-ALTERNATE-DOC":[
         {"event":"/journey/alternate-doc-invalid-dl","document":"drivingPermit"},
         {"event":"/journey/alternate-doc-invalid-passport","document":"passport"}
       ]
@@ -338,9 +340,13 @@ core:
           "signingKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}",
           "componentId": "https://orch.stubs.account.gov.uk/migration/v1"
         }'
+  local:
+    asyncQueue:
+      apiBaseUrl: "https://queue.stubs.account.gov.uk"
   featureFlags:
     resetIdentity: false
     deleteDetailsEnabled: false
+    pendingF2FResetEnabled: false
     strategicAppEnabled: false
     ticfCriBeta: false
     inheritedIdentity: true
@@ -353,6 +359,7 @@ core:
     p1JourneysEnabled: false
     sqsAsync: true
     cimitApiGatewayEnabled: true
+    updateDetailsAccountDeletion: false
   features:
     mfaReset:
       featureFlags:
@@ -370,6 +377,9 @@ core:
     evcsRead:
       featureFlags:
         evcsReadEnabled: true
+    updateDetailsAccountDeletion:
+      featureFlags:
+        updateDetailsAccountDeletion: true
     hmrcKbvBeta:
       credentialIssuers:
         hmrcKbv:
@@ -404,6 +414,9 @@ core:
     deleteDetailsTestJourney:
       featureFlags:
         deleteDetailsEnabled: true
+    pendingF2FResetEnabled:
+      featureFlags:
+        pendingF2FResetEnabled: true
     ticfCriBeta:
       featureFlags:
         ticfCriBeta: true
