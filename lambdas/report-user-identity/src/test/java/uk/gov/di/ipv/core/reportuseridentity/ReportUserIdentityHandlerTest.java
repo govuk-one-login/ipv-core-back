@@ -20,17 +20,14 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportSummaryItem;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,9 +64,6 @@ class ReportUserIdentityHandlerTest {
     @Mock(name = "reportUserIdentityDataStore")
     private ScanDynamoDataStore<ReportUserIdentityItem> mockReportUserIdentityScanDynamoDataStore;
 
-    @Mock(name = "reportSummaryDataStore")
-    private ScanDynamoDataStore<ReportSummaryItem> mockReportSummaryScanDynamoDataStore;
-
     @Captor private ArgumentCaptor<ReportProcessingResult> reportProcessingResultArgumentCaptor;
     private ReportUserIdentityHandler reportUserIdentityHandler;
 
@@ -83,8 +77,7 @@ class ReportUserIdentityHandlerTest {
                         mockVerifiableCredentialService,
                         mockReportUserIdentityService,
                         mockVcStoreItemScanDynamoDataStore,
-                        mockReportUserIdentityScanDynamoDataStore,
-                        mockReportSummaryScanDynamoDataStore);
+                        mockReportUserIdentityScanDynamoDataStore);
     }
 
     @Test
@@ -93,9 +86,9 @@ class ReportUserIdentityHandlerTest {
         when(mockContext.getRemainingTimeInMillis())
                 .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
         when(objectMapper.readValue(mockInputStream, ReportProcessingRequest.class))
-                .thenReturn(new ReportProcessingRequest(true, true, null, null));
+                .thenReturn(new ReportProcessingRequest(true, true, null, null, null));
         // for step-1
-        when(mockVcStoreItemScanDynamoDataStore.getItems(any(), any()))
+        when(mockVcStoreItemScanDynamoDataStore.getScannedItemsPages(any(), any()))
                 .thenReturn(mockVcStoreItemPageIterable);
         when(mockVcStoreItemPageIterable.iterator()).thenReturn(mockVCStoreItemIterator);
         when(mockVCStoreItemIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -126,20 +119,23 @@ class ReportUserIdentityHandlerTest {
         List<ReportUserIdentityItem> totalIdentitiesPage1 =
                 List.of(
                         new ReportUserIdentityItem(
-                                TEST_SUBJECT, "P2", 0, Collections.emptyList(), true),
-                        new ReportUserIdentityItem(
-                                userId2, "P2", 0, Collections.emptyList(), false));
+                                TEST_SUBJECT, "P2", 0, List.of("address,passport"), true),
+                        new ReportUserIdentityItem(userId2, "P2", 0, List.of("fraud"), false));
         List<ReportUserIdentityItem> totalIdentitiesPage2 =
                 List.of(
                         new ReportUserIdentityItem(
-                                "userId3", "P2", 0, Collections.emptyList(), false));
+                                "userId3", "P2", 0, List.of("address,passport"), true));
         // for step-2
-        when(mockReportUserIdentityScanDynamoDataStore.getItems(
+        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(
                         any(), anyString(), anyString(), anyString()))
                 .thenReturn(mockReportUserIdentityPageIterable);
         when(mockReportUserIdentityPageIterable.iterator())
+                .thenReturn(mockReportUserIdentityIterator)
                 .thenReturn(mockReportUserIdentityIterator);
         when(mockReportUserIdentityIterator.hasNext())
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(false)
                 .thenReturn(true)
                 .thenReturn(true)
                 .thenReturn(false);
@@ -151,33 +147,23 @@ class ReportUserIdentityHandlerTest {
                 .thenReturn(
                         Page.builder(ReportUserIdentityItem.class)
                                 .items(totalIdentitiesPage2)
+                                .build())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage1)
+                                .build())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage2)
                                 .build());
-
-        when(mockReportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE))
-                .thenReturn(null)
-                .thenReturn(
-                        new ReportSummaryItem(
-                                ScanDynamoDataStore.KEY_VALUE,
-                                2L,
-                                1L,
-                                0L,
-                                0L,
-                                Map.of("address,passport", 1L)))
-                .thenReturn(
-                        new ReportSummaryItem(
-                                ScanDynamoDataStore.KEY_VALUE,
-                                3L,
-                                2L,
-                                0L,
-                                0L,
-                                Map.of("address,passport", 2L, "fraud", 1L)));
+        // for step-3
+        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any()))
+                .thenReturn(mockReportUserIdentityPageIterable);
         // Act
         reportUserIdentityHandler.handleRequest(mockInputStream, mockOutputStream, mockContext);
 
         // Assert
         verify(mockReportUserIdentityScanDynamoDataStore, times(4)).createOrUpdate(any());
-        verify(mockReportSummaryScanDynamoDataStore, times(3)).getItem(any());
-        verify(mockReportSummaryScanDynamoDataStore, times(2)).update(any());
         verify(objectMapper)
                 .writeValue(
                         any(OutputStream.class), reportProcessingResultArgumentCaptor.capture());

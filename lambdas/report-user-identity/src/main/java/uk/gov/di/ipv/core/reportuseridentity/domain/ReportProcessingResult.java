@@ -16,4 +16,5 @@ public record ReportProcessingResult(
         ReportSummary summary,
         List<ReportUserIdentityItem> users,
         Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
-        Map<String, AttributeValue> userIdentitylastEvaluatedKey) {}
+        Map<String, AttributeValue> userIdentitylastEvaluatedKey,
+        Map<String, AttributeValue> buildReportLastEvaluatedKey) {}

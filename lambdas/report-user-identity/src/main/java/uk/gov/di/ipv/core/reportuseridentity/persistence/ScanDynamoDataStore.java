@@ -33,7 +33,7 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public PageIterable<T> getItems(
+    public PageIterable<T> getScannedItemsPages(
             Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
         return getTableScanResult(exclusiveStartKey, null, attributesToProject);
     }
@@ -62,8 +62,10 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
                         .exclusiveStartKey(exclusiveStartKey)
                         .filterExpression(filterExpression);
 
-        for (String attr : attributesToProject) {
-            builder.addAttributeToProject(attr);
+        if (attributesToProject != null) {
+            for (String attr : attributesToProject) {
+                builder.addAttributeToProject(attr);
+            }
         }
 
         return getTable().scan(builder.build());

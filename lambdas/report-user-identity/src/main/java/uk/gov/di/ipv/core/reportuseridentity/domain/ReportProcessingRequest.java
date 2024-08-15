@@ -10,4 +10,5 @@ public record ReportProcessingRequest(
         boolean continueUniqueUserScan,
         boolean continueUserIdentityScan,
         Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
-        Map<String, AttributeValue> userIdentitylastEvaluatedKey) {}
+        Map<String, AttributeValue> userIdentitylastEvaluatedKey,
+        Map<String, AttributeValue> buildReportLastEvaluatedKey) {}

@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
 import uk.gov.di.ipv.core.reportuseridentity.exceptions.StopBeforeLambdaTimeoutException;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportSummaryItem;
 import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
@@ -53,7 +52,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     private final ReportUserIdentityService reportUserIdentityService;
     private final ScanDynamoDataStore<VcStoreItem> vcStoreItemScanDynamoDataStore;
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
-    private final ScanDynamoDataStore<ReportSummaryItem> reportSummaryScanDynamoDataStore;
 
     @SuppressWarnings({"java:S107"}) // Used by AWS
     public ReportUserIdentityHandler(
@@ -63,8 +61,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             VerifiableCredentialService verifiableCredentialService,
             ReportUserIdentityService reportUserIdentityService,
             ScanDynamoDataStore<VcStoreItem> vcStoreItemScanDynamoDataStore,
-            ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore,
-            ScanDynamoDataStore<ReportSummaryItem> reportSummaryScanDynamoDataStore) {
+            ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore) {
         this.objectMapper = objectMapper;
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -72,7 +69,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         this.reportUserIdentityService = reportUserIdentityService;
         this.vcStoreItemScanDynamoDataStore = vcStoreItemScanDynamoDataStore;
         this.reportUserIdentityScanDynamoDataStore = reportUserIdentityScanDynamoDataStore;
-        this.reportSummaryScanDynamoDataStore = reportSummaryScanDynamoDataStore;
     }
 
     @SuppressWarnings({"unused", "java:S107"}) // Used by AWS
@@ -96,13 +92,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         ReportUserIdentityItem.class,
                         DynamoDataStore.getClient(),
                         configService);
-        this.reportSummaryScanDynamoDataStore =
-                new ScanDynamoDataStore<>(
-                        configService.getEnvironmentVariable(
-                                EnvironmentVariable.REPORT_SUMMARY_TABLE_NAME),
-                        ReportSummaryItem.class,
-                        DynamoDataStore.getClient(),
-                        configService);
     }
 
     @Override
@@ -123,12 +112,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             "Request received- " + reportProcessingRequest.toString()));
             // Step-1
             scanToExtractUniqueUserIdFromTacticalStore(
-                    reportProcessingResult, reportProcessingRequest, context);
+                    reportProcessingRequest, reportProcessingResult, context);
             // Step-2
             processUsersToFindLOCAndUpdateDb(
                     reportProcessingRequest, reportProcessingResult, context);
             // Step-3
-            reportProcessingResult = buildReportProcessingResult(reportProcessingResult);
+            buildReportProcessingResult(reportProcessingRequest, reportProcessingResult, context);
 
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -149,8 +138,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     }
 
     private void scanToExtractUniqueUserIdFromTacticalStore(
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             ReportProcessingRequest reportProcessingRequest,
+            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             Context context)
             throws BatchDeleteException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUniqueUserScan()) {
@@ -158,7 +147,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                     LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
 
             for (var page :
-                    vcStoreItemScanDynamoDataStore.getItems(
+                    vcStoreItemScanDynamoDataStore.getScannedItemsPages(
                             reportProcessingRequest.tacticalStoreLastEvaluatedKey(),
                             ATTR_NAME_USER_ID)) {
 
@@ -194,9 +183,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                     LogHelper.buildLogMessage(
                             "Processing unique users to update their aggregate identities."));
 
-            List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
             for (var page :
-                    reportUserIdentityScanDynamoDataStore.getItems(
+                    reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
                             reportProcessingRequest.userIdentitylastEvaluatedKey(),
                             ATTR_NAME_USER_ID,
                             "identity",
@@ -217,21 +205,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         + reportUserIdentityItems.size()));
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
 
-                aggregateAndPersistIdentities(reportUserIdentityItems);
-
-                totalReportUserIdentityItems.addAll(reportUserIdentityItems);
                 reportProcessingResult.userIdentitylastEvaluatedKey(page.lastEvaluatedKey());
 
-                try {
-                    checkLambdaRemainingExecutionTime(context);
-                } catch (StopBeforeLambdaTimeoutException e) {
-                    reportProcessingResult.users(totalReportUserIdentityItems);
-                    throw e;
-                }
+                checkLambdaRemainingExecutionTime(context);
             }
             LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
             reportProcessingResult.userIdentitylastEvaluatedKey(null);
-            reportProcessingResult.users(totalReportUserIdentityItems);
         }
     }
 
@@ -274,65 +253,72 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         }
     }
 
-    private void aggregateAndPersistIdentities(List<ReportUserIdentityItem> items) {
-        LOGGER.info(LogHelper.buildLogMessage("Updating aggregate identities values."));
-        var reportSummaryItem =
-                reportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE);
-        if (reportSummaryItem == null) {
-            reportSummaryItem =
-                    new ReportSummaryItem(
-                            ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L, Collections.emptyMap());
-        }
-        List<ReportUserIdentityItem> totalP2Identities =
-                items.stream().filter(ui -> Vot.P2.name().equals(ui.getIdentity())).toList();
-        reportSummaryItem.setTotalP2(reportSummaryItem.getTotalP2() + totalP2Identities.size());
-        reportSummaryItem.setTotalP2Migrated(
-                reportSummaryItem.getTotalP2Migrated()
-                        + totalP2Identities.stream()
-                                .filter(item -> (Boolean.TRUE.equals(item.getMigrated())))
-                                .count());
-        reportSummaryItem.setTotalP1(
-                reportSummaryItem.getTotalP1()
-                        + items.stream()
-                                .filter(ui -> Vot.P1.name().equals(ui.getIdentity()))
-                                .count());
-        reportSummaryItem.setTotalP0(
-                reportSummaryItem.getTotalP0()
-                        + items.stream()
-                                .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
-                                .count());
-        var constituteVCsTotal =
-                items.stream()
-                        .map(ReportUserIdentityItem::getConstituentVcs)
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-        var mergedConstituteVCsTotal =
-                Stream.of(reportSummaryItem.getConstituentVcsTotal(), constituteVCsTotal)
-                        .flatMap(map -> map.entrySet().stream())
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey, Map.Entry::getValue, Long::sum));
-        reportSummaryItem.setConstituentVcsTotal(mergedConstituteVCsTotal);
-        reportSummaryScanDynamoDataStore.update(reportSummaryItem);
-    }
-
-    private ReportProcessingResult.ReportProcessingResultBuilder buildReportProcessingResult(
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult) {
+    private void buildReportProcessingResult(
+            ReportProcessingRequest reportProcessingRequest,
+            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
+            Context context)
+            throws StopBeforeLambdaTimeoutException {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
-        var reportSummaryItem =
-                reportSummaryScanDynamoDataStore.getItem(ScanDynamoDataStore.KEY_VALUE);
-        if (reportSummaryItem == null) {
-            reportSummaryItem =
-                    new ReportSummaryItem(
-                            ScanDynamoDataStore.KEY_VALUE, 0L, 0L, 0L, 0L, Collections.emptyMap());
+        long totalP2Identities = 0L;
+        long totalP2IdentitiesMigrated = 0L;
+        long totalP1Identities = 0L;
+        long totalP0Identities = 0L;
+        Map<String, Long> previousConstituteVCsTotal = Collections.emptyMap();
+        Map<String, Long> mergedConstituteVCsTotal = Collections.emptyMap();
+        List<ReportUserIdentityItem> totalReportUserIdentityItems = new ArrayList<>();
+        for (var page :
+                reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
+                        reportProcessingRequest.buildReportLastEvaluatedKey())) {
+            var p2Identities =
+                    page.items().stream()
+                            .filter(ui -> Vot.P2.name().equals(ui.getIdentity()))
+                            .toList();
+            totalP2Identities = totalP2Identities + p2Identities.size();
+            totalP2IdentitiesMigrated =
+                    totalP2IdentitiesMigrated
+                            + p2Identities.stream()
+                                    .filter(item -> (Boolean.TRUE.equals(item.getMigrated())))
+                                    .count();
+            totalP1Identities =
+                    totalP1Identities
+                            + page.items().stream()
+                                    .filter(ui -> Vot.P1.name().equals(ui.getIdentity()))
+                                    .count();
+            totalP0Identities =
+                    totalP0Identities
+                            + page.items().stream()
+                                    .filter(ui -> Vot.P0.name().equals(ui.getIdentity()))
+                                    .count();
+            var pageConstituteVCsTotal =
+                    page.items().stream()
+                            .map(ReportUserIdentityItem::getConstituentVcs)
+                            .filter(Objects::nonNull)
+                            .collect(
+                                    Collectors.groupingBy(
+                                            Function.identity(), Collectors.counting()));
+            mergedConstituteVCsTotal =
+                    Stream.of(previousConstituteVCsTotal, pageConstituteVCsTotal)
+                            .flatMap(map -> map.entrySet().stream())
+                            .collect(
+                                    Collectors.toMap(
+                                            Map.Entry::getKey, Map.Entry::getValue, Long::sum));
+            previousConstituteVCsTotal = pageConstituteVCsTotal;
+            totalReportUserIdentityItems.addAll(page.items());
+            reportProcessingResult.buildReportLastEvaluatedKey(page.lastEvaluatedKey());
+
+            checkLambdaRemainingExecutionTime(context);
         }
-        return reportProcessingResult.summary(
+        reportProcessingResult.userIdentitylastEvaluatedKey(null);
+        reportProcessingResult.users(totalReportUserIdentityItems);
+        reportProcessingResult.summary(
                 new ReportSummary(
-                        reportSummaryItem.getTotalP2(),
-                        reportSummaryItem.getTotalP2Migrated(),
-                        reportSummaryItem.getTotalP1(),
-                        reportSummaryItem.getTotalP0(),
-                        reportSummaryItem.getConstituentVcsTotal()));
+                        totalP2Identities,
+                        totalP2IdentitiesMigrated,
+                        totalP1Identities,
+                        totalP0Identities,
+                        mergedConstituteVCsTotal));
+        LOGGER.info(
+                LogHelper.buildLogMessage("Completed building report processing summary result."));
     }
 
     private void checkLambdaRemainingExecutionTime(Context context)
