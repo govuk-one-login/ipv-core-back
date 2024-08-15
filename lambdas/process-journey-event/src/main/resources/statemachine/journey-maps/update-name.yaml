@@ -360,12 +360,20 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_UPDATE_DETAILS
 
   DCMAW_FAMILY_WITH_ADDRESS:
     response:
@@ -381,12 +389,20 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_UPDATE_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS:
     response:
