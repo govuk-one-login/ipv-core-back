@@ -220,7 +220,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
-    @Tracing
     private void sendAuditEvent(
             AuditEventTypes auditEventType,
             CoiCheckType coiCheckType,
@@ -261,7 +260,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 new DeviceInformation(deviceInformation));
     }
 
-    @Tracing
     private List<VerifiableCredential> getOldIdentity(
             String userId, String ipvSessionId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {

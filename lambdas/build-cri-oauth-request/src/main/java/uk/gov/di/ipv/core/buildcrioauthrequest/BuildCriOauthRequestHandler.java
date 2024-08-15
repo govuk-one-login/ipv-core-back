@@ -384,7 +384,6 @@ public class BuildCriOauthRequestHandler
         return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);
     }
 
-    @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
             IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, Cri cri)
             throws HttpResponseExceptionWithErrorBody {
@@ -473,13 +472,11 @@ public class BuildCriOauthRequestHandler
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
     }
 
-    @Tracing
     private void persistOauthState(IpvSessionItem ipvSessionItem, String oauthState) {
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
-    @Tracing
     private void persistCriOauthState(
             String oauthState, Cri cri, String clientOAuthSessionId, String connection) {
         criOAuthSessionService.persistCriOAuthSession(

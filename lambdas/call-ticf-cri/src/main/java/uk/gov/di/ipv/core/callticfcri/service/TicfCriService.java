@@ -69,6 +69,7 @@ public class TicfCriService {
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
+    @Tracing
     public List<VerifiableCredential> getTicfVc(
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {

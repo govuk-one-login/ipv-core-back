@@ -195,7 +195,6 @@ public class EvaluateGpg45ScoresHandler
                 .toObjectMap();
     }
 
-    @Tracing
     private Optional<Gpg45Profile> findMatchingGpg45Profile(
             List<VerifiableCredential> vcs,
             IpvSessionItem ipvSessionItem,
@@ -251,7 +250,6 @@ public class EvaluateGpg45ScoresHandler
         LOGGER.info(message);
     }
 
-    @Tracing
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,

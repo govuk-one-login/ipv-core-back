@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.verifiablecredential.service;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -39,6 +40,7 @@ public class VerifiableCredentialService {
                         configService);
     }
 
+    @Tracing
     public void persistUserCredentials(VerifiableCredential vc)
             throws VerifiableCredentialException {
         try {
@@ -50,6 +52,7 @@ public class VerifiableCredentialService {
         }
     }
 
+    @Tracing
     public List<VerifiableCredential> getVcs(String userId) throws CredentialParseException {
         var vcs = new ArrayList<VerifiableCredential>();
         for (var vcStoreItem : dataStore.getItems(userId)) {
@@ -58,10 +61,12 @@ public class VerifiableCredentialService {
         return vcs;
     }
 
+    @Tracing
     public VerifiableCredential getVc(String userId, String criId) throws CredentialParseException {
         return VerifiableCredential.fromVcStoreItem(dataStore.getItem(userId, criId));
     }
 
+    @Tracing
     public void deleteVCs(String userId) throws VerifiableCredentialException {
         try {
             dataStore.deleteAllByPartition(userId);
@@ -70,6 +75,7 @@ public class VerifiableCredentialService {
         }
     }
 
+    @Tracing
     public void storeIdentity(List<VerifiableCredential> vcs, String userId)
             throws VerifiableCredentialException {
         try {
@@ -83,6 +89,7 @@ public class VerifiableCredentialService {
         }
     }
 
+    @Tracing
     public void updateIdentity(List<VerifiableCredential> vcs)
             throws VerifiableCredentialException {
         try {

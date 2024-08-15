@@ -363,7 +363,6 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    @Tracing
     private void storeInheritedIdentity(
             String userId,
             IpvSessionItem ipvSessionItem,
@@ -427,7 +426,6 @@ public class InitialiseIpvSessionHandler
         return true;
     }
 
-    @Tracing
     private String getEvcsAccessToken(JWTClaimsSet claimsSet)
             throws RecoverableJarValidationException, ParseException {
         try {
@@ -443,7 +441,6 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    @Tracing
     private String validateEvcsAccessToken(
             Optional<StringListClaim> evcsAccessTokenClaim, JWTClaimsSet claimsSet)
             throws RecoverableJarValidationException, ParseException {
@@ -560,7 +557,6 @@ public class InitialiseIpvSessionHandler
         }
     }
 
-    @Tracing
     private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
         boolean isInvalid = false;
 

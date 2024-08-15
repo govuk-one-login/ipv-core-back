@@ -214,7 +214,6 @@ public class CiMitService {
         }
     }
 
-    @Tracing
     public ContraIndicators getContraIndicators(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
@@ -223,7 +222,6 @@ public class CiMitService {
         return getContraIndicators(vc);
     }
 
-    @Tracing
     public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
         var evidenceItem = parseContraIndicatorEvidence(vc);
@@ -432,6 +430,7 @@ public class CiMitService {
         return requestBuilder;
     }
 
+    @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
             throws CimitHttpRequestException {
         try {

@@ -170,7 +170,6 @@ public class ProcessJourneyEventHandler
         }
     }
 
-    @Tracing
     private StepResponse executeJourneyEvent(
             String journeyEvent,
             IpvSessionItem ipvSessionItem,
@@ -251,7 +250,6 @@ public class ProcessJourneyEventHandler
         }
     }
 
-    @Tracing
     private State executeStateTransition(
             JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
@@ -309,7 +307,6 @@ public class ProcessJourneyEventHandler
         return result.state();
     }
 
-    @Tracing
     private void logStateChange(
             JourneyState oldJourneyState, String journeyEvent, IpvSessionItem ipvSessionItem) {
         var newJourneyState = ipvSessionItem.getState();
@@ -324,14 +321,12 @@ public class ProcessJourneyEventHandler
         LOGGER.info(message);
     }
 
-    @Tracing
     private void clearOauthSessionIfExists(IpvSessionItem ipvSessionItem) {
         if (ipvSessionItem.getCriOAuthSessionId() != null) {
             ipvSessionItem.setCriOAuthSessionId(null);
         }
     }
 
-    @Tracing
     private void updateUserSessionForTimeout(
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
@@ -346,7 +341,6 @@ public class ProcessJourneyEventHandler
         sendSubJourneyStartAuditEvent(auditEventUser, SESSION_TIMEOUT, deviceInformation);
     }
 
-    @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
         return (!SESSION_TIMEOUT.equals(ipvSessionItem.getState().subJourney()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
@@ -357,7 +351,6 @@ public class ProcessJourneyEventHandler
                                                         BACKEND_SESSION_TIMEOUT)));
     }
 
-    @Tracing
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode)

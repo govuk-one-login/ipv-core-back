@@ -110,7 +110,6 @@ public class EvcsService {
                                 EXTERNAL)));
     }
 
-    @Tracing
     public List<VerifiableCredential> getVerifiableCredentials(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
