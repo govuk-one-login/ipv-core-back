@@ -54,6 +54,7 @@ class ContractTest {
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
+    @Mock private BearerAccessToken mockBearerAccessToken;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String SUBJECT_ID = "dummySubjectId";
     private static final String CALLBACK_URL =
@@ -293,6 +294,7 @@ class ContractTest {
         var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
         when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
                 .thenReturn(credentialIssuerConfig);
+        when(mockBearerAccessToken.toAuthorizationHeader()).thenReturn(null);
 
         var underTest =
                 new CriApiService(
@@ -304,7 +306,7 @@ class ContractTest {
                         CriApiException.class,
                         () ->
                                 underTest.fetchVerifiableCredential(
-                                        new BearerAccessToken("missingAccessToken"),
+                                        mockBearerAccessToken,
                                         DCMAW_ASYNC,
                                         CRI_OAUTH_SESSION_ITEM,
                                         getCredentialRequestBody(SUBJECT_ID)));
