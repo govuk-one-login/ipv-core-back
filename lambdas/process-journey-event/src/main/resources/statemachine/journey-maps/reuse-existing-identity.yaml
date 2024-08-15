@@ -304,6 +304,8 @@ states:
     events:
       continue:
         targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
       end:
         targetState: DELETE_IDENTITY_PAGE
 
@@ -311,9 +313,6 @@ states:
     response:
       type: page
       pageId: delete-handover
-    events:
-      back:
-        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
 
   RETURN_TO_RP:
     response:
