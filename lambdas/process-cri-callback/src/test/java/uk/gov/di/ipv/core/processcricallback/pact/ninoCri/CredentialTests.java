@@ -598,7 +598,8 @@ class CredentialTests {
             """
             {
               "typ": "JWT",
-              "alg": "ES256"
+              "alg": "ES256",
+              "kid": "did:web:review-hc.localdev.account.gov.uk#02ba5dbd2a3664670bf5c4689a9f8e014fe2c019209c9e5db7641a2b2a4bc7a8"
             }
             """;
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
@@ -665,7 +666,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "oN70YT7U5ot--Iku7KDo2H9ij1cY44cIBF-g6xqKR1ZxVS1CB5gZFyMIKIouvyoKtsbgPOejpQitttD_eaUHwg"; // pragma: allowlist secret
+            "SnthjM7v9cnoNMT0QgrhgkYnd4U_X1F8fNYzNT8GeEIvSgjBVSaAR_fvDLl4a-DFtvwUENQZV8XyhhB8oscu8Q"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_BODY =
             """
@@ -733,7 +734,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_IDENTITY_CHECK_VC_SIGNATURE =
-            "9cKlVt_-KZFc83uDRLSaS6K2jzVnMrfv2KqK6Q-4IHIBbiPieC5R-gcoEm85HIbnK82nX83XUcqrNxmVkQ9MDQ"; // pragma: allowlist secret
+            "n_JVP1topSmn-_XVRHChwrZZ-vZkADhGRuSvBparwYIIwp3sxkyThtEZZs2evCICrt5ihdWAFDxUsE1kbCCcWQ"; // pragma: allowlist secret
 
     private static final String VALID_NINO_VC_BODY =
             """
@@ -797,7 +798,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_NINO_VC_SIGNATURE =
-            "LDMA4INOpUG9M7tYTCwOR3czkX3C2uityJ4aTbgpSarfVTa9cZSaBkSw69A7obDWd2uvtxdKwbHyu6JMoAJ_Xw"; // pragma: allowlist secret
+            "jmWoY3iv3wRIOqAZW-gKQGQhgq_8f7z1ziPrLrT8ugjATN1zeuShZcx5QWsJH5WoTxcrw9TarP8dDClI1k55FQ"; // pragma: allowlist secret
 
     private static final String FAILED_NINO_VC_BODY =
             """
@@ -861,5 +862,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_NINO_VC_SIGNATURE =
-            "s6YXmDlZx_iMV-7k0VJlp5SD9CgReEQoF8WiOmqyiEUmoTELYI53cTL1puecV5QnW6-0SD90dwMuLelPIqukaw"; // pragma: allowlist secret
+            "6MxYpvaWpABZQ-eD3M-1h8DxULaqZE7ciUf-e_sGpFWsfLdC1NzgLKHpG3_26uiECa7Zlqm2BTYiXnQBNVuteA"; // pragma: allowlist secret
 }
