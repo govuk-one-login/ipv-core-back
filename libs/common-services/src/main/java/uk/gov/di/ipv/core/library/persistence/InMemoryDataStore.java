@@ -69,6 +69,13 @@ public class InMemoryDataStore<T extends PersistenceItem> implements DataStore<T
     }
 
     @Override
+    public void createOrUpdate(List<T> items) {
+        for (T item : items) {
+            records.put(getKey(item), item);
+        }
+    }
+
+    @Override
     public T getItem(String partitionValue, String sortValue) {
         return records.get(getKey(partitionValue, sortValue));
     }

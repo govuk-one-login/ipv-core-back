@@ -28,6 +28,8 @@ public interface DataStore<T extends PersistenceItem> {
 
     void createIfNotExists(T item) throws ItemAlreadyExistsException;
 
+    void createOrUpdate(List<T> items) throws BatchDeleteException;
+
     T getItem(String partitionValue, String sortValue);
 
     T getItem(String partitionValue);
