@@ -290,8 +290,9 @@ Then(
   "I get a {string} MFA reset result",
   async function (this: World, expectedMfaResetResult: string): Promise<void> {
     assert.equal(
-      expectedMfaResetResult === "successful",
       this.mfaResetResult.success,
+      expectedMfaResetResult === "successful",
+      "MFA reset results do not match.",
     );
   },
 );
