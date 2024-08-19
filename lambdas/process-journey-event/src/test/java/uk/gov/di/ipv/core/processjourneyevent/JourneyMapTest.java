@@ -228,26 +228,23 @@ class JourneyMapTest {
         }
     }
 
-    private void checkTargetStatesExist(Event event, Set<String> stateMachineKeys) throws IOException {
+    private void checkTargetStatesExist(Event event, Set<String> stateMachineKeys)
+            throws IOException {
         if (event instanceof BasicEvent basicEvent) {
             if (basicEvent.getTargetJourney() != null) {
                 var basicEventStateMachine =
                         new StateMachineInitializer(
-                                IpvJourneyTypes.valueOf(
-                                        basicEvent.getTargetJourney()))
+                                        IpvJourneyTypes.valueOf(basicEvent.getTargetJourney()))
                                 .initialize();
                 var basicEventStateMachineKeys = basicEventStateMachine.keySet();
                 assertTrue(
-                        basicEventStateMachineKeys.contains(
-                                basicEvent.getTargetState()),
-                        "Unknown target state %s"
-                                .formatted(basicEvent.getTargetState()));
+                        basicEventStateMachineKeys.contains(basicEvent.getTargetState()),
+                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
 
             } else if (basicEvent.getTargetState() != null) {
                 assertTrue(
                         stateMachineKeys.contains(basicEvent.getTargetState()),
-                        "Unknown target state %s"
-                                .formatted(basicEvent.getTargetState()));
+                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
             }
 
             var eventsIfDisabled = basicEvent.getCheckIfDisabled();
