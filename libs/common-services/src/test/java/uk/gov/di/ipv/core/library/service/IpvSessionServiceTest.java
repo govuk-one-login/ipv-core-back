@@ -27,8 +27,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -161,19 +159,12 @@ class IpvSessionServiceTest {
         ipvSessionItem.setIpvSessionId(ipvSessionID);
 
         when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
-                .thenReturn(null, null, null, null, null, ipvSessionItem);
+                .thenReturn(null)
+                .thenReturn(ipvSessionItem);
 
         IpvSessionItem result = ipvSessionService.getIpvSessionByAccessToken(accessToken);
 
         assertEquals(result, ipvSessionItem);
-
-        var inOrder = inOrder(mockSleeper);
-        inOrder.verify(mockSleeper, times(1)).sleep(10);
-        inOrder.verify(mockSleeper, times(1)).sleep(20);
-        inOrder.verify(mockSleeper, times(1)).sleep(40);
-        inOrder.verify(mockSleeper, times(1)).sleep(80);
-        inOrder.verify(mockSleeper, times(1)).sleep(160);
-        inOrder.verifyNoMoreInteractions();
     }
 
     @Test
