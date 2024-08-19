@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
@@ -42,7 +43,7 @@ public class TicfCriService {
 
     public TicfCriService(ConfigService configService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
         this.jwtValidator = new VerifiableCredentialValidator(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
@@ -53,7 +54,7 @@ public class TicfCriService {
             VerifiableCredentialValidator jwtValidator,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
         this.jwtValidator = jwtValidator;
         this.sessionCredentialsService = sessionCredentialsService;
     }
@@ -69,6 +70,7 @@ public class TicfCriService {
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
+    @Tracing
     public List<VerifiableCredential> getTicfVc(
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
@@ -160,7 +162,6 @@ public class TicfCriService {
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from TICF CRI"));
     }
 
-    @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest ticfCriHttpRequest)
             throws IOException, InterruptedException {
         LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to TICF CRI"));

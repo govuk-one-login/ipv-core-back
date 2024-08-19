@@ -175,7 +175,6 @@ public class ProcessAsyncCriCredentialHandler
         sendIpvVcErrorAuditEvent(errorAsyncCriResponse);
     }
 
-    @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
@@ -247,7 +246,6 @@ public class ProcessAsyncCriCredentialHandler
         }
     }
 
-    @Tracing
     private void sendIpvVcReceivedAuditEvent(
             AuditEventUser auditEventUser,
             VerifiableCredential verifiableCredential,
@@ -262,7 +260,6 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc) {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
@@ -274,7 +271,6 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse) {
         AuditEventUser auditEventUser =
                 new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
@@ -295,12 +291,10 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     private void submitVcToCiStorage(VerifiableCredential vc) throws CiPutException {
         ciMitService.submitVC(vc, null, null);
     }
 
-    @Tracing
     private void postMitigatingVc(VerifiableCredential vc) throws CiPostMitigationsException {
         ciMitService.submitMitigatingVcList(List.of(vc), null, null);
     }

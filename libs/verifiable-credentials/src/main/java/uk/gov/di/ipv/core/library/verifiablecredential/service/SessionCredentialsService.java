@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.verifiablecredential.service;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -46,6 +47,7 @@ public class SessionCredentialsService {
         return getCredentials(ipvSessionId, userId, null);
     }
 
+    @Tracing
     public List<VerifiableCredential> getCredentials(
             String ipvSessionId, String userId, Boolean receivedThisSession)
             throws VerifiableCredentialException {
@@ -73,6 +75,7 @@ public class SessionCredentialsService {
         }
     }
 
+    @Tracing
     public void persistCredentials(
             List<VerifiableCredential> credentials,
             String ipvSessionId,
@@ -91,6 +94,7 @@ public class SessionCredentialsService {
         }
     }
 
+    @Tracing
     public void deleteSessionCredentialsForResetType(
             String ipvSessionId, SessionCredentialsResetType resetType)
             throws VerifiableCredentialException {
@@ -123,6 +127,7 @@ public class SessionCredentialsService {
         }
     }
 
+    @Tracing
     public void deleteSessionCredentials(String ipvSessionId) throws VerifiableCredentialException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
@@ -136,6 +141,7 @@ public class SessionCredentialsService {
         }
     }
 
+    @Tracing
     public void deleteSessionCredentialsForCri(String ipvSessionId, Cri cri)
             throws VerifiableCredentialException {
         var criId = cri.getId();

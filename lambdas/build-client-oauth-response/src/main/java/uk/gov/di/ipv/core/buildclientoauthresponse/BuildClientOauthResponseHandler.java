@@ -277,7 +277,6 @@ public class BuildClientOauthResponseHandler
         return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
     }
 
-    @Tracing
     private Map<String, List<String>> getAuthParamsAsMap(
             ClientOAuthSessionItem clientOAuthSessionItem) {
         if (clientOAuthSessionItem != null) {

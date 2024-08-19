@@ -241,7 +241,6 @@ public class CheckExistingIdentityHandler
         "java:S3776", // Cognitive Complexity of methods should not be too high
         "java:S6541" // "Brain method" PYIC-6901 should refactor this method
     })
-    @Tracing
     private JourneyResponse getJourneyResponse(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -364,7 +363,6 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @Tracing
     private VerifiableCredentialBundle getVerifiableCredentials(
             String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
@@ -564,7 +562,6 @@ public class CheckExistingIdentityHandler
         return vcs.stream().map(vc -> vc.getCri().getId()).collect(Collectors.joining(","));
     }
 
-    @Tracing
     private JourneyResponse buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
         switch (faceToFaceRequest.getStatus()) {
             case CriResponseService.STATUS_PENDING -> {
@@ -584,7 +581,6 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    @Tracing
     private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -774,7 +770,6 @@ public class CheckExistingIdentityHandler
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
-    @Tracing
     private void sendVCsMigratedAuditEvent(
             AuditEventUser auditEventUser,
             List<VerifiableCredential> credentials,
@@ -799,7 +794,6 @@ public class CheckExistingIdentityHandler
                 JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
     }
 
-    @Tracing
     private Optional<Vot> getStrongestAttainedVotForVtr(
             List<Vot> requestedVotsByStrength,
             List<VerifiableCredential> vcs,
@@ -897,7 +891,6 @@ public class CheckExistingIdentityHandler
         return false;
     }
 
-    @Tracing
     private void sendProfileMatchedAuditEvent(
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,

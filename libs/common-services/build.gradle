@@ -19,6 +19,7 @@ dependencies {
 			libs.jacksonDataformatYaml,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
+			libs.powertoolsTracing,
 			project(":libs:journey-uris")
 
 	compileOnly libs.lombok

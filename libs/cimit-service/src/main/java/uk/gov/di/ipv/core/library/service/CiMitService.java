@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public class CiMitService {
                         .build();
         this.configService = configService;
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
     }
 
     public CiMitService(
@@ -106,7 +107,7 @@ public class CiMitService {
         this.lambdaClient = lambdaClient;
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -214,7 +215,6 @@ public class CiMitService {
         }
     }
 
-    @Tracing
     public ContraIndicators getContraIndicators(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
@@ -223,7 +223,6 @@ public class CiMitService {
         return getContraIndicators(vc);
     }
 
-    @Tracing
     public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
         var evidenceItem = parseContraIndicatorEvidence(vc);

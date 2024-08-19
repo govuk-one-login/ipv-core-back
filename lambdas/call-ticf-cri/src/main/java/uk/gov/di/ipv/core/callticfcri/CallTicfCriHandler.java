@@ -137,7 +137,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
     }
 
-    @Tracing
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,

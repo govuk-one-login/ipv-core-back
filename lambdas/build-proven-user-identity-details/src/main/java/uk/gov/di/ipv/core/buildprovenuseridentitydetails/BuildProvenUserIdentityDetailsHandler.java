@@ -132,7 +132,6 @@ public class BuildProvenUserIdentityDetailsHandler
         return ApiGatewayResponseGenerator.proxyJsonResponse(statusCode, errorResponse);
     }
 
-    @Tracing
     private IdentityClaim getProvenIdentity(List<VerifiableCredential> vcs)
             throws ProvenUserIdentityDetailsException, CredentialParseException {
         try {
@@ -156,7 +155,6 @@ public class BuildProvenUserIdentityDetailsHandler
         }
     }
 
-    @Tracing
     private List<PostalAddress> getProvenIdentityAddresses(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, ProvenUserIdentityDetailsException {
         var addressClaim = userIdentityService.generateAddressClaim(vcs);
