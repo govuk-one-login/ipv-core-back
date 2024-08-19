@@ -10,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -147,7 +147,7 @@ class VerifiableCredentialServiceTest {
 
     @Test
     void storeIdentityShouldThrowIfFailureToDeleteExistingVc() throws Exception {
-        doThrow(new BatchDeleteException("Deletion failed"))
+        doThrow(new BatchProcessingException("Deletion failed"))
                 .when(mockDataStore)
                 .deleteAllByPartition(USER_ID);
 

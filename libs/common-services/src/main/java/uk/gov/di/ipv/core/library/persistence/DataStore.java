@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -28,7 +28,7 @@ public interface DataStore<T extends PersistenceItem> {
 
     void createIfNotExists(T item) throws ItemAlreadyExistsException;
 
-    void createOrUpdate(List<T> items) throws BatchDeleteException;
+    void createOrUpdate(List<T> items) throws BatchProcessingException;
 
     T getItem(String partitionValue, String sortValue);
 
@@ -46,7 +46,7 @@ public interface DataStore<T extends PersistenceItem> {
 
     T delete(String partitionValue, String sortValue);
 
-    void delete(List<T> items) throws BatchDeleteException;
+    void delete(List<T> items) throws BatchProcessingException;
 
-    void deleteAllByPartition(String partitionValue) throws BatchDeleteException;
+    void deleteAllByPartition(String partitionValue) throws BatchProcessingException;
 }
