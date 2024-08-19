@@ -198,27 +198,7 @@ class JourneyMapTest {
             if (targetState instanceof BasicState basicState) {
                 var events = basicState.getEvents();
                 for (var event : events.values()) {
-                    if (event instanceof BasicEvent basicEvent) {
-                        if (basicEvent.getTargetJourney() != null) {
-                            var basicEventStateMachine =
-                                    new StateMachineInitializer(
-                                                    IpvJourneyTypes.valueOf(
-                                                            basicEvent.getTargetJourney()))
-                                            .initialize();
-                            var basicEventStateMachineKeys = basicEventStateMachine.keySet();
-                            assertTrue(
-                                    basicEventStateMachineKeys.contains(
-                                            basicEvent.getTargetState()),
-                                    "Unknown target state %s"
-                                            .formatted(basicEvent.getTargetState()));
-
-                        } else if (basicEvent.getTargetState() != null) {
-                            assertTrue(
-                                    stateMachineKeys.contains(basicEvent.getTargetState()),
-                                    "Unknown target state %s"
-                                            .formatted(basicEvent.getTargetState()));
-                        }
-                    }
+                    checkTargetStatesExist(event, stateMachineKeys);
                 }
             }
         }
@@ -244,6 +224,34 @@ class JourneyMapTest {
                         actualExitEvents,
                         String.format(
                                 "%s doesn't have matching exit states to nested journey", state));
+            }
+        }
+    }
+
+    private void checkTargetStatesExist(Event event, Set<String> stateMachineKeys)
+            throws IOException {
+        if (event instanceof BasicEvent basicEvent) {
+            if (basicEvent.getTargetJourney() != null) {
+                var basicEventStateMachine =
+                        new StateMachineInitializer(
+                                        IpvJourneyTypes.valueOf(basicEvent.getTargetJourney()))
+                                .initialize();
+                var basicEventStateMachineKeys = basicEventStateMachine.keySet();
+                assertTrue(
+                        basicEventStateMachineKeys.contains(basicEvent.getTargetState()),
+                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
+
+            } else if (basicEvent.getTargetState() != null) {
+                assertTrue(
+                        stateMachineKeys.contains(basicEvent.getTargetState()),
+                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
+            }
+
+            var eventsIfDisabled = basicEvent.getCheckIfDisabled();
+            if (eventsIfDisabled != null) {
+                for (var eventIfDisabled : eventsIfDisabled.values()) {
+                    checkTargetStatesExist(eventIfDisabled, stateMachineKeys);
+                }
             }
         }
     }
