@@ -4,11 +4,11 @@ Feature: Inherited Identity
     Given I start a new '<journey-type>' journey with inherited identity '<inherited-identity>'
     Then I get an OAuth response
     And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
-    When I use the OAuth response to get my identity
+    When I use the OAuth response to get my 'identity'
     Then I get a '<expected-identity>' identity
     When I start a new '<journey-type>' journey
     Then I get an OAuth response
-    When I use the OAuth response to get my identity
+    When I use the OAuth response to get my 'identity'
     Then I get a '<expected-identity>' identity
 
     Examples:
@@ -22,7 +22,7 @@ Feature: Inherited Identity
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
-    When I use the OAuth response to get my identity
+    When I use the OAuth response to get my 'identity'
     Then I get a 'PCL200' identity
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -31,7 +31,7 @@ Feature: Inherited Identity
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
-    When I use the OAuth response to get my identity
+    When I use the OAuth response to get my 'identity'
     Then I get a 'PCL200' identity
     When I start a new 'medium-confidence-pcl250' journey
     Then I get a 'page-ipv-identity-document-start' page response

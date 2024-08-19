@@ -43,7 +43,7 @@ Feature: P2 F2F journey
     When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my identity
+    When I use the OAuth response to get my 'identity'
     Then I get a 'P2' identity
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
