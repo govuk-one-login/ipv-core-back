@@ -12,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
@@ -208,7 +208,7 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialShouldThrowVerifiableCredentialExceptionIfProblemDeleting()
-                throws BatchDeleteException {
+                throws BatchProcessingException {
             doThrow(new IllegalStateException())
                     .when(mockDataStore)
                     .deleteAllByPartition(SESSION_ID);
@@ -373,7 +373,7 @@ class SessionCredentialsServiceTest {
 
         @Test
         void deleteSessionCredentialsForCriShouldThrowIfProblemDeleting()
-                throws BatchDeleteException {
+                throws BatchProcessingException {
             when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
                     .thenReturn(List.of());
             doThrow(new IllegalStateException()).when(mockDataStore).delete(any());

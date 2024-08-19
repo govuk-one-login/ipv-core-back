@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -75,7 +75,7 @@ public class VerifiableCredentialService {
         try {
             dataStore.deleteAllByPartition(userId);
             vcs.stream().map(VerifiableCredential::toVcStoreItem).forEach(dataStore::create);
-        } catch (BatchDeleteException e) {
+        } catch (BatchProcessingException e) {
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR, FAILED_TO_DELETE_CREDENTIAL);
         } catch (Exception e) {

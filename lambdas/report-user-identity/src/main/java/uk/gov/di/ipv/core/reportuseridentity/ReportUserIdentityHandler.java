@@ -11,7 +11,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.DynamoDbHelper;
@@ -122,7 +122,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Stopped report processing of user's identities.", e));
-        } catch (BatchDeleteException e) {
+        } catch (BatchProcessingException e) {
             LOGGER.info(LogHelper.buildLogMessage("Error occurred during batch write process."));
         } catch (StopBeforeLambdaTimeoutException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Stopping as lambda about to timeout.", e));
@@ -137,7 +137,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             ReportProcessingRequest reportProcessingRequest,
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             Context context)
-            throws BatchDeleteException, StopBeforeLambdaTimeoutException {
+            throws BatchProcessingException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUniqueUserScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
@@ -175,7 +175,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             Context context)
             throws CredentialParseException, HttpResponseExceptionWithErrorBody,
-                    BatchDeleteException, StopBeforeLambdaTimeoutException {
+                    BatchProcessingException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUserIdentityScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
