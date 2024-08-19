@@ -588,7 +588,7 @@ class CredentialTests {
             {
               "typ": "JWT",
               "alg": "ES256",
-              "kid": "did:web:dummyExperianKbvComponentId:5187377245dfa768c91884dba9eea7e7dbbd1ceec1ddb4b14b658c0c42b04432"
+              "kid": "did:web:dummyExperianKbvComponentId#5187377245dfa768c91884dba9eea7e7dbbd1ceec1ddb4b14b658c0c42b04432"
             }
             """;
 
@@ -678,7 +678,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_VC_SIGNATURE =
-            "ApoatTnd1s8uILZzZYUMMaTAtn9jVWfz9sg_AF3m5rcDVlQPb72smOZUHKhj8KRBZpp8TYzQ1sL87bqMyZhM6w"; // pragma: allowlist secret
+            "cHYsPI1M8wa6JOwU70yVZv8E7Bb6ev1QV20Nomm6e3QPKzyKo2rxuy8Gsk3r9fErXy8hv1N0L-LuZn7pLTSQSQ"; // pragma: allowlist secret
 
     private static final String VALID_THIN_FILE_VC_BODY =
             """
@@ -749,7 +749,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_THIN_FILE_VC_SIGNATURE =
-            "3vjkGHuOgcI60DifKzoacgX8dnBheG05H-NHbibRYugvTyb9FosCm4YkY8BaJ4We23xC-msXBCUGyWEXTw4osw"; // pragma: allowlist secret
+            "gjiDQ5rzrzFjrVqvOE2ayqnbaQlDQpa7VHRBh-cGhar5Ty4pEkcTYr6LLChT5NoGPkSE9PlT9G4SuSEkako6gw"; // pragma: allowlist secret
 
     private static final String FAILED_VC_BODY =
             """
@@ -844,5 +844,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_VC_SIGNATURE =
-            "q9dpoOoXjMqlHAd9M-BPd1mxF8dPofhez_J-ykxJ4QyAhDh8RecIXpcg8hCc_sfGHhfaJgVCfTbOuZuwwOrpig"; // pragma: allowlist secret
+            "m3xuM0mpZ3lTHhDk9hOLa79hyLr1x9fcCavK7RCD_OOGo04QvZFyxtV6OoUPnANU-WxEr3iMv7ZNBLPEcQb90g"; // pragma: allowlist secret
 }
