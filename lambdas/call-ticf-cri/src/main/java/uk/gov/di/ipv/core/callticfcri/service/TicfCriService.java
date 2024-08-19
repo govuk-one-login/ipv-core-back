@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
+import java.time.Duration;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -40,6 +42,7 @@ public class TicfCriService {
     private final VerifiableCredentialValidator jwtValidator;
     private final SessionCredentialsService sessionCredentialsService;
 
+    @ExcludeFromGeneratedCoverageReport
     public TicfCriService(ConfigService configService) {
         this.configService = configService;
         this.httpClient = HttpClient.newHttpClient();
@@ -47,7 +50,7 @@ public class TicfCriService {
         this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
-    @ExcludeFromGeneratedCoverageReport
+    // Used by contract tests
     public TicfCriService(
             ConfigService configService,
             VerifiableCredentialValidator jwtValidator,
@@ -92,9 +95,10 @@ public class TicfCriService {
                                     .map(VerifiableCredential::getVcString)
                                     .toList());
 
-            HttpRequest.Builder httpRequestBuilder =
+            var httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(ticfCriConfig.getCredentialUrl())
+                            .timeout(Duration.ofSeconds(ticfCriConfig.getRequestTimeout()))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(ticfCriRequest)));
@@ -134,6 +138,10 @@ public class TicfCriService {
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();
+            }
+
+            if (e instanceof HttpTimeoutException) {
+                LOGGER.warn(LogHelper.buildLogMessage("Request to TICF CRI has timed out"));
             }
             // In the case of unavailability, the TICF CRI is deemed optional.
             LOGGER.error(
