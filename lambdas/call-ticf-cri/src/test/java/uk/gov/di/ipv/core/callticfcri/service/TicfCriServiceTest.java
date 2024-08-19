@@ -31,6 +31,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
+import java.net.http.HttpTimeoutException;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
@@ -98,6 +99,7 @@ class TicfCriServiceTest {
                         .signingKey(TEST_EC_PUBLIC_JWK)
                         .componentId("https://ticf-cri.example.com")
                         .requiresApiKey(false)
+                        .requestTimeout(5L)
                         .build();
     }
 
@@ -261,5 +263,26 @@ class TicfCriServiceTest {
         assertThrows(
                 TicfCriServiceException.class,
                 () -> ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem));
+    }
+
+    @Test
+    void getTicfVcShouldNotExplodeIfTimeoutIsNull() throws Exception {
+        var ticfCriConfigWithZeroTimeout =
+                RestCriConfig.builder()
+                        .credentialUrl(new URI("https://credential.example.com"))
+                        .signingKey(TEST_EC_PUBLIC_JWK)
+                        .componentId("https://ticf-cri.example.com")
+                        .requiresApiKey(false)
+                        .requestTimeout(null)
+                        .build();
+
+        when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
+                .thenReturn(ticfCriConfigWithZeroTimeout);
+        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
+                .thenThrow(new HttpTimeoutException("too slow"));
+
+        ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem);
+
+        verify(mockHttpClient).send(requestCaptor.capture(), any());
     }
 }
