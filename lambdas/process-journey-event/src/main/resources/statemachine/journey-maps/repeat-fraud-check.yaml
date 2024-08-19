@@ -100,6 +100,9 @@ states:
           updateSupported: true
       dob:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -108,6 +111,9 @@ states:
           updateSupported: false
       dob-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -116,6 +122,9 @@ states:
           updateSupported: false
       dob-family:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -124,6 +133,9 @@ states:
           updateSupported: false
       address-dob:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -132,6 +144,9 @@ states:
           updateSupported: false
       dob-family-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -140,6 +155,9 @@ states:
           updateSupported: false
       address-dob-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -148,6 +166,9 @@ states:
           updateSupported: false
       address-dob-family:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -156,6 +177,9 @@ states:
           updateSupported: false
       address-dob-family-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -164,6 +188,9 @@ states:
           updateSupported: false
       family-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -172,6 +199,9 @@ states:
           updateSupported: false
       address-family-given:
         targetState: UPDATE_NAME_DOB
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -191,6 +221,24 @@ states:
        targetState: CONFIRM_DETAILS
        auditEvents:
          - IPV_USER_DETAILS_UPDATE_ABORTED
+
+  UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION:
+    response:
+      type: page
+      pageId: update-name-date-birth
+      context: rfcAccountDeletion
+    events:
+      continue:
+        targetState: DELETE_HANDOVER_PAGE
+      end:
+        targetState: CONFIRM_DETAILS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
+
+  DELETE_HANDOVER_PAGE:
+    response:
+      type: page
+      pageId: delete-handover
 
   FRAUD_CHECK_RFC:
     response:
