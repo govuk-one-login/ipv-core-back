@@ -46,7 +46,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 60000;
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -104,7 +104,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 ReportProcessingResult.builder();
         try {
             ReportProcessingRequest reportProcessingRequest =
-                    objectMapper.readValue(inputStream, ReportProcessingRequest.class);
+                    OBJECT_MAPPER.readValue(inputStream, ReportProcessingRequest.class);
 
             // Step-1
             scanToExtractUniqueUserIdFromTacticalStore(
@@ -128,8 +128,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.error(LogHelper.buildErrorMessage("Stopping as lambda about to timeout.", e));
         } finally {
             LOGGER.info(LogHelper.buildLogMessage("Writing output with result summary."));
-            objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            objectMapper.writeValue(outputStream, reportProcessingResult.build());
+            OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
+            OBJECT_MAPPER.writeValue(outputStream, reportProcessingResult.build());
         }
     }
 
