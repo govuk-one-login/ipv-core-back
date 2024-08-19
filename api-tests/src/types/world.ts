@@ -6,7 +6,7 @@ export interface World extends CucumberWorld {
   userId: string;
   ipvSessionId: string;
   journeyId: string;
-  lastJourneyEngineResponse: JourneyEngineResponse;
-  identity: UserIdentity;
-  mfaResetResult: MfaResetResult;
+  lastJourneyEngineResponse?: JourneyEngineResponse;
+  identity?: UserIdentity;
+  mfaResetResult?: MfaResetResult;
 }

@@ -127,6 +127,10 @@ When(
         journeyType === REVERIFICATION,
       );
 
+      if (!this.lastJourneyEngineResponse) {
+        throw new Error("No last journey engine response found.");
+      }
+
       try {
         assert.ok(
           isPageResponse(this.lastJourneyEngineResponse),
@@ -149,6 +153,10 @@ When(
 Then(
   "I get a(n) {string} page response",
   function (this: World, expectedPage: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -170,6 +178,10 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     assert.ok(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -179,6 +191,10 @@ Then(
 );
 
 Then("I get an OAuth response", function (this: World): void {
+  if (!this.lastJourneyEngineResponse) {
+    throw new Error("No last journey engine response found.");
+  }
+
   assert.ok(
     isClientResponse(this.lastJourneyEngineResponse),
     `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -196,6 +212,10 @@ When(
     this: World,
     result: "identity" | "MFA reset result",
   ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isClientResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a client response");
     }
@@ -217,6 +237,10 @@ When(
 );
 
 Then("I get a {string} identity", function (this: World, vot: string): void {
+  if (!this.identity) {
+    throw new Error("No identity found.");
+  }
+
   assert.equal(this.identity.vot, vot);
 });
 
@@ -248,6 +272,10 @@ Then(
 Then(
   "my identity {string} is {string}",
   function (this: World, field: NamePartType, value: string): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
     const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
       (np) => {
         return field === np.type;
@@ -261,6 +289,10 @@ Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
     const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
 
     const expectedAddresses = this.identity[addressCredential];
     assert.deepEqual(
@@ -289,6 +321,10 @@ Then(
 Then(
   "I get a {string} MFA reset result",
   async function (this: World, expectedMfaResetResult: string): Promise<void> {
+    if (!this.mfaResetResult) {
+      throw new Error("No MFA reset result found.");
+    }
+
     assert.equal(
       this.mfaResetResult.success,
       expectedMfaResetResult === "successful",
