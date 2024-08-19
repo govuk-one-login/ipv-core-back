@@ -36,6 +36,8 @@ const MAX_ATTEMPTS = 5;
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
+const REVERIFICATION = "reverification";
+
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
     return "none";
@@ -66,17 +68,21 @@ const startNewJourney = async (
   journeyType: string,
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
+  isReverification: boolean,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
   world.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody({
-      subject: world.userId,
-      journeyId: world.journeyId,
-      journeyType,
-      isReproveIdentity: !!reproveIdentity,
-      inheritedIdentityId,
-    }),
+    await generateInitialiseIpvSessionBody(
+      {
+        subject: world.userId,
+        journeyId: world.journeyId,
+        journeyType,
+        isReproveIdentity: !!reproveIdentity,
+        inheritedIdentityId,
+      },
+      isReverification,
+    ),
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
@@ -97,6 +103,7 @@ When(
       journeyType,
       !!reproveIdentity,
       inheritedIdentityId,
+      journeyType === REVERIFICATION,
     );
   },
 );
@@ -112,7 +119,13 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(
+        this,
+        journeyType,
+        false,
+        undefined,
+        journeyType === REVERIFICATION,
+      );
 
       try {
         assert.ok(
@@ -178,8 +191,11 @@ Then("I get an OAuth response", function (this: World): void {
 });
 
 When(
-  "I use the OAuth response to get my identity",
-  async function (this: World): Promise<void> {
+  "I use the OAuth response to get my {string}",
+  async function (
+    this: World,
+    result: "identity" | "MFA reset result",
+  ): Promise<void> {
     if (!isClientResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a client response");
     }
@@ -188,7 +204,15 @@ When(
         this.lastJourneyEngineResponse.client.redirectUrl,
       ),
     );
-    this.identity = await externalClient.getIdentity(tokenResponse);
+
+    if (result === "identity") {
+      this.identity = await externalClient.getIdentity(tokenResponse);
+    }
+
+    if (result === "MFA reset result") {
+      this.mfaResetResult =
+        await externalClient.getMfaResetResult(tokenResponse);
+    }
   },
 );
 
@@ -258,6 +282,16 @@ Then(
       provenIdentity.nameParts,
       expectedNames,
       "Names do not match.",
+    );
+  },
+);
+
+Then(
+  "I get a {string} MFA reset result",
+  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+    assert.equal(
+      expectedMfaResetResult === "successful",
+      this.mfaResetResult.success,
     );
   },
 );

@@ -17,13 +17,14 @@ type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
+  isReverification: boolean,
 ): Promise<AuthRequestBody> => {
   return {
     responseType: "code",
-    clientId: "orchestrator",
+    clientId: isReverification ? "stubAuth" : "orchestrator",
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
-    scope: "openid",
+    scope: isReverification ? "reverification" : "openid",
     request: await generateJar(session),
   };
 };
