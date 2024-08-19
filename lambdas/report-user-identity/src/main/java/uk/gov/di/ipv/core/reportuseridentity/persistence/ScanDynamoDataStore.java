@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.reportuseridentity.persistence;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -40,19 +38,11 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
     @ExcludeFromGeneratedCoverageReport
     private PageIterable<T> getTableScanResult(
             Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
-        try {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Scanning table with exclusiveStartKey as [%s]",
-                                    new ObjectMapper().writeValueAsString(exclusiveStartKey))));
-        } catch (JsonProcessingException e) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Parsing error while logging. Scanning table with exclusiveStartKey as [%s]",
-                                    exclusiveStartKey)));
-        }
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        String.format(
+                                "Scanning table with exclusiveStartKey as [%s]",
+                                exclusiveStartKey)));
         ScanEnhancedRequest.Builder builder =
                 ScanEnhancedRequest.builder()
                         .limit(PAGE_SIZE_LIMIT)

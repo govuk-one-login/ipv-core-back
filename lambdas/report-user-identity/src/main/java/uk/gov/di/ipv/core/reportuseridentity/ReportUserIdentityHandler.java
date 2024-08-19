@@ -47,6 +47,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final String USER_HASH = "user_hash";
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -118,10 +119,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Completed report processing for user's identities."));
-        } catch (HttpResponseExceptionWithErrorBody | CredentialParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Stopped report processing of user's identities.", e));
         } catch (BatchProcessingException e) {
             LOGGER.info(LogHelper.buildLogMessage("Error occurred during batch write process."));
         } catch (StopBeforeLambdaTimeoutException e) {
@@ -174,8 +171,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             ReportProcessingRequest reportProcessingRequest,
             ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
             Context context)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody,
-                    BatchProcessingException, StopBeforeLambdaTimeoutException {
+            throws BatchProcessingException, StopBeforeLambdaTimeoutException {
         if (reportProcessingRequest.continueUserIdentityScan()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -195,7 +191,11 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 List<ReportUserIdentityItem> reportUserIdentityItems =
                         new ArrayList<>(userIds.size());
                 for (String userId : userIds) {
-                    reportUserIdentityItems.add(evaluateUserIdentityDetail(userId));
+                    ReportUserIdentityItem reportUserIdentityItem =
+                            evaluateUserIdentityDetail(userId);
+                    if (reportUserIdentityItem != null) {
+                        reportUserIdentityItems.add(reportUserIdentityItem);
+                    }
                 }
                 LOGGER.info(
                         LogHelper.buildLogMessage(
@@ -213,38 +213,50 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         }
     }
 
-    private ReportUserIdentityItem evaluateUserIdentityDetail(String userId)
-            throws CredentialParseException, HttpResponseExceptionWithErrorBody {
-        var tacticalVcs = verifiableCredentialService.getVcs(userId);
-        if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("User VCs not correlated.")
-                            .with("user_hash", ReportUserIdentityItem.getUserHash(userId)));
-            return new ReportUserIdentityItem(
-                    userId,
-                    Vot.P0.name(),
-                    tacticalVcs.size(),
-                    reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                    false);
-        } else {
-            boolean anyVCsMigrated = tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
-            boolean allVCsMigrated = tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+    private ReportUserIdentityItem evaluateUserIdentityDetail(String userId) {
+        String userHash = ReportUserIdentityItem.getUserHash(userId);
+        try {
+            var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
-            if (anyVCsMigrated && !allVCsMigrated) {
-                LOGGER.warn(
-                        LogHelper.buildLogMessage("Not all VCs are migrated for this user.")
-                                .with("user_hash", ReportUserIdentityItem.getUserHash(userId)));
+            if (!userIdentityService.areVcsCorrelated(tacticalVcs)) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage("User VCs not correlated.")
+                                .with(USER_HASH, userHash));
+                return new ReportUserIdentityItem(
+                        userId,
+                        Vot.P0.name(),
+                        tacticalVcs.size(),
+                        reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                        false);
+            } else {
+                boolean anyVCsMigrated =
+                        tacticalVcs.stream().anyMatch(vc -> vc.getMigrated() != null);
+                boolean allVCsMigrated =
+                        tacticalVcs.stream().allMatch(vc -> vc.getMigrated() != null);
+
+                if (anyVCsMigrated && !allVCsMigrated) {
+                    LOGGER.warn(
+                            LogHelper.buildLogMessage("Not all VCs are migrated for this user.")
+                                    .with(USER_HASH, userHash));
+                }
+
+                return new ReportUserIdentityItem(
+                        userId,
+                        reportUserIdentityService
+                                .getStrongestAttainedVotForCredentials(tacticalVcs)
+                                .orElse(Vot.P0)
+                                .name(),
+                        tacticalVcs.size(),
+                        reportUserIdentityService.getIdentityConstituent(tacticalVcs),
+                        allVCsMigrated);
             }
-
-            return new ReportUserIdentityItem(
-                    userId,
-                    reportUserIdentityService
-                            .getStrongestAttainedVotForCredentials(tacticalVcs)
-                            .orElse(Vot.P0)
-                            .name(),
-                    tacticalVcs.size(),
-                    reportUserIdentityService.getIdentityConstituent(tacticalVcs),
-                    allVCsMigrated);
+        } catch (HttpResponseExceptionWithErrorBody | CredentialParseException ex) {
+            LOGGER.warn(
+                    LogHelper.buildErrorMessage(
+                                    "Exception while retrieving user VCs or vc having missing name.",
+                                    ex)
+                            .with(USER_HASH, userHash));
+            return null;
         }
     }
 
