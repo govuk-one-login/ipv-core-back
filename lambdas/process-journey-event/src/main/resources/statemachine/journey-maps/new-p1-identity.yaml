@@ -675,7 +675,7 @@ states:
         targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
-            targetState: MITIGATION_KBV_OPTIONS
+            targetState: MITIGATION_02_OPTIONS
             auditEvents:
               - IPV_MITIGATION_START
             auditContext:
