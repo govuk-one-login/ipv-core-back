@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.reportuseridentity.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Map;
@@ -12,6 +11,6 @@ import java.util.Map;
 @ExcludeFromGeneratedCoverageReport
 public record ReportProcessingResult(
         ReportSummary summary,
-        Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
-        Map<String, AttributeValue> userIdentitylastEvaluatedKey,
-        Map<String, AttributeValue> buildReportLastEvaluatedKey) {}
+        Map<String, Object> tacticalStoreLastEvaluatedKey,
+        Map<String, Object> userIdentitylastEvaluatedKey,
+        Map<String, Object> buildReportLastEvaluatedKey) {}

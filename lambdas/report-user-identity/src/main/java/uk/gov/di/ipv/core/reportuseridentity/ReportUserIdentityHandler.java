@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.helpers.DynamoDbHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -45,7 +46,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 60000;
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ObjectMapper objectMapper;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -55,14 +56,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     @SuppressWarnings({"java:S107"}) // Used by AWS
     public ReportUserIdentityHandler(
-            ObjectMapper objectMapper,
             ConfigService configService,
             UserIdentityService userIdentityService,
             VerifiableCredentialService verifiableCredentialService,
             ReportUserIdentityService reportUserIdentityService,
             ScanDynamoDataStore<VcStoreItem> vcStoreItemScanDynamoDataStore,
             ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore) {
-        this.objectMapper = objectMapper;
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.verifiableCredentialService = verifiableCredentialService;
@@ -73,7 +72,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     @SuppressWarnings({"unused", "java:S107"}) // Used by AWS
     public ReportUserIdentityHandler() {
-        this.objectMapper = new ObjectMapper();
         this.configService = ConfigService.create();
         this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
@@ -146,7 +144,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
             for (var page :
                     vcStoreItemScanDynamoDataStore.getScannedItemsPages(
-                            reportProcessingRequest.tacticalStoreLastEvaluatedKey(),
+                            DynamoDbHelper.marshallToLastEvaluatedKey(
+                                    reportProcessingRequest.tacticalStoreLastEvaluatedKey()),
                             ATTR_NAME_USER_ID)) {
 
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(
@@ -159,7 +158,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                                         usrId, null, null, null, null))
                                 .toList());
 
-                reportProcessingResult.tacticalStoreLastEvaluatedKey(page.lastEvaluatedKey());
+                reportProcessingResult.tacticalStoreLastEvaluatedKey(
+                        DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
 
                 checkLambdaRemainingExecutionTime(context);
             }
@@ -183,7 +183,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
             for (var page :
                     reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
-                            reportProcessingRequest.userIdentitylastEvaluatedKey(),
+                            DynamoDbHelper.marshallToLastEvaluatedKey(
+                                    reportProcessingRequest.userIdentitylastEvaluatedKey()),
                             ATTR_NAME_USER_ID)) {
                 var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
                 LOGGER.info(
@@ -202,7 +203,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                         + reportUserIdentityItems.size()));
                 reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
 
-                reportProcessingResult.userIdentitylastEvaluatedKey(page.lastEvaluatedKey());
+                reportProcessingResult.userIdentitylastEvaluatedKey(
+                        DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
 
                 checkLambdaRemainingExecutionTime(context);
             }
@@ -260,7 +262,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         Map<String, Long> mergedConstituteVCsTotal = Collections.emptyMap();
         for (var page :
                 reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
-                        reportProcessingRequest.buildReportLastEvaluatedKey())) {
+                        DynamoDbHelper.marshallToLastEvaluatedKey(
+                                reportProcessingRequest.buildReportLastEvaluatedKey()))) {
             var p2Identities =
                     page.items().stream()
                             .filter(ui -> Vot.P2.name().equals(ui.getIdentity()))
@@ -295,11 +298,12 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                     Collectors.toMap(
                                             Map.Entry::getKey, Map.Entry::getValue, Long::sum));
             previousConstituteVCsTotal = pageConstituteVCsTotal;
-            reportProcessingResult.buildReportLastEvaluatedKey(page.lastEvaluatedKey());
+            reportProcessingResult.buildReportLastEvaluatedKey(
+                    DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
 
             checkLambdaRemainingExecutionTime(context);
         }
-        reportProcessingResult.userIdentitylastEvaluatedKey(null);
+        reportProcessingResult.buildReportLastEvaluatedKey(null);
         reportProcessingResult.summary(
                 new ReportSummary(
                         totalP2Identities,

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
@@ -35,14 +34,12 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
     @ExcludeFromGeneratedCoverageReport
     public PageIterable<T> getScannedItemsPages(
             Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
-        return getTableScanResult(exclusiveStartKey, null, attributesToProject);
+        return getTableScanResult(exclusiveStartKey, attributesToProject);
     }
 
     @ExcludeFromGeneratedCoverageReport
     private PageIterable<T> getTableScanResult(
-            Map<String, AttributeValue> exclusiveStartKey,
-            Expression filterExpression,
-            String... attributesToProject) {
+            Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
         try {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -59,8 +56,7 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
         ScanEnhancedRequest.Builder builder =
                 ScanEnhancedRequest.builder()
                         .limit(PAGE_SIZE_LIMIT)
-                        .exclusiveStartKey(exclusiveStartKey)
-                        .filterExpression(filterExpression);
+                        .exclusiveStartKey(exclusiveStartKey);
 
         if (attributesToProject != null) {
             for (String attr : attributesToProject) {
