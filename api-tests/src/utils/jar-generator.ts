@@ -17,7 +17,7 @@ const encKey = await jose.importJWK(
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const generateJarRequest = async (
+export const generateJarPayload = async (
   session: IpvSessionDetails,
 ): Promise<JarRequest> => {
   const payloadData = JSON.parse(

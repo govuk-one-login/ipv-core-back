@@ -28,7 +28,7 @@ Feature: CIMIT - Enhanced verification
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my 'identity'
+    When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
   Scenario: CIMIT - Enhanced verification mitigation via DCMAW (separate session mitigation)
@@ -47,7 +47,7 @@ Feature: CIMIT - Enhanced verification
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my 'identity'
+    When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
   Scenario: CIMIT - Enhanced verification mitigation via F2F
@@ -60,5 +60,5 @@ Feature: CIMIT - Enhanced verification
     When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my 'identity'
+    When I use the OAuth response to get my identity
     Then I get a 'P2' identity

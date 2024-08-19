@@ -16,7 +16,7 @@ Feature: Reprove Identity Journey
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         When I start a new 'medium-confidence' journey with reprove identity
         Then I get a 'reprove-identity-start' page response

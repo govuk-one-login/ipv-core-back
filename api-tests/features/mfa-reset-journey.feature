@@ -16,7 +16,7 @@ Feature: MFA reset journey
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my 'identity'
+    When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
     # Start MFA Reset journey for existing user
@@ -28,5 +28,5 @@ Feature: MFA reset journey
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    When I use the OAuth response to get my 'MFA reset result'
-    Then I get a 'successful' MFA reset result
+    When I use the OAuth response to get my MFA reset result
+    Then I get a successful MFA reset result

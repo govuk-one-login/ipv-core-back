@@ -16,7 +16,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
@@ -37,7 +37,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'GivenName' is 'Ken'
 
@@ -54,7 +54,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
 
@@ -67,7 +67,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my address 'buildingNumber' is '28'
 
@@ -86,7 +86,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
@@ -106,7 +106,7 @@ Feature: Update details
         Then I get a 'page-ipv-success' page response
         When I submit a 'next' event
         Then I get an OAuth response
-        When I use the OAuth response to get my 'identity'
+        When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'streetName' is 'King Road'

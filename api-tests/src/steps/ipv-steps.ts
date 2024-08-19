@@ -194,7 +194,7 @@ Then("I get an OAuth response", function (this: World): void {
 });
 
 When(
-  /^I use the OAuth response to get my '(identity|MFA reset result)'$/,
+  /^I use the OAuth response to get my (identity|MFA reset result)$/,
   async function (
     this: World,
     result: "identity" | "MFA reset result",
@@ -306,7 +306,7 @@ Then(
 );
 
 Then(
-  /^I get a '(successful|unsuccessful)' MFA reset result$/,
+  /^I get a (successful|unsuccessful) MFA reset result$/,
   async function (this: World, expectedMfaResetResult: string): Promise<void> {
     if (!this.mfaResetResult) {
       throw new Error("No MFA reset result found.");
