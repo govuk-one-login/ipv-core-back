@@ -1,5 +1,5 @@
 import config from "../config/config.js";
-import { generateJar } from "./jar-generator.js";
+import { encryptJarRequest, generateJarRequest } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
@@ -17,15 +17,16 @@ type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
-  isReverification: boolean,
 ): Promise<AuthRequestBody> => {
+  const jarRequest = await generateJarRequest(session);
+
   return {
     responseType: "code",
-    clientId: isReverification ? "stubAuth" : "orchestrator",
+    clientId: jarRequest.client_id,
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
-    scope: isReverification ? "reverification" : "openid",
-    request: await generateJar(session),
+    scope: jarRequest.scope,
+    request: await encryptJarRequest(jarRequest),
   };
 };
 

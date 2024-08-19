@@ -36,8 +36,6 @@ const MAX_ATTEMPTS = 5;
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
-const REVERIFICATION = "reverification";
-
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
     return "none";
@@ -68,21 +66,17 @@ const startNewJourney = async (
   journeyType: string,
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
-  isReverification: boolean,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
   world.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody(
-      {
-        subject: world.userId,
-        journeyId: world.journeyId,
-        journeyType,
-        isReproveIdentity: !!reproveIdentity,
-        inheritedIdentityId,
-      },
-      isReverification,
-    ),
+    await generateInitialiseIpvSessionBody({
+      subject: world.userId,
+      journeyId: world.journeyId,
+      journeyType,
+      isReproveIdentity: !!reproveIdentity,
+      inheritedIdentityId,
+    }),
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
@@ -103,7 +97,6 @@ When(
       journeyType,
       !!reproveIdentity,
       inheritedIdentityId,
-      journeyType === REVERIFICATION,
     );
   },
 );
@@ -119,13 +112,7 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(
-        this,
-        journeyType,
-        false,
-        undefined,
-        journeyType === REVERIFICATION,
-      );
+      await startNewJourney(this, journeyType, false, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
