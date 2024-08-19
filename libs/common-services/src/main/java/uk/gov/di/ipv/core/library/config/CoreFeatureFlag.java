@@ -5,7 +5,6 @@ public enum CoreFeatureFlag implements FeatureFlag {
     RESET_IDENTITY("resetIdentity"),
     INHERITED_IDENTITY("inheritedIdentity"),
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
-    TICF_CRI_BETA("ticfCriBeta"),
     EVCS_WRITE_ENABLED("evcsWriteEnabled"),
     EVCS_ASYNC_WRITE_ENABLED("evcsAsyncWriteEnabled"),
     EVCS_READ_ENABLED("evcsReadEnabled"),
