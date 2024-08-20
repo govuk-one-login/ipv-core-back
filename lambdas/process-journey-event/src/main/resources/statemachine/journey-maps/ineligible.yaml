@@ -10,10 +10,10 @@ states:
   INELIGIBLE:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_ANOTHER_WAY
-        checkIfDisabled:
-          ticf:
-            targetState: ANOTHER_WAY_PAGE
+        targetState: ANOTHER_WAY_PAGE
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_ANOTHER_WAY
 
   INELIGIBLE_NO_TICF:
     events:
@@ -23,10 +23,10 @@ states:
   INELIGIBLE_SKIP_MESSAGE:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_RETURN_TO_RP
-        checkIfDisabled:
-          ticf:
-            targetState: RETURN_TO_RP
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_RETURN_TO_RP
 
   # Journey states
 

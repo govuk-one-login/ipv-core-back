@@ -7,10 +7,10 @@ states:
   START:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_F2F
-        checkIfDisabled:
-          ticf:
-            targetState: CRI_F2F
+        targetState: CRI_F2F
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_F2F
 
   # Parent states
   CRI_STATE:

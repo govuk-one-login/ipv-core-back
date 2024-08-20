@@ -120,10 +120,10 @@ states:
         checkType: FULL_NAME_AND_DOB
     events:
       coi-check-passed:
-        targetState: CRI_TICF
-        checkIfDisabled:
-          ticf:
-            targetState: RETURN_TO_RP
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

@@ -9,10 +9,10 @@ states:
   START:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_RETURN_TO_RP
-        checkIfDisabled:
-          ticf:
-            targetState: RETURN_TO_RP
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_RETURN_TO_RP
 
   # Journey states
 
