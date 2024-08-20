@@ -44,8 +44,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -124,8 +123,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                     userIdentityService.generateUserIdentity(
                             vcs, userId, achievedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
-
-            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
+            if (configService.enabled(TICF_CRI_BETA)
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
                 userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
             }
