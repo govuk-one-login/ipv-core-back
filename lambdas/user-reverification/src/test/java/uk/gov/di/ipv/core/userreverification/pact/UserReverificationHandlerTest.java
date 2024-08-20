@@ -5,8 +5,9 @@ import au.com.dius.pact.provider.junit5.PactVerificationContext;
 import au.com.dius.pact.provider.junit5.PactVerificationInvocationContextProvider;
 import au.com.dius.pact.provider.junitsupport.Provider;
 import au.com.dius.pact.provider.junitsupport.State;
+import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
+import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
-import au.com.dius.pact.provider.junitsupport.loader.PactFolder;
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -23,7 +24,6 @@ import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -42,15 +42,16 @@ import static org.mockito.Mockito.when;
 // - Comment out the @PactBroker annotation below
 // - Uncomment @PactFolder annotation below
 @Provider("IpvCoreBackReverificationProvider")
-// @PactBroker(
-//        url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
-//        authentication = @PactBrokerAuth(username = "${PACT_USER}", password =
-// "${PACT_PASSWORD}"))
-@PactFolder("pacts")
+@PactBroker(
+        url = "${PACT_URL}?testSource=${PACT_BROKER_SOURCE_SECRET_DEV}",
+        authentication = @PactBrokerAuth(username = "${PACT_USER}", password = "${PACT_PASSWORD}"))
+// @PactFolder("pacts")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UserReverificationHandlerTest {
     private static final String IPV_SESSION_ID = "mockIpvSessionId";
+    private static final String CLIENT_OAUTH_SESSION_ID = "mockClientOAuthSessionId";
+    private static final String REVERIFICATION_SCOPE = "reverification";
 
     private LambdaHttpServer httpServer;
 
@@ -58,7 +59,7 @@ public class UserReverificationHandlerTest {
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
     @Mock private ConfigService mockConfigService;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
-    @Mock private DataStore<SessionCredentialItem> mockSessionCredentialItemStore;
+    @Mock private SessionCredentialsService mockSessionCredentialsService;
 
     @PactBrokerConsumerVersionSelectors
     public static SelectorBuilder consumerVersionSelectors() {
@@ -75,15 +76,13 @@ public class UserReverificationHandlerTest {
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(mockOAuthSessionStore);
-        var sessionCredentialService =
-                new SessionCredentialsService(mockSessionCredentialItemStore);
 
         var handler =
                 new UserReverificationHandler(
                         ipvSessionService,
                         mockConfigService,
                         clientOAuthSessionDetailsService,
-                        sessionCredentialService);
+                        mockSessionCredentialsService);
 
         httpServer = new LambdaHttpServer(handler, "/reverification");
         httpServer.startServer();
@@ -106,10 +105,10 @@ public class UserReverificationHandlerTest {
         var oAuthSession = new ClientOAuthSessionItem();
         oAuthSession.setUserId("mockUserId");
         oAuthSession.setClientId("mockClientId");
-        oAuthSession.setGovukSigninJourneyId("mockGovukSigninJourneyId");
-        oAuthSession.setScope("reverification");
+        oAuthSession.setGovukSigninJourneyId(CLIENT_OAUTH_SESSION_ID);
+        oAuthSession.setScope(REVERIFICATION_SCOPE);
 
-        when(mockOAuthSessionStore.getItem("mockClientOAuthSessionId")).thenReturn(oAuthSession);
+        when(mockOAuthSessionStore.getItem(CLIENT_OAUTH_SESSION_ID)).thenReturn(oAuthSession);
         when(mockIpvSessionDataStore.getItemByIndex(
                         "accessToken", DigestUtils.sha256Hex("accessToken")))
                 .thenReturn(ipvSession);
