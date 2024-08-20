@@ -212,6 +212,21 @@ states:
           f2f:
             targetState: PYI_ESCAPE
 
+  MULTIPLE_DOC_F2F_NINO_CHECK_PAGE:
+    response:
+      type: page
+      context: nino
+      pageId: page-multiple-doc-check
+    events:
+      ukPassport:
+        targetState: CRI_UK_PASSPORT_J2
+      drivingLicence:
+        targetState: CRI_DRIVING_LICENCE_J3
+      nino:
+        targetState: NINO_START_PAGE
+      end:
+        targetState: F2F_PYI_POST_OFFICE
+
   PYI_ESCAPE:
     response:
       type: page
