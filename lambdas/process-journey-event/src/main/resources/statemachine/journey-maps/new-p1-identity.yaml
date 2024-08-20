@@ -541,9 +541,9 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
 
   # DWP KBV journey (J7)
   CRI_DWP_KBV_J7:
