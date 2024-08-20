@@ -115,10 +115,11 @@ public class UserReverificationHandlerTest {
     }
 
     @State("accessToken is a invalid access token")
-    /*
-    This method is empty as it doesn't set an access token in order to invoke a 403
-     */
-    public void dontSetAccessToken() {}
+    public void dontSetAccessToken() {
+        /*
+            This method is empty as it doesn't set an access token in order to invoke a 403
+        */
+    }
 
     @TestTemplate
     @ExtendWith(PactVerificationInvocationContextProvider.class)
