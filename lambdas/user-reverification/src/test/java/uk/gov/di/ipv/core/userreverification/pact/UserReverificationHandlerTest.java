@@ -115,7 +115,9 @@ public class UserReverificationHandlerTest {
     }
 
     @State("accessToken is a invalid access token")
-    // This method is empty as it doesn't set an access token in order to invoke a 403
+    /*
+    This method is empty as it doesn't set an access token in order to invoke a 403
+     */
     public void dontSetAccessToken() {}
 
     @TestTemplate
