@@ -191,15 +191,26 @@ class JourneyMapTest {
     @EnumSource
     void basicEventTargetStatesShouldExist(IpvJourneyTypes journeyType) throws IOException {
         var stateMachine = new StateMachineInitializer(journeyType).initialize();
-        var stateMachineKeys = stateMachine.keySet();
 
-        for (var targetKey : stateMachineKeys) {
-            var targetState = stateMachine.get(targetKey);
+        recursiveCheckTargetStatesExist(stateMachine, stateMachine.keySet());
+    }
+
+    private void recursiveCheckTargetStatesExist(Map<String, State> stateMachine, Set<String> stateNamesInScope) throws IOException {
+        var stateMachineKeys = stateMachine.keySet();
+        for (var stateNameToCheck : stateMachineKeys) {
+            var targetState = stateMachine.get(stateNameToCheck);
             if (targetState instanceof BasicState basicState) {
                 var events = basicState.getEvents();
                 for (var event : events.values()) {
-                    checkTargetStatesExist(event, stateMachineKeys);
+                    checkTargetStatesExist(event, stateNamesInScope);
                 }
+            } else if (targetState instanceof NestedJourneyInvokeState nestedState) {
+                var nestedStateMachine =
+                        nestedState.getNestedJourneyDefinition().getNestedJourneyStates();
+                var combinedStateNames = new HashSet<String>();
+                combinedStateNames.addAll(stateNamesInScope);
+                combinedStateNames.addAll(nestedStateMachine.keySet());
+                recursiveCheckTargetStatesExist(nestedStateMachine, combinedStateNames);
             }
         }
     }
