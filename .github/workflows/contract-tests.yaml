@@ -65,3 +65,9 @@ jobs:
         with:
           name: issue-client-access-token provider pact test report
           path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/issue-client-access-token/build/reports/tests/pactProviderTests/
+      - name: Upload user-reverification provider pact test report
+        if: ${{ !cancelled() && github.actor != 'dependabot[bot]' && github.event_name != 'merge_group' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: user-reverification provider pact test report
+          path: /home/runner/work/ipv-core-back/ipv-core-back/lambdas/user-reverification/build/reports/tests/pactProviderTests/
