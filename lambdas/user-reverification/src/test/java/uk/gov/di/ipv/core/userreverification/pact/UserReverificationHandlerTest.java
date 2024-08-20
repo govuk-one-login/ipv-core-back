@@ -114,6 +114,7 @@ public class UserReverificationHandlerTest {
                 .thenReturn(ipvSession);
     }
 
+    // This method is empty as it doesn't set an access token in order to invoke a 403
     @State("accessToken is a invalid access token")
     public void dontSetAccessToken() {}
 
