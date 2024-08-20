@@ -36,6 +36,7 @@ test {
 	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+	exclude 'uk/gov/di/ipv/core/userreverification/pact/**'
 }
 
 task pactProviderTests (type: Test) {
