@@ -309,7 +309,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                             .collect(
                                     Collectors.toMap(
                                             Map.Entry::getKey, Map.Entry::getValue, Long::sum));
-            previousConstituteVCsTotal = pageConstituteVCsTotal;
+            previousConstituteVCsTotal = mergedConstituteVCsTotal;
             reportProcessingResult.buildReportLastEvaluatedKey(
                     DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
 

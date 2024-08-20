@@ -299,6 +299,77 @@ class ReportUserIdentityHandlerTest {
         assertEquals(1, result.summary().constituentVcsTotal().get("fraud"));
     }
 
+    @Test
+    void shouldRunReportToGenerateUsersIdentity_andSkipStep1AndStep2() throws Exception {
+        // Arrange
+        inputStream =
+                ReportProcessingRequest.class.getResourceAsStream(
+                        "/testRequest_skipStep1And2.json");
+        when(mockContext.getRemainingTimeInMillis())
+                .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
+        // for step-3
+        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any()))
+                .thenReturn(mockReportUserIdentityPageIterable);
+        when(mockReportUserIdentityPageIterable.iterator())
+                .thenReturn(mockReportUserIdentityIterator)
+                .thenReturn(mockReportUserIdentityIterator)
+                .thenReturn(mockReportUserIdentityIterator);
+        when(mockReportUserIdentityIterator.hasNext())
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(true)
+                .thenReturn(false);
+        String userId2 = "urn:uuid:7fadacac-0d61-4786-aca3-8ef7934cb092";
+        List<ReportUserIdentityItem> totalIdentitiesPage1 =
+                List.of(
+                        new ReportUserIdentityItem(
+                                TEST_SUBJECT, "P2", 0, List.of("address,passport"), true),
+                        new ReportUserIdentityItem(userId2, "P2", 0, List.of("fraud"), false));
+        List<ReportUserIdentityItem> totalIdentitiesPage2 =
+                List.of(
+                        new ReportUserIdentityItem(
+                                "userId3", "P2", 0, List.of("address,passport"), true));
+        List<ReportUserIdentityItem> totalIdentitiesPage3 =
+                List.of(
+                        new ReportUserIdentityItem(
+                                "userId4", "P2", 0, List.of("address,passport"), true));
+        when(mockReportUserIdentityIterator.next())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage1)
+                                .build())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage2)
+                                .build())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage3)
+                                .build());
+        // Act
+        reportUserIdentityHandler.handleRequest(inputStream, outputStream, mockContext);
+        // Assert
+        ReportProcessingResult result = getReportProcessingResult();
+        Map<String, Object> tacticalStoreLastEvaluatedKey = result.tacticalStoreLastEvaluatedKey();
+        assertNull(tacticalStoreLastEvaluatedKey);
+        assertNull(result.userIdentitylastEvaluatedKey());
+        assertNotNull(result.summary());
+        long totalP2Identities =
+                totalIdentitiesPage1.stream()
+                                .filter(i -> Vot.P2.name().equals(i.getIdentity()))
+                                .count()
+                        + totalIdentitiesPage2.stream()
+                                .filter(i -> Vot.P2.name().equals(i.getIdentity()))
+                                .count()
+                        + +totalIdentitiesPage3.stream()
+                                .filter(i -> Vot.P2.name().equals(i.getIdentity()))
+                                .count();
+        assertEquals(totalP2Identities, result.summary().totalP2Identities());
+        assertEquals(3, result.summary().totalP2IdentitiesMigrated());
+        assertEquals(3, result.summary().constituentVcsTotal().get("address,passport"));
+        assertEquals(1, result.summary().constituentVcsTotal().get("fraud"));
+    }
+
     private ReportProcessingResult getReportProcessingResult() throws JsonProcessingException {
         return objectMapper.readValue(outputStream.toString(), ReportProcessingResult.class);
     }
