@@ -48,6 +48,6 @@ log4j = ["log4jApi", "log4jCore"]
 awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
-postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.7.1"
+postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.10"
 sonar = "org.sonarqube:5.1.0.4882"
 spotless = "com.diffplug.spotless:6.25.0"
