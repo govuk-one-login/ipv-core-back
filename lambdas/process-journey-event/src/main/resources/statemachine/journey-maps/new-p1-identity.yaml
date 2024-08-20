@@ -819,9 +819,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -833,9 +830,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE

@@ -9,10 +9,11 @@ states:
   START:
     events:
       next:
-        targetState: IDENTITY_REUSE_PAGE
+        targetState: CRI_TICF_BEFORE_REUSE
+        checkIfDisabled:
+          ticf:
+            targetState: IDENTITY_REUSE_PAGE
         checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_REUSE
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
 
@@ -39,10 +40,11 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       identity-stored:
-        targetState: IDENTITY_REUSE_PAGE
+        targetState: CRI_TICF_BEFORE_REUSE
+        checkIfDisabled:
+          ticf:
+            targetState: IDENTITY_REUSE_PAGE
         checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_REUSE
           deleteDetailsEnabled:
             targetState: IDENTITY_REUSE_PAGE_TEST
 
