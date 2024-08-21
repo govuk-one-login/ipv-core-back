@@ -14,11 +14,12 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
+import static java.util.Objects.requireNonNullElse;
+
 public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataStore<T> {
 
-    public static final String KEY_VALUE = "1";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int PAGE_SIZE_LIMIT = 50;
+    public static final int DEFAULT_PAGE_SIZE = 100;
 
     @ExcludeFromGeneratedCoverageReport
     public ScanDynamoDataStore(
@@ -30,14 +31,10 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public PageIterable<T> getScannedItemsPages(
-            Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
-        return getTableScanResult(exclusiveStartKey, attributesToProject);
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private PageIterable<T> getTableScanResult(
-            Map<String, AttributeValue> exclusiveStartKey, String... attributesToProject) {
+    public PageIterable<T> scan(
+            Map<String, AttributeValue> exclusiveStartKey,
+            Integer pageSize,
+            String... attributesToProject) {
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         String.format(
@@ -45,7 +42,7 @@ public class ScanDynamoDataStore<T extends PersistenceItem> extends DynamoDataSt
                                 exclusiveStartKey)));
         ScanEnhancedRequest.Builder builder =
                 ScanEnhancedRequest.builder()
-                        .limit(PAGE_SIZE_LIMIT)
+                        .limit(requireNonNullElse(pageSize, DEFAULT_PAGE_SIZE))
                         .exclusiveStartKey(exclusiveStartKey);
 
         if (attributesToProject != null) {

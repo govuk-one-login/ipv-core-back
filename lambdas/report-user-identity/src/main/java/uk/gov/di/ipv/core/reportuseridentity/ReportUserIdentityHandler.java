@@ -101,20 +101,26 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         LogHelper.attachComponentId(configService);
         LOGGER.info(LogHelper.buildLogMessage("Start processing report."));
 
-        ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult =
-                ReportProcessingResult.builder();
+        var reportProcessingResult = new ReportProcessingResult();
         try {
             ReportProcessingRequest reportProcessingRequest =
                     OBJECT_MAPPER.readValue(inputStream, ReportProcessingRequest.class);
 
             // Step-1
-            scanToExtractUniqueUserIdFromTacticalStore(
-                    reportProcessingRequest, reportProcessingResult, context);
+            if (reportProcessingRequest.continueUniqueUserScan()) {
+                scanToExtractUniqueUserIdFromTacticalStore(
+                        reportProcessingRequest, reportProcessingResult, context);
+            }
             // Step-2
-            processUsersToFindLOCAndUpdateDb(
-                    reportProcessingRequest, reportProcessingResult, context);
+            if (reportProcessingRequest.continueUserIdentityScan()) {
+                processUsersToFindLOCAndUpdateDb(
+                        reportProcessingRequest, reportProcessingResult, context);
+            }
             // Step-3
-            buildReportProcessingResult(reportProcessingRequest, reportProcessingResult, context);
+            if (reportProcessingRequest.generateReport()) {
+                buildReportProcessingResult(
+                        reportProcessingRequest, reportProcessingResult, context);
+            }
 
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -126,91 +132,84 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         } finally {
             LOGGER.info(LogHelper.buildLogMessage("Writing output with result summary."));
             OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
-            OBJECT_MAPPER.writeValue(outputStream, reportProcessingResult.build());
+            OBJECT_MAPPER.writeValue(outputStream, reportProcessingResult);
         }
     }
 
     private void scanToExtractUniqueUserIdFromTacticalStore(
             ReportProcessingRequest reportProcessingRequest,
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
+            ReportProcessingResult reportProcessingResult,
             Context context)
             throws BatchProcessingException, StopBeforeLambdaTimeoutException {
-        if (reportProcessingRequest.continueUniqueUserScan()) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
+        LOGGER.info(LogHelper.buildLogMessage("Retrieving userIds from tactical store db table."));
 
-            for (var page :
-                    vcStoreItemScanDynamoDataStore.getScannedItemsPages(
-                            DynamoDbHelper.marshallToLastEvaluatedKey(
-                                    reportProcessingRequest.tacticalStoreLastEvaluatedKey()),
-                            ATTR_NAME_USER_ID)) {
+        for (var page :
+                vcStoreItemScanDynamoDataStore.scan(
+                        DynamoDbHelper.marshallToLastEvaluatedKey(
+                                reportProcessingRequest.tacticalStoreLastEvaluatedKey()),
+                        reportProcessingRequest.pageSize(),
+                        ATTR_NAME_USER_ID)) {
 
-                reportUserIdentityScanDynamoDataStore.createOrUpdate(
-                        page.items().stream()
-                                .map(VcStoreItem::getUserId)
-                                .distinct()
-                                .map(
-                                        usrId ->
-                                                new ReportUserIdentityItem(
-                                                        usrId, null, null, null, null))
-                                .toList());
+            reportUserIdentityScanDynamoDataStore.createOrUpdate(
+                    page.items().stream()
+                            .map(VcStoreItem::getUserId)
+                            .distinct()
+                            .map(usrId -> new ReportUserIdentityItem(usrId, null, null, null, null))
+                            .toList());
 
-                reportProcessingResult.tacticalStoreLastEvaluatedKey(
-                        DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
+            reportProcessingResult.setTacticalStoreLastEvaluatedKey(
+                    DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
+            reportProcessingResult.addTacticalVcsEvaluated(page.items().size());
 
-                checkLambdaRemainingExecutionTime(context);
-            }
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Tactical storage scan completed to get unique users."));
-            reportProcessingResult.tacticalStoreLastEvaluatedKey(null);
+            checkLambdaRemainingExecutionTime(context);
         }
+        LOGGER.info(
+                LogHelper.buildLogMessage("Tactical storage scan completed to get unique users."));
+        reportProcessingResult.setTacticalStoreLastEvaluatedKey(null);
     }
 
     private void processUsersToFindLOCAndUpdateDb(
             ReportProcessingRequest reportProcessingRequest,
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
+            ReportProcessingResult reportProcessingResult,
             Context context)
             throws BatchProcessingException, StopBeforeLambdaTimeoutException {
-        if (reportProcessingRequest.continueUserIdentityScan()) {
+        LOGGER.info(
+                LogHelper.buildLogMessage(
+                        "Processing unique users to update their aggregate identities."));
+
+        for (var page :
+                reportUserIdentityScanDynamoDataStore.scan(
+                        DynamoDbHelper.marshallToLastEvaluatedKey(
+                                reportProcessingRequest.userIdentitylastEvaluatedKey()),
+                        reportProcessingRequest.pageSize(),
+                        ATTR_NAME_USER_ID)) {
+            var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            "Processing unique users to update their aggregate identities."));
-
-            for (var page :
-                    reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
-                            DynamoDbHelper.marshallToLastEvaluatedKey(
-                                    reportProcessingRequest.userIdentitylastEvaluatedKey()),
-                            ATTR_NAME_USER_ID)) {
-                var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                String.format(
-                                        "Checking user identity for total (%s) users.",
-                                        userIds.size())));
-                List<ReportUserIdentityItem> reportUserIdentityItems =
-                        new ArrayList<>(userIds.size());
-                for (String userId : userIds) {
-                    ReportUserIdentityItem reportUserIdentityItem =
-                            evaluateUserIdentityDetail(userId);
-                    if (reportUserIdentityItem != null) {
-                        reportUserIdentityItems.add(reportUserIdentityItem);
-                    }
+                            String.format(
+                                    "Checking user identity for total (%s) users.",
+                                    userIds.size())));
+            List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>(userIds.size());
+            for (String userId : userIds) {
+                ReportUserIdentityItem reportUserIdentityItem = evaluateUserIdentityDetail(userId);
+                if (reportUserIdentityItem != null) {
+                    reportUserIdentityItems.add(reportUserIdentityItem);
                 }
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "Updating processed user's identity.-"
-                                        + reportUserIdentityItems.size()));
-                reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
-
-                reportProcessingResult.userIdentitylastEvaluatedKey(
-                        DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
-
-                checkLambdaRemainingExecutionTime(context);
             }
-            LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
-            reportProcessingResult.userIdentitylastEvaluatedKey(null);
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Updating processed user's identity.-"
+                                    + reportUserIdentityItems.size()));
+            reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
+
+            reportProcessingResult.setUserIdentitylastEvaluatedKey(
+                    DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
+            reportProcessingResult.addUserIdentitiesEvaluated(page.items().size());
+
+            checkLambdaRemainingExecutionTime(context);
         }
+        LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
+        reportProcessingResult.setUserIdentitylastEvaluatedKey(null);
     }
 
     private ReportUserIdentityItem evaluateUserIdentityDetail(String userId) {
@@ -262,7 +261,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
 
     private void buildReportProcessingResult(
             ReportProcessingRequest reportProcessingRequest,
-            ReportProcessingResult.ReportProcessingResultBuilder reportProcessingResult,
+            ReportProcessingResult reportProcessingResult,
             Context context)
             throws StopBeforeLambdaTimeoutException {
         LOGGER.info(LogHelper.buildLogMessage("Building report processing summary result."));
@@ -273,9 +272,10 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         Map<String, Long> previousConstituteVCsTotal = Collections.emptyMap();
         Map<String, Long> mergedConstituteVCsTotal = Collections.emptyMap();
         for (var page :
-                reportUserIdentityScanDynamoDataStore.getScannedItemsPages(
+                reportUserIdentityScanDynamoDataStore.scan(
                         DynamoDbHelper.marshallToLastEvaluatedKey(
-                                reportProcessingRequest.buildReportLastEvaluatedKey()))) {
+                                reportProcessingRequest.buildReportLastEvaluatedKey()),
+                        reportProcessingRequest.pageSize())) {
             var p2Identities =
                     page.items().stream()
                             .filter(ui -> Vot.P2.name().equals(ui.getIdentity()))
@@ -310,13 +310,13 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                                     Collectors.toMap(
                                             Map.Entry::getKey, Map.Entry::getValue, Long::sum));
             previousConstituteVCsTotal = mergedConstituteVCsTotal;
-            reportProcessingResult.buildReportLastEvaluatedKey(
+            reportProcessingResult.setBuildReportLastEvaluatedKey(
                     DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
 
             checkLambdaRemainingExecutionTime(context);
         }
-        reportProcessingResult.buildReportLastEvaluatedKey(null);
-        reportProcessingResult.summary(
+        reportProcessingResult.setBuildReportLastEvaluatedKey(null);
+        reportProcessingResult.setSummary(
                 new ReportSummary(
                         totalP2Identities,
                         totalP2IdentitiesMigrated,
