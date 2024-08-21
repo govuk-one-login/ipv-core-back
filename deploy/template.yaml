@@ -14,35 +14,63 @@ Globals:
       Variables:
         AWS_LAMBDA_EXEC_WRAPPER: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - /opt/dynatrace
+            - !Ref AWS::NoValue
           - /opt/dynatrace
         DT_CONNECTION_AUTH_TOKEN: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !Ref AWS::NoValue
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_AUTH_TOKEN}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
         DT_CONNECTION_BASE_URL: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_BASE_URL}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !Ref AWS::NoValue
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CONNECTION_BASE_URL}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
         DT_CLUSTER_ID: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CLUSTER_ID}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !Ref AWS::NoValue
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_CLUSTER_ID}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
         DT_LOG_COLLECTION_AUTH_TOKEN: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_LOG_COLLECTION_AUTH_TOKEN}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !Ref AWS::NoValue
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_LOG_COLLECTION_AUTH_TOKEN}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
         DT_TENANT: !If
           - IsDevelopment
-          - !Ref AWS::NoValue
+          - !If
+            - IsPerfDev
+            - !Sub
+              - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_TENANT}}' # pragma: allowlist secret
+              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+            - !Ref AWS::NoValue
           - !Sub
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_TENANT}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
@@ -52,7 +80,10 @@ Globals:
         POWERTOOLS_TRACER_CAPTURE_ERROR: false
         CONFIG_SERVICE_CACHE_DURATION_MINUTES: !If
           - IsDevelopment
-          - 0
+          - !If
+            - IsPerfDev
+            - 3
+            - 0
           - 3
     CodeSigningConfigArn: !If
       - UseCodeSigning
@@ -65,9 +96,14 @@ Globals:
     Layers:
       - !If
         - IsDevelopment
-        - !Ref AWS::NoValue
+        - !If
+          - IsPerfDev
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !Ref AWS::NoValue
         - !Sub
-          - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
+          - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret
           - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
 
 Parameters:
@@ -103,6 +139,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
+  IsPerfDev: !Equals [ !Ref Environment, dev-perf ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
