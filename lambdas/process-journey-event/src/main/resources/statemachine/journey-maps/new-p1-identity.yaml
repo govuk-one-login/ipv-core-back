@@ -930,26 +930,6 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
-  # PYIC-7051 Remove once route changes have been live some time.
-  MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options
-      context: no-photo-id
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-
   PYI_POST_OFFICE:
     response:
       type: page
