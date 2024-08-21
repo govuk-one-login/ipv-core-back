@@ -195,7 +195,8 @@ class JourneyMapTest {
         recursiveCheckTargetStatesExist(stateMachine, stateMachine.keySet());
     }
 
-    private void recursiveCheckTargetStatesExist(Map<String, State> stateMachine, Set<String> stateNamesInScope) throws IOException {
+    private void recursiveCheckTargetStatesExist(
+            Map<String, State> stateMachine, Set<String> stateNamesInScope) throws IOException {
         var stateMachineKeys = stateMachine.keySet();
         for (var stateNameToCheck : stateMachineKeys) {
             var targetState = stateMachine.get(stateNameToCheck);
