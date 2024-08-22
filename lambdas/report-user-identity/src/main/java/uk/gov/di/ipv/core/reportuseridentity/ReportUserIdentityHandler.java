@@ -32,28 +32,31 @@ import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 60000;
     public static final String ATTR_NAME_USER_ID = "userId";
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final String USER_HASH = "user_hash";
+    private static final int IDENTITY_CHECK_PARALLELISM = 4;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final String USER_HASH = "user_hash";
+
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final ReportUserIdentityService reportUserIdentityService;
     private final ScanDynamoDataStore<VcStoreItem> vcStoreItemScanDynamoDataStore;
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
+    private final ForkJoinPool identityCheckPool;
 
     @SuppressWarnings({"java:S107"}) // Used by AWS
     public ReportUserIdentityHandler(
@@ -69,6 +72,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         this.reportUserIdentityService = reportUserIdentityService;
         this.vcStoreItemScanDynamoDataStore = vcStoreItemScanDynamoDataStore;
         this.reportUserIdentityScanDynamoDataStore = reportUserIdentityScanDynamoDataStore;
+        this.identityCheckPool = new ForkJoinPool(IDENTITY_CHECK_PARALLELISM);
     }
 
     @SuppressWarnings({"unused", "java:S107"}) // Used by AWS
@@ -91,6 +95,7 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         ReportUserIdentityItem.class,
                         DynamoDataStore.getClient(),
                         configService);
+        this.identityCheckPool = new ForkJoinPool(IDENTITY_CHECK_PARALLELISM);
     }
 
     @Override
@@ -125,6 +130,11 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Completed report processing for user's identities."));
+        } catch (ExecutionException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            LOGGER.error(LogHelper.buildErrorMessage("Parallel execution failed", e));
         } catch (BatchProcessingException e) {
             LOGGER.info(LogHelper.buildLogMessage("Error occurred during batch write process."));
         } catch (StopBeforeLambdaTimeoutException e) {
@@ -172,7 +182,8 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             ReportProcessingRequest reportProcessingRequest,
             ReportProcessingResult reportProcessingResult,
             Context context)
-            throws BatchProcessingException, StopBeforeLambdaTimeoutException {
+            throws BatchProcessingException, StopBeforeLambdaTimeoutException, InterruptedException,
+                    ExecutionException {
         LOGGER.info(
                 LogHelper.buildLogMessage(
                         "Processing unique users to update their aggregate identities."));
@@ -186,20 +197,23 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
             var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            String.format(
-                                    "Checking user identity for total (%s) users.",
-                                    userIds.size())));
-            List<ReportUserIdentityItem> reportUserIdentityItems = new ArrayList<>(userIds.size());
-            for (String userId : userIds) {
-                ReportUserIdentityItem reportUserIdentityItem = evaluateUserIdentityDetail(userId);
-                if (reportUserIdentityItem != null) {
-                    reportUserIdentityItems.add(reportUserIdentityItem);
-                }
-            }
+                            String.format("Checking user identity for %s users.", userIds.size())));
+
+            var reportUserIdentityItems =
+                    identityCheckPool
+                            .submit(
+                                    () ->
+                                            userIds.parallelStream()
+                                                    .map(this::evaluateUserIdentityDetail)
+                                                    .filter(Objects::nonNull)
+                                                    .toList())
+                            .get();
+
             LOGGER.info(
                     LogHelper.buildLogMessage(
-                            "Updating processed user's identity.-"
-                                    + reportUserIdentityItems.size()));
+                            String.format(
+                                    "Completed user identity checks for %s users.",
+                                    userIds.size())));
             reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
 
             reportProcessingResult.setUserIdentitylastEvaluatedKey(
