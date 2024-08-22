@@ -520,10 +520,10 @@ states:
       lambda: evaluate-gpg45-scores
     events:
       met:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_SUCCESS
+        targetState: CRI_TICF_BEFORE_SUCCESS
+        checkIfDisabled:
+          ticf:
+            targetState: STORE_IDENTITY_BEFORE_SUCCESS
       unmet:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

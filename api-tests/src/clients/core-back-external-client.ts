@@ -1,5 +1,9 @@
 import config from "../config/config.js";
-import { TokenResponse, UserIdentity } from "../types/external-api.js";
+import {
+  MfaResetResult,
+  TokenResponse,
+  UserIdentity,
+} from "../types/external-api.js";
 
 export const exchangeCodeForToken = async (
   tokenExchangeBody: string,
@@ -36,4 +40,21 @@ export const getIdentity = async (
   }
 
   return (await response.json()) as UserIdentity;
+};
+
+export const getMfaResetResult = async (
+  tokenResponse: TokenResponse,
+): Promise<MfaResetResult> => {
+  const response = await fetch(`${config.core.externalApiUrl}/reverification`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${tokenResponse.access_token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`getMfaResetResult request failed: ${response.statusText}`);
+  }
+
+  return (await response.json()) as MfaResetResult;
 };

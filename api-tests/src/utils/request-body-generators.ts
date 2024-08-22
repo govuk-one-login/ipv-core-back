@@ -1,5 +1,5 @@
 import config from "../config/config.js";
-import { generateJar } from "./jar-generator.js";
+import { encryptJarRequest, generateJarPayload } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
@@ -18,13 +18,15 @@ type JsonType = "credentialSubject" | "evidence";
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
 ): Promise<AuthRequestBody> => {
+  const jarPayload = await generateJarPayload(session);
+
   return {
     responseType: "code",
-    clientId: "orchestrator",
+    clientId: jarPayload.client_id,
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
-    scope: "openid",
-    request: await generateJar(session),
+    scope: jarPayload.scope,
+    request: await encryptJarRequest(jarPayload),
   };
 };
 

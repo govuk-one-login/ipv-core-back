@@ -114,6 +114,10 @@ When(
     while (attempt <= MAX_ATTEMPTS) {
       await startNewJourney(this, journeyType, false, undefined);
 
+      if (!this.lastJourneyEngineResponse) {
+        throw new Error("No last journey engine response found.");
+      }
+
       try {
         assert.ok(
           isPageResponse(this.lastJourneyEngineResponse),
@@ -136,6 +140,9 @@ When(
 Then(
   /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?$/,
   function (this: World, expectedPage: string, expectedContext: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -163,6 +170,10 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     assert.ok(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -172,6 +183,10 @@ Then(
 );
 
 Then("I get an OAuth response", function (this: World): void {
+  if (!this.lastJourneyEngineResponse) {
+    throw new Error("No last journey engine response found.");
+  }
+
   assert.ok(
     isClientResponse(this.lastJourneyEngineResponse),
     `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -184,8 +199,15 @@ Then("I get an OAuth response", function (this: World): void {
 });
 
 When(
-  "I use the OAuth response to get my identity",
-  async function (this: World): Promise<void> {
+  /^I use the OAuth response to get my (identity|MFA reset result)$/,
+  async function (
+    this: World,
+    result: "identity" | "MFA reset result",
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isClientResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a client response");
     }
@@ -194,11 +216,23 @@ When(
         this.lastJourneyEngineResponse.client.redirectUrl,
       ),
     );
-    this.identity = await externalClient.getIdentity(tokenResponse);
+
+    if (result === "identity") {
+      this.identity = await externalClient.getIdentity(tokenResponse);
+    }
+
+    if (result === "MFA reset result") {
+      this.mfaResetResult =
+        await externalClient.getMfaResetResult(tokenResponse);
+    }
   },
 );
 
 Then("I get a {string} identity", function (this: World, vot: string): void {
+  if (!this.identity) {
+    throw new Error("No identity found.");
+  }
+
   assert.equal(this.identity.vot, vot);
 });
 
@@ -230,6 +264,10 @@ Then(
 Then(
   "my identity {string} is {string}",
   function (this: World, field: NamePartType, value: string): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
     const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
       (np) => {
         return field === np.type;
@@ -243,6 +281,10 @@ Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
     const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
 
     const expectedAddresses = this.identity[addressCredential];
     assert.deepEqual(
@@ -264,6 +306,21 @@ Then(
       provenIdentity.nameParts,
       expectedNames,
       "Names do not match.",
+    );
+  },
+);
+
+Then(
+  /^I get a (successful|unsuccessful) MFA reset result$/,
+  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+    if (!this.mfaResetResult) {
+      throw new Error("No MFA reset result found.");
+    }
+
+    assert.equal(
+      this.mfaResetResult.success,
+      expectedMfaResetResult === "successful",
+      "MFA reset results do not match.",
     );
   },
 );

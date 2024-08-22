@@ -348,7 +348,6 @@ core:
     deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: false
-    ticfCriBeta: false
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
     evcsWriteEnabled: true
@@ -418,8 +417,6 @@ core:
       featureFlags:
         pendingF2FResetEnabled: true
     ticfCriBeta:
-      featureFlags:
-        ticfCriBeta: true
       credentialIssuers:
         ticf:
           enabled: true
