@@ -1,4 +1,5 @@
 {
   "continueUniqueUserScan": true,
-  "continueUserIdentityScan": true
+  "continueUserIdentityScan": true,
+  "generateReport": true
 }
