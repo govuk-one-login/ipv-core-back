@@ -135,7 +135,7 @@ When(
 
 Then(
   /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?$/,
-  function (this: World, expectedPage: string, expectedContext): void {
+  function (this: World, expectedPage: string, expectedContext: string): void {
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
