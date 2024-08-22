@@ -30,3 +30,10 @@ export interface UserIdentity {
 interface ReturnCode {
   code: string;
 }
+
+export interface MfaResetResult {
+  sub: string;
+  success: boolean;
+  errorDescription?: string;
+  errorCode?: string;
+}

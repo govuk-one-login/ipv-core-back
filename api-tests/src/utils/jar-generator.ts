@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { getRandomString } from "./random-string-generator.js";
 import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 import { IpvSessionDetails } from "./ipv-session.js";
+import { JarRequest } from "../types/jar-request.js";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -16,9 +17,9 @@ const encKey = await jose.importJWK(
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const generateJar = async (
+export const generateJarPayload = async (
   session: IpvSessionDetails,
-): Promise<string> => {
+): Promise<JarRequest> => {
   const payloadData = JSON.parse(
     await fs.readFile(
       path.join(
@@ -27,7 +28,8 @@ export const generateJar = async (
       ),
       "utf8",
     ),
-  );
+  ) as JarRequest;
+
   const payload = {
     ...payloadData,
     ...{
@@ -58,9 +60,12 @@ export const generateJar = async (
     ] = { values: [await createSignedJwt(inheritedIdentity)] };
   }
 
-  return await new jose.CompactEncrypt(
+  return payload;
+};
+
+export const encryptJarRequest = async (payload: JarRequest): Promise<string> =>
+  await new jose.CompactEncrypt(
     new TextEncoder().encode(await createSignedJwt(payload)),
   )
     .setProtectedHeader({ alg: encAlg, enc: encMethod })
     .encrypt(encKey);
-};
