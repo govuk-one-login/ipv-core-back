@@ -10,8 +10,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     EVCS_READ_ENABLED("evcsReadEnabled"),
     MFA_RESET("mfaResetEnabled"),
     P1_JOURNEYS_ENABLED("p1JourneysEnabled"),
-    SQS_ASYNC("sqsAsync"),
-    CIMIT_API_GATEWAY_ENABLED("cimitApiGatewayEnabled");
+    SQS_ASYNC("sqsAsync");
 
     private final String name;
 

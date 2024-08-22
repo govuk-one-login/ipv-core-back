@@ -12,7 +12,6 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -42,7 +41,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_SIGNING_KEY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.CIMIT_API_GATEWAY_ENABLED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.service.CiMitService.FAILED_API_REQUEST;
 import static uk.gov.di.ipv.core.library.service.CiMitService.GET_VCS_ENDPOINT;
@@ -58,11 +56,6 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_E
 class ContractTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock ConfigService mockConfigService;
-
-    @BeforeEach
-    void setUp() {
-        when(mockConfigService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-    }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact getCisUserIdReturnsContraIndicators(PactDslWithProvider builder) {
