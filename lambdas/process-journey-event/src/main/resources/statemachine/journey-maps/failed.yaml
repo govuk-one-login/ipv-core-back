@@ -50,7 +50,7 @@ states:
           successful: false
         checkFeatureFlag:
           ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
@@ -148,6 +148,25 @@ states:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+      enhanced-verification:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

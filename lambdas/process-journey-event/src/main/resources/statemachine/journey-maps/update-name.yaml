@@ -527,9 +527,25 @@ states:
       unmet:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
 
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:
