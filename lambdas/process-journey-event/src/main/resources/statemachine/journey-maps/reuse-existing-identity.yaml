@@ -126,6 +126,7 @@ states:
         targetState: IDENTITY_REUSE_PAGE
 
   UPDATE_DETAILS_PAGE:
+    journeyContext: reuse
     response:
       type: page
       pageId: update-details

@@ -24,7 +24,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_
 
 class StateMachineTest {
     private static final JourneyContext JOURNEY_CONTEXT =
-            new JourneyContext(mock(ConfigService.class));
+            new JourneyContext(mock(ConfigService.class), "");
 
     @Test
     void transitionShouldReturnAppropriateState() throws Exception {

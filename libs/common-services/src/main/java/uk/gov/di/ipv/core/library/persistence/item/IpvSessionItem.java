@@ -36,6 +36,7 @@ public class IpvSessionItem implements PersistenceItem {
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     private List<String> stateStack = new ArrayList<>();
+    private String journeyContext;
 
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
@@ -96,5 +97,9 @@ public class IpvSessionItem implements PersistenceItem {
     // target Vot.
     public Vot getThresholdVot() {
         return vot == Vot.P0 ? targetVot : vot;
+    }
+
+    public void setJourneyContext(String journeyContext) {
+        this.journeyContext = journeyContext;
     }
 }

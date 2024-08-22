@@ -40,6 +40,22 @@ states:
             auditContext:
               successful: false
 
+  FAILED_CONFIRM_DETAILS_WITH_DELETION:
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
+        checkFeatureFlag:
+          ticfCriBeta:
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+            auditEvents:
+              - IPV_USER_DETAILS_UPDATE_END
+            auditContext:
+              successful: false
+
   FAILED_UPDATE_DETAILS:
     events:
       next:
@@ -197,6 +213,15 @@ states:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
+    events:
+      end:
+        targetState: RETURN_TO_RP
+
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-details
+      context: deleteDetailsReuse
     events:
       end:
         targetState: RETURN_TO_RP

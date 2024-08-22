@@ -75,6 +75,38 @@ class BasicEventTest {
     }
 
     @Test
+    void resolveShouldReturnAlternativeStateIfJourneyContextIsSetAndIgnoreFeatureFlag()
+            throws Exception {
+        BasicEvent eventWithCheckFeatureFlagConfigured = new BasicEvent();
+        BasicState featureFlagTargetState = new BasicState();
+        eventWithCheckFeatureFlagConfigured.setTargetStateObj(featureFlagTargetState);
+
+        BasicEvent eventWithContextConfigured = new BasicEvent();
+        BasicState contextTargetState =
+                new BasicState("evtWithContext", "", "test-context", null, null, null, null);
+        eventWithContextConfigured.setTargetStateObj(contextTargetState);
+
+        BasicEvent defaultEvent = new BasicEvent();
+        defaultEvent.setTargetStateObj(
+                new BasicState("defaultEvent", "", "", null, null, null, null));
+
+        LinkedHashMap<String, Event> checkFeatureFlag = new LinkedHashMap<>();
+        checkFeatureFlag.put(
+                CoreFeatureFlag.UNUSED_PLACEHOLDER.getName(), eventWithCheckFeatureFlagConfigured);
+        defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
+
+        LinkedHashMap<String, Event> checkContext = new LinkedHashMap<>();
+        checkContext.put("test-context", eventWithContextConfigured);
+
+        defaultEvent.setCheckJourneyContext(checkContext);
+
+        var journeyContextWithName = new JourneyContext(mockConfigService, "test-context");
+        var result = defaultEvent.resolve(journeyContextWithName);
+
+        assertEquals(contextTargetState, result.state());
+    }
+
+    @Test
     void initializeShouldSetAttributes() {
         BasicEvent basicEvent = new BasicEvent();
         BasicState targetStateObj = new BasicState();
