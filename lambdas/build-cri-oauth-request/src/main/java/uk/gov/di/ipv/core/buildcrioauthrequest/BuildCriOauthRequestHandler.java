@@ -26,10 +26,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -69,6 +69,7 @@ import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
@@ -83,10 +84,11 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourneyParameter;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getLanguage;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<CriJourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
@@ -146,11 +148,12 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
+            String language = getLanguage(input);
             configService.setFeatureSet(getFeatureSet(input));
 
             var cri = getCriFromJourney(input.getJourneyUri().getPath());
@@ -196,7 +199,7 @@ public class BuildCriOauthRequestHandler
                             criEvidenceRequest,
                             targetVot);
 
-            CriResponse criResponse = getCriResponse(criConfig, jweObject, cri);
+            CriResponse criResponse = getCriResponse(criConfig, jweObject, cri, language);
 
             persistOauthState(ipvSessionItem, oauthState);
 
@@ -281,7 +284,8 @@ public class BuildCriOauthRequestHandler
         return null;
     }
 
-    private CriResponse getCriResponse(OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri)
+    private CriResponse getCriResponse(
+            OauthCriConfig oauthCriConfig, JWEObject jweObject, Cri cri, String language)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
@@ -291,6 +295,10 @@ public class BuildCriOauthRequestHandler
 
         if (cri.equals(DCMAW)) {
             redirectUri.addParameter("response_type", "code");
+        }
+
+        if (cri.equals(DWP_KBV)) {
+            redirectUri.addParameter("lng", language);
         }
 
         return new CriResponse(new CriDetails(cri.getId(), redirectUri.build().toString()));

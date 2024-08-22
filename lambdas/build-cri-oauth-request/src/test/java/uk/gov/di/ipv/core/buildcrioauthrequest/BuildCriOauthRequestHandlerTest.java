@@ -34,10 +34,10 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -89,6 +89,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
@@ -119,6 +120,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_LANGUAGE = "en";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/%s";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
@@ -278,9 +280,10 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
         // Arrange
         var input =
-                JourneyRequest.builder()
+                CriJourneyRequest.builder()
                         .ipvSessionId("aSessionId")
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey("nope")
                         .build();
 
@@ -296,10 +299,11 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
             throws JsonProcessingException {
         // Arrange
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId("aSessionId")
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, "bad"))
                         .build();
 
@@ -342,10 +346,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -427,10 +432,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -508,10 +514,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -590,10 +597,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -671,10 +679,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
                         .build();
 
@@ -724,9 +733,62 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
+            throws Exception {
+        // Arrange
+        when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
+        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
+                .thenReturn(dcmawOauthCriConfig);
+        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DWP_KBV.getId()))
+                .thenReturn(null);
+        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+                                        IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        TEST_USER_ID,
+                                        ADDRESS,
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+                                        IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
+                        .journey(String.format(JOURNEY_BASE_URL, DWP_KBV.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> lng =
+                queryParams.stream().filter(param -> param.getName().equals("lng")).findFirst();
+        assertTrue(lng.isPresent());
+        assertEquals(TEST_LANGUAGE, lng.get().getValue());
+    }
+
+    @Test
     void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
         // Arrange
-        JourneyRequest input = JourneyRequest.builder().journey(PASSPORT.getId()).build();
+        CriJourneyRequest input = CriJourneyRequest.builder().journey(PASSPORT.getId()).build();
 
         // Act
         var responseJson = handleRequest(input, context);
@@ -843,10 +905,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -908,10 +971,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -971,10 +1035,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -1058,10 +1123,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -1123,10 +1189,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -1195,10 +1262,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
                         .build();
 
@@ -1267,10 +1335,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
                         .build();
 
@@ -1341,10 +1410,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
                         .build();
 
@@ -1402,10 +1472,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
                         .build();
 
@@ -1458,10 +1529,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
                         .build();
 
@@ -1524,10 +1596,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
                         .build();
 
@@ -1576,10 +1649,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
 
-        JourneyRequest input =
-                JourneyRequest.builder()
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
                         .ipvSessionId(SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
                         .journey(String.format(JOURNEY_BASE_URL, journeyUri))
                         .build();
 
@@ -1663,7 +1737,7 @@ class BuildCriOauthRequestHandlerTest {
         return OBJECT_MAPPER.writeValueAsString(response);
     }
 
-    private String handleRequest(JourneyRequest event, Context context)
+    private String handleRequest(CriJourneyRequest event, Context context)
             throws JsonProcessingException {
         final var response = buildCriOauthRequestHandler.handleRequest(event, context);
         return getJsonResponse(OBJECT_MAPPER.convertValue(response, new TypeReference<>() {}));

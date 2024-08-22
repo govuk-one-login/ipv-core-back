@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.net.URI;
@@ -14,7 +14,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-@Builder
+@SuperBuilder
 public class JourneyRequest {
     private String ipvSessionId;
     private String ipAddress;
