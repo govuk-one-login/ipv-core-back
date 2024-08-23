@@ -41,13 +41,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNullElse;
+
 @ExcludeFromGeneratedCoverageReport
 public class ReportUserIdentityHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final int STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT = 60000;
     public static final String ATTR_NAME_USER_ID = "userId";
     private static final String USER_HASH = "user_hash";
-    private static final int IDENTITY_CHECK_PARALLELISM = 4;
+    private static final int DEFAULT_PARALLELISM = 4;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final ConfigService configService;
@@ -56,7 +58,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
     private final ReportUserIdentityService reportUserIdentityService;
     private final ScanDynamoDataStore<VcStoreItem> vcStoreItemScanDynamoDataStore;
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
-    private final ForkJoinPool identityCheckPool;
 
     @SuppressWarnings({"java:S107"}) // Used by AWS
     public ReportUserIdentityHandler(
@@ -72,7 +73,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
         this.reportUserIdentityService = reportUserIdentityService;
         this.vcStoreItemScanDynamoDataStore = vcStoreItemScanDynamoDataStore;
         this.reportUserIdentityScanDynamoDataStore = reportUserIdentityScanDynamoDataStore;
-        this.identityCheckPool = new ForkJoinPool(IDENTITY_CHECK_PARALLELISM);
     }
 
     @SuppressWarnings({"unused", "java:S107"}) // Used by AWS
@@ -95,7 +95,6 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         ReportUserIdentityItem.class,
                         DynamoDataStore.getClient(),
                         configService);
-        this.identityCheckPool = new ForkJoinPool(IDENTITY_CHECK_PARALLELISM);
     }
 
     @Override
@@ -160,16 +159,24 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                         reportProcessingRequest.pageSize(),
                         ATTR_NAME_USER_ID)) {
 
-            reportUserIdentityScanDynamoDataStore.createOrUpdate(
+            var userRecords =
                     page.items().stream()
                             .map(VcStoreItem::getUserId)
                             .distinct()
                             .map(usrId -> new ReportUserIdentityItem(usrId, null, null, null, null))
-                            .toList());
+                            .toList();
+
+            reportUserIdentityScanDynamoDataStore.createOrUpdate(userRecords);
 
             reportProcessingResult.setTacticalStoreLastEvaluatedKey(
                     DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
             reportProcessingResult.addTacticalVcsEvaluated(page.items().size());
+
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            String.format(
+                                    "Scanned %s VCs and found %s unique users",
+                                    page.items().size(), userRecords.size())));
 
             checkLambdaRemainingExecutionTime(context);
         }
@@ -188,40 +195,51 @@ public class ReportUserIdentityHandler implements RequestStreamHandler {
                 LogHelper.buildLogMessage(
                         "Processing unique users to update their aggregate identities."));
 
-        for (var page :
-                reportUserIdentityScanDynamoDataStore.scan(
-                        DynamoDbHelper.marshallToLastEvaluatedKey(
-                                reportProcessingRequest.userIdentitylastEvaluatedKey()),
-                        reportProcessingRequest.pageSize(),
-                        ATTR_NAME_USER_ID)) {
-            var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format("Checking user identity for %s users.", userIds.size())));
+        var forkJoinPool =
+                new ForkJoinPool(
+                        requireNonNullElse(
+                                reportProcessingRequest.parallelism(), DEFAULT_PARALLELISM));
 
-            var reportUserIdentityItems =
-                    identityCheckPool
-                            .submit(
-                                    () ->
-                                            userIds.parallelStream()
-                                                    .map(this::evaluateUserIdentityDetail)
-                                                    .filter(Objects::nonNull)
-                                                    .toList())
-                            .get();
+        try {
+            for (var page :
+                    reportUserIdentityScanDynamoDataStore.scan(
+                            DynamoDbHelper.marshallToLastEvaluatedKey(
+                                    reportProcessingRequest.userIdentitylastEvaluatedKey()),
+                            reportProcessingRequest.pageSize(),
+                            ATTR_NAME_USER_ID)) {
+                var userIds = page.items().stream().map(ReportUserIdentityItem::getUserId).toList();
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Checking user identity for %s users.", userIds.size())));
 
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            String.format(
-                                    "Completed user identity checks for %s users.",
-                                    userIds.size())));
-            reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
+                var reportUserIdentityItems =
+                        forkJoinPool
+                                .submit(
+                                        () ->
+                                                userIds.parallelStream()
+                                                        .map(this::evaluateUserIdentityDetail)
+                                                        .filter(Objects::nonNull)
+                                                        .toList())
+                                .get();
 
-            reportProcessingResult.setUserIdentitylastEvaluatedKey(
-                    DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
-            reportProcessingResult.addUserIdentitiesEvaluated(page.items().size());
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                String.format(
+                                        "Completed user identity checks for %s users.",
+                                        userIds.size())));
+                reportUserIdentityScanDynamoDataStore.createOrUpdate(reportUserIdentityItems);
 
-            checkLambdaRemainingExecutionTime(context);
+                reportProcessingResult.setUserIdentitylastEvaluatedKey(
+                        DynamoDbHelper.unmarshallLastEvaluatedKey(page.lastEvaluatedKey()));
+                reportProcessingResult.addUserIdentitiesEvaluated(page.items().size());
+
+                checkLambdaRemainingExecutionTime(context);
+            }
+        } finally {
+            forkJoinPool.shutdown();
         }
+
         LOGGER.info(LogHelper.buildLogMessage("User identity check scan completed."));
         reportProcessingResult.setUserIdentitylastEvaluatedKey(null);
     }

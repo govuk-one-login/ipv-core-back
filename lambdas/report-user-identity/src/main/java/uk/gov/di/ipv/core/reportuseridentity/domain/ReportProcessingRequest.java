@@ -12,4 +12,5 @@ public record ReportProcessingRequest(
         Map<String, Object> tacticalStoreLastEvaluatedKey,
         Map<String, Object> userIdentitylastEvaluatedKey,
         Map<String, Object> buildReportLastEvaluatedKey,
-        Integer pageSize) {}
+        Integer pageSize,
+        Integer parallelism) {}

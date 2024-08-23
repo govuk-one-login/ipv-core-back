@@ -78,6 +78,7 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
@@ -851,6 +852,11 @@ public class CheckExistingIdentityHandler
                     gpg45Credentials.add(vc);
                 }
             }
+            LOGGER.info(
+                    LogHelper.buildLogMessage("GPG45 profile has been met.")
+                            .with(
+                                    LOG_GPG45_PROFILE.getFieldName(),
+                                    matchedGpg45Profile.get().getLabel()));
             sendProfileMatchedAuditEvent(
                     matchedGpg45Profile.get(),
                     gpg45Scores,
