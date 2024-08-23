@@ -93,7 +93,6 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "130355686670"]
     - !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670"]
-  IsDev02: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsSubscriptionEnviroment: !Or
@@ -189,16 +188,16 @@ Resources:
       DomainName: !If
         - IsDev01
         - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
             - IsDev01
             - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
-            - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+            - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
           HostedZoneId: !If
             - IsDev01
             - !ImportValue Dev01IdentityHostedZoneId
-            - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
+            - !ImportValue Dev02IdentityHostedZoneId
       ValidationMethod: DNS
 
   # dns rcord
@@ -210,11 +209,11 @@ Resources:
       Name: !If
         - IsDev01
         - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       HostedZoneId: !If
         - IsDev01
         - !ImportValue Dev01IdentityHostedZoneId
-        - !If [IsDev02, !ImportValue Dev02IdentityHostedZoneId, DevIdentityHostedZoneId]
+        - !ImportValue Dev02IdentityHostedZoneId
       AliasTarget:
         DNSName: !GetAtt DevApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt DevApiDomain.RegionalHostedZoneId
@@ -227,7 +226,7 @@ Resources:
       DomainName: !If
         - IsDev01
         - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref DevSSLCert
           EndpointType: REGIONAL
@@ -240,7 +239,7 @@ Resources:
       DomainName: !If
         - IsDev01
         - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
-        - !If [IsDev02, !Sub "api-${Environment}.02.dev.identity.account.gov.uk", !Ref AWS::NoValue]
+        - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
       Stage: !Ref IPVCoreExternalAPI.Stage
     DependsOn:
@@ -2847,7 +2846,6 @@ Resources:
       OKActions:
         - !ImportValue alarm-alerts-topic
       InsufficientDataActions: []
-      Dimensions: []
       EvaluationPeriods: 5
       DatapointsToAlarm: 2
       Threshold: 2500
