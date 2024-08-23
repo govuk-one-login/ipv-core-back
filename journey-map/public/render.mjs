@@ -277,8 +277,7 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
         const { transitionsMermaid, states } = renderTransitions(allNestedJourneyStates, formData, true);
 
         const { statesMermaid } = renderNestedJourneyStates(allNestedJourneyStates);
-        console.log("statesMermaid: ", statesMermaid)
-        console.log("transitionsMermaid: ", transitionsMermaid)
+
         const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
         // These styles should be kept in sync with the key in style.css
         const mermaid =
@@ -292,7 +291,7 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
             ${statesMermaid}
             ${transitionsMermaid}
             `;
-        console.log(mermaid)
+
         return mermaid;
     } else {
         // Copy to avoid mutating the input
@@ -301,7 +300,6 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
         if (formData.getAll('otherOption').includes('expandNestedJourneys')) {
             expandNestedJourneys(journeyMapCopy.states, nestedJourneys, formData);
         }
-        console.log("expanded nested journeys ", journeyMapCopy.states)
         expandParents(journeyMapCopy.states);
 
         const { transitionsMermaid, states } = formData.getAll('otherOption').includes('onlyOrphanStates')
@@ -309,8 +307,6 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
             : renderTransitions(journeyMapCopy.states, formData, false);
 
         const { statesMermaid } = renderStates(journeyMapCopy, states);
-        console.log("statesMermaid: ", statesMermaid)
-        console.log("transitionsMermaid: ", transitionsMermaid)
 
         const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
 
@@ -326,7 +322,7 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
             ${statesMermaid}
             ${transitionsMermaid}
             `;
-        console.log(mermaid)
+
         return mermaid;
     }
 };
