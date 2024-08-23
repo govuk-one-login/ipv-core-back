@@ -133,8 +133,15 @@ const renderTransitions = (journeyStates, formData) => {
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
             const { targetJourney, targetState, exitEventToEmit } = resolveEventTarget(def, formData);
-            // TODO: better way of specifying exit event?
-            const target = targetJourney ? `${targetJourney}__${targetState}` : (targetState ?? "EXIT");
+
+            let target;
+            if (exitEventToEmit) {
+                // An exitEventToEmit is only present in nested journeys. Events wth this target always end at
+                // the EXIT state in the nested journey map
+                target = "EXIT";
+            } else {
+                target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
+            }
 
             if (errorJourneys.includes(targetJourney) &&
                 !formData.getAll('otherOption').includes('includeErrors')) {
@@ -176,8 +183,14 @@ const renderTransitions = (journeyStates, formData) => {
 };
 
 const renderClickHandler = (state, definition) => {
+    if (definition.nestedJourney) {
+        definition.response = {
+            type: "nestedJourney",
+            ...definition
+        }
+    }
     // Click handler serializes the definition to Base64-encoded JSON to avoid escaping issues
-    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify({response: definition.response ?? {}, nestedJourney: definition.nestedJourney ?? null}))})`;
+    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify( definition.response ?? {}))})`;
 };
 
 const renderState = (state, definition) => {
@@ -220,16 +233,15 @@ const renderStates = (journeyMap, states) => {
 
 // TODO: can this be combined with the existing renderStates method?
 const renderNestedJourneyStates = (nestedJourneyStates) => {
-    const mermaids = [];
-
-    mermaids.push(...Object.keys(nestedJourneyStates).flatMap((state) => {
+    const mermaids = Object.keys(nestedJourneyStates).flatMap((state) => {
         const definition = nestedJourneyStates[state];
         const stateLabel = state === 'entryEvents' ? "ENTRY" : state;
         return [
             renderState(stateLabel, definition),
             renderClickHandler(stateLabel, definition)
         ]
-    }))
+    });
+
     mermaids.push([
         renderState("EXIT", {})
     ])

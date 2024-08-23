@@ -4,6 +4,8 @@ import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
+const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
+const JOURNEY_TYPE_SEARCH_PARAM = 'journeyType';
 
 const JOURNEY_TYPES = {
     INITIAL_JOURNEY_SELECTION: 'Initial journey selection',
@@ -101,13 +103,15 @@ const getPageUrl = (id, context) => {
     return context ? `${baseUrl}?context=${encodeURIComponent(context)}` : baseUrl;
 }
 
-const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
+const getJourneyUrl = (id) => `?${JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
+
+const getNestedJourneyUrl = (id) => `?${NESTED_JOURNEY_TYPES}=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
     const params = new URLSearchParams(window.location.search);
-    params.delete('nestedJourneyType');
-    params.set('journeyType', targetJourney);
+    params.delete(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
+    params.set(JOURNEY_TYPE_SEARCH_PARAM, targetJourney);
     window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
@@ -126,7 +130,7 @@ const switchJourney = async (targetJourney, targetState) => {
 const switchToNestedJourney = async (targetNestedJourney) => {
     // Update URL
     const params = new URLSearchParams(window.location.search);
-    params.set('nestedJourneyType', targetNestedJourney);
+    params.set(NESTED_JOURNEY_TYPE_SEARCH_PARAM, targetNestedJourney);
     window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
@@ -138,7 +142,7 @@ const switchToNestedJourney = async (targetNestedJourney) => {
 }
 
 const setupHeader = () => {
-    // Add header entries for most common journies
+    // Add header entries for most common journeys
     COMMON_JOURNEY_TYPES.forEach(id => {
         const link = document.createElement('a');
         link.href = getJourneyUrl(id);
@@ -212,20 +216,19 @@ const setupOtherOptions = () => {
 }
 
 const updateView = async () => {
+    const formData = new FormData(form);
     const selectedNestedJourney = new URLSearchParams(window.location.search).get('nestedJourneyType');
     if (selectedNestedJourney) {
-        const formData = new FormData(form);
+        journeyName.innerText = `${NESTED_JOURNEY_TYPES[selectedNestedJourney]} nested journey`;
+        journeyDesc.innerText = `This is the route of the ${NESTED_JOURNEY_TYPES[selectedNestedJourney].toLowerCase()} nested journey. It starts via an entry event specified in the main user journey and emits an exit event.`;
+
         return renderSvg(selectedNestedJourney, formData);
     } else {
         const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
         journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
+
         const desc = journeyMaps[selectedJourney].description;
-        const formData = new FormData(form);
-        if (desc && formData.has('showJourneyDesc')) {
-            journeyDesc.innerText = desc;
-        } else {
-            journeyDesc.innerText = '';
-        }
+
         journeySelect.value = selectedJourney;
         journeyDesc.innerText = desc || '';
         return renderSvg(selectedJourney, formData);
@@ -267,18 +270,18 @@ const highlightState = (state) => {
 
 // Set up the click handlers that mermaid binds to each node
 const setupMermaidClickHandlers = () => {
-    const getDesc = (def) => {
-        switch(def.type) {
+    const getDesc = (response) => {
+        switch(response.type) {
             case 'process':
-                return `Process node executing the '${def.lambda}' lambda.`;
+                return `Process node executing the '${response.lambda}' lambda.`;
             case 'page':
-                return `Page node displaying the \'${def.pageId}\' screen in IPV Core.`;
+                return `Page node displaying the \'${response.pageId}\' screen in IPV Core.`;
             case 'cri':
-                return `CRI node routing to the ${CRI_NAMES[def.criId] || `'${def.criId}' CRI`}.`;
+                return `CRI node routing to the ${CRI_NAMES[response.criId] || `'${response.criId}' CRI`}.`;
             case 'journeyTransition':
-                return `Journey transition to the ${def.targetJourney} journey type (${def.targetState}).`
+                return `Journey transition to the ${response.targetJourney} journey type (${response.targetState}).`;
             case 'nestedJourney':
-                return `TODO: Journey node displaying the {nestedJourney}.`
+                return `Node representing the ${response.nestedJourney} nested journey.`;
             default:
                 return '';
         }
@@ -289,12 +292,12 @@ const setupMermaidClickHandlers = () => {
 
         // Clicking a node twice opens the link
         if (selectedState === state) {
-            if (def.response?.pageId) {
-                window.open(getPageUrl(def.response.pageId, def.response.context), '_blank');
+            if (def.pageId) {
+                window.open(getPageUrl(def.pageId, def.context), '_blank');
                 return;
             }
-            if (def.response?.targetJourney) {
-                await switchJourney(def.response.targetJourney, def.response.targetState);
+            if (def.targetJourney) {
+                await switchJourney(def.targetJourney, def.targetState);
                 return;
             }
             if (def.nestedJourney) {
@@ -307,24 +310,37 @@ const setupMermaidClickHandlers = () => {
         highlightState(state);
         nodeTitle.innerText = state;
         nodeDesc.innerHTML = '';
-        nodeDef.innerText = JSON.stringify(def.response, undefined, 2);
+        nodeDef.innerText = JSON.stringify(def, undefined, 2);
         const desc = document.createElement('p');
-        desc.innerText = getDesc(def.response);
+        desc.innerText = getDesc(def);
         nodeDesc.append(desc);
-        if (def.response?.pageId) {
+
+        if (def.nestedJourney) {
+            const link = document.createElement('a');
+            link.innerText = 'Click here to view the nested journey';
+            link.href = getNestedJourneyUrl(def.nestedJourney);
+            link.onclick = async (e) => {
+                e.preventDefault();
+                await switchToNestedJourney(def.nestedJourney);
+            }
+            nodeDesc.append(link);
+        }
+
+        if (def.pageId) {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the page in build';
-            link.href = getPageUrl(def.response.pageId, def.context);
+            link.href = getPageUrl(def.pageId, def.context);
             link.target = '_blank';
             nodeDesc.append(link);
         }
-        if (def.response?.type === 'journeyTransition') {
+
+        if (def.type === 'journeyTransition') {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the journey';
-            link.href = getJourneyUrl(def.response.targetJourney);
+            link.href = getJourneyUrl(def.targetJourney);
             link.onclick = async (e) => {
                 e.preventDefault();
-                await switchJourney(def.response.targetJourney, def.targetState);
+                await switchJourney(def.targetJourney, def.targetState);
             }
             nodeDesc.append(link);
         }
