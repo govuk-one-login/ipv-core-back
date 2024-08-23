@@ -73,7 +73,7 @@ When(
 );
 
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub which had request attributes$/,
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub and see requested attributes$/,
   async function (
     this: World,
     expired: "expired " | undefined,
