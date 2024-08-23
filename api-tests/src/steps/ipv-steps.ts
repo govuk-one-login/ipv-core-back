@@ -66,6 +66,7 @@ const startNewJourney = async (
   journeyType: string,
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
+  featureSet: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
@@ -74,29 +75,32 @@ const startNewJourney = async (
       subject: world.userId,
       journeyId: world.journeyId,
       journeyType,
-      isReproveIdentity: !!reproveIdentity,
+      isReproveIdentity: reproveIdentity,
       inheritedIdentityId,
     }),
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
     world.ipvSessionId,
+    featureSet,
   );
 };
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?$/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
     inheritedIdentityId: string | undefined,
+    featureSet: string | undefined,
   ): Promise<void> {
     await startNewJourney(
       this,
       journeyType,
       !!reproveIdentity,
       inheritedIdentityId,
+      featureSet,
     );
   },
 );
@@ -112,7 +116,7 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, false, undefined, undefined);
 
       try {
         assert.ok(
@@ -145,11 +149,16 @@ Then(
 );
 
 When(
-  "I submit a(n) {string} event",
-  async function (this: World, event: string): Promise<void> {
+  /^I submit (?:a|an) '(.*?)' event(?: with feature set '(.*?)')?$/,
+  async function (
+    this: World,
+    event: string,
+    featureSet: string | undefined,
+  ): Promise<void> {
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       event,
       this.ipvSessionId,
+      featureSet,
     );
   },
 );

@@ -25,5 +25,8 @@ export interface CriStubRequest {
 
 export interface CriStubResponse {
   redirectUri: string;
-  jarPayload?: object;
+  jarPayload?: {
+    context?: string;
+    evidence_requested?: { strength?: number; validity?: number };
+  };
 }

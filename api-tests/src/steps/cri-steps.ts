@@ -1,4 +1,4 @@
-import { When } from "@cucumber/cucumber";
+import { DataTable, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
@@ -13,6 +13,7 @@ import {
   isJourneyResponse,
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
+import assert from "assert";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 
@@ -40,7 +41,10 @@ const submitAndProcessCriAction = async (
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     journeyResponse.journey,
     world.ipvSessionId,
+    undefined,
   );
+
+  return criStubResponse.jarPayload;
 };
 
 When(
@@ -65,6 +69,46 @@ When(
         !!async,
       ),
     );
+  },
+);
+
+When(
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub which had request attributes$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    scenario: string,
+    async: "async " | undefined,
+    dataTable: DataTable | undefined,
+  ): Promise<void> {
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
+        !!async,
+      ),
+    );
+
+    if (jarPayload && dataTable?.rows) {
+      dataTable.rows().forEach(([key, expected]) => {
+        const actual = JSON.stringify(
+          jarPayload[key as keyof typeof jarPayload],
+        );
+
+        assert.equal(
+          actual,
+          expected,
+          `Value for ${key} sent to CRI should be ${expected} but was ${actual}`,
+        );
+      });
+    }
   },
 );
 
