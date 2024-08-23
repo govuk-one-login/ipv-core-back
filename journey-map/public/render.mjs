@@ -176,11 +176,8 @@ const renderTransitions = (journeyStates, formData) => {
 };
 
 const renderClickHandler = (state, definition) => {
-    if (!definition.response) {
-        definition.response = {};
-    }
     // Click handler serializes the definition to Base64-encoded JSON to avoid escaping issues
-    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify(definition.response))})`;
+    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify({response: definition.response ?? {}, nestedJourney: definition.nestedJourney ?? null}))})`;
 };
 
 const renderState = (state, definition) => {

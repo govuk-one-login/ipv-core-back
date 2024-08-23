@@ -106,6 +106,7 @@ const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
     const params = new URLSearchParams(window.location.search);
+    params.delete('nestedJourneyType');
     params.set('journeyType', targetJourney);
     window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
@@ -121,6 +122,20 @@ const switchJourney = async (targetJourney, targetState) => {
     nodeDef.innerHTML = "";
     nodeDesc.innerHTML = "";
 };
+
+const switchToNestedJourney = async (targetNestedJourney) => {
+    // Update URL
+    const params = new URLSearchParams(window.location.search);
+    params.set('nestedJourneyType', targetNestedJourney);
+    window.history.pushState(undefined, undefined, `?${params.toString()}`);
+
+    // Update journey map graph
+    await updateView();
+
+    nodeTitle.innerText = targetNestedJourney;
+    nodeDef.innerHTML = "";
+    nodeDesc.innerHTML = "";
+}
 
 const setupHeader = () => {
     // Add header entries for most common journies
@@ -274,17 +289,16 @@ const setupMermaidClickHandlers = () => {
 
         // Clicking a node twice opens the link
         if (selectedState === state) {
-            if (def.pageId) {
-                window.open(getPageUrl(def.pageId, def.context), '_blank');
+            if (def.response?.pageId) {
+                window.open(getPageUrl(def.response.pageId, def.response.context), '_blank');
                 return;
             }
-            if (def.targetJourney) {
-                await switchJourney(def.targetJourney, def.targetState);
+            if (def.response?.targetJourney) {
+                await switchJourney(def.response.targetJourney, def.response.targetState);
                 return;
             }
             if (def.nestedJourney) {
-                // TODO: switch to nested journey diagram
-                await switchJourney(def.nestedJourney, null)
+                await switchToNestedJourney(def.nestedJourney)
                 return
             }
         }
@@ -293,24 +307,24 @@ const setupMermaidClickHandlers = () => {
         highlightState(state);
         nodeTitle.innerText = state;
         nodeDesc.innerHTML = '';
-        nodeDef.innerText = JSON.stringify(def, undefined, 2);
+        nodeDef.innerText = JSON.stringify(def.response, undefined, 2);
         const desc = document.createElement('p');
-        desc.innerText = getDesc(def);
+        desc.innerText = getDesc(def.response);
         nodeDesc.append(desc);
-        if (def.pageId) {
+        if (def.response?.pageId) {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the page in build';
-            link.href = getPageUrl(def.pageId, def.context);
+            link.href = getPageUrl(def.response.pageId, def.context);
             link.target = '_blank';
             nodeDesc.append(link);
         }
-        if (def.type === 'journeyTransition') {
+        if (def.response?.type === 'journeyTransition') {
             const link = document.createElement('a');
             link.innerText = 'Click here to view the journey';
-            link.href = getJourneyUrl(def.targetJourney);
+            link.href = getJourneyUrl(def.response.targetJourney);
             link.onclick = async (e) => {
                 e.preventDefault();
-                await switchJourney(def.targetJourney, def.targetState);
+                await switchJourney(def.response.targetJourney, def.targetState);
             }
             nodeDesc.append(link);
         }
