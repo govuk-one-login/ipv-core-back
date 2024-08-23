@@ -1,8 +1,5 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.model.CheckDetails;
@@ -22,33 +19,13 @@ import java.util.stream.Stream;
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static software.amazon.awssdk.utils.StringUtils.isEmpty;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class Gpg45ProfileEvaluator {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final int NO_SCORE = 0;
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
             Gpg45Scores gpg45Scores, List<Gpg45Profile> profiles) {
-        return profiles.stream()
-                .filter(
-                        profile -> {
-                            boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
-                            if (profileMet) {
-                                var message =
-                                        new StringMapMessage()
-                                                .with(
-                                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                                        "GPG45 profile has been met.")
-                                                .with(
-                                                        LOG_GPG45_PROFILE.getFieldName(),
-                                                        profile.getLabel());
-                                LOGGER.info(message);
-                            }
-                            return profileMet;
-                        })
-                .findFirst();
+        return profiles.stream().filter(profile -> profile.isSatisfiedBy(gpg45Scores)).findFirst();
     }
 
     public Gpg45Scores buildScore(List<VerifiableCredential> vcs) {
