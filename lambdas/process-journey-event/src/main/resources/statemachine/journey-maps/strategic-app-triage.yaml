@@ -1,0 +1,147 @@
+STRATEGIC_APP_TRIAGE:
+  entryEvents:
+    appTriage:
+      targetState: SELECT_DEVICE_PAGE
+    appTriageSmartphone:
+      targetState: MAM_SELECT_SMARTPHONE
+    appTriageSmartphoneIphone:
+      targetState: MOBILE_IPHONE_CONFIRM_PAGE
+    appTriageSmartphoneAndroid:
+      targetState: MOBILE_ANDROID_CONFIRM_PAGE
+
+  nestedJourneyStates:
+    SELECT_DEVICE_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-select-device
+      events:
+        computer-or-tablet:
+          targetState: DAD_SELECT_SMARTPHONE
+        smartphone:
+          targetState: MAM_SELECT_SMARTPHONE
+
+    DAD_SELECT_SMARTPHONE:
+      response:
+        type: page
+        pageId: pyi-triage-select-smartphone
+      events:
+        iphone:
+          targetState: DAD_IPHONE_START_SESSION
+        android:
+          targetState: DAD_ANDROID_START_SESSION
+        end:
+          exitEventToEmit: end
+
+    DAD_IPHONE_START_SESSION:
+      response:
+        type: process
+        lambda: call-dcmaw-async-cri
+      events:
+        next:
+          targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        error:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+
+    DAD_ANDROID_START_SESSION:
+      response:
+        type: process
+        lambda: call-dcmaw-async-cri
+      events:
+        next:
+          targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        error:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+
+    DESKTOP_IPHONE_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-desktop-download-app
+        context: iphone
+
+    DESKTOP_ANDROID_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-desktop-download-app
+        context: android
+
+    MAM_SELECT_SMARTPHONE:
+      response:
+        type: page
+        pageId: pyi-triage-select-smartphone
+      events:
+        iphone:
+          targetState: MOBILE_IPHONE_START_SESSION
+        android:
+          targetState: MOBILE_ANDROID_START_SESSION
+        end:
+          exitEventToEmit: end
+
+    MOBILE_IPHONE_CONFIRM_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-confirm
+      events:
+        next:
+          targetState: MOBILE_IPHONE_START_SESSION
+        end:
+          exitEventToEmit: end
+
+    MOBILE_ANDROID_CONFIRM_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-confirm
+      events:
+        next:
+          targetState: MOBILE_ANDROID_START_SESSION
+        end:
+          exitEventToEmit: end
+
+    MOBILE_IPHONE_START_SESSION:
+      response:
+        type: process
+        lambda: call-dcmaw-async-cri
+      events:
+        next:
+          targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+        error:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+
+    MOBILE_ANDROID_START_SESSION:
+      response:
+        type: process
+        lambda: call-dcmaw-async-cri
+      events:
+        next:
+          targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+        error:
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
+
+    MOBILE_IPHONE_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-download-app
+        context: iphone
+      events:
+        next:
+          exitEventToEmit: next
+
+    MOBILE_ANDROID_DOWNLOAD_PAGE:
+      response:
+        type: page
+        pageId: pyi-triage-mobile-download-app
+        context: android
+      events:
+        next:
+          exitEventToEmit: next
