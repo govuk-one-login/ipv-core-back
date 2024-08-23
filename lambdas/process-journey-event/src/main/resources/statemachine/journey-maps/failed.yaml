@@ -244,6 +244,8 @@ states:
     events:
       end:
         targetState: RETURN_TO_RP
+      delete:
+        targetState: DELETE_HANDOVER_PAGE
 
   COULD_NOT_UPDATE_DETAILS_PAGE:
     response:
