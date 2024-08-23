@@ -23,7 +23,12 @@ const JOURNEY_TYPES = {
     F2F_FAILED: 'F2F failed',
     OPERATIONAL_PROFILE_MIGRATION: 'Operational profile migration',
     OPERATIONAL_PROFILE_REUSE: 'Operational profile reuse',
-    REVERIFICATION: 'Reverification',
+    REVERIFICATION: 'Reverification'
+};
+
+const NESTED_JOURNEY_TYPES = {
+    ADDRESS_AND_FRAUD: "Address and fraud",
+    STRATEGIC_APP_TRIAGE: "Strategic app triage"
 };
 
 const COMMON_JOURNEY_TYPES = [
@@ -84,8 +89,11 @@ const loadJourneyMaps = async () => {
         const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
         journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
     }));
-    const nestedResponse = await fetch('./nested-journey-definitions.yaml');
-    nestedJourneys = yaml.parse(await nestedResponse.text());
+
+    await Promise.all(Object.keys(NESTED_JOURNEY_TYPES).map(async (journeyType) => {
+        const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
+        nestedJourneys[journeyType] = yaml.parse(await journeyResponse.text())[journeyType];
+    }))
 };
 
 const getPageUrl = (id, context) => {
@@ -189,19 +197,24 @@ const setupOtherOptions = () => {
 }
 
 const updateView = async () => {
-    const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
-    journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
-    const desc = journeyMaps[selectedJourney].description;
-    const formData = new FormData(form);
-    if (desc && formData.has('showJourneyDesc')) {
-        journeyDesc.innerText = desc;
+    const selectedNestedJourney = new URLSearchParams(window.location.search).get('nestedJourneyType');
+    if (selectedNestedJourney) {
+        const formData = new FormData(form);
+        return renderSvg(selectedNestedJourney, formData);
     } else {
-        journeyDesc.innerText = '';
+        const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
+        journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
+        const desc = journeyMaps[selectedJourney].description;
+        const formData = new FormData(form);
+        if (desc && formData.has('showJourneyDesc')) {
+            journeyDesc.innerText = desc;
+        } else {
+            journeyDesc.innerText = '';
+        }
+        journeySelect.value = selectedJourney;
+        journeyDesc.innerText = desc || '';
+        return renderSvg(selectedJourney, formData);
     }
-    journeySelect.value = selectedJourney;
-    journeyDesc.innerText = desc || '';
-
-    return renderSvg(selectedJourney, formData);
 };
 
 // Render the journey map SVG
@@ -249,6 +262,8 @@ const setupMermaidClickHandlers = () => {
                 return `CRI node routing to the ${CRI_NAMES[def.criId] || `'${def.criId}' CRI`}.`;
             case 'journeyTransition':
                 return `Journey transition to the ${def.targetJourney} journey type (${def.targetState}).`
+            case 'nestedJourney':
+                return `TODO: Journey node displaying the {nestedJourney}.`
             default:
                 return '';
         }
@@ -266,6 +281,11 @@ const setupMermaidClickHandlers = () => {
             if (def.targetJourney) {
                 await switchJourney(def.targetJourney, def.targetState);
                 return;
+            }
+            if (def.nestedJourney) {
+                // TODO: switch to nested journey diagram
+                await switchJourney(def.nestedJourney, null)
+                return
             }
         }
 
