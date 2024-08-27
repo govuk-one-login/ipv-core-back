@@ -66,6 +66,7 @@ states:
           successful: false
         checkJourneyContext:
           rfc:
+            targetJourney: FAILED
             targetState: FAILED_CONFIRM_DETAILS
         checkIfDisabled:
           ticf:
