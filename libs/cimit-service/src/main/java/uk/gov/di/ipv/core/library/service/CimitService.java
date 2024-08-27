@@ -83,15 +83,12 @@ public class CimitService {
     @Tracing
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
-
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
+        var payload = createPostCiPayload(vc);
         try {
-            var payload = OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
-
             sendPostHttpRequest(POST_CI_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
-        } catch (JsonProcessingException e) {
-            throw new CiPutException("Failed to serialize payload for post CI request.");
         } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error sending VC to CIMIT", e));
             throw new CiPutException(FAILED_API_REQUEST);
         }
     }
@@ -102,19 +99,12 @@ public class CimitService {
             throws CiPostMitigationsException {
 
         LOGGER.info(LogHelper.buildLogMessage("Sending mitigating VCs to CIMIT."));
+        var payload = createSubmitMitigationPayload(vcs);
         try {
-            var payload =
-                    OBJECT_MAPPER.writeValueAsString(
-                            new PostMitigationsApiRequest(
-                                    vcs.stream().map(VerifiableCredential::getVcString).toList()));
-
             sendPostHttpRequest(
                     POST_MITIGATIONS_ENDPOINT, govukSigninJourneyId, ipAddress, payload);
-
-        } catch (JsonProcessingException e) {
-            throw new CiPostMitigationsException(
-                    "Failed to serialize payload for post mitigations request");
         } catch (PostApiException | CimitHttpRequestException | URISyntaxException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error sending mitigation to CIMIT", e));
             throw new CiPostMitigationsException(FAILED_API_REQUEST);
         }
     }
@@ -145,10 +135,11 @@ public class CimitService {
         var response = sendGetHttpRequest(govukSigninJourneyId, ipAddress, userId);
 
         try {
-            ContraIndicatorCredentialDto contraIndicatorCredential =
+            var contraIndicatorCredential =
                     OBJECT_MAPPER.readValue(response, ContraIndicatorCredentialDto.class);
             return extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
         } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error reading CIMIT VC", e));
             throw new CiRetrievalException("Failed to deserialize ContraIndicatorCredentialDto");
         }
     }
@@ -235,20 +226,29 @@ public class CimitService {
 
     private void sendPostHttpRequest(
             String endpoint, String govukSigninJourneyId, String ipAddress, String payload)
-            throws PostApiException, URISyntaxException, CimitHttpRequestException,
-                    JsonProcessingException {
-        var uri = getUriBuilderWithBaseApiUrl(endpoint).build();
-
-        var httpRequestBuilder = buildHttpRequest(uri, govukSigninJourneyId, ipAddress);
-        httpRequestBuilder.POST(HttpRequest.BodyPublishers.ofString(payload));
-
-        var response = sendHttpRequest(httpRequestBuilder.build());
-
-        var parsedResponse = OBJECT_MAPPER.readValue(response.body(), CimitApiResponse.class);
+            throws PostApiException, URISyntaxException, CimitHttpRequestException {
+        var parsedResponse =
+                parseResponse(
+                        sendHttpRequest(
+                                buildHttpRequest(
+                                                getUriBuilderWithBaseApiUrl(endpoint).build(),
+                                                govukSigninJourneyId,
+                                                ipAddress)
+                                        .POST(HttpRequest.BodyPublishers.ofString(payload))
+                                        .build()));
 
         if (FAILED_RESPONSE.equals(parsedResponse.result())) {
             logApiRequestError(parsedResponse);
             throw new PostApiException(FAILED_API_REQUEST);
+        }
+    }
+
+    private CimitApiResponse parseResponse(HttpResponse<String> response) throws PostApiException {
+        try {
+            return OBJECT_MAPPER.readValue(response.body(), CimitApiResponse.class);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse CIMIT response", e));
+            throw new PostApiException("Failed to parse CIMIT response");
         }
     }
 
@@ -296,5 +296,28 @@ public class CimitService {
                 configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL) + endpointUrl;
 
         return new URIBuilder(baseUri);
+    }
+
+    private String createPostCiPayload(VerifiableCredential vc) throws CiPutException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(new PostCiApiRequest(vc.getVcString()));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Error creating VC submission payload", e));
+            throw new CiPutException("Failed to serialize VC submission payload");
+        }
+    }
+
+    private String createSubmitMitigationPayload(List<VerifiableCredential> vcs)
+            throws CiPostMitigationsException {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(
+                    new PostMitigationsApiRequest(
+                            vcs.stream().map(VerifiableCredential::getVcString).toList()));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Error creating mitigation submission payload", e));
+            throw new CiPostMitigationsException(
+                    "Failed to serialize mitigation submission payload");
+        }
     }
 }
