@@ -50,6 +50,7 @@ import java.util.Optional;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -225,6 +226,11 @@ public class EvaluateGpg45ScoresHandler
                                         contraIndicators, requestedVot);
 
                 if (matchedProfile.isPresent() && !isBreaching) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage("GPG45 profile has been met.")
+                                    .with(
+                                            LOG_GPG45_PROFILE.getFieldName(),
+                                            matchedProfile.get().getLabel()));
                     auditService.sendAuditEvent(
                             buildProfileMatchedAuditEvent(
                                     ipvSessionItem,

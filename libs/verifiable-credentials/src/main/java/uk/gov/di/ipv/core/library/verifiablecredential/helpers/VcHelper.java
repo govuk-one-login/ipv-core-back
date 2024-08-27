@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.DrivingPermitDetails;
@@ -34,6 +35,7 @@ import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -52,8 +54,10 @@ public class VcHelper {
             var evidence = identityCheckCredential.getEvidence();
             if (isNullOrEmpty(evidence)) {
                 LOGGER.warn(
-                        "Unexpected missing evidence on VC from issuer: {}",
-                        vc.getClaimsSet().getIssuer());
+                        LogHelper.buildLogMessage("Unexpected missing evidence on VC")
+                                .with(
+                                        LOG_CRI_ISSUER.getFieldName(),
+                                        vc.getClaimsSet().getIssuer()));
                 return false;
             }
             return evidence.stream()

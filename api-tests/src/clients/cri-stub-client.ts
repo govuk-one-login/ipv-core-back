@@ -13,13 +13,17 @@ export const callHeadlessApi = async (
     },
   );
 
-  if (!(criStubResponse.status === 302)) {
-    throw new Error(
-      `callHeadlessApi request failed: ${criStubResponse.statusText}`,
-    );
+  if (criStubResponse.status === 200) {
+    return criStubResponse.json();
   }
 
-  return {
-    redirectUri: criStubResponse.headers.get("location") as string,
-  };
+  if (criStubResponse.status === 302) {
+    return {
+      redirectUri: criStubResponse.headers.get("location") as string,
+    };
+  }
+
+  throw new Error(
+    `callHeadlessApi request failed: ${criStubResponse.statusText}`,
+  );
 };
