@@ -149,6 +149,8 @@ states:
         checkIfDisabled:
           f2f:
             targetState: MULTIPLE_DOC_CHECK_PAGE
+      multipleDocCheckPage:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   F2F_START_PAGE:
     response:
@@ -814,6 +816,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      multipleDocCheckPage:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   MITIGATION_01_CRI_DCMAW:
     response:
@@ -904,6 +908,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      multipleDocCheckPage:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   CRI_DCMAW_PYI_ESCAPE:
     response:

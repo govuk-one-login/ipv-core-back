@@ -68,7 +68,7 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
         error:
-          targetState: MULTIPLE_DOC_CHECK_PAGE
+          exitEventToEmit: multipleDocCheckPage
 
     DAD_ANDROID_START_SESSION:
       response:
@@ -78,7 +78,7 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
         error:
-          targetState: MULTIPLE_DOC_CHECK_PAGE
+          exitEventToEmit: multipleDocCheckPage
 
     DESKTOP_IPHONE_DOWNLOAD_PAGE:
       response:
@@ -132,7 +132,7 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
         error:
-          targetState: MULTIPLE_DOC_CHECK_PAGE
+          exitEventToEmit: multipleDocCheckPage
 
     MOBILE_ANDROID_START_SESSION:
       response:
@@ -142,7 +142,7 @@ STRATEGIC_APP_TRIAGE:
         next:
           targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
         error:
-          targetState: MULTIPLE_DOC_CHECK_PAGE
+          exitEventToEmit: multipleDocCheckPage
 
     MOBILE_IPHONE_DOWNLOAD_PAGE:
       response:
