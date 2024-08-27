@@ -44,12 +44,12 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.service.CiMitService.FAILED_RESPONSE;
-import static uk.gov.di.ipv.core.library.service.CiMitService.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.service.CiMitService.X_API_KEY_HEADER;
+import static uk.gov.di.ipv.core.library.service.CimitService.FAILED_RESPONSE;
+import static uk.gov.di.ipv.core.library.service.CimitService.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.service.CimitService.X_API_KEY_HEADER;
 
 @ExtendWith(MockitoExtension.class)
-class CiMitServiceTest {
+class CimitServiceTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
     private static final String TEST_USER_ID = "a-user-id";
@@ -70,7 +70,7 @@ class CiMitServiceTest {
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private HttpClient mockHttpClient;
     @Mock private HttpResponse<String> mockHttpResponse;
-    @InjectMocks CiMitService ciMitService;
+    @InjectMocks CimitService cimitService;
 
     @Test
     void submitVcSendsHttpRequestToApi() throws Exception {
@@ -86,7 +86,7 @@ class CiMitServiceTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            ciMitService.submitVC(
+            cimitService.submitVC(
                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
             // Assert
@@ -100,7 +100,7 @@ class CiMitServiceTest {
                     httpRequest
                             .headers()
                             .map()
-                            .containsKey(CiMitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
+                            .containsKey(CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
@@ -122,7 +122,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiPutException.class,
                 () ->
-                        ciMitService.submitVC(
+                        cimitService.submitVC(
                                 PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
@@ -142,7 +142,7 @@ class CiMitServiceTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            ciMitService.submitMitigatingVcList(vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+            cimitService.submitMitigatingVcList(vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
             // Assert
             verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -155,7 +155,7 @@ class CiMitServiceTest {
                     httpRequest
                             .headers()
                             .map()
-                            .containsKey(CiMitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
+                            .containsKey(CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
 
             mockedBodyPublishers.verify(
                     () -> HttpRequest.BodyPublishers.ofString(stringCaptor.capture()));
@@ -179,7 +179,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
-                        ciMitService.submitMitigatingVcList(
+                        cimitService.submitMitigatingVcList(
                                 vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -211,7 +211,7 @@ class CiMitServiceTest {
 
         // Act
         var cis =
-                ciMitService.getContraIndicators(
+                cimitService.getContraIndicators(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         // Assert
@@ -224,7 +224,7 @@ class CiMitServiceTest {
                 httpRequest
                         .headers()
                         .map()
-                        .containsKey(CiMitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
+                        .containsKey(CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
         assertEquals(
                 "ContraIndicators(usersContraIndicators=[ContraIndicator(code=D01, issuers=[https://issuing-cri.example], issuanceDate=2022-09-20T15:54:50.000Z, document=passport/GBR/824159121, txn=[abcdef], mitigation=[Mitigation(code=M01, mitigatingCredential=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50.000Z, txn=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigation=[Mitigation(code=M02, mitigatingCredential=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50.000Z, txn=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])])",
                 cis.toString());
@@ -246,7 +246,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVc(
+                        cimitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -263,7 +263,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVc(
+                        cimitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -280,7 +280,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicatorsVc(
+                        cimitService.getContraIndicatorsVc(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -303,14 +303,14 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicators(
+                        cimitService.getContraIndicators(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
     void getContraIndicatorsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
         var contraIndicators =
-                ciMitService.getContraIndicators(
+                cimitService.getContraIndicators(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID,
                                 null,
@@ -324,7 +324,7 @@ class CiMitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciMitService.getContraIndicators(
+                        cimitService.getContraIndicators(
                                 VerifiableCredential.fromValidJwt(
                                         TEST_USER_ID,
                                         null,
@@ -334,7 +334,7 @@ class CiMitServiceTest {
     @Test
     void getContraIndicatorsReturnsContraIndicatorsFromSignedJwt() throws Exception {
         var contraIndicators =
-                ciMitService.getContraIndicators(
+                cimitService.getContraIndicators(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
 

@@ -78,11 +78,11 @@ public class UserIdentityService {
             "Credential must be an IdentityCheck credential.";
 
     private final ConfigService configService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitUtilityService cimitUtilityService;
 
     public UserIdentityService(ConfigService configService) {
         this.configService = configService;
-        this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -445,7 +445,7 @@ public class UserIdentityService {
 
     private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot targetVot)
             throws UnrecognisedCiException {
-        return ciMitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
+        return cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
                         new ReturnCode(

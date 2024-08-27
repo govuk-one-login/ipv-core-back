@@ -20,8 +20,8 @@ import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
-import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitVc;
+import uk.gov.di.ipv.core.library.domain.cimitvc.CimitJwt;
+import uk.gov.di.ipv.core.library.domain.cimitvc.CimitVc;
 import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -41,7 +41,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 
-public class CiMitService {
+public class CimitService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -64,14 +64,14 @@ public class CiMitService {
     private final HttpClient httpClient;
 
     @ExcludeFromGeneratedCoverageReport
-    public CiMitService(ConfigService configService) {
+    public CimitService(ConfigService configService) {
         this.configService = configService;
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.httpClient = TracingHttpClient.newHttpClient();
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public CiMitService(
+    public CimitService(
             ConfigService configService,
             VerifiableCredentialValidator verifiableCredentialValidator,
             HttpClient httpClient) {
@@ -201,15 +201,15 @@ public class CiMitService {
             throws CiRetrievalException {
 
         var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
-        CiMitJwt ciMitJwt = OBJECT_MAPPER.convertValue(claimSetJsonObject, CiMitJwt.class);
-        if (ciMitJwt == null) {
-            String message = "Failed to convert claim set object to CiMitJwt";
+        CimitJwt cimitJwt = OBJECT_MAPPER.convertValue(claimSetJsonObject, CimitJwt.class);
+        if (cimitJwt == null) {
+            String message = "Failed to convert claim set object to CIMIT JWT";
             LOGGER.error(LogHelper.buildLogMessage(message));
             throw new CiRetrievalException(message);
         }
-        CiMitVc vcClaim = ciMitJwt.getVc();
+        CimitVc vcClaim = cimitJwt.getVc();
         if (vcClaim == null) {
-            String message = "VC claim not found in CiMit JWT";
+            String message = "VC claim not found in CIMIT JWT";
             LOGGER.error(LogHelper.buildLogMessage(message));
             throw new CiRetrievalException(message);
         }
@@ -277,16 +277,16 @@ public class CiMitService {
     private HttpResponse<String> sendHttpRequest(HttpRequest cimitHttpRequest)
             throws CimitHttpRequestException {
         try {
-            LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CiMit."));
+            LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to CIMIT."));
             return httpClient.send(cimitHttpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (InterruptedException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
-                            "Client interrupted sending http request to CiMit", e));
+                            "Client interrupted sending http request to CIMIT", e));
             Thread.currentThread().interrupt();
             throw new CimitHttpRequestException(FAILED_API_REQUEST);
         } catch (IOException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Http request to CiMit failed", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Http request to CIMIT failed", e));
             throw new CimitHttpRequestException(FAILED_API_REQUEST);
         }
     }
