@@ -2,9 +2,6 @@ const topDownJourneys = ['INITIAL_JOURNEY_SELECTION'];
 const errorJourneys = ['TECHNICAL_ERROR'];
 const failureJourneys = ['INELIGIBLE', 'FAILED'];
 
-const EXIT_NESTED_JOURNEY_MAP_STATE = "EXIT";
-const ENTRY_NESTED_JOURNEY_MAP_STATE = "ENTRY";
-
 const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
     Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
         if (!disabledOptions.includes(opt)) {
@@ -124,8 +121,11 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
 const renderTransitions = (journeyStates, formData) => {
-    const states = Object.keys(journeyStates)
+    // Initial states have no response or nested journey
+    const initialStates = Object.keys(journeyStates)
             .filter((s) => !journeyStates[s].response && !journeyStates[s].nestedJourney);
+
+    const states = [...initialStates];
     const stateTransitions = [];
 
     for (let i = 0; i < states.length; i++) {
@@ -139,8 +139,6 @@ const renderTransitions = (journeyStates, formData) => {
 
             let target;
             if (exitEventToEmit) {
-                // An exitEventToEmit is only present in nested journeys. Events wth this target always end at
-                // the EXIT state in the nested journey map
                 target = `${exitEventToEmit}_exit-event`;
             } else {
                 target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
@@ -172,7 +170,7 @@ const renderTransitions = (journeyStates, formData) => {
                         }
                     };
                 } else if (exitEventToEmit) {
-                    journeyStates[`${exitEventToEmit}_exit-event`] = {}
+                    journeyStates[target] = {}
                 } else {
                     throw new Error(`Failed to resolve state ${target} from ${state}`);
                 }
@@ -262,7 +260,7 @@ const calcOrphanStates = (journeyMap) => {
 const getNestedJourneyStatesFlatMap = nestedJourney => ({
     ...nestedJourney.nestedJourneyStates,
     // map entryEvents to an `ENTRY` state - this acts as the starting block of a nested journey map
-    [ENTRY_NESTED_JOURNEY_MAP_STATE]: {
+    ENTRY: {
         events: nestedJourney.entryEvents
     }
 })
