@@ -179,21 +179,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   DCMAW_FAMILY_ONLY:
     response:
@@ -208,19 +200,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY:
     response:
@@ -359,21 +345,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   DCMAW_FAMILY_WITH_ADDRESS:
     response:
@@ -388,21 +366,13 @@ states:
         targetState: FAILED_CONFIRM_DETAILS
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_UPDATE_DETAILS
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS:
     response:
@@ -454,14 +424,6 @@ states:
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -495,26 +457,9 @@ states:
       unmet:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
-
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:
       type: process

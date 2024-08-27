@@ -27,6 +27,20 @@ states:
   FAILED_CONFIRM_DETAILS:
     events:
       next:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_WITHOUT_DELETION
+        checkJourneyContext:
+          rfc:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_WITHOUT_DELETION
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_WITH_DELETION
+
+  FAILED_CONFIRM_DETAILS_WITHOUT_DELETION:
+    events:
+      next:
         targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
@@ -59,15 +73,25 @@ states:
   FAILED_UPDATE_DETAILS:
     events:
       next:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_UPDATE_DETAILS_WITH_DELETION
+
+  FAILED_UPDATE_DETAILS_WITH_DELETION:
+    events:
+      next:
         targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkIfDisabled:
           ticf:
             targetState: COULD_NOT_UPDATE_DETAILS_PAGE
