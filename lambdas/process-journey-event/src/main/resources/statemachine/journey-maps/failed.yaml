@@ -43,14 +43,14 @@ states:
   FAILED_CONFIRM_DETAILS_WITH_DELETION:
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
+        checkIfDisabled:
+          ticf:
+            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
