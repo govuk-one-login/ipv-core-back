@@ -141,7 +141,7 @@ const renderTransitions = (journeyStates, formData) => {
             if (exitEventToEmit) {
                 // An exitEventToEmit is only present in nested journeys. Events wth this target always end at
                 // the EXIT state in the nested journey map
-                target = EXIT_NESTED_JOURNEY_MAP_STATE;
+                target = `${exitEventToEmit}_exit-event`;
             } else {
                 target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
             }
@@ -172,7 +172,7 @@ const renderTransitions = (journeyStates, formData) => {
                         }
                     };
                 } else if (exitEventToEmit) {
-                    journeyStates[EXIT_NESTED_JOURNEY_MAP_STATE] = {}
+                    journeyStates[`${exitEventToEmit}_exit-event`] = {}
                 } else {
                     throw new Error(`Failed to resolve state ${target} from ${state}`);
                 }
@@ -281,10 +281,12 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
     let journeyMapCopy;
 
     const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
+    console.log(isNestedJourney)
 
     if (isNestedJourney) {
         // Copy to avoid mutating the input
         journeyMapCopy = JSON.parse(JSON.stringify(nestedJourneys[selectedJourney]));
+        console.log(journeyMapCopy)
 
         const nestedJourneyStates = getNestedJourneyStatesFlatMap(journeyMapCopy);
 

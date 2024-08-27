@@ -92,10 +92,12 @@ const loadJourneyMaps = async () => {
         journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
     }));
 
-    await Promise.all(Object.keys(NESTED_JOURNEY_TYPES).map(async (journeyType) => {
-        const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
-        nestedJourneys[journeyType] = yaml.parse(await journeyResponse.text())[journeyType];
-    }))
+    // await Promise.all(Object.keys(NESTED_JOURNEY_TYPES).map(async (journeyType) => {
+    //     const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
+    //     nestedJourneys[journeyType] = yaml.parse(await journeyResponse.text())[journeyType];
+    // }))
+    const nestedResponse = await fetch('./nested-journey-definitions.yaml');
+    nestedJourneys = yaml.parse(await nestedResponse.text());
 };
 
 const getPageUrl = (id, context) => {
