@@ -203,6 +203,10 @@ const renderState = (state, definition) => {
     // process - response.type = process, response.lambda = <lambda>
     // page    - response.type = page, response.pageId = 'page-id'
     // cri     - response.type = cri,
+    if (definition.nestedJourney) {
+        return `    ${state}(${state}):::nested_journey`;
+    }
+
     switch (definition.response?.type) {
         case 'process':
             return `    ${state}(${state}\\n${definition.response.lambda}):::process`;
@@ -272,6 +276,7 @@ const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
                 classDef journey_transition fill:#aaf,stroke:#000;
                 classDef error_transition fill:#f99,stroke:#000;
                 classDef other fill:#f3f2f1,stroke:#000;
+                classDef nested_journey fill:#aaedff,stroke:#000;
             ${statesMermaid}
             ${transitionsMermaid}
             `;
@@ -281,12 +286,10 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
     let journeyMapCopy;
 
     const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
-    console.log(isNestedJourney)
 
     if (isNestedJourney) {
         // Copy to avoid mutating the input
         journeyMapCopy = JSON.parse(JSON.stringify(nestedJourneys[selectedJourney]));
-        console.log(journeyMapCopy)
 
         const nestedJourneyStates = getNestedJourneyStatesFlatMap(journeyMapCopy);
 
