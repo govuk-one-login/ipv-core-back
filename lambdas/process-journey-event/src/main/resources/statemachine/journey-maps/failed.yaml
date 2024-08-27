@@ -64,6 +64,9 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
+        checkJourneyContext:
+          rfc:
+            targetState: FAILED_CONFIRM_DETAILS
         checkIfDisabled:
           ticf:
             targetState: COULD_NOT_UPDATE_DETAILS_PAGE

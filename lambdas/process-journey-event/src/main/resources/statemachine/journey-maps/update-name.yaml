@@ -180,10 +180,6 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
@@ -194,10 +190,6 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
@@ -217,10 +209,6 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetState: FAILED_UPDATE_DETAILS
@@ -230,10 +218,6 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetState: FAILED_UPDATE_DETAILS
@@ -376,10 +360,6 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
@@ -390,10 +370,6 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
@@ -413,10 +389,6 @@ states:
       access-denied:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
@@ -427,10 +399,6 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-        checkJourneyContext:
-          rfc:
-            targetJourney: FAILED
-            targetState: FAILED_CONFIRM_DETAILS
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
