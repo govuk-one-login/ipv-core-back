@@ -33,17 +33,6 @@ public class BasicEvent implements Event {
     private LinkedHashMap<String, String> auditContext;
 
     public TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException {
-        if (checkJourneyContext != null && !StringUtils.isNullOrEmpty(journeyContext.name())) {
-            Optional<String> matchingContext =
-                    checkJourneyContext.keySet().stream()
-                            .filter(ctx -> ctx.equals(journeyContext.name()))
-                            .findFirst();
-            if (matchingContext.isPresent()) {
-                String contextValue = matchingContext.get();
-                LOGGER.info("Matching context '{}' is set. Using alternative event", contextValue);
-                return checkJourneyContext.get(contextValue).resolve(journeyContext);
-            }
-        }
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
@@ -58,6 +47,17 @@ public class BasicEvent implements Event {
                 String disabledCriId = firstDisabledCri.get();
                 LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
+            }
+        }
+        if (checkJourneyContext != null && !StringUtils.isNullOrEmpty(journeyContext.name())) {
+            Optional<String> matchingContext =
+                    checkJourneyContext.keySet().stream()
+                            .filter(ctx -> ctx.equals(journeyContext.name()))
+                            .findFirst();
+            if (matchingContext.isPresent()) {
+                String contextValue = matchingContext.get();
+                LOGGER.info("Matching context '{}' is set. Using alternative event", contextValue);
+                return checkJourneyContext.get(contextValue).resolve(journeyContext);
             }
         }
         if (checkFeatureFlag != null) {
