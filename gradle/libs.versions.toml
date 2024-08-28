@@ -2,7 +2,7 @@
 awsSdk = "2.26.9"
 jackson = "2.15.3"
 log4j = "2.23.0"
-mockito = "5.12.0"
+mockito = "5.13.0"
 pact = "4.6.5"
 powertools = "1.18.0"
 
@@ -14,7 +14,6 @@ awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
-awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
@@ -24,7 +23,7 @@ hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-javalin = "io.javalin:javalin:6.2.0"
+javalin = "io.javalin:javalin:6.3.0"
 junitJupiter = "org.junit.jupiter:junit-jupiter:5.11.0"
 junitPlatform = "org.junit.platform:junit-platform-launcher:1.11.0"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
