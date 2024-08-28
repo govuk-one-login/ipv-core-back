@@ -85,6 +85,10 @@ When(
     async: "async " | undefined,
     dataTable: DataTable | undefined,
   ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
