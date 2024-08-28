@@ -24,6 +24,6 @@ export interface CriStubRequest {
 }
 
 export interface CriStubResponse {
-  redirectUri: string;
+  redirectUrl: string;
   jarPayload?: object;
 }

@@ -33,7 +33,7 @@ export const generateInitialiseIpvSessionBody = async (
 export const generateProcessCriCallbackBody = (
   criStubResponse: CriStubResponse,
 ): ProcessCriCallbackRequest => {
-  const url = new URL(criStubResponse.redirectUri);
+  const url = new URL(criStubResponse.redirectUrl);
   const params = url.searchParams;
   const criId = params.get("id") || url.pathname.split("/")[3];
 

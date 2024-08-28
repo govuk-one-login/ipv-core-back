@@ -65,4 +65,4 @@ Feature: Repeat fraud check journeys
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
     When I submit expired 'kenneth-changed-family-name-address-score-2' details to the CRI stub
-    Then I get a 'sorry-could-not-confirm-details' page response with context 'null'
+    Then I get a 'sorry-could-not-confirm-details' page response with context 'deleteDetailsReuse'
