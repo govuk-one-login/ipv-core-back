@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
+import com.amazonaws.util.StringUtils;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,7 @@ public class BasicEvent implements Event {
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;
+    private LinkedHashMap<String, Event> checkJourneyContext;
     private List<AuditEventTypes> auditEvents;
     private LinkedHashMap<String, String> auditContext;
 
@@ -45,6 +47,17 @@ public class BasicEvent implements Event {
                 String disabledCriId = firstDisabledCri.get();
                 LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
+            }
+        }
+        if (checkJourneyContext != null && !StringUtils.isNullOrEmpty(journeyContext.name())) {
+            Optional<String> matchingContext =
+                    checkJourneyContext.keySet().stream()
+                            .filter(ctx -> ctx.equals(journeyContext.name()))
+                            .findFirst();
+            if (matchingContext.isPresent()) {
+                String contextValue = matchingContext.get();
+                LOGGER.info("Matching context '{}' is set. Using alternative event", contextValue);
+                return checkJourneyContext.get(contextValue).resolve(journeyContext);
             }
         }
         if (checkFeatureFlag != null) {
@@ -79,6 +92,9 @@ public class BasicEvent implements Event {
         }
         if (checkFeatureFlag != null) {
             checkFeatureFlag.forEach((eventName, event) -> event.initialize(eventName, states));
+        }
+        if (checkJourneyContext != null) {
+            checkJourneyContext.forEach((eventName, event) -> event.initialize(eventName, states));
         }
     }
 }

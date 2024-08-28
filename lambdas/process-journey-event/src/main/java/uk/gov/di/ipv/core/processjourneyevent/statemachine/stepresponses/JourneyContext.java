@@ -4,4 +4,4 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 @ExcludeFromGeneratedCoverageReport
-public record JourneyContext(ConfigService configService) {}
+public record JourneyContext(ConfigService configService, String name) {}

@@ -138,17 +138,22 @@ When(
 );
 
 Then(
-  "I get a(n) {string} page response",
-  function (this: World, expectedPage: string): void {
+  /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?$/,
+  function (this: World, expectedPage: string, expectedContext: string): void {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
     }
-
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
     assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
+    if (expectedContext) {
+      assert.equal(
+        this.lastJourneyEngineResponse.context,
+        expectedContext === "null" ? null : expectedContext,
+      );
+    }
   },
 );
 

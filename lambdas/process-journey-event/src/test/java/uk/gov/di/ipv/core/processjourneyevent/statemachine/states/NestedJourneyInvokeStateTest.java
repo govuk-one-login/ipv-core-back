@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 class NestedJourneyInvokeStateTest {
     private static final JourneyContext JOURNEY_CONTEXT =
-            new JourneyContext(mock(ConfigService.class));
+            new JourneyContext(mock(ConfigService.class), "");
 
     @Test
     void transitionShouldUseEntryEventsWhenStartStateHasOnePart() throws Exception {

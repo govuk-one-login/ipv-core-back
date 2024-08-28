@@ -24,6 +24,20 @@ Feature: Update details
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
 
+
+    Scenario: Given Name Change Failure
+        When I submit a 'given-names-only' event
+        Then I get a 'page-update-name' page response
+        When I submit a 'update-name' event
+        Then I get a 'dcmaw' CRI response
+        When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+        Then I get a 'page-dcmaw-success' page response
+        When I submit a 'next' event
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+        Then I get a 'sorry-could-not-confirm-details' page response with context 'deleteDetailsReuse'
+        And an 'IPV_USER_DETAILS_UPDATE_END' audit event was recorded [local only]
+
     Scenario: Given Name Change
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response

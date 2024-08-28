@@ -31,6 +31,7 @@ export const isJourneyResponse = (
 export interface PageResponse {
   page: string;
   statusCode?: string;
+  context?: string;
 }
 
 export const isPageResponse = (
