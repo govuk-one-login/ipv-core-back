@@ -2,11 +2,11 @@
 Feature: M2B No Photo Id Journey
 
   Scenario: M2B Journey
-    Given I start a new 'medium-confidence' journey
+    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaExperianKbv'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
-    When I submit an 'end' event with feature set 'm2bBetaExperianKbv'
+    When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response
     When I submit an 'next' event
     Then I get a 'claimedIdentity' CRI response

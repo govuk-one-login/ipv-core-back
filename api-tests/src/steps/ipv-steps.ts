@@ -70,6 +70,7 @@ const startNewJourney = async (
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
+  world.featureSet = featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
     await generateInitialiseIpvSessionBody({
       subject: world.userId,
@@ -82,7 +83,7 @@ const startNewJourney = async (
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
     world.ipvSessionId,
-    featureSet,
+    world.featureSet,
   );
 };
 
@@ -149,16 +150,12 @@ Then(
 );
 
 When(
-  /^I submit (?:a|an) '(.*?)' event(?: with feature set '(.*?)')?$/,
-  async function (
-    this: World,
-    event: string,
-    featureSet: string | undefined,
-  ): Promise<void> {
+  "I submit a(n) {string} event",
+  async function (this: World, event: string): Promise<void> {
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       event,
       this.ipvSessionId,
-      featureSet,
+      this.featureSet,
     );
   },
 );
