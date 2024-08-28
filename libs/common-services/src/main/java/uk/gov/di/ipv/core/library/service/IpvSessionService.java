@@ -35,6 +35,11 @@ public class IpvSessionService {
     private static final String START_STATE = "START";
     private static final String ERROR_STATE = "ERROR";
 
+    // Max sleeping time will be roughly WAIT_TIME * 2 ^ (MAX_ATTEMPTS - 1), plus execution time
+    // AWS say 'Consistency across all copies of data is usually reached within a second'
+    private static final int MAX_ATTEMPTS = 5;
+    private static final int WAIT_TIME_MILLIS = 50;
+
     private final DataStore<IpvSessionItem> dataStore;
     private final Sleeper sleeper;
 
@@ -184,7 +189,7 @@ public class IpvSessionService {
 
     private <T> T callRunTaskWithBackoff(RetryableTask<T> task) throws IpvSessionNotFoundException {
         try {
-            return Retry.runTaskWithBackoff(sleeper, 7, 10, task);
+            return Retry.runTaskWithBackoff(sleeper, MAX_ATTEMPTS, WAIT_TIME_MILLIS, task);
         } catch (InterruptedException e) {
             LOGGER.warn(LogHelper.buildLogMessage("backoff and retry sleep was interrupted"));
             Thread.currentThread().interrupt();

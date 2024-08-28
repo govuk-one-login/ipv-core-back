@@ -46,6 +46,7 @@ export const sendJourneyEvent = async (
       ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
       "ipv-session-id": ipvSessionId,
+      language: "en",
     },
   });
 

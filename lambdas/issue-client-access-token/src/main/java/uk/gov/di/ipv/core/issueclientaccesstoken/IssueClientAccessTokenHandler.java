@@ -224,14 +224,12 @@ public class IssueClientAccessTokenHandler
         }
     }
 
-    @Tracing
     private int getHttpStatusCodeForErrorResponse(ErrorObject errorObject) {
         return errorObject.getHTTPStatusCode() > 0
                 ? errorObject.getHTTPStatusCode()
                 : HttpStatus.SC_BAD_REQUEST;
     }
 
-    @Tracing
     private boolean redirectUrlsDoNotMatch(
             AuthorizationCodeMetadata authorizationCodeMetadata,
             AuthorizationCodeGrant authorizationGrant) {

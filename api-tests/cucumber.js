@@ -1,4 +1,4 @@
-export default {
+const base = {
   parallel: 8,
   format: [
     "html:reports/api-tests-cucumber-report.html",
@@ -8,4 +8,11 @@ export default {
   retry: 0,
   loader: ["ts-node/esm"],
   import: ["src/steps/**/*.ts", "src/config/**/*.ts"],
+};
+
+export default base;
+
+export const codepipeline = {
+  ...base,
+  retry: 1,
 };

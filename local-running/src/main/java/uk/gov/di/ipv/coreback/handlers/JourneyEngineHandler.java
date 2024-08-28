@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.checkcoi.CheckCoiHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
@@ -29,6 +30,7 @@ public class JourneyEngineHandler {
     public static final String ENCODED_DEVICE_INFORMATION = "txma-audit-encoded";
     public static final String CLIENT_SESSION_ID = "client-session-id";
     public static final String FEATURE_SET = "feature-set";
+    public static final String LANGUAGE = "language";
 
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
@@ -111,7 +113,7 @@ public class JourneyEngineHandler {
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
                     yield buildCriOauthRequestHandler.handleRequest(
-                            buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
+                            buildCriJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
                 } else {
                     throw new UnrecognisedJourneyException(
                             String.format("Journey not configured: %s", journeyStep));
@@ -127,6 +129,18 @@ public class JourneyEngineHandler {
                 .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
                 .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
                 .featureSet(ctx.header(FEATURE_SET))
+                .journey(journey)
+                .build();
+    }
+
+    private CriJourneyRequest buildCriJourneyRequest(Context ctx, String journey) {
+        return CriJourneyRequest.builder()
+                .ipvSessionId(ctx.header(IPV_SESSION_ID))
+                .ipAddress(ctx.header(IP_ADDRESS))
+                .deviceInformation(ctx.header(ENCODED_DEVICE_INFORMATION))
+                .clientOAuthSessionId(ctx.header(CLIENT_SESSION_ID))
+                .featureSet(ctx.header(FEATURE_SET))
+                .language(ctx.header(LANGUAGE))
                 .journey(journey)
                 .build();
     }

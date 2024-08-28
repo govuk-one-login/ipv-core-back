@@ -191,7 +191,7 @@ class EvcsClientTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {150, 400})
+    @ValueSource(ints = {400, 500})
     void testGetUserVCs_shouldThrowException_ifNon200ResponseStatus(int statusCode)
             throws Exception {
         // Arrange
@@ -216,7 +216,6 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.body()).thenReturn("{\"message\":\"no data found\"}");
         when(mockHttpResponse.statusCode()).thenReturn(404);
         // Act
         // Assert
@@ -238,6 +237,7 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(500);
         when(mockHttpResponse.body()).thenReturn("{}}");
         // Act
         // Assert

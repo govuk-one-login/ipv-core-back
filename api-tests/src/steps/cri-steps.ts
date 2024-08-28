@@ -55,6 +55,10 @@ When(
     scenario: string,
     async: "async " | undefined,
   ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
@@ -115,6 +119,10 @@ When(
 When(
   "I get a(n) {string} OAuth error from the CRI stub",
   async function (this: World, error: string): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }
@@ -137,6 +145,10 @@ When(
     async: "async " | undefined,
     mitigatedCis: string,
   ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
     }

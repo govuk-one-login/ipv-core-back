@@ -29,8 +29,8 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -53,8 +53,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final TicfCriService ticfCriService;
-    private final CiMitService ciMitService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitService cimitService;
+    private final CimitUtilityService cimitUtilityService;
     private final CriStoringService criStoringService;
     private final AuditService auditService;
 
@@ -64,8 +64,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ticfCriService = new TicfCriService(configService);
-        this.ciMitService = new CiMitService(configService);
-        this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.cimitService = new CimitService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
         this.auditService = AuditService.create(configService);
         this.criStoringService =
                 new CriStoringService(
@@ -73,7 +73,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                         auditService,
                         null,
                         new SessionCredentialsService(configService),
-                        ciMitService);
+                        cimitService);
     }
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -82,16 +82,16 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             TicfCriService ticfCriService,
-            CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService,
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService,
             CriStoringService criStoringService,
             AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ticfCriService = ticfCriService;
-        this.ciMitService = ciMitService;
-        this.ciMitUtilityService = ciMitUtilityService;
+        this.cimitService = cimitService;
+        this.cimitUtilityService = cimitUtilityService;
         this.criStoringService = criStoringService;
         this.auditService = auditService;
     }
@@ -137,7 +137,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         }
     }
 
-    @Tracing
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,
@@ -165,7 +164,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ipvSessionItem);
 
         ContraIndicators cis =
-                ciMitService.getContraIndicators(
+                cimitService.getContraIndicators(
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         request.getIpAddress());
@@ -173,7 +172,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
         var thresholdVot = ipvSessionItem.getThresholdVot();
 
         var journeyResponse =
-                ciMitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
+                cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
         if (journeyResponse.isPresent()) {
             LOGGER.info(
                     LogHelper.buildLogMessage(

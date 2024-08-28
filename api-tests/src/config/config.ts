@@ -37,8 +37,7 @@ const config = {
     name: getMandatoryConfig("ASYNC_QUEUE_NAME"),
     delaySeconds: parseInt(getMandatoryConfig("ASYNC_QUEUE_DELAY")),
   },
-  localAuditEvents:
-    getOptionalConfig("process.env.LOCAL_AUDIT_EVENTS") === "true",
+  localAuditEvents: getOptionalConfig("LOCAL_AUDIT_EVENTS") === "true",
   cimit: {
     managementCimitUrl: getMandatoryConfig("CIMIT_STUB_BASE_URL"),
     managementCimitApiKey: getMandatoryConfig("MANAGEMENT_CIMIT_STUB_API_KEY"),

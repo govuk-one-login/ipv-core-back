@@ -65,6 +65,7 @@ public class LogHelper {
         LOG_REDIRECT_URI("redirectUri"),
         LOG_RESET_TYPE("resetType"),
         LOG_RESPONSE_CONTENT_TYPE("responseContentType"),
+        LOG_RESPONSE_MESSAGE("responseMessage"),
         LOG_SCOPE("scope"),
         LOG_SCORE_TYPE("scoreType"),
         LOG_SECRET_ID("secretId"),

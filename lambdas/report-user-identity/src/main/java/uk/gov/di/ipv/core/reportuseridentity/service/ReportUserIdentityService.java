@@ -1,15 +1,11 @@
 package uk.gov.di.ipv.core.reportuseridentity.service;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.PersonWithDocuments;
 
@@ -19,12 +15,8 @@ import java.util.Optional;
 import static com.nimbusds.oauth2.sdk.util.CollectionUtils.isNotEmpty;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 
 public class ReportUserIdentityService {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     @ExcludeFromGeneratedCoverageReport
@@ -82,18 +74,8 @@ public class ReportUserIdentityService {
     }
 
     private boolean achievedWithGpg45Profile(Vot votToCheck, Gpg45Scores gpg45Scores) {
-        Optional<Gpg45Profile> matchedGpg45Profile =
-                gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45Scores, votToCheck.getSupportedGpg45Profiles());
-
-        // Successful match
-        if (matchedGpg45Profile.isPresent()) {
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "GPG45 profile matched")
-                            .with(LOG_VOT.getFieldName(), votToCheck));
-            return true;
-        }
-        return false;
+        return gpg45ProfileEvaluator
+                .getFirstMatchingProfile(gpg45Scores, votToCheck.getSupportedGpg45Profiles())
+                .isPresent();
     }
 }

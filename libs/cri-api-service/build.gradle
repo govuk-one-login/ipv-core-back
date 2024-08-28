@@ -2,17 +2,23 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
+	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
 	implementation libs.bundles.log4j,
 			libs.jacksonDatabind,
+			libs.powertoolsTracing,
 			project(":libs:common-services"),
 			project(":libs:kms-es256-signer"),
 			project(":libs:verifiable-credentials")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
+
+	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
+			libs.aspectj
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
@@ -41,6 +47,8 @@ tasks.named('jar') {
 }
 
 test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
 }

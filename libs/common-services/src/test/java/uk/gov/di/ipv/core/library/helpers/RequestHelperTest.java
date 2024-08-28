@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -42,6 +43,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getHeaderByKey;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowBlank;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getLanguage;
 
 class RequestHelperTest {
     private final String TEST_IPV_SESSION_ID = "a-session-id";
@@ -236,6 +238,34 @@ class RequestHelperTest {
         event.setClientOAuthSessionId(null);
 
         assertNull(getClientOAuthSessionId(event));
+    }
+
+    @Test
+    void getLanguageInCriRequestShouldReturnLanguage() throws HttpResponseExceptionWithErrorBody {
+        // Arrange
+        var event = new CriJourneyRequest();
+        String language = "some-language";
+        event.setLanguage(language);
+
+        // Act & Assert
+        assertEquals(language, getLanguage(event));
+    }
+
+    @Test
+    void getLanguageInCriRequestShouldThrowIfLanguageIsNull() {
+        // Arrange
+        var event = new CriJourneyRequest();
+        event.setLanguage(null);
+
+        // Act
+        HttpResponseExceptionWithErrorBody exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            getLanguage(event);
+                        });
+        // Assert
+        assertEquals(ErrorResponse.MISSING_LANGUAGE, exception.getErrorResponse());
     }
 
     @Test

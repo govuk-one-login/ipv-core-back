@@ -39,8 +39,8 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -115,7 +115,7 @@ public class ProcessCriCallbackHandler
         auditService = AuditService.create(configService);
 
         var sessionCredentialsService = new SessionCredentialsService(configService);
-        var ciMitService = new CiMitService(configService);
+        var cimitService = new CimitService(configService);
 
         criApiService =
                 new CriApiService(
@@ -128,8 +128,8 @@ public class ProcessCriCallbackHandler
                         configService,
                         auditService,
                         new UserIdentityService(configService),
-                        ciMitService,
-                        new CiMitUtilityService(configService),
+                        cimitService,
+                        new CimitUtilityService(configService),
                         sessionCredentialsService);
         criStoringService =
                 new CriStoringService(
@@ -137,7 +137,7 @@ public class ProcessCriCallbackHandler
                         auditService,
                         new CriResponseService(configService),
                         sessionCredentialsService,
-                        ciMitService);
+                        cimitService);
 
         VcHelper.setConfigService(configService);
     }

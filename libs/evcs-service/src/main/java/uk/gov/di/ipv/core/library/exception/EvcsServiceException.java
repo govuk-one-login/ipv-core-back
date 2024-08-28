@@ -9,6 +9,7 @@ public class EvcsServiceException extends Exception implements ErrorResponseExce
     private final int responseCode;
 
     public EvcsServiceException(int responseCode, ErrorResponse errorResponse) {
+        super(errorResponse.getMessage());
         this.errorResponse = errorResponse;
         this.responseCode = responseCode;
     }

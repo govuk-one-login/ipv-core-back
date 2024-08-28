@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
@@ -88,7 +88,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private AuditService auditService;
-    @Mock private CiMitService ciMitService;
+    @Mock private CimitService cimitService;
     @Mock private CriResponseService criResponseService;
     @Mock private EvcsService evcsService;
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
@@ -235,7 +235,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         mockCredentialIssuerConfig();
 
         doThrow(new CiPutException("Lambda execution failed"))
-                .when(ciMitService)
+                .when(cimitService)
                 .submitVC(any(VerifiableCredential.class), eq(null), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
@@ -266,7 +266,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         mockCredentialIssuerConfig();
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
-                .when(ciMitService)
+                .when(cimitService)
                 .submitMitigatingVcList(anyList(), eq(null), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
@@ -274,7 +274,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyVerifiableCredentialJwtValidator();
         verify(auditService, times(1))
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
-        verify(ciMitService, times(1)).submitVC(any(), any(), any());
+        verify(cimitService, times(1)).submitVC(any(), any(), any());
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
         verify(evcsService, never()).storePendingVc(any());
 
@@ -327,7 +327,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         var ciVcCaptor = ArgumentCaptor.forClass(VerifiableCredential.class);
         var govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         var ipAddressCaptor = ArgumentCaptor.forClass(String.class);
-        verify(ciMitService, times(1))
+        verify(cimitService, times(1))
                 .submitVC(
                         ciVcCaptor.capture(),
                         govukSigninJourneyIdCaptor.capture(),
@@ -353,7 +353,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
 
-        verify(ciMitService, times(1))
+        verify(cimitService, times(1))
                 .submitMitigatingVcList(
                         postedVcsCaptor.capture(),
                         govukSigninJourneyIdCaptor.capture(),
@@ -388,8 +388,8 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
         verify(evcsService, never()).storePendingVc(any());
-        verify(ciMitService, never()).submitVC(any(), any(), any());
-        verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
+        verify(cimitService, never()).submitVC(any(), any(), any());
+        verify(cimitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     private static void verifyBatchResponseFailures(

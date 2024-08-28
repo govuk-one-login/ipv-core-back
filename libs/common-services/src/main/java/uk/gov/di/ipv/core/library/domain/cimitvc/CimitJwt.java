@@ -7,10 +7,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class CiMitJwt {
+public class CimitJwt {
     private String sub;
     private String iss;
     private Long nbf;
     private Long exp;
-    private CiMitVc vc;
+    private CimitVc vc;
 }

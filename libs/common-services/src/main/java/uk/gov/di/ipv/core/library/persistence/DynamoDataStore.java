@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedExce
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.exceptions.BatchDeleteException;
+import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.ItemAlreadyExistsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
@@ -102,7 +102,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
 
     @ExcludeFromGeneratedCoverageReport
     @Override
-    public void createOrUpdate(List<T> items) throws BatchDeleteException {
+    public void createOrUpdate(List<T> items) throws BatchProcessingException {
         processBatchOperation(items, false);
     }
 
@@ -187,18 +187,18 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
 
     @Override
     @ExcludeFromGeneratedCoverageReport
-    public void delete(List<T> items) throws BatchDeleteException {
+    public void delete(List<T> items) throws BatchProcessingException {
         processBatchOperation(items, true);
     }
 
     @Override
-    public void deleteAllByPartition(String partitionValue) throws BatchDeleteException {
+    public void deleteAllByPartition(String partitionValue) throws BatchProcessingException {
         delete(getItems(partitionValue));
     }
 
     @ExcludeFromGeneratedCoverageReport
     private void processBatchOperation(List<T> items, boolean isForDeletion)
-            throws BatchDeleteException {
+            throws BatchProcessingException {
         for (List<T> subItems : ListUtils.partition(items, MAX_ITEMS_IN_WRITE_BATCH)) {
             if (!subItems.isEmpty()) {
                 BatchWriteResult batchWriteResult =
@@ -213,7 +213,7 @@ public class DynamoDataStore<T extends PersistenceItem> implements DataStore<T> 
                 if (!unprocessedItems.isEmpty()) {
                     String errMessage = "Failed during batch deletion.";
                     LOGGER.error(LogHelper.buildLogMessage(errMessage));
-                    throw new BatchDeleteException(errMessage);
+                    throw new BatchProcessingException(errMessage);
                 }
             } else {
                 LOGGER.info(LogHelper.buildLogMessage("No items to delete"));

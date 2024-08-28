@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
@@ -64,7 +64,7 @@ public class ProcessAsyncCriCredentialHandler
     private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final AuditService auditService;
-    private final CiMitService ciMitService;
+    private final CimitService cimitService;
     private final CriResponseService criResponseService;
     private final EvcsService evcsService;
 
@@ -73,14 +73,14 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialService verifiableCredentialService,
             VerifiableCredentialValidator verifiableCredentialValidator,
             AuditService auditService,
-            CiMitService ciMitService,
+            CimitService cimitService,
             CriResponseService criResponseService,
             EvcsService evcsService) {
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
-        this.ciMitService = ciMitService;
+        this.cimitService = cimitService;
         this.criResponseService = criResponseService;
         this.evcsService = evcsService;
         VcHelper.setConfigService(this.configService);
@@ -92,7 +92,7 @@ public class ProcessAsyncCriCredentialHandler
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = AuditService.create(configService);
-        this.ciMitService = new CiMitService(configService);
+        this.cimitService = new CimitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.evcsService = new EvcsService(configService);
         VcHelper.setConfigService(this.configService);
@@ -175,7 +175,6 @@ public class ProcessAsyncCriCredentialHandler
         sendIpvVcErrorAuditEvent(errorAsyncCriResponse);
     }
 
-    @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, CiPutException, AsyncVerifiableCredentialException,
                     CiPostMitigationsException, VerifiableCredentialException,
@@ -247,7 +246,6 @@ public class ProcessAsyncCriCredentialHandler
         }
     }
 
-    @Tracing
     private void sendIpvVcReceivedAuditEvent(
             AuditEventUser auditEventUser,
             VerifiableCredential verifiableCredential,
@@ -262,7 +260,6 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc) {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
@@ -274,7 +271,6 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse) {
         AuditEventUser auditEventUser =
                 new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
@@ -295,13 +291,11 @@ public class ProcessAsyncCriCredentialHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    @Tracing
     private void submitVcToCiStorage(VerifiableCredential vc) throws CiPutException {
-        ciMitService.submitVC(vc, null, null);
+        cimitService.submitVC(vc, null, null);
     }
 
-    @Tracing
     private void postMitigatingVc(VerifiableCredential vc) throws CiPostMitigationsException {
-        ciMitService.submitMitigatingVcList(List.of(vc), null, null);
+        cimitService.submitMitigatingVcList(List.of(vc), null, null);
     }
 }

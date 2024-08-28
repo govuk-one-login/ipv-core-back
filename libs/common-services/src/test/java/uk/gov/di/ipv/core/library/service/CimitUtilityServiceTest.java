@@ -32,11 +32,11 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
-class CiMitUtilityServiceTest {
+class CimitUtilityServiceTest {
     private static final Vot TEST_VOT = Vot.P2;
     @Mock private ConfigService mockConfigService;
 
-    @InjectMocks private CiMitUtilityService ciMitUtilityService;
+    @InjectMocks private CimitUtilityService cimitUtilityService;
 
     @ParameterizedTest
     @MethodSource("ciScoresAndSurpassedThresholds")
@@ -62,7 +62,7 @@ class CiMitUtilityServiceTest {
         ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
 
         // Act
-        var result = ciMitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
+        var result = cimitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
 
         // Assert
         assertTrue(
@@ -104,7 +104,7 @@ class CiMitUtilityServiceTest {
         ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
 
         // Act
-        var result = ciMitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
+        var result = cimitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
 
         // Assert
         assertFalse(
@@ -139,7 +139,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("9");
 
         // Act
-        boolean result = ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VOT);
+        boolean result = cimitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VOT);
 
         // Assert
         assertTrue(result);
@@ -162,7 +162,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("9");
 
         // Act
-        boolean result = ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci2, cis, TEST_VOT);
+        boolean result = cimitUtilityService.isBreachingCiThresholdIfMitigated(ci2, cis, TEST_VOT);
 
         // Assert
         assertFalse(result);
@@ -184,7 +184,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // Act
-        boolean result = ciMitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VOT);
+        boolean result = cimitUtilityService.isBreachingCiThresholdIfMitigated(ci1, cis, TEST_VOT);
 
         // Assert
         assertFalse(result);
@@ -214,7 +214,7 @@ class CiMitUtilityServiceTest {
         ContraIndicators cis = ContraIndicators.builder().usersContraIndicators(usersCis).build();
 
         // Act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // Assert
         assertTrue(
@@ -247,7 +247,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -269,7 +269,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -305,7 +305,7 @@ class CiMitUtilityServiceTest {
 
         // Act
         Optional<JourneyResponse> result =
-                ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+                cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // Assert
         assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
@@ -325,7 +325,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
@@ -349,7 +349,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -370,7 +370,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
@@ -393,7 +393,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // Act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // Assert
         assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
@@ -434,7 +434,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = ciMitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
+        var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)), result);
@@ -459,7 +459,7 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 
         // act
-        var result = ciMitUtilityService.getMitigatedCiJourneyResponse(ci);
+        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
 
         // assert
         assertEquals(Optional.of(new JourneyResponse(journey)), result);
@@ -473,7 +473,7 @@ class CiMitUtilityServiceTest {
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
 
         // act
-        var result = ciMitUtilityService.getMitigatedCiJourneyResponse(ci);
+        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
 
         // assert
         assertEquals(Optional.empty(), result);
@@ -498,7 +498,7 @@ class CiMitUtilityServiceTest {
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
 
         // Act
-        var result = ciMitUtilityService.getMitigatedCiJourneyResponse(ci);
+        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
 
         // Assert
         assertTrue(result.isEmpty());

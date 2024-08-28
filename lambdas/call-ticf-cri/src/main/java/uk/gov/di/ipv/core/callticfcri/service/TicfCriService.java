@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
+import java.time.Duration;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -40,20 +43,21 @@ public class TicfCriService {
     private final VerifiableCredentialValidator jwtValidator;
     private final SessionCredentialsService sessionCredentialsService;
 
+    @ExcludeFromGeneratedCoverageReport
     public TicfCriService(ConfigService configService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
         this.jwtValidator = new VerifiableCredentialValidator(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
     }
 
-    @ExcludeFromGeneratedCoverageReport
+    // Used by contract tests
     public TicfCriService(
             ConfigService configService,
             VerifiableCredentialValidator jwtValidator,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
         this.jwtValidator = jwtValidator;
         this.sessionCredentialsService = sessionCredentialsService;
     }
@@ -69,6 +73,7 @@ public class TicfCriService {
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
+    @Tracing
     public List<VerifiableCredential> getTicfVc(
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {
@@ -92,9 +97,10 @@ public class TicfCriService {
                                     .map(VerifiableCredential::getVcString)
                                     .toList());
 
-            HttpRequest.Builder httpRequestBuilder =
+            var httpRequestBuilder =
                     HttpRequest.newBuilder()
                             .uri(ticfCriConfig.getCredentialUrl())
+                            .timeout(Duration.ofSeconds(ticfCriConfig.getRequestTimeout()))
                             .POST(
                                     HttpRequest.BodyPublishers.ofString(
                                             OBJECT_MAPPER.writeValueAsString(ticfCriRequest)));
@@ -135,6 +141,10 @@ public class TicfCriService {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();
             }
+
+            if (e instanceof HttpTimeoutException) {
+                LOGGER.warn(LogHelper.buildLogMessage("Request to TICF CRI has timed out"));
+            }
             // In the case of unavailability, the TICF CRI is deemed optional.
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -160,7 +170,6 @@ public class TicfCriService {
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from TICF CRI"));
     }
 
-    @Tracing
     private HttpResponse<String> sendHttpRequest(HttpRequest ticfCriHttpRequest)
             throws IOException, InterruptedException {
         LOGGER.info(LogHelper.buildLogMessage("Sending HTTP request to TICF CRI"));

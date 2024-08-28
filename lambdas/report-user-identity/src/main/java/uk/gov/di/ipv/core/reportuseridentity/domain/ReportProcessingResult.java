@@ -1,17 +1,28 @@
 package uk.gov.di.ipv.core.reportuseridentity.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import lombok.Data;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Map;
+import java.util.Optional;
 
-@Builder
+@Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @ExcludeFromGeneratedCoverageReport
-public record ReportProcessingResult(
-        ReportSummary summary,
-        Map<String, AttributeValue> tacticalStoreLastEvaluatedKey,
-        Map<String, AttributeValue> userIdentitylastEvaluatedKey,
-        Map<String, AttributeValue> buildReportLastEvaluatedKey) {}
+public class ReportProcessingResult {
+    ReportSummary summary;
+    Long tacticalVcsEvaluated;
+    Map<String, Object> tacticalStoreLastEvaluatedKey;
+    Long userIdentitiesEvaluated;
+    Map<String, Object> userIdentitylastEvaluatedKey;
+    Map<String, Object> buildReportLastEvaluatedKey;
+
+    public void addTacticalVcsEvaluated(long count) {
+        tacticalVcsEvaluated = Optional.ofNullable(tacticalVcsEvaluated).orElse(0L) + count;
+    }
+
+    public void addUserIdentitiesEvaluated(long count) {
+        userIdentitiesEvaluated = Optional.ofNullable(userIdentitiesEvaluated).orElse(0L) + count;
+    }
+}

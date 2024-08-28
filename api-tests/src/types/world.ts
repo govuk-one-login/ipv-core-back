@@ -1,5 +1,5 @@
 import { JourneyEngineResponse } from "./internal-api.js";
-import { UserIdentity } from "./external-api.js";
+import { MfaResetResult, UserIdentity } from "./external-api.js";
 import { World as CucumberWorld } from "@cucumber/cucumber";
 
 export interface World extends CucumberWorld {
@@ -7,6 +7,7 @@ export interface World extends CucumberWorld {
   ipvSessionId: string;
   journeyId: string;
   featureSet: string | undefined;
-  lastJourneyEngineResponse: JourneyEngineResponse;
-  identity: UserIdentity;
+  lastJourneyEngineResponse?: JourneyEngineResponse;
+  identity?: UserIdentity;
+  mfaResetResult?: MfaResetResult;
 }
