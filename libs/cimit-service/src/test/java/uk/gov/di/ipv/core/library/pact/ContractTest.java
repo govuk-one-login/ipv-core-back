@@ -12,7 +12,6 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -23,7 +22,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.SecurityCheck;
 import uk.gov.di.model.SecurityCheckCredential;
@@ -42,14 +41,13 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_SIGNING_KEY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.CIMIT_API_GATEWAY_ENABLED;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.service.CiMitService.FAILED_API_REQUEST;
-import static uk.gov.di.ipv.core.library.service.CiMitService.GET_VCS_ENDPOINT;
-import static uk.gov.di.ipv.core.library.service.CiMitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER;
-import static uk.gov.di.ipv.core.library.service.CiMitService.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.service.CiMitService.POST_CI_ENDPOINT;
-import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_ENDPOINT;
+import static uk.gov.di.ipv.core.library.service.CimitService.FAILED_API_REQUEST;
+import static uk.gov.di.ipv.core.library.service.CimitService.GET_VCS_ENDPOINT;
+import static uk.gov.di.ipv.core.library.service.CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER;
+import static uk.gov.di.ipv.core.library.service.CimitService.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.service.CimitService.POST_CI_ENDPOINT;
+import static uk.gov.di.ipv.core.library.service.CimitService.POST_MITIGATIONS_ENDPOINT;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
@@ -58,11 +56,6 @@ import static uk.gov.di.ipv.core.library.service.CiMitService.POST_MITIGATIONS_E
 class ContractTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock ConfigService mockConfigService;
-
-    @BeforeEach
-    void setUp() {
-        when(mockConfigService.enabled(CIMIT_API_GATEWAY_ENABLED)).thenReturn(true);
-    }
 
     @Pact(provider = "CiMitProvider", consumer = "IpvCoreBack")
     public RequestResponsePact getCisUserIdReturnsContraIndicators(PactDslWithProvider builder) {
@@ -110,7 +103,7 @@ class ContractTest {
         when(mockConfigService.getParameter(CIMIT_SIGNING_KEY)).thenReturn(EC_PRIVATE_KEY_JWK);
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act
         var contraIndicator =
@@ -175,7 +168,7 @@ class ContractTest {
         when(mockConfigService.getParameter(CIMIT_SIGNING_KEY)).thenReturn(EC_PRIVATE_KEY_JWK);
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act
         var contraIndicator =
@@ -234,7 +227,7 @@ class ContractTest {
                 VerifiableCredential.fromValidJwt(
                         MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT));
 
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act
         assertDoesNotThrow(() -> underTest.submitVC(testVc, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS));
@@ -285,7 +278,7 @@ class ContractTest {
                                 null,
                                 SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT)));
 
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act/Assert
         assertThrows(
@@ -342,7 +335,7 @@ class ContractTest {
                 VerifiableCredential.fromValidJwt(
                         MOCK_USER_ID, null, SignedJWT.parse(FAILED_DVLA_VC_WITH_CI_JWT));
 
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act
         assertDoesNotThrow(
@@ -398,7 +391,7 @@ class ContractTest {
                         null,
                         SignedJWT.parse(DVLA_VC_WITH_CI_AND_INVALID_ISSUER_JWT));
 
-        var underTest = new CiMitService(mockConfigService);
+        var underTest = new CimitService(mockConfigService);
 
         // Act/Assert
         assertThrows(

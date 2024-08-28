@@ -43,8 +43,8 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -134,8 +134,8 @@ public class CheckExistingIdentityHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final CiMitService ciMitService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitService cimitService;
+    private final CimitUtilityService cimitUtilityService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
@@ -153,8 +153,8 @@ public class CheckExistingIdentityHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService,
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             EvcsService evcsService,
@@ -166,8 +166,8 @@ public class CheckExistingIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
-        this.ciMitService = ciMitService;
-        this.ciMitUtilityService = ciMitUtilityService;
+        this.cimitService = cimitService;
+        this.cimitUtilityService = cimitUtilityService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
@@ -185,8 +185,8 @@ public class CheckExistingIdentityHandler
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
-        this.ciMitService = new CiMitService(configService);
-        this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.cimitService = new CimitService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
@@ -280,7 +280,7 @@ public class CheckExistingIdentityHandler
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var contraIndicators =
-                    ciMitService.getContraIndicators(
+                    cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             Optional<Boolean> reproveIdentity =
@@ -301,7 +301,7 @@ public class CheckExistingIdentityHandler
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
             var ciScoringCheckResponse =
-                    ciMitUtilityService.getMitigationJourneyIfBreaching(
+                    cimitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
@@ -630,10 +630,10 @@ public class CheckExistingIdentityHandler
                         : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                 auditEventUser,
                 deviceInformation);
-        var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
+        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
             var mitigationJourney =
-                    ciMitUtilityService
+                    cimitUtilityService
                             .getMitigatedCiJourneyResponse(mitigatedCI.get())
                             .map(JourneyResponse::getJourney)
                             .orElseThrow(
@@ -655,9 +655,9 @@ public class CheckExistingIdentityHandler
             ContraIndicators contraIndicators, Vot preferredNewIdentityLevel)
             throws ConfigException, MitigationRouteException {
 
-        var mitigatedCI = ciMitUtilityService.hasMitigatedContraIndicator(contraIndicators);
+        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
-            return ciMitUtilityService
+            return cimitUtilityService
                     .getMitigatedCiJourneyResponse(mitigatedCI.get())
                     .orElseThrow(
                             () ->
@@ -842,7 +842,7 @@ public class CheckExistingIdentityHandler
                         : Optional.empty();
 
         var isBreaching =
-                ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+                cimitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
 
         // Successful match
         if (matchedGpg45Profile.isPresent() && !isBreaching) {
@@ -881,7 +881,7 @@ public class CheckExistingIdentityHandler
                             .findFirst();
 
             var isBreaching =
-                    ciMitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
+                    cimitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
 
             // Successful match
             if (matchedOperationalProfile.isPresent() && !isBreaching) {

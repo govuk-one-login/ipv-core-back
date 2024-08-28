@@ -11,7 +11,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -37,7 +37,7 @@ class ReplayCimitVcsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CRI_ID = "address";
 
-    @Mock private CiMitService ciMitService;
+    @Mock private CimitService cimitService;
     @Mock private ConfigService configService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @InjectMocks private ReplayCimitVcsHandler replayCimitVcsHandler;
@@ -54,7 +54,7 @@ class ReplayCimitVcsHandlerTest {
         var postedVcCaptor = ArgumentCaptor.forClass(VerifiableCredential.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
-        verify(ciMitService, times(1))
+        verify(cimitService, times(1))
                 .submitVC(
                         postedVcCaptor.capture(),
                         govukSigninJourneyIdCaptor.capture(),
@@ -77,7 +77,7 @@ class ReplayCimitVcsHandlerTest {
 
         this.replayCimitVcsHandler.handleRequest(inputStream, null, null);
 
-        verify(ciMitService, never()).submitVC(any(), any(), any());
+        verify(cimitService, never()).submitVC(any(), any(), any());
     }
 
     @Test
@@ -88,7 +88,7 @@ class ReplayCimitVcsHandlerTest {
             when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID))
                     .thenReturn(M1A_ADDRESS_VC);
             doThrow(new CiPutException("Lambda execution failed"))
-                    .when(ciMitService)
+                    .when(cimitService)
                     .submitVC(any(), eq(null), eq(null));
 
             assertThrows(
@@ -105,7 +105,7 @@ class ReplayCimitVcsHandlerTest {
             when(mockVerifiableCredentialService.getVc(TEST_USER_ID, TEST_CRI_ID))
                     .thenReturn(M1A_ADDRESS_VC);
             doThrow(new CiPostMitigationsException("Lambda execution failed"))
-                    .when(ciMitService)
+                    .when(cimitService)
                     .submitMitigatingVcList(anyList(), eq(null), eq(null));
 
             assertThrows(

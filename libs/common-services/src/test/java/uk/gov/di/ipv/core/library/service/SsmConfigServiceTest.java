@@ -598,16 +598,16 @@ class SsmConfigServiceTest {
             throws ConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn(cimitSsmConfig);
-        Map<String, List<MitigationRoute>> expectedCiMitConfig =
+        Map<String, List<MitigationRoute>> expectedCimitConfig =
                 Map.of(
                         "X01",
                         List.of(new MitigationRoute("/journey/do-a-thing", expectedDocument)));
         Map<String, List<MitigationRoute>> cimitConfig = configService.getCimitConfig();
         assertEquals(
-                expectedCiMitConfig.get("X01").get(0).event(),
+                expectedCimitConfig.get("X01").get(0).event(),
                 cimitConfig.get("X01").get(0).event());
         assertEquals(
-                expectedCiMitConfig.get("X01").get(0).document(),
+                expectedCimitConfig.get("X01").get(0).document(),
                 cimitConfig.get("X01").get(0).document());
     }
 

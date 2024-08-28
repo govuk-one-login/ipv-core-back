@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -55,7 +55,7 @@ class CriStoringServiceTest {
     @Mock private AuditService mockAuditService;
     @Mock private CriResponseService mockCriResponseService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
-    @Mock private CiMitService mockCiMitService;
+    @Mock private CimitService mockCimitService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
     @Captor private ArgumentCaptor<String> userIdCaptor;
@@ -151,14 +151,14 @@ class CriStoringServiceTest {
                 mockIpvSessionItem);
 
         // Assert
-        verify(mockCiMitService)
+        verify(mockCimitService)
                 .submitVC(
                         vcCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
         assertEquals(vc, vcCaptor.getValue());
 
-        verify(mockCiMitService)
+        verify(mockCimitService)
                 .submitMitigatingVcList(
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
@@ -182,7 +182,7 @@ class CriStoringServiceTest {
     }
 
     @Test
-    void storeVcsShouldNotSubmitVcsToCiMitServiceWhenOnReverificationJourney() throws Exception {
+    void storeVcsShouldNotSubmitVcsToCimitServiceWhenOnReverificationJourney() throws Exception {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
@@ -198,8 +198,8 @@ class CriStoringServiceTest {
                 mockIpvSessionItem);
 
         // Assert
-        verify(mockCiMitService, never()).submitVC(any(), any(), any());
-        verify(mockCiMitService, never()).submitMitigatingVcList(any(), any(), any());
+        verify(mockCimitService, never()).submitVC(any(), any(), any());
+        verify(mockCimitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test
@@ -244,14 +244,14 @@ class CriStoringServiceTest {
                 mockIpvSessionItem);
 
         // Assert
-        verify(mockCiMitService)
+        verify(mockCimitService)
                 .submitVC(
                         vcCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
         assertEquals(vc, vcCaptor.getValue());
 
-        verify(mockCiMitService)
+        verify(mockCimitService)
                 .submitMitigatingVcList(
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
@@ -300,7 +300,7 @@ class CriStoringServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPutException(""))
-                .when(mockCiMitService)
+                .when(mockCimitService)
                 .submitVC(any(VerifiableCredential.class), any(), any());
 
         // Act & Assert
@@ -323,7 +323,7 @@ class CriStoringServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         doThrow(new CiPostMitigationsException(""))
-                .when(mockCiMitService)
+                .when(mockCimitService)
                 .submitMitigatingVcList(any(), any(), any());
 
         // Act & Assert

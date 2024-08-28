@@ -27,8 +27,8 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -74,8 +74,8 @@ class CallTicfCriHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private TicfCriService mockTicfCriService;
-    @Mock private CiMitService mockCiMitService;
-    @Mock private CiMitUtilityService mockCiMitUtilityService;
+    @Mock private CimitService mockCimitService;
+    @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private CriStoringService mockCriStoringService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private VerifiableCredential mockVerifiableCredential;
@@ -114,7 +114,7 @@ class CallTicfCriHandlerTest {
                         clientOAuthSessionItem,
                         mockIpvSessionItem);
 
-        verify(mockCiMitService)
+        verify(mockCimitService)
                 .getContraIndicators(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
 
         InOrder inOrder = inOrder(mockIpvSessionService);
@@ -135,7 +135,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
         verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any(), any());
-        verify(mockCiMitService, never()).getContraIndicators(any(), any(), any());
+        verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
 
         InOrder inOrder = inOrder(mockIpvSessionService);
         inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
@@ -151,7 +151,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -171,7 +171,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
@@ -249,13 +249,13 @@ class CallTicfCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorResponseIfCiMitServiceThrows() throws Exception {
+    void handleRequestShouldReturnJourneyErrorResponseIfCimitServiceThrows() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCiMitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Oh dear"));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);

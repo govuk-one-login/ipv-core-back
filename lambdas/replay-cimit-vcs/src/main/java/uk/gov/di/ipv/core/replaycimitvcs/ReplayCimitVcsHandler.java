@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.FailedVcReplayException;
 import uk.gov.di.ipv.core.library.helpers.ListHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -30,16 +30,16 @@ import java.util.List;
 public class ReplayCimitVcsHandler implements RequestStreamHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
-    private final CiMitService ciMitService;
+    private final CimitService cimitService;
     private final VerifiableCredentialService verifiableCredentialService;
 
     @SuppressWarnings("unused") // Used through dependency injection
     public ReplayCimitVcsHandler(
             ConfigService configService,
-            CiMitService ciMitService,
+            CimitService cimitService,
             VerifiableCredentialService verifiableCredentialService) {
         this.configService = configService;
-        this.ciMitService = ciMitService;
+        this.cimitService = cimitService;
         this.verifiableCredentialService = verifiableCredentialService;
     }
 
@@ -47,7 +47,7 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
     @ExcludeFromGeneratedCoverageReport
     public ReplayCimitVcsHandler() {
         this.configService = ConfigService.create();
-        this.ciMitService = new CiMitService(configService);
+        this.cimitService = new CimitService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
     }
 
@@ -92,12 +92,12 @@ public class ReplayCimitVcsHandler implements RequestStreamHandler {
                     this.verifiableCredentialService.getVc(
                             item.getUserId().get("S"), item.getCredentialIssuer().get("S"));
             if (vc != null) {
-                ciMitService.submitVC(vc, null, null);
+                cimitService.submitVC(vc, null, null);
                 submittedVcs.add(vc);
             } else {
                 LOGGER.warn("VC not found");
             }
         }
-        ciMitService.submitMitigatingVcList(submittedVcs, null, null);
+        cimitService.submitMitigatingVcList(submittedVcs, null, null);
     }
 }

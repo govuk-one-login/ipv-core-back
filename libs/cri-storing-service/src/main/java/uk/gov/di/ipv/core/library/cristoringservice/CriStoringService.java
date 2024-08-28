@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
+import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -47,7 +47,7 @@ public class CriStoringService {
     private final CriResponseService criResponseService;
     private final SessionCredentialsService sessionCredentialsService;
     private final AuditService auditService;
-    private final CiMitService ciMitService;
+    private final CimitService cimitService;
     private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -56,12 +56,12 @@ public class CriStoringService {
             AuditService auditService,
             CriResponseService criResponseService,
             SessionCredentialsService sessionCredentialsService,
-            CiMitService ciMitService) {
+            CimitService cimitService) {
         this.configService = configService;
         this.auditService = auditService;
         this.criResponseService = criResponseService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.ciMitService = ciMitService;
+        this.cimitService = cimitService;
         VcHelper.setConfigService(configService);
     }
 
@@ -160,8 +160,8 @@ public class CriStoringService {
 
             var scopeClaims = clientOAuthSessionItem.getScopeClaims();
             if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
-                ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-                ciMitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+                cimitService.submitVC(vc, govukSigninJourneyId, ipAddress);
+                cimitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
             }
 
             if (cri.equals(TICF)) {

@@ -14,7 +14,6 @@ awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
-awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"

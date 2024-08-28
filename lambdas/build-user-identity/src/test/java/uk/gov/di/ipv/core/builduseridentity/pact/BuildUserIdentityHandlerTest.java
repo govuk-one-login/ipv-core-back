@@ -34,8 +34,8 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -75,8 +75,8 @@ class BuildUserIdentityHandlerTest {
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
     @Mock private DataStore<SessionCredentialItem> mockSessionCredentialItemStore;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
-    @Mock private CiMitService mockCiMitService;
-    @Mock private CiMitUtilityService mockCiMitUtilityService;
+    @Mock private CimitService mockCimitService;
+    @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private Sleeper mockSleeper;
 
@@ -103,12 +103,12 @@ class BuildUserIdentityHandlerTest {
         var jwtBuilder =
                 new PactJwtBuilder(VC_HEADER, CIMIT_VC_NO_CIS_BODY, CIMIT_VC_NO_CIS_SIGNATURE);
         var cimitVc = VerifiableCredential.fromValidJwt(null, null, jwtBuilder.buildSignedJwt());
-        when(mockCiMitService.getContraIndicatorsVc(
+        when(mockCimitService.getContraIndicatorsVc(
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
         var contraIndicators = ContraIndicators.builder().usersContraIndicators(List.of()).build();
-        when(mockCiMitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
+        when(mockCimitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
 
         // Configure the config service
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
@@ -143,8 +143,8 @@ class BuildUserIdentityHandlerTest {
                         mockConfigService,
                         mockAuditService,
                         clientOAuthSessionDetailsService,
-                        mockCiMitService,
-                        mockCiMitUtilityService,
+                        mockCimitService,
+                        mockCimitUtilityService,
                         sessionCredentialService);
 
         httpServer = new LambdaHttpServer(handler, "/user-identity");
