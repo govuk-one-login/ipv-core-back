@@ -357,7 +357,6 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    cimitApiGatewayEnabled: true
     updateDetailsAccountDeletion: true
   features:
     mfaReset:
