@@ -19,7 +19,7 @@ export const callHeadlessApi = async (
 
   if (criStubResponse.status === 302) {
     return {
-      redirectUrl: criStubResponse.headers.get("location") as string,
+      redirectUri: criStubResponse.headers.get("location") as string,
     };
   }
 
