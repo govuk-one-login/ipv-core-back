@@ -76,8 +76,12 @@ When(
   },
 );
 
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub and see requested attributes$/,
+  /^I submit (expired )?'([\w-]+)' details with attributes to the (async )?CRI stub$/,
   async function (
     this: World,
     expired: "expired " | undefined,
