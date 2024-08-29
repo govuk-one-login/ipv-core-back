@@ -109,7 +109,11 @@ When(
       ),
     );
 
-    if (jarPayload && dataTable?.rows) {
+    if (!jarPayload) {
+      throw new Error("No payload returned from CRI stub");
+    }
+
+    if (dataTable?.rows) {
       dataTable.rows().forEach(([key, expected]) => {
         const actual = JSON.stringify(
           jarPayload[key as keyof typeof jarPayload],
