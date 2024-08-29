@@ -66,37 +66,43 @@ const startNewJourney = async (
   journeyType: string,
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
+  featureSet: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
+  world.featureSet = featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
     await generateInitialiseIpvSessionBody({
       subject: world.userId,
       journeyId: world.journeyId,
       journeyType,
-      isReproveIdentity: !!reproveIdentity,
+      isReproveIdentity: reproveIdentity,
       inheritedIdentityId,
     }),
+    world.featureSet,
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
     world.ipvSessionId,
+    world.featureSet,
   );
 };
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?$/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
     inheritedIdentityId: string | undefined,
+    featureSet: string | undefined,
   ): Promise<void> {
     await startNewJourney(
       this,
       journeyType,
       !!reproveIdentity,
       inheritedIdentityId,
+      featureSet,
     );
   },
 );
@@ -112,7 +118,7 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, false, undefined, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
@@ -163,6 +169,7 @@ When(
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       event,
       this.ipvSessionId,
+      this.featureSet,
     );
   },
 );
@@ -280,7 +287,10 @@ Then(
 Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
-    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+    const provenIdentity = await getProvenIdentityDetails(
+      this.ipvSessionId,
+      this.featureSet,
+    );
 
     if (!this.identity) {
       throw new Error("No identity found.");

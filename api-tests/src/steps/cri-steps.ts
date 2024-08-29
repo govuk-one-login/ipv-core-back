@@ -1,4 +1,4 @@
-import { When } from "@cucumber/cucumber";
+import { DataTable, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
@@ -13,6 +13,7 @@ import {
   isJourneyResponse,
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
+import assert from "assert";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 
@@ -29,6 +30,7 @@ const submitAndProcessCriAction = async (
   const journeyResponse = await internalClient.processCriCallback(
     generateProcessCriCallbackBody(criStubResponse),
     world.ipvSessionId,
+    world.featureSet,
   );
 
   if (!isJourneyResponse(journeyResponse)) {
@@ -40,7 +42,10 @@ const submitAndProcessCriAction = async (
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     journeyResponse.journey,
     world.ipvSessionId,
+    world.featureSet,
   );
+
+  return criStubResponse.jarPayload;
 };
 
 When(
@@ -69,6 +74,53 @@ When(
         !!async,
       ),
     );
+  },
+);
+
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
+When(
+  /^I submit (expired )?'([\w-]+)' details with attributes to the (async )?CRI stub$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    scenario: string,
+    async: "async " | undefined,
+    dataTable: DataTable | undefined,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
+        !!async,
+      ),
+    );
+
+    if (!jarPayload) {
+      throw new Error("No payload returned from CRI stub");
+    }
+
+    if (dataTable?.rows) {
+      dataTable.rows().forEach(([key, expected]) => {
+        const actualValue = jarPayload[key as keyof typeof jarPayload];
+        const expectedValue = JSON.parse(expected);
+
+        assert.deepStrictEqual(actualValue, expectedValue);
+      });
+    }
   },
 );
 
