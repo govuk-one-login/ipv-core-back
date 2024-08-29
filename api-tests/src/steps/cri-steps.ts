@@ -2,10 +2,13 @@ import { DataTable, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
+import * as evcsStubClient from "../clients/evcs-stub-client.js";
 import {
   generateCriStubBody,
   generateCriStubErrorBody,
+  generatePostVcsBody,
   generateProcessCriCallbackBody,
+  generateVcRequestBody,
 } from "../utils/request-body-generators.js";
 import {
   CriResponse,
@@ -13,6 +16,7 @@ import {
   isJourneyResponse,
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
+import { getRandomString } from "../utils/random-string-generator.js";
 import assert from "assert";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
@@ -171,6 +175,36 @@ When(
         !!async,
         mitigatedCis.split(","),
       ),
+    );
+  },
+);
+
+When(
+  /^the subject already has the following (expired )?credentials$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    table: DataTable,
+  ): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    const credentials: string[] = [];
+    for (const row of table.hashes()) {
+      credentials.push(
+        await criStubClient.generateVc(
+          row.CRI,
+          await generateVcRequestBody(
+            this.userId,
+            row.CRI,
+            row.scenario,
+            expired ? EXPIRED_NBF : undefined,
+          ),
+        ),
+      );
+    }
+
+    await evcsStubClient.postCredentials(
+      this.userId,
+      generatePostVcsBody(credentials),
     );
   },
 );

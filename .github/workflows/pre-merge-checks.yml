@@ -163,6 +163,8 @@ jobs:
         env:
           ASYNC_QUEUE_NAME: ${{ steps.extract_queue_name.outputs.queue_name }}
           MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
+          EVCS_STUB_API_KEY: ${{ secrets.API_KEY_EVCS }}
+          CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
         run: npm run test:ci
 
       - name: Upload API test report

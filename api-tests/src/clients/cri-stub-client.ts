@@ -1,4 +1,9 @@
-import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
+import {
+  CriStubGenerateVcRequest,
+  CriStubRequest,
+  CriStubResponse,
+} from "../types/cri-stub.js";
+import config from "../config/config.js";
 
 export const callHeadlessApi = async (
   redirectUrl: string,
@@ -20,4 +25,26 @@ export const callHeadlessApi = async (
   }
 
   return criStubResponse.json();
+};
+
+export const generateVc = async (
+  criId: string,
+  body: CriStubGenerateVcRequest,
+): Promise<string> => {
+  const response = await fetch(
+    `https://${criId}-cri.stubs.account.gov.uk/credentials/generate`,
+    {
+      headers: {
+        "x-api-key": config.credentialIssuers.generateCredentialApiKey,
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`generateVc request failed: ${response.statusText}`);
+  }
+
+  return response.text();
 };
