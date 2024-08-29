@@ -30,6 +30,7 @@ const submitAndProcessCriAction = async (
   const journeyResponse = await internalClient.processCriCallback(
     generateProcessCriCallbackBody(criStubResponse),
     world.ipvSessionId,
+    world.featureSet,
   );
 
   if (!isJourneyResponse(journeyResponse)) {
@@ -41,7 +42,7 @@ const submitAndProcessCriAction = async (
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     journeyResponse.journey,
     world.ipvSessionId,
-    undefined,
+    world.featureSet,
   );
 
   return criStubResponse.jarPayload;

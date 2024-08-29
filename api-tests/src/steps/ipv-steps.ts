@@ -79,6 +79,7 @@ const startNewJourney = async (
       isReproveIdentity: reproveIdentity,
       inheritedIdentityId,
     }),
+    world.featureSet,
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
@@ -281,7 +282,10 @@ Then(
 Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
-    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+    const provenIdentity = await getProvenIdentityDetails(
+      this.ipvSessionId,
+      this.featureSet,
+    );
 
     if (!this.identity) {
       throw new Error("No identity found.");
