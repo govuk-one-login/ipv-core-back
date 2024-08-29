@@ -357,7 +357,7 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    updateDetailsAccountDeletion: true
+    updateDetailsAccountDeletion: false
   features:
     mfaReset:
       featureFlags:
