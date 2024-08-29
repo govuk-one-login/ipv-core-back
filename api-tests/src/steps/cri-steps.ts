@@ -115,15 +115,10 @@ When(
 
     if (dataTable?.rows) {
       dataTable.rows().forEach(([key, expected]) => {
-        const actual = JSON.stringify(
-          jarPayload[key as keyof typeof jarPayload],
-        );
+        const actualValue = jarPayload[key as keyof typeof jarPayload];
+        const expectedValue = JSON.parse(expected);
 
-        assert.equal(
-          actual,
-          expected,
-          `Value for ${key} sent to CRI should be ${expected} but was ${actual}`,
-        );
+        assert.deepStrictEqual(actualValue, expectedValue);
       });
     }
   },
