@@ -11,7 +11,7 @@ import { JarRequest } from "../types/jar-request.js";
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
 const encKey = await jose.importJWK(
-  JSON.parse(config.core.encryptionkey) as jose.JWK,
+  JSON.parse(config.core.encryptionKey) as jose.JWK,
   encAlg,
 );
 
