@@ -10,6 +10,12 @@ echo "Running API tests against the build environment"
 CORE_BACK_INTERNAL_API_KEY=$(aws secretsmanager get-secret-value --secret-id CoreBackInternalTestingApiKey | jq -r .SecretString)
 export CORE_BACK_INTERNAL_API_KEY
 
+EVCS_STUB_API_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/evcs/apiKey | jq -r .SecretString)
+export EVCS_STUB_API_KEY
+
+CRI_STUB_GEN_CRED_API_KEY=$(aws secretsmanager get-secret-value --secret-id CriStubGenCredApiKey | jq -r .SecretString)
+export CRI_STUB_GEN_CRED_API_KEY
+
 cd /api-tests
 
 npm run test:build -- --profile codepipeline
