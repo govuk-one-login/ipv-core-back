@@ -76,23 +76,9 @@ states:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
                   successful: false
-            checkFeatureFlag:
-              updateDetailsAccountDeletion:
-                targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
         checkJourneyContext:
           rfc:
             targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
