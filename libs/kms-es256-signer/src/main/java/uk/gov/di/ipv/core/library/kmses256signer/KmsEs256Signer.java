@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.kms.model.SignRequest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Set;
 
 import static software.amazon.awssdk.services.kms.model.MessageType.DIGEST;
@@ -23,8 +22,6 @@ import static software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec.ECD
 public class KmsEs256Signer implements JWSSigner {
 
     private final KmsClient kmsClient;
-
-    private static final Base64.Encoder B64_URL_ENCODER = Base64.getUrlEncoder();
     private final JCAContext jcaContext = new JCAContext();
     private final String keyId;
 
@@ -59,7 +56,7 @@ public class KmsEs256Signer implements JWSSigner {
                         signResponse.signature().asByteArray(),
                         ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256));
 
-        return new Base64URL(B64_URL_ENCODER.encodeToString(concatSignature));
+        return Base64URL.encode(concatSignature);
     }
 
     @Override
