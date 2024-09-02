@@ -1,0 +1,6 @@
+{
+  "ci": ["BREACHING"],
+  "txn": "RB000117420948",
+  "identityFraudScore": 0,
+  "type": "IdentityCheck"
+}

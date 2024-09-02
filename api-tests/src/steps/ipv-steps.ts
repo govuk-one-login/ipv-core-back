@@ -108,6 +108,13 @@ const startNewJourney = async (
 };
 
 When(
+  "I activate the {string} feature set(s)",
+  function (this: World, featureSet: string) {
+    this.featureSet = featureSet;
+  },
+);
+
+When(
   /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-,]+)')?$/,
   async function (
     this: World,

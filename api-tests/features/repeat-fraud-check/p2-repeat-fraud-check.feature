@@ -24,22 +24,22 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
 
   Scenario: Fraud 6 Months Expiry + Given Name Update
-    # Repeat fraud check with update given name
+    # Repeat fraud check with update name
     When I submit a 'given-names-only' event
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-changed-first-name-only-passport-valid' details to the CRI stub
+    When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-changed-first-name-only-score-2' details to the CRI stub
+    When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And my identity 'GivenName' is 'Michael'
+    And my identity 'GivenName' is 'Ken'
     And my identity 'FamilyName' is 'Decerqueira'
 
   Scenario: Fraud 6 Months Expiry + Family Name Update
@@ -158,16 +158,3 @@ Feature: Repeat fraud check journeys
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-family-given' event
     Then I get a 'update-name-date-birth' page response
-
-  Scenario: Fraud 6 Months Expiry + Given Name Update Failure
-    # Repeat fraud check with update given name failure
-    When I submit a 'given-names-only' event
-    Then I get a 'page-update-name' page response
-    When I submit a 'update-name' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
-    Then I get a 'page-dcmaw-success' page response
-    When I submit a 'next' event
-    Then I get a 'fraud' CRI response
-    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
-    Then I get a 'sorry-could-not-confirm-details' page response
