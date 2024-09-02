@@ -55,7 +55,15 @@ export const sendJourneyEvent = async (
   });
 
   if (!response.ok) {
-    throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
+    console.log(
+      "sendJourneyEvent url, internalApiHeaders, response",
+      url,
+      internalApiHeaders,
+      response,
+    );
+    throw new Error(
+      `sendJourneyEvent request failed: ${await response.text()}`,
+    );
   }
 
   return (await response.json()) as JourneyEngineResponse;
