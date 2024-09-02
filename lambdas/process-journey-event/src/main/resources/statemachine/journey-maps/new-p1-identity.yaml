@@ -711,7 +711,7 @@ states:
       type: page
       pageId: no-photo-id-abandon-find-another-way
     events:
-      app:
+      mobileApp:
         targetState: CRI_DCMAW
         checkFeatureFlag:
           strategicAppEnabled:
