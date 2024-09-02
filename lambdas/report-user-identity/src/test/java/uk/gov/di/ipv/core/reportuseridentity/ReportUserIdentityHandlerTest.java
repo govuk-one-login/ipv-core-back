@@ -89,7 +89,7 @@ class ReportUserIdentityHandlerTest {
         when(mockContext.getRemainingTimeInMillis())
                 .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
         // for step-1
-        when(mockVcStoreItemScanDynamoDataStore.getScannedItemsPages(any(), any()))
+        when(mockVcStoreItemScanDynamoDataStore.scan(any(), any(), any()))
                 .thenReturn(mockVcStoreItemPageIterable);
         when(mockVcStoreItemPageIterable.iterator()).thenReturn(mockVCStoreItemIterator);
         when(mockVCStoreItemIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -127,7 +127,7 @@ class ReportUserIdentityHandlerTest {
                         new ReportUserIdentityItem(
                                 "userId3", "P2", 0, List.of("address,passport"), true));
         // for step-2
-        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any(), anyString()))
+        when(mockReportUserIdentityScanDynamoDataStore.scan(any(), any(), anyString()))
                 .thenReturn(mockReportUserIdentityPageIterable);
         when(mockReportUserIdentityPageIterable.iterator())
                 .thenReturn(mockReportUserIdentityIterator)
@@ -157,7 +157,7 @@ class ReportUserIdentityHandlerTest {
                                 .items(totalIdentitiesPage2)
                                 .build());
         // for step-3
-        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any()))
+        when(mockReportUserIdentityScanDynamoDataStore.scan(any(), any()))
                 .thenReturn(mockReportUserIdentityPageIterable);
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, mockContext);
@@ -166,10 +166,10 @@ class ReportUserIdentityHandlerTest {
         verify(mockReportUserIdentityScanDynamoDataStore, times(4)).createOrUpdate(any());
 
         ReportProcessingResult result = getReportProcessingResult();
-        assertNull(result.tacticalStoreLastEvaluatedKey());
-        assertNull(result.userIdentitylastEvaluatedKey());
-        assertNull(result.buildReportLastEvaluatedKey());
-        assertNotNull(result.summary());
+        assertNull(result.getTacticalStoreLastEvaluatedKey());
+        assertNull(result.getUserIdentitylastEvaluatedKey());
+        assertNull(result.getBuildReportLastEvaluatedKey());
+        assertNotNull(result.getSummary());
         long totalP2Identities =
                 totalIdentitiesPage1.stream()
                                 .filter(i -> Vot.P2.name().equals(i.getIdentity()))
@@ -177,10 +177,10 @@ class ReportUserIdentityHandlerTest {
                         + totalIdentitiesPage2.stream()
                                 .filter(i -> Vot.P2.name().equals(i.getIdentity()))
                                 .count();
-        assertEquals(totalP2Identities, result.summary().totalP2Identities());
-        assertEquals(2, result.summary().totalP2IdentitiesMigrated());
-        assertEquals(2, result.summary().constituentVcsTotal().get("address,passport"));
-        assertEquals(1, result.summary().constituentVcsTotal().get("fraud"));
+        assertEquals(totalP2Identities, result.getSummary().totalP2Identities());
+        assertEquals(2, result.getSummary().totalP2IdentitiesMigrated());
+        assertEquals(2, result.getSummary().constituentVcsTotal().get("address,passport"));
+        assertEquals(1, result.getSummary().constituentVcsTotal().get("fraud"));
     }
 
     @Test
@@ -189,7 +189,7 @@ class ReportUserIdentityHandlerTest {
         when(mockContext.getRemainingTimeInMillis())
                 .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT - 100);
         // for step-1
-        when(mockVcStoreItemScanDynamoDataStore.getScannedItemsPages(any(), any()))
+        when(mockVcStoreItemScanDynamoDataStore.scan(any(), any(), any()))
                 .thenReturn(mockVcStoreItemPageIterable);
         when(mockVcStoreItemPageIterable.iterator()).thenReturn(mockVCStoreItemIterator);
         when(mockVCStoreItemIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -219,12 +219,13 @@ class ReportUserIdentityHandlerTest {
         // Assert
         verify(mockReportUserIdentityScanDynamoDataStore, times(1)).createOrUpdate(any());
         ReportProcessingResult result = getReportProcessingResult();
-        Map<String, Object> tacticalStoreLastEvaluatedKey = result.tacticalStoreLastEvaluatedKey();
+        Map<String, Object> tacticalStoreLastEvaluatedKey =
+                result.getTacticalStoreLastEvaluatedKey();
         assertNotNull(tacticalStoreLastEvaluatedKey);
         assertEquals(TEST_SUBJECT, tacticalStoreLastEvaluatedKey.get("userId"));
         assertEquals("PASSPORT", tacticalStoreLastEvaluatedKey.get("credentialIssuer"));
-        assertNull(result.userIdentitylastEvaluatedKey());
-        assertNull(result.summary());
+        assertNull(result.getUserIdentitylastEvaluatedKey());
+        assertNull(result.getSummary());
     }
 
     @Test
@@ -237,7 +238,7 @@ class ReportUserIdentityHandlerTest {
         when(mockContext.getRemainingTimeInMillis())
                 .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
         // for step-1
-        when(mockVcStoreItemScanDynamoDataStore.getScannedItemsPages(any(), any()))
+        when(mockVcStoreItemScanDynamoDataStore.scan(any(), any(), any()))
                 .thenReturn(mockVcStoreItemPageIterable);
         when(mockVcStoreItemPageIterable.iterator()).thenReturn(mockVCStoreItemIterator);
         when(mockVCStoreItemIterator.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
@@ -248,13 +249,34 @@ class ReportUserIdentityHandlerTest {
                         vcExperianFraudScoreTwo().toVcStoreItem());
         when(mockVCStoreItemIterator.next())
                 .thenReturn(Page.builder(VcStoreItem.class).items(credentialsPage1).build());
+        // Act
+        reportUserIdentityHandler.handleRequest(inputStream, outputStream, mockContext);
+        // Assert
+        verify(mockReportUserIdentityScanDynamoDataStore, times(2)).createOrUpdate(any());
+        ReportProcessingResult result = getReportProcessingResult();
+        Map<String, Object> tacticalStoreLastEvaluatedKey =
+                result.getTacticalStoreLastEvaluatedKey();
+        assertNull(tacticalStoreLastEvaluatedKey);
+        assertNull(result.getUserIdentitylastEvaluatedKey());
+    }
+
+    @Test
+    void shouldRunReportToGenerateUsersIdentity_andSkipStep1AndStep2() throws Exception {
+        // Arrange
+        inputStream =
+                ReportProcessingRequest.class.getResourceAsStream(
+                        "/testRequest_skipStep1And2.json");
+        when(mockContext.getRemainingTimeInMillis())
+                .thenReturn(STOP_TIME_IN_MILLISECONDS_BEFORE_LAMBDA_TIMEOUT + 100);
         // for step-3
-        when(mockReportUserIdentityScanDynamoDataStore.getScannedItemsPages(any()))
+        when(mockReportUserIdentityScanDynamoDataStore.scan(any(), any()))
                 .thenReturn(mockReportUserIdentityPageIterable);
         when(mockReportUserIdentityPageIterable.iterator())
                 .thenReturn(mockReportUserIdentityIterator)
+                .thenReturn(mockReportUserIdentityIterator)
                 .thenReturn(mockReportUserIdentityIterator);
         when(mockReportUserIdentityIterator.hasNext())
+                .thenReturn(true)
                 .thenReturn(true)
                 .thenReturn(true)
                 .thenReturn(false);
@@ -268,6 +290,10 @@ class ReportUserIdentityHandlerTest {
                 List.of(
                         new ReportUserIdentityItem(
                                 "userId3", "P2", 0, List.of("address,passport"), true));
+        List<ReportUserIdentityItem> totalIdentitiesPage3 =
+                List.of(
+                        new ReportUserIdentityItem(
+                                "userId4", "P2", 0, List.of("address,passport"), true));
         when(mockReportUserIdentityIterator.next())
                 .thenReturn(
                         Page.builder(ReportUserIdentityItem.class)
@@ -276,27 +302,34 @@ class ReportUserIdentityHandlerTest {
                 .thenReturn(
                         Page.builder(ReportUserIdentityItem.class)
                                 .items(totalIdentitiesPage2)
+                                .build())
+                .thenReturn(
+                        Page.builder(ReportUserIdentityItem.class)
+                                .items(totalIdentitiesPage3)
                                 .build());
         // Act
         reportUserIdentityHandler.handleRequest(inputStream, outputStream, mockContext);
         // Assert
-        verify(mockReportUserIdentityScanDynamoDataStore, times(2)).createOrUpdate(any());
         ReportProcessingResult result = getReportProcessingResult();
-        Map<String, Object> tacticalStoreLastEvaluatedKey = result.tacticalStoreLastEvaluatedKey();
+        Map<String, Object> tacticalStoreLastEvaluatedKey =
+                result.getTacticalStoreLastEvaluatedKey();
         assertNull(tacticalStoreLastEvaluatedKey);
-        assertNull(result.userIdentitylastEvaluatedKey());
-        assertNotNull(result.summary());
+        assertNull(result.getUserIdentitylastEvaluatedKey());
+        assertNotNull(result.getSummary());
         long totalP2Identities =
                 totalIdentitiesPage1.stream()
                                 .filter(i -> Vot.P2.name().equals(i.getIdentity()))
                                 .count()
                         + totalIdentitiesPage2.stream()
                                 .filter(i -> Vot.P2.name().equals(i.getIdentity()))
+                                .count()
+                        + +totalIdentitiesPage3.stream()
+                                .filter(i -> Vot.P2.name().equals(i.getIdentity()))
                                 .count();
-        assertEquals(totalP2Identities, result.summary().totalP2Identities());
-        assertEquals(2, result.summary().totalP2IdentitiesMigrated());
-        assertEquals(2, result.summary().constituentVcsTotal().get("address,passport"));
-        assertEquals(1, result.summary().constituentVcsTotal().get("fraud"));
+        assertEquals(totalP2Identities, result.getSummary().totalP2Identities());
+        assertEquals(3, result.getSummary().totalP2IdentitiesMigrated());
+        assertEquals(3, result.getSummary().constituentVcsTotal().get("address,passport"));
+        assertEquals(1, result.getSummary().constituentVcsTotal().get("fraud"));
     }
 
     private ReportProcessingResult getReportProcessingResult() throws JsonProcessingException {

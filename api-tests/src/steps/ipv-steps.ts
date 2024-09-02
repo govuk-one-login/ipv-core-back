@@ -66,37 +66,43 @@ const startNewJourney = async (
   journeyType: string,
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
+  featureSet: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
+  world.featureSet = featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
     await generateInitialiseIpvSessionBody({
       subject: world.userId,
       journeyId: world.journeyId,
       journeyType,
-      isReproveIdentity: !!reproveIdentity,
+      isReproveIdentity: reproveIdentity,
       inheritedIdentityId,
     }),
+    world.featureSet,
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
     "/journey/next",
     world.ipvSessionId,
+    world.featureSet,
   );
 };
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?$/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
     inheritedIdentityId: string | undefined,
+    featureSet: string | undefined,
   ): Promise<void> {
     await startNewJourney(
       this,
       journeyType,
       !!reproveIdentity,
       inheritedIdentityId,
+      featureSet,
     );
   },
 );
@@ -112,7 +118,11 @@ When(
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, false, undefined, undefined);
+
+      if (!this.lastJourneyEngineResponse) {
+        throw new Error("No last journey engine response found.");
+      }
 
       try {
         assert.ok(
@@ -134,13 +144,22 @@ When(
 );
 
 Then(
-  "I get a(n) {string} page response",
-  function (this: World, expectedPage: string): void {
+  /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?$/,
+  function (this: World, expectedPage: string, expectedContext: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
     assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
+    if (expectedContext) {
+      assert.equal(
+        this.lastJourneyEngineResponse.context,
+        expectedContext === "null" ? null : expectedContext,
+      );
+    }
   },
 );
 
@@ -150,6 +169,7 @@ When(
     this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       event,
       this.ipvSessionId,
+      this.featureSet,
     );
   },
 );
@@ -157,6 +177,10 @@ When(
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     assert.ok(
       isCriResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -166,6 +190,10 @@ Then(
 );
 
 Then("I get an OAuth response", function (this: World): void {
+  if (!this.lastJourneyEngineResponse) {
+    throw new Error("No last journey engine response found.");
+  }
+
   assert.ok(
     isClientResponse(this.lastJourneyEngineResponse),
     `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -178,8 +206,15 @@ Then("I get an OAuth response", function (this: World): void {
 });
 
 When(
-  "I use the OAuth response to get my identity",
-  async function (this: World): Promise<void> {
+  /^I use the OAuth response to get my (identity|MFA reset result)$/,
+  async function (
+    this: World,
+    result: "identity" | "MFA reset result",
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
     if (!isClientResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a client response");
     }
@@ -188,11 +223,23 @@ When(
         this.lastJourneyEngineResponse.client.redirectUrl,
       ),
     );
-    this.identity = await externalClient.getIdentity(tokenResponse);
+
+    if (result === "identity") {
+      this.identity = await externalClient.getIdentity(tokenResponse);
+    }
+
+    if (result === "MFA reset result") {
+      this.mfaResetResult =
+        await externalClient.getMfaResetResult(tokenResponse);
+    }
   },
 );
 
 Then("I get a {string} identity", function (this: World, vot: string): void {
+  if (!this.identity) {
+    throw new Error("No identity found.");
+  }
+
   assert.equal(this.identity.vot, vot);
 });
 
@@ -224,6 +271,10 @@ Then(
 Then(
   "my identity {string} is {string}",
   function (this: World, field: NamePartType, value: string): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
     const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
       (np) => {
         return field === np.type;
@@ -236,7 +287,14 @@ Then(
 Then(
   "my proven user details match",
   async function (this: World): Promise<void> {
-    const provenIdentity = await getProvenIdentityDetails(this.ipvSessionId);
+    const provenIdentity = await getProvenIdentityDetails(
+      this.ipvSessionId,
+      this.featureSet,
+    );
+
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
 
     const expectedAddresses = this.identity[addressCredential];
     assert.deepEqual(
@@ -258,6 +316,21 @@ Then(
       provenIdentity.nameParts,
       expectedNames,
       "Names do not match.",
+    );
+  },
+);
+
+Then(
+  /^I get a (successful|unsuccessful) MFA reset result$/,
+  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+    if (!this.mfaResetResult) {
+      throw new Error("No MFA reset result found.");
+    }
+
+    assert.equal(
+      this.mfaResetResult.success,
+      expectedMfaResetResult === "successful",
+      "MFA reset results do not match.",
     );
   },
 );

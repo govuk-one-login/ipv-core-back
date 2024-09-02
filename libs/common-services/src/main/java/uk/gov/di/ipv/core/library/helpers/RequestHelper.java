@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -87,6 +88,22 @@ public class RequestHelper {
         String ipAddress = request.getIpAddress();
         validateIpAddress(ipAddress, "ipAddress not present in request.");
         return ipAddress;
+    }
+
+    public static String getLanguage(CriJourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        String language = request.getLanguage();
+
+        if (language == null) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Language choice is missing from this frontend request",
+                            IP_ADDRESS_HEADER));
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.MISSING_LANGUAGE);
+        }
+
+        return language;
     }
 
     public static String getClientOAuthSessionId(JourneyRequest event) {

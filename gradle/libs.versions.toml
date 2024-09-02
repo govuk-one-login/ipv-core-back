@@ -2,7 +2,7 @@
 awsSdk = "2.26.9"
 jackson = "2.15.3"
 log4j = "2.23.0"
-mockito = "5.12.0"
+mockito = "5.13.0"
 pact = "4.6.5"
 powertools = "1.18.0"
 
@@ -14,7 +14,6 @@ awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
 awsSdkKms = { module = "software.amazon.awssdk:kms" }
-awsSdkLambda = { module = "software.amazon.awssdk:lambda" }
 awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
@@ -24,16 +23,16 @@ hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jacksonDatatypeJsr = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
-javalin = "io.javalin:javalin:6.2.0"
-junitJupiter = "org.junit.jupiter:junit-jupiter:5.10.0"
-junitPlatform = "org.junit.platform:junit-platform-launcher:1.10.2"
+javalin = "io.javalin:javalin:6.3.0"
+junitJupiter = "org.junit.jupiter:junit-jupiter:5.11.0"
+junitPlatform = "org.junit.platform:junit-platform-launcher:1.11.0"
 log4j12Api = { module = "org.apache.logging.log4j:log4j-1.2-api", version.ref = "log4j" }
 log4jApi = { module = "org.apache.logging.log4j:log4j-api", version.ref = "log4j" }
 log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.15"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.18"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
@@ -48,6 +47,6 @@ log4j = ["log4jApi", "log4jCore"]
 awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 
 [plugins]
-postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.7.1"
+postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.10"
 sonar = "org.sonarqube:5.1.0.4882"
 spotless = "com.diffplug.spotless:6.25.0"

@@ -1,15 +1,20 @@
 import config from "../config/config.js";
-import { generateJar } from "./jar-generator.js";
+import { encryptJarRequest, generateJarPayload } from "./jar-generator.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import { createSignedJwt } from "./jwt-signer.js";
-import { CriStubRequest, CriStubResponse } from "../types/cri-stub.js";
+import {
+  CriStubGenerateVcRequest,
+  CriStubRequest,
+  CriStubResponse,
+} from "../types/cri-stub.js";
 import { IpvSessionDetails } from "./ipv-session.js";
 import {
   AuthRequestBody,
   ProcessCriCallbackRequest,
 } from "../types/internal-api.js";
+import { EvcsStubPostVcsRequest } from "../types/evcs-stub.js";
 
 const ORCHESTRATOR_CLIENT_ID = "orchestrator";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,13 +23,15 @@ type JsonType = "credentialSubject" | "evidence";
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
 ): Promise<AuthRequestBody> => {
+  const jarPayload = await generateJarPayload(session);
+
   return {
     responseType: "code",
-    clientId: "orchestrator",
+    clientId: jarPayload.client_id,
     redirectUri: config.orch.redirectUrl,
     state: "api-tests-state",
-    scope: "openid",
-    request: await generateJar(session),
+    scope: jarPayload.scope,
+    request: await encryptJarRequest(jarPayload),
   };
 };
 
@@ -132,6 +139,36 @@ export const generateTokenExchangeBody = async (
   );
 
   return params.toString();
+};
+
+export const generateVcRequestBody = async (
+  userId: string,
+  criId: string,
+  scenario: string,
+  nbf?: number,
+): Promise<CriStubGenerateVcRequest> => {
+  return {
+    userId: userId,
+    clientId: config.core.criClientId,
+    credentialSubjectJson: await readJsonFile(
+      criId,
+      scenario,
+      "credentialSubject",
+    ),
+    evidenceJson: await readJsonFile(criId, scenario, "evidence"),
+    nbf: nbf ?? Math.floor(Date.now() / 1000),
+  };
+};
+
+export const generatePostVcsBody = (
+  credentialsToPost: string[],
+): EvcsStubPostVcsRequest => {
+  return credentialsToPost.map((cred) => ({
+    vc: cred,
+    state: "CURRENT",
+    metadata: {},
+    provenance: "ONLINE",
+  }));
 };
 
 const readJsonFile = async (

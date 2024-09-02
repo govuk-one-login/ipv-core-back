@@ -37,6 +37,13 @@ public class IpvSessionItem implements PersistenceItem {
     private ReverificationStatus reverificationStatus;
     private List<String> stateStack = new ArrayList<>();
 
+    /*
+     * journeyContext is used a way of tracking the origin of journeys
+     * and can be used to re-route particular contexts
+     * @see uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent#TransitionResult
+     */
+    private String journeyContext;
+
     // Only for passing the featureSet to the external API lambdas at the end of the user journey.
     // Not for general use.
     private String featureSet;
@@ -96,5 +103,9 @@ public class IpvSessionItem implements PersistenceItem {
     // target Vot.
     public Vot getThresholdVot() {
         return vot == Vot.P0 ? targetVot : vot;
+    }
+
+    public void setJourneyContext(String journeyContext) {
+        this.journeyContext = journeyContext;
     }
 }

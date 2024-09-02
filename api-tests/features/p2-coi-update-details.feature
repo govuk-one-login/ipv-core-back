@@ -2,27 +2,29 @@
 Feature: Update details
 
     Background:
-        Given I start a new 'medium-confidence' journey
-        Then I get a 'page-ipv-identity-document-start' page response
-        When I submit an 'appTriage' event
-        Then I get a 'dcmaw' CRI response
-        When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-        Then I get a 'page-dcmaw-success' page response
-        When I submit a 'next' event
-        Then I get an 'address' CRI response
-        When I submit 'kenneth-current' details to the CRI stub
-        Then I get a 'fraud' CRI response
-        When I submit 'kenneth-score-2' details to the CRI stub
-        Then I get a 'page-ipv-success' page response
-        When I submit a 'next' event
-        Then I get an OAuth response
-        When I use the OAuth response to get my identity
-        Then I get a 'P2' identity
+        Given the subject already has the following credentials
+            | CRI     | scenario                     |
+            | dcmaw   | kenneth-driving-permit-valid |
+            | address | kenneth-current              |
+            | fraud   | kenneth-score-2              |
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
-        And my proven user details match
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
+
+
+    Scenario: Given Name Change Failure
+        When I submit a 'given-names-only' event
+        Then I get a 'page-update-name' page response
+        When I submit a 'update-name' event
+        Then I get a 'dcmaw' CRI response
+        When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+        Then I get a 'page-dcmaw-success' page response
+        When I submit a 'next' event
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+        Then I get a 'sorry-could-not-confirm-details' page response
+        And an 'IPV_USER_DETAILS_UPDATE_END' audit event was recorded [local only]
 
     Scenario: Given Name Change
         When I submit a 'given-names-only' event

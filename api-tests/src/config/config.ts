@@ -27,7 +27,8 @@ const config = {
     internalApiUrl: getMandatoryConfig("CORE_BACK_INTERNAL_API_URL"),
     internalApiKey: getOptionalConfig("CORE_BACK_INTERNAL_API_KEY"),
     externalApiUrl: getMandatoryConfig("CORE_BACK_EXTERNAL_API_URL"),
-    encryptionkey: getMandatoryConfig("CORE_BACK_PUBLIC_ENCRYPTION_KEY"),
+    encryptionKey: getMandatoryConfig("CORE_BACK_PUBLIC_ENCRYPTION_KEY"),
+    criClientId: getMandatoryConfig("CORE_BACK_CRI_CLIENT_ID"),
   },
   orch: {
     redirectUrl: getMandatoryConfig("ORCHESTRATOR_REDIRECT_URL"),
@@ -41,6 +42,13 @@ const config = {
   cimit: {
     managementCimitUrl: getMandatoryConfig("CIMIT_STUB_BASE_URL"),
     managementCimitApiKey: getMandatoryConfig("MANAGEMENT_CIMIT_STUB_API_KEY"),
+  },
+  credentialIssuers: {
+    generateCredentialApiKey: getMandatoryConfig("CRI_STUB_GEN_CRED_API_KEY"),
+  },
+  evcs: {
+    baseUrl: getMandatoryConfig("EVCS_STUB_BASE_URL"),
+    apiKey: getMandatoryConfig("EVCS_STUB_API_KEY"),
   },
 };
 

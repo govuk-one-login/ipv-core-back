@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class EvcsClient {
@@ -186,7 +186,9 @@ public class EvcsClient {
     private void checkResponseStatusCode(HttpResponse<String> evcsHttpResponse)
             throws RetryableException, EvcsServiceException {
         var statusCode = evcsHttpResponse.statusCode();
-        if (200 > statusCode || statusCode > 299) {
+
+        // 404 is valid and indicates the user has no VCs
+        if (statusCode > 299 && statusCode != 404) {
             String responseMessage;
             try {
                 Map<String, String> responseBody =
@@ -197,24 +199,23 @@ public class EvcsClient {
             } catch (JsonProcessingException e) {
                 responseMessage = "Failed to parse evcs response body.";
             }
-            LOGGER.info(
+
+            LOGGER.error(
                     LogHelper.buildLogMessage(
                                     ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE
                                             .getMessage())
                             .with(LOG_STATUS_CODE.getFieldName(), statusCode)
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), responseMessage));
+                            .with(LOG_RESPONSE_MESSAGE.getFieldName(), responseMessage));
 
-            if (statusCode != 404) {
-                var e =
-                        new EvcsServiceException(
-                                HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
+            var e =
+                    new EvcsServiceException(
+                            HTTPResponse.SC_SERVER_ERROR,
+                            ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE);
 
-                if (RETRYABLE_STATUS_CODES.contains(statusCode)) {
-                    throw new RetryableException(e);
-                }
-                throw e;
+            if (RETRYABLE_STATUS_CODES.contains(statusCode)) {
+                throw new RetryableException(e);
             }
+            throw e;
         }
         LOGGER.info(LogHelper.buildLogMessage("Successful HTTP response from EVCS Api"));
     }
@@ -245,15 +246,19 @@ public class EvcsClient {
                         }
                     });
         } catch (NonRetryableException | InterruptedException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));
             if (e instanceof InterruptedException) {
                 // This should never happen running in Lambda as it's single threaded.
                 Thread.currentThread().interrupt();
             } else if (e.getCause() instanceof EvcsServiceException evcsException) {
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(),
+                                evcsException));
                 throw evcsException;
             }
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), e));
             throw new EvcsServiceException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND);
         }

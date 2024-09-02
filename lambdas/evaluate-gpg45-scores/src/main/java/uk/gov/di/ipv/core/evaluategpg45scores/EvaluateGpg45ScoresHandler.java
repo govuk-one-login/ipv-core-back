@@ -35,8 +35,8 @@ import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -50,6 +50,7 @@ import java.util.Optional;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -69,8 +70,8 @@ public class EvaluateGpg45ScoresHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final ConfigService configService;
     private final AuditService auditService;
-    private final CiMitService ciMitService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitService cimitService;
+    private final CimitUtilityService cimitUtilityService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final SessionCredentialsService sessionCredentialsService;
 
@@ -86,8 +87,8 @@ public class EvaluateGpg45ScoresHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             SessionCredentialsService sessionCredentialsService,
-            CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService) {
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
@@ -95,8 +96,8 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.ciMitService = ciMitService;
-        this.ciMitUtilityService = ciMitUtilityService;
+        this.cimitService = cimitService;
+        this.cimitUtilityService = cimitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -110,8 +111,8 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.ciMitService = new CiMitService(configService);
-        this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.cimitService = new CimitService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -140,14 +141,14 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            // This is a performance optimisation as calling ciMitService.getContraIndicators()
+            // This is a performance optimisation as calling cimitService.getContraIndicators()
             // takes about 0.5 seconds.
             // If the VTR only contains one entry then it is impossible for a user to reach here
             // with a breaching CI so we don't have to check.
             var contraIndicators =
                     clientOAuthSessionItem.getVtr().size() == 1
                             ? null
-                            : ciMitService.getContraIndicators(
+                            : cimitService.getContraIndicators(
                                     userId, govukSigninJourneyId, ipAddress);
 
             var matchingGpg45Profile =
@@ -221,10 +222,15 @@ public class EvaluateGpg45ScoresHandler
 
                 var isBreaching =
                         contraIndicators != null
-                                && ciMitUtilityService.isBreachingCiThreshold(
+                                && cimitUtilityService.isBreachingCiThreshold(
                                         contraIndicators, requestedVot);
 
                 if (matchedProfile.isPresent() && !isBreaching) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage("GPG45 profile has been met.")
+                                    .with(
+                                            LOG_GPG45_PROFILE.getFieldName(),
+                                            matchedProfile.get().getLabel()));
                     auditService.sendAuditEvent(
                             buildProfileMatchedAuditEvent(
                                     ipvSessionItem,

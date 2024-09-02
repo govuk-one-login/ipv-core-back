@@ -13,12 +13,12 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
-public class CiMitUtilityService {
+public class CimitUtilityService {
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private final ConfigService configService;
 
-    public CiMitUtilityService(ConfigService configService) {
+    public CimitUtilityService(ConfigService configService) {
         this.configService = configService;
     }
 

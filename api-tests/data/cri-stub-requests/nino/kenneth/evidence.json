@@ -1,0 +1,10 @@
+{
+  "type": "IdentityCheck",
+  "strengthScore": 2,
+  "validityScore": 2,
+  "checkDetails": [
+    {
+      "checkMethod": "data"
+    }
+  ]
+}

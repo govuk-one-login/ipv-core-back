@@ -34,8 +34,8 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -44,7 +44,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.TICF_CRI_BETA;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -54,8 +55,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
-    private final CiMitService ciMitService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitService cimitService;
+    private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildUserIdentityHandler(
@@ -64,8 +65,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService,
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
         super(
                 OPENID,
@@ -75,8 +76,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                 sessionCredentialsService);
         this.userIdentityService = userIdentityService;
         this.auditService = auditService;
-        this.ciMitService = ciMitService;
-        this.ciMitUtilityService = ciMitUtilityService;
+        this.cimitService = cimitService;
+        this.cimitUtilityService = cimitUtilityService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -84,8 +85,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
         this.auditService = AuditService.create(configService);
-        this.ciMitService = new CiMitService(configService);
-        this.ciMitUtilityService = new CiMitUtilityService(configService);
+        this.cimitService = new CimitService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
     @Override
@@ -109,10 +110,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             null);
 
             var contraIndicatorsVc =
-                    ciMitService.getContraIndicatorsVc(
+                    cimitService.getContraIndicatorsVc(
                             userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
-            var contraIndicators = ciMitService.getContraIndicators(contraIndicatorsVc);
+            var contraIndicators = cimitService.getContraIndicators(contraIndicatorsVc);
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
@@ -123,7 +124,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                     userIdentityService.generateUserIdentity(
                             vcs, userId, achievedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
-            if (configService.enabled(TICF_CRI_BETA)
+
+            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
                 userIdentity.getVcs().add(ipvSessionItem.getRiskAssessmentCredential());
             }
@@ -186,7 +188,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         var extensions =
                 new AuditExtensionsUserIdentity(
                         achievedVot,
-                        ciMitUtilityService.isBreachingCiThreshold(contraIndicators, thresholdVot),
+                        cimitUtilityService.isBreachingCiThreshold(contraIndicators, thresholdVot),
                         contraIndicators.hasMitigations(),
                         auditEventReturnCodes);
 

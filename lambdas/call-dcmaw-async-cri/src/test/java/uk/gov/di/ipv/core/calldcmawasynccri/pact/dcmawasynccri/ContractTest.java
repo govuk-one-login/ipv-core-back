@@ -54,6 +54,7 @@ class ContractTest {
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
+    @Mock private BearerAccessToken mockBearerAccessToken;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String SUBJECT_ID = "dummySubjectId";
     private static final String CALLBACK_URL =
@@ -122,7 +123,7 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidRequestReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidRequestReturns400(PactDslWithProvider builder) {
         return builder.given("badDummySecret is not a valid basic auth secret")
                 .given("dummyDcmawAsyncComponentId is the dcmaw async CRI component ID")
                 .uponReceiving("Invalid basic auth credentials")
@@ -135,12 +136,12 @@ class ContractTest {
                         "Authorization",
                         getBasicAuthHeaderValue(IPV_CORE_CLIENT_ID, "badDummySecret"))
                 .willRespondWith()
-                .status(401)
+                .status(400)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidRequestReturns401")
+    @PactTestFor(pactMethod = "invalidRequestReturns400")
     void fetchAccessToken_whenCalledAgainstDcmawAsyncCri_throwsErrorWithInvalidAuthCode(
             MockServer mockServer) throws URISyntaxException {
         // Arrange
@@ -260,6 +261,52 @@ class ContractTest {
                         () ->
                                 underTest.fetchVerifiableCredential(
                                         new BearerAccessToken("badAccessToken"),
+                                        DCMAW_ASYNC,
+                                        CRI_OAUTH_SESSION_ITEM,
+                                        getCredentialRequestBody(SUBJECT_ID)));
+
+        // Assert
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, exception.getErrorResponse());
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+    }
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact missingAccessTokenReturns401(PactDslWithProvider builder)
+            throws Exception {
+        return builder.given("access token is missing")
+                .uponReceiving("Valid credential request")
+                .path("/async/credential")
+                .method("POST")
+                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
+                .headers("Content-Type", "application/json")
+                .willRespondWith()
+                .status(401)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "missingAccessTokenReturns401")
+    void
+            fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriWithMissingAccessToken_throwsAnException(
+                    MockServer mockServer) throws URISyntaxException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+        when(mockBearerAccessToken.toAuthorizationHeader()).thenReturn(null);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        CriApiException exception =
+                assertThrows(
+                        CriApiException.class,
+                        () ->
+                                underTest.fetchVerifiableCredential(
+                                        mockBearerAccessToken,
                                         DCMAW_ASYNC,
                                         CRI_OAUTH_SESSION_ITEM,
                                         getCredentialRequestBody(SUBJECT_ID)));

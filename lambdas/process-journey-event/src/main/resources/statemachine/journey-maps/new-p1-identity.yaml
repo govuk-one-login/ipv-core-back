@@ -516,11 +516,11 @@ states:
         targetJourney: EVALUATE_SCORES
         targetState: START
       enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
+        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
             targetState: MITIGATION_02_OPTIONS
@@ -529,9 +529,9 @@ states:
             auditContext:
               mitigationType: enhanced-verification
       invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
 
   # DWP KBV journey (J7)
   CRI_DWP_KBV_J7:
@@ -575,11 +575,11 @@ states:
       access-denied:
         targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
+        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
             targetState: MITIGATION_02_OPTIONS
@@ -677,7 +677,6 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
-      context: p1
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
@@ -711,7 +710,7 @@ states:
     response:
       type: page
       pageId: no-photo-id-security-questions-find-another-way
-      context: p1Dropout
+      context: dropout
     events:
       f2f:
         targetJourney: F2F_HAND_OFF
@@ -807,9 +806,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -821,9 +817,6 @@ states:
     events:
       next:
         targetState: CRI_CLAIMED_IDENTITY_J4
-        checkFeatureFlag:
-          ticfCriBeta:
-            targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
@@ -904,25 +897,6 @@ states:
     response:
       type: page
       pageId: pyi-suggest-other-options
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-
-  MITIGATION_02_OPTIONS_WITH_F2F_NO_PHOTO_ID:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options
-      context: no-photo-id
     events:
       f2f:
         targetJourney: F2F_HAND_OFF

@@ -7,7 +7,7 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class CiMitVc {
+public class CimitVc {
     private List<String> type;
     private List<EvidenceItem> evidence;
 }

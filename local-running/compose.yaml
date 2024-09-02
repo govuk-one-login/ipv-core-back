@@ -46,6 +46,7 @@ services:
       EXTERNAL_WEBSITE_HOST: http://localhost:4501
       PORT: 4501
       CDN_DOMAIN:
+      ENABLE_PREVIEW: "development"
     ports:
       - "4501:4501"
       - "5001:9229"

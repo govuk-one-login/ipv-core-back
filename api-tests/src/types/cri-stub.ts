@@ -25,4 +25,16 @@ export interface CriStubRequest {
 
 export interface CriStubResponse {
   redirectUri: string;
+  jarPayload: {
+    context?: string;
+    evidence_requested?: { strength?: number; validity?: number };
+  };
+}
+
+export interface CriStubGenerateVcRequest {
+  userId: string;
+  clientId: string;
+  credentialSubjectJson: string;
+  evidenceJson: string;
+  nbf?: number;
 }

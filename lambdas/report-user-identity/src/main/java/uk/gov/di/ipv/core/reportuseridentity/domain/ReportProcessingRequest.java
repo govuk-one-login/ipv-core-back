@@ -8,6 +8,9 @@ import java.util.Map;
 public record ReportProcessingRequest(
         boolean continueUniqueUserScan,
         boolean continueUserIdentityScan,
+        boolean generateReport,
         Map<String, Object> tacticalStoreLastEvaluatedKey,
         Map<String, Object> userIdentitylastEvaluatedKey,
-        Map<String, Object> buildReportLastEvaluatedKey) {}
+        Map<String, Object> buildReportLastEvaluatedKey,
+        Integer pageSize,
+        Integer parallelism) {}

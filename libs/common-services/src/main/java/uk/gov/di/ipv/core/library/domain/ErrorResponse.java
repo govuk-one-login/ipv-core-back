@@ -62,8 +62,6 @@ public enum ErrorResponse {
     FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception"),
     UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential"),
     PENDING_VERIFICATION_EXCEPTION(1051, "Pending face to face verification exception"),
-    FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
-            1051, "Failed to validate verifiable credential response"),
     FAILED_TO_FIND_VISITED_CRI(1052, "Failed to find a visited CRI"),
     FAILED_TO_PARSE_CIMIT_SIGNING_KEY(1053, "Failed to parse CIMIT signing key"),
     UNRECOGNISED_CI_CODE(1054, "Unrecognised CI code"),
@@ -106,7 +104,10 @@ public enum ErrorResponse {
     UNEXPECTED_CREDENTIAL_TYPE(1092, "Unexpected credential type"),
     IPV_SESSION_NOT_FOUND(
             1093, "Invalid IPV session id provided, corresponding session not found in db"),
-    CLIENT_OAUTH_SESSION_NOT_FOUND(1093, "Client OAuth session not found");
+    CLIENT_OAUTH_SESSION_NOT_FOUND(1094, "Client OAuth session not found"),
+    MISSING_LANGUAGE(1095, "Missing language choice from the frontend"),
+    FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
+            1096, "Failed to validate verifiable credential response");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

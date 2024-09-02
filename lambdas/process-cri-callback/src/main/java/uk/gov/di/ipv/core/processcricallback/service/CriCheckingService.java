@@ -27,8 +27,8 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
-import uk.gov.di.ipv.core.library.service.CiMitUtilityService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -73,8 +73,8 @@ public class CriCheckingService {
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
-    private final CiMitService ciMitService;
-    private final CiMitUtilityService ciMitUtilityService;
+    private final CimitService cimitService;
+    private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
     private final SessionCredentialsService sessionCredentialsService;
 
@@ -83,14 +83,14 @@ public class CriCheckingService {
             ConfigService configService,
             AuditService auditService,
             UserIdentityService userIdentityService,
-            CiMitService ciMitService,
-            CiMitUtilityService ciMitUtilityService,
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
-        this.ciMitService = ciMitService;
-        this.ciMitUtilityService = ciMitUtilityService;
+        this.cimitService = cimitService;
+        this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
@@ -224,7 +224,7 @@ public class CriCheckingService {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
             var cis =
-                    ciMitService.getContraIndicators(
+                    cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             callbackRequest.getIpAddress());
@@ -233,7 +233,7 @@ public class CriCheckingService {
             // mitigation journey.
             var targetVot = ipvSessionItem.getTargetVot();
             var journeyResponse =
-                    ciMitUtilityService.getMitigationJourneyIfBreaching(cis, targetVot);
+                    cimitUtilityService.getMitigationJourneyIfBreaching(cis, targetVot);
             if (journeyResponse.isPresent()) {
                 return journeyResponse.get();
             }
