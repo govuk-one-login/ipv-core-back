@@ -55,9 +55,7 @@ export const sendJourneyEvent = async (
   });
 
   if (!response.ok) {
-    throw new Error(
-      `sendJourneyEvent request failed: ${await response.text()}`,
-    );
+    throw new Error(`sendJourneyEvent request failed: ${response.statusText}`);
   }
 
   return (await response.json()) as JourneyEngineResponse;
