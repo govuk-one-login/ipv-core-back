@@ -2,15 +2,15 @@
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey
-    Given I start a new 'low-confidence' journey with feature set 'm2bBetaExperianKbv'
+    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,m2bBetaExperianKbv'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response
     When I submit an 'next' event
     Then I get a 'claimedIdentity' CRI response
-    When I submit 'kenneth-current' details with attributes to the CRI stub
-      | Attribute | Values         |
-      | context   | "hmrc_check"   |
+    When I submit 'kenneth-current' details to the CRI stub
+#      | Attribute | Values         |
+#      | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
     When I submit 'kenneth' details with attributes to the CRI stub
       | Attribute          | Values                                      |

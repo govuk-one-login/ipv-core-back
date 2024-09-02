@@ -55,12 +55,6 @@ export const sendJourneyEvent = async (
   });
 
   if (!response.ok) {
-    console.log(
-      "sendJourneyEvent url, internalApiHeaders, response",
-      url,
-      internalApiHeaders,
-      response,
-    );
     throw new Error(
       `sendJourneyEvent request failed: ${await response.text()}`,
     );
