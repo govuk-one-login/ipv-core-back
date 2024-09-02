@@ -5,6 +5,7 @@ import {
   Then,
   When,
   Status,
+  DataTable,
 } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
@@ -29,6 +30,10 @@ import {
   PostalAddressClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
 import { delay } from "../utils/delay.js";
+import {
+  parseTableForTicfManagementParameters,
+  postUserToTicfManagementApi,
+} from "../clients/ticf-management-api.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -331,6 +336,22 @@ Then(
       this.mfaResetResult.success,
       expectedMfaResetResult === "successful",
       "MFA reset results do not match.",
+    );
+  },
+);
+
+When(
+  "there is an existing TICF record for the user with details",
+  async function (this: World, table: DataTable): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    const detailsForPost = parseTableForTicfManagementParameters(table);
+
+    await postUserToTicfManagementApi(
+      this.userId,
+      detailsForPost.cis, // TODO: refactor this to have less args
+      detailsForPost.type,
+      detailsForPost.responseDelay,
+      detailsForPost.txn,
     );
   },
 );
