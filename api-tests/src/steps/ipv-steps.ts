@@ -352,6 +352,7 @@ When(
       detailsForPost.type,
       detailsForPost.responseDelay,
       detailsForPost.txn,
+      detailsForPost.statusCode,
     );
   },
 );
