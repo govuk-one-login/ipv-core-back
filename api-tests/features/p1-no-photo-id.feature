@@ -2,7 +2,7 @@
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,m2bBetaExperianKbv'
+    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response
