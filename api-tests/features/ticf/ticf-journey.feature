@@ -1,4 +1,3 @@
-@Build # TODO: add ticf env variables to build (see run-tests.sh)
 Feature: TICF journey
   Scenario: TICF CRI request - with no CI same session
     Given there is an existing TICF record for the user with details
