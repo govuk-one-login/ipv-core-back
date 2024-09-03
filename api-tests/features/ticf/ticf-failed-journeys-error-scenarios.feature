@@ -1,4 +1,3 @@
-@Build
 Feature: TICF failed journeys error scenarios
 
   Rule: Via alternate doc route
