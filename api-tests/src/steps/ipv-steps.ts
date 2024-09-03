@@ -141,11 +141,17 @@ When(
     this: World,
     journeyType: string,
     expectedPage: string,
-    featureSet: string,
+    featureSet: string | undefined,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined, featureSet);
+      await startNewJourney(
+        this,
+        journeyType,
+        false,
+        undefined,
+        featureSet ?? undefined,
+      );
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
