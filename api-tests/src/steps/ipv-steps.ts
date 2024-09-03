@@ -276,7 +276,6 @@ Then(
     assert.equal(this.identity.vot, vot);
 
     if (vc) {
-      console.log(this.userId);
       this.vcs = decodeCredentialJwts(
         this.identity["https://vocab.account.gov.uk/v1/credentialJWT"],
       );
