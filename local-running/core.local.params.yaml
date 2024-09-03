@@ -329,7 +329,8 @@ core:
           "credentialUrl": "https://ticf.stubs.account.gov.uk/risk-assessment",
           "signingKey": "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}",
           "componentId": "https://ticf.stubs.account.gov.uk",
-          "requiresApiKey": "true"
+          "requiresApiKey": "true",
+          "requestTimeout": 5
         }'
     hmrcMigration:
       id: hmrcMigration
