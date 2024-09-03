@@ -28,18 +28,23 @@ import { getProvenIdentityDetails } from "../clients/core-back-internal-client.j
 import {
   NamePartType,
   PostalAddressClass,
+  RiskAssessmentCredentialClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
 import { delay } from "../utils/delay.js";
 import {
   parseTableForTicfManagementParameters,
   postUserToTicfManagementApi,
 } from "../clients/ticf-management-api.js";
+import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
+import { VcJwtPayload } from "../types/external-api.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
+
+const TICF_CREDENTIAL_ISSUER = "https://ticf.stubs.account.gov.uk";
 
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
@@ -54,6 +59,22 @@ const describeResponse = (response: JourneyEngineResponse): string => {
     return `client response`;
   }
   return `unknown ${JSON.stringify(response)}`;
+};
+
+const CREDENTIAL_ISSUERS: Record<string, string> = {
+  TICF: TICF_CREDENTIAL_ISSUER,
+};
+
+const checkForVc = (
+  vc: string,
+  checkForAbsence: boolean,
+  jwts: Record<string, VcJwtPayload>,
+) => {
+  const issuer = CREDENTIAL_ISSUERS[vc];
+  const isVcInIdentity = issuer in jwts;
+  const errorMessage = `Identity does ${!checkForAbsence ? "not " : ""}have a ${vc} VC.`;
+
+  assert.ok(checkForAbsence ? !isVcInIdentity : isVcInIdentity, errorMessage);
 };
 
 After(function (this: World, options: ITestCaseHookParameter) {
@@ -114,16 +135,17 @@ When(
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  "I start a new {string} journey and return to a {string} page response",
+  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response(?: with feature set '([\w-,]+)')?$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
     expectedPage: string,
+    featureSet: string,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined, undefined);
+      await startNewJourney(this, journeyType, false, undefined, featureSet);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
@@ -240,13 +262,28 @@ When(
   },
 );
 
-Then("I get a {string} identity", function (this: World, vot: string): void {
-  if (!this.identity) {
-    throw new Error("No identity found.");
-  }
+Then(
+  /I get a '(\w+)' identity(?: with(out)? a '([\w-]+)' VC)?/,
+  function (
+    this: World,
+    vot: string,
+    checkForAbsence: "out" | undefined,
+    vc: string,
+  ): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+    assert.equal(this.identity.vot, vot);
 
-  assert.equal(this.identity.vot, vot);
-});
+    if (vc) {
+      console.log(this.userId);
+      this.vcs = decodeCredentialJwts(
+        this.identity["https://vocab.account.gov.uk/v1/credentialJWT"],
+      );
+      checkForVc(vc, !!checkForAbsence, this.vcs);
+    }
+  },
+);
 
 Then(
   "a(n) {string} audit event was recorded [local only]",
@@ -354,5 +391,22 @@ When(
       detailsForPost.txn,
       detailsForPost.statusCode,
     );
+  },
+);
+
+Then(
+  "the TICF VC has properties",
+  function (this: World, table: DataTable): void {
+    if (!this.vcs || !(TICF_CREDENTIAL_ISSUER in this.vcs)) {
+      throw new Error("No TICF VC found with identity.");
+    }
+    const ticfVc = this.vcs[TICF_CREDENTIAL_ISSUER]
+      .vc as RiskAssessmentCredentialClass;
+    const expectedProperties = table.rowsHash();
+
+    const cis = ticfVc.evidence[0].ci;
+    assert.equal(ticfVc.evidence[0].type, expectedProperties.type);
+    assert.equal(ticfVc.evidence[0].txn, expectedProperties.txn);
+    assert.equal(cis ? cis.join() : "", expectedProperties.cis);
   },
 );

@@ -1,6 +1,5 @@
 import config from "../config/config.js";
 import { DataTable } from "@cucumber/cucumber";
-import { getRandomString } from "../utils/random-string-generator.js";
 
 export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const rowsHash = table.rowsHash();
@@ -35,7 +34,7 @@ export const postUserToTicfManagementApi = async (
     body: JSON.stringify({
       type: type || "RiskAssessment",
       ci: cis,
-      txn: txn != "timeOut" ? getRandomString(16) : undefined,
+      txn,
       responseDelay,
     }),
   });
