@@ -1,5 +1,5 @@
 import * as jose from "jose";
-import { VcJwtPayload } from "../types/jar-request.js";
+import { VcJwtPayload } from "../types/external-api.js";
 
 export const decodeCredentialJwts = (jwts: string[]) => {
   const mappedJwts: Record<string, VcJwtPayload> = {};
