@@ -1,4 +1,3 @@
-@Build
 Feature: TICF journey
   Rule: No TICF CI initially via app journey
     Background: User starts a medium-confidence journey and has existing TICF record with no CI
@@ -22,6 +21,7 @@ Feature: TICF journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
 
+    @Build
     Scenario: TICF CRI request - with no CI same session
       Then I get a 'P2' identity with a 'TICF' VC
       And the TICF VC has properties
@@ -29,6 +29,7 @@ Feature: TICF journey
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
+    @Build
     Scenario: TICF CRI request - with no CI in separate session
       Then I get a 'P2' identity with a 'TICF' VC
       And the TICF VC has properties
@@ -77,6 +78,8 @@ Feature: TICF journey
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
+    @Build
+    @Build
     Scenario: TICF CRI request - with no CI initially then timeout in separate session
       Then I get a 'P2' identity with a 'TICF' VC
       And the TICF VC has properties
@@ -240,6 +243,7 @@ Feature: TICF journey
         | txn  | randomUuid                   |
 
   Rule: TICF request has a response delay
+    @Build
     Scenario: TICF CRI request - response delay less than 5s
       Given there is an existing TICF record for the user with details
         | responseDelay | 4                            |
@@ -266,6 +270,7 @@ Feature: TICF journey
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
+    @Build
     Scenario: TICF CRI request - response delay more than 5s
       Given there is an existing TICF record for the user with details
         | responseDelay | 10                           |
