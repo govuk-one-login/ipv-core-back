@@ -1,10 +1,12 @@
 import {
   DrivingPermitDetailsClass,
   IdentityVectorOfTrust,
+  JWTClass,
   PassportDetailsClass,
   PersonWithIdentityClass,
   PostalAddressClass,
   SocialSecurityRecordDetailsClass,
+  VerifiableCredentialClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
 
 export interface TokenResponse {
@@ -36,4 +38,9 @@ export interface MfaResetResult {
   success: boolean;
   errorDescription?: string;
   errorCode?: string;
+}
+
+export interface VcJwtPayload extends JWTClass {
+  vc: VerifiableCredentialClass;
+  iss: string;
 }
