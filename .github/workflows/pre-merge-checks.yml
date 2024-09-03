@@ -165,6 +165,7 @@ jobs:
           MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.MANAGEMENT_CIMIT_STUB_API_KEY }}
           EVCS_STUB_API_KEY: ${{ secrets.API_KEY_EVCS }}
           CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.CRI_STUB_GEN_CRED_API_KEY }}
+          MANAGEMENT_TICF_API_KEY: ${{ secrets.MANAGEMENT_TICF_API_KEY }}
         run: npm run test:ci
 
       - name: Upload API test report
