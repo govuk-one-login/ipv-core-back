@@ -1,5 +1,5 @@
 @Build
-Feature: TICF failed journeys
+Feature: TICF failed journeys error scenarios
 
   Rule: Via alternate doc route
     Background: Start TICF alternate doc journey given user already has an existing TICF record
