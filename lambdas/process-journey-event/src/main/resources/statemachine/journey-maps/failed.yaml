@@ -71,11 +71,18 @@ states:
               successful: false
             checkJourneyContext:
               rfc:
-                targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
+                targetState: COULD_NOT_UPDATE_DETAILS_PAGE
                 auditEvents:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
                   successful: false
+                checkFeatureFlag:
+                  updateDetailsAccountDeletion:
+                    targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+                    auditEvents:
+                      - IPV_USER_DETAILS_UPDATE_END
+                    auditContext:
+                      successful: false
         checkJourneyContext:
           rfc:
             targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
@@ -83,22 +90,13 @@ states:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
-
-  FAILED_UPDATE_DETAILS_RFC:
-    events:
-      next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_END
-        auditContext:
-          successful: false
-        checkIfDisabled:
-          ticf:
-            targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
+            checkFeatureFlag:
+              updateDetailsAccountDeletion:
+                targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC
+                auditEvents:
+                  - IPV_USER_DETAILS_UPDATE_END
+                auditContext:
+                  successful: false
 
   FAILED_BAV:
     events:
@@ -312,9 +310,8 @@ states:
     events:
       delete:
         targetState: DELETE_HANDOVER_PAGE
-      back:
-        targetJourney: INITIAL_JOURNEY_SELECTION
-        targetState: START
+      returnToRp:
+        targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
 
