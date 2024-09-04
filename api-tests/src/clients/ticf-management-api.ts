@@ -1,6 +1,7 @@
 import config from "../config/config.js";
 import { DataTable } from "@cucumber/cucumber";
 import { TicfManagementParameters } from "../types/ticf-management-api.js";
+import { getRandomString } from "../utils/random-string-generator.js";
 
 export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const rowsHash = table.rowsHash();
@@ -11,7 +12,7 @@ export const parseTableForTicfManagementParameters = (table: DataTable) => {
     ci: cis || undefined,
     responseDelay,
     type: rowsHash.type || "RiskAssessment",
-    txn: rowsHash.txn || undefined,
+    txn: rowsHash.txn === "" ? undefined : getRandomString(16),
     statusCode: rowsHash.statusCode,
   };
 };

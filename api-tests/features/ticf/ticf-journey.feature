@@ -1,10 +1,8 @@
 Feature: TICF journey
   Rule: No TICF CI initially via app journey
-    Background: User starts a medium-confidence journey and has existing TICF record with no CI
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+    Background: User starts a medium-confidence journey and TICF returns no CIs
+      Given TICF CRI will respond with default parameters
+        | | |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -25,25 +23,17 @@ Feature: TICF journey
     Scenario: TICF CRI request - with no CI same session
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
     @Build
     Scenario: TICF CRI request - with no CI in separate session
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters
+        | | |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-reuse' page response
       And my proven user details match
@@ -52,24 +42,15 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
     Scenario: TICF CRI request - with no CI initially and then a CI in a separate session
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters and
         | cis           | BREACHING                    |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'pyi-no-match' page response
@@ -78,26 +59,18 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
     @Build
     Scenario: TICF CRI request - with no CI initially then timeout in separate session
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
       # New journey with the same user id
       # Submitting no txn results in a timeout when the user's TICF record is requested
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           |                              |
+      Given TICF CRI will respond with default parameters
+        | txn           |                     |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-reuse' page response
       And my proven user details match
@@ -106,17 +79,11 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  |                              |
+      And the TICF VC has default properties with no txn
 
   Rule: With TICF CI initially
     Background: User starts a medium-confidence journey and has existing TICF record with a CI
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters and
         | cis           | BREACHING                    |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
@@ -137,47 +104,30 @@ Feature: TICF journey
     Scenario: TICF CRI request - with CI same session
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
     Scenario: TICF CRI request - with CI separate session
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters and
         | cis           | BREACHING                    |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'pyi-no-match' page response
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
     Scenario: TICF CRI request - with CI initially then no CI in separate session
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters
+        | | |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
@@ -185,16 +135,11 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
   Rule: TICF request times out
     Background: User starts a medium-confidence journey and but TICF request times out
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
+      Given TICF CRI will respond with default parameters and
         | txn           |                              |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
@@ -213,17 +158,12 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  |                              |
+      And the TICF VC has default properties with no txn
 
     Scenario: TICF CRI request - for timeout and no CI initially then no CI in separate session
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters
+        | | |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-reuse' page response
       And my proven user details match
@@ -232,17 +172,11 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
     Scenario: TICF CRI request - for timeout then CI in separate session
       # New journey with the same user id
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters and
         | cis           | BREACHING                    |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'pyi-no-match' page response
@@ -251,18 +185,13 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  | BREACHING                    |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties with 'BREACHING' CI
 
   Rule: TICF request has a response delay
     @Build
     Scenario: TICF CRI request - response delay less than 5s
-      Given TICF CRI will respond with
+      Given TICF CRI will respond with default parameters and
         | responseDelay | 4                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -280,17 +209,12 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties
 
     @Build
     Scenario: TICF CRI request - response delay more than 5s
-      Given TICF CRI will respond with
+      Given TICF CRI will respond with default parameters and
         | responseDelay | 10                           |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -311,10 +235,8 @@ Feature: TICF journey
 
   Rule: With CI via F2F
     Scenario: TICF CRI request - F2F separate session check
-      Given TICF CRI will respond with
-        | responseDelay | 0                            |
-        | type          | RiskAssessment               |
-        | txn           | randomUuid                   |
+      Given TICF CRI will respond with default parameters
+        | | |
       Given I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
@@ -337,7 +259,4 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has properties
-        | cis  |                              |
-        | type | RiskAssessment               |
-        | txn  | randomUuid                   |
+      And the TICF VC has default properties

@@ -1,10 +1,7 @@
 @Build
 Feature: Failed TICF requests
   Scenario Outline: TICF CRI returns a <statusCode> during identity proving and no CI in reuse
-    Given TICF CRI will respond with
-      | responseDelay | 0                            |
-      | type          | RiskAssessment               |
-      | txn           | randomUuid                   |
+    Given TICF CRI will respond with default parameters and
       | statusCode    | <statusCode>                 |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-identity-document-start' page response
@@ -24,10 +21,8 @@ Feature: Failed TICF requests
     Then I get a 'P2' identity
     And my identity does not include a 'TICF' credential
 
-    Given TICF CRI will respond with
-      | responseDelay | 0                            |
-      | type          | RiskAssessment               |
-      | txn           | randomUuid                   |
+    Given TICF CRI will respond with default parameters
+      | | |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-reuse' page response
     And my proven user details match
@@ -36,10 +31,7 @@ Feature: Failed TICF requests
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has properties
-      | cis  |                              |
-      | type | RiskAssessment               |
-      | txn  | randomUuid                   |
+    And the TICF VC has default properties
 
     Examples:
       | statusCode |
