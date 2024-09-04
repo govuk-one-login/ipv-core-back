@@ -1,7 +1,5 @@
 Feature: TICF new identity journey
   Scenario: Via app - TICF returns no CIs
-    Given TICF CRI will respond with default parameters
-    | | |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -109,8 +107,6 @@ Feature: TICF new identity journey
     And my identity does not include a 'TICF' credential
 
   Scenario: Via F2F - TICF request does not return a CI
-    Given TICF CRI will respond with default parameters
-      | | |
     Given I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event

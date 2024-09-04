@@ -22,7 +22,7 @@ Feature: Failed TICF requests
     And my identity does not include a 'TICF' credential
 
     Given TICF CRI will respond with default parameters
-      | | |
+      | statusCode    | 200                 |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-reuse' page response
     And my proven user details match

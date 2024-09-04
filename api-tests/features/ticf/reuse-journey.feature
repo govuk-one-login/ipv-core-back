@@ -7,8 +7,6 @@ Feature: TICF reuse journey
       | fraud   | kenneth-score-2              |
 
   Scenario: TICF request returns no CIs
-    Given TICF CRI will respond with default parameters
-      | | |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
