@@ -285,6 +285,41 @@ Then(
 );
 
 Then(
+  "I get {string} return code(s)",
+  function (this: World, expectedReturnCodes: string): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
+    const returnCodes = this.identity[
+      "https://vocab.account.gov.uk/v1/returnCode"
+    ]
+      .map((returnCode) => returnCode.code)
+      .sort();
+    const parsedExpectedCodes = expectedReturnCodes
+      ? expectedReturnCodes.split(",").sort()
+      : [];
+
+    assert.deepEqual(returnCodes, parsedExpectedCodes);
+  },
+);
+
+Then("I don't get any return codes", function (this: World): void {
+  if (!this.identity) {
+    throw new Error("No identity found.");
+  }
+
+  const returnCodes = this.identity[
+    "https://vocab.account.gov.uk/v1/returnCode"
+  ].map((returnCode) => returnCode.code);
+
+  assert.ok(
+    returnCodes.length === 0,
+    `Expected no return codes but got: ${returnCodes.join(",")}`,
+  );
+});
+
+Then(
   "a(n) {string} audit event was recorded [local only]",
   async function (this: World, eventName: string): Promise<void> {
     if (config.localAuditEvents) {
