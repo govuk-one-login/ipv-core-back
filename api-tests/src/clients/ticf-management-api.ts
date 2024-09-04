@@ -7,10 +7,10 @@ export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const cis = rowsHash.cis && rowsHash.cis.split(",");
 
   return {
-    cis: cis || [],
+    cis: cis || undefined,
     responseDelay,
     type: rowsHash.type,
-    txn: rowsHash.txn ?? undefined,
+    txn: rowsHash.txn || undefined,
     statusCode: rowsHash.statusCode,
   };
 };

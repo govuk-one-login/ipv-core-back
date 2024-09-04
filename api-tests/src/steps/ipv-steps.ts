@@ -44,8 +44,6 @@ const MAX_ATTEMPTS = 5;
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
 const identityCredential = "https://vocab.account.gov.uk/v1/coreIdentity";
 
-const TICF_CREDENTIAL_ISSUER = "https://ticf.stubs.account.gov.uk";
-
 const describeResponse = (response: JourneyEngineResponse): string => {
   if (!response) {
     return "none";
@@ -62,7 +60,7 @@ const describeResponse = (response: JourneyEngineResponse): string => {
 };
 
 const CREDENTIAL_ISSUERS: Record<string, string> = {
-  TICF: TICF_CREDENTIAL_ISSUER,
+  TICF: "https://ticf.stubs.account.gov.uk",
 };
 
 const checkForVc = (
@@ -150,7 +148,7 @@ When(
         journeyType,
         false,
         undefined,
-        featureSet ?? undefined,
+        featureSet || undefined,
       );
 
       if (!this.lastJourneyEngineResponse) {
@@ -274,18 +272,18 @@ Then(
     this: World,
     vot: string,
     checkForAbsence: "out" | undefined,
-    vc: string,
+    expectedVc: string,
   ): void {
     if (!this.identity) {
       throw new Error("No identity found.");
     }
     assert.equal(this.identity.vot, vot);
 
-    if (vc) {
+    if (expectedVc) {
       this.vcs = decodeCredentialJwts(
         this.identity["https://vocab.account.gov.uk/v1/credentialJWT"],
       );
-      checkForVc(vc, !!checkForAbsence, this.vcs);
+      checkForVc(expectedVc, !!checkForAbsence, this.vcs);
     }
   },
 );
@@ -386,15 +384,16 @@ When(
   "there is an existing TICF record for the user with details",
   async function (this: World, table: DataTable): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
-    const detailsForPost = parseTableForTicfManagementParameters(table);
+    const { cis, type, responseDelay, txn, statusCode } =
+      parseTableForTicfManagementParameters(table);
 
     await postUserToTicfManagementApi(
       this.userId,
-      detailsForPost.cis, // TODO: refactor this to have less args
-      detailsForPost.type,
-      detailsForPost.responseDelay,
-      detailsForPost.txn,
-      detailsForPost.statusCode,
+      cis,
+      type,
+      responseDelay,
+      txn,
+      statusCode,
     );
   },
 );
@@ -402,10 +401,10 @@ When(
 Then(
   "the TICF VC has properties",
   function (this: World, table: DataTable): void {
-    if (!this.vcs || !(TICF_CREDENTIAL_ISSUER in this.vcs)) {
+    if (!this.vcs || !(CREDENTIAL_ISSUERS["TICF"] in this.vcs)) {
       throw new Error("No TICF VC found with identity.");
     }
-    const ticfVc = this.vcs[TICF_CREDENTIAL_ISSUER]
+    const ticfVc = this.vcs[CREDENTIAL_ISSUERS["TICF"]]
       .vc as RiskAssessmentCredentialClass;
     const expectedProperties = table.rowsHash();
 
