@@ -1,7 +1,7 @@
 Feature: TICF journey
   Rule: No TICF CI initially via app journey
     Background: User starts a medium-confidence journey and has existing TICF record with no CI
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -23,7 +23,8 @@ Feature: TICF journey
 
     @Build
     Scenario: TICF CRI request - with no CI same session
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -31,14 +32,15 @@ Feature: TICF journey
 
     @Build
     Scenario: TICF CRI request - with no CI in separate session
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -48,21 +50,23 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
     Scenario: TICF CRI request - with no CI initially and then a CI in a separate session
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -72,16 +76,17 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
     @Build
-    @Build
     Scenario: TICF CRI request - with no CI initially then timeout in separate session
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -89,7 +94,7 @@ Feature: TICF journey
 
       # New journey with the same user id
       # Submitting no txn results in a timeout when the user's TICF record is requested
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           |                              |
@@ -99,7 +104,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -107,7 +113,7 @@ Feature: TICF journey
 
   Rule: With TICF CI initially
     Background: User starts a medium-confidence journey and has existing TICF record with a CI
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -129,42 +135,46 @@ Feature: TICF journey
       When I use the OAuth response to get my identity
 
     Scenario: TICF CRI request - with CI same session
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
     Scenario: TICF CRI request - with CI separate session
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
         | cis           | BREACHING                    |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'pyi-no-match' page response
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
     Scenario: TICF CRI request - with CI initially then no CI in separate session
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
         | txn  | randomUuid                   |
 
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -173,7 +183,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -181,7 +192,7 @@ Feature: TICF journey
 
   Rule: TICF request times out
     Background: User starts a medium-confidence journey and but TICF request times out
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           |                              |
@@ -200,7 +211,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -208,7 +220,7 @@ Feature: TICF journey
 
     Scenario: TICF CRI request - for timeout and no CI initially then no CI in separate session
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -218,7 +230,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -226,7 +239,7 @@ Feature: TICF journey
 
     Scenario: TICF CRI request - for timeout then CI in separate session
       # New journey with the same user id
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -236,7 +249,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
@@ -245,7 +259,7 @@ Feature: TICF journey
   Rule: TICF request has a response delay
     @Build
     Scenario: TICF CRI request - response delay less than 5s
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 4                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -264,7 +278,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -272,7 +287,7 @@ Feature: TICF journey
 
     @Build
     Scenario: TICF CRI request - response delay more than 5s
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 10                           |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -291,11 +306,12 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity without a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity does not include a 'TICF' credential
 
   Rule: With CI via F2F
     Scenario: TICF CRI request - F2F separate session check
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -319,7 +335,8 @@ Feature: TICF journey
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P2' identity with a 'TICF' VC
+      Then I get a 'P2' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

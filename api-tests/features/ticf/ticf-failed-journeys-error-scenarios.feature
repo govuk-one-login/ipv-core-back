@@ -2,7 +2,7 @@ Feature: TICF failed journeys error scenarios
 
   Rule: Via alternate doc route
     Background: Start TICF alternate doc journey given user already has an existing TICF record
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -33,7 +33,8 @@ Feature: TICF failed journeys error scenarios
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -49,7 +50,8 @@ Feature: TICF failed journeys error scenarios
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -63,7 +65,8 @@ Feature: TICF failed journeys error scenarios
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -71,7 +74,7 @@ Feature: TICF failed journeys error scenarios
 
   Rule: Via post-office or no-photo-id
     Background: User already has an existing TICF record
-      Given there is an existing TICF record for the user with details
+      Given TICF CRI will respond with
         | responseDelay | 0                            |
         | type          | RiskAssessment               |
         | txn           | randomUuid                   |
@@ -86,7 +89,8 @@ Feature: TICF failed journeys error scenarios
       When I submit an 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
@@ -108,7 +112,8 @@ Feature: TICF failed journeys error scenarios
       When I submit an 'end' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity with a 'TICF' VC
+      Then I get a 'P0' identity
+      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

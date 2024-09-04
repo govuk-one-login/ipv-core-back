@@ -1,11 +1,11 @@
 @Build
 Feature: Failed TICF requests
-  Scenario Outline: TICF Management API request configured for 400 initially and no CI in reuse journey
-    Given there is an existing TICF record for the user with details
+  Scenario Outline: TICF CRI returns a <statusCode> during identity proving and no CI in reuse
+    Given TICF CRI will respond with
       | responseDelay | 0                            |
       | type          | RiskAssessment               |
       | txn           | randomUuid                   |
-      | statusCode    | <statusCode>                          |
+      | statusCode    | <statusCode>                 |
     When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -21,9 +21,10 @@ Feature: Failed TICF requests
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity without a 'TICF' VC
+    Then I get a 'P2' identity
+    And my identity does not include a 'TICF' credential
 
-    Given there is an existing TICF record for the user with details
+    Given TICF CRI will respond with
       | responseDelay | 0                            |
       | type          | RiskAssessment               |
       | txn           | randomUuid                   |
@@ -33,7 +34,8 @@ Feature: Failed TICF requests
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity with a 'TICF' VC
+    Then I get a 'P2' identity
+    And my identity includes a 'TICF' credential
     And the TICF VC has properties
       | cis  |                              |
       | type | RiskAssessment               |

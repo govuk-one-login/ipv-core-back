@@ -1,5 +1,6 @@
 import config from "../config/config.js";
 import { DataTable } from "@cucumber/cucumber";
+import { TicfManagementParameters } from "../types/ticf-management-api.js";
 
 export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const rowsHash = table.rowsHash();
@@ -7,9 +8,9 @@ export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const cis = rowsHash.cis && rowsHash.cis.split(",");
 
   return {
-    cis: cis || undefined,
+    ci: cis || undefined,
     responseDelay,
-    type: rowsHash.type,
+    type: rowsHash.type || "RiskAssessment",
     txn: rowsHash.txn || undefined,
     statusCode: rowsHash.statusCode,
   };
@@ -17,12 +18,11 @@ export const parseTableForTicfManagementParameters = (table: DataTable) => {
 
 export const postUserToTicfManagementApi = async (
   userId: string,
-  cis: string[] | undefined,
-  type: string,
-  responseDelay: number,
-  txn: string | undefined,
-  statusCode: string | undefined,
+  parsedTicfManagementParameters: {
+    statusCode: string;
+  } & TicfManagementParameters,
 ) => {
+  const { statusCode } = parsedTicfManagementParameters;
   const statusCodeUrlParam = statusCode ? `/statuscode/${statusCode}` : "";
   const url = `${config.ticf.managementTicfUrl}/management/user/${userId}${statusCodeUrlParam}`;
 
@@ -30,12 +30,11 @@ export const postUserToTicfManagementApi = async (
     method: "POST",
     headers: {
       "x-api-key": config.ticf.managementTicfApiKey,
+      "content-type": "application/json",
     },
     body: JSON.stringify({
-      type: type || "RiskAssessment",
-      ci: cis,
-      txn,
-      responseDelay,
+      ...parsedTicfManagementParameters,
+      statusCode: undefined,
     }),
   });
 
