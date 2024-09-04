@@ -28,11 +28,6 @@ const JOURNEY_TYPES = {
     REVERIFICATION: 'Reverification'
 };
 
-const NESTED_JOURNEY_TYPES = {
-    ADDRESS_AND_FRAUD: "Address and fraud",
-    STRATEGIC_APP_TRIAGE: "Strategic app triage"
-};
-
 const COMMON_JOURNEY_TYPES = [
     'NEW_P2_IDENTITY', 'REUSE_EXISTING_IDENTITY', 'REPEAT_FRAUD_CHECK', 'REVERIFICATION', 'UPDATE_ADDRESS', 'UPDATE_NAME'
 ];
@@ -103,7 +98,7 @@ const getPageUrl = (id, context) => {
 
 const getJourneyUrl = (id) => `?${JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
 
-const getNestedJourneyUrl = (id) => `?${NESTED_JOURNEY_TYPES}=${encodeURIComponent(id)}`;
+const getNestedJourneyUrl = (id) => `?${NESTED_JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
@@ -217,8 +212,8 @@ const updateView = async () => {
     const formData = new FormData(form);
     const selectedNestedJourney = new URLSearchParams(window.location.search).get(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
     if (selectedNestedJourney) {
-        journeyName.innerText = `${NESTED_JOURNEY_TYPES[selectedNestedJourney]} nested journey`;
-        journeyDesc.innerText = `This is the route of the ${NESTED_JOURNEY_TYPES[selectedNestedJourney].toLowerCase()} nested journey. It starts via an entry event specified in the main user journey and emits an exit event.`;
+        journeyName.innerText = nestedJourneys[selectedNestedJourney].name;
+        journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
 
         return renderSvg(selectedNestedJourney, formData);
     } else {
@@ -266,6 +261,18 @@ const highlightState = (state) => {
         .forEach((node) => node.classList.add('highlight'));
 };
 
+const createLink = (text, href, onClick) => {
+    const link = document.createElement('a');
+    link.innerText = text;
+    link.href = href;
+    if (onClick) {
+        link.onclick = onClick; // internal targets switch using an event handler
+    } else {
+        link.target = '_blank'; // external targets should open a new tab
+    }
+    return link;
+};
+
 // Set up the click handlers that mermaid binds to each node
 const setupMermaidClickHandlers = () => {
     const getDesc = (response) => {
@@ -304,6 +311,7 @@ const setupMermaidClickHandlers = () => {
             }
         }
 
+        // Otherwise, update node information
         selectedState = state;
         highlightState(state);
         nodeTitle.innerText = state;
@@ -313,33 +321,34 @@ const setupMermaidClickHandlers = () => {
         desc.innerText = getDesc(def);
         nodeDesc.append(desc);
 
-        const link = document.createElement('a');
-
         if (def.nestedJourney) {
-            link.innerText = 'Click here to view the nested journey';
-            link.href = getNestedJourneyUrl(def.nestedJourney);
-            link.onclick = async (e) => {
-                e.preventDefault();
-                await switchToNestedJourney(def.nestedJourney);
-            }
+            nodeDesc.append(createLink(
+                'Click here to view the nested journey',
+                getNestedJourneyUrl(def.nestedJourney),
+                async (e) => {
+                    e.preventDefault();
+                    await switchToNestedJourney(def.nestedJourney);
+                },
+            ));
         }
 
         if (def.pageId) {
-            link.innerText = 'Click here to view the page in build';
-            link.href = getPageUrl(def.pageId, def.context);
-            link.target = '_blank';
+            nodeDesc.append(createLink(
+                'Click here to view the page in build',
+                getPageUrl(def.pageId, def.context),
+            ));
         }
 
         if (def.type === 'journeyTransition') {
-            link.innerText = 'Click here to view the journey';
-            link.href = getJourneyUrl(def.targetJourney);
-            link.onclick = async (e) => {
-                e.preventDefault();
-                await switchJourney(def.targetJourney, def.targetState);
-            }
+            nodeDesc.append(createLink(
+                'Click here to view the journey',
+                getJourneyUrl(def.targetJourney),
+                async (e) => {
+                    e.preventDefault();
+                    await switchJourney(def.targetJourney, def.targetState);
+                },
+            ));
         }
-
-        nodeDesc.append(link);
     };
 }
 

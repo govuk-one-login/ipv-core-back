@@ -1,4 +1,7 @@
 ADDRESS_AND_FRAUD:
+  name: Address and Fraud
+  description: >-
+    The combined journey for Address and Fraud CRIs.
   entryEvents:
     next:
       targetState: CRI_ADDRESS
@@ -27,6 +30,10 @@ ADDRESS_AND_FRAUD:
           exitEventToEmit: enhanced-verification
 
 STRATEGIC_APP_TRIAGE:
+  name: Strategic App Triage
+  description: >-
+    App triage pages to determine eligibility for the app
+    and handover to the appropriate journey type.
   entryEvents:
     appTriage:
       targetState: SELECT_DEVICE_PAGE
