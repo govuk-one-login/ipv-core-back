@@ -35,11 +35,12 @@ export const getOptions = (journeyMaps) => {
 };
 
 // Expand out parent states
-const expandParents = (journeyMap) => {
+// Will also search 'otherStates' (e.g. for nested journeys)
+const expandParents = (journeyStates, otherStates) => {
     const parentStates = [];
-    Object.entries(journeyMap).forEach(([state, definition]) => {
+    Object.entries(journeyStates).forEach(([state, definition]) => {
         if (definition.parent) {
-            const parent = journeyMap[definition.parent];
+            const parent = journeyStates[definition.parent] ?? otherStates[definition.parent];
             if (!parent) {
                 console.warn(`Missing parent ${definition.parent} of state ${state}`);
             } else {
@@ -47,12 +48,12 @@ const expandParents = (journeyMap) => {
                     ...parent.events,
                     ...definition.events,
                 };
-                journeyMap[state] = { ...parent, ...definition };
+                journeyStates[state] = { ...parent, ...definition };
                 parentStates.push(definition.parent);
             }
         }
     });
-    parentStates.forEach((state) => delete journeyMap[state]);
+    parentStates.forEach((state) => delete journeyStates[state]);
 };
 
 // Should match logic in BasicEvent.java
@@ -298,7 +299,7 @@ const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
             ${transitionsMermaid}
             `;
 
-export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = new FormData()) => {
+export const render = (selectedJourney, journeyMap, nestedJourneys, formData = new FormData()) => {
     const isNestedJourney = selectedJourney in nestedJourneys;
     const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
 
@@ -306,14 +307,14 @@ export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = 
     const journeyStates = JSON.parse(JSON.stringify(
         isNestedJourney
             ? getNestedJourneyStates(nestedJourneys[selectedJourney])
-            : journeyMaps[selectedJourney].states
+            : journeyMap.states
     ));
 
     if (!isNestedJourney && formData.getAll('otherOption').includes('expandNestedJourneys')) {
         expandNestedJourneys(journeyStates, nestedJourneys, formData);
     }
 
-    expandParents(journeyStates);
+    expandParents(journeyStates, journeyMap.states);
 
     const { transitionsMermaid, states } = formData.getAll('otherOption').includes('onlyOrphanStates')
         ? { transitionsMermaid: '', states: calcOrphanStates(journeyStates) }

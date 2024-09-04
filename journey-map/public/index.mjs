@@ -211,26 +211,31 @@ const setupOtherOptions = () => {
 const updateView = async () => {
     const formData = new FormData(form);
     const selectedNestedJourney = new URLSearchParams(window.location.search).get(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
-    if (selectedNestedJourney) {
-        journeyName.innerText = nestedJourneys[selectedNestedJourney].name;
-        journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
+    const selectedJourney = new URLSearchParams(window.location.search).get(JOURNEY_TYPE_SEARCH_PARAM) || DEFAULT_JOURNEY_TYPE;
 
-        return renderSvg(selectedNestedJourney, formData);
+    if (selectedNestedJourney) {
+        const nestedJourneyName = nestedJourneys[selectedNestedJourney].name || 'Details';
+        journeyName.innerText = `${nestedJourneyName} (${journeyMaps[selectedJourney].name})`;
+        journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
     } else {
-        const selectedJourney = new URLSearchParams(window.location.search).get(JOURNEY_TYPE_SEARCH_PARAM) || DEFAULT_JOURNEY_TYPE;
-        journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
+        journeyName.innerText = journeyMaps[selectedJourney].name || 'Details';
 
         const desc = journeyMaps[selectedJourney].description;
 
         journeySelect.value = selectedJourney;
         journeyDesc.innerText = desc || '';
-        return renderSvg(selectedJourney, formData);
     }
+
+    return renderSvg(selectedJourney, selectedNestedJourney, formData);
 };
 
 // Render the journey map SVG
-const renderSvg = async (selectedJourney, formData) => {
-    const diagram = render(selectedJourney, journeyMaps, nestedJourneys, formData);
+const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
+    const diagram = render(
+        selectedNestedJourney ?? selectedJourney,
+        journeyMaps[selectedJourney],
+        nestedJourneys,
+        formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
