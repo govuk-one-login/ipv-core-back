@@ -79,8 +79,9 @@ public class YamlConfigService extends ConfigService {
     @Override
     public String getParameter(String path) {
         if (getFeatureSet() != null) {
-            for (String featureSet : getFeatureSet()) {
-                var featurePath = String.format("%s/%s/%s", FEATURE_SETS, featureSet, path);
+            for (String individualFeatureSet : getFeatureSet()) {
+                var featurePath =
+                        String.format("%s/%s/%s", FEATURE_SETS, individualFeatureSet, path);
                 if (parameters.containsKey(featurePath)) {
                     return parameters.get(featurePath);
                 }
