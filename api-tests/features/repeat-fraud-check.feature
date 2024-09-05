@@ -22,6 +22,9 @@ Feature: Repeat fraud check journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Fraud 6 Months Expiry + Given Name Update
     # Repeat fraud check with update given name
@@ -41,6 +44,9 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
     And my identity 'GivenName' is 'Michael'
     And my identity 'FamilyName' is 'Decerqueira'
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Fraud 6 Months Expiry + Family Name Update
     # Repeat fraud check with update family name
@@ -60,6 +66,9 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
     And my identity 'GivenName' is 'Kenneth'
     And my identity 'FamilyName' is 'Smith'
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Fraud 6 Months Expiry + Address Update
     # Repeat fraud check with update address
@@ -75,6 +84,9 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
     And my address 'buildingNumber' is '28'
     And my address 'addressLocality' is 'Bristol'
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Fraud 6 Months Expiry + Address and Family Name Update
     # Repeat fraud check with update address and family name
@@ -96,6 +108,9 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
     And my identity 'FamilyName' is 'Smith'
     And my address 'addressLocality' is 'Bristol'
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Fraud 6 Months Expiry + Address and Given Name Update
     # Repeat fraud check with update address and given name
@@ -117,6 +132,9 @@ Feature: Repeat fraud check journeys
     Then I get a 'P2' identity
     And my identity 'GivenName' is 'Ken'
     And my address 'streetName' is 'King Road'
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Unsupported Changes
     # Repeat fraud check with various unsupported events and back navigation

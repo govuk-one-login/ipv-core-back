@@ -1,8 +1,8 @@
-Feature: TICF failed journeys error scenarios
+Feature: TICF failed/error journeys
 
-  Rule: Via alternate doc route
-    Background: Start TICF alternate doc journey given user already has an existing TICF record
-      When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
+  Rule: Via enhanced-verification journey
+    Background: Start TICF enhanced verification journey
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -21,7 +21,7 @@ Feature: TICF failed journeys error scenarios
       When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
       Then I get a 'pyi-suggest-other-options' page response
 
-    Scenario: TICF failed alternate doc journey - PYI_NO_MATCH
+    Scenario: TICF failed enhanced-verification journey - PYI_NO_MATCH
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-invalid' details to the CRI stub
@@ -30,12 +30,11 @@ Feature: TICF failed journeys error scenarios
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
 
-    Scenario: TICF failed alternate doc journey - PYI_ANOTHER_WAY
+    Scenario: TICF failed enhanced-verification journey - PYI_ANOTHER_WAY
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I get an 'access_denied' OAuth error from the CRI stub
@@ -46,12 +45,11 @@ Feature: TICF failed journeys error scenarios
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
 
-    Scenario: TICF failed alternate doc journey - PYI_TECHNICAL
+    Scenario: TICF failed enhanced-verification journey - PYI_TECHNICAL
       When I submit an 'f2f' event
       Then I get a 'f2f' CRI response
       When I get an 'temporarily_unavailable' OAuth error from the CRI stub
@@ -60,16 +58,14 @@ Feature: TICF failed journeys error scenarios
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
 
   Rule: Via post-office
+    @Build
     Scenario: TICF failed post-office journey - PYI_ESCAPE
-      Given TICF CRI will respond with default parameters
-        | | |
-      When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -79,16 +75,14 @@ Feature: TICF failed journeys error scenarios
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
 
   Rule: Via no-photo-id
+    @Build
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
-      Given TICF CRI will respond with default parameters
-        | | |
-      When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta,m2bBetaExperianKbv'
+      When I start a new 'medium-confidence' journey with feature set 'm2bBetaExperianKbv'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -104,7 +98,6 @@ Feature: TICF failed journeys error scenarios
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
-      And my identity includes a 'TICF' credential
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |

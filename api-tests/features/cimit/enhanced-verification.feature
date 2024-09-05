@@ -30,6 +30,9 @@ Feature: CIMIT - Enhanced verification
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: CIMIT - Enhanced verification mitigation via DCMAW (separate session mitigation)
     # Start new session as the same user
@@ -49,6 +52,9 @@ Feature: CIMIT - Enhanced verification
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: CIMIT - Enhanced verification mitigation via F2F
     When I submit a 'f2f' event
@@ -62,3 +68,6 @@ Feature: CIMIT - Enhanced verification
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |

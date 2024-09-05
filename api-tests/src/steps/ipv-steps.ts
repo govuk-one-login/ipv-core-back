@@ -263,13 +263,25 @@ When(
   },
 );
 
-Then("I get a {string} identity", function (this: World, vot: string): void {
-  if (!this.identity) {
-    throw new Error("No identity found.");
-  }
+Then(
+  /^I get a '([\w-]+)' identity( without a TICF VC)?$/,
+  function (
+    this: World,
+    vot: string,
+    checkForTicfAbsence: " without a TICF VC" | undefined,
+  ): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
 
-  assert.equal(this.identity.vot, vot);
-});
+    if (!this.vcs) {
+      throw new Error("No credentials found.");
+    }
+
+    assert.equal(this.identity.vot, vot);
+    assertIdentityContainsVc("TICF", !!checkForTicfAbsence, this.vcs);
+  },
+);
 
 Then(
   "a(n) {string} audit event was recorded [local only]",
@@ -360,20 +372,5 @@ Then(
       expectedMfaResetResult === "successful",
       "MFA reset results do not match.",
     );
-  },
-);
-
-Then(
-  /my identity (does not )?include(?:s)? a '([\w-]+)' credential/,
-  function (
-    this: World,
-    checkForAbsence: "does not " | undefined,
-    expectedVc: string,
-  ): void {
-    if (!this.vcs || Object.keys(this.vcs).length === 0) {
-      throw new Error("No credentials found.");
-    }
-
-    assertIdentityContainsVc(expectedVc, !!checkForAbsence, this.vcs);
   },
 );
