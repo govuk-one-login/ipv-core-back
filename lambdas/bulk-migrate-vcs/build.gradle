@@ -6,28 +6,23 @@ plugins {
 }
 
 dependencies {
+
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
-			libs.awsSdkUrlConnectionClient,
-			libs.commonsCollections,
-			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:evcs-migration"),
-			project(":libs:gpg45-evaluator"),
-			project(":libs:user-identity-service"),
+			project(":libs:evcs-service"),
 			project(":libs:verifiable-credentials")
-
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
+	aspect libs.powertoolsLogging,
+			libs.aspectj
+
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			libs.mockitoJunit
 
 	testRuntimeOnly libs.junitPlatform
 }

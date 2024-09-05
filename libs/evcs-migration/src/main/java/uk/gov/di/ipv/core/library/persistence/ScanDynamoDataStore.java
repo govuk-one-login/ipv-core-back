@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.reportuseridentity.persistence;
+package uk.gov.di.ipv.core.library.persistence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,7 +8,6 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
 import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.reportuseridentity.persistence.item;
+package uk.gov.di.ipv.core.library.persistence.item;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
@@ -7,7 +7,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.persistence.item.PersistenceItem;
 
 import java.util.List;
 
