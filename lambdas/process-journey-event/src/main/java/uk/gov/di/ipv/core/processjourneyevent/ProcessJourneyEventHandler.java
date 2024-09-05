@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionUserDetailsUp
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensions;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -59,6 +60,7 @@ import java.util.Map;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
@@ -74,6 +76,8 @@ public class ProcessJourneyEventHandler
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     public static final String BACK_EVENT = "back";
+    private static final String TICF_CRI_LAMBDA = "call-ticf-cri";
+
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
@@ -298,6 +302,23 @@ public class ProcessJourneyEventHandler
                 sendJourneyAuditEvent(
                         auditEventType, result.auditContext(), auditEventUser, deviceInformation);
             }
+        }
+
+        // Special case to skip TICF CRI if it has been disabled,
+        // to save us defining lots of fallback routes in the journey map
+        if (result.state() instanceof BasicState basicState
+                && basicState.getResponse() instanceof ProcessStepResponse processResponse
+                && TICF_CRI_LAMBDA.equals(processResponse.getLambda())
+                && !configService.getBooleanParameter(
+                        CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
+            LOGGER.info(LogHelper.buildLogMessage("Skipping disabled TICF CRI state"));
+            return executeStateTransition(
+                    new JourneyState(basicState.getJourneyType(), basicState.getName()),
+                    ipvSessionItem,
+                    NEXT_EVENT,
+                    null,
+                    auditEventUser,
+                    deviceInformation);
         }
 
         if (result.state() instanceof BasicState basicState) {
