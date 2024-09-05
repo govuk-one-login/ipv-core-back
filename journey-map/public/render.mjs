@@ -35,20 +35,25 @@ export const getOptions = (journeyMaps) => {
 };
 
 // Expand out parent states
-const expandParents = (journeyMap) => {
+// Will also search 'otherStates' (e.g. for nested journeys)
+const expandParents = (journeyStates, otherStates) => {
     const parentStates = [];
-    Object.entries(journeyMap).forEach(([state, definition]) => {
+    Object.entries(journeyStates).forEach(([state, definition]) => {
         if (definition.parent) {
-            const parent = journeyMap[definition.parent];
-            definition.events = {
-                ...parent.events,
-                ...definition.events,
-            };
-            journeyMap[state] = { ...parent, ...definition };
-            parentStates.push(definition.parent);
+            const parent = journeyStates[definition.parent] ?? otherStates[definition.parent];
+            if (!parent) {
+                console.warn(`Missing parent ${definition.parent} of state ${state}`);
+            } else {
+                definition.events = {
+                    ...parent.events,
+                    ...definition.events,
+                };
+                journeyStates[state] = { ...parent, ...definition };
+                parentStates.push(definition.parent);
+            }
         }
     });
-    parentStates.forEach((state) => delete journeyMap[state]);
+    parentStates.forEach((state) => delete journeyStates[state]);
 };
 
 // Should match logic in BasicEvent.java
@@ -120,21 +125,28 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
-const renderTransitions = (journeyMap, formData) => {
+const renderTransitions = (journeyStates, formData) => {
     // Initial states have no response or nested journey
-    const states = Object.keys(journeyMap)
-        .filter((s) => !journeyMap[s].response && !journeyMap[s].nestedJourney);
+    const initialStates = Object.keys(journeyStates)
+            .filter((s) => !journeyStates[s].response && !journeyStates[s].nestedJourney);
+
+    const states = [...initialStates];
     const stateTransitions = [];
 
     for (let i = 0; i < states.length; i++) {
         const state = states[i];
-        const definition = journeyMap[state];
+        const definition = journeyStates[state];
         const events = definition.events || definition.exitEvents || {};
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            const { targetJourney, targetState } = resolveEventTarget(def, formData);
-            const target = targetJourney ? `${targetJourney}__${targetState}` : targetState;
+            const { targetJourney, targetState, exitEventToEmit } = resolveEventTarget(def, formData);
+
+            const target = exitEventToEmit
+                ? `exit_${exitEventToEmit}`.toUpperCase()
+                : targetJourney
+                  ? `${targetJourney}__${targetState}`
+                  : targetState;
 
             if (errorJourneys.includes(targetJourney) &&
                 !formData.getAll('otherOption').includes('includeErrors')) {
@@ -152,14 +164,18 @@ const renderTransitions = (journeyMap, formData) => {
             eventsByTarget[target] = eventsByTarget[target] || [];
             eventsByTarget[target].push(eventName);
 
-            if (!journeyMap[target]) {
+            if (!journeyStates[target]) {
                 if (targetJourney) {
-                    journeyMap[target] = {
+                    journeyStates[target] = {
                         response: {
                             type: 'journeyTransition',
                             targetJourney,
                             targetState,
                         }
+                    };
+                } else if (exitEventToEmit) {
+                    journeyStates[target] = {
+                        exitEvent: exitEventToEmit,
                     };
                 } else {
                     throw new Error(`Failed to resolve state ${target} from ${state}`);
@@ -176,15 +192,29 @@ const renderTransitions = (journeyMap, formData) => {
 };
 
 const renderClickHandler = (state, definition) => {
-    if (!definition.response) {
-        definition.response = {};
+    if (definition.nestedJourney) {
+        definition.response = {
+            type: "nestedJourney",
+            nestedJourney: definition.nestedJourney,
+        };
     }
     // Click handler serializes the definition to Base64-encoded JSON to avoid escaping issues
-    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify(definition.response))})`;
+    return `    click ${state} call onStateClick(${JSON.stringify(state)}, ${btoa(JSON.stringify(definition.response ?? {}))})`;
 };
 
 const renderState = (state, definition) => {
-    // Types
+    // Special cases for nested journeys
+    if (definition.nestedJourney) {
+        return `    ${state}(${state}):::nested_journey`;
+    }
+    if (definition.exitEvent) {
+        return `    ${state}[EXIT\\n${definition.exitEvent}]:::other`;
+    }
+    if (definition.entryEvent) {
+        return `    ${state}[ENTRY\\n${definition.entryEvent}]:::other`;
+    }
+
+    // Types for basic nodes
     // process - response.type = process, response.lambda = <lambda>
     // page    - response.type = page, response.pageId = 'page-id'
     // cri     - response.type = cri,
@@ -208,9 +238,9 @@ const renderState = (state, definition) => {
     }
 };
 
-const renderStates = (journeyMap, states) => {
+const renderStates = (journeyMapStates, states) => {
     const mermaids = states.flatMap((state) => {
-        const definition = journeyMap.states[state];
+        const definition = journeyMapStates[state];
 
         return [
             renderState(state, definition),
@@ -240,36 +270,57 @@ const calcOrphanStates = (journeyMap) => {
     return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
 };
 
-export const render = (selectedJourney, journeyMaps, nestedJourneys, formData = new FormData()) => {
-    // Copy to avoid mutating the input
-    const journeyMapCopy = JSON.parse(JSON.stringify(journeyMaps[selectedJourney]));
+const getNestedJourneyStates = (nestedJourney) => ({
+    ...nestedJourney.nestedJourneyStates,
+    // Create an entry state for each entry event
+    ...Object.fromEntries(
+        Object.entries(nestedJourney.entryEvents)
+            .map(([event, def]) => [
+                `entry_${event}`.toUpperCase(),
+                {
+                    entryEvent: event,
+                    events: { [event]: def }
+                }
+            ]),
+    ),
+});
 
-    if (formData.getAll('otherOption').includes('expandNestedJourneys')) {
-        expandNestedJourneys(journeyMapCopy.states, nestedJourneys, formData);
-    }
+const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
+    // These styles should be kept in sync with the key in style.css
+            `graph ${graphDirection}
+                classDef process fill:#ffa,stroke:#000;
+                classDef page fill:#ae8,stroke:#000;
+                classDef cri fill:#faf,stroke:#000;
+                classDef journey_transition fill:#aaf,stroke:#000;
+                classDef error_transition fill:#f99,stroke:#000;
+                classDef other fill:#f3f2f1,stroke:#000;
+                classDef nested_journey fill:#aaedff,stroke:#000;
+            ${statesMermaid}
+            ${transitionsMermaid}
+            `;
 
-    expandParents(journeyMapCopy.states);
-
-    const { transitionsMermaid, states } = formData.getAll('otherOption').includes('onlyOrphanStates')
-        ? { transitionsMermaid: '', states: calcOrphanStates(journeyMapCopy.states) }
-        : renderTransitions(journeyMapCopy.states, formData);
-
-    const { statesMermaid } = renderStates(journeyMapCopy, states);
-
+export const render = (selectedJourney, journeyMap, nestedJourneys, formData = new FormData()) => {
+    const isNestedJourney = selectedJourney in nestedJourneys;
     const direction = topDownJourneys.includes(selectedJourney) ? 'TD' : 'LR';
 
-    // These styles should be kept in sync with the key in style.css
-    const mermaid =
-`graph ${direction}
-    classDef process fill:#ffa,stroke:#000;
-    classDef page fill:#ae8,stroke:#000;
-    classDef cri fill:#faf,stroke:#000;
-    classDef journey_transition fill:#aaf,stroke:#000;
-    classDef error_transition fill:#f99,stroke:#000;
-    classDef other fill:#f3f2f1,stroke:#000;
-${statesMermaid}
-${transitionsMermaid}
-`;
+    // Copy to avoid mutating the input
+    const journeyStates = JSON.parse(JSON.stringify(
+        isNestedJourney
+            ? getNestedJourneyStates(nestedJourneys[selectedJourney])
+            : journeyMap.states
+    ));
 
-    return mermaid;
+    if (!isNestedJourney && formData.getAll('otherOption').includes('expandNestedJourneys')) {
+        expandNestedJourneys(journeyStates, nestedJourneys, formData);
+    }
+
+    expandParents(journeyStates, journeyMap.states);
+
+    const { transitionsMermaid, states } = formData.getAll('otherOption').includes('onlyOrphanStates')
+        ? { transitionsMermaid: '', states: calcOrphanStates(journeyStates) }
+        : renderTransitions(journeyStates, formData);
+
+    const { statesMermaid } = renderStates(journeyStates, states);
+
+    return getMermaidGraph(direction, statesMermaid, transitionsMermaid);
 };
