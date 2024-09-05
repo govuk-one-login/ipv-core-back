@@ -69,13 +69,6 @@ states:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
-            checkJourneyContext:
-              rfc:
-                targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
             checkFeatureFlag:
               updateDetailsAccountDeletion:
                 targetState: COULD_NOT_UPDATE_DETAILS_PAGE
@@ -83,13 +76,13 @@ states:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
                   successful: false
-        checkJourneyContext:
-          rfc:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
+                checkJourneyContext:
+                  rfc:
+                    targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+                    auditEvents:
+                      - IPV_USER_DETAILS_UPDATE_END
+                    auditContext:
+                      successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
@@ -97,6 +90,13 @@ states:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
+            checkJourneyContext:
+              rfc:
+                targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC
+                auditEvents:
+                  - IPV_USER_DETAILS_UPDATE_END
+                auditContext:
+                  successful: false
 
   FAILED_BAV:
     events:
@@ -216,6 +216,25 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
+  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+      enhanced-verification:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+      fail-with-ci:
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
   CRI_TICF_BEFORE_NO_MATCH_BAV:
     response:
       type: process
@@ -282,6 +301,19 @@ states:
         targetState: RETURN_TO_RP
       delete:
         targetState: DELETE_HANDOVER_PAGE
+
+  COULD_NOT_UPDATE_DETAILS_PAGE_RFC:
+    response:
+      type: page
+      pageId: update-details-failed
+      context: repeatFraudCheck
+    events:
+      delete:
+        targetState: DELETE_HANDOVER_PAGE
+      return-to-service:
+        targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   DELETE_HANDOVER_PAGE:
     response:
