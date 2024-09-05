@@ -321,7 +321,7 @@ core:
     ticf:
       id: ticf
       name: Threat Intelligence and Counter Fraud
-      enabled: "false"
+      enabled: "true"
       unavailable: "false"
       activeConnection: "stub"
       connections:
