@@ -91,9 +91,10 @@ Feature: TICF successful responses
 
   Rule: TICF request times out
     @Build
-    Scenario: Via app - TICF request has a response delay less than 5s
+    Scenario: Via app - TICF request times out
+      # To prime TICF to time out, we set txn to be undefined
       Given TICF CRI will respond with default parameters
-        | responseDelay | 4         |
+        | txn   |                             |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -113,3 +114,4 @@ Feature: TICF successful responses
       And the TICF VC has properties
         | cis  |                              |
         | type | RiskAssessment               |
+        | txn  |                              |
