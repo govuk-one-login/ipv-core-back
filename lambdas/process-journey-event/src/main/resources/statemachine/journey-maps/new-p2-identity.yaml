@@ -749,14 +749,26 @@ states:
   PYI_ESCAPE_ABANDON_NO_PHOTO_ID:
     response:
       type: page
-      context: abandon
-      pageId: no-photo-id-exit-find-another-way
+      pageId: no-photo-id-abandon-find-another-way
     events:
-      end:
+      mobileApp:
+        targetState: CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      passport:
+        targetState: CRI_UK_PASSPORT_J2
+      drivingLicence:
+        targetState: CRI_DRIVING_LICENCE_J3
+      postOffice:
+        targetState: CRI_CLAIMED_IDENTITY_J4
+      relyingParty:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-      next:
-        targetState: RESET_SESSION_IDENTITY
 
   PYI_KBV_DROPOUT_NO_PHOTO_ID:
     response:
