@@ -17,7 +17,9 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Via app - TICF returns a CI
     Given TICF CRI will respond with default parameters and
@@ -39,7 +41,9 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties with 'BREACHING' CI
+    And the TICF VC has properties
+      | cis  | BREACHING                    |
+      | type | RiskAssessment               |
 
   Scenario: Via app - TICF request times out
     Given TICF CRI will respond with default parameters
@@ -61,7 +65,9 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Via app - TICF request has a response delay less than 5s
     Given TICF CRI will respond with default parameters
@@ -83,7 +89,9 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Via app - TICF request has a response delay greater than 5s
     Given TICF CRI will respond with default parameters
@@ -129,7 +137,9 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: Via F2F - TICF request returns a CI
     Given TICF CRI will respond with default parameters
@@ -151,4 +161,6 @@ Feature: TICF new identity journey
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties with 'BREACHING' CI
+    And the TICF VC has properties
+      | cis  | BREACHING                    |
+      | type | RiskAssessment               |

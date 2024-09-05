@@ -31,7 +31,9 @@ Feature: Failed TICF requests
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
     Examples:
       | statusCode |

@@ -2,8 +2,6 @@ Feature: TICF failed journeys error scenarios
 
   Rule: Via alternate doc route
     Background: Start TICF alternate doc journey given user already has an existing TICF record
-      Given TICF CRI will respond with default parameters
-        | | |
       When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -33,7 +31,9 @@ Feature: TICF failed journeys error scenarios
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has default properties
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
 
     Scenario: TICF failed alternate doc journey - PYI_ANOTHER_WAY
       When I submit a 'appTriage' event
@@ -47,7 +47,9 @@ Feature: TICF failed journeys error scenarios
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has default properties
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
 
     Scenario: TICF failed alternate doc journey - PYI_TECHNICAL
       When I submit an 'f2f' event
@@ -59,7 +61,9 @@ Feature: TICF failed journeys error scenarios
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has default properties
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
 
   Rule: Via post-office
     Scenario: TICF failed post-office journey - PYI_ESCAPE
@@ -76,7 +80,9 @@ Feature: TICF failed journeys error scenarios
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has default properties
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |
 
   Rule: Via no-photo-id
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
@@ -99,4 +105,6 @@ Feature: TICF failed journeys error scenarios
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And my identity includes a 'TICF' credential
-      And the TICF VC has default properties
+      And the TICF VC has properties
+        | cis  |                              |
+        | type | RiskAssessment               |

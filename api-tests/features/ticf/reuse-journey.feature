@@ -14,7 +14,9 @@ Feature: TICF reuse journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties
+    And the TICF VC has properties
+      | cis  |                              |
+      | type | RiskAssessment               |
 
   Scenario: TICF request returns a CI
     Given TICF CRI will respond with default parameters
@@ -26,4 +28,6 @@ Feature: TICF reuse journey
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
     And my identity includes a 'TICF' credential
-    And the TICF VC has default properties with 'BREACHING' CI
+    And the TICF VC has properties
+      | cis  | BREACHING                    |
+      | type | RiskAssessment               |
