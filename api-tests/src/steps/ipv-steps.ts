@@ -29,6 +29,8 @@ import {
   PostalAddressClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
 import { delay } from "../utils/delay.js";
+import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
+import { VcJwtPayload } from "../types/external-api.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -49,6 +51,22 @@ const describeResponse = (response: JourneyEngineResponse): string => {
     return `client response`;
   }
   return `unknown ${JSON.stringify(response)}`;
+};
+
+export const CREDENTIAL_ISSUERS: Record<string, string> = {
+  TICF: "https://ticf.stubs.account.gov.uk",
+};
+
+const assertIdentityContainsVc = (
+  vc: string,
+  checkForAbsence: boolean,
+  jwts: Record<string, VcJwtPayload>,
+) => {
+  const issuer = CREDENTIAL_ISSUERS[vc];
+  const isVcInIdentity = issuer in jwts;
+  const errorMessage = `Identity does ${!checkForAbsence ? "not " : ""}have a ${vc} VC.`;
+
+  assert.ok(checkForAbsence ? !isVcInIdentity : isVcInIdentity, errorMessage);
 };
 
 After(function (this: World, options: ITestCaseHookParameter) {
@@ -89,7 +107,7 @@ const startNewJourney = async (
 };
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-]+)')?$/,
+  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-,]+)')?$/,
   async function (
     this: World,
     journeyType: string,
@@ -109,16 +127,23 @@ When(
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  "I start a new {string} journey and return to a {string} page response",
+  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response(?: with feature set '([\w-,]+)')?$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
     expectedPage: string,
+    featureSet: string | undefined,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined, undefined);
+      await startNewJourney(
+        this,
+        journeyType,
+        false,
+        undefined,
+        featureSet || undefined,
+      );
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
@@ -226,6 +251,9 @@ When(
 
     if (result === "identity") {
       this.identity = await externalClient.getIdentity(tokenResponse);
+      this.vcs = decodeCredentialJwts(
+        this.identity["https://vocab.account.gov.uk/v1/credentialJWT"],
+      );
     }
 
     if (result === "MFA reset result") {
@@ -235,13 +263,25 @@ When(
   },
 );
 
-Then("I get a {string} identity", function (this: World, vot: string): void {
-  if (!this.identity) {
-    throw new Error("No identity found.");
-  }
+Then(
+  /^I get a '([\w-]+)' identity( without a TICF VC)?$/,
+  function (
+    this: World,
+    vot: string,
+    checkForTicfAbsence: " without a TICF VC" | undefined,
+  ): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
 
-  assert.equal(this.identity.vot, vot);
-});
+    if (!this.vcs) {
+      throw new Error("No credentials found.");
+    }
+
+    assert.equal(this.identity.vot, vot);
+    assertIdentityContainsVc("TICF", !!checkForTicfAbsence, this.vcs);
+  },
+);
 
 Then(
   "a(n) {string} audit event was recorded [local only]",

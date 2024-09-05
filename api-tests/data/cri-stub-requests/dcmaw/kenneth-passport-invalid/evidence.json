@@ -1,0 +1,16 @@
+{
+  "type": "IdentityCheck",
+  "validityScore": 0,
+  "strengthScore": 4,
+  "ci": ["BREACHING"],
+  "failedCheckDetails": [
+    {
+      "checkMethod": "vcrypt",
+      "identityCheckPolicy": "published"
+    },
+    {
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 3
+    }
+  ]
+}

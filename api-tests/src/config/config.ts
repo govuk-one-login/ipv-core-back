@@ -50,6 +50,10 @@ const config = {
     baseUrl: getMandatoryConfig("EVCS_STUB_BASE_URL"),
     apiKey: getMandatoryConfig("EVCS_STUB_API_KEY"),
   },
+  ticf: {
+    managementTicfUrl: getMandatoryConfig("TICF_STUB_BASE_URL"),
+    managementTicfApiKey: getMandatoryConfig("MANAGEMENT_TICF_API_KEY"),
+  },
 };
 
 export default config;

@@ -36,6 +36,7 @@ export const generateVc = async (
     {
       headers: {
         "x-api-key": config.credentialIssuers.generateCredentialApiKey,
+        "content-type": "application/json",
       },
       method: "POST",
       body: JSON.stringify(body),
