@@ -8,9 +8,6 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_F2F
-        checkIfDisabled:
-          ticf:
-            targetState: CRI_F2F
 
   # Parent states
   CRI_STATE:
