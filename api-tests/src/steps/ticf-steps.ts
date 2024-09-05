@@ -35,7 +35,7 @@ Then(
     assert.equal(cis ? cis.join() : undefined, expectedCis || undefined);
     assert.equal(ticfVc.evidence[0].type, table.rowsHash().type);
 
-    // We set the txn as a randomly generated unless specified to be empty (ie to trigger a timeout)
+    // We set the txn as a randomly generated string unless specified to be empty (ie to trigger a timeout)
     // so we only need to check for when there is no txn
     if (table.rowsHash().txn === "") {
       assert.equal(ticfVc.evidence[0].txn, undefined);
