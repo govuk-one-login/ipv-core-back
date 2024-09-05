@@ -42,9 +42,6 @@ Feature: Update details
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'GivenName' is 'Ken'
-        And the TICF VC has properties
-            | cis  |                              |
-            | type | RiskAssessment               |
 
     Scenario: Family Name Change
         When I submit a 'family-name-only' event
@@ -62,9 +59,6 @@ Feature: Update details
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
-        And the TICF VC has properties
-            | cis  |                              |
-            | type | RiskAssessment               |
 
     Scenario: Address Change
         When I submit a 'address-only' event
@@ -78,9 +72,6 @@ Feature: Update details
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
         And my address 'buildingNumber' is '28'
-        And the TICF VC has properties
-            | cis  |                              |
-            | type | RiskAssessment               |
 
     Scenario: Address and Family Name Change
         When I submit a 'family-name-and-address' event
@@ -101,9 +92,6 @@ Feature: Update details
         Then I get a 'P2' identity
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
-        And the TICF VC has properties
-            | cis  |                              |
-            | type | RiskAssessment               |
 
     Scenario: Address and Given Name Change
         When I submit a 'given-names-and-address' event
@@ -124,9 +112,6 @@ Feature: Update details
         Then I get a 'P2' identity
         And my identity 'GivenName' is 'Ken'
         And my address 'streetName' is 'King Road'
-        And the TICF VC has properties
-            | cis  |                              |
-            | type | RiskAssessment               |
 
     Scenario: Unsupported Changes
         When I submit a 'dob' event

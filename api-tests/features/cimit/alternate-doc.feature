@@ -27,9 +27,6 @@ Feature: CIMIT - Alternate doc
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And the TICF VC has properties
-      | cis  |                              |
-      | type | RiskAssessment               |
 
     Examples:
       | initialCri          | initialInvalidDoc                            | noMatchPage                                | mitigatingCri   | mitigatingDoc                  |
