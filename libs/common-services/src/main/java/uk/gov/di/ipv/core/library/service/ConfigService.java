@@ -38,7 +38,15 @@ public abstract class ConfigService {
 
     @Getter @Setter private static boolean local = false;
 
-    @Getter @Setter private List<String> featureSet;
+    private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
+
+    public List<String> getFeatureSet() {
+        return featureSet.get();
+    }
+
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet.set(featureSet);
+    }
 
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
