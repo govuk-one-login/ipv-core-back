@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.service.YamlConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
 import uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler;
@@ -32,6 +33,7 @@ public class JourneyEngineHandler {
     public static final String FEATURE_SET = "feature-set";
     public static final String LANGUAGE = "language";
 
+    private final YamlConfigService configService;
     private final ProcessJourneyEventHandler processJourneyEventHandler;
     private final CheckExistingIdentityHandler checkExistingIdentityHandler;
     private final ResetSessionIdentityHandler resetSessionIdentityHandler;
@@ -45,17 +47,18 @@ public class JourneyEngineHandler {
     private final CheckCoiHandler checkCoiHandler;
 
     public JourneyEngineHandler() throws IOException {
-        this.processJourneyEventHandler = new ProcessJourneyEventHandler();
-        this.checkExistingIdentityHandler = new CheckExistingIdentityHandler();
-        this.resetSessionIdentityHandler = new ResetSessionIdentityHandler();
-        this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler();
-        this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler();
-        this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
-        this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler();
-        this.callTicfCriHandler = new CallTicfCriHandler();
-        this.callDcmawAsyncHandler = new CallDcmawAsyncCriHandler();
-        this.storeIdentityHandler = new StoreIdentityHandler();
-        this.checkCoiHandler = new CheckCoiHandler();
+        this.configService = new YamlConfigService();
+        this.processJourneyEventHandler = new ProcessJourneyEventHandler(configService);
+        this.checkExistingIdentityHandler = new CheckExistingIdentityHandler(configService);
+        this.resetSessionIdentityHandler = new ResetSessionIdentityHandler(configService);
+        this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler(configService);
+        this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler(configService);
+        this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler(configService);
+        this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler(configService);
+        this.callTicfCriHandler = new CallTicfCriHandler(configService);
+        this.callDcmawAsyncHandler = new CallDcmawAsyncCriHandler(configService);
+        this.storeIdentityHandler = new StoreIdentityHandler(configService);
+        this.checkCoiHandler = new CheckCoiHandler(configService);
     }
 
     public void journeyEngine(Context ctx) {
@@ -66,6 +69,7 @@ public class JourneyEngineHandler {
 
             if (!processJourneyEventOutput.containsKey(JOURNEY)) {
                 ctx.json(processJourneyEventOutput);
+                configService.removeFeatureSet();
                 return;
             }
 
@@ -73,6 +77,7 @@ public class JourneyEngineHandler {
 
             if (!processJourneyStepOutput.containsKey(JOURNEY)) {
                 ctx.json(processJourneyStepOutput);
+                configService.removeFeatureSet();
                 return;
             }
 

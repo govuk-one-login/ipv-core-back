@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,20 @@ public class YamlConfigService extends ConfigService {
     private static final String PATH_SEPARATOR = "/";
     private static final String CORE = "core";
     private static final String FEATURE_SETS = "features";
+    private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
+
+    @Override
+    public List<String> getFeatureSet() {
+        return featureSet.get();
+    }
+
+    public void setFeatureSet(List<String> featureSet) {
+        this.featureSet.set(featureSet);
+    }
+
+    public void removeFeatureSet() {
+        this.featureSet.remove();
+    }
 
     private static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);

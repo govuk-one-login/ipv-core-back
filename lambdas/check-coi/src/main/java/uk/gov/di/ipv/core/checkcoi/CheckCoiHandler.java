@@ -94,7 +94,12 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
 
     @ExcludeFromGeneratedCoverageReport
     public CheckCoiHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CheckCoiHandler(ConfigService configService) {
+        this.configService = configService;
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

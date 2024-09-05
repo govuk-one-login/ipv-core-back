@@ -38,16 +38,6 @@ public abstract class ConfigService {
 
     @Getter @Setter private static boolean local = false;
 
-    private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
-
-    public List<String> getFeatureSet() {
-        return featureSet.get();
-    }
-
-    public void setFeatureSet(List<String> featureSet) {
-        this.featureSet.set(featureSet);
-    }
-
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
         if (isLocal()) {
@@ -55,6 +45,10 @@ public abstract class ConfigService {
         }
         return new SsmConfigService();
     }
+
+    public abstract List<String> getFeatureSet();
+
+    public abstract void setFeatureSet(List<String> featureSet);
 
     protected abstract String getParameter(String path);
 

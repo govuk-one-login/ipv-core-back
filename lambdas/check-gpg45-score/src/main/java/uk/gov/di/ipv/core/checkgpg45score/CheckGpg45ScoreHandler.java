@@ -70,7 +70,12 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public CheckGpg45ScoreHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CheckGpg45ScoreHandler(ConfigService configService) {
+        this.configService = configService;
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();

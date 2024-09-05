@@ -104,7 +104,12 @@ public class EvaluateGpg45ScoresHandler
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public EvaluateGpg45ScoresHandler(ConfigService configService) {
+        this.configService = configService;
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();

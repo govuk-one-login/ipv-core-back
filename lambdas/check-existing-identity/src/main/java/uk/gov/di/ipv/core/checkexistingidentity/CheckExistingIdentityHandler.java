@@ -178,7 +178,12 @@ public class CheckExistingIdentityHandler
     @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CheckExistingIdentityHandler(ConfigService configService) {
+        this.configService = configService;
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
