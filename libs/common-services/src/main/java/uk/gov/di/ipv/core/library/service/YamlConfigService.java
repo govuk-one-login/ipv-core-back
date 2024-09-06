@@ -22,7 +22,6 @@ public class YamlConfigService extends ConfigService {
     private static final String FEATURE_SETS = "features";
     private final ThreadLocal<List<String>> featureSet = new ThreadLocal<>();
 
-    @Override
     public List<String> getFeatureSet() {
         return featureSet.get();
     }
