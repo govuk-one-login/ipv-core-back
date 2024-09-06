@@ -4,6 +4,8 @@ import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { getOptions, render } from './render.mjs';
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
+const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
+const JOURNEY_TYPE_SEARCH_PARAM = 'journeyType';
 
 const JOURNEY_TYPES = {
     INITIAL_JOURNEY_SELECTION: 'Initial journey selection',
@@ -23,7 +25,7 @@ const JOURNEY_TYPES = {
     F2F_FAILED: 'F2F failed',
     OPERATIONAL_PROFILE_MIGRATION: 'Operational profile migration',
     OPERATIONAL_PROFILE_REUSE: 'Operational profile reuse',
-    REVERIFICATION: 'Reverification',
+    REVERIFICATION: 'Reverification'
 };
 
 const COMMON_JOURNEY_TYPES = [
@@ -84,6 +86,7 @@ const loadJourneyMaps = async () => {
         const journeyResponse = await fetch(`./${encodeURIComponent(upperToKebab(journeyType))}.yaml`);
         journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
     }));
+
     const nestedResponse = await fetch('./nested-journey-definitions.yaml');
     nestedJourneys = yaml.parse(await nestedResponse.text());
 };
@@ -93,12 +96,15 @@ const getPageUrl = (id, context) => {
     return context ? `${baseUrl}?context=${encodeURIComponent(context)}` : baseUrl;
 }
 
-const getJourneyUrl = (id) => `?journeyType=${encodeURIComponent(id)}`;
+const getJourneyUrl = (id) => `?${JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
+
+const getNestedJourneyUrl = (id) => `?${NESTED_JOURNEY_TYPE_SEARCH_PARAM}=${encodeURIComponent(id)}`;
 
 const switchJourney = async (targetJourney, targetState) => {
     // Update URL
     const params = new URLSearchParams(window.location.search);
-    params.set('journeyType', targetJourney);
+    params.delete(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
+    params.set(JOURNEY_TYPE_SEARCH_PARAM, targetJourney);
     window.history.pushState(undefined, undefined, `?${params.toString()}`);
 
     // Update journey map graph
@@ -114,8 +120,22 @@ const switchJourney = async (targetJourney, targetState) => {
     nodeDesc.innerHTML = "";
 };
 
+const switchToNestedJourney = async (targetNestedJourney) => {
+    // Update URL
+    const params = new URLSearchParams(window.location.search);
+    params.set(NESTED_JOURNEY_TYPE_SEARCH_PARAM, targetNestedJourney);
+    window.history.pushState(undefined, undefined, `?${params.toString()}`);
+
+    // Update journey map graph
+    await updateView();
+
+    nodeTitle.innerText = targetNestedJourney;
+    nodeDef.innerHTML = "";
+    nodeDesc.innerHTML = "";
+}
+
 const setupHeader = () => {
-    // Add header entries for most common journies
+    // Add header entries for most common journeys
     COMMON_JOURNEY_TYPES.forEach(id => {
         const link = document.createElement('a');
         link.href = getJourneyUrl(id);
@@ -189,24 +209,33 @@ const setupOtherOptions = () => {
 }
 
 const updateView = async () => {
-    const selectedJourney = new URLSearchParams(window.location.search).get('journeyType') || DEFAULT_JOURNEY_TYPE;
-    journeyName.innerText = journeyMaps[selectedJourney].name || "Details";
-    const desc = journeyMaps[selectedJourney].description;
     const formData = new FormData(form);
-    if (desc && formData.has('showJourneyDesc')) {
-        journeyDesc.innerText = desc;
-    } else {
-        journeyDesc.innerText = '';
-    }
-    journeySelect.value = selectedJourney;
-    journeyDesc.innerText = desc || '';
+    const selectedNestedJourney = new URLSearchParams(window.location.search).get(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
+    const selectedJourney = new URLSearchParams(window.location.search).get(JOURNEY_TYPE_SEARCH_PARAM) || DEFAULT_JOURNEY_TYPE;
 
-    return renderSvg(selectedJourney, formData);
+    if (selectedNestedJourney) {
+        const nestedJourneyName = nestedJourneys[selectedNestedJourney].name || 'Details';
+        journeyName.innerText = `${nestedJourneyName} (${journeyMaps[selectedJourney].name})`;
+        journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
+    } else {
+        journeyName.innerText = journeyMaps[selectedJourney].name || 'Details';
+
+        const desc = journeyMaps[selectedJourney].description;
+
+        journeySelect.value = selectedJourney;
+        journeyDesc.innerText = desc || '';
+    }
+
+    return renderSvg(selectedJourney, selectedNestedJourney, formData);
 };
 
 // Render the journey map SVG
-const renderSvg = async (selectedJourney, formData) => {
-    const diagram = render(selectedJourney, journeyMaps, nestedJourneys, formData);
+const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
+    const diagram = render(
+        selectedNestedJourney ?? selectedJourney,
+        journeyMaps[selectedJourney],
+        nestedJourneys,
+        formData);
     const diagramElement = document.getElementById('diagram');
     const { svg, bindFunctions } = await mermaid.render('diagramSvg', diagram);
     diagramElement.innerHTML = svg;
@@ -237,18 +266,32 @@ const highlightState = (state) => {
         .forEach((node) => node.classList.add('highlight'));
 };
 
+const createLink = (text, href, onClick) => {
+    const link = document.createElement('a');
+    link.innerText = text;
+    link.href = href;
+    if (onClick) {
+        link.onclick = onClick; // internal targets switch using an event handler
+    } else {
+        link.target = '_blank'; // external targets should open a new tab
+    }
+    return link;
+};
+
 // Set up the click handlers that mermaid binds to each node
 const setupMermaidClickHandlers = () => {
-    const getDesc = (def) => {
-        switch(def.type) {
+    const getDesc = (response) => {
+        switch(response.type) {
             case 'process':
-                return `Process node executing the '${def.lambda}' lambda.`;
+                return `Process node executing the '${response.lambda}' lambda.`;
             case 'page':
-                return `Page node displaying the \'${def.pageId}\' screen in IPV Core.`;
+                return `Page node displaying the \'${response.pageId}\' screen in IPV Core.`;
             case 'cri':
-                return `CRI node routing to the ${CRI_NAMES[def.criId] || `'${def.criId}' CRI`}.`;
+                return `CRI node routing to the ${CRI_NAMES[response.criId] || `'${response.criId}' CRI`}.`;
             case 'journeyTransition':
-                return `Journey transition to the ${def.targetJourney} journey type (${def.targetState}).`
+                return `Journey transition to the ${response.targetJourney} journey type (${response.targetState}).`;
+            case 'nestedJourney':
+                return `Node representing the ${response.nestedJourney} nested journey.`;
             default:
                 return '';
         }
@@ -267,8 +310,13 @@ const setupMermaidClickHandlers = () => {
                 await switchJourney(def.targetJourney, def.targetState);
                 return;
             }
+            if (def.nestedJourney) {
+                await switchToNestedJourney(def.nestedJourney)
+                return
+            }
         }
 
+        // Otherwise, update node information
         selectedState = state;
         highlightState(state);
         nodeTitle.innerText = state;
@@ -277,22 +325,34 @@ const setupMermaidClickHandlers = () => {
         const desc = document.createElement('p');
         desc.innerText = getDesc(def);
         nodeDesc.append(desc);
-        if (def.pageId) {
-            const link = document.createElement('a');
-            link.innerText = 'Click here to view the page in build';
-            link.href = getPageUrl(def.pageId, def.context);
-            link.target = '_blank';
-            nodeDesc.append(link);
+
+        if (def.nestedJourney) {
+            nodeDesc.append(createLink(
+                'Click here to view the nested journey',
+                getNestedJourneyUrl(def.nestedJourney),
+                async (e) => {
+                    e.preventDefault();
+                    await switchToNestedJourney(def.nestedJourney);
+                },
+            ));
         }
+
+        if (def.pageId) {
+            nodeDesc.append(createLink(
+                'Click here to view the page in build',
+                getPageUrl(def.pageId, def.context),
+            ));
+        }
+
         if (def.type === 'journeyTransition') {
-            const link = document.createElement('a');
-            link.innerText = 'Click here to view the journey';
-            link.href = getJourneyUrl(def.targetJourney);
-            link.onclick = async (e) => {
-                e.preventDefault();
-                await switchJourney(def.targetJourney, def.targetState);
-            }
-            nodeDesc.append(link);
+            nodeDesc.append(createLink(
+                'Click here to view the journey',
+                getJourneyUrl(def.targetJourney),
+                async (e) => {
+                    e.preventDefault();
+                    await switchJourney(def.targetJourney, def.targetState);
+                },
+            ));
         }
     };
 }

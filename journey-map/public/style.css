@@ -173,6 +173,10 @@ form fieldset p {
     background: #aaf;
     border-radius: 4px;
 }
+.key-node.nested_journey {
+    background: #aaedff;
+    border-radius: 4px;
+}
 .key-node.error_transition {
     background: #f99;
     border-radius: 4px;

@@ -32,6 +32,7 @@ export const getIdentity = async (
     method: "GET",
     headers: {
       Authorization: `Bearer ${tokenResponse.access_token}`,
+      "content-type": "application/json",
     },
   });
 
@@ -49,6 +50,7 @@ export const getMfaResetResult = async (
     method: "GET",
     headers: {
       Authorization: `Bearer ${tokenResponse.access_token}`,
+      "content-type": "application/json",
     },
   });
 

@@ -8,6 +8,7 @@ export const postCredentials = async (
   const response = await fetch(`${config.evcs.baseUrl}/vcs/${userId}`, {
     headers: {
       "x-api-key": config.evcs.apiKey,
+      "content-type": "application/json",
     },
     method: "POST",
     body: JSON.stringify(body),
