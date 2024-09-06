@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
@@ -14,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class YamlConfigServiceTest {
-    @Mock private List<String> mockFeatureSet;
 
     private YamlConfigService getConfigService() throws Exception {
         return new YamlConfigService(
@@ -39,6 +37,7 @@ class YamlConfigServiceTest {
         var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
         assertEquals("alternate-component-id", param);
+        configService.removeFeatureSet();
     }
 
     @Test
@@ -49,6 +48,7 @@ class YamlConfigServiceTest {
         var param = configService.getParameter(ConfigurationVariable.COMPONENT_ID);
 
         assertEquals("test-component-id", param);
+        configService.removeFeatureSet();
     }
 
     @Test
