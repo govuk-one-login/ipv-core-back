@@ -146,7 +146,7 @@ jobs:
       - name: Calculate queue name
         # SQS queue names have a max length of 80 and cannot contain special characters
         run: |
-          branch_name=${{ github.head_ref || github.ref_name }}
+          branch_name=${{ github.head_ref || github.sha }}
           queue_name=`echo $branch_name | sed 's/[^[:alnum:]-]/\_/g' | cut -c1-60`
           echo "queue_name=stubQueue_branch_$queue_name" >> $GITHUB_OUTPUT
         id: extract_queue_name
