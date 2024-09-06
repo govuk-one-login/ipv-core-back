@@ -374,3 +374,11 @@ Then(
     );
   },
 );
+
+When("I call the healthcheck endpoint", async function (this: World) {
+  this.healthCheckResult = await externalClient.healthcheck();
+});
+
+Then("the healthcheck is successful", async function (this: World) {
+  assert.ok(this.healthCheckResult);
+});

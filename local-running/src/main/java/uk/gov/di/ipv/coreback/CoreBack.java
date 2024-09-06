@@ -11,6 +11,7 @@ import uk.gov.di.ipv.coreback.services.AsyncCredentialPoller;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 public class CoreBack {
     private static final int DEFAULT_PORT = 4502;
@@ -38,6 +39,7 @@ public class CoreBack {
         app.post("/token", lambdaHandler::getToken);
         app.get("/user-identity", lambdaHandler::getUserIdentity);
         app.get("/reverification", lambdaHandler::getUserReverification);
+        app.get("/healthcheck", (ctx) -> ctx.json(Map.of("healthcheck", "ok")));
 
         // Poll for async credentials
         startAsyncPoller();
