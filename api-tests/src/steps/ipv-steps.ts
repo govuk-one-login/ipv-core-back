@@ -31,6 +31,7 @@ import {
 import { delay } from "../utils/delay.js";
 import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
 import { VcJwtPayload } from "../types/external-api.js";
+import * as jose from "jose";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -381,4 +382,28 @@ When("I call the healthcheck endpoint", async function (this: World) {
 
 Then("the healthcheck is successful", async function (this: World) {
   assert.ok(this.healthCheckResult);
+});
+
+When("I call the JWKS endpoint", async function (this: World) {
+  this.jwksResult = await externalClient.jwks();
+});
+
+Then("I get a valid JWKS response", async function (this: World) {
+  const keys = this.jwksResult?.keys ?? [];
+
+  // Keys must parse correctly
+  for (const key of keys) {
+    const parsedKey = await jose.importJWK(key);
+    assert.ok(parsedKey);
+  }
+
+  // Must be at least one signing and one encryption key
+  assert.ok(
+    keys.find((k) => k.use === "sig"),
+    "No signing key",
+  );
+  assert.ok(
+    keys.find((k) => k.use === "enc"),
+    "No encryption key",
+  );
 });

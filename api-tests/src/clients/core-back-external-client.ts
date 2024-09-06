@@ -1,3 +1,4 @@
+import { JSONWebKeySet } from "jose";
 import config from "../config/config.js";
 import {
   MfaResetResult,
@@ -67,4 +68,19 @@ export const healthcheck = async (): Promise<boolean> => {
   });
 
   return response.ok;
+};
+
+export const jwks = async (): Promise<JSONWebKeySet> => {
+  const response = await fetch(
+    `${config.core.externalApiUrl}/.well-known/jwks.json`,
+    {
+      method: "GET",
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`jwks request failed: ${response.statusText}`);
+  }
+
+  return await response.json();
 };

@@ -6,6 +6,7 @@ import uk.gov.di.ipv.core.library.service.YamlConfigService;
 import uk.gov.di.ipv.coreback.handlers.AuditHandler;
 import uk.gov.di.ipv.coreback.handlers.HomeHandler;
 import uk.gov.di.ipv.coreback.handlers.JourneyEngineHandler;
+import uk.gov.di.ipv.coreback.handlers.JwksHandler;
 import uk.gov.di.ipv.coreback.handlers.LambdaHandler;
 import uk.gov.di.ipv.coreback.services.AsyncCredentialPoller;
 
@@ -22,6 +23,7 @@ public class CoreBack {
         var lambdaHandler = new LambdaHandler();
         var journeyEngineHandler = new JourneyEngineHandler();
         var auditHandler = new AuditHandler();
+        var jwksHandler = new JwksHandler();
 
         var app = Javalin.create();
 
@@ -40,6 +42,7 @@ public class CoreBack {
         app.get("/user-identity", lambdaHandler::getUserIdentity);
         app.get("/reverification", lambdaHandler::getUserReverification);
         app.get("/healthcheck", (ctx) -> ctx.json(Map.of("healthcheck", "ok")));
+        app.get("/.well-known/jwks.json", jwksHandler::jwks);
 
         // Poll for async credentials
         startAsyncPoller();
