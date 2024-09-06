@@ -142,10 +142,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       end:
-        targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       multipleDocCheckPage:
         targetState: MULTIPLE_DOC_CHECK_PAGE
 
