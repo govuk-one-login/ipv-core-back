@@ -60,3 +60,11 @@ export const getMfaResetResult = async (
 
   return (await response.json()) as MfaResetResult;
 };
+
+export const healthcheck = async (): Promise<boolean> => {
+  const response = await fetch(`${config.core.externalApiUrl}/healthcheck`, {
+    method: "GET",
+  });
+
+  return response.ok;
+};
