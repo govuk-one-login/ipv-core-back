@@ -51,7 +51,7 @@ public class EvcsClient {
     public static final String VC_STATE_PARAM = "state";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(429);
+    private static final List<Integer> RETRYABLE_STATUS_CODES = List.of(401, 429);
     private static final int NUMBER_OF_HTTP_REQUEST_ATTEMPTS = 4;
     private static final int RETRY_DELAY_MILLIS = 1000;
     private final HttpClient httpClient;
