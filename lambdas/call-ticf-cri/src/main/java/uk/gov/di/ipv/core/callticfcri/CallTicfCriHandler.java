@@ -60,7 +60,12 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
     @ExcludeFromGeneratedCoverageReport
     public CallTicfCriHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CallTicfCriHandler(ConfigService configService) {
+        this.configService = configService;
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ticfCriService = new TicfCriService(configService);

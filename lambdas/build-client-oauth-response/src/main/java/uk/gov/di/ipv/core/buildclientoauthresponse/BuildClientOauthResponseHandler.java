@@ -69,7 +69,12 @@ public class BuildClientOauthResponseHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public BuildClientOauthResponseHandler(ConfigService configService) {
+        this.configService = configService;
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);

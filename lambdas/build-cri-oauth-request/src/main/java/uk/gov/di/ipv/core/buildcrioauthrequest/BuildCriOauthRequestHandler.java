@@ -134,7 +134,12 @@ public class BuildCriOauthRequestHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public BuildCriOauthRequestHandler(ConfigService configService) {
+        this.configService = configService;
         this.signerFactory = new SignerFactory(configService);
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);

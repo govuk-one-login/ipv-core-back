@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -38,6 +40,8 @@ public class SsmConfigService extends ConfigService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
+
+    @Getter @Setter private List<String> featureSet;
 
     public SsmConfigService(
             SSMProvider ssmProvider, SecretsProvider secretsProvider, List<String> featureSet) {

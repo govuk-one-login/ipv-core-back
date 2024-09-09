@@ -38,8 +38,6 @@ public abstract class ConfigService {
 
     @Getter @Setter private static boolean local = false;
 
-    @Getter @Setter private List<String> featureSet;
-
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
         if (isLocal()) {
@@ -47,6 +45,10 @@ public abstract class ConfigService {
         }
         return new SsmConfigService();
     }
+
+    public abstract List<String> getFeatureSet();
+
+    public abstract void setFeatureSet(List<String> featureSet);
 
     protected abstract String getParameter(String path);
 

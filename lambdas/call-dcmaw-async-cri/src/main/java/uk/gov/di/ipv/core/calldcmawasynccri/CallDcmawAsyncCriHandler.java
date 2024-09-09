@@ -56,7 +56,12 @@ public class CallDcmawAsyncCriHandler
 
     @ExcludeFromGeneratedCoverageReport
     public CallDcmawAsyncCriHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public CallDcmawAsyncCriHandler(ConfigService configService) {
+        this.configService = configService;
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.dcmawAsyncCriService = new DcmawAsyncCriService(configService);

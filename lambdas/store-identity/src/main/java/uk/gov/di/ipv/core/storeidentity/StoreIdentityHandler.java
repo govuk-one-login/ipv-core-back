@@ -78,7 +78,12 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
 
     @ExcludeFromGeneratedCoverageReport
     public StoreIdentityHandler() {
-        this.configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public StoreIdentityHandler(ConfigService configService) {
+        this.configService = configService;
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);

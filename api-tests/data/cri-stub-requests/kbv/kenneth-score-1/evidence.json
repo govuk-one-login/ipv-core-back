@@ -1,0 +1,21 @@
+{
+  "type": "IdentityCheck",
+  "verificationScore": 1,
+  "checkDetails": [
+    {
+      "kbvResponseMode": "multiple_choice",
+      "kbvQuality": 3,
+      "checkMethod": "kbv"
+    },
+    {
+      "kbvResponseMode": "multiple_choice",
+      "kbvQuality": 3,
+      "checkMethod": "kbv"
+    },
+    {
+      "kbvResponseMode": "multiple_choice",
+      "kbvQuality": 2,
+      "checkMethod": "kbv"
+    }
+  ]
+}
