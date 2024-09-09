@@ -2,6 +2,7 @@ import { JourneyEngineResponse } from "./internal-api.js";
 import { MfaResetResult, UserIdentity } from "./external-api.js";
 import { World as CucumberWorld } from "@cucumber/cucumber";
 import { VcJwtPayload } from "./external-api.js";
+import { JSONWebKeySet } from "jose";
 
 export interface World extends CucumberWorld {
   // Journey properties
@@ -20,4 +21,7 @@ export interface World extends CucumberWorld {
 
   // Healthcheck results
   healthCheckResult?: boolean;
+
+  // JWKS result
+  jwksResult?: JSONWebKeySet;
 }
