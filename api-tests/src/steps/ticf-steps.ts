@@ -7,7 +7,7 @@ import {
 } from "../clients/ticf-management-api.js";
 import { RiskAssessmentCredentialClass } from "@govuk-one-login/data-vocab/credentials.js";
 import assert from "assert";
-import { CREDENTIAL_ISSUERS } from "./ipv-steps.js";
+import { buildCredentialIssuerUrl } from "../clients/cri-stub-client.js";
 
 When(
   "TICF CRI will respond with default parameters( and)",
@@ -23,11 +23,11 @@ When(
 Then(
   "the TICF VC has properties",
   function (this: World, table: DataTable): void {
-    if (!this.vcs || !(CREDENTIAL_ISSUERS["TICF"] in this.vcs)) {
+    const ticfIssuer = buildCredentialIssuerUrl("ticf");
+    if (!this.vcs || !(ticfIssuer in this.vcs)) {
       throw new Error("No TICF VC found with identity.");
     }
-    const ticfVc = this.vcs[CREDENTIAL_ISSUERS["TICF"]]
-      .vc as RiskAssessmentCredentialClass;
+    const ticfVc = this.vcs[ticfIssuer].vc as RiskAssessmentCredentialClass;
 
     const expectedCis = table.rowsHash().cis;
     const cis = ticfVc.evidence[0].ci;

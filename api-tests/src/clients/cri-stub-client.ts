@@ -5,6 +5,25 @@ import {
 } from "../types/cri-stub.js";
 import config from "../config/config.js";
 
+const CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
+  ticf: "ticf",
+  kbv: "experian-kbv-cri",
+  dcmaw: "dcmaw-cri",
+  address: "address-cri",
+  fraud: "fraud-cri",
+  ukPassport: "passport-cri",
+  drivingLicence: "driving-license-cri",
+  claimedIdentity: "claimed-identity-cri",
+  f2f: "f2f-cri",
+  nino: "nino-cri",
+  dwpKbv: "dwp-kbv-cri",
+  hmrcKbv: "hmrc-kbv-cri",
+  bav: "bav-cri",
+};
+
+export const buildCredentialIssuerUrl = (criId: string) =>
+  `https://${CREDENTIAL_ISSUER_SUBDOMAINS[criId]}.stubs.account.gov.uk`;
+
 export const callHeadlessApi = async (
   redirectUrl: string,
   body: CriStubRequest,
@@ -32,7 +51,7 @@ export const generateVc = async (
   body: CriStubGenerateVcRequest,
 ): Promise<string> => {
   const response = await fetch(
-    `https://${criId}-cri.stubs.account.gov.uk/credentials/generate`,
+    `${buildCredentialIssuerUrl(criId)}/credentials/generate`,
     {
       headers: {
         "x-api-key": config.credentialIssuers.generateCredentialApiKey,
