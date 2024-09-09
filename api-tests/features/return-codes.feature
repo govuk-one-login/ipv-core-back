@@ -1,6 +1,6 @@
 Feature: Return exit codes
   @Build
-  Scenario: no return codes - successful journey with identity - no CIs
+  Scenario: Successful journey with identity and no CIs - no return codes
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -19,7 +19,7 @@ Feature: Return exit codes
     Then I get a 'P2' identity
     And I don't get any return codes
 
-  Scenario: non-ci-breaching code returned - failed identity journey with no CI - user doesn't hold appropriate documents
+  Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -32,7 +32,7 @@ Feature: Return exit codes
     Then I get a 'P0' identity
     And I get 'non-ci-breaching' return code
 
-  Scenario: non-ci-breaching code returned - thin file and failure to complete journey
+  Scenario: Thin file and failure to complete journey - non-ci-breaching code returned
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -61,7 +61,7 @@ Feature: Return exit codes
     Then I get a 'P0' identity
     And I get 'non-ci-breaching' return code
 
-  Scenario: non-ci-breaching code returned -  CI mitigated in separate session but failed to complete journey
+  Scenario: CI mitigated in separate session but failed to complete journey - non-ci-breaching code returned
     Given the subject already has the following credentials
       | CRI              | scenario                            |
       | drivingLicence   | kenneth-driving-permit-valid        |
@@ -86,7 +86,7 @@ Feature: Return exit codes
     Then I get a 'P0' identity
     And I get 'non-ci-breaching' return code
 
-  Scenario: always-required code returned - successful journey with always-required return code
+  Scenario: Successful journey with always-required return code - always-required code returned
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -105,7 +105,7 @@ Feature: Return exit codes
     Then I get a 'P2' identity
     And I get 'always-required' return code
 
-  Scenario: CI codes returned - breaching CI codes generate return codes, including mitigated CIs
+  Scenario: Breaching CI codes generate return codes, including mitigated CIs - CI codes returned
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
