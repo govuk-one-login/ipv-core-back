@@ -21,15 +21,19 @@ Feature: MFA reset journey
     When I use the OAuth response to get my MFA reset result
     Then I get a successful MFA reset result
 
-  Scenario: Successful MFA reset journey - with CI
+  Scenario: Failed MFA reset journey with breaching CI - user can still reuse existing identity
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-needs-enhanced-verification' details to the CRI stub
-    Then I get a 'page-dcmaw-success' page response
+    When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
+    Then I get a 'pyi-no-match' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get a successful MFA reset result
+    Then I get an unsuccessful MFA reset result
+
+    # New journey with same user id
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
 
   @Build
   Scenario: Failed MFA reset journey - DCMAW error
@@ -54,7 +58,7 @@ Feature: MFA reset journey
   Scenario: Failed MFA reset journey - failed verification score
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-invalid-verification-zero' details to the CRI stub
+    When I submit 'kenneth-passport-verification-zero' details to the CRI stub
     Then I get a 'pyi-no-match' page response
     When I submit a 'next' event
     Then I get an OAuth response
