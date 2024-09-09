@@ -1,0 +1,15 @@
+{
+  "type": "IdentityCheck",
+  "validityScore": 2,
+  "strengthScore": 4,
+  "failedCheckDetails": [
+    {
+      "checkMethod": "vcrypt",
+      "identityCheckPolicy": "published"
+    },
+    {
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 0
+    }
+  ]
+}
