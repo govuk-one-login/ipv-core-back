@@ -138,10 +138,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       end:
-        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       multipleDocCheckPage:
         targetState: MULTIPLE_DOC_CHECK_PAGE
 
@@ -191,29 +188,18 @@ states:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
       not-found:
-        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       access-denied:
-        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       temporarily-unavailable:
-        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       fail-with-no-ci:
-        targetState: MULTIPLE_DOC_F2F_NINO_CHECK_PAGE
-        checkIfDisabled:
-          f2f:
-            targetState: MULTIPLE_DOC_CHECK_PAGE
+        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
       type: page
+      context: nino
       pageId: page-multiple-doc-check
     events:
       ukPassport:
@@ -223,8 +209,10 @@ states:
       nino:
         targetState: NINO_START_PAGE
       end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
 
   MULTIPLE_DOC_F2F_NINO_CHECK_PAGE:
     response:
