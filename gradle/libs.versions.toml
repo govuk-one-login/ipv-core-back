@@ -1,7 +1,7 @@
 [versions]
 awsSdk = "2.27.17"
 jackson = "2.15.3"
-log4j = "2.23.0"
+log4j = "2.24.0"
 mockito = "5.13.0"
 pact = "4.6.5"
 powertools = "1.18.0"
