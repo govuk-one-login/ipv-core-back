@@ -79,7 +79,7 @@ Feature: Return exit codes
         Then I get a 'P0' identity
         And I get 'non-ci-breaching' return code
 
-    Scenario: CI mitigated (in separate session) but failed to complete journey
+    Scenario: CI mitigated in separate session but failed to complete journey
       Given the subject already has the following credentials
         | CRI              | scenario                            |
         | drivingLicence   | kenneth-driving-permit-valid        |
@@ -103,7 +103,6 @@ Feature: Return exit codes
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       And I get 'non-ci-breaching' return code
-
 
   Rule: always-required code returned
     Scenario:  Successful journey with always-required return code
