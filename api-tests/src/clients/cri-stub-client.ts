@@ -5,7 +5,7 @@ import {
 } from "../types/cri-stub.js";
 import config from "../config/config.js";
 
-const CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
+const STUB_CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
   ticf: "ticf",
   kbv: "experian-kbv-cri",
   dcmaw: "dcmaw-cri",
@@ -22,7 +22,7 @@ const CREDENTIAL_ISSUER_SUBDOMAINS: Record<string, string> = {
 };
 
 export const buildCredentialIssuerUrl = (criId: string) =>
-  `https://${CREDENTIAL_ISSUER_SUBDOMAINS[criId]}.stubs.account.gov.uk`;
+  `https://${STUB_CREDENTIAL_ISSUER_SUBDOMAINS[criId]}.stubs.account.gov.uk`;
 
 export const callHeadlessApi = async (
   redirectUrl: string,
