@@ -1,5 +1,6 @@
 Feature: Return exit codes
   Rule: no return codes
+    @Build
     Scenario:  Successful journey with identity - no CIs
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -33,85 +34,58 @@ Feature: Return exit codes
       Then I get a 'P0' identity
       And I get 'non-ci-breaching' return code
 
-    Scenario: Failed to complete alternate doc F2F journey
-      Given I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get a 'page-multiple-doc-check' page response
-      When I submit a 'drivingLicence' event
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'kbv' CRI response
-      When I submit 'kenneth-thin-file' details to the CRI stub
-      Then I get a 'pyi-cri-escape' page response
-      When I submit a 'f2f' event
-      Then I get a 'f2f' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get a 'pyi-another-way' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      And I get 'non-ci-breaching' return code
+    Rule: Failed to complete journey
+      Background: Start alternate doc journey with no CI
+        Given I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-identity-document-start' page response
+        When I submit an 'appTriage' event
+        Then I get a 'dcmaw' CRI response
+        When I get an 'access_denied' OAuth error from the CRI stub
+        Then I get a 'page-multiple-doc-check' page response
+        When I submit a 'drivingLicence' event
+        Then I get a 'drivingLicence' CRI response
+        When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+        Then I get an 'address' CRI response
+        When I submit 'kenneth-current' details to the CRI stub
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-score-2' details to the CRI stub
+        Then I get a 'page-pre-experian-kbv-transition' page response
+        When I submit a 'next' event
+        Then I get a 'kbv' CRI response
+        When I submit 'kenneth-thin-file' details to the CRI stub
+        Then I get a 'pyi-cri-escape' page response
 
-    Scenario: Failed to complete alternate doc DCMAW journey
-      Given I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get a 'page-multiple-doc-check' page response
-      When I submit a 'drivingLicence' event
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'kbv' CRI response
-      When I submit 'kenneth-thin-file' details to the CRI stub
-      Then I get a 'pyi-cri-escape' page response
-      When I submit a 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get a 'pyi-post-office' page response
-      When I submit a 'end' event
-      Then I get a 'pyi-another-way' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-      And I get 'non-ci-breaching' return code
+      Scenario: Error from f2f CRI
+        When I submit a 'f2f' event
+        Then I get a 'f2f' CRI response
+        When I get an 'access_denied' OAuth error from the CRI stub
+        Then I get a 'pyi-another-way' page response
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P0' identity
+        And I get 'non-ci-breaching' return code
 
-    Scenario: CI mitigated via DCMAW (in separate session) but failed to complete journey
-      Given I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get a 'page-multiple-doc-check' page response
-      When I submit a 'drivingLicence' event
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'kbv' CRI response
-      When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
-      Then I get a 'pyi-suggest-other-options' page response
+      Scenario: Error from DCMAW CRI
+        When I submit a 'appTriage' event
+        Then I get a 'dcmaw' CRI response
+        When I get an 'access_denied' OAuth error from the CRI stub
+        Then I get a 'pyi-post-office' page response
+        When I submit a 'end' event
+        Then I get a 'pyi-another-way' page response
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P0' identity
+        And I get 'non-ci-breaching' return code
+
+    Scenario: CI mitigated (in separate session) but failed to complete journey
+      Given the subject already has the following credentials
+        | CRI              | scenario                            |
+        | drivingLicence   | kenneth-driving-permit-valid        |
+        | address          | kenneth-current                     |
+        | fraud            | kenneth-score-2                     |
+        | kbv              | kenneth-needs-enhanced-verification |
 
       # Start new session
       When I start a new 'medium-confidence' journey
