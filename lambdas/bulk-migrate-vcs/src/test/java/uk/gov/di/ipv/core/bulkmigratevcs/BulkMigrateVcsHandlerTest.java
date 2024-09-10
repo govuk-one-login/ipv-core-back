@@ -36,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
@@ -65,9 +66,13 @@ class BulkMigrateVcsHandlerTest {
     void handlerShouldCorrectlyHandleMigrateAndSkip() throws Exception {
         var reportUserIdentityItems =
                 List.of(
-                        new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false),
-                        new ReportUserIdentityItem("id2", "P0", 1, List.of("vc"), false),
-                        new ReportUserIdentityItem("id3", "P2", 3, List.of("vc"), false));
+                        new ReportUserIdentityItem("migrate", "P2", 3, List.of("vc"), false),
+                        new ReportUserIdentityItem("skipNonP2", "P0", 3, List.of("vc"), false),
+                        new ReportUserIdentityItem("skipNoVcs", "P2", 0, List.of(), false),
+                        new ReportUserIdentityItem(
+                                "skipAlreadyMigrated", "P2", 3, List.of("vc"), false),
+                        new ReportUserIdentityItem(
+                                "skipPartiallyMigrated", "P2", 3, List.of("vc"), false));
 
         mockScanResponse(null, List.of(reportUserIdentityItems), null);
 
@@ -75,17 +80,24 @@ class BulkMigrateVcsHandlerTest {
         when(notMigratedVc.getMigrated()).thenReturn(null);
         when(notMigratedVc.getVcString()).thenReturn("vcString");
 
-        when(mockVerifiableCredentialService.getVcs("id1"))
-                .thenReturn(List.of(migratedVc, migratedVc, notMigratedVc));
+        when(mockVerifiableCredentialService.getVcs("migrate"))
+                .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));
 
-        when(mockVerifiableCredentialService.getVcs("id3"))
+        when(mockVerifiableCredentialService.getVcs("skipNoVcs")).thenReturn(List.of());
+
+        when(mockVerifiableCredentialService.getVcs("skipAlreadyMigrated"))
                 .thenReturn(List.of(migratedVc, migratedVc, migratedVc));
 
-        var report = bulkMigrateVcsHandler.handleRequest(new Request(null, 100, 0), mockContext);
+        when(mockVerifiableCredentialService.getVcs("skipPartiallyMigrated"))
+                .thenReturn(List.of(migratedVc, migratedVc, notMigratedVc));
+
+        var report = bulkMigrateVcsHandler.handleRequest(new Request(null, 100, null), mockContext);
 
         assertEquals(1, report.getTotalMigrated());
-        assertEquals(2, report.getTotalSkipped());
-        assertEquals(3, report.getTotalEvaluated());
+        assertEquals(1, report.getTotalSkippedNoVcs());
+        assertEquals(1, report.getTotalSkippedAlreadyMigrated());
+        assertEquals(1, report.getTotalSkippedPartiallyMigrated());
+        assertEquals(5, report.getTotalEvaluated());
         assertEquals(0, report.getTotalFailedEvcsWrite());
         assertEquals(0, report.getTotalFailedTacticalRead());
         assertEquals(0, report.getTotalFailedTacticalWrite());
@@ -94,16 +106,16 @@ class BulkMigrateVcsHandlerTest {
         assertTrue(report.getAllFailedTacticalWriteHashUserIds().isEmpty());
         assertEquals("Null - all batches complete", report.getLastEvaluatedHashUserId());
 
-        verify(mockEvcsClient).storeUserVCs(eq("id1"), evcsCreateListCaptor.capture());
+        verify(mockEvcsClient).storeUserVCs(eq("migrate"), evcsCreateListCaptor.capture());
 
         var evcsCreateUserVCsDtoList = evcsCreateListCaptor.getValue();
 
-        assertEquals(1, evcsCreateUserVCsDtoList.size());
+        assertEquals(3, evcsCreateUserVCsDtoList.size());
         assertEquals("vcString", evcsCreateUserVCsDtoList.get(0).vc());
         assertEquals(CURRENT, evcsCreateUserVCsDtoList.get(0).state());
         assertEquals(MIGRATED, evcsCreateUserVCsDtoList.get(0).provenance());
         assertEquals(
-                "START:3", ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata()).batchId());
+                "START:5", ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata()).batchId());
         assertTrue(
                 Instant.parse(
                                 ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata())
@@ -114,8 +126,8 @@ class BulkMigrateVcsHandlerTest {
 
         var vcList = vcListCaptor.getValue();
 
-        assertEquals(1, vcList.size());
-        verify(vcList.get(0)).setMigrated(any(Instant.class));
+        assertEquals(3, vcList.size());
+        verify(vcList.get(0), times(3)).setMigrated(any(Instant.class));
     }
 
     @Test

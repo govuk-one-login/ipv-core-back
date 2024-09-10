@@ -1,18 +1,21 @@
 package uk.gov.di.ipv.core.bulkmigratevcs.domain;
 
-import lombok.Data;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Data
+@Getter
 public class Report {
     private final Map<String, BatchSummary> batchSummaries;
     private int totalEvaluated;
     private int totalMigrated;
-    private int totalSkipped;
+    private int totalSkippedNonP2;
+    private int totalSkippedAlreadyMigrated;
+    private int totalSkippedPartiallyMigrated;
+    private int totalSkippedNoVcs;
     private int totalFailedTacticalRead;
     private int totalFailedTacticalWrite;
     private int totalFailedEvcsWrite;
@@ -28,34 +31,25 @@ public class Report {
         this.allFailedEvcsWriteHashUserIds = new ArrayList<>();
     }
 
-    public void addBatchSummary(BatchSummary summary) {
+    public synchronized void addBatchSummary(BatchSummary summary) {
+        totalMigrated += summary.getMigrated();
+        totalSkippedNonP2 += summary.getSkippedNonP2();
+        totalSkippedAlreadyMigrated += summary.getSkippedAlreadyMigrated();
+        totalSkippedPartiallyMigrated += summary.getSkippedPartiallyMigrated();
+        totalSkippedNoVcs += summary.getSkippedNoVcs();
+        totalFailedTacticalRead += summary.getFailedTacticalRead();
+        totalFailedTacticalWrite += summary.getFailedTacticalWrite();
+        totalFailedEvcsWrite += summary.getFailedEvcsWrite();
+        totalEvaluated += summary.getTotal();
+
+        allFailedTacticalReadHashUserIds.addAll(summary.getFailedTacticalReadHashUserIds());
+        allFailedTacticalWriteHashUserIds.addAll(summary.getFailedTacticalWriteHashUserIds());
+        allFailedEvcsWriteHashUserIds.addAll(summary.getFailedEvcsWriteHashUserIds());
+
         this.batchSummaries.put(summary.getBatchId(), summary);
     }
 
     public void setLastEvaluatedHashUserId(String lastEvaluatedHashUserId) {
         this.lastEvaluatedHashUserId = lastEvaluatedHashUserId;
-    }
-
-    public Report finalise() {
-        batchSummaries
-                .values()
-                .forEach(
-                        summary -> {
-                            totalMigrated += summary.getMigrated();
-                            totalSkipped += summary.getSkipped();
-                            totalFailedTacticalRead += summary.getFailedTacticalRead();
-                            totalFailedTacticalWrite += summary.getFailedTacticalWrite();
-                            totalFailedEvcsWrite += summary.getFailedEvcsWrite();
-                            totalEvaluated += summary.getTotal();
-
-                            allFailedTacticalReadHashUserIds.addAll(
-                                    summary.getFailedTacticalReadHashUserIds());
-                            allFailedTacticalWriteHashUserIds.addAll(
-                                    summary.getFailedTacticalWriteHashUserIds());
-                            allFailedEvcsWriteHashUserIds.addAll(
-                                    summary.getFailedEvcsWriteHashUserIds());
-                        });
-
-        return this;
     }
 }

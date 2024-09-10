@@ -91,61 +91,74 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, Report> {
                         String.format(
                                 "Starting bulk migration with exclusiveStartKey: %s",
                                 exclusiveStartKey)));
-        int parallelism = request.parallelism() == 0 ? DEFAULT_PARALLELISM : request.parallelism();
+        int parallelism =
+                request.parallelism() == null ? DEFAULT_PARALLELISM : request.parallelism();
         var forkJoinPool = new ForkJoinPool(parallelism);
+
         LOGGER.info(LogHelper.buildLogMessage(String.format("Parallelism: %d", parallelism)));
 
-        for (var page :
-                reportUserIdentityScanDynamoDataStore.scan(
-                        exclusiveStartKey, request.batchSize(), HASH_USER_ID, USER_ID, IDENTITY)) {
+        try {
+            for (var page :
+                    reportUserIdentityScanDynamoDataStore.scan(
+                            exclusiveStartKey,
+                            request.batchSize(),
+                            HASH_USER_ID,
+                            USER_ID,
+                            IDENTITY)) {
 
-            // Using last evaluated from previous page for batchId to allow a batch rerun
-            var batchId = getBatchId(previousPageLastEvaluatedHashUserId, page.count());
+                // Using last evaluated from previous page for batchId to allow a batch rerun
+                var batchId = getBatchId(previousPageLastEvaluatedHashUserId, page.count());
 
-            // Updating while we still have access to the current page, ready for next loop
-            previousPageLastEvaluatedHashUserId =
-                    page.lastEvaluatedKey() == null
-                            ? null
-                            : page.lastEvaluatedKey().get(HASH_USER_ID).s();
+                // Updating while we still have access to the current page, ready for next loop
+                previousPageLastEvaluatedHashUserId =
+                        page.lastEvaluatedKey() == null
+                                ? null
+                                : page.lastEvaluatedKey().get(HASH_USER_ID).s();
 
-            LOGGER.info(LogHelper.buildLogMessage(String.format("Processing batch: %s", batchId)));
-
-            var batchSummary = new BatchSummary(batchId);
-            try {
-                forkJoinPool
-                        .submit(
-                                () ->
-                                        page.items().parallelStream()
-                                                .forEach(
-                                                        reportItem ->
-                                                                migrateIdentity(
-                                                                        reportItem, batchSummary)))
-                        .get();
-            } catch (InterruptedException | ExecutionException e) {
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-                LOGGER.error(
-                        LogHelper.buildErrorMessage("Parallel execution failed", e)
-                                .with(LOG_BATCH_ID.getFieldName(), batchId));
-            }
-
-            report.addBatchSummary(batchSummary);
-
-            if (context.getRemainingTimeInMillis() <= ONE_MINUTE_IN_MS) {
                 LOGGER.info(
-                        LogHelper.buildLogMessage("Lambda close to timeout - stopping execution"));
-                report.setLastEvaluatedHashUserId(previousPageLastEvaluatedHashUserId);
-                break;
-            }
+                        LogHelper.buildLogMessage(String.format("Processing batch: %s", batchId)));
 
-            if (previousPageLastEvaluatedHashUserId == null) {
-                LOGGER.info(LogHelper.buildLogMessage("No lastEvaluatedKey - all batches run"));
-                report.setLastEvaluatedHashUserId("Null - all batches complete");
+                var batchSummary = new BatchSummary(batchId);
+                try {
+                    forkJoinPool
+                            .submit(
+                                    () ->
+                                            page.items().parallelStream()
+                                                    .forEach(
+                                                            reportItem ->
+                                                                    migrateIdentity(
+                                                                            reportItem,
+                                                                            batchSummary)))
+                            .get();
+                } catch (InterruptedException | ExecutionException e) {
+                    if (e instanceof InterruptedException) {
+                        Thread.currentThread().interrupt();
+                    }
+                    LOGGER.error(
+                            LogHelper.buildErrorMessage("Parallel execution failed", e)
+                                    .with(LOG_BATCH_ID.getFieldName(), batchId));
+                }
+
+                report.addBatchSummary(batchSummary);
+
+                if (context.getRemainingTimeInMillis() <= ONE_MINUTE_IN_MS) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage(
+                                    "Lambda close to timeout - stopping execution"));
+                    report.setLastEvaluatedHashUserId(previousPageLastEvaluatedHashUserId);
+                    break;
+                }
+
+                if (previousPageLastEvaluatedHashUserId == null) {
+                    LOGGER.info(LogHelper.buildLogMessage("No lastEvaluatedKey - all batches run"));
+                    report.setLastEvaluatedHashUserId("Null - all batches complete");
+                }
             }
+        } finally {
+            forkJoinPool.shutdown();
         }
 
-        return report.finalise();
+        return report;
     }
 
     private void migrateIdentity(ReportUserIdentityItem reportItem, BatchSummary batchSummary) {
@@ -157,7 +170,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, Report> {
                             .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
                             .with(LOG_VOT.getFieldName(), reportItem.getIdentity())
                             .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
-            batchSummary.incrementSkipped();
+            batchSummary.incrementSkippedNonP2();
             return;
         }
 
@@ -174,53 +187,71 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, Report> {
             return;
         }
 
-        // Migrate identity if any VCs are not already migrated, else do nothing
-        if (vcs.stream().anyMatch(vc -> vc.getMigrated() == null)) {
-            var timestamp = Instant.now();
-            try {
-                storeUnmigratedVcsInEvcs(
-                        reportItem.getUserId(), vcs, batchSummary.getBatchId(), timestamp);
-            } catch (Throwable e) {
-                logError(
-                        "Migration failed - error writing to EVCS",
-                        reportItem,
-                        e,
-                        batchSummary.getBatchId());
-                // Send failed audit event
-                batchSummary.incrementFailedEvcsWrite(reportItem.getHashUserId());
-                return;
-            }
-
-            try {
-                setMigratedOnTacticalStoreVcs(vcs, timestamp);
-                LOGGER.info(
-                        LogHelper.buildLogMessage("Migrated")
-                                .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
-                                .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
-                // Send migrated audit event
-                batchSummary.incrementMigrated();
-            } catch (Throwable e) {
-                logError(
-                        "Migration failed - error writing to tactical",
-                        reportItem,
-                        e,
-                        batchSummary.getBatchId());
-                // Send failed audit event
-                batchSummary.incrementFailedTacticalWrite(reportItem.getHashUserId());
-            }
-        } else {
+        // Skip if no VCs to migrate
+        if (vcs.isEmpty()) {
             LOGGER.info(
-                    LogHelper.buildLogMessage(
-                                    String.format("Skipping migration - %s", getSkippedReason(vcs)))
+                    LogHelper.buildLogMessage("Skipping migration - no VCs to migrate")
                             .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
                             .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
             // Send skipped audit event
-            batchSummary.incrementSkipped();
+            batchSummary.incrementSkippedNoVcs();
+            return;
         }
-    }
 
-    private String getSkippedReason(List<VerifiableCredential> vcs) {
-        return vcs.isEmpty() ? "no VCs to migrate" : "all VCs already migrated";
+        // Skip already migrated identities
+        if (vcs.stream().allMatch(vc -> vc.getMigrated() != null)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Skipping migration - all VCs already migrated")
+                            .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
+                            .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
+            // Send skipped audit event
+            batchSummary.incrementSkippedAlreadyMigrated();
+            return;
+        }
+
+        // Skip partial migrations?
+        if (vcs.stream().anyMatch(vc -> vc.getMigrated() != null)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Skipping migration - partially migrated identity")
+                            .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
+                            .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
+            // Send skipped audit event
+            batchSummary.incrementSkippedPartiallyMigrated();
+            return;
+        }
+
+        // Migrate identity
+        var timestamp = Instant.now();
+        try {
+            storeVcsInEvcs(reportItem.getUserId(), vcs, batchSummary.getBatchId(), timestamp);
+        } catch (Throwable e) {
+            logError(
+                    "Migration failed - error writing to EVCS",
+                    reportItem,
+                    e,
+                    batchSummary.getBatchId());
+            // Send failed audit event
+            batchSummary.incrementFailedEvcsWrite(reportItem.getHashUserId());
+            return;
+        }
+
+        try {
+            setMigratedOnTacticalStoreVcs(vcs, timestamp);
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Migrated")
+                            .with(LOG_HASH_USER_ID.getFieldName(), reportItem.getHashUserId())
+                            .with(LOG_BATCH_ID.getFieldName(), batchSummary.getBatchId()));
+            // Send migrated audit event
+            batchSummary.incrementMigrated();
+        } catch (Throwable e) {
+            logError(
+                    "Migration failed - error writing to tactical",
+                    reportItem,
+                    e,
+                    batchSummary.getBatchId());
+            // Send failed audit event
+            batchSummary.incrementFailedTacticalWrite(reportItem.getHashUserId());
+        }
     }
 
     private String getBatchId(String lastEvaluatedKey, int pageSize) {
@@ -230,13 +261,12 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, Report> {
                 "%s:%d", lastEvaluatedKey == null ? "START" : lastEvaluatedKey, pageSize);
     }
 
-    private void storeUnmigratedVcsInEvcs(
+    private void storeVcsInEvcs(
             String userId, List<VerifiableCredential> vcs, String batchId, Instant timestamp)
             throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 userId,
                 vcs.stream()
-                        .filter(vc -> vc.getMigrated() == null)
                         .map(
                                 vc ->
                                         new EvcsCreateUserVCsDto(
@@ -251,7 +281,6 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, Report> {
             throws VerifiableCredentialException {
         verifiableCredentialService.updateIdentity(
                 vcs.stream()
-                        .filter(vc -> vc.getMigrated() == null)
                         .map(
                                 vc -> {
                                     vc.setMigrated(timestamp);

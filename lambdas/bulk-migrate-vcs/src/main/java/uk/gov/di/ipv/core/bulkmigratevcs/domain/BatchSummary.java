@@ -9,7 +9,10 @@ import java.util.List;
 public class BatchSummary {
     private final String batchId;
     private int migrated;
-    private int skipped;
+    private int skippedNonP2;
+    private int skippedAlreadyMigrated;
+    private int skippedPartiallyMigrated;
+    private int skippedNoVcs;
     private int failedEvcsWrite;
     private int failedTacticalRead;
     private int failedTacticalWrite;
@@ -30,8 +33,23 @@ public class BatchSummary {
         total++;
     }
 
-    public synchronized void incrementSkipped() {
-        skipped++;
+    public synchronized void incrementSkippedNonP2() {
+        skippedNonP2++;
+        total++;
+    }
+
+    public synchronized void incrementSkippedAlreadyMigrated() {
+        skippedAlreadyMigrated++;
+        total++;
+    }
+
+    public synchronized void incrementSkippedPartiallyMigrated() {
+        skippedPartiallyMigrated++;
+        total++;
+    }
+
+    public synchronized void incrementSkippedNoVcs() {
+        skippedNoVcs++;
         total++;
     }
 
