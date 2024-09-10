@@ -615,6 +615,11 @@ class ContractTest {
                       ]
                     }
                   ],
+                  "birthDate": [
+                    {
+                      "value": "1994-01-25"
+                    }
+                  ],
                   "bankAccount": [
                     {
                       "sortCode": "103233",
@@ -642,7 +647,7 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_BAV_VC_SIGNATURE =
-            "Mf2vUI7tchtEhiafnyp7oGFO0n_ngPgDseuZXGcc2aboVSErdJPiPp-6KrlRCxCq4h-1Js1Q9Ic_R8FUSRn3AA"; // pragma: allowlist secret
+            "SxuIBfLDLkLttqimyhORo7XGnsj_cLzUOT_WgCljef_708OdnguRKikMGCMDbtKMVzb3OZbobV5UjLNaEVermw"; // pragma: allowlist secret
 
     private static final String FAILED_BAV_VC_BODY =
             """
@@ -676,6 +681,11 @@ class ContractTest {
                       ]
                     }
                   ],
+                  "birthDate": [
+                    {
+                      "value": "1994-01-25"
+                    }
+                  ],
                   "bankAccount": [
                     {
                       "sortCode": "103233",
@@ -706,5 +716,5 @@ class ContractTest {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
-            "_sW-3UzTjh0x6n1v0uvuZSOIwQ9GAMCv-HIlWdbaCYCgSjysIQg2e3rBaJAuqg21qm6uldYSYW3O1XFtVFtwJw"; // pragma: allowlist secret
+            "JlGnDKxWr2ELrHzh1txDvG21xrINyWQ6fu9gTnoZaWlZzIe5pKrawn9ulwJ2B-0BUvUHMAKURj7sPODiOL-v_w"; // pragma: allowlist secret
 }
