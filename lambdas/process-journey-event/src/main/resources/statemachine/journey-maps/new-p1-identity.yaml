@@ -595,6 +595,7 @@ states:
     response:
       type: cri
       criId: claimedIdentity
+      context: hmrc_check
     parent: CRI_STATE
     events:
       next:
