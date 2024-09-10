@@ -25,8 +25,6 @@ import {
 } from "../types/internal-api.js";
 import { getProvenIdentityDetails } from "../clients/core-back-internal-client.js";
 import {
-  IdentityCheckCredentialClass,
-  IdentityCheckSubjectClass,
   NamePartType,
   PostalAddressClass,
 } from "@govuk-one-login/data-vocab/credentials.js";
@@ -361,20 +359,11 @@ Then(
       throw new Error("No credentials found.");
     }
 
-    const inheritedIdentity = this.vcs[
-      "https://orch.stubs.account.gov.uk/migration/v1"
-    ]
-      ? (this.vcs["https://orch.stubs.account.gov.uk/migration/v1"]
-          .vc as IdentityCheckCredentialClass)
-      : undefined;
-
-    const namePart = (
-      inheritedIdentity
-        ? (inheritedIdentity.credentialSubject as IdentityCheckSubjectClass)
-        : this.identity[identityCredential]
-    ).name?.[0].nameParts.find((np) => {
-      return field === np.type;
-    });
+    const namePart = this.identity[identityCredential].name?.[0].nameParts.find(
+      (np) => {
+        return field === np.type;
+      },
+    );
     assert.equal(value.toLowerCase(), namePart?.value.toLowerCase());
   },
 );
