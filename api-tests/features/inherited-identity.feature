@@ -25,14 +25,15 @@ Feature: Inherited Identity
     And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a '<expected-identity>' identity
+
     When I start a new '<return-journey-type>' journey
     Then I get a 'page-ipv-identity-document-start' page response
 
     Examples:
-    | inherited-identity            | expected-identity | return-journey-type      | vtr       |
-    |  alice-vot-pcl200-no-evidence | PCL200            | medium-confidence        | P2        |
-    |  alice-vot-pcl200-no-evidence | PCL200            | medium-confidence-pcl250 | P2/PCL250 |
-    | alice-vot-pcl250-no-evidence  | PCL250            | medium-confidence        | P2        |
+    | inherited-identity           | expected-identity | return-journey-type      | vtr       |
+    | alice-vot-pcl200-no-evidence | PCL200            | medium-confidence        | P2        |
+    | alice-vot-pcl200-no-evidence | PCL200            | medium-confidence-pcl250 | P2/PCL250 |
+    | alice-vot-pcl250-no-evidence | PCL250            | medium-confidence        | P2        |
 
   Scenario: Migrate PCL250 HRMC profile successfully with no evidence and returns with P2/PCL250
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
@@ -98,3 +99,30 @@ Feature: Inherited Identity
     | PCL200       | alice-vot-pcl200-no-evidence   | Alice             | PCL200           | PCL250       | kenneth-vot-pcl250-driving-permit    | Kenneth           | PCL250           | replaced     |
     | PCL200       | alice-vot-pcl200-no-evidence   | Alice             | PCL200           | PCL250       | kenneth-vot-pcl250-passport          | Kenneth           | PCL250           | replaced     |
     | PCL250       | alice-vot-pcl250-no-evidence   | Alice             | PCL250           | PCL200       | kenneth-vot-pcl200-no-evidence       | Alice             | PCL250           | not replaced |
+
+  Scenario: Previous PCL250 inherited identity is replaced with new P2 identity for the same user
+    Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
+    Then I get an OAuth response
+    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
+    When I use the OAuth response to get my identity
+    Then I get a 'PCL250' identity
+    And my identity 'GivenName' is 'Alice'
+
+    # New P2 journey
+    Given I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And my identity 'GivenName' is 'Kenneth'
