@@ -114,7 +114,7 @@ When(
 );
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-,]+)')?$/,
+  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: with inherited identity '([<>\w-]+)')?(?: with feature set '([<>\w-,]+)')?$/,
   async function (
     this: World,
     journeyType: string,
@@ -271,7 +271,7 @@ When(
 );
 
 Then(
-  /^I get a '([\w-]+)' identity( without a TICF VC)?$/,
+  /^I get a '([<>\w-]+)' identity( without a TICF VC)?$/,
   function (
     this: World,
     vot: string,
