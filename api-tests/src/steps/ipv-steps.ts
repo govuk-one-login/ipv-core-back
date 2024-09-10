@@ -32,6 +32,7 @@ import { delay } from "../utils/delay.js";
 import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
 import { VcJwtPayload } from "../types/external-api.js";
 import * as jose from "jose";
+import { buildCredentialIssuerUrl } from "../clients/cri-stub-client.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -54,16 +55,12 @@ const describeResponse = (response: JourneyEngineResponse): string => {
   return `unknown ${JSON.stringify(response)}`;
 };
 
-export const CREDENTIAL_ISSUERS: Record<string, string> = {
-  TICF: "https://ticf.stubs.account.gov.uk",
-};
-
 const assertIdentityContainsVc = (
   vc: string,
   checkForAbsence: boolean,
   jwts: Record<string, VcJwtPayload>,
 ) => {
-  const issuer = CREDENTIAL_ISSUERS[vc];
+  const issuer = buildCredentialIssuerUrl(vc);
   const isVcInIdentity = issuer in jwts;
   const errorMessage = `Identity does ${!checkForAbsence ? "not " : ""}have a ${vc} VC.`;
 
@@ -280,9 +277,44 @@ Then(
     }
 
     assert.equal(this.identity.vot, vot);
-    assertIdentityContainsVc("TICF", !!checkForTicfAbsence, this.vcs);
+    assertIdentityContainsVc("ticf", !!checkForTicfAbsence, this.vcs);
   },
 );
+
+Then(
+  "I get {string} return code(s)",
+  function (this: World, expectedReturnCodes: string): void {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
+    const returnCodes = this.identity[
+      "https://vocab.account.gov.uk/v1/returnCode"
+    ]
+      .map((returnCode) => returnCode.code)
+      .sort();
+    const parsedExpectedCodes = expectedReturnCodes
+      ? expectedReturnCodes.split(",").sort()
+      : [];
+
+    assert.deepEqual(returnCodes, parsedExpectedCodes);
+  },
+);
+
+Then("I don't get any return codes", function (this: World): void {
+  if (!this.identity) {
+    throw new Error("No identity found.");
+  }
+
+  const returnCodes = this.identity[
+    "https://vocab.account.gov.uk/v1/returnCode"
+  ].map((returnCode) => returnCode.code);
+
+  assert.ok(
+    returnCodes.length === 0,
+    `Expected no return codes but got: ${returnCodes.join(",")}`,
+  );
+});
 
 Then(
   "a(n) {string} audit event was recorded [local only]",
