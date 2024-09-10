@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.StopBeforeLambdaTimeoutException;
 import uk.gov.di.ipv.core.library.helpers.DynamoDbHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
@@ -26,7 +27,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
-import uk.gov.di.ipv.core.reportuseridentity.exceptions.StopBeforeLambdaTimeoutException;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.IOException;

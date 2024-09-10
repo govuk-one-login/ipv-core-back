@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class BatchSummary {
-    private final String batchId;
+public class PageSummary {
+    private final String exclusiveStartKey;
+    private final int count;
     private int migrated;
     private int skippedNonP2;
     private int skippedAlreadyMigrated;
@@ -21,11 +22,16 @@ public class BatchSummary {
     private final List<String> failedTacticalReadHashUserIds;
     private final List<String> failedTacticalWriteHashUserIds;
 
-    public BatchSummary(String batchId) {
-        this.batchId = batchId;
+    public PageSummary(String exclusiveStartKey, int count) {
+        this.exclusiveStartKey = exclusiveStartKey;
+        this.count = count;
         this.failedEvcsWriteHashUserIds = new ArrayList<>();
         this.failedTacticalReadHashUserIds = new ArrayList<>();
         this.failedTacticalWriteHashUserIds = new ArrayList<>();
+    }
+
+    public String getExclusiveStartKey() {
+        return exclusiveStartKey == null ? "null" : exclusiveStartKey;
     }
 
     public synchronized void incrementMigrated() {

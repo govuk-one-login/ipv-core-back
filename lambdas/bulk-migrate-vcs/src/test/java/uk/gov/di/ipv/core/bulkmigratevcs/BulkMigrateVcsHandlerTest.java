@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.bulkmigratevcs;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -8,11 +9,14 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
+import uk.gov.di.ipv.core.bulkmigratevcs.domain.RequestBatchDetails;
+import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
@@ -24,21 +28,24 @@ import uk.gov.di.ipv.core.library.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -50,17 +57,25 @@ class BulkMigrateVcsHandlerTest {
     public static final String HASH_USER_ID = "hashUserId";
     public static final String USER_ID = "userId";
     public static final String IDENTITY = "identity";
+    public static final int TWO_MINUTES_IN_MS = 120_000;
     @Captor private ArgumentCaptor<List<EvcsCreateUserVCsDto>> evcsCreateListCaptor;
     @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
     @Mock private ScanDynamoDataStore<ReportUserIdentityItem> mockScanDataStore;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private EvcsClient mockEvcsClient;
+    @Mock private ForkJoinPoolFactory mockForkJoinPoolFactory;
+    @Mock private ForkJoinTask mockForkJoinTask;
+    @Mock private ForkJoinPool mockForkJoinPool;
     @Mock private PageIterable<ReportUserIdentityItem> mockPageIterable;
-    @Mock private Page<ReportUserIdentityItem> mockPage;
     @Mock private Context mockContext;
     @Mock private VerifiableCredential migratedVc;
     @Mock private VerifiableCredential notMigratedVc;
     @InjectMocks BulkMigrateVcsHandler bulkMigrateVcsHandler;
+
+    @BeforeEach
+    public void setup() {
+        when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
+    }
 
     @Test
     void handlerShouldCorrectlyHandleMigrateAndSkip() throws Exception {
@@ -74,7 +89,7 @@ class BulkMigrateVcsHandlerTest {
                         new ReportUserIdentityItem(
                                 "skipPartiallyMigrated", "P2", 3, List.of("vc"), false));
 
-        mockScanResponse(null, List.of(reportUserIdentityItems), null);
+        mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(migratedVc.getMigrated()).thenReturn(Instant.now());
         when(notMigratedVc.getMigrated()).thenReturn(null);
@@ -91,7 +106,10 @@ class BulkMigrateVcsHandlerTest {
         when(mockVerifiableCredentialService.getVcs("skipPartiallyMigrated"))
                 .thenReturn(List.of(migratedVc, migratedVc, notMigratedVc));
 
-        var report = bulkMigrateVcsHandler.handleRequest(new Request(null, 100, null), mockContext);
+        var report =
+                bulkMigrateVcsHandler.handleRequest(
+                        new Request(new RequestBatchDetails("batchId", null, 2000), 100, null),
+                        mockContext);
 
         assertEquals(1, report.getTotalMigrated());
         assertEquals(1, report.getTotalSkippedNoVcs());
@@ -104,7 +122,8 @@ class BulkMigrateVcsHandlerTest {
         assertTrue(report.getAllFailedEvcsWriteHashUserIds().isEmpty());
         assertTrue(report.getAllFailedTacticalReadHashUserIds().isEmpty());
         assertTrue(report.getAllFailedTacticalWriteHashUserIds().isEmpty());
-        assertEquals("Null - all batches complete", report.getLastEvaluatedHashUserId());
+        assertEquals("null", report.getNextBatchExclusiveStartKey());
+        assertEquals("Scan complete", report.getExitReason());
 
         verify(mockEvcsClient).storeUserVCs(eq("migrate"), evcsCreateListCaptor.capture());
 
@@ -115,7 +134,7 @@ class BulkMigrateVcsHandlerTest {
         assertEquals(CURRENT, evcsCreateUserVCsDtoList.get(0).state());
         assertEquals(MIGRATED, evcsCreateUserVCsDtoList.get(0).provenance());
         assertEquals(
-                "START:5", ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata()).batchId());
+                "batchId", ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata()).batchId());
         assertTrue(
                 Instant.parse(
                                 ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata())
@@ -138,7 +157,7 @@ class BulkMigrateVcsHandlerTest {
                         new ReportUserIdentityItem("id2", "P2", 3, List.of("vc"), false),
                         new ReportUserIdentityItem("id3", "P2", 3, List.of("vc"), false));
 
-        mockScanResponse(null, List.of(reportUserIdentityItems), null);
+        mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(notMigratedVc.getMigrated()).thenReturn(null);
 
@@ -154,7 +173,10 @@ class BulkMigrateVcsHandlerTest {
                 .when(mockVerifiableCredentialService)
                 .updateIdentity(any());
 
-        var report = bulkMigrateVcsHandler.handleRequest(new Request(null, 100, 1), mockContext);
+        var report =
+                bulkMigrateVcsHandler.handleRequest(
+                        new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                        mockContext);
 
         assertEquals(3, report.getTotalEvaluated());
         assertEquals(1, report.getTotalFailedTacticalRead());
@@ -169,39 +191,93 @@ class BulkMigrateVcsHandlerTest {
     }
 
     @Test
-    void handlerShouldCreateCorrectBatchIdForEachPage() {
+    void handlerShouldStartBatchAtProvidedHash() {
         var reportUserIdentityItem =
                 new ReportUserIdentityItem("id1", "P0", 3, List.of("vc"), false);
-        var pageOne = List.of(reportUserIdentityItem);
-        var pageTwo =
-                List.of(reportUserIdentityItem, reportUserIdentityItem, reportUserIdentityItem);
-        var pageThree = List.of(reportUserIdentityItem, reportUserIdentityItem);
 
         mockScanResponse(
-                null,
-                List.of(pageOne, pageTwo, pageThree),
-                new ArrayList<>(Arrays.asList("hashOne", "hashTwo", null)));
-
-        var report = bulkMigrateVcsHandler.handleRequest(new Request(null, 100, 1), mockContext);
-
-        assertEquals(6, report.getTotalEvaluated());
-        assertEquals(
-                Set.of("START:1", "hashOne:3", "hashTwo:2"), report.getBatchSummaries().keySet());
-    }
-
-    @Test
-    void handlerShouldStartScanAtProvidedHash() {
-        var reportUserIdentityItem =
-                new ReportUserIdentityItem("id1", "P0", 3, List.of("vc"), false);
-
-        mockScanResponse("specificStartKey", List.of(List.of(reportUserIdentityItem)), null);
+                "specificStartKey",
+                List.of(List.of(reportUserIdentityItem)),
+                Arrays.asList(new String[1]));
 
         var report =
                 bulkMigrateVcsHandler.handleRequest(
-                        new Request("specificStartKey", 100, 1), mockContext);
+                        new Request(
+                                new RequestBatchDetails("batchId", "specificStartKey", 2000),
+                                100,
+                                1),
+                        mockContext);
 
         assertEquals(1, report.getTotalEvaluated());
-        assertEquals(Set.of("specificStartKey:1"), report.getBatchSummaries().keySet());
+        assertEquals("specificStartKey", report.getPageSummaries().get(0).getExclusiveStartKey());
+    }
+
+    @MockitoSettings(strictness = LENIENT)
+    @Test
+    void handleRequestShouldExitIfAllItemsInBatchProcessed() {
+        var item = new ReportUserIdentityItem("id1", "P0", 3, List.of("vc"), false);
+
+        mockScanResponse(
+                null,
+                List.of(List.of(item), List.of(item), List.of(item), List.of(item), List.of(item)),
+                List.of("hash1", "hash2", "hash3", "hash4"));
+
+        var report =
+                bulkMigrateVcsHandler.handleRequest(
+                        new Request(new RequestBatchDetails("batchId", null, 4), 100, 1),
+                        mockContext);
+
+        assertEquals(4, report.getTotalEvaluated());
+        assertEquals("hash4", report.getNextBatchExclusiveStartKey());
+        assertEquals("All items in batch processed", report.getExitReason());
+    }
+
+    @MockitoSettings(strictness = LENIENT)
+    @Test
+    void handleRequestShouldExitIfLambdaTimeoutApproaching() {
+        var item = new ReportUserIdentityItem("id1", "P0", 3, List.of("vc"), false);
+
+        mockScanResponse(
+                null,
+                List.of(List.of(item), List.of(item), List.of(item), List.of(item), List.of(item)),
+                List.of("hash1", "hash2", "hash3", "hash4"));
+
+        when(mockContext.getRemainingTimeInMillis())
+                .thenReturn(TWO_MINUTES_IN_MS)
+                .thenReturn(TWO_MINUTES_IN_MS)
+                .thenReturn(1);
+
+        var report =
+                bulkMigrateVcsHandler.handleRequest(
+                        new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                        mockContext);
+
+        assertEquals(3, report.getTotalEvaluated());
+        assertEquals("hash3", report.getNextBatchExclusiveStartKey());
+        assertEquals("Lambda close to timeout", report.getExitReason());
+    }
+
+    @MockitoSettings(strictness = LENIENT)
+    @Test
+    void handlerShouldContinueBatchIfParallelExecutionFailure() throws Exception {
+        when(mockForkJoinPoolFactory.getForkJoinPool(1)).thenReturn(mockForkJoinPool);
+        when(mockForkJoinPool.submit(any(Runnable.class))).thenReturn(mockForkJoinTask);
+        when(mockForkJoinTask.get())
+                .thenThrow(new ExecutionException("Oops", new IllegalArgumentException()));
+
+        var reportItem = new ReportUserIdentityItem("id1", "22", 3, List.of("vc"), false);
+
+        mockScanResponse(
+                null,
+                List.of(List.of(reportItem), List.of(reportItem, reportItem)),
+                Arrays.asList("hash1", null));
+
+        var report =
+                bulkMigrateVcsHandler.handleRequest(
+                        new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                        mockContext);
+
+        assertEquals(2, report.getPageSummaries().size());
     }
 
     private void mockScanResponse(
@@ -222,50 +298,30 @@ class BulkMigrateVcsHandlerTest {
                         IDENTITY))
                 .thenReturn(mockPageIterable);
 
-        var mockPageList = reportUserIdentityItemsList.stream().map(itemList -> mockPage).toList();
+        var mockPageList =
+                reportUserIdentityItemsList.stream()
+                        .map(
+                                itemList -> {
+                                    var mockPage = (Page<ReportUserIdentityItem>) mock(Page.class);
+                                    when(mockPage.items()).thenReturn(itemList);
+                                    when(mockPage.count()).thenReturn(itemList.size());
+                                    return mockPage;
+                                })
+                        .toList();
+
+        for (var i = 0; i < lastEvaluatedUserHashIds.size(); i++) {
+            when(mockPageList.get(i).lastEvaluatedKey())
+                    .thenReturn(
+                            lastEvaluatedUserHashIds.get(i) == null
+                                    ? null
+                                    : Map.of(
+                                            HASH_USER_ID,
+                                            AttributeValue.builder()
+                                                    .s(lastEvaluatedUserHashIds.get(i))
+                                                    .build()));
+        }
+
         when(mockPageIterable.iterator()).thenReturn(mockPageList.iterator());
-
-        var pageCounts =
-                reportUserIdentityItemsList.stream().map(List::size).collect(Collectors.toList());
-        var pageCountOngoingStubbing = when(mockPage.count()).thenReturn(pageCounts.remove(0));
-        for (var remainingCount : pageCounts) {
-            pageCountOngoingStubbing.thenReturn(remainingCount);
-        }
-
-        var modifiableReportUserIdentityItemsList = new ArrayList<>(reportUserIdentityItemsList);
-        var pageItemsOngoingStubbing =
-                when(mockPage.items()).thenReturn(modifiableReportUserIdentityItemsList.remove(0));
-        for (var remainingItemList : modifiableReportUserIdentityItemsList) {
-            pageItemsOngoingStubbing.thenReturn(remainingItemList);
-        }
-
-        if (lastEvaluatedUserHashIds == null) {
-            when(mockPage.lastEvaluatedKey())
-                    .thenReturn(Map.of(HASH_USER_ID, AttributeValue.builder().s(null).build()));
-        } else {
-            var modifiableLastEvaluatedUserHashIds = new ArrayList<>(lastEvaluatedUserHashIds);
-            var initialValue =
-                    Map.of(
-                            HASH_USER_ID,
-                            AttributeValue.builder()
-                                    .s(modifiableLastEvaluatedUserHashIds.remove(0))
-                                    .build());
-            var lastEvaluatedHashOngoingStubbing =
-                    when(mockPage.lastEvaluatedKey())
-                            .thenReturn(initialValue)
-                            .thenReturn(initialValue); // method is called twice per page
-            for (var remainingLastEvaluatedHash : modifiableLastEvaluatedUserHashIds) {
-                var value =
-                        remainingLastEvaluatedHash == null
-                                ? null
-                                : Map.of(
-                                        HASH_USER_ID,
-                                        AttributeValue.builder()
-                                                .s(remainingLastEvaluatedHash)
-                                                .build());
-                lastEvaluatedHashOngoingStubbing.thenReturn(value).thenReturn(value);
-            }
-        }
         when(mockContext.getRemainingTimeInMillis()).thenReturn(100_000);
     }
 }

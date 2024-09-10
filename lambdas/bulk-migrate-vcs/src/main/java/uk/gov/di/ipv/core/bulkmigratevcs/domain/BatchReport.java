@@ -3,13 +3,12 @@ package uk.gov.di.ipv.core.bulkmigratevcs.domain;
 import lombok.Getter;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 @Getter
-public class Report {
-    private final Map<String, BatchSummary> batchSummaries;
+public class BatchReport {
+    private final String batchId;
+    private final List<PageSummary> pageSummaries;
     private int totalEvaluated;
     private int totalMigrated;
     private int totalSkippedNonP2;
@@ -22,16 +21,18 @@ public class Report {
     private final List<String> allFailedTacticalReadHashUserIds;
     private final List<String> allFailedTacticalWriteHashUserIds;
     private final List<String> allFailedEvcsWriteHashUserIds;
-    private String lastEvaluatedHashUserId;
+    private String nextBatchExclusiveStartKey;
+    private String exitReason;
 
-    public Report() {
-        this.batchSummaries = new LinkedHashMap<>();
+    public BatchReport(String batchId) {
+        this.batchId = batchId;
+        this.pageSummaries = new ArrayList<>();
         this.allFailedTacticalReadHashUserIds = new ArrayList<>();
         this.allFailedTacticalWriteHashUserIds = new ArrayList<>();
         this.allFailedEvcsWriteHashUserIds = new ArrayList<>();
     }
 
-    public synchronized void addBatchSummary(BatchSummary summary) {
+    public synchronized void addPageSummary(PageSummary summary) {
         totalMigrated += summary.getMigrated();
         totalSkippedNonP2 += summary.getSkippedNonP2();
         totalSkippedAlreadyMigrated += summary.getSkippedAlreadyMigrated();
@@ -46,10 +47,11 @@ public class Report {
         allFailedTacticalWriteHashUserIds.addAll(summary.getFailedTacticalWriteHashUserIds());
         allFailedEvcsWriteHashUserIds.addAll(summary.getFailedEvcsWriteHashUserIds());
 
-        this.batchSummaries.put(summary.getBatchId(), summary);
+        this.pageSummaries.add(summary);
     }
 
-    public void setLastEvaluatedHashUserId(String lastEvaluatedHashUserId) {
-        this.lastEvaluatedHashUserId = lastEvaluatedHashUserId;
+    public void finalise(String exitReason, String nextBatchExclusiveStartKey) {
+        this.exitReason = exitReason;
+        this.nextBatchExclusiveStartKey = nextBatchExclusiveStartKey;
     }
 }

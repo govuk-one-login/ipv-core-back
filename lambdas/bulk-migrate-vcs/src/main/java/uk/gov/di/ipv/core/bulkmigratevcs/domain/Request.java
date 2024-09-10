@@ -1,4 +1,3 @@
 package uk.gov.di.ipv.core.bulkmigratevcs.domain;
 
-public record Request(
-        String reportStoreLastEvaluatedHashUserId, int batchSize, Integer parallelism) {}
+public record Request(RequestBatchDetails batch, int pageSize, Integer parallelism) {}
