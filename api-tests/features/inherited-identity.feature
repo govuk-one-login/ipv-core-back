@@ -19,7 +19,7 @@ Feature: Inherited Identity
       | medium-confidence-pcl250        | kenneth-vot-pcl250-passport       | PCL250            |
       | medium-confidence-pcl250        | kenneth-vot-pcl250-driving-permit | PCL250            |
 
-  Scenario Outline: Migrate <expected-identity> HMRC profile successfully with no evidence and returns with <vtr> - requires identity to be proved for stronger profile
+  Scenario Outline: Migrating a <expected-identity> HMRC profile successfully and returning with <vtr> VTR requires a P2 identity to be proved
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<inherited-identity>'
     Then I get an OAuth response
     And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
@@ -43,8 +43,10 @@ Feature: Inherited Identity
     Then I get a 'PCL250' identity
     When I start a new 'medium-confidence-pcl250' journey
     Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'PCL250' identity
 
-  Scenario Outline: P2 identity takes priority over successfully migrated PCL200 <evidence-state>
+  Scenario Outline: P2 identity takes priority over successfully migrated PCL200
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -72,10 +74,10 @@ Feature: Inherited Identity
     Then I get a 'P2' identity
 
     Examples:
-    | inherited-identity                | evidence-state   |
-    | alice-vot-pcl200-no-evidence      | with no evidence |
-    | kenneth-vot-pcl250-driving-permit | with evidence    |
-
+    | inherited-identity                |
+    | alice-vot-pcl200-no-evidence      |
+    | kenneth-vot-pcl250-driving-permit |
+#
   Scenario Outline: Previous <old-identity> is <is-replaced> with new <new-identity> for the same user
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<old-details>'
     Then I get an OAuth response
