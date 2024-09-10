@@ -11,9 +11,6 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_ERROR
-        checkIfDisabled:
-          ticf:
-            targetState: ERROR_PAGE
 
   ERROR_NO_TICF:
     events:

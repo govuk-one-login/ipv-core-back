@@ -19,7 +19,7 @@ const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) =
 
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMaps) => {
-    const disabledOptions = [];
+    const disabledOptions = ['ticf'];
     const featureFlagOptions = [];
 
     Object.values(journeyMaps).forEach((journeyMap) => {
@@ -30,6 +30,9 @@ export const getOptions = (journeyMaps) => {
             });
         });
     });
+
+    disabledOptions.sort();
+    featureFlagOptions.sort();
 
     return { disabledOptions, featureFlagOptions };
 };
@@ -140,7 +143,16 @@ const renderTransitions = (journeyStates, formData) => {
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            const { targetJourney, targetState, exitEventToEmit } = resolveEventTarget(def, formData);
+            let resolvedTarget = resolveEventTarget(def, formData);
+
+            // Special case for disabling TICF, to match the special case in the journey engine
+            if (journeyStates[resolvedTarget.targetState]?.response?.lambda === 'call-ticf-cri' &&
+                formData.getAll('disabledCri').includes('ticf')) {
+                resolvedTarget = resolveEventTarget(
+                    journeyStates[resolvedTarget.targetState].events.next, formData);
+            }
+
+            const { targetJourney, targetState, exitEventToEmit } = resolvedTarget;
 
             const target = exitEventToEmit
                 ? `exit_${exitEventToEmit}`.toUpperCase()

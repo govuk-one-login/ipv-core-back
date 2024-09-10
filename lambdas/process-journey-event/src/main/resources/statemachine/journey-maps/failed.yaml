@@ -12,17 +12,11 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_NO_MATCH
-        checkIfDisabled:
-          ticf:
-            targetState: NO_MATCH_PAGE
 
   FAILED_SKIP_MESSAGE:
     events:
       next:
         targetState: CRI_TICF_BEFORE_RETURN_TO_RP
-        checkIfDisabled:
-          ticf:
-            targetState: RETURN_TO_RP
 
   FAILED_CONFIRM_DETAILS:
     events:
@@ -32,20 +26,6 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkIfDisabled:
-          ticf:
-            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
-            checkFeatureFlag:
-              updateDetailsAccountDeletion:
-                targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
@@ -62,27 +42,6 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkIfDisabled:
-          ticf:
-            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
-            checkFeatureFlag:
-              updateDetailsAccountDeletion:
-                targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
-                checkJourneyContext:
-                  rfc:
-                    targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
-                    auditEvents:
-                      - IPV_USER_DETAILS_UPDATE_END
-                    auditContext:
-                      successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
             targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
@@ -102,17 +61,11 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
-        checkIfDisabled:
-          ticf:
-            targetState: NO_MATCH_PAGE_BAV
 
   FAILED_NINO:
     events:
       next:
         targetState: CRI_TICF_BEFORE_NO_MATCH_NINO
-        checkIfDisabled:
-          ticf:
-            targetState: NO_MATCH_PAGE_NINO
 
   FAILED_NO_TICF:
     events:

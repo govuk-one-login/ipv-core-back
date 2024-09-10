@@ -26,6 +26,8 @@ states:
         targetState: PAGE_STATE_AT_START_OF_NO_PHOTO_ID
       eventFive:
         targetState: PAGE_STATE_WITH_BACK_EVENT
+      eventSix:
+        targetState: TICF_CRI_STATE
 
   CRI_STATE:
     response:
@@ -145,3 +147,11 @@ states:
     response:
       type: page
       pageId: page-id-for-another-page-state
+
+  TICF_CRI_STATE:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: ANOTHER_PAGE_STATE

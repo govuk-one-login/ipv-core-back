@@ -10,12 +10,6 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_REUSE
-        checkIfDisabled:
-          ticf:
-            targetState: IDENTITY_REUSE_PAGE
-            checkFeatureFlag:
-              deleteDetailsEnabled:
-                targetState: IDENTITY_REUSE_PAGE_TEST
 
   UPDATE_DETAILS_START:
     events:
@@ -41,12 +35,6 @@ states:
         targetState: ERROR
       identity-stored:
         targetState: CRI_TICF_BEFORE_REUSE
-        checkIfDisabled:
-          ticf:
-            targetState: IDENTITY_REUSE_PAGE
-            checkFeatureFlag:
-              deleteDetailsEnabled:
-                targetState: IDENTITY_REUSE_PAGE_TEST
 
   CRI_TICF_BEFORE_REUSE:
     response:

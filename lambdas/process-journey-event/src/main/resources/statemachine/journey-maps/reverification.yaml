@@ -121,9 +121,6 @@ states:
     events:
       coi-check-passed:
         targetState: CRI_TICF
-        checkIfDisabled:
-          ticf:
-            targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
