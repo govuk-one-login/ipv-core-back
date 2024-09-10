@@ -1,3 +1,4 @@
+@Build
 Feature: CIMIT - Alternate doc
 
   Scenario Outline: CIMIT - Alternate doc mitigation via passport or DL
