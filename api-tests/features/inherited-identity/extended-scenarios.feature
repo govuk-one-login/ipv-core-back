@@ -1,3 +1,4 @@
+@Build
 Feature: Inherited identity extended scenarios
   Scenario Outline: Successfully migrates <inherited-identity> HRMC profile after partial P2 journey
     Given I start a new 'medium-confidence' journey
@@ -247,7 +248,7 @@ Feature: Inherited identity extended scenarios
       | PCL200             | alice-vot-pcl200-no-evidence |
       | PCL250             | kenneth-vot-pcl250-passport  |
 
-  Scenario Outline: Successfully completes separate sessions alternate doc journey with <inherited-identity> HMRC profile and receives P2 identity
+  Scenario Outline: Successfully completes an alternate doc (separate session mitigation) journey with <inherited-identity> HMRC profile and receives P2 identity
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
