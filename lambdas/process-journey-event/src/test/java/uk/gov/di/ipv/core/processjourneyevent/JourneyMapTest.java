@@ -30,15 +30,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class JourneyMapTest {
 
-    @ParameterizedTest
-    @EnumSource
-    void shouldHandleSameEventsForAllCris(IpvJourneyTypes journeyType) throws IOException {
-        var stateMachineInitializer = new StateMachineInitializer(journeyType);
-        var stateMachine = stateMachineInitializer.initialize();
-
+    @Test
+    void shouldHandleSameEventsForAllCris() throws IOException {
         var criStatesAndEvents = new ArrayList<StateAndEvents>();
         var allCriEvents = new HashSet<String>();
-        findCriStatesAndEvents(stateMachine, criStatesAndEvents, allCriEvents);
+
+        for (var journeyType : IpvJourneyTypes.values()) {
+            var stateMachineInitializer = new StateMachineInitializer(journeyType);
+            var stateMachine = stateMachineInitializer.initialize();
+
+            findCriStatesAndEvents(stateMachine, criStatesAndEvents, allCriEvents);
+        }
 
         for (var stateAndEvents : criStatesAndEvents) {
             var missingCriEvents = new HashSet<>(allCriEvents);
@@ -53,14 +55,16 @@ class JourneyMapTest {
         }
     }
 
-    @ParameterizedTest
-    @EnumSource
-    void shouldHandleSameEventsForSamePage(IpvJourneyTypes journeyType) throws IOException {
-        var stateMachineInitializer = new StateMachineInitializer(journeyType);
-        var stateMachine = stateMachineInitializer.initialize();
-
+    @Test
+    void shouldHandleSameEventsForSamePage() throws IOException {
         var pageMap = new HashMap<String, List<StateAndEvents>>();
-        findPageSpecificStatesAndEvents(stateMachine, pageMap);
+
+        for (var journeyType : IpvJourneyTypes.values()) {
+            var stateMachineInitializer = new StateMachineInitializer(journeyType);
+            var stateMachine = stateMachineInitializer.initialize();
+
+            findPageSpecificStatesAndEvents(stateMachine, pageMap);
+        }
 
         for (var statesAndEvents : pageMap.values()) {
             var pageEvents = new HashSet<String>();
