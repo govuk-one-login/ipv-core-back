@@ -1,0 +1,17 @@
+{
+  "type": "IdentityCheck",
+  "strengthScore": 3,
+  "validityScore": 2,
+  "activityHistory": 1,
+  "checkDetails": [
+    {
+      "checkMethod": "vcrypt",
+      "identityCheckPolicy": "published",
+      "activityFrom": null
+    },
+    {
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 3
+    }
+  ]
+}
