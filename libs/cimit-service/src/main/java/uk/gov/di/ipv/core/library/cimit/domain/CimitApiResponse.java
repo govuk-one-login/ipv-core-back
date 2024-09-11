@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.cimit.domain;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record CimitApiResponse(@JsonProperty String result, @JsonProperty String reason) {}
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record CimitApiResponse(String result, String reason, String errorMessage) {}

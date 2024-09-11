@@ -221,7 +221,11 @@ public class CimitService {
     }
 
     private void logApiRequestError(CimitApiResponse failedResponse) {
-        LOGGER.error(LogHelper.buildErrorMessage(FAILED_API_REQUEST, failedResponse.reason()));
+        LOGGER.error(
+                LogHelper.buildErrorMessage(
+                        FAILED_API_REQUEST,
+                        failedResponse.errorMessage(),
+                        failedResponse.reason()));
     }
 
     private void sendPostHttpRequest(
