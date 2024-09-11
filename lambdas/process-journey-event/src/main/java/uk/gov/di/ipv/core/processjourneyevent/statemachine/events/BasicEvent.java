@@ -25,6 +25,7 @@ public class BasicEvent implements Event {
     private String name;
     private String targetJourney;
     private String targetState;
+    private String targetEntryEvent;
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;
@@ -75,7 +76,7 @@ public class BasicEvent implements Event {
                 return checkFeatureFlag.get(featureFlagValue).resolve(journeyContext);
             }
         }
-        return new TransitionResult(targetStateObj, auditEvents, auditContext);
+        return new TransitionResult(targetStateObj, auditEvents, auditContext, targetEntryEvent);
     }
 
     @Override

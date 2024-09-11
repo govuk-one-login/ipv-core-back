@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 public class StateMachine {
@@ -53,7 +54,8 @@ public class StateMachine {
 
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {
-            return result.state().transition(event, startState, journeyContext);
+            var entryEvent = requireNonNullElse(result.targetEntryEvent(), event);
+            return result.state().transition(entryEvent, startState, journeyContext);
         }
 
         return result;
