@@ -45,6 +45,9 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
 
   # Journey States
 
