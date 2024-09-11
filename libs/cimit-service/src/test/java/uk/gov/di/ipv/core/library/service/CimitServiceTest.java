@@ -56,11 +56,11 @@ class CimitServiceTest {
     private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     private static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
     private static final CimitApiResponse SUCCESSFUL_POST_HTTP_RESPONSE =
-            new CimitApiResponse("success", null);
+            new CimitApiResponse("success", null, null);
     private static final ContraIndicatorCredentialDto SUCCESSFUL_GET_CI_HTTP_RESPONSE =
             new ContraIndicatorCredentialDto(SIGNED_CONTRA_INDICATOR_VC);
     private static final CimitApiResponse FAILED_CIMIT_HTTP_RESPONSE =
-            new CimitApiResponse(FAILED_RESPONSE, "Internal Server Error");
+            new CimitApiResponse(FAILED_RESPONSE, "INTERNAL_ERROR", "Internal Server Error");
     private static final String CIMIT_API_BASE_URL = "https://base-url.co.uk";
     private static final String MOCK_CIMIT_API_KEY = "mock-api-key"; // pragma: allowlist secret
 
