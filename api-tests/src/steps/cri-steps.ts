@@ -76,7 +76,31 @@ When(
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
         expired ? EXPIRED_NBF : undefined,
-        !!async,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
+      ),
+    );
+  },
+);
+
+When(
+  "I get an error from the async CRI stub",
+  async function (this: World): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        undefined,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+        undefined,
+        { sendVcToQueue: false, sendErrorToQueue: true },
       ),
     );
   },
@@ -110,7 +134,7 @@ When(
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
         expired ? EXPIRED_NBF : undefined,
-        !!async,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
       ),
     );
 
@@ -193,7 +217,7 @@ When(
         scenario,
         this.lastJourneyEngineResponse.cri.redirectUrl,
         undefined,
-        !!async,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
         mitigatedCis.split(","),
       ),
     );
