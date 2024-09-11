@@ -1,5 +1,5 @@
 @Build
-Feature: Update details
+Feature: Identity reuse update details
 
     Background:
         Given the subject already has the following credentials
@@ -11,7 +11,6 @@ Feature: Update details
         Then I get a 'page-ipv-reuse' page response
         When I submit a 'update-details' event
         Then I get a 'update-details' page response
-
 
     Scenario: Given Name Change Failure
         When I submit a 'given-names-only' event

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "cucumber-js",
+    "test:dev": "CORE_ENV=dev cucumber-js",
     "test:build": "CORE_ENV=build cucumber-js --tags '@Build'",
     "test:local": "CORE_ENV=local cucumber-js",
     "test:ci": "start-server-and-test run-local-core-back 'http://localhost:4502' test:local",
