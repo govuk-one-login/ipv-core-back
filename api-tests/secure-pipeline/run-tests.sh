@@ -19,6 +19,9 @@ export CRI_STUB_GEN_CRED_API_KEY
 MANAGEMENT_TICF_API_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/credentialIssuers/ticf/connections/stub/apiKey | jq -r .SecretString)
 export MANAGEMENT_TICF_API_KEY
 
+MANAGEMENT_CIMIT_STUB_API_KEY=$(aws ssm get-parameter --name /tests/core-back-build/cimit_api_key | jq -r .Parameter.Value)
+export MANAGEMENT_CIMIT_STUB_API_KEY
+
 cd /api-tests
 
 npm run test:build -- --profile codepipeline

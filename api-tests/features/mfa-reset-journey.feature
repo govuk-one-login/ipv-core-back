@@ -1,3 +1,4 @@
+@Build
 Feature: MFA reset journey
   Background: There is an existing user and they start an MFA reset journey
     Given the subject already has the following credentials
@@ -10,7 +11,6 @@ Feature: MFA reset journey
     When I start a new 'reverification' journey
     Then I get a 'page-ipv-identity-document-start' page response
 
-  @Build
   Scenario: Successful MFA reset journey
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -35,7 +35,6 @@ Feature: MFA reset journey
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
 
-  @Build
   Scenario: Failed MFA reset journey - DCMAW error
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -45,7 +44,6 @@ Feature: MFA reset journey
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result
 
-  @Build
   Scenario: Failed MFA reset journey - no photo id
     When I submit an 'end' event
     Then I get a 'pyi-another-way' page response
@@ -54,7 +52,6 @@ Feature: MFA reset journey
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result
 
-  @Build
   Scenario: Failed MFA reset journey - failed verification score
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -65,7 +62,6 @@ Feature: MFA reset journey
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result
 
-  @Build
   Scenario: Failed MFA reset journey - non-matching identity
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

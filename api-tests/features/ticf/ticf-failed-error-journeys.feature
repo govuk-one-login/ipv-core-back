@@ -1,3 +1,4 @@
+@Build
 Feature: TICF failed/error journeys
 
   Rule: Via enhanced-verification journey
@@ -63,7 +64,6 @@ Feature: TICF failed/error journeys
         | type | RiskAssessment               |
 
   Rule: Via post-office
-    @Build
     Scenario: TICF failed post-office journey - PYI_ESCAPE
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -80,7 +80,6 @@ Feature: TICF failed/error journeys
         | type | RiskAssessment               |
 
   Rule: Via no-photo-id
-    @Build
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
       When I start a new 'medium-confidence' journey with feature set 'm2bBetaExperianKbv'
       Then I get a 'page-ipv-identity-document-start' page response

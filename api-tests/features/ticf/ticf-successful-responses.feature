@@ -1,3 +1,4 @@
+@Build
 Feature: TICF successful responses
   Rule: TICF returns CI
     Scenario: New P2 identity journey via app - TICF returns a CI
@@ -65,7 +66,6 @@ Feature: TICF successful responses
         | type | RiskAssessment               |
 
   Rule: TICF response delay less than 5s
-    @Build
     Scenario: Via app - TICF request has a response delay less than 5s
       Given TICF CRI will respond with default parameters
         | responseDelay | 4         |
@@ -90,7 +90,6 @@ Feature: TICF successful responses
         | type | RiskAssessment               |
 
   Rule: TICF request times out
-    @Build
     Scenario: Via app - TICF request times out
       # To prime TICF to time out, we set txn to be undefined
       Given TICF CRI will respond with default parameters

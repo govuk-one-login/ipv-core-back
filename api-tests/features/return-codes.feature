@@ -152,3 +152,23 @@ Feature: Return exit codes
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
     And I get 'non-breaching,breaching,needs-enhanced-verification' return codes
+
+  @Build
+  Scenario: Breaching CI code generates return code
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-0-breaching' details to the CRI stub
+    Then I get a 'pyi-no-match' page response
+    When I submit an 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
+    And I get 'breaching' return codes

@@ -1,3 +1,4 @@
+@Build
 Feature: CIMIT - Enhanced verification
 
   Background:
