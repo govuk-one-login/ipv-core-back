@@ -394,7 +394,7 @@ Then(
 );
 
 Then(
-  /^I get a (successful|unsuccessful) MFA reset result$/,
+  /^I get a(?:n)? (successful|unsuccessful) MFA reset result$/,
   async function (this: World, expectedMfaResetResult: string): Promise<void> {
     if (!this.mfaResetResult) {
       throw new Error("No MFA reset result found.");
