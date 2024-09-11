@@ -112,7 +112,7 @@ When(
 );
 
 When(
-  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: with inherited identity '([<>\w-]+)')?(?: with feature set '([<>\w-,]+)')?$/,
+  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: and)?(?: with inherited identity '([<>\w-]+)')?(?: with feature set '([<>\w-,]+)')?$/,
   async function (
     this: World,
     journeyType: string,
