@@ -122,7 +122,7 @@ Feature: Repeat fraud check failures
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-reuse' page response
+      Then I get a 'confirm-your-details' page response
 
   Rule: Update address only
 
