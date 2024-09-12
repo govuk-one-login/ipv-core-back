@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.verifiablecredential.helpers;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -50,7 +51,8 @@ public class VcHelper {
     }
 
     public static boolean isSuccessfulVc(VerifiableCredential vc) {
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential
+                && vc.getCri() != Cri.HMRC_MIGRATION) {
             var evidence = identityCheckCredential.getEvidence();
             if (isNullOrEmpty(evidence)) {
                 LOGGER.warn(

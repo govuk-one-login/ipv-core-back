@@ -112,7 +112,7 @@ When(
 );
 
 When(
-  /^I start a new ?'([\w-]+)' journey( with reprove identity)?(?: with inherited identity '([\w-]+)')?(?: with feature set '([\w-,]+)')?$/,
+  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: with inherited identity '([<>\w-]+)')?(?: with feature set '([<>\w-,]+)')?$/,
   async function (
     this: World,
     journeyType: string,
@@ -269,7 +269,7 @@ When(
 );
 
 Then(
-  /^I get a '([\w-]+)' identity( without a TICF VC)?$/,
+  /^I get a '([<>\w-]+)' identity( without a TICF VC)?$/,
   function (
     this: World,
     vot: string,
@@ -353,6 +353,10 @@ Then(
   function (this: World, field: NamePartType, value: string): void {
     if (!this.identity) {
       throw new Error("No identity found.");
+    }
+
+    if (!this.vcs) {
+      throw new Error("No credentials found.");
     }
 
     const namePart = this.identity[identityCredential].name?.[0].nameParts.find(

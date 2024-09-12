@@ -42,6 +42,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250NoEvidence;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcInvalidVot;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNullVot;
@@ -57,7 +58,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 class VcHelperTest {
     @Mock private ConfigService configService;
 
-    private static Stream<Arguments> SuccessfulTestCases() {
+    private static Stream<Arguments> SuccessfulTestCases() throws Exception {
         return Stream.of(
                 Arguments.of("Non-evidence VC", M1A_ADDRESS_VC),
                 Arguments.of("Evidence VC", PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
@@ -66,7 +67,9 @@ class VcHelperTest {
                 Arguments.of("Verification VC", vcVerificationM1a()),
                 Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
                 Arguments.of("Verification F2F VC", vcF2fM1a()),
-                Arguments.of("Verification Nino VC", vcNinoSuccessful()));
+                Arguments.of("Verification Nino VC", vcNinoSuccessful()),
+                Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
+                Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));
     }
 
     @ParameterizedTest
