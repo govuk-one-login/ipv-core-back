@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.bulkmigratevcs.domain;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,8 +22,8 @@ public class BatchReport {
     private final List<String> allFailedTacticalReadHashUserIds;
     private final List<String> allFailedTacticalWriteHashUserIds;
     private final List<String> allFailedEvcsWriteHashUserIds;
-    private String nextBatchExclusiveStartKey;
-    private String exitReason;
+    @Setter private String nextBatchExclusiveStartKey;
+    @Setter private String exitReason;
 
     public BatchReport(String batchId) {
         this.batchId = batchId;
@@ -32,7 +33,7 @@ public class BatchReport {
         this.allFailedEvcsWriteHashUserIds = new ArrayList<>();
     }
 
-    public synchronized void addPageSummary(PageSummary summary) {
+    public void addPageSummary(PageSummary summary) {
         totalMigrated += summary.getMigrated();
         totalSkippedNonP2 += summary.getSkippedNonP2();
         totalSkippedAlreadyMigrated += summary.getSkippedAlreadyMigrated();
@@ -48,10 +49,5 @@ public class BatchReport {
         allFailedEvcsWriteHashUserIds.addAll(summary.getFailedEvcsWriteHashUserIds());
 
         this.pageSummaries.add(summary);
-    }
-
-    public void finalise(String exitReason, String nextBatchExclusiveStartKey) {
-        this.exitReason = exitReason;
-        this.nextBatchExclusiveStartKey = nextBatchExclusiveStartKey;
     }
 }

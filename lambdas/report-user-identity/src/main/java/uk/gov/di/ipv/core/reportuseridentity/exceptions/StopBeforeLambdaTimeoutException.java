@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.exceptions;
+package uk.gov.di.ipv.core.reportuseridentity.exceptions;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 

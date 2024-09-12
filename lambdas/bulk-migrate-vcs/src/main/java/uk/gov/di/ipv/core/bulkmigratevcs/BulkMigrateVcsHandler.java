@@ -12,7 +12,6 @@ import uk.gov.di.ipv.core.bulkmigratevcs.domain.BatchReport;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.PageSummary;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
-import uk.gov.di.ipv.core.bulkmigratevcs.exceptions.BatchProcessedException;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
@@ -21,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.StopBeforeLambdaTimeoutException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
@@ -142,9 +140,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                             PAGE_EXCLUSIVE_START_KEY,
                                             pageSummary.getExclusiveStartKey())
                                     .with(PAGE_ITEM_COUNT, pageSummary.getCount()));
-                    report.finalise(
-                            "Lambda close to timeout", getPageLastEvaluatedHashUserId(page));
-                    throw new StopBeforeLambdaTimeoutException();
+                    report.setExitReason("Lambda close to timeout");
+                    report.setNextBatchExclusiveStartKey(getPageLastEvaluatedHashUserId(page));
+                    return report;
                 }
 
                 if (report.getTotalEvaluated() >= request.batch().size()) {
@@ -155,9 +153,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                             PAGE_EXCLUSIVE_START_KEY,
                                             pageSummary.getExclusiveStartKey())
                                     .with(PAGE_ITEM_COUNT, pageSummary.getCount()));
-                    report.finalise(
-                            "All items in batch processed", getPageLastEvaluatedHashUserId(page));
-                    throw new BatchProcessedException();
+                    report.setExitReason("All items in batch processed");
+                    report.setNextBatchExclusiveStartKey(getPageLastEvaluatedHashUserId(page));
+                    return report;
                 }
 
                 if (page.lastEvaluatedKey() == null) {
@@ -165,11 +163,10 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             LogHelper.buildLogMessage("No lastEvaluatedKey - all pages run")
                                     .with(LOG_BATCH_ID.getFieldName(), batchId)
                                     .with(PAGE_ITEM_COUNT, pageSummary.getCount()));
-                    report.finalise("Scan complete", getPageLastEvaluatedHashUserId(page));
+                    report.setExitReason("Scan complete");
+                    report.setNextBatchExclusiveStartKey(getPageLastEvaluatedHashUserId(page));
                 }
             }
-        } catch (StopBeforeLambdaTimeoutException | BatchProcessedException ignored) {
-            // Exit from loop and allow lambda to shut down
         } finally {
             forkJoinPool.shutdown();
         }
@@ -325,14 +322,8 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
 
     private void setMigratedOnTacticalStoreVcs(List<VerifiableCredential> vcs, Instant timestamp)
             throws VerifiableCredentialException {
-        verifiableCredentialService.updateIdentity(
-                vcs.stream()
-                        .map(
-                                vc -> {
-                                    vc.setMigrated(timestamp);
-                                    return vc;
-                                })
-                        .toList());
+        vcs.forEach(vc -> vc.setMigrated(timestamp));
+        verifiableCredentialService.updateIdentity(vcs);
     }
 
     private void logError(
