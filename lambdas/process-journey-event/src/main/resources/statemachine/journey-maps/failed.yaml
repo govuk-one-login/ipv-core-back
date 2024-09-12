@@ -28,7 +28,7 @@ states:
           successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_REUSE
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
@@ -138,21 +138,21 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION:
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_REUSE:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
       enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
       alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
       alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
       fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -260,7 +260,7 @@ states:
       end:
         targetState: RETURN_TO_RP
 
-  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION:
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
