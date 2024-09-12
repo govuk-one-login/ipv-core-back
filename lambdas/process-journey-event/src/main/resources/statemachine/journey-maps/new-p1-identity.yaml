@@ -740,6 +740,7 @@ states:
             targetState: ERROR
       passport:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: ukPassport
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
       postOffice:

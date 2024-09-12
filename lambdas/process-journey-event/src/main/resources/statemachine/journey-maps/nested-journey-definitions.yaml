@@ -174,7 +174,7 @@ WEB_DL_OR_PASSPORT:
   description: >-
     The combined journey for web Driving Licence and Passport CRIs.
   entryEvents:
-    passport:
+    ukPassport:
       targetState: CRI_UK_PASSPORT
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE
