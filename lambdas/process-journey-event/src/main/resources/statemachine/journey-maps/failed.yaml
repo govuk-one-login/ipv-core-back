@@ -161,7 +161,7 @@ states:
       alternate-doc-invalid-passport:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -199,7 +199,7 @@ states:
       alternate-doc-invalid-passport:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
       fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
