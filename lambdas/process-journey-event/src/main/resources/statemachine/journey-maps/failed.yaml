@@ -28,18 +28,27 @@ states:
           successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_REUSE
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
             checkJourneyContext:
               rfc:
-                targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_RFC
+                targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
                 auditEvents:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
                   successful: false
+
+  FAILED_CONFIRM_DETAILS_INVALID_ID:
+    events:
+      next:
+        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
 
   FAILED_UPDATE_DETAILS:
     events:
@@ -138,40 +147,40 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_REUSE:
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_RFC:
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -260,22 +269,22 @@ states:
       end:
         targetState: RETURN_TO_RP
 
-  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_REUSE:
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
-      context: deleteDetailsReuse
+      context: existingIdentityValid
     events:
       returnToRp:
         targetState: RETURN_TO_RP
       delete:
         targetState: DELETE_HANDOVER_PAGE
 
-  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_RFC:
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
-      context: deleteDetailsRfc
+      context: existingIdentityInvalid
     events:
       returnToRp:
         targetState: RETURN_TO_RP

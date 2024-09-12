@@ -33,21 +33,37 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
       alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+        checkFeatureFlag:
+          updateDetailsAccountDeletion:
+            targetJourney: FAILED
+            targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
   # Journey States
 
