@@ -23,12 +23,14 @@ states:
   ALTERNATE_DOC_PASSPORT:
     events:
       next:
-        targetState: MITIGATION_04_DL_NO_MATCH_PAGE
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl
 
   ALTERNATE_DOC_DL:
     events:
       next:
-        targetState: MITIGATION_06_PASSPORT_NO_MATCH_PAGE
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-passport
 
   ENHANCED_VERIFICATION_F2F_FAIL:
     events:
@@ -203,11 +205,36 @@ states:
       pageId: page-multiple-doc-check
     events:
       ukPassport:
-        targetState: CRI_UK_PASSPORT_J2
+        targetState: WEB_DL_OR_PASSPORT
       drivingLicence:
-        targetState: CRI_DRIVING_LICENCE_J3
+        targetState: WEB_DL_OR_PASSPORT
       nino:
         targetState: NINO_START_PAGE
+      end:
+        targetState: F2F_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
+
+  WEB_DL_OR_PASSPORT:
+    nestedJourney: WEB_DL_OR_PASSPORT
+    exitEvents:
+      next:
+        targetState: CRI_DWP_KBV_J7
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      alternate-doc-next:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -712,9 +739,9 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
       passport:
-        targetState: CRI_UK_PASSPORT_J2
+        targetState: WEB_DL_OR_PASSPORT
       drivingLicence:
-        targetState: CRI_DRIVING_LICENCE_J3
+        targetState: WEB_DL_OR_PASSPORT
       postOffice:
         targetState: CRI_CLAIMED_IDENTITY_J4
       relyingParty:
