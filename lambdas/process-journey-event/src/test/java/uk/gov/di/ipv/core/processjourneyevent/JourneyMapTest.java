@@ -205,10 +205,7 @@ class JourneyMapTest {
         for (var stateNameToCheck : stateMachineKeys) {
             var targetState = stateMachine.get(stateNameToCheck);
             if (targetState instanceof BasicState basicState) {
-                var events = basicState.getEvents();
-                for (var event : events.values()) {
-                    checkTargetStatesExist(event, stateNamesInScope);
-                }
+                checkTargetStatesExist(basicState.getEvents(), stateNamesInScope);
             } else if (targetState instanceof NestedJourneyInvokeState nestedState) {
                 var nestedStateMachine =
                         nestedState.getNestedJourneyDefinition().getNestedJourneyStates();
@@ -244,30 +241,33 @@ class JourneyMapTest {
         }
     }
 
-    private void checkTargetStatesExist(Event event, Set<String> stateMachineKeys)
+    private void checkTargetStatesExist(Map<String, Event> events, Set<String> stateMachineKeys)
             throws IOException {
-        if (event instanceof BasicEvent basicEvent) {
-            if (basicEvent.getTargetJourney() != null) {
-                var basicEventStateMachine =
-                        new StateMachineInitializer(
-                                        IpvJourneyTypes.valueOf(basicEvent.getTargetJourney()))
-                                .initialize();
-                var basicEventStateMachineKeys = basicEventStateMachine.keySet();
-                assertTrue(
-                        basicEventStateMachineKeys.contains(basicEvent.getTargetState()),
-                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
+        if (events == null) {
+            return;
+        }
+        for (var event : events.values()) {
+            if (event instanceof BasicEvent basicEvent) {
+                if (basicEvent.getTargetJourney() != null) {
+                    var basicEventStateMachine =
+                            new StateMachineInitializer(
+                                            IpvJourneyTypes.valueOf(basicEvent.getTargetJourney()))
+                                    .initialize();
+                    var basicEventStateMachineKeys = basicEventStateMachine.keySet();
+                    assertTrue(
+                            basicEventStateMachineKeys.contains(basicEvent.getTargetState()),
+                            "Unknown target state %s".formatted(basicEvent.getTargetState()));
 
-            } else if (basicEvent.getTargetState() != null) {
-                assertTrue(
-                        stateMachineKeys.contains(basicEvent.getTargetState()),
-                        "Unknown target state %s".formatted(basicEvent.getTargetState()));
-            }
-
-            var eventsIfDisabled = basicEvent.getCheckIfDisabled();
-            if (eventsIfDisabled != null) {
-                for (var eventIfDisabled : eventsIfDisabled.values()) {
-                    checkTargetStatesExist(eventIfDisabled, stateMachineKeys);
+                } else if (basicEvent.getTargetState() != null) {
+                    assertTrue(
+                            stateMachineKeys.contains(basicEvent.getTargetState()),
+                            "Unknown target state %s".formatted(basicEvent.getTargetState()));
                 }
+
+                // Recursively check other event resolutions
+                checkTargetStatesExist(basicEvent.getCheckIfDisabled(), stateMachineKeys);
+                checkTargetStatesExist(basicEvent.getCheckFeatureFlag(), stateMachineKeys);
+                checkTargetStatesExist(basicEvent.getCheckJourneyContext(), stateMachineKeys);
             }
         }
     }
