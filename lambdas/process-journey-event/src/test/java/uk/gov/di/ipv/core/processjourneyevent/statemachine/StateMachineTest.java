@@ -81,6 +81,35 @@ class StateMachineTest {
     }
 
     @Test
+    void transitionShouldTransitionIntoNestedJourneyInvokeStateWithEntryEventOverride()
+            throws Exception {
+        var event = "event";
+        var eventOverride = "eventOverride";
+
+        // Nested event transitions using the override
+        var expectedResult = new TransitionResult(new BasicState());
+        State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
+        when(nestedJourneyInvokeState.transition(eventOverride, "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(expectedResult);
+
+        // Outer event transitions using the overall event
+        State startingState = mock(BasicState.class);
+        when(startingState.transition(event, "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(
+                        new TransitionResult(nestedJourneyInvokeState, null, null, eventOverride));
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        var actualResult = stateMachine.transition("START_STATE", event, JOURNEY_CONTEXT, null);
+
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
     void transitionShouldHandleNestedStateName() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
 
