@@ -5,7 +5,8 @@ import * as criStubClient from "../clients/cri-stub-client.js";
 import * as evcsStubClient from "../clients/evcs-stub-client.js";
 import {
   generateCriStubBody,
-  generateCriStubErrorBody,
+  generateCriStubOAuthErrorBody,
+  generateCriStubUserInfoEndpointErrorBody,
   generatePostVcsBody,
   generateProcessCriCallbackBody,
   generateVcRequestBody,
@@ -141,8 +142,28 @@ When(
 
     await submitAndProcessCriAction(
       this,
-      await generateCriStubErrorBody(
+      generateCriStubOAuthErrorBody(
         error,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+      ),
+    );
+  },
+);
+
+When(
+  "the CRI stub returns a 404 from its user-info endpoint",
+  async function (this: World): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      generateCriStubUserInfoEndpointErrorBody(
         this.lastJourneyEngineResponse.cri.redirectUrl,
       ),
     );

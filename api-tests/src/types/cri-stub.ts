@@ -15,12 +15,21 @@ export interface CriStubRequest {
     queueName: string;
     delaySeconds?: number;
   };
-  requestedError?: {
-    error: string;
-    description: string;
-    endpoint: "auth" | "token";
-    userInfoError: "none" | "404";
-  };
+  requestedError?: CriStubRequestedError;
+}
+
+type CriStubRequestedError =
+  | CriStubOauthErrorRequest
+  | CriStubUserInfoEndpointErrorRequest;
+
+interface CriStubOauthErrorRequest {
+  error: string;
+  description: string;
+  endpoint: "auth" | "token";
+}
+
+interface CriStubUserInfoEndpointErrorRequest {
+  userInfoError: "404";
 }
 
 export interface CriStubResponse {

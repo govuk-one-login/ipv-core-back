@@ -1,11 +1,13 @@
 @Build
 Feature: P2 App journey
 
-  Scenario Outline: Successful P2 identity via DCMAW using <doc>
+  Background:
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
+
+  Scenario Outline: Successful P2 identity via DCMAW using <doc>
     When I submit '<details>' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
@@ -24,3 +26,8 @@ Feature: P2 App journey
       | doc      | details                      |
       | passport | kenneth-passport-valid       |
       | DL       | kenneth-driving-permit-valid |
+      | BRC      | kenneth-brc-valid            |
+
+  Scenario: DCMAW returns a 404 from user-info endpoint
+    Given the CRI stub returns a 404 from its user-info endpoint
+    Then I get a 'page-multiple-doc-check' page response
