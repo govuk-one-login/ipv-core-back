@@ -1,4 +1,4 @@
-@f2f
+@Build
 Feature: P2 F2F journey
 
   Rule: Pending F2F journey
@@ -129,22 +129,12 @@ Feature: P2 F2F journey
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
 
-    Scenario Outline: Oauth access_denied error F2F using <doc>
+    Scenario Outline: Oauth access_denied error F2F
       # Initial journey
       When I get an 'access_denied' OAuth error from the CRI stub
       Then I get a 'pyi-another-way' page response
 
-      Examples:
-        | doc      | details                      |
-        | passport | kenneth-passport-valid       |
-        | DL       | kenneth-driving-permit-valid |
-
-    Scenario Outline: Oauth temporarily_unavailable error F2F using <doc>
+    Scenario Outline: Oauth temporarily_unavailable error F2F
       # Initial journey
       When I get an 'temporarily_unavailable' OAuth error from the CRI stub
       Then I get a 'pyi-technical' page response
-
-      Examples:
-        | doc      | details                      |
-        | passport | kenneth-passport-valid       |
-        | DL       | kenneth-driving-permit-valid |
