@@ -10,8 +10,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
@@ -34,9 +34,12 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
@@ -109,11 +112,26 @@ public class ResetSessionIdentityHandler
             ipvSessionItem.setVot(P0);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            SessionCredentialsResetType sessionCredentialsResetType =
-                    RequestHelper.getSessionCredentialsResetType(input);
+            var sessionCredentialsResetType = RequestHelper.getSessionCredentialsResetType(input);
             sessionCredentialsService.deleteSessionCredentialsForResetType(
                     ipvSessionId, sessionCredentialsResetType);
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
+
+            if (sessionCredentialsResetType == REINSTATE) {
+                var existingIdentityVcs =
+                        configService.enabled(EVCS_READ_ENABLED)
+                                ? evcsService.getVerifiableCredentials(
+                                        clientOAuthSessionItem.getUserId(),
+                                        clientOAuthSessionItem.getEvcsAccessToken(),
+                                        CURRENT)
+                                : verifiableCredentialService.getVcs(
+                                        clientOAuthSessionItem.getUserId());
+                sessionCredentialsService.persistCredentials(
+                        existingIdentityVcs, ipvSessionId, false);
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "Existing identity persisted in session credentials store"));
+            }
 
             if (sessionCredentialsResetType.equals(PENDING_F2F_ALL)) {
                 doResetForPendingF2f(clientOAuthSessionItem);
@@ -138,6 +156,13 @@ public class ResetSessionIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
+                    .toObjectMap();
+        } catch (CredentialParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to fetch existing credentials", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         }
     }

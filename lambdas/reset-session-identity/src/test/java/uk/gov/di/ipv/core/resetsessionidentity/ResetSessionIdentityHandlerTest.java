@@ -6,13 +6,18 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -27,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
@@ -44,9 +50,11 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
+import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
@@ -74,6 +82,7 @@ class ResetSessionIdentityHandlerTest {
     @Mock private CriResponseService mockCriResponseService;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private EvcsService mockEvcsService;
+    @Mock private VerifiableCredential mockVerifiableCredential;
     @InjectMocks private ResetSessionIdentityHandler resetSessionIdentityHandler;
     @Mock private ConfigService mockConfigService;
 
@@ -236,6 +245,85 @@ class ResetSessionIdentityHandlerTest {
         assertEquals(500, journeyResponse.get(STATUS_CODE));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getCode(), journeyResponse.get("code"));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), journeyResponse.get("message"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReinstateUsersIdentity(boolean evcsReadEnabled) throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(evcsReadEnabled);
+        if (evcsReadEnabled) {
+            when(mockEvcsService.getVerifiableCredentials(TEST_USER_ID, TEST_EVCS_TOKEN, CURRENT))
+                    .thenReturn(List.of(mockVerifiableCredential));
+        } else {
+            when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
+                    .thenReturn(List.of(mockVerifiableCredential));
+        }
+
+        ProcessRequest event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", REINSTATE.name()))
+                        .build();
+
+        // Act
+        JourneyResponse journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(ipvSessionItem.getIpvSessionId(), REINSTATE);
+        verify(mockSessionCredentialsService)
+                .persistCredentials(List.of(mockVerifiableCredential), TEST_SESSION_ID, false);
+
+        assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldReturnErrorJourneyIfReinstateAndUnableToReadFromLongTermStore(
+            boolean evcsReadEnabled) throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(evcsReadEnabled);
+        if (evcsReadEnabled) {
+            when(mockEvcsService.getVerifiableCredentials(TEST_USER_ID, TEST_EVCS_TOKEN, CURRENT))
+                    .thenThrow(new CredentialParseException("Boop"));
+        } else {
+            when(mockVerifiableCredentialService.getVcs(TEST_USER_ID))
+                    .thenThrow(new CredentialParseException("Beep"));
+        }
+
+        var event =
+                ProcessRequest.processRequestBuilder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .featureSet(TEST_FEATURE_SET)
+                        .lambdaInput(Map.of("resetType", REINSTATE.name()))
+                        .build();
+
+        // Act
+        var journeyResponse =
+                OBJECT_MAPPER.convertValue(
+                        resetSessionIdentityHandler.handleRequest(event, mockContext),
+                        JourneyErrorResponse.class);
+
+        // Assert
+        verifyVotSetToP0();
+
+        verify(mockSessionCredentialsService)
+                .deleteSessionCredentialsForResetType(ipvSessionItem.getIpvSessionId(), REINSTATE);
+
+        assertEquals(JOURNEY_ERROR_PATH, journeyResponse.getJourney());
     }
 
     @Test

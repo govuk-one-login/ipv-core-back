@@ -24,7 +24,19 @@ Feature: Identity reuse update details failures
         When I submit a 'continue' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
-        Then I get a 'P0' identity
+        Then I get a 'P2' identity
+        When I start a new 'medium-confidence' journey
+        Then I get a 'page-ipv-reuse' page response
+
+    @FastFollow
+    Scenario: Given name change - fail-with-no-ci from DCMAW
+        Given I activate the 'updateDetailsAccountDeletion' feature set
+        When I submit 'kenneth-passport-verification-zero' details to the CRI stub
+        Then I get an 'update-details-failed' page response
+        When I submit a 'continue' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P2' identity
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
 

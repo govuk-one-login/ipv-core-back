@@ -5,6 +5,8 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -12,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.BatchProcessingException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -35,15 +38,12 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
-import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ADDRESS_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
-import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcNinoSuccessful;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
@@ -289,8 +289,10 @@ class SessionCredentialsServiceTest {
                     .delete(List.of(sessionFraudCredentialItem, sessionAddressCredentialItem));
         }
 
-        @Test
-        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcsForAll() throws Exception {
+        @ParameterizedTest
+        @EnumSource(names = {"ALL", "PENDING_F2F_ALL", "REINSTATE"})
+        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcs(
+                SessionCredentialsResetType resetType) throws Exception {
             var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
             var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
 
@@ -311,7 +313,7 @@ class SessionCredentialsServiceTest {
                                     sessionDcmawCredentialItem,
                                     sessionHmrcKbvCredentialItem));
 
-            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, ALL);
+            sessionCredentialService.deleteSessionCredentialsForResetType(SESSION_ID, resetType);
 
             verify(mockDataStore).getItems(SESSION_ID);
             verify(mockDataStore)
@@ -321,36 +323,6 @@ class SessionCredentialsServiceTest {
                                     sessionAddressCredentialItem,
                                     sessionDcmawCredentialItem,
                                     sessionHmrcKbvCredentialItem));
-        }
-
-        @Test
-        void deleteSessionCredentialsForResetTypeShouldDeleteAllVcsForPendingF2F()
-                throws Exception {
-            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
-            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
-            var f2fVc = generateVerifiableCredential("userId", F2F, vcClaim(Map.of()));
-
-            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
-            var sessionF2fCredentialItem = f2fVc.toSessionCredentialItem(SESSION_ID, true);
-
-            when(mockDataStore.getItems(SESSION_ID))
-                    .thenReturn(
-                            List.of(
-                                    sessionFraudCredentialItem,
-                                    sessionAddressCredentialItem,
-                                    sessionF2fCredentialItem));
-
-            sessionCredentialService.deleteSessionCredentialsForResetType(
-                    SESSION_ID, PENDING_F2F_ALL);
-
-            verify(mockDataStore).getItems(SESSION_ID);
-            verify(mockDataStore)
-                    .delete(
-                            List.of(
-                                    sessionFraudCredentialItem,
-                                    sessionAddressCredentialItem,
-                                    sessionF2fCredentialItem));
         }
 
         @Test
