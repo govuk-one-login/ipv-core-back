@@ -298,7 +298,7 @@ class ContractTest {
 
         // Assert
         assertThat(exception.getErrorResponse(), is(ErrorResponse.INVALID_TOKEN_REQUEST));
-        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_UNAUTHORIZED));
     }
 
     @NotNull
