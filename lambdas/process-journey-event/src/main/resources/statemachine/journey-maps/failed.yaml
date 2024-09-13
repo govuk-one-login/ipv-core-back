@@ -276,7 +276,7 @@ states:
       context: existingIdentityValid
     events:
       returnToRp:
-        targetState: RETURN_TO_RP
+        targetState: REINSTATE_EXISTING_IDENTITY
       delete:
         targetState: DELETE_HANDOVER_PAGE
 
