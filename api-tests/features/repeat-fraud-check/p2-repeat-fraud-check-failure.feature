@@ -19,17 +19,26 @@ Feature: Repeat fraud check failures
       Then I get a 'dcmaw' CRI response
 
     @FastFollow
-    Scenario: Given name change - DCMAW access denied OAuth error
+    Scenario: DCMAW access denied OAuth error
+      Given I activate the 'updateDetailsAccountDeletion' feature set
       When I get an 'access_denied' OAuth error from the CRI stub
-      Then I get an 'sorry-could-not-confirm-details' page response
-      When I submit a 'end' event
+      Then I get an 'update-details-failed' page response
+      When I submit a 'return-to-service' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
-    Scenario: Given name change - breaching CI received from DCMAW
+    @FastFollow
+    Scenario: User is able to delete details from update-details-failed screen
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I get an 'access_denied' OAuth error from the CRI stub
+      Then I get an 'update-details-failed' page response
+      When I submit a 'delete' event
+      Then I get a 'delete-handover' page response
+
+    Scenario: Breaching CI received from DCMAW
       When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
       When I submit a 'end' event
@@ -39,7 +48,27 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
 
-    Scenario: Given name change - zero score in fraud CRI
+    @FastFollow
+    Scenario: Breaching CI received from DCMAW
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'pyi-no-match' page response
+
+    @FastFollow
+    Scenario: Users able to delete account from sorry-could-not-confirm-details screen
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response
+      When I submit a 'delete' event
+      Then I get a 'delete-handover' page response
+
+    Scenario: Zero score in fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
@@ -53,7 +82,23 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
-    Scenario: Given name change - breaching CI received from fraud CRI
+    @FastFollow
+    Scenario: Zero score in fraud CRI
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-given-name-score-0' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+
+    Scenario: Breaching CI received from fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
@@ -67,7 +112,23 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
 
-    Scenario: Given name change - family name changed
+    @FastFollow
+    Scenario: Breaching CI received from fraud CRI
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-breaching-ci' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'pyi-no-match' page response
+
+    Scenario: Failed COI check
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
@@ -75,20 +136,30 @@ Feature: Repeat fraud check failures
       When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
 
-    Scenario: Given name change - breaching CI received from TICF CRI
+    @FastFollow
+    Scenario: Failed COI check
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+
+    Scenario: Breaching CI received from TICF CRI
+      Given TICF CRI will respond with default parameters and
+        | cis | BREACHING |
       When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-      Given TICF CRI will respond with default parameters and
-        | cis | BREACHING |
-      When I start a new 'medium-confidence' journey
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -98,19 +169,7 @@ Feature: Repeat fraud check failures
         | cis  | BREACHING      |
         | type | RiskAssessment |
 
-    Scenario: Given name change - failed COI check
-      When I submit 'alice-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'alice-score-2' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response
-      When I submit an 'end' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-    Scenario: Given name change - Fraud access denied OAuth error
+    Scenario: Fraud access denied OAuth error
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
       When I submit a 'next' event
@@ -124,9 +183,24 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
-  Rule: Update address only
+    @FastFollow
+    Scenario: Fraud access denied OAuth error
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I get an 'access_denied' OAuth error from the CRI stub
+      Then I get an 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
 
-    Scenario: Given name change - Address access denied OAuth error
+  Rule: Update address only
+    Background:
       Given the subject already has the following credentials
         | CRI     | scenario                     |
         | dcmaw   | kenneth-driving-permit-valid |
@@ -138,9 +212,23 @@ Feature: Repeat fraud check failures
       Then I get a 'confirm-your-details' page response
       When I submit a 'address-only' event
       Then I get an 'address' CRI response
+
+    Scenario: Address access denied OAuth error
       When I get an 'access_denied' OAuth error from the CRI stub
       Then I get an 'sorry-could-not-confirm-details' page response
       When I submit a 'end' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+      When I start a new 'medium-confidence' journey
+      Then I get a 'confirm-your-details' page response
+
+    @FastFollow
+    Scenario: Address access denied OAuth error
+      Given I activate the 'updateDetailsAccountDeletion' feature set
+      When I get an 'access_denied' OAuth error from the CRI stub
+      Then I get an 'sorry-could-not-confirm-details' page response
+      When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
