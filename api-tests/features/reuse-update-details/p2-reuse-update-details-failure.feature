@@ -31,6 +31,14 @@ Feature: Identity reuse update details failures
             Then I get a 'page-ipv-reuse' page response
 
         @FastFollow
+        Scenario: User is able to delete account from update-details-failed page
+            Given I activate the 'updateDetailsAccountDeletion' feature set
+            When I get an 'access_denied' OAuth error from the CRI stub
+            Then I get an 'update-details-failed' page response
+            When I submit a 'delete' event
+            Then I get a 'delete-handover' page response
+
+        @FastFollow
         Scenario: fail-with-no-ci from DCMAW
             Given I activate the 'updateDetailsAccountDeletion' feature set
             When I submit 'kenneth-passport-verification-zero' details to the CRI stub
@@ -63,6 +71,14 @@ Feature: Identity reuse update details failures
             Then I get a 'P0' identity
             When I start a new 'medium-confidence' journey
             Then I get a 'pyi-no-match' page response
+
+        @FastFollow
+        Scenario: User is able to delete account from sorry-could-not-confirm-details page
+            Given I activate the 'updateDetailsAccountDeletion' feature set
+            When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
+            Then I get a 'sorry-could-not-confirm-details' page response
+            When I submit a 'delete' event
+            Then I get a 'delete-handover' page response
 
         Scenario: Zero score in fraud CRI
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub

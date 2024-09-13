@@ -31,7 +31,7 @@ Feature: Repeat fraud check failures
       Then I get a 'confirm-your-details' page response
 
     @FastFollow
-    Scenario: User is able to delete details from update-details-failed screen
+    Scenario: User is able to delete account from update-details-failed screen
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I get an 'access_denied' OAuth error from the CRI stub
       Then I get an 'update-details-failed' page response
@@ -61,7 +61,7 @@ Feature: Repeat fraud check failures
       Then I get a 'pyi-no-match' page response
 
     @FastFollow
-    Scenario: Users able to delete account from sorry-could-not-confirm-details screen
+    Scenario: User is able to delete account from sorry-could-not-confirm-details screen
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I submit 'kenneth-driving-permit-breaching-ci' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
