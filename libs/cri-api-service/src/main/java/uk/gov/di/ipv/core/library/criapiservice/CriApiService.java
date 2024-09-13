@@ -50,6 +50,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -173,7 +174,10 @@ public class CriApiService {
 
             var signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(
-                            clientAuthClaims, signerFactory.getSigner());
+                            clientAuthClaims,
+                            signerFactory.getSigner(),
+                            configService.enabled(KID_JAR_HEADER),
+                            configService.getParameter(ConfigurationVariable.SIGNING_KEY_ID));
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
 
