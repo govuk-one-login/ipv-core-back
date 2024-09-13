@@ -19,7 +19,6 @@ spotless {
 		googleJavaFormat("1.13.0").aosp()
 		importOrder "", "javax", "java", "\\#"
 		endWithNewline()
-		toggleOffOn()
 	}
 	groovyGradle {
 		target '**/*.gradle'

@@ -11,7 +11,6 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.commons.codec.digest.DigestUtils;
 
 import java.util.Map;
 
@@ -21,24 +20,17 @@ public class JwtHelper {
 
     private JwtHelper() {}
 
-    public static <T> SignedJWT createSignedJwtFromObject(
-            T claimInput, JWSSigner signer, boolean isKidJarHeaderEnabled, String signingKeyId)
+    public static <T> SignedJWT createSignedJwtFromObject(T claimInput, JWSSigner signer)
             throws JOSEException {
-        JWSHeader jwsHeader = generateHeader(isKidJarHeaderEnabled, signingKeyId);
+        JWSHeader jwsHeader = generateHeader();
         JWTClaimsSet claimsSet = generateClaims(claimInput);
         SignedJWT signedJWT = new SignedJWT(jwsHeader, claimsSet);
         signedJWT.sign(signer);
         return signedJWT;
     }
 
-    private static JWSHeader generateHeader(boolean isKidJarHeaderEnabled, String signingKeyId) {
-        JWSHeader.Builder headerBuilder =
-                new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
-        if (isKidJarHeaderEnabled) {
-            String signingKid = DigestUtils.sha256Hex(signingKeyId);
-            headerBuilder.keyID(signingKid);
-        }
-        return headerBuilder.build();
+    private static JWSHeader generateHeader() {
+        return new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     }
 
     private static <T> JWTClaimsSet generateClaims(T claimInput) {

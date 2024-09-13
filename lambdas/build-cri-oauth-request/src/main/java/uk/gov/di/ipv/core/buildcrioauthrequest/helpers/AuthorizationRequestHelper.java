@@ -62,8 +62,7 @@ public class AuthorizationRequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
-        JWSHeader.Builder headerBuilder =
-                new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
+        var headerBuilder = new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
         if (configService.enabled(KID_JAR_HEADER)) {
             String signingKid = DigestUtils.sha256Hex(configService.getParameter(SIGNING_KEY_ID));
             headerBuilder.keyID(signingKid);

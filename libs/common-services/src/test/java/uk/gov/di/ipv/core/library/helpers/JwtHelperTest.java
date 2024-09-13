@@ -63,19 +63,10 @@ class JwtHelperTest {
         SharedClaimsResponse sharedClaimsResponse =
                 SharedClaimsResponse.from(Set.of(sharedClaims), null);
 
-        SignedJWT signedJWT =
-                JwtHelper.createSignedJwtFromObject(
-                        sharedClaimsResponse, signer, true, "testKeyId");
+        SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedClaimsResponse, signer);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
 
         assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK))));
-
-        // spotless:off
-        // SHA256 hash of "testKeyId"
-        String testKeyIdHash =
-                "faa7198cb31902b8a430502a9a91b095775354899e60f9f0365953004bd127fa"; // pragma: allowlist secret
-        // spotless:on
-        assertEquals(testKeyIdHash, signedJWT.getHeader().getKeyID());
 
         JsonNode claimsSet = objectMapper.readTree(generatedClaims.toString());
         JsonNode namePartsNode = claimsSet.get("name").get(0).get("nameParts").get(0);
