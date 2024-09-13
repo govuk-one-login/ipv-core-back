@@ -57,6 +57,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -81,6 +83,11 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String TEST_EMAIL_ADDRESS = "test@hotmail.com";
+    private static final String UNHASHED_KID = "testKeyId";
+    // spotless:off
+    private static final String HASHED_KID =
+            "faa7198cb31902b8a430502a9a91b095775354899e60f9f0365953004bd127fa"; // pragma: allowlist secret
+    // spotless:on
     private static final String OAUTH_STATE = SecureTokenHelper.getInstance().generate();
 
     private final SharedClaimsResponse sharedClaims =
@@ -110,10 +117,12 @@ class AuthorizationRequestHelperTest {
     }
 
     @Test
-    void shouldCreateSignedJWTWithCorrectClaims()
+    void shouldCreateSignedJWTWithCorrectHeaderAndClaims()
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
+        when(configService.enabled(KID_JAR_HEADER)).thenReturn(true);
+        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(UNHASHED_KID);
         when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
         when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
@@ -129,6 +138,7 @@ class AuthorizationRequestHelperTest {
                         null,
                         null);
 
+        assertEquals(HASHED_KID, result.getHeader().getKeyID());
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(
