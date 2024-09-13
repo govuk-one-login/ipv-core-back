@@ -9,6 +9,11 @@ states:
       next:
         targetState: EVALUATE_GPG45_SCORES
 
+  START_NO_STORE:
+    events:
+      next:
+        targetState: EVALUATE_GPG45_SCORES_NO_STORE
+
   # Parent states
   CRI_TICF_STATE:
     events:
@@ -43,6 +48,20 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
+  EVALUATE_GPG45_SCORES_NO_STORE:
+    response:
+      type: process
+      lambda: evaluate-gpg45-scores
+    events:
+      met:
+        targetState: CRI_TICF_BEFORE_RP_RETURN_NO_STORE
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+
   CRI_TICF_BEFORE_SUCCESS:
     response:
       type: process
@@ -51,6 +70,15 @@ states:
     events:
       next:
         targetState: STORE_IDENTITY_BEFORE_SUCCESS
+
+  CRI_TICF_BEFORE_RP_RETURN_NO_STORE:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: RETURN_TO_RP
 
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:

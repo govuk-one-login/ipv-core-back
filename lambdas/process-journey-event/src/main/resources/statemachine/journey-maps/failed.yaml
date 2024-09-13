@@ -251,9 +251,20 @@ states:
       pageId: update-details-failed
     events:
       continue:
-        targetState: RETURN_TO_RP
+        targetState: REINSTATE_EXISTING_IDENTITY
       delete:
         targetState: DELETE_HANDOVER_PAGE
+
+  REINSTATE_EXISTING_IDENTITY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: REINSTATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START_NO_STORE
 
   COULD_NOT_UPDATE_DETAILS_PAGE_RFC:
     response:
