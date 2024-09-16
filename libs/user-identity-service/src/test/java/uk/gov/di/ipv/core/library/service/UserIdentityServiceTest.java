@@ -1,12 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -20,13 +13,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
@@ -36,16 +26,15 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.ipv.core.library.helpers.TestVc;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.model.DrivingPermitDetails;
-import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -70,28 +59,18 @@ import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.IDENTITY_CHECK_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_BIRTH_DATE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_STRENGTH;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_VALIDITY;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_FAMILY_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_GIVEN_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_TYPE;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VERIFIABLE_CREDENTIAL_TYPE;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_NAME_PARTS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
+import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class UserIdentityServiceTest {
-    public static final JWSHeader JWS_HEADER =
-            new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     private static final String USER_ID_1 = "user-id-1";
-    private static ECDSASigner jwtSigner;
+
     private final ContraIndicators emptyContraIndicators =
             ContraIndicators.builder().usersContraIndicators(List.of()).build();
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
@@ -108,7 +87,6 @@ class UserIdentityServiceTest {
 
     @BeforeAll
     static void beforeAllSetUp() throws Exception {
-        jwtSigner = new ECDSASigner(ECKey.parse(EC_PRIVATE_KEY_JWK).toECPrivateKey());
         claimedIdentityConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI("http://example.com/token"))
@@ -170,19 +148,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -195,19 +173,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Corky", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -220,14 +198,14 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimmy", "Jones",
                                         ""))); // BAV cri doesn't provide birthdate
@@ -238,19 +216,18 @@ class UserIdentityServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingGivenName(String missingName)
-            throws Exception {
+    void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingGivenName(String missingName) {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         missingName, "Jones", "1000-01-01")));
 
@@ -266,19 +243,18 @@ class UserIdentityServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingFamilyName(String missingName)
-            throws Exception {
+    void areVCsCorrelatedShouldThrowExceptionWhenVcHasMissingFamilyName(String missingName) {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", missingName, "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -299,14 +275,14 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         missing, missing, "1000-01-01")));
 
@@ -316,24 +292,23 @@ class UserIdentityServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void areVCsCorrelatedShouldReturnFalseWhenMissingNameCredentialForBAVCRI(String missing)
-            throws Exception {
+    void areVCsCorrelatedShouldReturnFalseWhenMissingNameCredentialForBAVCRI(String missing) {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                DCMAW.getId(),
+                                DCMAW,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(missing, "Jones", missing)));
 
         // Act & Assert
@@ -351,19 +326,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jimmy", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -376,19 +351,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
 
@@ -398,23 +373,22 @@ class UserIdentityServiceTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    void areVCsCorrelatedShouldThrowExceptionWhenMissingBirthDateProperty(String missing)
-            throws Exception {
+    void areVCsCorrelatedShouldThrowExceptionWhenMissingBirthDateProperty(String missing) {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -435,18 +409,18 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -461,18 +435,18 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -485,19 +459,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01")));
 
@@ -510,19 +484,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Corky", "Jones", "1000-01-01", false)),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")));
 
@@ -535,19 +509,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                EXPERIAN_FRAUD.getId(),
+                                EXPERIAN_FRAUD,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "2000-01-01", false)));
 
@@ -560,19 +534,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01"))));
 
@@ -587,19 +561,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    ADDRESS,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    DCMAW,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", "1000-01-01")));
 
@@ -612,19 +586,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
 
@@ -637,19 +611,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Dimbo", "Bones", "1000-01-01")));
 
@@ -662,19 +636,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", "2000-01-01")));
 
@@ -684,23 +658,23 @@ class UserIdentityServiceTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void shouldThrowIfMissingGivenName(String missingName) throws Exception {
+        void shouldThrowIfMissingGivenName(String missingName) {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             missingName, "Bones", "1000-01-01")));
 
@@ -717,23 +691,23 @@ class UserIdentityServiceTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void shouldThrowIfMissingDob(String missingDob) throws Exception {
+        void shouldThrowIfMissingDob(String missingDob) {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Bones", missingDob)));
 
@@ -762,19 +736,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    ADDRESS,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    DCMAW,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "1000-01-01")));
 
@@ -788,19 +762,19 @@ class UserIdentityServiceTest {
             when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    ADDRESS.getId(),
+                                    ADDRESS,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    DCMAW.getId(),
+                                    DCMAW,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "1000-01-01")));
 
@@ -813,19 +787,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Bones", "1000-01-01")));
 
@@ -838,19 +812,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", "2000-01-01")));
 
@@ -861,23 +835,23 @@ class UserIdentityServiceTest {
         @MockitoSettings(strictness = LENIENT)
         @ParameterizedTest
         @NullAndEmptySource
-        void shouldThrowIfMissingFamilyName(String missingName) throws Exception {
+        void shouldThrowIfMissingFamilyName(String missingName) {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", missingName, "1000-01-01")));
 
@@ -896,23 +870,23 @@ class UserIdentityServiceTest {
 
         @ParameterizedTest
         @NullAndEmptySource
-        void shouldThrowIfMissingDob(String missingDob) throws Exception {
+        void shouldThrowIfMissingDob(String missingDob) {
             // Arrange
             var vcs =
                     List.of(
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Jimbo", "Jones", "1000-01-01")),
-                            TestFixtures.createVerifiableCredential(
+                            generateVerifiableCredential(
                                     USER_ID_1,
-                                    PASSPORT.getId(),
+                                    PASSPORT,
                                     createCredentialWithNameAndBirthDate(
                                             "Dimbo", "Jones", missingDob)));
 
@@ -951,9 +925,7 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals(
-                NamePart.NamePartType.GIVEN_NAME,
-                identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(GIVEN_NAME, identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -980,9 +952,7 @@ class UserIdentityServiceTest {
         // Assert
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
-        assertEquals(
-                NamePart.NamePartType.GIVEN_NAME,
-                identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(GIVEN_NAME, identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
 
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
@@ -1879,9 +1849,7 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals(
-                NamePart.NamePartType.GIVEN_NAME,
-                identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(GIVEN_NAME, identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -1900,9 +1868,7 @@ class UserIdentityServiceTest {
         assertEquals("test-sub", credentials.getSub());
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
-        assertEquals(
-                NamePart.NamePartType.GIVEN_NAME,
-                identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals(GIVEN_NAME, identityClaim.getName().get(0).getNameParts().get(0).getType());
         assertEquals("KENNETH", identityClaim.getName().get(0).getNameParts().get(0).getValue());
         assertEquals("1965-07-08", identityClaim.getBirthDate().get(0).getValue());
     }
@@ -1912,19 +1878,19 @@ class UserIdentityServiceTest {
         // Arrange
         var vcs =
                 List.of(
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                ADDRESS.getId(),
+                                ADDRESS,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                PASSPORT.getId(),
+                                PASSPORT,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
-                        TestFixtures.createVerifiableCredential(
+                        generateVerifiableCredential(
                                 USER_ID_1,
-                                BAV.getId(),
+                                BAV,
                                 createCredentialWithNameAndBirthDate(
                                         "Jimbo", "Jones", "1000-01-01")),
                         vcHmrcMigrationPCL200());
@@ -1975,78 +1941,68 @@ class UserIdentityServiceTest {
         params.forEach((key, value) -> when(mockConfigService.getParameter(key)).thenReturn(value));
     }
 
-    private String createCredentialWithNameAndBirthDate(
-            String givenName, String familyName, String birthDate) throws Exception {
+    private TestVc createCredentialWithNameAndBirthDate(
+            String givenName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
         return createCredentialWithNameAndBirthDate(
                 givenName, null, familyName, birthDateList, true);
     }
 
-    private String createCredentialWithNameAndBirthDate(
-            String givenName, String middleName, String familyName, String birthDate)
-            throws Exception {
+    private TestVc createCredentialWithNameAndBirthDate(
+            String givenName, String middleName, String familyName, String birthDate) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
         return createCredentialWithNameAndBirthDate(
                 givenName, middleName, familyName, birthDateList, true);
     }
 
-    private String createCredentialWithNameAndBirthDate(
-            String givenName, String familyName, String birthDate, boolean isSuccessful)
-            throws Exception {
+    private TestVc createCredentialWithNameAndBirthDate(
+            String givenName, String familyName, String birthDate, boolean isSuccessful) {
         var birthDateList = new ArrayList<String>();
         birthDateList.add(birthDate);
         return createCredentialWithNameAndBirthDate(
                 givenName, null, familyName, birthDateList, isSuccessful);
     }
 
-    private String createCredentialWithNameAndBirthDate(
-            String givenName, String familyName, List<String> birthDates) throws Exception {
+    private TestVc createCredentialWithNameAndBirthDate(
+            String givenName, String familyName, List<String> birthDates) {
         return createCredentialWithNameAndBirthDate(givenName, null, familyName, birthDates, true);
     }
 
-    private String createCredentialWithNameAndBirthDate(
+    private TestVc createCredentialWithNameAndBirthDate(
             String givenName,
             String middleName,
             String familyName,
             List<String> birthDates,
-            boolean isSuccessful)
-            throws Exception {
-        var credentialSubject = new HashMap<String, Object>();
-        var evidence = new HashMap<String, Object>();
-        var vcClaim = new HashMap<String, Object>();
-
-        vcClaim.put(
-                VC_TYPE, new String[] {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE});
-
-        vcClaim.put(VC_EVIDENCE, List.of(evidence));
-        evidence.put(VC_EVIDENCE_STRENGTH, isSuccessful ? 4 : 0);
-        evidence.put(VC_EVIDENCE_VALIDITY, isSuccessful ? 2 : 0);
-
-        vcClaim.put(VC_CREDENTIAL_SUBJECT, credentialSubject);
-        List<NameParts> nameParts =
-                new ArrayList<>(
-                        List.of(
-                                new NameParts(givenName, VC_GIVEN_NAME),
-                                new NameParts(familyName, VC_FAMILY_NAME)));
-        if (middleName != null) {
-            nameParts.add(1, new NameParts(middleName, VC_GIVEN_NAME));
-        }
-
-        credentialSubject.put(VC_NAME, List.of(new Name(nameParts)));
-
-        credentialSubject.put(VC_BIRTH_DATE, birthDates.stream().map(BirthDate::new).toList());
-
-        JWTClaimsSet claims =
-                new JWTClaimsSet.Builder()
-                        .claim(VC_CLAIM, vcClaim)
-                        .issuer(PASSPORT.getId())
+            boolean isSuccessful) {
+        var evidence =
+                TestVc.TestEvidence.builder()
+                        .strengthScore(isSuccessful ? 4 : 0)
+                        .validityScore(isSuccessful ? 2 : 0)
                         .build();
 
-        SignedJWT signedJWT = new SignedJWT(JWS_HEADER, claims);
-        signedJWT.sign(jwtSigner);
+        var nameParts =
+                new ArrayList<>(
+                        List.of(
+                                createNamePart(givenName, GIVEN_NAME),
+                                createNamePart(familyName, FAMILY_NAME)));
+        if (middleName != null) {
+            nameParts.add(1, createNamePart(middleName, GIVEN_NAME));
+        }
 
-        return signedJWT.serialize();
+        var credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of(Map.of(VC_NAME_PARTS, nameParts)))
+                        .birthDate(
+                                birthDates.stream()
+                                        .map(BirthDateGenerator::createBirthDate)
+                                        .toList())
+                        .build();
+
+        return TestVc.builder()
+                .credentialSubject(credentialSubject)
+                .evidence(List.of(evidence))
+                .build();
     }
 }
