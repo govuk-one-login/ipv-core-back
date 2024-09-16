@@ -62,17 +62,20 @@ export const generateProcessCriCallbackBody = (
 
 export const generateCriStubBody = async (
   criId: string,
-  scenario: string,
+  scenario: string | undefined,
   redirectUrl: string,
   nbf?: number,
-  f2f?: boolean,
+  f2f?: {
+    sendVcToQueue: boolean;
+    sendErrorToQueue: boolean;
+  },
   mitigatedCis?: string[],
 ): Promise<CriStubRequest> => {
   const urlParams = new URL(redirectUrl).searchParams;
   const f2fRequest = f2f
     ? {
-        sendVcToQueue: true,
-        sendErrorToQueue: false,
+        sendVcToQueue: f2f.sendVcToQueue,
+        sendErrorToQueue: f2f.sendErrorToQueue,
         queueName: config.asyncQueue.name,
         delaySeconds: config.asyncQueue.delaySeconds,
       }
@@ -84,12 +87,12 @@ export const generateCriStubBody = async (
   return {
     clientId: urlParams.get("client_id") as string,
     request: urlParams.get("request") as string,
-    credentialSubjectJson: await readJsonFile(
-      criId,
-      scenario,
-      "credentialSubject",
-    ),
-    evidenceJson: await readJsonFile(criId, scenario, "evidence"),
+    credentialSubjectJson: scenario
+      ? await readJsonFile(criId, scenario, "credentialSubject")
+      : undefined,
+    evidenceJson: scenario
+      ? await readJsonFile(criId, scenario, "evidence")
+      : undefined,
     nbf,
     f2f: f2fRequest,
     mitigations,
