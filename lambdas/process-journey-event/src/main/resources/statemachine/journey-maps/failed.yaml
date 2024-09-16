@@ -28,11 +28,27 @@ states:
           successful: false
         checkFeatureFlag:
           updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
+            checkJourneyContext:
+              rfc:
+                targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
+                auditEvents:
+                  - IPV_USER_DETAILS_UPDATE_END
+                auditContext:
+                  successful: false
+
+  FAILED_CONFIRM_DETAILS_INVALID_ID:
+    events:
+      next:
+        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: false
 
   FAILED_UPDATE_DETAILS:
     events:
@@ -51,7 +67,7 @@ states:
               successful: false
             checkJourneyContext:
               rfc:
-                targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC
+                targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY
                 auditEvents:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
@@ -131,21 +147,40 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION:
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID
       fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+
+  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID:
+    response:
+      type: process
+      lambda: call-ticf-cri
+    events:
+      next:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
+      enhanced-verification:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
+      alternate-doc-invalid-dl:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
+      alternate-doc-invalid-passport:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
+      fail-with-ci:
+        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -164,26 +199,26 @@ states:
       alternate-doc-invalid-passport:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
       fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_RFC:
+  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY:
     response:
       type: process
       lambda: call-ticf-cri
     events:
       next:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       enhanced-verification:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       alternate-doc-invalid-dl:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       alternate-doc-invalid-passport:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_RFC
+        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -234,13 +269,24 @@ states:
       end:
         targetState: RETURN_TO_RP
 
-  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION:
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID:
     response:
       type: page
       pageId: sorry-could-not-confirm-details
-      context: deleteDetailsReuse
+      context: existingIdentityValid
     events:
-      end:
+      returnToRp:
+        targetState: REINSTATE_EXISTING_IDENTITY
+      delete:
+        targetState: DELETE_HANDOVER_PAGE
+
+  COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_INVALID_ID:
+    response:
+      type: page
+      pageId: sorry-could-not-confirm-details
+      context: existingIdentityInvalid
+    events:
+      returnToRp:
         targetState: RETURN_TO_RP
       delete:
         targetState: DELETE_HANDOVER_PAGE
@@ -255,6 +301,19 @@ states:
       delete:
         targetState: DELETE_HANDOVER_PAGE
 
+  COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY:
+    response:
+      type: page
+      pageId: update-details-failed
+      context: existingIdentityInvalid
+    events:
+      delete:
+        targetState: DELETE_HANDOVER_PAGE
+      return-to-service:
+        targetState: RETURN_TO_RP
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_ABORTED
+
   REINSTATE_EXISTING_IDENTITY:
     response:
       type: process
@@ -265,19 +324,6 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START_NO_STORE
-
-  COULD_NOT_UPDATE_DETAILS_PAGE_RFC:
-    response:
-      type: page
-      pageId: update-details-failed
-      context: repeatFraudCheck
-    events:
-      delete:
-        targetState: DELETE_HANDOVER_PAGE
-      return-to-service:
-        targetState: RETURN_TO_RP
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
 
   DELETE_HANDOVER_PAGE:
     response:
