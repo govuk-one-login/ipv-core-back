@@ -17,6 +17,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -36,6 +37,8 @@ import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 
 public class AuthorizationRequestHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -59,8 +62,12 @@ public class AuthorizationRequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
-        JWSHeader header =
-                new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
+        var headerBuilder = new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
+        if (configService.enabled(KID_JAR_HEADER)) {
+            String signingKid = DigestUtils.sha256Hex(configService.getParameter(SIGNING_KEY_ID));
+            headerBuilder.keyID(signingKid);
+        }
+        JWSHeader header = headerBuilder.build();
 
         JWTClaimsSet authClaimsSet =
                 new AuthorizationRequest.Builder(
