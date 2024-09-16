@@ -459,7 +459,7 @@ public interface VcFixtures {
                         .build());
     }
 
-    private static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
+    static VerifiableCredential generateAddressVc(TestVc.TestCredentialSubject subject) {
         return generateVerifiableCredential(
                 TEST_SUBJECT,
                 Cri.ADDRESS,

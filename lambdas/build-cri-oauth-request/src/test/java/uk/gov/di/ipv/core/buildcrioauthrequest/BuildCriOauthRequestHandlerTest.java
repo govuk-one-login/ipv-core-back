@@ -31,9 +31,10 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
+import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -65,7 +66,6 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +74,6 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -98,7 +96,6 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_4;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -121,7 +118,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String TEST_LANGUAGE = "en";
-    private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/%s";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final String TEST_NI_NUMBER = "AA000003D";
@@ -140,6 +136,8 @@ class BuildCriOauthRequestHandlerTest {
             SecureTokenHelper.getInstance().generate();
     public static final String MAIN_CONNECTION = "main";
 
+    public static final SharedClaims TEST_SHARED_CLAIMS = new SharedClaims();
+
     @Mock private Context context;
     @Mock private ConfigService configService;
     @Mock private UserIdentityService userIdentityService;
@@ -149,6 +147,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private SessionCredentialsService mockSessionCredentialService;
+    @Mock private MockedStatic<SharedClaimsHelper> mockSharedClaimsHelper;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
     @Mock private SignerFactory mockSignerFactory;
     @InjectMocks private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
@@ -267,6 +266,10 @@ class BuildCriOauthRequestHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
         ipvSessionItem.setTargetVot(Vot.P2);
+
+        mockSharedClaimsHelper
+                .when(() -> SharedClaimsHelper.generateSharedClaims(any(), any(), any()))
+                .thenReturn(TEST_SHARED_CLAIMS);
     }
 
     @AfterEach
@@ -469,7 +472,7 @@ class BuildCriOauthRequestHandlerTest {
         assertTrue(request.isPresent());
         JWEObject jweObject = JWEObject.parse(request.get().getValue());
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValidForAllVCsAreNotSuccess(jweObject.getPayload().toString());
+        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
         assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
 
@@ -801,575 +804,17 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.getMessage());
     }
 
-    private void assertSharedClaimsJWTIsValid(String request)
-            throws ParseException, JsonProcessingException, JOSEException {
-        // Arrange
+    private void assertSharedClaimsJWTIsValid(String request) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(request);
 
-        // Act
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+        SharedClaims sharedClaims =
+                OBJECT_MAPPER.convertValue(
+                        signedJWT.getJWTClaimsSet().getClaim("shared_claims"), SharedClaims.class);
 
-        // Assert
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
-        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
-        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
-
-        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
-        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
-
-        JsonNode address = vcAttributes.get("address");
-
-        List<Address> addressList = new ArrayList<>();
-        for (JsonNode jo : address) {
-            addressList.add(OBJECT_MAPPER.convertValue(jo, Address.class));
-        }
-
-        // Find the latest Address VC (from which we take the address)
-        Address streetAddress =
-                addressList.stream()
-                        .filter(x -> "NotDowningStreet".equals(x.getStreetName()))
-                        .findAny()
-                        .orElse(null);
-        Address postCode =
-                addressList.stream()
-                        .filter(x -> "SW2A 3BB".equals(x.getPostalCode()))
-                        .findAny()
-                        .orElse(null);
-
-        assertNotNull(streetAddress);
-        assertNotNull(postCode);
-
-        assertEquals(2, (vcAttributes.get("name")).size());
-        assertEquals(1, (vcAttributes.get("address")).size());
-        assertEquals(2, (vcAttributes.get("birthDate")).size());
+        assertEquals(TEST_SHARED_CLAIMS, sharedClaims);
 
         ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
         assertTrue(signedJWT.verify(verifier));
-    }
-
-    private void assertSharedClaimsJWTIsValidForAllVCsAreNotSuccess(String request)
-            throws ParseException, JsonProcessingException, JOSEException {
-        // Arrange
-        SignedJWT signedJWT = SignedJWT.parse(request);
-
-        // Act
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        // Assert
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
-        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
-        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
-
-        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
-        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
-
-        JsonNode address = vcAttributes.get("address");
-        assertTrue(address.isEmpty());
-        JsonNode name = vcAttributes.get("name");
-        assertTrue(name.isEmpty());
-        JsonNode birtDate = vcAttributes.get("birthDate");
-        assertTrue(birtDate.isEmpty());
-
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        assertTrue(signedJWT.verify(verifier));
-    }
-
-    @Test
-    void shouldDeduplicateSharedClaims() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(1, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(2, sharedClaims.get("address").size());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(2, sharedClaims.get("name").size());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldDeduplicateNamesThatAppearInDifferentVCs() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_4),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode names = claimsSet.get(TEST_SHARED_CLAIMS).get("name");
-        JsonNode name1NameParts = names.get(1).get("nameParts");
-        JsonNode name2NameParts = names.get(0).get("nameParts");
-
-        assertEquals("GivenName", name1NameParts.get(0).get("type").asText());
-        assertEquals("Alice", name1NameParts.get(0).get("value").asText());
-        assertEquals("GivenName", name1NameParts.get(1).get("type").asText());
-        assertEquals("Jane", name1NameParts.get(1).get("value").asText());
-        assertEquals("GivenName", name1NameParts.get(2).get("type").asText());
-        assertEquals("Laura", name1NameParts.get(2).get("value").asText());
-        assertEquals("FamilyName", name1NameParts.get(3).get("type").asText());
-        assertEquals("Doe", name1NameParts.get(3).get("value").asText());
-        assertEquals("FamilyName", name1NameParts.get(4).get("type").asText());
-        assertEquals("Musk", name1NameParts.get(4).get("value").asText());
-
-        assertEquals("GivenName", name2NameParts.get(0).get("type").asText());
-        assertEquals("Alice", name2NameParts.get(0).get("value").asText());
-        assertEquals("GivenName", name2NameParts.get(1).get("type").asText());
-        assertEquals("Jane", name2NameParts.get(1).get("value").asText());
-        assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
-        assertEquals("Doe", name2NameParts.get(2).get("value").asText());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldRemoveExtraAddressClaimsAndOnlyUseValuesFromTheAddressVC() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(3, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(1, sharedClaims.get("address").size());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldNotIncludeFailedVcsInTheSharedClaims() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, false);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(1, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(2, sharedClaims.get("address").size());
-        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn("name,birthDate,address,emailAddress");
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        ipvSessionItem.setEmailAddress(null);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(3, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(1, sharedClaims.get("address").size());
-        assertFalse(sharedClaims.has("emailAddress"));
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
-        assertNull(evidenceRequested);
-    }
-
-    @Test
-    void shouldOnlyEmailForF2FAndAllowCRIConfiguredSharedClaimAttr() throws Exception {
-        // Arrange
-        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
-                .thenReturn(f2FOauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
-                .thenReturn("name,birthDate,address,emailAddress");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(3, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(1, sharedClaims.get("address").size());
-        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
-        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
-        assertEquals(3, evidenceRequested.get("strengthScore").asInt());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
     @Test
@@ -1434,14 +879,11 @@ class BuildCriOauthRequestHandlerTest {
         JWEObject jweObject = JWEObject.parse(request.get().getValue());
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
 
+        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(3, sharedClaims.get("name").size());
-        assertEquals(2, sharedClaims.get("birthDate").size());
-        assertEquals(1, sharedClaims.get("address").size());
-        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
         JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertEquals(2, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
@@ -1559,76 +1001,6 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
         assertEquals(1, evidenceRequested.get("verificationScore").asInt());
-    }
-
-    @Test
-    void shouldIncludeSocialSecurityRecordInSharedClaimsIfConfigured() throws Exception {
-        // Arrange
-        ipvSessionItem.setTargetVot(P2);
-        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
-                .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
-                .thenReturn("name,birthDate,address,socialSecurityRecord");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(1, sharedClaims.get("socialSecurityRecord").size());
-        assertEquals(
-                TEST_NI_NUMBER,
-                sharedClaims.get("socialSecurityRecord").get(0).get("personalNumber").asText());
-        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
     }
 
     @ParameterizedTest

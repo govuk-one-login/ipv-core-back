@@ -16,8 +16,8 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
-import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.AuthorizationRequestHelper;
+import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -49,10 +49,6 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.AddressAssertion;
-import uk.gov.di.model.IdentityCheckSubject;
-import uk.gov.di.model.PersonWithDocuments;
-import uk.gov.di.model.PersonWithIdentity;
 
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
@@ -63,11 +59,9 @@ import java.util.Map;
 import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -88,11 +82,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 public class BuildCriOauthRequestHandler
         implements RequestHandler<CriJourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String SHARED_CLAIM_ATTR_NAME = "name";
-    public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
-    public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
-    public static final String SHARED_CLAIM_ATTR_EMAIL = "emailAddress";
-    public static final String SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD = "socialSecurityRecord";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
@@ -323,7 +312,9 @@ public class BuildCriOauthRequestHandler
         var vcs =
                 sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
-        var sharedClaims = getSharedAttributesForUser(ipvSessionItem, vcs, cri);
+        var sharedClaims =
+                SharedClaimsHelper.generateSharedClaims(
+                        ipvSessionItem.getEmailAddress(), vcs, getAllowedSharedClaimAttrs(cri));
 
         if (cri.equals(F2F)) {
             evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
@@ -391,81 +382,6 @@ public class BuildCriOauthRequestHandler
                 };
 
         return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);
-    }
-
-    private SharedClaims getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, Cri cri) {
-        var sharedClaims = new SharedClaims();
-        var criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(cri);
-
-        // Email address is provided separately in the session, not from a VC
-        sharedClaims.setEmailAddress(ipvSessionItem.getEmailAddress());
-
-        // Other shared claims are added from successful VCs
-        for (var vc : vcs) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                var credentialSubject = vc.getCredential().getCredentialSubject();
-
-                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
-                        && personWithIdentity.getName() != null) {
-                    sharedClaims.getName().addAll(personWithIdentity.getName());
-                }
-                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
-                        && personWithIdentity.getBirthDate() != null) {
-                    sharedClaims.getBirthDate().addAll(personWithIdentity.getBirthDate());
-                }
-                if (ADDRESS.equals(vc.getCri())
-                        && credentialSubject instanceof AddressAssertion addressAssertion
-                        && addressAssertion.getAddress() != null) {
-                    sharedClaims.getAddress().addAll(addressAssertion.getAddress());
-                }
-                // TODO: should update tests to avoid needing this
-                if (ADDRESS.equals(vc.getCri())
-                        && credentialSubject instanceof IdentityCheckSubject addressAssertion) {
-                    sharedClaims.setAddress(
-                            addressAssertion.getAddress().stream().collect(Collectors.toSet()));
-                }
-                if (credentialSubject instanceof PersonWithDocuments personWithDocuments
-                        && personWithDocuments.getSocialSecurityRecord() != null) {
-                    sharedClaims
-                            .getSocialSecurityRecord()
-                            .addAll(personWithDocuments.getSocialSecurityRecord());
-                }
-            }
-        }
-
-        LOGGER.info(
-                LogHelper.buildLogMessage("Found shared claims")
-                        .with("names", sharedClaims.getName().size())
-                        .with("birthDates", sharedClaims.getBirthDate().size())
-                        .with("addresses", sharedClaims.getAddress().size())
-                        .with("emails", sharedClaims.getEmailAddress() == null ? 0 : 1)
-                        .with(
-                                "socialSecurityRecords",
-                                sharedClaims.getSocialSecurityRecord().size()));
-
-        stripDisallowedSharedClaims(sharedClaims, criAllowedSharedClaimAttrs);
-
-        return sharedClaims;
-    }
-
-    private void stripDisallowedSharedClaims(
-            SharedClaims credentialsSharedClaims, List<String> allowedSharedAttr) {
-        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_NAME)) {
-            credentialsSharedClaims.setName(null);
-        }
-        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_BIRTH_DATE)) {
-            credentialsSharedClaims.setBirthDate(null);
-        }
-        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
-            credentialsSharedClaims.setAddress(null);
-        }
-        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_EMAIL)) {
-            credentialsSharedClaims.setEmailAddress(null);
-        }
-        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD)) {
-            credentialsSharedClaims.setSocialSecurityRecord(null);
-        }
     }
 
     private List<String> getAllowedSharedClaimAttrs(Cri cri) {
