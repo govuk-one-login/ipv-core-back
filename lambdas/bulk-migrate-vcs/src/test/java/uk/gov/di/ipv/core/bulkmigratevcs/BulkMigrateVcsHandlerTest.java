@@ -136,12 +136,6 @@ class BulkMigrateVcsHandlerTest {
 
         verify(mockEvcsClient).storeUserVCs(eq("migrate"), evcsCreateListCaptor.capture());
         verify(auditService, times(5)).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
-                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-        assertEquals(
-                AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
-                auditEventArgumentCaptor.getAllValues().get(4).getEventName());
 
         var evcsCreateUserVCsDtoList = evcsCreateListCaptor.getValue();
 
@@ -209,6 +203,34 @@ class BulkMigrateVcsHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+    }
+
+    @Test
+    void handlerShouldCorrectlySendAuditEvents() throws Exception {
+        var reportUserIdentityItems =
+                List.of(
+                        new ReportUserIdentityItem("migrate", "P2", 3, List.of("vc"), false),
+                        new ReportUserIdentityItem("skipNonP2", "P0", 3, List.of("vc"), false));
+
+        mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
+
+        when(notMigratedVc.getMigrated()).thenReturn(null);
+        when(notMigratedVc.getVcString()).thenReturn("vcString");
+
+        when(mockVerifiableCredentialService.getVcs("migrate"))
+                .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+
+        bulkMigrateVcsHandler.handleRequest(
+                new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1), mockContext);
+
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
+                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
     }
 
     @Test
