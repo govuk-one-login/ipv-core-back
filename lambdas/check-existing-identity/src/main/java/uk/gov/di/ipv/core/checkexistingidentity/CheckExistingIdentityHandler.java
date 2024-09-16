@@ -58,6 +58,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -66,6 +67,7 @@ import java.util.stream.Collectors;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -183,7 +185,7 @@ public class CheckExistingIdentityHandler
 
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler(ConfigService configService) {
-        this.configService = configService;
+        this.configService = ConfigService.create();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
@@ -371,9 +373,15 @@ public class CheckExistingIdentityHandler
 
     private VerifiableCredentialBundle getVerifiableCredentials(
             String userId, String evcsAccessToken)
-            throws CredentialParseException, EvcsServiceException {
+            throws CredentialParseException, EvcsServiceException, VerifiableCredentialException {
 
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
+
+        if (vcsAreFromEvcsMigrationRollbackBatch(tacticalVcs)) {
+            tacticalVcs.forEach(vc -> vc.setBatchId(null));
+            verifiableCredentialService.updateIdentity(tacticalVcs);
+            return new VerifiableCredentialBundle(tacticalVcs, false, false);
+        }
 
         if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
             var bundle = getEvcsCredentialBundle(userId, evcsAccessToken, tacticalVcs);
@@ -383,6 +391,23 @@ public class CheckExistingIdentityHandler
         }
 
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
+    }
+
+    private boolean vcsAreFromEvcsMigrationRollbackBatch(List<VerifiableCredential> tacticalVcs) {
+        var batchIds =
+                tacticalVcs.stream().map(VerifiableCredential::getBatchId).distinct().toList();
+        if (batchIds.size() > 1) {
+            LOGGER.warn(LogHelper.buildLogMessage("More than one batch ID found in tactical VCs"));
+            return false;
+        } else if (batchIds.isEmpty()
+                || !new HashSet<>(
+                                configService.getStringListParameter(
+                                        BULK_MIGRATION_ROLLBACK_BATCHES))
+                        .containsAll(batchIds)) {
+            return false;
+        }
+        LOGGER.info(LogHelper.buildLogMessage("Previously migrated identity in rollback batch"));
+        return true;
     }
 
     private VerifiableCredentialBundle getEvcsCredentialBundle(

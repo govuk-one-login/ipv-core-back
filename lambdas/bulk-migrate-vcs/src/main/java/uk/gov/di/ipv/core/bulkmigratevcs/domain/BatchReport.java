@@ -19,9 +19,11 @@ public class BatchReport {
     private int totalFailedTacticalRead;
     private int totalFailedTacticalWrite;
     private int totalFailedEvcsWrite;
+    private int totalFailedTooManyBatchIds;
     private final List<String> allFailedTacticalReadHashUserIds;
     private final List<String> allFailedTacticalWriteHashUserIds;
     private final List<String> allFailedEvcsWriteHashUserIds;
+    private final List<String> allFailedTooManyBatchIdsHashUserIds;
     @Setter private String nextBatchExclusiveStartKey;
     @Setter private String exitReason;
 
@@ -31,6 +33,7 @@ public class BatchReport {
         this.allFailedTacticalReadHashUserIds = new ArrayList<>();
         this.allFailedTacticalWriteHashUserIds = new ArrayList<>();
         this.allFailedEvcsWriteHashUserIds = new ArrayList<>();
+        this.allFailedTooManyBatchIdsHashUserIds = new ArrayList<>();
     }
 
     public void addPageSummary(PageSummary summary) {
@@ -42,11 +45,13 @@ public class BatchReport {
         totalFailedTacticalRead += summary.getFailedTacticalRead();
         totalFailedTacticalWrite += summary.getFailedTacticalWrite();
         totalFailedEvcsWrite += summary.getFailedEvcsWrite();
+        totalFailedTooManyBatchIds += summary.getFailedTooManyBatchIds();
         totalEvaluated += summary.getTotal();
 
         allFailedTacticalReadHashUserIds.addAll(summary.getFailedTacticalReadHashUserIds());
         allFailedTacticalWriteHashUserIds.addAll(summary.getFailedTacticalWriteHashUserIds());
         allFailedEvcsWriteHashUserIds.addAll(summary.getFailedEvcsWriteHashUserIds());
+        allFailedTooManyBatchIdsHashUserIds.addAll(summary.getFailedTooManyBatchIdsHashUserIds());
 
         this.pageSummaries.add(summary);
     }

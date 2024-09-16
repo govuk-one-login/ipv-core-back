@@ -141,7 +141,7 @@ public class BuildProvenUserIdentityDetailsHandler
             if (identityClaim.isEmpty()) {
                 LOGGER.error(LogHelper.buildLogMessage("Failed to generate identity claim"));
                 throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                        500, ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM);
             }
 
             return identityClaim.get();
