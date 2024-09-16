@@ -1,13 +1,11 @@
 package uk.gov.di.ipv.core.bulkmigratevcs;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
@@ -44,17 +42,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.MIGRATED;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
 class BulkMigrateVcsHandlerTest {
@@ -74,7 +69,7 @@ class BulkMigrateVcsHandlerTest {
     @Mock private PageIterable<ReportUserIdentityItem> mockPageIterable;
     @Mock private Context mockContext;
     @Mock private VerifiableCredential migratedVc;
-    @Mock private VerifiableCredential notMigratedVc;
+    @Mock private VerifiableCredential notMigratedVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
     @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
@@ -83,6 +78,13 @@ class BulkMigrateVcsHandlerTest {
     @BeforeEach
     public void setup() {
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
+    }
+
+    @AfterEach
+    void checkAuditEventWait() {
+        InOrder auditInOrder = inOrder(auditService);
+        auditInOrder.verify(auditService).awaitAuditEvents();
+        auditInOrder.verifyNoMoreInteractions();
     }
 
     @Test
@@ -101,7 +103,7 @@ class BulkMigrateVcsHandlerTest {
 
         when(migratedVc.getMigrated()).thenReturn(Instant.now());
         when(notMigratedVc.getMigrated()).thenReturn(null);
-        when(notMigratedVc.getVcString()).thenReturn("vcString");
+        when(notMigratedVc.getVcString()).thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString());
 
         when(mockVerifiableCredentialService.getVcs("migrate"))
                 .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));
@@ -140,7 +142,8 @@ class BulkMigrateVcsHandlerTest {
         var evcsCreateUserVCsDtoList = evcsCreateListCaptor.getValue();
 
         assertEquals(3, evcsCreateUserVCsDtoList.size());
-        assertEquals("vcString", evcsCreateUserVCsDtoList.get(0).vc());
+        assertEquals(
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString(), evcsCreateUserVCsDtoList.get(0).vc());
         assertEquals(CURRENT, evcsCreateUserVCsDtoList.get(0).state());
         assertEquals(MIGRATED, evcsCreateUserVCsDtoList.get(0).provenance());
         assertEquals(
@@ -215,7 +218,7 @@ class BulkMigrateVcsHandlerTest {
         mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(notMigratedVc.getMigrated()).thenReturn(null);
-        when(notMigratedVc.getVcString()).thenReturn("vcString");
+        when(notMigratedVc.getVcString()).thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString());
 
         when(mockVerifiableCredentialService.getVcs("migrate"))
                 .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));

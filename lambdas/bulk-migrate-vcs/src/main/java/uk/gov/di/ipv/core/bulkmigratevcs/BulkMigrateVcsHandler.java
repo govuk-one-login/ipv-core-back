@@ -81,12 +81,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
 
     @ExcludeFromGeneratedCoverageReport
     public BulkMigrateVcsHandler() {
-        this(ConfigService.create());
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    public BulkMigrateVcsHandler(ConfigService configService) {
-        this.configService = configService;
+        this.configService = ConfigService.create();
         this.auditService = AuditService.create(configService);
         this.reportUserIdentityScanDynamoDataStore =
                 new ScanDynamoDataStore<>(
@@ -188,6 +183,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                 }
             }
         } finally {
+            auditService.awaitAuditEvents();
             forkJoinPool.shutdown();
         }
 
@@ -236,9 +232,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             auditService.sendAuditEvent(
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
-                            batchId,
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
-                            new AuditExtensionsEvcsSkippedMigration(batchId, "already_migrated")));
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSkippedMigration(batchId, "not_p2_identity")));
             pageSummary.incrementSkippedNonP2();
             return;
         }
@@ -257,8 +253,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
-                            new AuditExtensionsEvcsFailedMigration(batchId, 0, e.getMessage())));
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
+                            new AuditExtensionsEvcsFailedMigration(
+                                    batchId, 0, "Failed to fetch VCs from tactical store")));
             pageSummary.incrementFailedTacticalRead(reportItem.getHashUserId());
             return;
         }
@@ -275,7 +272,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsSkippedMigration(
                                     batchId, "missing_credentials")));
             pageSummary.incrementSkippedNoVcs();
@@ -294,7 +291,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsSkippedMigration(batchId, "already_migrated")));
             pageSummary.incrementSkippedAlreadyMigrated();
             return;
@@ -312,7 +309,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsSkippedMigration(
                                     batchId, "partially_migrated")));
             pageSummary.incrementSkippedPartiallyMigrated();
@@ -334,9 +331,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsFailedMigration(
-                                    batchId, vcs.size(), e.getMessage())));
+                                    batchId, vcs.size(), "Failed to write VCs to the EVCS")));
             pageSummary.incrementFailedEvcsWrite(reportItem.getHashUserId());
             return;
         }
@@ -344,19 +341,12 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         try {
             setMigratedOnTacticalStoreVcs(vcs, timestamp);
             LOGGER.info(annotateLog("Migrated", reportItem, batchId, pageSummary));
-            List<String> vcsCredentials =
-                    vcs.stream()
-                            .map(
-                                    vc -> {
-                                        String[] parts = vc.getVcString().split("\\.");
-                                        return parts.length > 2 ? parts[2] : "";
-                                    })
-                            .toList();
+            var vcsCredentials = vcs.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
             auditService.sendAuditEvent(
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsSuccessfulMigration(
                                     batchId, vcsCredentials, vcs.size())));
             pageSummary.incrementMigrated();
@@ -371,9 +361,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsFailedMigration(
-                                    batchId, vcs.size(), e.getMessage())));
+                                    batchId, vcs.size(), "Failed to write VCs to tactical store")));
             pageSummary.incrementFailedTacticalWrite(reportItem.getHashUserId());
         }
     }

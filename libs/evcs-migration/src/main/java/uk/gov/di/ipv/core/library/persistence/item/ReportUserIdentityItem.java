@@ -41,6 +41,11 @@ public class ReportUserIdentityItem implements PersistenceItem {
         return hashUserId;
     }
 
+    @JsonIgnore
+    public String getUserId() {
+        return userId;
+    }
+
     @Override
     public void setTtl(long ttl) {
         throw new UnsupportedOperationException("VC store items do not use TTL");

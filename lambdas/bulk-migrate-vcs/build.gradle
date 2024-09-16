@@ -23,7 +23,8 @@ dependencies {
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly libs.junitPlatform
 }
