@@ -20,7 +20,7 @@ public class NameGenerator {
                         NamePartGenerator.createNamePart(
                                 givenName, NamePart.NamePartType.GIVEN_NAME),
                         NamePartGenerator.createNamePart(
-                                givenName, NamePart.NamePartType.FAMILY_NAME)));
+                                familyName, NamePart.NamePartType.FAMILY_NAME)));
     }
 
     public static class NamePartGenerator {

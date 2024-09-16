@@ -32,31 +32,9 @@ public class SharedClaimsHelper {
         sharedClaims.setEmailAddress(emailAddress);
 
         // Other shared claims are added from successful VCs
-        for (var vc : vcs) {
-            if (VcHelper.isSuccessfulVc(vc)) {
-                var credentialSubject = vc.getCredential().getCredentialSubject();
-
-                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
-                        && personWithIdentity.getName() != null) {
-                    sharedClaims.getName().addAll(personWithIdentity.getName());
-                }
-                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
-                        && personWithIdentity.getBirthDate() != null) {
-                    sharedClaims.getBirthDate().addAll(personWithIdentity.getBirthDate());
-                }
-                if (ADDRESS.equals(vc.getCri())
-                        && credentialSubject instanceof AddressAssertion addressAssertion
-                        && addressAssertion.getAddress() != null) {
-                    sharedClaims.getAddress().addAll(addressAssertion.getAddress());
-                }
-                if (credentialSubject instanceof PersonWithDocuments personWithDocuments
-                        && personWithDocuments.getSocialSecurityRecord() != null) {
-                    sharedClaims
-                            .getSocialSecurityRecord()
-                            .addAll(personWithDocuments.getSocialSecurityRecord());
-                }
-            }
-        }
+        vcs.stream()
+                .filter(VcHelper::isSuccessfulVc)
+                .forEach(vc -> addSharedClaimsFromVc(sharedClaims, vc));
 
         LOGGER.info(
                 LogHelper.buildLogMessage("Found shared claims")
@@ -71,6 +49,30 @@ public class SharedClaimsHelper {
         stripDisallowedSharedClaims(sharedClaims, allowedSharedClaims);
 
         return sharedClaims;
+    }
+
+    private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc) {
+        var credentialSubject = vc.getCredential().getCredentialSubject();
+
+        if (credentialSubject instanceof PersonWithIdentity personWithIdentity
+                && personWithIdentity.getName() != null) {
+            sharedClaims.getName().addAll(personWithIdentity.getName());
+        }
+        if (credentialSubject instanceof PersonWithIdentity personWithIdentity
+                && personWithIdentity.getBirthDate() != null) {
+            sharedClaims.getBirthDate().addAll(personWithIdentity.getBirthDate());
+        }
+        if (ADDRESS.equals(vc.getCri())
+                && credentialSubject instanceof AddressAssertion addressAssertion
+                && addressAssertion.getAddress() != null) {
+            sharedClaims.getAddress().addAll(addressAssertion.getAddress());
+        }
+        if (credentialSubject instanceof PersonWithDocuments personWithDocuments
+                && personWithDocuments.getSocialSecurityRecord() != null) {
+            sharedClaims
+                    .getSocialSecurityRecord()
+                    .addAll(personWithDocuments.getSocialSecurityRecord());
+        }
     }
 
     private static void stripDisallowedSharedClaims(

@@ -112,7 +112,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
     private static final String IPV_ISSUER = "http://www.example.com/issuer";
     private static final String ADDRESS_ISSUER = "http://www.example.com/address/issuer";
-    private static final String CRI_AUDIENCE = "http://www.example.com/audience";
     private static final String IPV_CLIENT_ID = "ipv-core";
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
@@ -120,7 +119,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_LANGUAGE = "en";
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/%s";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
-    private static final String TEST_NI_NUMBER = "AA000003D";
     private static final String CONTEXT = "context";
     private static final String TEST_CONTEXT = "test_context";
     private static final String CRI_WITH_CONTEXT =

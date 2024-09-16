@@ -34,7 +34,7 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator.create
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 import static uk.gov.di.ipv.core.library.helpers.vocab.SocialSecurityRecordDetailsGenerator.createSocialSecurityRecordDetails;
 
-public class SharedClaimsHelperTest {
+class SharedClaimsHelperTest {
     private static final List<String> ALL_ATTRIBUTES =
             List.of(
                     SHARED_CLAIM_ATTR_NAME,

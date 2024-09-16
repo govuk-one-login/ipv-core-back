@@ -36,7 +36,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 
 @ExtendWith(MockitoExtension.class)
 class JwtHelperTest {
-    private final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Data
     private static final class ExamplePayload {
