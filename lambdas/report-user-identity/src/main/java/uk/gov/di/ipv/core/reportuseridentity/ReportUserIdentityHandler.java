@@ -17,6 +17,8 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.DynamoDbHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
+import uk.gov.di.ipv.core.library.persistence.ScanDynamoDataStore;
+import uk.gov.di.ipv.core.library.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -25,8 +27,6 @@ import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingRequest;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportProcessingResult;
 import uk.gov.di.ipv.core.reportuseridentity.domain.ReportSummary;
 import uk.gov.di.ipv.core.reportuseridentity.exceptions.StopBeforeLambdaTimeoutException;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.ScanDynamoDataStore;
-import uk.gov.di.ipv.core.reportuseridentity.persistence.item.ReportUserIdentityItem;
 import uk.gov.di.ipv.core.reportuseridentity.service.ReportUserIdentityService;
 
 import java.io.IOException;

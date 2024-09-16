@@ -23,6 +23,7 @@ public class LogHelper {
 
     public enum LogField {
         LOG_ACCESS_TOKEN("accessToken"),
+        LOG_BATCH_ID("batchId"),
         LOG_CI_SCORE("ciScore"),
         LOG_CLIENT_ID("clientId"),
         LOG_CLIENT_OAUTH_SESSION_ID("clientOAuthSessionId"),
@@ -43,6 +44,7 @@ public class LogHelper {
         LOG_FEATURE_SET("featureSet"),
         LOG_GOVUK_SIGNIN_JOURNEY_ID("govuk_signin_journey_id"),
         LOG_GPG45_PROFILE("gpg45Profile"),
+        LOG_HASH_USER_ID("hashUserId"),
         LOG_IS_USER_INITIATED("isUserInitiated"),
         LOG_IPV_SESSION_ID("ipvSessionId"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),

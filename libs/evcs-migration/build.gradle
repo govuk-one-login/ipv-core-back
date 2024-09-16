@@ -1,0 +1,28 @@
+plugins {
+	id 'java'
+}
+
+dependencies {
+
+	implementation platform(libs.awsSdkBom),
+			libs.bundles.log4j,
+			libs.awsSdkDynamodbEnhanced,
+			libs.commonsCodec,
+			libs.jacksonDatabind,
+			project(":libs:common-services")
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	useJUnitPlatform()
+}

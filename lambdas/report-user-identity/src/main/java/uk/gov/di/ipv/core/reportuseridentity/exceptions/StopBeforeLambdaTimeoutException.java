@@ -4,11 +4,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class StopBeforeLambdaTimeoutException extends Exception {
-    public StopBeforeLambdaTimeoutException(String message) {
-        super(message);
+    public StopBeforeLambdaTimeoutException() {
+        super();
     }
 
-    public StopBeforeLambdaTimeoutException(String message, Throwable cause) {
-        super(message, cause);
+    public StopBeforeLambdaTimeoutException(String message) {
+        super(message);
     }
 }

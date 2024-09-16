@@ -9,6 +9,7 @@ public class VerifiableCredentialException extends Exception implements ErrorRes
     private final int responseCode;
 
     public VerifiableCredentialException(int responseCode, ErrorResponse errorResponse) {
+        super(errorResponse.getMessage());
         this.errorResponse = errorResponse;
         this.responseCode = responseCode;
     }
