@@ -3,8 +3,6 @@ package uk.gov.di.ipv.core.buildcrioauthrequest;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
@@ -18,6 +16,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -30,8 +29,6 @@ import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.SharedClaims;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -52,18 +49,21 @@ import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.AddressAssertion;
+import uk.gov.di.model.IdentityCheckSubject;
+import uk.gov.di.model.PersonWithDocuments;
+import uk.gov.di.model.PersonWithIdentity;
 
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
@@ -76,8 +76,6 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EV
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
@@ -90,7 +88,6 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_P
 public class BuildCriOauthRequestHandler
         implements RequestHandler<CriJourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
@@ -326,8 +323,7 @@ public class BuildCriOauthRequestHandler
         var vcs =
                 sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
-        SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributesForUser(ipvSessionItem, vcs, cri);
+        var sharedClaims = getSharedAttributesForUser(ipvSessionItem, vcs, cri);
 
         if (cri.equals(F2F)) {
             evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
@@ -336,7 +332,7 @@ public class BuildCriOauthRequestHandler
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaimsResponse,
+                        sharedClaims,
                         signerFactory.getSigner(),
                         oauthCriConfig,
                         configService,
@@ -397,70 +393,63 @@ public class BuildCriOauthRequestHandler
         return new EvidenceRequest(SCORING_POLICY_GPG45, null, verificationScoreRequired);
     }
 
-    private SharedClaimsResponse getSharedAttributesForUser(
-            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, Cri cri)
-            throws HttpResponseExceptionWithErrorBody {
+    private SharedClaims getSharedAttributesForUser(
+            IpvSessionItem ipvSessionItem, List<VerifiableCredential> vcs, Cri cri) {
+        var sharedClaims = new SharedClaims();
+        var criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(cri);
 
-        Set<SharedClaims> sharedClaimsSet = new HashSet<>();
-        List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(cri);
-        boolean hasAddressVc = false;
+        // Email address is provided separately in the session, not from a VC
+        sharedClaims.setEmailAddress(ipvSessionItem.getEmailAddress());
+
+        // Other shared claims are added from successful VCs
         for (var vc : vcs) {
-            try {
-                if (VcHelper.isSuccessfulVc(vc)) {
-                    JsonNode credentialSubject =
-                            OBJECT_MAPPER
-                                    .readTree(
-                                            SignedJWT.parse(vc.getVcString())
-                                                    .getPayload()
-                                                    .toString())
-                                    .path(VC_CLAIM)
-                                    .path(VC_CREDENTIAL_SUBJECT);
-                    if (credentialSubject.isMissingNode()) {
-                        LOGGER.error(
-                                LogHelper.buildLogMessage(
-                                        ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
-                    }
+            if (VcHelper.isSuccessfulVc(vc)) {
+                var credentialSubject = vc.getCredential().getCredentialSubject();
 
-                    SharedClaims credentialsSharedClaims =
-                            OBJECT_MAPPER.readValue(
-                                    credentialSubject.toString(), SharedClaims.class);
-                    if (ADDRESS.equals(vc.getCri())) {
-                        hasAddressVc = true;
-                        sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
-                    } else if (hasAddressVc) {
-                        credentialsSharedClaims.setAddress(null);
-                    }
-                    verifyForAllowedSharedClaimAttrs(
-                            credentialsSharedClaims, criAllowedSharedClaimAttrs);
-                    sharedClaimsSet.add(credentialsSharedClaims);
+                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
+                        && personWithIdentity.getName() != null) {
+                    sharedClaims.getName().addAll(personWithIdentity.getName());
                 }
-            } catch (JsonProcessingException e) {
-                LOGGER.error(LogHelper.buildErrorMessage("Failed to get Shared Attributes.", e));
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
-            } catch (ParseException e) {
-                LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials.", e));
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                if (credentialSubject instanceof PersonWithIdentity personWithIdentity
+                        && personWithIdentity.getBirthDate() != null) {
+                    sharedClaims.getBirthDate().addAll(personWithIdentity.getBirthDate());
+                }
+                if (ADDRESS.equals(vc.getCri())
+                        && credentialSubject instanceof AddressAssertion addressAssertion
+                        && addressAssertion.getAddress() != null) {
+                    sharedClaims.getAddress().addAll(addressAssertion.getAddress());
+                }
+                // TODO: should update tests to avoid needing this
+                if (ADDRESS.equals(vc.getCri())
+                        && credentialSubject instanceof IdentityCheckSubject addressAssertion) {
+                    sharedClaims.setAddress(
+                            addressAssertion.getAddress().stream().collect(Collectors.toSet()));
+                }
+                if (credentialSubject instanceof PersonWithDocuments personWithDocuments
+                        && personWithDocuments.getSocialSecurityRecord() != null) {
+                    sharedClaims
+                            .getSocialSecurityRecord()
+                            .addAll(personWithDocuments.getSocialSecurityRecord());
+                }
             }
         }
-        return SharedClaimsResponse.from(
-                sharedClaimsSet,
-                getEmailAddressFromIpvSession(ipvSessionItem, criAllowedSharedClaimAttrs));
+
+        LOGGER.info(
+                LogHelper.buildLogMessage("Found shared claims")
+                        .with("names", sharedClaims.getName().size())
+                        .with("birthDates", sharedClaims.getBirthDate().size())
+                        .with("addresses", sharedClaims.getAddress().size())
+                        .with("emails", sharedClaims.getEmailAddress() == null ? 0 : 1)
+                        .with(
+                                "socialSecurityRecords",
+                                sharedClaims.getSocialSecurityRecord().size()));
+
+        stripDisallowedSharedClaims(sharedClaims, criAllowedSharedClaimAttrs);
+
+        return sharedClaims;
     }
 
-    private String getEmailAddressFromIpvSession(
-            IpvSessionItem ipvSessionItem, List<String> allowedSharedAttr) {
-        if (ipvSessionItem.getEmailAddress() != null
-                && allowedSharedAttr.contains(SHARED_CLAIM_ATTR_EMAIL)) {
-            return ipvSessionItem.getEmailAddress();
-        }
-        return null;
-    }
-
-    private void verifyForAllowedSharedClaimAttrs(
+    private void stripDisallowedSharedClaims(
             SharedClaims credentialsSharedClaims, List<String> allowedSharedAttr) {
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_NAME)) {
             credentialsSharedClaims.setName(null);
@@ -470,6 +459,9 @@ public class BuildCriOauthRequestHandler
         }
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
             credentialsSharedClaims.setAddress(null);
+        }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_EMAIL)) {
+            credentialsSharedClaims.setEmailAddress(null);
         }
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD)) {
             credentialsSharedClaims.setSocialSecurityRecord(null);

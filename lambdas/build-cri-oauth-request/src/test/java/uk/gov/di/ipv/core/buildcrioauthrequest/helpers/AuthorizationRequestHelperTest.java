@@ -20,17 +20,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
+import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.PostalAddress;
+import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -44,7 +43,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -83,13 +81,13 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_EMAIL_ADDRESS = "test@hotmail.com";
     private static final String OAUTH_STATE = SecureTokenHelper.getInstance().generate();
 
-    private final SharedClaimsResponse sharedClaims =
-            new SharedClaimsResponse(
-                    Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
-                    Set.of(new BirthDate("2011-01-01")),
-                    Set.of(Address.builder().build()),
+    private final SharedClaims sharedClaims =
+            new SharedClaims(
+                    Set.of(NameGenerator.createName("Test", "User")),
+                    Set.of(BirthDateGenerator.createBirthDate("2011-01-01")),
+                    Set.of(new PostalAddress()),
                     TEST_EMAIL_ADDRESS,
-                    Set.of(new SocialSecurityRecord()));
+                    Set.of(new SocialSecurityRecordDetails()));
 
     private ECDSASigner signer;
 
@@ -135,7 +133,11 @@ class AuthorizationRequestHelperTest {
                 TEST_JOURNEY_ID,
                 result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
-        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
+        assertEquals(
+                sharedClaims,
+                objectMapper.convertValue(
+                        result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS),
+                        SharedClaims.class));
         assertEquals(OAUTH_STATE, result.getJWTClaimsSet().getClaim("state"));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
