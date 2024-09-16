@@ -67,7 +67,7 @@ Feature: F2F Volume Control
       | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid |
       | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       |
 
-  Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without identity
+  Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without an identity
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
@@ -77,7 +77,7 @@ Feature: F2F Volume Control
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-  Scenario: User can use F2F to receive identity from the prove-identity-another-type-photo-id page
+  Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
