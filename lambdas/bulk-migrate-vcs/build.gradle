@@ -10,6 +10,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
+			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(":libs:evcs-migration"),
 			project(":libs:evcs-service"),

@@ -14,7 +14,14 @@ import uk.gov.di.ipv.core.bulkmigratevcs.domain.PageSummary;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsFailedMigration;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsSkippedMigration;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsSuccessfulMigration;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
@@ -25,6 +32,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DynamoDataStore;
 import uk.gov.di.ipv.core.library.persistence.ScanDynamoDataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ReportUserIdentityItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -53,21 +61,33 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     private final VerifiableCredentialService verifiableCredentialService;
     private final EvcsClient evcsClient;
     private final ForkJoinPoolFactory forkJoinPoolFactory;
+    private final ConfigService configService;
+    private final AuditService auditService;
 
     public BulkMigrateVcsHandler(
             ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore,
             VerifiableCredentialService verifiableCredentialService,
             EvcsClient evcsClient,
-            ForkJoinPoolFactory forkJoinPoolFactory) {
+            ForkJoinPoolFactory forkJoinPoolFactory,
+            ConfigService configService,
+            AuditService auditService) {
         this.reportUserIdentityScanDynamoDataStore = reportUserIdentityScanDynamoDataStore;
         this.verifiableCredentialService = verifiableCredentialService;
         this.evcsClient = evcsClient;
         this.forkJoinPoolFactory = forkJoinPoolFactory;
+        this.configService = configService;
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BulkMigrateVcsHandler() {
-        var configService = ConfigService.create();
+        this(ConfigService.create());
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public BulkMigrateVcsHandler(ConfigService configService) {
+        this.configService = configService;
+        this.auditService = AuditService.create(configService);
         this.reportUserIdentityScanDynamoDataStore =
                 new ScanDynamoDataStore<>(
                         configService.getEnvironmentVariable(
@@ -207,13 +227,18 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             ReportUserIdentityItem reportItem, PageSummary pageSummary, String batchId) {
         // Skip any non P2 identities
         if (!Vot.P2.name().equals(reportItem.getIdentity())) {
-            // Send skipped audit event
             LOGGER.info(
                     annotateLog(
                             "Skipping migration - not a P2 identity",
                             reportItem,
                             batchId,
                             pageSummary));
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                            batchId,
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSkippedMigration(batchId, "already_migrated")));
             pageSummary.incrementSkippedNonP2();
             return;
         }
@@ -228,6 +253,12 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     e,
                     batchId,
                     pageSummary);
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsFailedMigration(batchId, 0, e.getMessage())));
             pageSummary.incrementFailedTacticalRead(reportItem.getHashUserId());
             return;
         }
@@ -240,7 +271,13 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             reportItem,
                             batchId,
                             pageSummary));
-            // Send skipped audit event
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSkippedMigration(
+                                    batchId, "missing_credentials")));
             pageSummary.incrementSkippedNoVcs();
             return;
         }
@@ -253,7 +290,12 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             reportItem,
                             batchId,
                             pageSummary));
-            // Send skipped audit event
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSkippedMigration(batchId, "already_migrated")));
             pageSummary.incrementSkippedAlreadyMigrated();
             return;
         }
@@ -266,7 +308,13 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             reportItem,
                             batchId,
                             pageSummary));
-            // Send skipped audit event
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSkippedMigration(
+                                    batchId, "partially_migrated")));
             pageSummary.incrementSkippedPartiallyMigrated();
             return;
         }
@@ -282,7 +330,13 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     e,
                     batchId,
                     pageSummary);
-            // Send failed audit event
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsFailedMigration(
+                                    batchId, vcs.size(), e.getMessage())));
             pageSummary.incrementFailedEvcsWrite(reportItem.getHashUserId());
             return;
         }
@@ -290,7 +344,21 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         try {
             setMigratedOnTacticalStoreVcs(vcs, timestamp);
             LOGGER.info(annotateLog("Migrated", reportItem, batchId, pageSummary));
-            // Send migrated audit event
+            List<String> vcsCredentials =
+                    vcs.stream()
+                            .map(
+                                    vc -> {
+                                        String[] parts = vc.getVcString().split("\\.");
+                                        return parts.length > 2 ? parts[2] : "";
+                                    })
+                            .toList();
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsSuccessfulMigration(
+                                    batchId, vcsCredentials, vcs.size())));
             pageSummary.incrementMigrated();
         } catch (Exception e) {
             logError(
@@ -299,7 +367,13 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                     e,
                     batchId,
                     pageSummary);
-            // Send failed audit event
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(reportItem.getHashUserId(), "", "", ""),
+                            new AuditExtensionsEvcsFailedMigration(
+                                    batchId, vcs.size(), e.getMessage())));
             pageSummary.incrementFailedTacticalWrite(reportItem.getHashUserId());
         }
     }

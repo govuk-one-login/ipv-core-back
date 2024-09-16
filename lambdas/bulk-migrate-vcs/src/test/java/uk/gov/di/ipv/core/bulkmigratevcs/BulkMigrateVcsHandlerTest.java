@@ -17,6 +17,8 @@ import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.RequestBatchDetails;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
@@ -25,6 +27,8 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.ScanDynamoDataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ReportUserIdentityItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
@@ -46,6 +50,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -70,6 +75,9 @@ class BulkMigrateVcsHandlerTest {
     @Mock private Context mockContext;
     @Mock private VerifiableCredential migratedVc;
     @Mock private VerifiableCredential notMigratedVc;
+    @Mock private ConfigService configService;
+    @Mock private AuditService auditService;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
     @InjectMocks BulkMigrateVcsHandler bulkMigrateVcsHandler;
 
     @BeforeEach
@@ -105,6 +113,7 @@ class BulkMigrateVcsHandlerTest {
 
         when(mockVerifiableCredentialService.getVcs("skipPartiallyMigrated"))
                 .thenReturn(List.of(migratedVc, migratedVc, notMigratedVc));
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
 
         var report =
                 bulkMigrateVcsHandler.handleRequest(
@@ -126,6 +135,13 @@ class BulkMigrateVcsHandlerTest {
         assertEquals("Scan complete", report.getExitReason());
 
         verify(mockEvcsClient).storeUserVCs(eq("migrate"), evcsCreateListCaptor.capture());
+        verify(auditService, times(5)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
+                auditEventArgumentCaptor.getAllValues().get(4).getEventName());
 
         var evcsCreateUserVCsDtoList = evcsCreateListCaptor.getValue();
 
@@ -160,6 +176,7 @@ class BulkMigrateVcsHandlerTest {
         mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(notMigratedVc.getMigrated()).thenReturn(null);
+        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
 
         when(mockVerifiableCredentialService.getVcs(any()))
                 .thenThrow(new CredentialParseException("Boop"))
@@ -188,6 +205,10 @@ class BulkMigrateVcsHandlerTest {
         assertTrue(report.getAllFailedEvcsWriteHashUserIds().get(0).startsWith("04b"));
         assertEquals(1, report.getAllFailedTacticalWriteHashUserIds().size());
         assertTrue(report.getAllFailedTacticalWriteHashUserIds().get(0).startsWith("f34"));
+        verify(auditService, times(3)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
     }
 
     @Test
