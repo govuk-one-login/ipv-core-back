@@ -220,8 +220,7 @@ WEB_DL_OR_PASSPORT:
         f2f:
           exitEventToEmit: end
         returnToRp:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     CRI_DRIVING_LICENCE:
       response:
         type: cri
@@ -259,8 +258,7 @@ WEB_DL_OR_PASSPORT:
         met:
           exitEventToEmit: next
         unmet:
-          targetJourney: FAILED
-          targetState: FAILED
+          exitEventToEmit: failed
     PROVE_ANOTHER_WAY_AFTER_DL:
       response:
         type: page
@@ -272,8 +270,7 @@ WEB_DL_OR_PASSPORT:
         f2f:
           exitEventToEmit: end
         returnToRp:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
 
     # Invalid passport mitigation routes
     MITIGATION_PP_NO_MATCH:
@@ -295,8 +292,7 @@ WEB_DL_OR_PASSPORT:
         next:
           targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
         end:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     MITIGATION_PP_NO_MATCH_ANOTHER_WAY:
       response:
         type: page
@@ -305,8 +301,7 @@ WEB_DL_OR_PASSPORT:
         next:
           targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
         end:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     MITIGATION_DL_CRI_DRIVING_LICENCE:
       response:
         type: cri
@@ -326,16 +321,14 @@ WEB_DL_OR_PASSPORT:
         back:
           targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
         returnToRp:
-          targetJourney: FAILED
-          targetState: FAILED_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     MITIGATION_DL_ADDRESS_AND_FRAUD:
       nestedJourney: ADDRESS_AND_FRAUD
       exitEvents:
         next:
           targetState: MITIGATION_CHECK_FRAUD_SCORE
         enhanced-verification:
-          targetJourney: FAILED
-          targetState: FAILED
+          exitEventToEmit: failed
     MITIGATION_CHECK_FRAUD_SCORE:
       response:
         type: process
@@ -347,8 +340,7 @@ WEB_DL_OR_PASSPORT:
         met:
           exitEventToEmit: alternate-doc-next
         unmet:
-          targetJourney: FAILED
-          targetState: FAILED
+          exitEventToEmit: failed
 
     # Invalid DL mitigation routes
     MITIGATION_DL_NO_MATCH:
@@ -370,8 +362,7 @@ WEB_DL_OR_PASSPORT:
         next:
           targetState: MITIGATION_PP_CRI_UK_PASSPORT
         end:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     MITIGATION_DL_NO_MATCH_ANOTHER_WAY:
       response:
         type: page
@@ -380,8 +371,7 @@ WEB_DL_OR_PASSPORT:
         next:
           targetState: MITIGATION_PP_CRI_UK_PASSPORT
         end:
-          targetJourney: INELIGIBLE
-          targetState: INELIGIBLE_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp
     MITIGATION_PP_CRI_UK_PASSPORT:
       response:
         type: cri
@@ -398,8 +388,7 @@ WEB_DL_OR_PASSPORT:
         next:
           exitEventToEmit: alternate-doc-next
         enhanced-verification:
-          targetJourney: FAILED
-          targetState: FAILED
+          exitEventToEmit: failed
     MITIGATION_PP_PROVE_ANOTHER_WAY:
       response:
         type: page
@@ -409,5 +398,4 @@ WEB_DL_OR_PASSPORT:
         back:
           targetState: MITIGATION_PP_CRI_UK_PASSPORT
         returnToRp:
-          targetJourney: FAILED
-          targetState: FAILED_SKIP_MESSAGE
+          exitEventToEmit: return-to-rp

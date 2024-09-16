@@ -242,6 +242,12 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_ESCAPE
+      return-to-rp:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+      failed:
+        targetJourney: FAILED
+        targetState: FAILED
 
   PYI_ESCAPE:
     response:
