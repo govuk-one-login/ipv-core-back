@@ -138,3 +138,17 @@ Feature: P2 F2F journey
       # Initial journey
       When I get an 'temporarily_unavailable' OAuth error from the CRI stub
       Then I get a 'pyi-technical' page response
+
+    Scenario Outline: Async queue error
+      When I get an error from the async CRI stub
+      Then I get a 'page-face-to-face-handoff' page response
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'pyi-f2f-technical' page response
+
+  Scenario: f2f PYI escpae route
+    Given I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit an 'end' event
+      Then I get a 'pyi-escape' page response
