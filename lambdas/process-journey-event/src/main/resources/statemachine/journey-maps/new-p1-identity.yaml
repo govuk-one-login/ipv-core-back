@@ -220,37 +220,15 @@ states:
     nestedJourney: WEB_DL_OR_PASSPORT
     exitEvents:
       next-dl:
-        targetState: CRI_DWP_KBV_J7
-        checkIfDisabled:
-          dwpKbv:
-            targetState: CRI_NINO_J6
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: KBV_PHOTO_ID
+        targetEntryEvent: next
       next-passport:
-        targetState: CRI_DWP_KBV_J7
-        checkIfDisabled:
-          dwpKbv:
-            targetState: CRI_NINO_J6
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: KBV_PHOTO_ID
+        targetEntryEvent: next
       alternate-doc-next-dl:
-        targetState: MITIGATION_CRI_DWP_KBV
-        checkIfDisabled:
-          dwpKbv:
-            targetState: MITIGATION_PP_CRI_NINO
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: MITIGATION_KBVS
       alternate-doc-next-passport:
-        targetState: MITIGATION_CRI_DWP_KBV
-        checkIfDisabled:
-          dwpKbv:
-            targetState: MITIGATION_PP_CRI_NINO
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+        targetState: MITIGATION_KBVS
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -331,20 +309,9 @@ states:
       lambda: build-client-oauth-response
 
   # Common pages
-  PRE_EXPERIAN_KBV_TRANSITION_PAGE:
-    response:
-      type: page
-      pageId: page-pre-experian-kbv-transition
-    events:
-      next:
-        targetState: CRI_EXPERIAN_KBV
-
-  CRI_EXPERIAN_KBV:
-    response:
-      type: cri
-      criId: kbv
-    parent: CRI_STATE
-    events:
+  KBV_PHOTO_ID:
+    nestedJourney: KBVS
+    exitEvents:
       fail-with-no-ci:
         targetState: PYI_CRI_ESCAPE
         checkIfDisabled:
@@ -408,127 +375,6 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
 
-  # HMRC KBV journey (J6)
-  CRI_NINO_J6:
-    response:
-      type: cri
-      criId: nino
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CRI_HMRC_KBV_J6
-      fail-with-no-ci:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  CRI_HMRC_KBV_J6:
-    response:
-      type: cri
-      criId: hmrcKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
-      invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  CRI_HMRC_KBV_NO_PHOTO_ID:
-    response:
-      type: cri
-      criId: hmrcKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      enhanced-verification:
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
-      invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
-      access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
-
-  # DWP KBV journey (J7)
-  CRI_DWP_KBV_J7:
-    response:
-      type: cri
-      criId: dwpKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
-
-  CRI_DWP_KBV_NO_PHOTO_ID:
-    response:
-      type: cri
-      criId: dwpKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      invalid-request:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
-      access-denied:
-        targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
-      enhanced-verification:
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
-        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
-
   # No photo id journey
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
     response:
@@ -563,36 +409,15 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
-        checkIfDisabled:
-          dwpKbv:
-            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+        targetState: KBV_NO_PHOTO_ID
+        targetEntryEvent: next-with-nino
       enhanced-verification:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
-        checkIfDisabled:
-          dwpKbv:
-            targetState: CRI_HMRC_KBV_NO_PHOTO_ID
-            checkIfDisabled:
-              hmrcKbv:
-                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+        targetState: KBV_NO_PHOTO_ID
+        targetEntryEvent: next-with-nino
 
-  PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
-    response:
-      type: page
-      pageId: page-pre-experian-kbv-transition
-    events:
-      next:
-        targetState: CRI_EXPERIAN_KBV_NO_PHOTO_ID
-
-  CRI_EXPERIAN_KBV_NO_PHOTO_ID:
-    response:
-      type: cri
-      criId: kbv
-    parent: CRI_STATE
-    events:
+  KBV_NO_PHOTO_ID:
+    nestedJourney: KBVS
+    exitEvents:
       fail-with-no-ci:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
         checkIfDisabled:
@@ -883,71 +708,15 @@ states:
         targetState: INELIGIBLE
 
   # Common Mitigation states - invalid-dl/invalid-passport
-  MITIGATION_PP_CRI_NINO:
-    response:
-      type: cri
-      criId: nino
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: MITIGATION_CRI_HMRC_KBV
-      fail-with-no-ci:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:
-    response:
-      type: page
-      pageId: page-pre-experian-kbv-transition
-    events:
-      next:
-        targetState: MITIGATION_CRI_EXPERIAN_KBV
-
-  MITIGATION_CRI_EXPERIAN_KBV:
-    response:
-      type: cri
-      criId: kbv
-    parent: CRI_STATE
-    events:
+  MITIGATION_KBVS:
+    nestedJourney: KBVS
+    exitEvents:
       fail-with-no-ci:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
-
-  MITIGATION_CRI_HMRC_KBV:
-    response:
-      type: cri
-      criId: hmrcKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
-      invalid-request:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      access-denied:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
-
-  MITIGATION_CRI_DWP_KBV:
-    response:
-      type: cri
-      criId: dwpKbv
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
-      invalid-request:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      access-denied:
-        targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED

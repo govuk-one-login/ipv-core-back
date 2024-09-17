@@ -375,3 +375,83 @@ WEB_DL_OR_PASSPORT:
           targetState: MITIGATION_PP_CRI_UK_PASSPORT
         returnToRp:
           exitEventToEmit: return-to-rp
+
+KBVS:
+  name: KBV challenge routing
+  description: >-
+    The combined journey for enabled KBV CRIs.
+  entryEvents:
+    next:
+      targetState: CRI_DWP_KBV
+      checkIfDisabled:
+        dwpKbv:
+          targetState: CRI_NINO
+          checkIfDisabled:
+            hmrcKbv:
+              targetState: PRE_EXPERIAN_PAGE
+    next-with-nino:
+      targetState: CRI_DWP_KBV
+      checkIfDisabled:
+        dwpKbv:
+          targetState: CRI_HMRC_KBV
+          checkIfDisabled:
+            hmrcKbv:
+              targetState: PRE_EXPERIAN_PAGE
+  nestedJourneyStates:
+    CRI_NINO:
+      response:
+        type: cri
+        criId: nino
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_HMRC_KBV
+        fail-with-no-ci:
+          targetState: PRE_EXPERIAN_PAGE
+    CRI_DWP_KBV:
+      response:
+        type: cri
+        criId: dwpKbv
+      parent: CRI_STATE
+      events:
+        next:
+          exitEventToEmit: next
+        enhanced-verification:
+          exitEventToEmit: enhanced-verification
+        invalid-request:
+          targetState: PRE_EXPERIAN_PAGE
+        access-denied:
+          targetState: PRE_EXPERIAN_PAGE
+    CRI_HMRC_KBV:
+      response:
+        type: cri
+        criId: hmrcKbv
+      parent: CRI_STATE
+      events:
+        next:
+          exitEventToEmit: next
+        enhanced-verification:
+          exitEventToEmit: enhanced-verification
+        invalid-request:
+          targetState: PRE_EXPERIAN_PAGE
+        access-denied:
+          targetState: PRE_EXPERIAN_PAGE
+    PRE_EXPERIAN_PAGE:
+      response:
+        type: page
+        pageId: page-pre-experian-kbv-transition
+      events:
+        next:
+          targetState: CRI_EXPERIAN_KBV
+    CRI_EXPERIAN_KBV:
+      response:
+        type: cri
+        criId: kbv
+      parent: CRI_STATE
+      events:
+        fail-with-no-ci:
+          exitEventToEmit: fail-with-no-ci
+        next:
+          exitEventToEmit: next
+        enhanced-verification:
+          exitEventToEmit: enhanced-verification
