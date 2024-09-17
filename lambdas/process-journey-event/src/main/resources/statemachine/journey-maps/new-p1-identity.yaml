@@ -220,7 +220,7 @@ states:
     nestedJourney: WEB_DL_OR_PASSPORT
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_J7
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
@@ -370,6 +370,116 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
+  # Passport journey (J2)
+  CRI_UK_PASSPORT_J2:
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J2
+      access-denied:
+        targetState: PROVE_ANOTHER_WAY_J2
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-passport:
+        targetState: MITIGATION_05_OPTIONS
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+
+  PROVE_ANOTHER_WAY_J2:
+    response:
+      type: page
+      pageId: prove-identity-another-type-photo-id
+      context: passport
+    events:
+      otherPhotoId:
+        targetState: CRI_DRIVING_LICENCE_J3
+      f2f:
+        targetState: F2F_PYI_POST_OFFICE
+      returnToRp:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  ADDRESS_AND_FRAUD_J2:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  # Driving licence journey (J3)
+  CRI_DRIVING_LICENCE_J3:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J3
+      access-denied:
+        targetState: PROVE_ANOTHER_WAY_J3
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-dl:
+        targetState: MITIGATION_03_OPTIONS
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+
+  PROVE_ANOTHER_WAY_J3:
+    response:
+      type: page
+      pageId: prove-identity-another-type-photo-id
+      context: drivingLicence
+    events:
+      otherPhotoId:
+        targetState: CRI_UK_PASSPORT_J2
+      f2f:
+        targetState: F2F_PYI_POST_OFFICE
+      returnToRp:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  ADDRESS_AND_FRAUD_J3:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      enhanced-verification:
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
     response:
@@ -513,6 +623,52 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
+  PERSONAL_INDEPENDENCE_PAYMENT_PAGE:
+    response:
+      type: page
+      pageId: personal-independence-payment
+    events:
+      next:
+        targetState: PRE_DWP_KBV_TRANSITION_PAGE
+      end:
+        targetState: CRI_HMRC_KBV_J6
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  PRE_DWP_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-dwp-kbv-transition
+    events:
+      next:
+        targetState: CRI_DWP_KBV_J7
+      end:
+        targetState: PYI_CRI_ESCAPE
+
+  PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: personal-independence-payment
+    events:
+      next:
+        targetState: PRE_DWP_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+      end:
+        targetState: CRI_HMRC_KBV_NO_PHOTO_ID
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+
+  PRE_DWP_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: page-pre-dwp-kbv-transition
+    events:
+      next:
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+      end:
+        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+
   # No photo id journey
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
     response:
@@ -547,7 +703,7 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_NO_PHOTO_ID
@@ -555,7 +711,7 @@ states:
               hmrcKbv:
                 targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       enhanced-verification:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_NO_PHOTO_ID
