@@ -10,6 +10,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
+			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(":libs:evcs-migration"),
 			project(":libs:evcs-service"),
@@ -22,7 +23,8 @@ dependencies {
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly libs.junitPlatform
 }
