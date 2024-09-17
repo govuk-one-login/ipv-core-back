@@ -97,14 +97,15 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                     }
 
                     // Map exit events to targets in the parent definition
-                    if (def.exitEventToEmit) {
-                        if (definition.exitEvents[def.exitEventToEmit]) {
-                            Object.assign(def, definition.exitEvents[def.exitEventToEmit]);
+                    const exitEvent = def.exitEventToEmit;
+                    if (exitEvent) {
+                        delete def.exitEventToEmit;
+                        if (definition.exitEvents[exitEvent]) {
+                            Object.assign(def, definition.exitEvents[exitEvent]);
                         } else {
-                            console.warn(`Unhandled exit event from ${state}:`, def.exitEventToEmit)
+                            console.warn(`Unhandled exit event from ${state}:`, exitEvent)
                             delete expandedDefinition.events[evt];
                         }
-                        delete def.exitEventToEmit;
                     }
                 });
 
@@ -116,10 +117,18 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                 Object.values(journeyMap).forEach((journeyDef) => {
                     if (journeyDef.events?.[entryEvent]) {
                         const target = resolveEventTarget(journeyDef.events[entryEvent], formData);
-                        if (target.targetState === state) {
-                            target.targetState = `${def.targetState}_${state}`
+                        if (target.targetState === state && !target.targetEntryEvent) {
+                            target.targetState = `${def.targetState}_${state}`;
                         }
                     }
+                    // Resolve targets with a `targetEntryEvent` override
+                    Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
+                        const target = resolveEventTarget(eventDef, formData);
+                        if (target.targetState === state && target.targetEntryEvent === entryEvent) {
+                            target.targetState = `${def.targetState}_${state}`;
+                            delete target.targetEntryEvent;
+                        }
+                    });
                 });
             });
         }
@@ -152,7 +161,7 @@ const renderTransitions = (journeyStates, formData) => {
                     journeyStates[resolvedTarget.targetState].events.next, formData);
             }
 
-            const { targetJourney, targetState, exitEventToEmit } = resolvedTarget;
+            const { targetJourney, targetState, targetEntryEvent, exitEventToEmit } = resolvedTarget;
 
             const target = exitEventToEmit
                 ? `exit_${exitEventToEmit}`.toUpperCase()
@@ -174,7 +183,7 @@ const renderTransitions = (journeyStates, formData) => {
             }
 
             eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(eventName);
+            eventsByTarget[target].push(targetEntryEvent ? `${eventName}/${targetEntryEvent}` : eventName);
 
             if (!journeyStates[target]) {
                 if (targetJourney) {
@@ -323,6 +332,9 @@ export const render = (selectedJourney, journeyMap, nestedJourneys, formData = n
     ));
 
     if (!isNestedJourney && formData.getAll('otherOption').includes('expandNestedJourneys')) {
+        // Expand nested journeys first, to allow for two levels of nesting
+        Object.values(nestedJourneys)
+            .forEach((nestedJourney) => expandNestedJourneys(nestedJourney.nestedJourneyStates, nestedJourneys, formData));
         expandNestedJourneys(journeyStates, nestedJourneys, formData);
     }
 

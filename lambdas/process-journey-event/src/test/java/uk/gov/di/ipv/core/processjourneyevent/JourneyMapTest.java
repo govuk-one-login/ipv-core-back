@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNullElse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -115,12 +116,16 @@ class JourneyMapTest {
                             if (sourceEvent instanceof BasicEvent sourceBasicEvent
                                     && Objects.equals(
                                             sourceBasicEvent.getTargetState(), targetKey)) {
+                                var eventToCompare =
+                                        requireNonNullElse(
+                                                sourceBasicEvent.getTargetEntryEvent(),
+                                                sourceEventName);
 
                                 assertTrue(
-                                        expectedEntryEvents.contains(sourceEventName),
+                                        expectedEntryEvents.contains(eventToCompare),
                                         String.format(
                                                 "%s has unexpected entry event: %s, from %s",
-                                                targetKey, sourceEventName, sourceKey));
+                                                targetKey, eventToCompare, sourceKey));
                             }
                         }
                     }

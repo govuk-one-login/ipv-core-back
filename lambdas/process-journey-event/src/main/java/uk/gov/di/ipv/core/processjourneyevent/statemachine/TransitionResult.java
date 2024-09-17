@@ -7,8 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 public record TransitionResult(
-        State state, List<AuditEventTypes> auditEvents, Map<String, String> auditContext) {
+        State state,
+        List<AuditEventTypes> auditEvents,
+        Map<String, String> auditContext,
+        String targetEntryEvent) {
     public TransitionResult(State state) {
-        this(state, null, null);
+        this(state, null, null, null);
     }
 }

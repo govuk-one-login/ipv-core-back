@@ -55,19 +55,14 @@ public class StateMachineInitializer {
         journeyStates.forEach(
                 (stateName, state) -> {
                     if (state instanceof BasicState basicState) {
-                        initializeBasicState(basicState, stateName, journeyStates);
+                        initializeBasicState(basicState, stateName, journeyStates, null);
                     }
 
                     if (state instanceof NestedJourneyInvokeState nestedJourneyInvokeState) {
                         initializeNestedJourneyInvokeState(
-                                nestedJourneyInvokeState, stateName, journeyStates);
+                                nestedJourneyInvokeState, stateName, journeyStates, null);
                     }
                 });
-    }
-
-    void initializeBasicState(
-            BasicState state, String stateName, Map<String, State> eventTargetsStatesMap) {
-        initializeBasicState(state, stateName, eventTargetsStatesMap, null);
     }
 
     void initializeBasicState(
@@ -109,7 +104,10 @@ public class StateMachineInitializer {
     }
 
     void initializeNestedJourneyInvokeState(
-            NestedJourneyInvokeState state, String stateName, Map<String, State> journeyStates) {
+            NestedJourneyInvokeState state,
+            String stateName,
+            Map<String, State> journeyStates,
+            Map<String, Event> nestedJourneyExitEvents) {
         state.setName(stateName);
         state.setJourneyType(journeyType);
         NestedJourneyDefinition nestedJourneyDefinition =
@@ -118,7 +116,7 @@ public class StateMachineInitializer {
                 deepCopyNestedJourneyDefinition(nestedJourneyDefinition);
         state.setNestedJourneyDefinition(
                 initializeNestedJourneyDefinition(state, nestedJourneyDefinitionCopy));
-        initializeExitStateEvents(state, journeyStates);
+        initializeExitStateEvents(state, journeyStates, nestedJourneyExitEvents);
     }
 
     private NestedJourneyDefinition deepCopyNestedJourneyDefinition(
@@ -155,20 +153,23 @@ public class StateMachineInitializer {
                                 initializeNestedJourneyInvokeState(
                                         subNestedJourneyInvokeState,
                                         name,
-                                        nestedJourneyDefinition.getNestedJourneyStates());
+                                        nestedJourneyDefinition.getNestedJourneyStates(),
+                                        nestedJourneyInvokeState.getExitEvents());
                             }
                         });
         initializeEvents(
                 nestedJourneyDefinition.getEntryEvents(),
                 nestedJourneyDefinition.getNestedJourneyStates(),
-                null);
+                nestedJourneyInvokeState.getExitEvents());
 
         return nestedJourneyDefinition;
     }
 
     private void initializeExitStateEvents(
-            NestedJourneyInvokeState state, Map<String, State> eventStatesSource) {
-        initializeEvents(state.getExitEvents(), eventStatesSource, null);
+            NestedJourneyInvokeState state,
+            Map<String, State> eventStatesSource,
+            Map<String, Event> nestedJourneyExitEvents) {
+        initializeEvents(state.getExitEvents(), eventStatesSource, nestedJourneyExitEvents);
     }
 
     private String createNestedJourneyStateName(
