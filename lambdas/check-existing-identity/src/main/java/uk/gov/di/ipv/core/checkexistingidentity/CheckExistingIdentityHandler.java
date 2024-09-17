@@ -373,13 +373,12 @@ public class CheckExistingIdentityHandler
 
     private VerifiableCredentialBundle getVerifiableCredentials(
             String userId, String evcsAccessToken)
-            throws CredentialParseException, EvcsServiceException, VerifiableCredentialException {
+            throws CredentialParseException, EvcsServiceException {
 
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
         if (vcsAreFromEvcsMigrationRollbackBatch(tacticalVcs)) {
             tacticalVcs.forEach(vc -> vc.setBatchId(null));
-            verifiableCredentialService.updateIdentity(tacticalVcs);
             return new VerifiableCredentialBundle(tacticalVcs, false, false);
         }
 

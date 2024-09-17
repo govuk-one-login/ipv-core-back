@@ -101,7 +101,6 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_SAVE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
@@ -1545,7 +1544,6 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
             verifiableCredential.setBatchId(null);
-            verify(mockVerifiableCredentialService).updateIdentity(List.of(verifiableCredential));
             verify(mockEvcsMigrationService)
                     .migrateExistingIdentity(TEST_USER_ID, List.of(verifiableCredential));
             verify(mockSessionCredentialService)
@@ -1580,7 +1578,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            verify(mockVerifiableCredentialService, never()).updateIdentity(any());
             verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
             verify(mockSessionCredentialService)
                     .persistCredentials(
@@ -1620,7 +1617,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            verify(mockVerifiableCredentialService, never()).updateIdentity(any());
             verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
             verify(mockSessionCredentialService)
                     .persistCredentials(
@@ -1648,7 +1644,6 @@ class CheckExistingIdentityHandlerTest {
 
             assertEquals(JOURNEY_REUSE, journeyResponse);
 
-            verify(mockVerifiableCredentialService, never()).updateIdentity(any());
             verify(mockEvcsMigrationService)
                     .migrateExistingIdentity(TEST_USER_ID, List.of(tacticalVc));
             verify(mockSessionCredentialService)
@@ -1660,39 +1655,6 @@ class CheckExistingIdentityHandlerTest {
             inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
             inOrder.verify(ipvSessionItem, never()).setVot(any());
             assertEquals(P2, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void handlerShouldReturnErrorResponseIfFailsToUpdateTacticalStoreBatchIds()
-                throws Exception {
-            var verifiableCredential = vcDrivingPermit();
-
-            verifiableCredential.setBatchId("batch1");
-            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
-                    .thenReturn(List.of("batch1"));
-            when(mockVerifiableCredentialService.getVcs(any()))
-                    .thenReturn(List.of(verifiableCredential));
-            doThrow(new VerifiableCredentialException(418, FAILED_TO_SAVE_CREDENTIAL))
-                    .when(mockVerifiableCredentialService)
-                    .updateIdentity(any());
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyErrorResponse.class);
-
-            assertEquals(
-                    new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            FAILED_TO_SAVE_CREDENTIAL),
-                    journeyResponse);
-
-            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
-            verify(mockSessionCredentialService, never())
-                    .persistCredentials(any(), any(), anyBoolean());
-
-            verify(ipvSessionItem, never()).setVot(any());
         }
     }
 

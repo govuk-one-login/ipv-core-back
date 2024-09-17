@@ -33,7 +33,7 @@ core:
       # Test COI config
       familyNameChars: 5
   bulkMigration:
-    rolledBackBatchIds: ""
+    rolledBackBatchIds: "noneConfigured"
   clients:
     orchestrator:
       id: orchestrator
