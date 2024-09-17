@@ -341,14 +341,14 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         try {
             setMigratedOnTacticalStoreVcs(vcs, timestamp);
             LOGGER.info(annotateLog("Migrated", reportItem, batchId, pageSummary));
-            var vcsCredentials = vcs.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
+            var vcSignatures = vcs.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
             auditService.sendAuditEvent(
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(reportItem.getUserId(), "", "", ""),
                             new AuditExtensionsEvcsSuccessfulMigration(
-                                    batchId, vcsCredentials, vcs.size())));
+                                    batchId, vcSignatures, vcs.size())));
             pageSummary.incrementMigrated();
         } catch (Exception e) {
             logError(

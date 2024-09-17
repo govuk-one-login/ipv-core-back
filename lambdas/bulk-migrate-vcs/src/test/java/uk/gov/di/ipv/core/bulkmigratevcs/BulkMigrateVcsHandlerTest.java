@@ -5,7 +5,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
@@ -17,6 +21,9 @@ import uk.gov.di.ipv.core.bulkmigratevcs.domain.RequestBatchDetails;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsFailedMigration;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsSkippedMigration;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsSuccessfulMigration;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
@@ -69,7 +76,7 @@ class BulkMigrateVcsHandlerTest {
     @Mock private PageIterable<ReportUserIdentityItem> mockPageIterable;
     @Mock private Context mockContext;
     @Mock private VerifiableCredential migratedVc;
-    @Mock private VerifiableCredential notMigratedVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+    @Mock private VerifiableCredential notMigratedVc;
     @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
@@ -206,6 +213,11 @@ class BulkMigrateVcsHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
+        assertEquals("id2", auditEventArgumentCaptor.getAllValues().get(0).getUser().getUserId());
+        assertEquals(
+                new AuditExtensionsEvcsFailedMigration(
+                        "batchId", 0, "Failed to fetch VCs from tactical store"),
+                auditEventArgumentCaptor.getAllValues().get(0).getExtensions());
     }
 
     @Test
@@ -232,8 +244,21 @@ class BulkMigrateVcsHandlerTest {
                 AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
         assertEquals(
+                "skipNonP2", auditEventArgumentCaptor.getAllValues().get(0).getUser().getUserId());
+        assertEquals(
+                new AuditExtensionsEvcsSkippedMigration("batchId", "not_p2_identity"),
+                auditEventArgumentCaptor.getAllValues().get(0).getExtensions());
+        assertEquals(
                 AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
+        assertEquals(
+                "migrate", auditEventArgumentCaptor.getAllValues().get(1).getUser().getUserId());
+        var successfulMigrationEvent =
+                (AuditExtensionsEvcsSuccessfulMigration)
+                        auditEventArgumentCaptor.getAllValues().get(1).getExtensions();
+        assertEquals("batchId", successfulMigrationEvent.batchId());
+        assertEquals(3, successfulMigrationEvent.vcCount());
+        assertEquals(3, successfulMigrationEvent.credentialSignatures().size());
     }
 
     @Test
