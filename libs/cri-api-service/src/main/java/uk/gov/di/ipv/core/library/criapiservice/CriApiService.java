@@ -138,7 +138,7 @@ public class CriApiService {
                         errorObject.getDescription(),
                         errorObject.getHTTPStatusCode());
                 throw new CriApiException(
-                        httpResponse.getStatusCode(), ErrorResponse.INVALID_TOKEN_REQUEST);
+                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
 
             var token = tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();

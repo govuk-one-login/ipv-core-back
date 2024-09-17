@@ -195,7 +195,7 @@ class TokenTests {
 
         // Assert
         assertThat(exception.getErrorResponse(), is(ErrorResponse.INVALID_TOKEN_REQUEST));
-        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_FORBIDDEN));
+        assertThat(exception.getHttpStatusCode(), is(HTTPResponse.SC_BAD_REQUEST));
     }
 
     @NotNull

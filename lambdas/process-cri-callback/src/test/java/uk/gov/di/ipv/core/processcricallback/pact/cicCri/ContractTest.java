@@ -365,7 +365,7 @@ class ContractTest {
 
         // Assert
         assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(HTTPResponse.SC_UNAUTHORIZED, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
     }
 
     private void configureMockConfigService(OauthCriConfig credentialIssuerConfig) {

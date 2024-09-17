@@ -11,6 +11,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
@@ -198,7 +199,7 @@ class TokenTests {
 
         // Assert
         assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(403, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_FORBIDDEN, exception.getHttpStatusCode());
     }
 
     @NotNull
