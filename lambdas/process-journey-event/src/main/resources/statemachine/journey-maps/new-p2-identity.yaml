@@ -224,7 +224,7 @@ states:
       next-dl:
         targetState: CHECK_FRAUD_AFTER_DL
       next-passport:
-        targetState: CRI_DWP_KBV_J7
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_NINO_J6
@@ -544,6 +544,52 @@ states:
             auditContext:
               mitigationType: enhanced-verification
 
+  PERSONAL_INDEPENDENCE_PAYMENT_PAGE:
+    response:
+      type: page
+      pageId: personal-independence-payment
+    events:
+      next:
+        targetState: PRE_DWP_KBV_TRANSITION_PAGE
+      end:
+        targetState: CRI_HMRC_KBV_J6
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  PRE_DWP_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-dwp-kbv-transition
+    events:
+      next:
+        targetState: CRI_DWP_KBV_J7
+      end:
+        targetState: PYI_CRI_ESCAPE
+
+  PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: personal-independence-payment
+    events:
+      next:
+        targetState: PRE_DWP_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+      end:
+        targetState: CRI_HMRC_KBV_NO_PHOTO_ID
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
+
+  PRE_DWP_KBV_TRANSITION_PAGE_NO_PHOTO_ID:
+    response:
+      type: page
+      pageId: page-pre-dwp-kbv-transition
+    events:
+      next:
+        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+      end:
+        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
+
   # No photo id journey (M2B)
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
     response:
@@ -592,7 +638,7 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_NO_PHOTO_ID
@@ -600,7 +646,7 @@ states:
               hmrcKbv:
                 targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE_NO_PHOTO_ID
       enhanced-verification:
-        targetState: CRI_DWP_KBV_NO_PHOTO_ID
+        targetState: PERSONAL_INDEPENDENCE_PAYMENT_PAGE_NO_PHOTO_ID
         checkIfDisabled:
           dwpKbv:
             targetState: CRI_HMRC_KBV_NO_PHOTO_ID
