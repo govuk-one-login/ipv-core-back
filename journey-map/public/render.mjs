@@ -18,16 +18,27 @@ const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) =
 };
 
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMaps) => {
+export const getOptions = (journeyMaps, nestedJourneys) => {
     const disabledOptions = ['ticf'];
     const featureFlagOptions = [];
 
-    Object.values(journeyMaps).forEach((journeyMap) => {
-        Object.values(journeyMap.states).forEach((definition) => {
-            const events = definition.events || definition.exitEvents || {};
-            Object.values(events).forEach((def) => {
-                addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-            });
+    const states = [
+        ...Object.values(journeyMaps)
+            .flatMap(journeyMap => Object.values(journeyMap.states)),
+        ...Object.values(nestedJourneys)
+            .flatMap(nestedJourney => Object.values(nestedJourney.nestedJourneyStates)),
+    ];
+
+    states.forEach((definition) => {
+        const events = definition.events || definition.exitEvents || {};
+        Object.values(events).forEach((def) => {
+            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
+        });
+    });
+
+    Object.values(nestedJourneys).forEach(nestedJourney => {
+        Object.values(nestedJourney.entryEvents).forEach((def) => {
+            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
         });
     });
 
