@@ -199,7 +199,7 @@ class TokenTests {
 
         // Assert
         assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(HTTPResponse.SC_FORBIDDEN, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
     }
 
     @NotNull
