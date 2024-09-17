@@ -290,6 +290,13 @@ class JourneyMapTest {
                     }
                 }
             }
+            if (nestedState instanceof NestedJourneyInvokeState nestedNestedState) {
+                for (var event : nestedNestedState.getExitEvents().values()) {
+                    if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
+                        actualExitEvents.add(exitNestedJourneyEvent.getExitEventToEmit());
+                    }
+                }
+            }
         }
         return actualExitEvents;
     }

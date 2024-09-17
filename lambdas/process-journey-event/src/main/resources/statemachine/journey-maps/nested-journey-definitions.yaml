@@ -206,9 +206,9 @@ WEB_DL_OR_PASSPORT:
       nestedJourney: ADDRESS_AND_FRAUD
       exitEvents:
         next:
-          exitEventToEmit: next
+          exitEventToEmit: next-passport
         enhanced-verification:
-          exitEventToEmit: next
+          exitEventToEmit: next-passport
     PROVE_ANOTHER_WAY_AFTER_PASSPORT:
       response:
         type: page
@@ -244,21 +244,9 @@ WEB_DL_OR_PASSPORT:
       nestedJourney: ADDRESS_AND_FRAUD
       exitEvents:
         next:
-          targetState: CHECK_FRAUD_SCORE_DL
+          exitEventToEmit: next-dl
         enhanced-verification:
-          targetState: CHECK_FRAUD_SCORE_DL
-    CHECK_FRAUD_SCORE_DL:
-      response:
-        type: process
-        lambda: check-gpg45-score
-        lambdaInput:
-          scoreType: fraud
-          scoreThreshold: 2
-      events:
-        met:
-          exitEventToEmit: next
-        unmet:
-          exitEventToEmit: failed
+          exitEventToEmit: next-dl
     PROVE_ANOTHER_WAY_AFTER_DL:
       response:
         type: page
@@ -326,20 +314,8 @@ WEB_DL_OR_PASSPORT:
       nestedJourney: ADDRESS_AND_FRAUD
       exitEvents:
         next:
-          targetState: MITIGATION_CHECK_FRAUD_SCORE
+          exitEventToEmit: alternate-doc-next-dl
         enhanced-verification:
-          exitEventToEmit: failed
-    MITIGATION_CHECK_FRAUD_SCORE:
-      response:
-        type: process
-        lambda: check-gpg45-score
-        lambdaInput:
-          scoreType: fraud
-          scoreThreshold: 2
-      events:
-        met:
-          exitEventToEmit: alternate-doc-next
-        unmet:
           exitEventToEmit: failed
 
     # Invalid DL mitigation routes
@@ -386,7 +362,7 @@ WEB_DL_OR_PASSPORT:
       nestedJourney: ADDRESS_AND_FRAUD
       exitEvents:
         next:
-          exitEventToEmit: alternate-doc-next
+          exitEventToEmit: alternate-doc-next-passport
         enhanced-verification:
           exitEventToEmit: failed
     MITIGATION_PP_PROVE_ANOTHER_WAY:
