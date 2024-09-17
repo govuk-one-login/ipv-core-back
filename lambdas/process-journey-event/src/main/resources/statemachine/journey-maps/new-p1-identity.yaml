@@ -219,7 +219,7 @@ states:
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT
     exitEvents:
-      next:
+      next-dl:
         targetState: CRI_DWP_KBV_J7
         checkIfDisabled:
           dwpKbv:
@@ -227,7 +227,23 @@ states:
             checkIfDisabled:
               hmrcKbv:
                 targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
-      alternate-doc-next:
+      next-passport:
+        targetState: CRI_DWP_KBV_J7
+        checkIfDisabled:
+          dwpKbv:
+            targetState: CRI_NINO_J6
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      alternate-doc-next-dl:
+        targetState: MITIGATION_CRI_DWP_KBV
+        checkIfDisabled:
+          dwpKbv:
+            targetState: MITIGATION_PP_CRI_NINO
+            checkIfDisabled:
+              hmrcKbv:
+                targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+      alternate-doc-next-passport:
         targetState: MITIGATION_CRI_DWP_KBV
         checkIfDisabled:
           dwpKbv:
