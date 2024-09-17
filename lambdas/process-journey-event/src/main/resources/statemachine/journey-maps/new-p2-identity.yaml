@@ -234,7 +234,7 @@ states:
       alternate-doc-next-dl:
         targetState: MITIGATION_CHECK_FRAUD_AFTER_DL
       alternate-doc-next-passport:
-        targetState: MITIGATION_CRI_DWP_KBV
+        targetState: MITIGATION_PERSONAL_INDEPENDENCE_PAYMENT_PAGE
         checkIfDisabled:
           dwpKbv:
             targetState: MITIGATION_PP_CRI_NINO
@@ -1022,6 +1022,29 @@ states:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
       access-denied:
         targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  MITIGATION_PERSONAL_INDEPENDENCE_PAYMENT_PAGE:
+    response:
+      type: page
+      pageId: personal-independence-payment
+    events:
+      next:
+        targetState: MITIGATION_PRE_DWP_KBV_TRANSITION_PAGE
+      end:
+        targetState: MITIGATION_CRI_HMRC_KBV
+        checkIfDisabled:
+          hmrcKbv:
+            targetState: MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE
+
+  MITIGATION_PRE_DWP_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-dwp-kbv-transition
+    events:
+      next:
+        targetState: MITIGATION_CRI_DWP_KBV
+      end:
+        targetState: PYI_CRI_ESCAPE
 
   MITIGATION_CRI_DWP_KBV:
     response:
