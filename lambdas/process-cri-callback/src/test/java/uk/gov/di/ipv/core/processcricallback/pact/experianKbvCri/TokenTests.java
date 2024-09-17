@@ -11,6 +11,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.jetbrains.annotations.NotNull;
@@ -132,7 +133,7 @@ class TokenTests {
     }
 
     @Pact(provider = "ExperianKbvCriTokenProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns403(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyExperianKbvComponentId is the experianKbv CRI component ID")
@@ -154,12 +155,12 @@ class TokenTests {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns403")
     void fetchAccessToken_whenCalledAgainstExperianKbvCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
 
@@ -198,7 +199,7 @@ class TokenTests {
 
         // Assert
         assertEquals("Invalid token request", exception.getErrorResponse().getMessage());
-        assertEquals(400, exception.getHttpStatusCode());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
     }
 
     @NotNull

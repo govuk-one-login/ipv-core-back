@@ -133,7 +133,7 @@ class TokenTests {
     }
 
     @Pact(provider = "NinoCriTokenProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthCodeRequestReturns400(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthCodeRequestReturns403(PactDslWithProvider builder) {
         return builder.given("dummyInvalidAuthCode is an invalid authorization code")
                 .given("dummyApiKey is a valid api key")
                 .given("dummyNinoComponentId is the NINO CRI component ID")
@@ -155,12 +155,12 @@ class TokenTests {
                         "Content-Type",
                         "application/x-www-form-urlencoded; charset=UTF-8")
                 .willRespondWith()
-                .status(400)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns400")
+    @PactTestFor(pactMethod = "invalidAuthCodeRequestReturns403")
     void fetchAccessToken_whenCalledAgainstNinoCriWithInvalidAuthCode_throwsAnException(
             MockServer mockServer) throws URISyntaxException, JOSEException {
         // Arrange
