@@ -13,14 +13,10 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import lombok.Data;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.BirthDate;
-import uk.gov.di.ipv.core.library.domain.Name;
-import uk.gov.di.ipv.core.library.domain.NameParts;
-import uk.gov.di.ipv.core.library.domain.SharedClaims;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -31,9 +27,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,36 +36,30 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JW
 
 @ExtendWith(MockitoExtension.class)
 class JwtHelperTest {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    @Data
+    private static final class ExamplePayload {
+        private String exampleField;
+    }
 
     @Test
     void shouldCreateValidSignedJWT()
             throws JOSEException, ParseException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JsonProcessingException {
-        ECDSASigner signer = new ECDSASigner(getPrivateKey());
+        var signer = new ECDSASigner(getPrivateKey());
 
-        Set<Name> nameSet = new HashSet<>();
-        nameSet.add(new Name(List.of(new NameParts("Paul", "GivenName"))));
+        var exampleFieldValue = "test";
+        var examplePayload = new ExamplePayload();
+        examplePayload.setExampleField(exampleFieldValue);
 
-        Set<BirthDate> birthDaySet = new HashSet<>();
-        birthDaySet.add(new BirthDate("2020-02-03"));
-
-        SharedClaims sharedClaims =
-                new SharedClaims.Builder().setName(nameSet).setBirthDate(birthDaySet).build();
-
-        SharedClaimsResponse sharedClaimsResponse =
-                SharedClaimsResponse.from(Set.of(sharedClaims), null);
-
-        SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedClaimsResponse, signer);
-        JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
+        var signedJWT = JwtHelper.createSignedJwtFromObject(examplePayload, signer);
+        var generatedClaims = signedJWT.getJWTClaimsSet();
 
         assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK))));
 
-        JsonNode claimsSet = objectMapper.readTree(generatedClaims.toString());
-        JsonNode namePartsNode = claimsSet.get("name").get(0).get("nameParts").get(0);
-        assertEquals("Paul", namePartsNode.get("value").asText());
-        assertEquals("GivenName", namePartsNode.get("type").asText());
-        assertEquals("2020-02-03", claimsSet.get("birthDate").get(0).get("value").asText());
+        var claimsSet = OBJECT_MAPPER.readTree(generatedClaims.toString());
+        assertEquals(exampleFieldValue, claimsSet.get("exampleField").asText());
     }
 
     @Test
@@ -110,7 +97,7 @@ class JwtHelperTest {
         SignedJWT signatureJwt = JwtHelper.transcodeSignature(vcWithDerSignature);
         //
         JsonNode expectedClaimsSet =
-                objectMapper.readTree(signatureJwt.getJWTClaimsSet().toString());
+                OBJECT_MAPPER.readTree(signatureJwt.getJWTClaimsSet().toString());
         assertEquals(sub, expectedClaimsSet.get("sub").asText());
         assertEquals(aud, expectedClaimsSet.get("aud").asText());
     }

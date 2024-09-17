@@ -14,6 +14,15 @@ public class NameGenerator {
         return name;
     }
 
+    public static Name createName(String givenName, String familyName) {
+        return createName(
+                List.of(
+                        NamePartGenerator.createNamePart(
+                                givenName, NamePart.NamePartType.GIVEN_NAME),
+                        NamePartGenerator.createNamePart(
+                                familyName, NamePart.NamePartType.FAMILY_NAME)));
+    }
+
     public static class NamePartGenerator {
         private NamePartGenerator() {}
 

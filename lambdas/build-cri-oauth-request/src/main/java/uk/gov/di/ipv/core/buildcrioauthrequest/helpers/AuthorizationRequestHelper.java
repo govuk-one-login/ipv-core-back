@@ -20,11 +20,9 @@ import com.nimbusds.oauth2.sdk.id.State;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
-import uk.gov.di.ipv.core.library.domain.NinoSharedClaimsResponseDto;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -50,7 +48,7 @@ public class AuthorizationRequestHelper {
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static SignedJWT createSignedJWT(
-            SharedClaimsResponse sharedClaims,
+            SharedClaims sharedClaims,
             JWSSigner signer,
             OauthCriConfig oauthCriConfig,
             ConfigService configService,
@@ -92,24 +90,7 @@ public class AuthorizationRequestHelper {
                         .claim("govuk_signin_journey_id", govukSigninJourneyId);
 
         if (Objects.nonNull(sharedClaims)) {
-            if (sharedClaims.getEmailAddress() != null) {
-                claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
-            } else if (!sharedClaims.getSocialSecurityRecord().isEmpty()) {
-                NinoSharedClaimsResponseDto response =
-                        new NinoSharedClaimsResponseDto(
-                                sharedClaims.getName(),
-                                sharedClaims.getBirthDate(),
-                                sharedClaims.getAddress(),
-                                sharedClaims.getSocialSecurityRecord());
-                claimsSetBuilder.claim(SHARED_CLAIMS, response);
-            } else {
-                SharedClaimsResponseDto response =
-                        new SharedClaimsResponseDto(
-                                sharedClaims.getName(),
-                                sharedClaims.getBirthDate(),
-                                sharedClaims.getAddress());
-                claimsSetBuilder.claim(SHARED_CLAIMS, response);
-            }
+            claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims.toMapWithNoNulls());
         }
 
         if (Objects.nonNull(evidenceRequest)) {
