@@ -642,7 +642,7 @@ class BuildUserIdentityHandlerTest {
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -653,10 +653,10 @@ class BuildUserIdentityHandlerTest {
 
         assertEquals(500, response.getStatusCode());
         assertEquals(
-                valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
+                valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM.getCode()),
                 responseBody.get("error"));
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM.getMessage(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());

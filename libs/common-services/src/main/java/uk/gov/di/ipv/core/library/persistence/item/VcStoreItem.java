@@ -25,6 +25,7 @@ public class VcStoreItem implements PersistenceItem {
     private Instant dateCreated;
     private Instant expirationTime;
     private Instant migrated;
+    private String batchId;
 
     @DynamoDbPartitionKey
     public String getUserId() {

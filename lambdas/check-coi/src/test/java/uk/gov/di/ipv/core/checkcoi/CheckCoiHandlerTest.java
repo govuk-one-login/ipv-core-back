@@ -62,7 +62,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
@@ -711,7 +711,7 @@ class CheckCoiHandlerTest {
             when(mockUserIdentityService.findIdentityClaim(any()))
                     .thenThrow(
                             new HttpResponseExceptionWithErrorBody(
-                                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+                                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM));
 
             var request =
                     ProcessRequest.processRequestBuilder()
@@ -722,7 +722,8 @@ class CheckCoiHandlerTest {
             var responseMap = checkCoiHandler.handleRequest(request, mockContext);
 
             assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(), responseMap.get("message"));
+            assertEquals(
+                    FAILED_TO_GENERATE_IDENTITY_CLAIM.getMessage(), responseMap.get("message"));
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         }
     }

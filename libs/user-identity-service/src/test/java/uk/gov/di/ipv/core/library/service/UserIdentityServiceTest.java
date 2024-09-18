@@ -1023,7 +1023,7 @@ class UserIdentityServiceTest {
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM, thrownError.getErrorResponse());
+                ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM, thrownError.getErrorResponse());
     }
 
     @Test
@@ -1047,7 +1047,7 @@ class UserIdentityServiceTest {
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM, thrownError.getErrorResponse());
+                ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM, thrownError.getErrorResponse());
     }
 
     @Test

@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -89,6 +90,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
@@ -1505,6 +1508,154 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
         assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @MockitoSettings(strictness = LENIENT)
+    @Nested
+    class BulkMigrationRollback {
+        @BeforeEach
+        public void reuseSetup() throws Exception {
+            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
+                    .thenReturn(ipvSessionItem);
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(clientOAuthSessionItem);
+            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
+                            any(), eq(P2.getSupportedGpg45Profiles())))
+                    .thenReturn(Optional.of(Gpg45Profile.M1A));
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        }
+
+        @Test
+        void handlerShouldRemigrateExistingIdentity() throws Exception {
+            var verifiableCredential = vcDrivingPermit();
+
+            verifiableCredential.setBatchId("batch1");
+            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
+                    .thenReturn(List.of("batch1"));
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(verifiableCredential));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verifiableCredential.setBatchId(null);
+            verify(mockEvcsMigrationService)
+                    .migrateExistingIdentity(TEST_USER_ID, List.of(verifiableCredential));
+            verify(mockSessionCredentialService)
+                    .persistCredentials(
+                            List.of(verifiableCredential), ipvSessionItem.getIpvSessionId(), false);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P2);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void handlerShouldNotRemigrateExistingIdentityIfBatchIdNotConfigured() throws Exception {
+            var tacticalVc = vcDrivingPermit();
+            var evcsVc = vcDrivingPermit();
+
+            tacticalVc.setBatchId("batch1");
+            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
+                    .thenReturn(List.of("batch0"));
+
+            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(tacticalVc));
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
+                    .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(evcsVc)));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
+            verify(mockSessionCredentialService)
+                    .persistCredentials(
+                            List.of(tacticalVc), ipvSessionItem.getIpvSessionId(), false);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P2);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void handlerShouldNotRemigrateExistingIdentityIfInconsistentBatchIds() throws Exception {
+            var tacticalVc1 = vcDrivingPermit();
+            var tacticalVc2 = vcDrivingPermit();
+            var tacticalVc3 = vcDrivingPermit();
+            var evcsVc = vcDrivingPermit();
+
+            tacticalVc1.setBatchId("batch1");
+            tacticalVc2.setBatchId("batch1");
+            tacticalVc3.setBatchId("batch2");
+
+            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
+                    .thenReturn(List.of("batch0"));
+
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(tacticalVc1, tacticalVc2, tacticalVc3));
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
+                    .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(evcsVc)));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
+            verify(mockSessionCredentialService)
+                    .persistCredentials(
+                            List.of(tacticalVc1, tacticalVc2, tacticalVc3),
+                            ipvSessionItem.getIpvSessionId(),
+                            false);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P2);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
+
+        @Test
+        void handlerShouldMigrateIdentityIfNoBatchIds() throws Exception {
+            var tacticalVc = vcDrivingPermit();
+
+            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(tacticalVc));
+
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REUSE, journeyResponse);
+
+            verify(mockEvcsMigrationService)
+                    .migrateExistingIdentity(TEST_USER_ID, List.of(tacticalVc));
+            verify(mockSessionCredentialService)
+                    .persistCredentials(
+                            List.of(tacticalVc), ipvSessionItem.getIpvSessionId(), false);
+
+            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
+            inOrder.verify(ipvSessionItem).setVot(P2);
+            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+            inOrder.verify(ipvSessionItem, never()).setVot(any());
+            assertEquals(P2, ipvSessionItem.getVot());
+        }
     }
 
     private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {

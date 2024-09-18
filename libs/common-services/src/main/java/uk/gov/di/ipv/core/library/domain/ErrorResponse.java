@@ -43,7 +43,7 @@ public enum ErrorResponse {
     MISSING_OAUTH_STATE(1030, "Missing OAuth state in callback request"),
     INVALID_OAUTH_STATE(1031, "Invalid OAuth State"),
     UNRECOVERABLE_OAUTH_STATE(1033, "Unable to resolve OAuth State"),
-    FAILED_TO_GENERATE_IDENTIY_CLAIM(1034, "Failed to generate the identity claim"),
+    FAILED_TO_GENERATE_IDENTITY_CLAIM(1034, "Failed to generate the identity claim"),
     FAILED_TO_GENERATE_ADDRESS_CLAIM(1035, "Failed to generate the address claim"),
     FAILED_TO_GENERATE_PASSPORT_CLAIM(1036, "Failed to generate the passport claim"),
     FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM(1037, "Failed to generate the driving permit claim"),

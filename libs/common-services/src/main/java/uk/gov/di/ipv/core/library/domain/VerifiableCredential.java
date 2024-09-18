@@ -23,8 +23,10 @@ public class VerifiableCredential {
     private final SignedJWT signedJwt;
     private Instant migrated;
     private final uk.gov.di.model.VerifiableCredential credential;
+    private String batchId;
 
-    private VerifiableCredential(String userId, Cri cri, SignedJWT signedJwt, Instant migrated)
+    private VerifiableCredential(
+            String userId, Cri cri, SignedJWT signedJwt, Instant migrated, String batchId)
             throws CredentialParseException {
         try {
             this.userId = userId;
@@ -34,6 +36,7 @@ public class VerifiableCredential {
             this.signedJwt = signedJwt;
             this.migrated = migrated;
             this.credential = VerifiableCredentialParser.parseCredential(this.claimsSet);
+            this.batchId = batchId;
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to get jwt claims to construct verifiable credential", e);
@@ -42,7 +45,7 @@ public class VerifiableCredential {
 
     public static VerifiableCredential fromValidJwt(String userId, Cri cri, SignedJWT jwt)
             throws CredentialParseException {
-        return new VerifiableCredential(userId, cri, jwt, null);
+        return new VerifiableCredential(userId, cri, jwt, null, null);
     }
 
     public static VerifiableCredential fromVcStoreItem(VcStoreItem vcStoreItem)
@@ -58,7 +61,8 @@ public class VerifiableCredential {
                     vcStoreItem.getUserId(),
                     Cri.fromId(vcStoreItem.getCredentialIssuer()),
                     jwt,
-                    vcStoreItem.getMigrated());
+                    vcStoreItem.getMigrated(),
+                    vcStoreItem.getBatchId());
         } catch (ParseException e) {
             throw new CredentialParseException("Failed to parse VcStoreItem credential", e);
         }
@@ -72,6 +76,7 @@ public class VerifiableCredential {
                         .dateCreated(Instant.now())
                         .credential(vcString)
                         .migrated(migrated)
+                        .batchId(batchId)
                         .build();
 
         Date expirationTime = claimsSet.getExpirationTime();
@@ -89,7 +94,8 @@ public class VerifiableCredential {
                     userId,
                     Cri.fromId(sessionCredentialItem.getCriId()),
                     SignedJWT.parse(sessionCredentialItem.getCredential()),
-                    sessionCredentialItem.getMigrated());
+                    sessionCredentialItem.getMigrated(),
+                    null);
         } catch (ParseException e) {
             throw new CredentialParseException(
                     "Failed to parse SessionCredentialItem credential", e);

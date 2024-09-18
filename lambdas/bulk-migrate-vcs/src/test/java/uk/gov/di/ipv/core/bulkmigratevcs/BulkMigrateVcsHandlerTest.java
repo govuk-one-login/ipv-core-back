@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.bulkmigratevcs;
 import com.amazonaws.services.lambda.runtime.Context;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -51,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.quality.Strictness.LENIENT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_UPDATE_IDENTITY;
@@ -71,14 +74,14 @@ class BulkMigrateVcsHandlerTest {
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private EvcsClient mockEvcsClient;
     @Mock private ForkJoinPoolFactory mockForkJoinPoolFactory;
+    @Mock private ConfigService mockConfigService;
+    @Mock private AuditService mockAuditService;
     @Mock private ForkJoinTask mockForkJoinTask;
     @Mock private ForkJoinPool mockForkJoinPool;
     @Mock private PageIterable<ReportUserIdentityItem> mockPageIterable;
     @Mock private Context mockContext;
     @Mock private VerifiableCredential migratedVc;
     @Mock private VerifiableCredential notMigratedVc;
-    @Mock private ConfigService configService;
-    @Mock private AuditService auditService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
     @InjectMocks BulkMigrateVcsHandler bulkMigrateVcsHandler;
 
@@ -89,8 +92,8 @@ class BulkMigrateVcsHandlerTest {
 
     @AfterEach
     void checkAuditEventWait() {
-        InOrder auditInOrder = inOrder(auditService);
-        auditInOrder.verify(auditService).awaitAuditEvents();
+        InOrder auditInOrder = inOrder(mockAuditService);
+        auditInOrder.verify(mockAuditService).awaitAuditEvents();
         auditInOrder.verifyNoMoreInteractions();
     }
 
@@ -110,7 +113,8 @@ class BulkMigrateVcsHandlerTest {
 
         when(migratedVc.getMigrated()).thenReturn(Instant.now());
         when(notMigratedVc.getMigrated()).thenReturn(null);
-        when(notMigratedVc.getVcString()).thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString());
+        when(notMigratedVc.getVcString())
+                .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
 
         when(mockVerifiableCredentialService.getVcs("migrate"))
                 .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));
@@ -122,7 +126,7 @@ class BulkMigrateVcsHandlerTest {
 
         when(mockVerifiableCredentialService.getVcs("skipPartiallyMigrated"))
                 .thenReturn(List.of(migratedVc, migratedVc, notMigratedVc));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
 
         var report =
                 bulkMigrateVcsHandler.handleRequest(
@@ -144,13 +148,14 @@ class BulkMigrateVcsHandlerTest {
         assertEquals("Scan complete", report.getExitReason());
 
         verify(mockEvcsClient).storeUserVCs(eq("migrate"), evcsCreateListCaptor.capture());
-        verify(auditService, times(5)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(mockAuditService, times(5)).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         var evcsCreateUserVCsDtoList = evcsCreateListCaptor.getValue();
 
         assertEquals(3, evcsCreateUserVCsDtoList.size());
         assertEquals(
-                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString(), evcsCreateUserVCsDtoList.get(0).vc());
+                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                evcsCreateUserVCsDtoList.get(0).vc());
         assertEquals(CURRENT, evcsCreateUserVCsDtoList.get(0).state());
         assertEquals(MIGRATED, evcsCreateUserVCsDtoList.get(0).provenance());
         assertEquals(
@@ -166,7 +171,8 @@ class BulkMigrateVcsHandlerTest {
         var vcList = vcListCaptor.getValue();
 
         assertEquals(3, vcList.size());
-        verify(vcList.get(0), times(3)).setMigrated(any(Instant.class));
+        verify(notMigratedVc, times(3)).setMigrated(any(Instant.class));
+        verify(notMigratedVc, times(3)).setBatchId("batchId");
     }
 
     @Test
@@ -180,7 +186,7 @@ class BulkMigrateVcsHandlerTest {
         mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(notMigratedVc.getMigrated()).thenReturn(null);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
 
         when(mockVerifiableCredentialService.getVcs(any()))
                 .thenThrow(new CredentialParseException("Boop"))
@@ -209,7 +215,7 @@ class BulkMigrateVcsHandlerTest {
         assertTrue(report.getAllFailedEvcsWriteHashUserIds().get(0).startsWith("04b"));
         assertEquals(1, report.getAllFailedTacticalWriteHashUserIds().size());
         assertTrue(report.getAllFailedTacticalWriteHashUserIds().get(0).startsWith("f34"));
-        verify(auditService, times(3)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(mockAuditService, times(3)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
@@ -230,16 +236,17 @@ class BulkMigrateVcsHandlerTest {
         mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
         when(notMigratedVc.getMigrated()).thenReturn(null);
-        when(notMigratedVc.getVcString()).thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.toString());
+        when(notMigratedVc.getVcString())
+                .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
 
         when(mockVerifiableCredentialService.getVcs("migrate"))
                 .thenReturn(List.of(notMigratedVc, notMigratedVc, notMigratedVc));
-        when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
 
         bulkMigrateVcsHandler.handleRequest(
                 new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1), mockContext);
 
-        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED,
                 auditEventArgumentCaptor.getAllValues().get(0).getEventName());
@@ -349,6 +356,148 @@ class BulkMigrateVcsHandlerTest {
                         mockContext);
 
         assertEquals(2, report.getPageSummaries().size());
+    }
+
+    @Nested
+    class Rollbacks {
+        @Test
+        void handlerShouldRemigrateIdentityWithConfiguredRollbackBatchId() throws Exception {
+            var reportUserIdentityItems =
+                    List.of(new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false));
+
+            mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
+
+            when(migratedVc.getBatchId()).thenReturn("batch1");
+            when(migratedVc.getMigrated()).thenReturn(Instant.now());
+            when(migratedVc.getVcString())
+                    .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
+
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(migratedVc, migratedVc, migratedVc));
+
+            when(mockConfigService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
+                    .thenReturn(List.of("batch0", "batch1", "batch2"));
+
+            var report =
+                    bulkMigrateVcsHandler.handleRequest(
+                            new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                            mockContext);
+
+            assertEquals(1, report.getTotalEvaluated());
+            assertEquals(1, report.getTotalMigrated());
+
+            verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(1, auditEventArgumentCaptor.getAllValues().size());
+            var capturedAuditEvent = auditEventArgumentCaptor.getAllValues().get(0);
+            assertEquals(
+                    AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS, capturedAuditEvent.getEventName());
+            assertEquals("id1", capturedAuditEvent.getUser().getUserId());
+            assertEquals(
+                    new AuditExtensionsEvcsSuccessfulMigration(
+                            "batchId",
+                            Collections.nCopies(
+                                    3,
+                                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC
+                                            .getSignedJwt()
+                                            .getSignature()
+                                            .toString()),
+                            3),
+                    capturedAuditEvent.getExtensions());
+        }
+
+        @Test
+        void handlerShouldNotRemigrateIdentityIfBatchIdNotConfigured() throws Exception {
+            var reportUserIdentityItems =
+                    List.of(new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false));
+
+            mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
+
+            when(migratedVc.getBatchId()).thenReturn("batch3");
+            when(migratedVc.getMigrated()).thenReturn(Instant.now());
+
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(migratedVc, migratedVc, migratedVc));
+
+            when(mockConfigService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
+                    .thenReturn(List.of("batch0", "batch1", "batch2"));
+
+            var report =
+                    bulkMigrateVcsHandler.handleRequest(
+                            new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                            mockContext);
+
+            assertEquals(1, report.getTotalEvaluated());
+            assertEquals(0, report.getTotalMigrated());
+
+            verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(1, auditEventArgumentCaptor.getAllValues().size());
+            var capturedAuditEvent = auditEventArgumentCaptor.getAllValues().get(0);
+            assertEquals(
+                    AuditEventTypes.IPV_EVCS_MIGRATION_SKIPPED, capturedAuditEvent.getEventName());
+            assertEquals("id1", capturedAuditEvent.getUser().getUserId());
+            assertEquals(
+                    new AuditExtensionsEvcsSkippedMigration("batchId", "already_migrated"),
+                    capturedAuditEvent.getExtensions());
+        }
+
+        @Test
+        void handlerShouldRecordFailureIfVcsHaveMoreThanOneBatchId() throws Exception {
+            var reportUserIdentityItems =
+                    List.of(
+                            new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false),
+                            new ReportUserIdentityItem("id2", "P2", 3, List.of("vc"), false));
+
+            mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
+
+            when(migratedVc.getBatchId()).thenReturn("batch1").thenReturn("batch2");
+            when(notMigratedVc.getMigrated()).thenReturn(null);
+            when(notMigratedVc.getVcString())
+                    .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
+
+            when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(migratedVc, migratedVc))
+                    .thenReturn(List.of(notMigratedVc));
+
+            var report =
+                    bulkMigrateVcsHandler.handleRequest(
+                            new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
+                            mockContext);
+
+            assertEquals(2, report.getTotalEvaluated());
+            assertEquals(1, report.getTotalFailedTooManyBatchIds());
+            assertEquals(1, report.getTotalMigrated());
+            assertEquals(1, report.getAllFailedTooManyBatchIdsHashUserIds().size());
+            assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(0).startsWith("b45"));
+
+            verify(mockAuditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(2, auditEventArgumentCaptor.getAllValues().size());
+
+            var capturedAuditEventOne = auditEventArgumentCaptor.getAllValues().get(1);
+            assertEquals(
+                    AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
+                    capturedAuditEventOne.getEventName());
+            assertEquals("id1", capturedAuditEventOne.getUser().getUserId());
+            assertEquals(
+                    new AuditExtensionsEvcsSuccessfulMigration(
+                            "batchId",
+                            List.of(
+                                    PASSPORT_NON_DCMAW_SUCCESSFUL_VC
+                                            .getSignedJwt()
+                                            .getSignature()
+                                            .toString()),
+                            1),
+                    capturedAuditEventOne.getExtensions());
+
+            var capturedAuditEventTwo = auditEventArgumentCaptor.getAllValues().get(0);
+            assertEquals(
+                    AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                    capturedAuditEventTwo.getEventName());
+            assertEquals("id2", capturedAuditEventTwo.getUser().getUserId());
+            assertEquals(
+                    new AuditExtensionsEvcsFailedMigration(
+                            "batchId", 2, "Too many batch IDs in tactical VCs"),
+                    capturedAuditEventTwo.getExtensions());
+        }
     }
 
     private void mockScanResponse(

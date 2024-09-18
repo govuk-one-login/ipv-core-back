@@ -17,10 +17,12 @@ public class PageSummary {
     private int failedEvcsWrite;
     private int failedTacticalRead;
     private int failedTacticalWrite;
+    private int failedTooManyBatchIds;
     private int total;
     private final List<String> failedEvcsWriteHashUserIds;
     private final List<String> failedTacticalReadHashUserIds;
     private final List<String> failedTacticalWriteHashUserIds;
+    private final List<String> failedTooManyBatchIdsHashUserIds;
 
     public PageSummary(String exclusiveStartKey, int count) {
         this.exclusiveStartKey = exclusiveStartKey;
@@ -28,6 +30,7 @@ public class PageSummary {
         this.failedEvcsWriteHashUserIds = new ArrayList<>();
         this.failedTacticalReadHashUserIds = new ArrayList<>();
         this.failedTacticalWriteHashUserIds = new ArrayList<>();
+        this.failedTooManyBatchIdsHashUserIds = new ArrayList<>();
     }
 
     public String getExclusiveStartKey() {
@@ -75,5 +78,11 @@ public class PageSummary {
         failedTacticalWrite++;
         total++;
         failedTacticalWriteHashUserIds.add(hashUserId);
+    }
+
+    public synchronized void incrementFailedTooManyBatchIds(String hashUserId) {
+        failedTooManyBatchIds++;
+        total++;
+        failedTooManyBatchIdsHashUserIds.add(hashUserId);
     }
 }

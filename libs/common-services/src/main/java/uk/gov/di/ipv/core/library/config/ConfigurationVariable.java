@@ -5,6 +5,7 @@ public enum ConfigurationVariable {
     BACKEND_SESSION_TIMEOUT("self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("self/backendSessionTtl"),
     BEARER_TOKEN_TTL("self/bearerTokenTtl"),
+    BULK_MIGRATION_ROLLBACK_BATCHES("bulkMigration/rolledBackBatchIds"),
     CIMIT_COMPONENT_ID("cimit/componentId"),
     CIMIT_CONFIG("cimit/config"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
