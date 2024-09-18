@@ -126,7 +126,7 @@ public class ProcessJourneyEventHandler
 
             // Handle route direct back to RP (used for recoverable timeouts)
             if (journeyEvent.equals(BUILD_CLIENT_OAUTH_RESPONSE_EVENT)) {
-                LOGGER.warn(LogHelper.buildLogMessage("Returning end session response directly"));
+                LOGGER.info(LogHelper.buildLogMessage("Returning end session response directly"));
                 return BUILD_CLIENT_OAUTH_RESPONSE.value();
             }
 
