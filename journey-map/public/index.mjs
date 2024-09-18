@@ -397,7 +397,7 @@ const setupSearchHandler = () => {
 const initialize = async () => {
     setupHeader();
     await loadJourneyMaps();
-    const { disabledOptions, featureFlagOptions } = getOptions(journeyMaps);
+    const { disabledOptions, featureFlagOptions } = getOptions(journeyMaps, nestedJourneys);
     setupOptions('disabledCri', disabledOptions, disabledInput, CRI_NAMES);
     setupOptions('featureFlag', featureFlagOptions, featureFlagInput);
     setupOtherOptions();
