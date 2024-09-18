@@ -776,3 +776,65 @@ states:
           mitigationType: enhanced-verification
       end:
         targetState: RETURN_TO_RP
+
+## Temporary inclusion of KBV states to avoid breaking existing journeys
+
+  PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: CRI_EXPERIAN_KBV
+
+  CRI_EXPERIAN_KBV:
+    response:
+      type: cri
+      criId: kbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetState: PYI_CRI_ESCAPE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_CRI_ESCAPE_NO_F2F
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetState: MITIGATION_02_OPTIONS_WITH_F2F
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: enhanced-verification
+        checkIfDisabled:
+          f2f:
+            targetState: MITIGATION_02_OPTIONS
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
+
+  MITIGATION_PRE_EXPERIAN_KBV_TRANSITION_PAGE:
+    response:
+      type: page
+      pageId: page-pre-experian-kbv-transition
+    events:
+      next:
+        targetState: MITIGATION_CRI_EXPERIAN_KBV
+
+  MITIGATION_CRI_EXPERIAN_KBV:
+    response:
+      type: cri
+      criId: kbv
+    parent: CRI_STATE
+    events:
+      fail-with-no-ci:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
