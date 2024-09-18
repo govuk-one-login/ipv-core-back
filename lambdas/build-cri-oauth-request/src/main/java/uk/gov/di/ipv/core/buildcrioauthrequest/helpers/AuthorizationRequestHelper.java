@@ -11,6 +11,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
@@ -28,6 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -36,6 +38,7 @@ import java.util.Objects;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_JWK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 
 public class AuthorizationRequestHelper {
@@ -62,8 +65,7 @@ public class AuthorizationRequestHelper {
 
         var headerBuilder = new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
         if (configService.enabled(KID_JAR_HEADER)) {
-            String signingKid = DigestUtils.sha256Hex(configService.getParameter(SIGNING_KEY_ID));
-            headerBuilder.keyID(signingKid);
+            headerBuilder.keyID(getKid(configService));
         }
         JWSHeader header = headerBuilder.build();
 
@@ -128,5 +130,17 @@ public class AuthorizationRequestHelper {
         } catch (JOSEException e) {
             throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
         }
+    }
+
+    private static String getKid(ConfigService configService) {
+        if (ConfigService.isLocal()) {
+            try {
+                return ECKey.parse(configService.getSecret(SIGNING_KEY_JWK)).getKeyID();
+            } catch (ParseException e) {
+                LOGGER.warn(LogHelper.buildLogMessage("Missing signing key JWK"));
+                return null;
+            }
+        }
+        return DigestUtils.sha256Hex(configService.getParameter(SIGNING_KEY_ID));
     }
 }
