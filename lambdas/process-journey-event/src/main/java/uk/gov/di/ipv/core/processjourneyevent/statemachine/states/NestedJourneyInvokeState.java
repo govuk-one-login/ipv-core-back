@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
+import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 @Data
@@ -64,9 +65,10 @@ public class NestedJourneyInvokeState implements State {
         }
 
         if (result.state() instanceof NestedJourneyInvokeState) {
+            var entryEvent = requireNonNullElse(result.targetEntryEvent(), eventName);
             return result.state()
                     .transition(
-                            eventName,
+                            entryEvent,
                             String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
                             journeyContext);
         }
