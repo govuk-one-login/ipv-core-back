@@ -1,4 +1,4 @@
-@Build
+@core-back-api-test
 Feature: M2B Strategic App Journeys
 
   Scenario: MAM journey iphone
