@@ -142,8 +142,11 @@ Feature: P2 F2F journey
     Scenario Outline: Async queue error
       When I get an error from the async CRI stub
       Then I get a 'page-face-to-face-handoff' page response
-      Given I start a new 'medium-confidence' journey
-      Then I get a 'pyi-f2f-technical' page response
+
+      # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      When I submit a 'end' event
+      Then I get an OAuth response
 
   Scenario: f2f PYI escpae route
     Given I start a new 'medium-confidence' journey
