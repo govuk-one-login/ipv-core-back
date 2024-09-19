@@ -52,6 +52,7 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.MIGRATED;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BATCH_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_STACK;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_HASH_USER_ID;
 
 public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchReport> {
@@ -418,7 +419,8 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
 
         LOGGER.error(
                 annotateLog(message, reportItem, batchId, pageSummary)
-                        .with(LOG_ERROR_DESCRIPTION.getFieldName(), error.getMessage()));
+                        .with(LOG_ERROR_DESCRIPTION.getFieldName(), error.getMessage())
+                        .with(LOG_ERROR_STACK.getFieldName(), error.getStackTrace()));
     }
 
     private StringMapMessage annotateLog(
