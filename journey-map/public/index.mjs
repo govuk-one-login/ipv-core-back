@@ -208,6 +208,53 @@ const setupOtherOptions = () => {
     }
 }
 
+const addJourneyContextFromDefinition = (definition, journeyContexts) => {
+    Object.entries(definition.checkIfDisabled || {}).forEach(([_, def]) => {
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+
+    Object.entries(definition.checkJourneyContext || {}).forEach(([ctx, def]) => {
+        if (!journeyContexts.includes(ctx)) {
+            journeyContexts.push(ctx);
+        }
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+
+    Object.entries(definition.checkFeatureFlag || {}).forEach(([_, def]) => {
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+}
+
+const getJourneyContexts = (journeyMap) => {
+    const checkedJourneyContexts = [];
+    Object.values(journeyMap.states).forEach((definition) => {
+        const events = definition.events || definition.exitEvents || {};
+        Object.values(events).forEach((def) => {
+            addJourneyContextFromDefinition(def, checkedJourneyContexts);
+        });
+    });
+    return checkedJourneyContexts;
+}
+
+const displayJourneyContextInfo = (ctxOptions) => {
+    journeyContextsList.innerText = '';
+    const ctxHeader = document.createElement('h3');
+    ctxHeader.innerText = "Journey Contexts"
+    journeyContextsList.append(ctxHeader);
+
+    const ctxDesc = document.createElement('p');
+    ctxDesc.innerText = "A journey context provides an added way to differentiate between user journeys. This journey checks for the following contexts:"
+    journeyContextsList.append(ctxDesc);
+
+    const list = document.createElement('ul');
+    journeyContextsList.append(list);
+    ctxOptions.forEach(ctx => {
+        const bulletPoint = document.createElement('li');
+        bulletPoint.innerText = ctx;
+        list.append(bulletPoint)
+    });
+}
+
 const updateView = async () => {
     const formData = new FormData(form);
     const selectedNestedJourney = new URLSearchParams(window.location.search).get(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
@@ -222,8 +269,14 @@ const updateView = async () => {
 
         const desc = journeyMaps[selectedJourney].description;
 
+        const ctxOptions = getJourneyContexts(journeyMaps[selectedJourney]);
+
         journeySelect.value = selectedJourney;
         journeyDesc.innerText = desc || '';
+
+        if (ctxOptions.length > 0) {
+            displayJourneyContextInfo(ctxOptions);
+        }
     }
 
     return renderSvg(selectedJourney, selectedNestedJourney, formData);
@@ -249,6 +302,12 @@ const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
     });
     // Pan to correct header offset
     svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
+
+    Array.from(document.querySelectorAll('.edgeLabel')).forEach(transitionLabel => {
+        if (/journeyContext: /.test(transitionLabel.innerText)) {
+            transitionLabel.style.backgroundColor = '#f5daa4';
+        }
+    })
 };
 
 const highlightState = (state) => {

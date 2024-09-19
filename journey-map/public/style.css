@@ -2,6 +2,9 @@
     margin: 0;
     box-sizing: border-box;
 }
+h3 {
+    padding: 2px;
+}
 body {
     height: 100vh;
     display: flex;
