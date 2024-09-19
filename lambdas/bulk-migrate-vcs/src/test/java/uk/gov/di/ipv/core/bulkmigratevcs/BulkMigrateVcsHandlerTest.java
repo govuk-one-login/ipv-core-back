@@ -441,20 +441,26 @@ class BulkMigrateVcsHandlerTest {
         }
 
         @Test
-        void handlerShouldRecordFailureIfVcsHaveMoreThanOneBatchId() throws Exception {
+        void handlerShouldRecordFailureIfVcsHaveInconsistentBatchIds() throws Exception {
             var reportUserIdentityItems =
                     List.of(
+                            new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false),
                             new ReportUserIdentityItem("id1", "P2", 3, List.of("vc"), false),
                             new ReportUserIdentityItem("id2", "P2", 3, List.of("vc"), false));
 
             mockScanResponse(null, List.of(reportUserIdentityItems), Arrays.asList(new String[1]));
 
-            when(migratedVc.getBatchId()).thenReturn("batch1").thenReturn("batch2");
+            when(migratedVc.getBatchId())
+                    .thenReturn("batch1")
+                    .thenReturn("batch2") // Non-matching case
+                    .thenReturn("batch1")
+                    .thenReturn(null); // Partial batch IDs case
             when(notMigratedVc.getMigrated()).thenReturn(null);
             when(notMigratedVc.getVcString())
                     .thenReturn(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
 
             when(mockVerifiableCredentialService.getVcs(any()))
+                    .thenReturn(List.of(migratedVc, migratedVc))
                     .thenReturn(List.of(migratedVc, migratedVc))
                     .thenReturn(List.of(notMigratedVc));
 
@@ -463,16 +469,17 @@ class BulkMigrateVcsHandlerTest {
                             new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1),
                             mockContext);
 
-            assertEquals(2, report.getTotalEvaluated());
-            assertEquals(1, report.getTotalFailedTooManyBatchIds());
+            assertEquals(3, report.getTotalEvaluated());
+            assertEquals(2, report.getTotalFailedTooManyBatchIds());
             assertEquals(1, report.getTotalMigrated());
-            assertEquals(1, report.getAllFailedTooManyBatchIdsHashUserIds().size());
-            assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(0).startsWith("b45"));
+            assertEquals(2, report.getAllFailedTooManyBatchIdsHashUserIds().size());
+            assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(0).startsWith("f34"));
+            assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(1).startsWith("b45"));
 
-            verify(mockAuditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(2, auditEventArgumentCaptor.getAllValues().size());
+            verify(mockAuditService, times(3)).sendAuditEvent(auditEventArgumentCaptor.capture());
+            assertEquals(3, auditEventArgumentCaptor.getAllValues().size());
 
-            var capturedAuditEventOne = auditEventArgumentCaptor.getAllValues().get(1);
+            var capturedAuditEventOne = auditEventArgumentCaptor.getAllValues().get(2);
             assertEquals(
                     AuditEventTypes.IPV_EVCS_MIGRATION_SUCCESS,
                     capturedAuditEventOne.getEventName());
@@ -488,7 +495,7 @@ class BulkMigrateVcsHandlerTest {
                             1),
                     capturedAuditEventOne.getExtensions());
 
-            var capturedAuditEventTwo = auditEventArgumentCaptor.getAllValues().get(0);
+            var capturedAuditEventTwo = auditEventArgumentCaptor.getAllValues().get(1);
             assertEquals(
                     AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
                     capturedAuditEventTwo.getEventName());
@@ -497,6 +504,16 @@ class BulkMigrateVcsHandlerTest {
                     new AuditExtensionsEvcsFailedMigration(
                             "batchId", 2, "Too many batch IDs in tactical VCs"),
                     capturedAuditEventTwo.getExtensions());
+
+            var capturedAuditEventThree = auditEventArgumentCaptor.getAllValues().get(0);
+            assertEquals(
+                    AuditEventTypes.IPV_EVCS_MIGRATION_FAILURE,
+                    capturedAuditEventThree.getEventName());
+            assertEquals("id1", capturedAuditEventThree.getUser().getUserId());
+            assertEquals(
+                    new AuditExtensionsEvcsFailedMigration(
+                            "batchId", 2, "Too many batch IDs in tactical VCs"),
+                    capturedAuditEventThree.getExtensions());
         }
     }
 
