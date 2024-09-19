@@ -1,7 +1,10 @@
 package uk.gov.di.ipv.core.library.gpg45;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -18,9 +21,10 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
-import static software.amazon.awssdk.utils.StringUtils.isEmpty;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class Gpg45ProfileEvaluator {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final int NO_SCORE = 0;
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
@@ -57,13 +61,22 @@ public class Gpg45ProfileEvaluator {
         var deduplicatedEvidences = new HashMap<String, List<Gpg45Scores.Evidence>>();
         for (var vc : vcs) {
             if (vc.getCredential() instanceof IdentityCheckCredential idCheckVc) {
-                var docType = getVcDocumentType(vc);
                 var evidence =
                         getEvidences(
                                 idCheckVc.getEvidence() != null
                                         ? idCheckVc.getEvidence()
                                         : Collections.emptyList());
-                if (isEmpty(docType)) {
+
+                // Not an evidence VC - skip
+                if (isNullOrEmpty(evidence)) {
+                    continue;
+                }
+
+                var docType = getVcDocumentType(vc);
+                if (docType == null) {
+                    LOGGER.warn(
+                            LogHelper.buildLogMessage("Could not determine evidence type")
+                                    .with(LOG_CRI_ID.getFieldName(), vc.getCri().getId()));
                     result.addAll(evidence);
                 } else {
                     var existing = deduplicatedEvidences.get(docType);
