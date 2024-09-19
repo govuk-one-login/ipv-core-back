@@ -115,7 +115,7 @@ core:
         stub: '{
           "credentialUrl": "https://dcmaw-async.stubs.account.gov.uk/async/credential",
           "tokenUrl":"https://dcmaw-async.stubs.account.gov.uk/async/token",
-          "clientId": "ipv-core-local",
+          "clientId": "dummyClientId",
           "componentId":"https://dcmaw-async.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmawAsync",
           "requiresApiKey": "false"
