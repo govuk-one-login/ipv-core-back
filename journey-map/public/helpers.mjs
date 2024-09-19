@@ -66,3 +66,46 @@ export const resolveEventTargets = (definition, resolvedEventTargets, formData) 
 
     return [...resolvedTargets, definition];
 }
+
+const addJourneyContextFromDefinition = (definition, journeyContexts) => {
+    Object.entries(definition.checkIfDisabled || {}).forEach(([_, def]) => {
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+
+    Object.entries(definition.checkJourneyContext || {}).forEach(([ctx, def]) => {
+        if (!journeyContexts.includes(ctx)) {
+            journeyContexts.push(ctx);
+        }
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+
+    Object.entries(definition.checkFeatureFlag || {}).forEach(([_, def]) => {
+        addJourneyContextFromDefinition(def, journeyContexts);
+    })
+}
+
+export const getJourneyContexts = (journeyStates) => {
+    const checkedJourneyContexts = [];
+    Object.values(journeyStates).forEach((definition) => {
+        const events = definition.events || definition.exitEvents || {};
+        Object.values(events).forEach((def) => {
+            addJourneyContextFromDefinition(def, checkedJourneyContexts);
+        });
+    });
+    return checkedJourneyContexts;
+}
+
+export const getNestedJourneyStates = (nestedJourney) => ({
+    ...nestedJourney.nestedJourneyStates,
+    // Create an entry state for each entry event
+    ...Object.fromEntries(
+        Object.entries(nestedJourney.entryEvents)
+            .map(([event, def]) => [
+                `entry_${event}`.toUpperCase(),
+                {
+                    entryEvent: event,
+                    events: { [event]: def }
+                }
+            ]),
+    ),
+});

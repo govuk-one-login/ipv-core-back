@@ -1,4 +1,4 @@
-import {resolveEventTargets} from "./helpers.mjs";
+import {getNestedJourneyStates, resolveEventTargets} from "./helpers.mjs";
 
 const topDownJourneys = ['INITIAL_JOURNEY_SELECTION'];
 const errorJourneys = ['TECHNICAL_ERROR'];
@@ -199,7 +199,7 @@ const renderTransitions = (journeyStates, formData) => {
             }
 
             eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(targetEntryEvent ? `${eventName}/${targetEntryEvent}` : journeyContext ? `\\njourneyContext: ${journeyContext}` : eventName);
+            eventsByTarget[target].push(targetEntryEvent ? `${eventName}/${targetEntryEvent}` : journeyContext ? ` - journeyContext: ${journeyContext}` : eventName);
 
                 if (!journeyStates[target]) {
                     if (targetJourney) {
@@ -307,21 +307,6 @@ const calcOrphanStates = (journeyMap) => {
 
     return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
 };
-
-const getNestedJourneyStates = (nestedJourney) => ({
-    ...nestedJourney.nestedJourneyStates,
-    // Create an entry state for each entry event
-    ...Object.fromEntries(
-        Object.entries(nestedJourney.entryEvents)
-            .map(([event, def]) => [
-                `entry_${event}`.toUpperCase(),
-                {
-                    entryEvent: event,
-                    events: { [event]: def }
-                }
-            ]),
-    ),
-});
 
 const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
     // These styles should be kept in sync with the key in style.css

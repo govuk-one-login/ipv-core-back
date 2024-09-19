@@ -2,7 +2,7 @@ import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.mi
 import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { render } from './render.mjs';
-import {getOptions} from "./helpers.mjs";
+import {getJourneyContexts, getNestedJourneyStates, getOptions} from "./helpers.mjs";
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
@@ -209,34 +209,6 @@ const setupOtherOptions = () => {
     }
 }
 
-const addJourneyContextFromDefinition = (definition, journeyContexts) => {
-    Object.entries(definition.checkIfDisabled || {}).forEach(([_, def]) => {
-        addJourneyContextFromDefinition(def, journeyContexts);
-    })
-
-    Object.entries(definition.checkJourneyContext || {}).forEach(([ctx, def]) => {
-        if (!journeyContexts.includes(ctx)) {
-            journeyContexts.push(ctx);
-        }
-        addJourneyContextFromDefinition(def, journeyContexts);
-    })
-
-    Object.entries(definition.checkFeatureFlag || {}).forEach(([_, def]) => {
-        addJourneyContextFromDefinition(def, journeyContexts);
-    })
-}
-
-const getJourneyContexts = (journeyMap) => {
-    const checkedJourneyContexts = [];
-    Object.values(journeyMap.states).forEach((definition) => {
-        const events = definition.events || definition.exitEvents || {};
-        Object.values(events).forEach((def) => {
-            addJourneyContextFromDefinition(def, checkedJourneyContexts);
-        });
-    });
-    return checkedJourneyContexts;
-}
-
 const displayJourneyContextInfo = (ctxOptions) => {
     journeyContextsList.innerText = '';
     const ctxHeader = document.createElement('h3');
@@ -244,7 +216,7 @@ const displayJourneyContextInfo = (ctxOptions) => {
     journeyContextsList.append(ctxHeader);
 
     const ctxDesc = document.createElement('p');
-    ctxDesc.innerText = "A journey context provides an added way to differentiate between user journeys. This journey checks for the following contexts:"
+    ctxDesc.innerText = "This journey checks for the following contexts:"
     journeyContextsList.append(ctxDesc);
 
     const list = document.createElement('ul');
@@ -267,20 +239,20 @@ const updateView = async () => {
         journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
     } else {
         journeyName.innerText = journeyMaps[selectedJourney].name || 'Details';
-
         const desc = journeyMaps[selectedJourney].description;
-
-        const ctxOptions = getJourneyContexts(journeyMaps[selectedJourney]);
 
         journeySelect.value = selectedJourney;
         journeyDesc.innerText = desc || '';
-
-        if (ctxOptions.length > 0) {
-            displayJourneyContextInfo(ctxOptions);
-        }
     }
 
-    return renderSvg(selectedJourney, selectedNestedJourney, formData);
+    const ctxOptions = getJourneyContexts(selectedNestedJourney ? getNestedJourneyStates(nestedJourneys[selectedNestedJourney]) : journeyMaps[selectedJourney].states);
+    if (ctxOptions.length > 0) {
+        displayJourneyContextInfo(ctxOptions);
+    } else {
+        journeyContextsList.innerText = '';
+    }
+
+    await renderSvg(selectedJourney, selectedNestedJourney, formData);
 };
 
 // Render the journey map SVG
@@ -304,11 +276,19 @@ const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
     // Pan to correct header offset
     svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
 
-    Array.from(document.querySelectorAll('.edgeLabel')).forEach(transitionLabel => {
-        if (/journeyContext: /.test(transitionLabel.innerText)) {
-            transitionLabel.style.backgroundColor = '#f5daa4';
-        }
-    })
+    // Style journeyContext transitions
+    Array.from(document.querySelectorAll('.edgeLabel'))
+        .filter(transitionLabel => /journeyContext: /.test(transitionLabel.innerText))
+        .forEach(transitionLabel => {
+            let labelHtml = transitionLabel.innerHTML;
+            const events = labelHtml.split('<br>');
+            events.forEach(event => {
+                if (/journeyContext: /.test(event)) {
+                    labelHtml = labelHtml.replace(event, `<span class="journeyCtxTransition">${event}</span>`)
+                }
+            })
+            transitionLabel.innerHTML = labelHtml;
+        })
 };
 
 const highlightState = (state) => {
