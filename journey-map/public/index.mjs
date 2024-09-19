@@ -1,7 +1,8 @@
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
 import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
-import { getOptions, render } from './render.mjs';
+import { render } from './render.mjs';
+import {getOptions} from "./helpers.mjs";
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
