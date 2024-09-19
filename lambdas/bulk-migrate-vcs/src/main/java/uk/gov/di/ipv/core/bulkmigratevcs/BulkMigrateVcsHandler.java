@@ -351,24 +351,25 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             String batchId,
             PageSummary pageSummary)
             throws TooManyBatchIdsException {
-        var vcBatchIds = vcs.stream().map(VerifiableCredential::getBatchId).distinct().toList();
-        if (vcBatchIds.isEmpty()) {
+        var batchIds = vcs.stream().map(VerifiableCredential::getBatchId).distinct().toList();
+        if (batchIds.isEmpty()) {
             return false;
         }
-        if (vcBatchIds.size() > 1) {
+        if (batchIds.size() > 1) {
             // This is an unexpected case
             LOGGER.error(
                     annotateLog(
-                                    "Too many batch IDs found in identity VCs",
+                                    "Inconsistent batch IDs in identity VCs",
                                     reportItem,
                                     batchId,
                                     pageSummary)
-                            .with("batchIds", vcBatchIds));
-            throw new TooManyBatchIdsException("Too many batch IDs found in identity VCs");
+                            .with("vcBatchIds", batchIds)
+                            .with("vcCount", vcs.size()));
+            throw new TooManyBatchIdsException("Inconsistent batch IDs in identity VCs");
         }
         if (!configService
                 .getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES)
-                .contains(vcBatchIds.get(0))) {
+                .contains(batchIds.get(0))) {
             return false;
         }
         LOGGER.info(
@@ -377,7 +378,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                 reportItem,
                                 batchId,
                                 pageSummary)
-                        .with("batchId", vcBatchIds.get(0)));
+                        .with("rollbackBatchId", batchIds.get(0)));
         return true;
     }
 
