@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -27,7 +26,6 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class RequestHelper {
 
@@ -69,13 +67,12 @@ public class RequestHelper {
         return getIpvSessionId(event, false);
     }
 
-    public static String getIpvSessionIdAllowBlank(JourneyRequest event)
+    public static String getIpvSessionIdAllowMissing(JourneyRequest event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpvSessionId(event, true);
     }
 
-    public static String getIpAddress(APIGatewayProxyRequestEvent event)
-            throws HttpResponseExceptionWithErrorBody {
+    public static String getIpAddress(APIGatewayProxyRequestEvent event) {
         return getIpAddress(event.getHeaders());
     }
 
@@ -83,46 +80,34 @@ public class RequestHelper {
         return RequestHelper.getHeaderByKey(event.getHeaders(), ENCODED_DEVICE_INFORMATION_HEADER);
     }
 
-    public static String getIpAddress(JourneyRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipAddress = request.getIpAddress();
-        validateIpAddress(ipAddress, "ipAddress not present in request.");
+    public static String getIpAddress(JourneyRequest request) {
+        var ipAddress = nullIfBlank(request.getIpAddress());
+        validateIpAddress(ipAddress);
         return ipAddress;
     }
 
-    public static String getLanguage(CriJourneyRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        String language = request.getLanguage();
+    public static String getLanguage(CriJourneyRequest request) {
+        var language = nullIfBlank(request.getLanguage());
 
         if (language == null) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Language choice is missing from this frontend request",
-                            IP_ADDRESS_HEADER));
-            throw new HttpResponseExceptionWithErrorBody(
-                    SC_BAD_REQUEST, ErrorResponse.MISSING_LANGUAGE);
+            LOGGER.warn(LogHelper.buildErrorMessage(ErrorResponse.MISSING_LANGUAGE));
         }
 
         return language;
     }
 
-    public static String getClientOAuthSessionId(JourneyRequest event) {
-        String clientSessionId = event.getClientOAuthSessionId();
-        StringMapMessage message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Client session id missing in header.");
-        validateClientOAuthSessionId(clientSessionId, message);
-        return StringUtils.isBlank(clientSessionId) ? null : clientSessionId;
+    public static String getClientOAuthSessionIdAllowMissing(JourneyRequest event) {
+        var clientSessionId = nullIfBlank(event.getClientOAuthSessionId());
+        LogHelper.attachClientSessionIdToLogs(clientSessionId);
+        return clientSessionId;
     }
 
     public static List<String> getFeatureSet(JourneyRequest request) {
-        String featureSet = request.getFeatureSet();
-        List<String> featureSetList =
-                (featureSet != null && !featureSet.isBlank())
+        var featureSet = nullIfBlank(request.getFeatureSet());
+        var featureSetList =
+                featureSet != null
                         ? Arrays.asList(featureSet.split(","))
-                        : Collections.emptyList();
+                        : Collections.<String>emptyList();
         LogHelper.attachFeatureSetToLogs(featureSetList);
         return featureSetList;
     }
@@ -239,21 +224,19 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
-    private static String getIpvSessionId(JourneyRequest request, boolean allowBlank)
+    private static String getIpvSessionId(JourneyRequest request, boolean allowMissing)
             throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = request.getIpvSessionId();
-
-        validateIpvSessionId(ipvSessionId, "ipvSessionId not present in request", allowBlank);
-
+        var ipvSessionId = nullIfBlank(request.getIpvSessionId());
+        validateIpvSessionId(ipvSessionId, "ipvSessionId not present in request", allowMissing);
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
     }
 
     private static void validateIpvSessionId(
-            String ipvSessionId, String errorMessage, boolean allowBlank)
+            String ipvSessionId, String errorMessage, boolean allowMissing)
             throws HttpResponseExceptionWithErrorBody {
         if (isBlank(ipvSessionId)) {
-            if (allowBlank) {
+            if (allowMissing) {
                 LOGGER.warn(LogHelper.buildLogMessage(errorMessage));
             } else {
                 LOGGER.error(LogHelper.buildLogMessage(errorMessage));
@@ -263,27 +246,19 @@ public class RequestHelper {
         }
     }
 
-    private static String getIpAddress(Map<String, String> headers)
-            throws HttpResponseExceptionWithErrorBody {
+    private static String getIpAddress(Map<String, String> headers) {
         String ipAddress = RequestHelper.getHeaderByKey(headers, IP_ADDRESS_HEADER);
-        validateIpAddress(ipAddress, String.format("%s not present in header", IP_ADDRESS_HEADER));
+        validateIpAddress(ipAddress);
         return ipAddress;
     }
 
-    private static void validateIpAddress(String ipAddress, String errorMessage)
-            throws HttpResponseExceptionWithErrorBody {
+    private static void validateIpAddress(String ipAddress) {
         if (ipAddress == null) {
-            LOGGER.error(LogHelper.buildErrorMessage(errorMessage, IP_ADDRESS_HEADER));
-            throw new HttpResponseExceptionWithErrorBody(
-                    SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
+            LOGGER.warn(LogHelper.buildErrorMessage(ErrorResponse.MISSING_IP_ADDRESS));
         }
     }
 
-    private static void validateClientOAuthSessionId(
-            String clientSessionId, StringMapMessage message) {
-        if (clientSessionId == null) {
-            LOGGER.warn(message);
-        }
-        LogHelper.attachClientSessionIdToLogs(clientSessionId);
+    private static String nullIfBlank(String input) {
+        return isBlank(input) ? null : input;
     }
 }
