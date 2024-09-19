@@ -380,6 +380,9 @@ KBVS:
   name: KBV challenge routing
   description: >-
     The combined journey for enabled KBV CRIs.
+
+    When redirecting to a KBV CRI, IPV Core will request a verification score
+    corresponding to the target Vector of Trust (P1 or P2).
   entryEvents:
     next:
       targetState: CRI_DWP_KBV
