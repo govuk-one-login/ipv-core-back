@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
@@ -33,6 +32,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +66,7 @@ class CriCheckingServiceTest {
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test_govuk_signin_journey_id";
-    private static final ContraIndicators TEST_CONTRA_INDICATORS = new ContraIndicators(List.of());
+    private static final List<ContraIndicator> TEST_CONTRA_INDICATORS = List.of();
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;

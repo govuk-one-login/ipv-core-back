@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileM
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -43,6 +42,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Map;
@@ -207,7 +207,7 @@ public class EvaluateGpg45ScoresHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String ipAddress,
             String deviceInformation,
-            ContraIndicators contraIndicators) {
+            List<ContraIndicator> contraIndicators) {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 

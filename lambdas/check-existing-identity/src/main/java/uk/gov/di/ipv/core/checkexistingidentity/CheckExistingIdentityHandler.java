@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigratio
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -55,6 +54,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -618,7 +618,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             VerifiableCredentialBundle vcBundle,
             boolean areGpg45VcsCorrelated,
-            ContraIndicators contraIndicators)
+            List<ContraIndicator> contraIndicators)
             throws ParseException, VerifiableCredentialException, EvcsServiceException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
@@ -650,7 +650,7 @@ public class CheckExistingIdentityHandler
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            ContraIndicators contraIndicators)
+            List<ContraIndicator> contraIndicators)
             throws ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
@@ -681,7 +681,7 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildNoMatchResponse(
-            ContraIndicators contraIndicators, Vot preferredNewIdentityLevel)
+            List<ContraIndicator> contraIndicators, Vot preferredNewIdentityLevel)
             throws ConfigException, MitigationRouteException {
 
         var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
@@ -830,7 +830,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             boolean areGpg45VcsCorrelated,
-            ContraIndicators contraIndicators)
+            List<ContraIndicator> contraIndicators)
             throws ParseException {
 
         for (Vot requestedVot : requestedVotsByStrength) {
@@ -861,7 +861,7 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            ContraIndicators contraIndicators)
+            List<ContraIndicator> contraIndicators)
             throws ParseException {
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
         Optional<Gpg45Profile> matchedGpg45Profile =
@@ -899,7 +899,9 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean hasOperationalProfileVc(
-            Vot requestedVot, List<VerifiableCredential> vcs, ContraIndicators contraIndicators)
+            Vot requestedVot,
+            List<VerifiableCredential> vcs,
+            List<ContraIndicator> contraIndicators)
             throws ParseException {
         for (var vc : vcs) {
             String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);

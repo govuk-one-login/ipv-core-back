@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
@@ -55,6 +54,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.BirthDate;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
+import uk.gov.di.model.Mitigation;
 import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
 import uk.gov.di.model.PassportDetails;
@@ -76,7 +76,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -110,24 +109,23 @@ class BuildUserIdentityHandlerTest {
     private static final String USER_IDENTITY_REQUEST = "/user-identity";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private static final ContraIndicators CONTRA_INDICATORS =
-            new ContraIndicators(
-                    List.of(
-                            createCi(
-                                    "X01",
-                                    List.of(
-                                            "https://review-d.account.gov.uk",
-                                            "https://review-f.account.gov.uk")),
-                            createCi(
-                                    "X02",
-                                    List.of(
-                                            "https://review-q.account.gov.uk",
-                                            "https://review-f.account.gov.uk")),
-                            createCi(
-                                    "Z03",
-                                    List.of(
-                                            "https://review-z.account.gov.uk",
-                                            "https://review-f.account.gov.uk"))));
+    private static final List<ContraIndicator> CONTRA_INDICATORS =
+            List.of(
+                    createCi(
+                            "X01",
+                            List.of(
+                                    "https://review-d.account.gov.uk",
+                                    "https://review-f.account.gov.uk")),
+                    createCi(
+                            "X02",
+                            List.of(
+                                    "https://review-q.account.gov.uk",
+                                    "https://review-f.account.gov.uk")),
+                    createCi(
+                            "Z03",
+                            List.of(
+                                    "https://review-z.account.gov.uk",
+                                    "https://review-f.account.gov.uk")));
     private static final APIGatewayProxyRequestEvent testEvent = getEventWithAuthAndIpHeaders();
 
     @Mock private Context mockContext;
@@ -210,9 +208,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+
+        var mitigatedCi = new ContraIndicator();
+        mitigatedCi.setCode("test_code");
+        mitigatedCi.setMitigation(List.of(new Mitigation()));
+        var testCis = List.of(mitigatedCi);
+
+        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -254,8 +256,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, mockContraIndicators);
+                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -276,9 +277,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+
+        var mitigatedCi = new ContraIndicator();
+        mitigatedCi.setCode("test_code");
+        mitigatedCi.setMitigation(List.of(new Mitigation()));
+        var testCis = List.of(mitigatedCi);
+
+        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -320,8 +325,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P1, Vot.P1, mockContraIndicators);
+                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P1, Vot.P1, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -342,9 +346,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+
+        var mitigatedCi = new ContraIndicator();
+        mitigatedCi.setCode("test_code");
+        mitigatedCi.setMitigation(List.of(new Mitigation()));
+        var testCis = List.of(mitigatedCi);
+
+        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -391,8 +399,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
         verify(mockUserIdentityService)
-                .generateUserIdentity(
-                        List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, mockContraIndicators);
+                .generateUserIdentity(List.of(VC_ADDRESS), TEST_USER_ID, Vot.P2, Vot.P2, testCis);
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
@@ -528,23 +535,22 @@ class BuildUserIdentityHandlerTest {
             shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseCiConfigForAuditEventReturnCodesAndCheckedDuplicateIssuers()
                     throws Exception {
         var contraIndicators =
-                new ContraIndicators(
-                        List.of(
-                                createCi(
-                                        "X01",
-                                        List.of(
-                                                "https://review-d.account.gov.uk",
-                                                "https://review-f.account.gov.uk")),
-                                createCi(
-                                        "X02",
-                                        List.of(
-                                                "https://review-d.account.gov.uk",
-                                                "https://review-f.account.gov.uk")),
-                                createCi(
-                                        "Z03",
-                                        List.of(
-                                                "https://review-w.account.gov.uk",
-                                                "https://review-x.account.gov.uk"))));
+                List.of(
+                        createCi(
+                                "X01",
+                                List.of(
+                                        "https://review-d.account.gov.uk",
+                                        "https://review-f.account.gov.uk")),
+                        createCi(
+                                "X02",
+                                List.of(
+                                        "https://review-d.account.gov.uk",
+                                        "https://review-f.account.gov.uk")),
+                        createCi(
+                                "Z03",
+                                List.of(
+                                        "https://review-w.account.gov.uk",
+                                        "https://review-x.account.gov.uk")));
 
         // Arrange
         when(mockConfigService.getContraIndicatorConfigMap())
@@ -742,10 +748,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID, CIMIT, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-        ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
 
-        when(mockContraIndicators.hasMitigations()).thenReturn(true);
+        var mitigatedCi = new ContraIndicator();
+        mitigatedCi.setCode("test_code");
+        mitigatedCi.setMitigation(List.of(new Mitigation()));
+        var testCis = List.of(mitigatedCi);
+
+        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))

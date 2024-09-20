@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -91,7 +90,7 @@ public class UserIdentityService {
             String sub,
             Vot achievedVot,
             Vot targetVot,
-            ContraIndicators contraIndicators)
+            List<ContraIndicator> contraIndicators)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     UnrecognisedCiException {
         var profileType = achievedVot.getProfileType();
@@ -278,7 +277,7 @@ public class UserIdentityService {
     private void buildUserIdentityBasedOnProfileType(
             Vot achievedVot,
             Vot targetVot,
-            ContraIndicators contraIndicators,
+            List<ContraIndicator> contraIndicators,
             ProfileType profileType,
             List<VerifiableCredential> vcs,
             UserIdentity.UserIdentityBuilder userIdentityBuilder)
@@ -443,8 +442,8 @@ public class UserIdentityService {
                 || birthDates.stream().map(BirthDate::getValue).allMatch(StringUtils::isEmpty);
     }
 
-    private List<ReturnCode> getFailReturnCode(ContraIndicators contraIndicators, Vot targetVot)
-            throws UnrecognisedCiException {
+    private List<ReturnCode> getFailReturnCode(
+            List<ContraIndicator> contraIndicators, Vot targetVot) throws UnrecognisedCiException {
         return cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
                 ? mapCisToReturnCodes(contraIndicators)
                 : List.of(
@@ -452,7 +451,7 @@ public class UserIdentityService {
                                 configService.getParameter(RETURN_CODES_NON_CI_BREACHING_P0)));
     }
 
-    private List<ReturnCode> getSuccessReturnCode(ContraIndicators contraIndicators)
+    private List<ReturnCode> getSuccessReturnCode(List<ContraIndicator> contraIndicators)
             throws UnrecognisedCiException {
         return mapCisToReturnCodes(contraIndicators).stream()
                 .filter(
@@ -463,9 +462,9 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<ReturnCode> mapCisToReturnCodes(ContraIndicators contraIndicators)
+    private List<ReturnCode> mapCisToReturnCodes(List<ContraIndicator> contraIndicators)
             throws UnrecognisedCiException {
-        return contraIndicators.usersContraIndicators().stream()
+        return contraIndicators.stream()
                 .map(ContraIndicator::getCode)
                 .map(
                         ciCode ->

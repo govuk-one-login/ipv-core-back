@@ -7,7 +7,6 @@ plugins {
 
 dependencies {
 	implementation libs.bundles.awsLambda,
-			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:audit-service"),
 			project(":libs:journey-uris"),

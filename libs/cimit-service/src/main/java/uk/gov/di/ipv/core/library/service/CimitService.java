@@ -18,12 +18,12 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.exception.CimitHttpRequestException;
 import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.SecurityCheckCredential;
 
 import java.io.IOException;
@@ -107,7 +107,7 @@ public class CimitService {
         }
     }
 
-    public ContraIndicators getContraIndicators(
+    public List<ContraIndicator> getContraIndicators(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         var vc = getContraIndicatorsVc(userId, govukSigninJourneyId, ipAddress);
@@ -115,7 +115,7 @@ public class CimitService {
         return getContraIndicators(vc);
     }
 
-    public ContraIndicators getContraIndicators(VerifiableCredential vc)
+    public List<ContraIndicator> getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
         if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
             var evidence = cimitCredential.getEvidence();
@@ -129,9 +129,9 @@ public class CimitService {
                                         evidence == null ? 0 : evidence.size())));
                 throw new CiRetrievalException(message);
             }
-            return new ContraIndicators(
-                    requireNonNullElse(
-                            cimitCredential.getEvidence().get(0).getContraIndicator(), List.of()));
+
+            return requireNonNullElse(
+                    cimitCredential.getEvidence().get(0).getContraIndicator(), List.of());
         } else {
             String message = "Unexpected vc type";
             LOGGER.error(

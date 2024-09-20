@@ -6,14 +6,14 @@ plugins {
 }
 
 dependencies {
-	api libs.nimbusdsOauth2OidcSdk
+	api libs.nimbusdsOauth2OidcSdk,
+			libs.diVocab
 	implementation platform(libs.awsSdkBom),
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,
 			libs.commonsCodec,
 			libs.commonsCollections,
-			libs.diVocab,
 			libs.jacksonDatabind,
 			libs.jacksonDataformatYaml,
 			libs.powertoolsLogging,

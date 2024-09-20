@@ -21,7 +21,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -107,8 +106,7 @@ class BuildUserIdentityHandlerTest {
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
-        var contraIndicators = new ContraIndicators(List.of());
-        when(mockCimitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
+        when(mockCimitService.getContraIndicators(cimitVc)).thenReturn(List.of());
 
         // Configure the config service
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");

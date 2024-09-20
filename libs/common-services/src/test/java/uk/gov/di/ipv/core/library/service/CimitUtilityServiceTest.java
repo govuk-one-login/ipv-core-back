@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -9,14 +10,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
+import java.sql.Date;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +29,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -34,14 +39,92 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WI
 @ExtendWith(MockitoExtension.class)
 class CimitUtilityServiceTest {
     private static final Vot TEST_VOT = Vot.P2;
+    private static final String TEST_CI1 = "CI1";
+    private static final String TEST_CI2 = "CI2";
+    private static final String TEST_CI3 = "CI3";
+    private static final Instant BASE_TIME = Instant.now();
+    private static final Map<String, ContraIndicatorConfig> CONTRA_INDICATOR_CONFIG_MAP =
+            Map.of(
+                    TEST_CI1,
+                    new ContraIndicatorConfig(TEST_CI1, 4, -3, "1"),
+                    TEST_CI2,
+                    new ContraIndicatorConfig(TEST_CI2, 3, -3, "2"),
+                    TEST_CI3,
+                    new ContraIndicatorConfig(TEST_CI3, 2, -1, "3"));
+
     @Mock private ConfigService mockConfigService;
 
     @InjectMocks private CimitUtilityService cimitUtilityService;
 
-    private static ContraIndicator createCi(String code) {
-        var ci = new ContraIndicator();
-        ci.setCode(code);
-        return ci;
+    @BeforeEach
+    void setup() {
+        lenient()
+                .when(mockConfigService.getContraIndicatorConfigMap())
+                .thenReturn(CONTRA_INDICATOR_CONFIG_MAP);
+    }
+
+    @ParameterizedTest
+    @MethodSource("cisAndScores")
+    void getContraIndicatorScoreShouldReturnCorrectScore(
+            List<ContraIndicator> cis, int expectedScore) throws UnrecognisedCiException {
+        assertEquals(expectedScore, cimitUtilityService.getContraIndicatorScore(cis));
+    }
+
+    static Stream<Arguments> cisAndScores() {
+        return Stream.of(
+                Arguments.of(List.of(), 0),
+                Arguments.of(
+                        List.of(
+                                createCi(
+                                        TEST_CI1,
+                                        BASE_TIME.minusSeconds(1),
+                                        List.of(new Mitigation()),
+                                        "passport"),
+                                createCi(
+                                        TEST_CI1,
+                                        BASE_TIME.minusSeconds(3),
+                                        List.of(),
+                                        "drivingLicence"),
+                                createCi(
+                                        TEST_CI2,
+                                        BASE_TIME.minusSeconds(2),
+                                        List.of(new Mitigation()),
+                                        null)),
+                        5),
+                Arguments.of(
+                        List.of(
+                                createCi(
+                                        TEST_CI1,
+                                        BASE_TIME.minusSeconds(1),
+                                        List.of(new Mitigation()),
+                                        null),
+                                createCi(
+                                        TEST_CI2,
+                                        BASE_TIME.minusSeconds(2),
+                                        Collections.emptyList(),
+                                        null),
+                                createCi(TEST_CI3, BASE_TIME.minusSeconds(4), null, null)),
+                        6));
+    }
+
+    @Test
+    void shouldRaiseExceptionIfScoringUnrecognisedContraIndicator() {
+        var cis =
+                List.of(
+                        createCi(
+                                TEST_CI1,
+                                BASE_TIME.minusSeconds(1),
+                                List.of(new Mitigation()),
+                                null),
+                        createCi(
+                                "unknown",
+                                BASE_TIME.minusSeconds(2),
+                                List.of(new Mitigation()),
+                                null));
+
+        assertThrows(
+                UnrecognisedCiException.class,
+                () -> cimitUtilityService.getContraIndicatorScore(cis));
     }
 
     @ParameterizedTest
@@ -61,7 +144,7 @@ class CimitUtilityServiceTest {
 
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
-        var cis = new ContraIndicators(List.of(createCi("ci_1"), createCi("ci_2")));
+        var cis = List.of(createCi("ci_1"), createCi("ci_2"));
 
         // Act
         var result = cimitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
@@ -99,7 +182,7 @@ class CimitUtilityServiceTest {
 
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
-        var cis = new ContraIndicators(List.of(createCi("ci_1"), createCi("ci_2")));
+        var cis = List.of(createCi("ci_1"), createCi("ci_2"));
 
         // Act
         var result = cimitUtilityService.isBreachingCiThreshold(cis, TEST_VOT);
@@ -125,7 +208,7 @@ class CimitUtilityServiceTest {
         // Arrange
         var ci1 = createCi("ciCode1");
         var ci2 = createCi("ciCode2");
-        var cis = new ContraIndicators(List.of(ci1, ci2));
+        var cis = List.of(ci1, ci2);
 
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
@@ -146,7 +229,7 @@ class CimitUtilityServiceTest {
         // Arrange
         var ci1 = createCi("ciCode1");
         var ci2 = createCi("ciCode2");
-        var cis = new ContraIndicators(List.of(ci1, ci2));
+        var cis = List.of(ci1, ci2);
 
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
@@ -166,7 +249,7 @@ class CimitUtilityServiceTest {
     void isBreachingCiThresholdIfMitigated_ShouldReturnFalse_WhenScoreEqualsThreshold() {
         var ci1 = createCi("ciCode1");
         var ci2 = createCi("ciCode2");
-        var cis = new ContraIndicators(List.of(ci1, ci2));
+        var cis = List.of(ci1, ci2);
 
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(
@@ -199,7 +282,7 @@ class CimitUtilityServiceTest {
 
         when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
 
-        var cis = new ContraIndicators(List.of(createCi("ci_1"), createCi("ci_2")));
+        var cis = List.of(createCi("ci_1"), createCi("ci_2"));
 
         // Act
         var result = cimitUtilityService.getMitigationJourneyIfBreaching(cis, TEST_VOT);
@@ -222,7 +305,7 @@ class CimitUtilityServiceTest {
         String documentType = "doc_type";
         var ci = createCi(code);
         ci.setDocument(document);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
@@ -245,7 +328,7 @@ class CimitUtilityServiceTest {
         var code = "ci_code";
         var journey = "some_mitigation";
         var ci = createCi(code);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, null))));
@@ -272,7 +355,7 @@ class CimitUtilityServiceTest {
         String configuredDocumentIdentifier = "a-configured-doc-type";
         var ci = createCi(code);
         ci.setDocument(ciDocumentIdentifier);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(
@@ -300,7 +383,7 @@ class CimitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
         Map<String, ContraIndicatorConfig> ciConfigMap =
@@ -322,7 +405,7 @@ class CimitUtilityServiceTest {
         var code = "ci_code";
         var ci = createCi(code);
         ci.setMitigation(List.of(new Mitigation()));
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         Map<String, ContraIndicatorConfig> ciConfigMap =
                 Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
@@ -342,7 +425,7 @@ class CimitUtilityServiceTest {
         // arrange
         var code = "ci_code";
         var ci = createCi(code);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute("journey", null))));
@@ -366,7 +449,7 @@ class CimitUtilityServiceTest {
         var code = "ci_code";
         var journey = "some_mitigation";
         var ci = createCi(code);
-        var cis = new ContraIndicators(List.of(ci));
+        var cis = List.of(ci);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, "documentType"))));
@@ -396,7 +479,7 @@ class CimitUtilityServiceTest {
         var mitCi = createCi("mit_ci_code");
         ci.setDocument(document);
         ci.setMitigation(List.of(new Mitigation()));
-        var cis = new ContraIndicators(List.of(ci, mitCi));
+        var cis = List.of(ci, mitCi);
 
         when(mockConfigService.getCimitConfig())
                 .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
@@ -473,5 +556,21 @@ class CimitUtilityServiceTest {
 
         // Assert
         assertTrue(result.isEmpty());
+    }
+
+    private static ContraIndicator createCi(String code) {
+        var ci = new ContraIndicator();
+        ci.setCode(code);
+        return ci;
+    }
+
+    private static ContraIndicator createCi(
+            String code, Instant issuanceDate, List<Mitigation> mitigations, String document) {
+        var ci = new ContraIndicator();
+        ci.setCode(code);
+        ci.setIssuanceDate(Date.from(issuanceDate));
+        ci.setMitigation(mitigations);
+        ci.setDocument(document);
+        return ci;
     }
 }

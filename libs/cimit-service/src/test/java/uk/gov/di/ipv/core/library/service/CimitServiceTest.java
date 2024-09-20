@@ -228,7 +228,7 @@ class CimitServiceTest {
 
         assertEquals(
                 "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
-                OBJECT_MAPPER.writeValueAsString(cis.usersContraIndicators()));
+                OBJECT_MAPPER.writeValueAsString(cis));
     }
 
     @Test
@@ -317,7 +317,7 @@ class CimitServiceTest {
                                 null,
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
-        assertTrue(contraIndicators.usersContraIndicators().isEmpty());
+        assertTrue(contraIndicators.isEmpty());
     }
 
     @Test
@@ -330,15 +330,5 @@ class CimitServiceTest {
                                         TEST_USER_ID,
                                         null,
                                         SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE))));
-    }
-
-    @Test
-    void getContraIndicatorsReturnsContraIndicatorsFromSignedJwt() throws Exception {
-        var contraIndicators =
-                cimitService.getContraIndicators(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
-
-        assertTrue(contraIndicators.hasMitigations());
     }
 }

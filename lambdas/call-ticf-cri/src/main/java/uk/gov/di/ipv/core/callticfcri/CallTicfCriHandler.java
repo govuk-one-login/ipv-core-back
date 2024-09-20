@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -35,7 +34,9 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.ContraIndicator;
 
+import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -168,7 +169,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 clientOAuthSessionItem,
                 ipvSessionItem);
 
-        ContraIndicators cis =
+        List<ContraIndicator> cis =
                 cimitService.getContraIndicators(
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),

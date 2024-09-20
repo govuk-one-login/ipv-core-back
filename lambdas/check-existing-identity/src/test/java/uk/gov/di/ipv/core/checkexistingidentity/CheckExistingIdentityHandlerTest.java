@@ -32,7 +32,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -669,14 +668,11 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
-            var testContraIndicators = new ContraIndicators(List.of());
             when(cimitService.getContraIndicators(
                             TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                    .thenReturn(testContraIndicators);
-            when(cimitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P2))
-                    .thenReturn(true);
-            when(cimitUtilityService.isBreachingCiThreshold(testContraIndicators, Vot.P1))
-                    .thenReturn(false);
+                    .thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), eq(Vot.P2))).thenReturn(true);
+            when(cimitUtilityService.isBreachingCiThreshold(any(), eq(Vot.P1))).thenReturn(false);
 
             clientOAuthSessionItem.setVtr(List.of(Vot.P1.name(), P2.name()));
 
@@ -1025,12 +1021,11 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnCiJourneyResponseIfPresent() throws Exception {
         var testJourneyResponse = "/journey/test-response";
-        var testContraIndicators = new ContraIndicators(List.of());
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(List.of());
+        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1047,12 +1042,10 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailWithCiJourneyResponseForCiBreach() throws Exception {
-        var testContraIndicators = new ContraIndicators(List.of());
-
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
+                .thenReturn(List.of());
+        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1193,12 +1186,11 @@ class CheckExistingIdentityHandlerTest {
     void
             shouldReturnJourneyFailedWithCiIfTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
                     throws Exception {
-        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(testContraIndicators);
+                .thenReturn(List.of());
         when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
@@ -1212,12 +1204,11 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnReproveP2JourneyStepResponseIfResetIdentityTrue() throws Exception {
-        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(testContraIndicators);
+                .thenReturn(List.of());
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
@@ -1233,13 +1224,12 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnReproveP1JourneyStepResponseIfResetIdentityTrueAndP1InVtr() throws Exception {
-        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(testContraIndicators);
+                .thenReturn(List.of());
         when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(false);
         when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
@@ -1260,7 +1250,7 @@ class CheckExistingIdentityHandlerTest {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+        var testContraIndicators = List.of(mitigatedCI);
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1288,7 +1278,7 @@ class CheckExistingIdentityHandlerTest {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+        var testContraIndicators = List.of(mitigatedCI);
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1321,7 +1311,7 @@ class CheckExistingIdentityHandlerTest {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+        var testContraIndicators = List.of(mitigatedCI);
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1357,7 +1347,7 @@ class CheckExistingIdentityHandlerTest {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+        var testContraIndicators = List.of(mitigatedCI);
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))

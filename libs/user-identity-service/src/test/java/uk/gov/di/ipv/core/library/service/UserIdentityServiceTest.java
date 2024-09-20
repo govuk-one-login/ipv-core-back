@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
@@ -71,7 +70,7 @@ import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 class UserIdentityServiceTest {
     private static final String USER_ID_1 = "user-id-1";
 
-    private final ContraIndicators emptyContraIndicators = new ContraIndicators(List.of());
+    private final List<ContraIndicator> emptyContraIndicators = List.of();
     private final Map<ConfigurationVariable, String> paramsToMockForP2 =
             Map.of(CORE_VTM_CLAIM, "mock-vtm-claim");
     private final Map<ConfigurationVariable, String> paramsToMockForP0 =
@@ -1575,8 +1574,7 @@ class UserIdentityServiceTest {
                                 "X02", new ContraIndicatorConfig("X02", 4, -3, "2"),
                                 "Z03", new ContraIndicatorConfig("Z03", 4, -3, "3")));
 
-        var contraIndicators =
-                new ContraIndicators(List.of(createCi("X01"), createCi("X02"), createCi("Z03")));
+        var contraIndicators = List.of(createCi("X01"), createCi("X02"), createCi("Z03"));
 
         // Act
         var userIdentity =
@@ -1609,7 +1607,7 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
-        var contraIndicators = new ContraIndicators(List.of(createCi("wat")));
+        var contraIndicators = List.of(createCi("wat"));
 
         // Act & Assert
         assertThrows(
@@ -1633,8 +1631,7 @@ class UserIdentityServiceTest {
 
         var mitigatedCi = createCi("X02");
         mitigatedCi.setMitigation(List.of(new Mitigation()));
-        var contraIndicators =
-                new ContraIndicators(List.of(createCi("X01"), mitigatedCi, createCi("Z03")));
+        var contraIndicators = List.of(createCi("X01"), mitigatedCi, createCi("Z03"));
 
         // Act
         var userIdentity =
@@ -1655,7 +1652,7 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
-        var contraIndicators = new ContraIndicators(List.of(createCi("wat")));
+        var contraIndicators = List.of(createCi("wat"));
 
         assertThrows(
                 UnrecognisedCiException.class,
@@ -1678,12 +1675,7 @@ class UserIdentityServiceTest {
                                 "Z04", new ContraIndicatorConfig("Z04", 4, -3, "2")));
 
         var contraIndicators =
-                new ContraIndicators(
-                        List.of(
-                                createCi("X01"),
-                                createCi("X02"),
-                                createCi("Z03"),
-                                createCi("Z04")));
+                List.of(createCi("X01"), createCi("X02"), createCi("Z03"), createCi("Z04"));
 
         // Act
         var userIdentity =
@@ -1707,7 +1699,7 @@ class UserIdentityServiceTest {
         when(mockConfigService.getContraIndicatorConfigMap())
                 .thenReturn(Map.of("X01", new ContraIndicatorConfig("X01", 4, -3, "1")));
 
-        var contraIndicators = new ContraIndicators(List.of(createCi("X01")));
+        var contraIndicators = List.of(createCi("X01"));
 
         // Act
         var userIdentity =

@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -41,10 +40,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.ContraIndicator;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
@@ -174,7 +176,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             Vot achievedVot,
             Vot thresholdVot,
             AuditEventUser auditEventUser,
-            ContraIndicators contraIndicators,
+            List<ContraIndicator> contraIndicators,
             UserIdentity userIdentity) {
 
         var configMap = configService.getContraIndicatorConfigMap();
@@ -190,7 +192,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                 new AuditExtensionsUserIdentity(
                         achievedVot,
                         cimitUtilityService.isBreachingCiThreshold(contraIndicators, thresholdVot),
-                        contraIndicators.hasMitigations(),
+                        contraIndicators.stream()
+                                .anyMatch(ci -> !isNullOrEmpty(ci.getMitigation())),
                         auditEventReturnCodes);
 
         LOGGER.info(LogHelper.buildLogMessage("Sending audit event IPV_IDENTITY_ISSUED message."));
@@ -204,15 +207,16 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     private AuditEventReturnCode getAuditEventReturnCodes(
             ReturnCode returnCode,
-            ContraIndicators contraIndicators,
-            Map<String, ContraIndicatorConfig> ciConfig) {
+            List<ContraIndicator> contraIndicators,
+            Map<String, ContraIndicatorConfig> ciConfigMap) {
         var issuers =
-                contraIndicators.usersContraIndicators().stream()
+                contraIndicators.stream()
                         .filter(
-                                ci ->
-                                        ciConfig.get(ci.getCode())
-                                                .getReturnCode()
-                                                .equals(returnCode.code()))
+                                ci -> {
+                                    var ciConfig = ciConfigMap.get(ci.getCode());
+                                    return ciConfig != null
+                                            && ciConfig.getReturnCode().equals(returnCode.code());
+                                })
                         .flatMap(ci -> ci.getIssuers().stream())
                         .map(URI::toString)
                         .distinct()
