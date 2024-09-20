@@ -385,7 +385,7 @@ KBVS:
     corresponding to the target Vector of Trust (P1 or P2).
   entryEvents:
     next:
-      targetState: PRE_DWP_KBV_PIP_PAGE
+      targetState: CRI_DWP_KBV
       checkIfDisabled:
         dwpKbv:
           targetState: CRI_NINO
@@ -393,7 +393,7 @@ KBVS:
             hmrcKbv:
               targetState: PRE_EXPERIAN_PAGE
     next-with-nino:
-      targetState: PRE_DWP_KBV_PIP_PAGE
+      targetState: CRI_DWP_KBV
       checkIfDisabled:
         dwpKbv:
           targetState: CRI_HMRC_KBV
@@ -439,6 +439,13 @@ KBVS:
           targetState: PRE_EXPERIAN_PAGE
         access-denied:
           targetState: PRE_EXPERIAN_PAGE
+    PRE_EXPERIAN_PAGE:
+      response:
+        type: page
+        pageId: page-pre-experian-kbv-transition
+      events:
+        next:
+          targetState: CRI_EXPERIAN_KBV
     CRI_EXPERIAN_KBV:
       response:
         type: cri
@@ -451,31 +458,3 @@ KBVS:
           exitEventToEmit: next
         enhanced-verification:
           exitEventToEmit: enhanced-verification
-    PRE_EXPERIAN_PAGE:
-      response:
-        type: page
-        pageId: page-pre-experian-kbv-transition
-      events:
-        next:
-          targetState: CRI_EXPERIAN_KBV
-    PRE_DWP_KBV_PIP_PAGE:
-      response:
-        type: page
-        pageId: personal-independence-payment
-      events:
-        next:
-          targetState: PRE_DWP_KBV_TRANSITION_PAGE
-        end:
-          targetState: CRI_NINO
-          checkIfDisabled:
-            hmrcKbv:
-              targetState: PRE_EXPERIAN_PAGE
-    PRE_DWP_KBV_TRANSITION_PAGE:
-      response:
-        type: page
-        pageId: page-pre-dwp-kbv-transition
-      events:
-        next:
-          targetState: CRI_DWP_KBV
-        end:
-          exitEventToEmit: end
