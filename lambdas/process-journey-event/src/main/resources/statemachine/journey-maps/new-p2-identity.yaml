@@ -225,6 +225,7 @@ states:
         targetState: CHECK_FRAUD_AFTER_DL
       next-passport:
         targetState: KBV_PHOTO_ID
+        targetEntryEvent: next
       alternate-doc-next-dl:
         targetState: MITIGATION_CHECK_FRAUD_AFTER_DL
       alternate-doc-next-passport:
