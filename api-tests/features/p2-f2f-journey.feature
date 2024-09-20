@@ -50,7 +50,7 @@ Feature: P2 F2F journey
       When I submit a 'end' event
       Then I get a 'page-ipv-pending' page response
 
-  Rule: Successful f2f journeys
+  Rule: Successful F2F journeys
     Scenario Outline: Successful P2 identity via F2F using <doc>
       # Initial journey
       Given I start a new 'medium-confidence' journey
@@ -114,8 +114,8 @@ Feature: P2 F2F journey
         | passport | kenneth-passport-valid       |
         | DL       | kenneth-driving-permit-valid |
 
-  Rule: Oauth error f2f journeys
-    Background: User starts f2f journey
+  Rule: Oauth error F2F journeys
+    Background: User starts F2F journey
       Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
@@ -129,17 +129,17 @@ Feature: P2 F2F journey
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
 
-    Scenario Outline: Oauth access_denied error F2F
+    Scenario: Oauth access_denied error F2F
       # Initial journey
       When I get an 'access_denied' OAuth error from the CRI stub
       Then I get a 'pyi-another-way' page response
 
-    Scenario Outline: Oauth temporarily_unavailable error F2F
+    Scenario: Oauth temporarily_unavailable error F2F
       # Initial journey
       When I get an 'temporarily_unavailable' OAuth error from the CRI stub
       Then I get a 'pyi-technical' page response
 
-    Scenario Outline: Async queue error
+    Scenario: Async queue error
       When I get an error from the async CRI stub
       Then I get a 'page-face-to-face-handoff' page response
 
@@ -148,7 +148,7 @@ Feature: P2 F2F journey
       When I submit a 'end' event
       Then I get an OAuth response
 
-  Scenario: f2f PYI escpae route
+  Scenario: F2F PYI escpae route
     Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
@@ -156,8 +156,8 @@ Feature: P2 F2F journey
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-  Rule: F2f evidence requested strength score
-    Background: User has pending f2f verification
+  Rule: F2F evidence requested strength score
+    Background: User has pending F2F verification
       Given I start a new 'medium-confidence' journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -172,7 +172,7 @@ Feature: P2 F2F journey
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response
 
-    Scenario Outline: requested strengh score three for fraud score 2
+    Scenario: requested strength score three for fraud score 2
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
@@ -180,7 +180,7 @@ Feature: P2 F2F journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
-    Scenario Outline: requested strengh score four for fraud score 1
+    Scenario: requested strength score four for fraud score 1
       When I submit 'kenneth-score-1' details to the CRI stub
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
@@ -188,7 +188,7 @@ Feature: P2 F2F journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
       Then I get a 'page-face-to-face-handoff' page response
 
-    Scenario Outline: requested strengh score four for history score 0
+    Scenario: requested strength score four fraud score 1 and history 0
       When I submit 'kenneth-score-1-history-0' details to the CRI stub
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
@@ -196,7 +196,7 @@ Feature: P2 F2F journey
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
       Then I get a 'page-face-to-face-handoff' page response
 
-    Scenario Outline: requested strengh score four for history score 1
+    Scenario: requested strength score four for fraud score 2 and history 0
       When I submit 'kenneth-score-2-history-0' details to the CRI stub
       Then I get a 'f2f' CRI response
       When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
