@@ -332,11 +332,6 @@ states:
         checkIfDisabled:
           f2f:
             targetState: PYI_CRI_ESCAPE_NO_F2F
-      end:
-        targetState: PYI_CRI_ESCAPE
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
@@ -453,11 +448,6 @@ states:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
-      end:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
         checkIfDisabled:
           f2f:
@@ -764,9 +754,6 @@ states:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
       next:
