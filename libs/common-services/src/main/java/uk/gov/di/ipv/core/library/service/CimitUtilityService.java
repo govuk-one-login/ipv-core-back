@@ -3,9 +3,9 @@ package uk.gov.di.ipv.core.library.service;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,7 +60,7 @@ public class CimitUtilityService {
             ContraIndicators contraIndicators, Vot confidenceRequested) throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
-        for (var ci : contraIndicators.getUsersContraIndicators()) {
+        for (var ci : contraIndicators.usersContraIndicators()) {
             if (isCiMitigatable(ci)
                     && !isBreachingCiThresholdIfMitigated(
                             ci, contraIndicators, confidenceRequested)) {
@@ -79,7 +79,7 @@ public class CimitUtilityService {
     public Optional<JourneyResponse> getMitigatedCiJourneyResponse(ContraIndicator ci)
             throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {
+        if (cimitConfig.containsKey(ci.getCode()) && isMitigated(ci)) {
             return getMitigationJourneyResponse(cimitConfig.get(ci.getCode()), ci.getDocument());
         }
         return Optional.empty();
@@ -87,8 +87,8 @@ public class CimitUtilityService {
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
             ContraIndicators contraIndicators) {
-        return contraIndicators.getUsersContraIndicators().stream()
-                .filter(ContraIndicator::isMitigated)
+        return contraIndicators.usersContraIndicators().stream()
+                .filter(this::isMitigated)
                 .findFirst();
     }
 
@@ -102,8 +102,12 @@ public class CimitUtilityService {
                 .map(JourneyResponse::new);
     }
 
+    private boolean isMitigated(ContraIndicator ci) {
+        return ci.getMitigation() != null && !ci.getMitigation().isEmpty();
+    }
+
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
+        return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
     }
 }

@@ -42,6 +42,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.net.URI;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -206,13 +207,14 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             ContraIndicators contraIndicators,
             Map<String, ContraIndicatorConfig> ciConfig) {
         var issuers =
-                contraIndicators.getUsersContraIndicators().stream()
+                contraIndicators.usersContraIndicators().stream()
                         .filter(
                                 ci ->
                                         ciConfig.get(ci.getCode())
                                                 .getReturnCode()
                                                 .equals(returnCode.code()))
                         .flatMap(ci -> ci.getIssuers().stream())
+                        .map(URI::toString)
                         .distinct()
                         .toList();
         return new AuditEventReturnCode(returnCode.code(), issuers);

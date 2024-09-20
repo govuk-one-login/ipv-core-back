@@ -107,7 +107,7 @@ class BuildUserIdentityHandlerTest {
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
-        var contraIndicators = ContraIndicators.builder().usersContraIndicators(List.of()).build();
+        var contraIndicators = new ContraIndicators(List.of());
         when(mockCimitService.getContraIndicators(cimitVc)).thenReturn(contraIndicators);
 
         // Configure the config service

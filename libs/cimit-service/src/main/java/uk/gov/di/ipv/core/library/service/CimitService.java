@@ -20,13 +20,11 @@ import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.cimitvc.CimitJwt;
-import uk.gov.di.ipv.core.library.domain.cimitvc.CimitVc;
-import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
+import uk.gov.di.model.SecurityCheckCredential;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,10 +32,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Collections;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
+import static java.util.Objects.requireNonNullElse;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 
@@ -119,13 +117,31 @@ public class CimitService {
 
     public ContraIndicators getContraIndicators(VerifiableCredential vc)
             throws CiRetrievalException {
-        var evidenceItem = parseContraIndicatorEvidence(vc);
-        return ContraIndicators.builder()
-                .usersContraIndicators(
-                        evidenceItem.getContraIndicator() != null
-                                ? evidenceItem.getContraIndicator()
-                                : Collections.emptyList())
-                .build();
+        if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
+            var evidence = cimitCredential.getEvidence();
+            if (evidence == null || evidence.size() != 1) {
+                String message = "Unexpected evidence count";
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                message,
+                                String.format(
+                                        "Expected one evidence item, got %d",
+                                        evidence == null ? 0 : evidence.size())));
+                throw new CiRetrievalException(message);
+            }
+            return new ContraIndicators(
+                    requireNonNullElse(
+                            cimitCredential.getEvidence().get(0).getContraIndicator(), List.of()));
+        } else {
+            String message = "Unexpected vc type";
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            message,
+                            String.format(
+                                    "Expected SecurityCheckCredential, got %s",
+                                    vc.getCredential().getClass())));
+            throw new CiRetrievalException(message);
+        }
     }
 
     @Tracing
@@ -186,38 +202,6 @@ public class CimitService {
             LOGGER.error(LogHelper.buildLogMessage(vcEx.getErrorResponse().getMessage()));
             throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
         }
-    }
-
-    private EvidenceItem parseContraIndicatorEvidence(VerifiableCredential vc)
-            throws CiRetrievalException {
-
-        var claimSetJsonObject = vc.getClaimsSet().toJSONObject();
-        CimitJwt cimitJwt = OBJECT_MAPPER.convertValue(claimSetJsonObject, CimitJwt.class);
-        if (cimitJwt == null) {
-            String message = "Failed to convert claim set object to CIMIT JWT";
-            LOGGER.error(LogHelper.buildLogMessage(message));
-            throw new CiRetrievalException(message);
-        }
-        CimitVc vcClaim = cimitJwt.getVc();
-        if (vcClaim == null) {
-            String message = "VC claim not found in CIMIT JWT";
-            LOGGER.error(LogHelper.buildLogMessage(message));
-            throw new CiRetrievalException(message);
-        }
-
-        List<EvidenceItem> evidenceList = vcClaim.getEvidence();
-        if (evidenceList == null || evidenceList.size() != 1) {
-            String message = "Unexpected evidence count";
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            message,
-                            String.format(
-                                    "Expected one evidence item, got %d",
-                                    evidenceList == null ? 0 : evidenceList.size())));
-            throw new CiRetrievalException(message);
-        }
-
-        return evidenceList.get(0);
     }
 
     private void logApiRequestError(CimitApiResponse failedResponse) {

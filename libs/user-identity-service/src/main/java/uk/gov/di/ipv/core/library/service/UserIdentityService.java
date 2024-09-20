@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -23,6 +22,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -465,7 +465,7 @@ public class UserIdentityService {
 
     private List<ReturnCode> mapCisToReturnCodes(ContraIndicators contraIndicators)
             throws UnrecognisedCiException {
-        return contraIndicators.getUsersContraIndicators().stream()
+        return contraIndicators.usersContraIndicators().stream()
                 .map(ContraIndicator::getCode)
                 .map(
                         ciCode ->

@@ -38,8 +38,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -68,6 +66,8 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.Mitigation;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -669,7 +669,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(EVCS_READ_ENABLED)).thenReturn(false);
             when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
-            var testContraIndicators = ContraIndicators.builder().build();
+            var testContraIndicators = new ContraIndicators(List.of());
             when(cimitService.getContraIndicators(
                             TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                     .thenReturn(testContraIndicators);
@@ -1025,7 +1025,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnCiJourneyResponseIfPresent() throws Exception {
         var testJourneyResponse = "/journey/test-response";
-        var testContraIndicators = ContraIndicators.builder().build();
+        var testContraIndicators = new ContraIndicators(List.of());
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
@@ -1047,7 +1047,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailWithCiJourneyResponseForCiBreach() throws Exception {
-        var testContraIndicators = ContraIndicators.builder().build();
+        var testContraIndicators = new ContraIndicators(List.of());
 
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
@@ -1193,7 +1193,7 @@ class CheckExistingIdentityHandlerTest {
     void
             shouldReturnJourneyFailedWithCiIfTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
                     throws Exception {
-        var testContraIndicators = ContraIndicators.builder().build();
+        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1212,7 +1212,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnReproveP2JourneyStepResponseIfResetIdentityTrue() throws Exception {
-        var testContraIndicators = ContraIndicators.builder().build();
+        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1233,7 +1233,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnReproveP1JourneyStepResponseIfResetIdentityTrueAndP1InVtr() throws Exception {
-        var testContraIndicators = ContraIndicators.builder().build();
+        var testContraIndicators = new ContraIndicators(List.of());
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of(P2.name(), P1.name()));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -1257,10 +1257,11 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnSameMitigationJourneyWhenCiAlreadyMitigated() throws Exception {
         var journey = "some_mitigation";
-        var mitigatedCI =
-                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
-        var testContraIndicators =
-                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
+        var mitigatedCI = new ContraIndicator();
+        mitigatedCI.setCode("test_code");
+        mitigatedCI.setMitigation(List.of(new Mitigation()));
+        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1284,10 +1285,11 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnSameJourneyMitigationWhenCiAlreadyMitigatedF2F() throws Exception {
-        var mitigatedCI =
-                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
-        var testContraIndicators =
-                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
+        var mitigatedCI = new ContraIndicator();
+        mitigatedCI.setCode("test_code");
+        mitigatedCI.setMitigation(List.of(new Mitigation()));
+        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1316,10 +1318,11 @@ class CheckExistingIdentityHandlerTest {
     void
             shouldReturnErrorResponseIfNoMitigationRouteFoundForAlreadyMitigatedCiWhenBuildingF2FNoMatchResponse()
                     throws Exception {
-        var mitigatedCI =
-                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
-        var testContraIndicators =
-                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
+        var mitigatedCI = new ContraIndicator();
+        mitigatedCI.setCode("test_code");
+        mitigatedCI.setMitigation(List.of(new Mitigation()));
+        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1351,10 +1354,11 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnErrorResponseWhenCiMitigationJourneyStepPresentButNotSupported()
             throws Exception {
         var journey = "unsupported_mitigation";
-        var mitigatedCI =
-                ContraIndicator.builder().mitigation(List.of(Mitigation.builder().build())).build();
-        var testContraIndicators =
-                ContraIndicators.builder().usersContraIndicators(List.of(mitigatedCI)).build();
+        var mitigatedCI = new ContraIndicator();
+        mitigatedCI.setCode("test_code");
+        mitigatedCI.setMitigation(List.of(new Mitigation()));
+        var testContraIndicators = new ContraIndicators(List.of(mitigatedCI));
+
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

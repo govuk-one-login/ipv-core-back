@@ -1,21 +1,13 @@
 package uk.gov.di.ipv.core.library.domain;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Getter
-@Builder(toBuilder = true)
-@ToString
-public class ContraIndicators {
-    private final List<ContraIndicator> usersContraIndicators;
-
+public record ContraIndicators(List<ContraIndicator> usersContraIndicators) {
     public Integer getContraIndicatorScore(
             final Map<String, ContraIndicatorConfig> contraIndicatorScores)
             throws UnrecognisedCiException {
@@ -25,7 +17,7 @@ public class ContraIndicators {
     }
 
     public boolean hasMitigations() {
-        return usersContraIndicators.stream().anyMatch(ContraIndicator::isMitigated);
+        return usersContraIndicators.stream().anyMatch(this::isMitigated);
     }
 
     private void validateContraIndicators(
@@ -55,12 +47,16 @@ public class ContraIndicators {
     private Integer calculateCheckedScore(
             final Map<String, ContraIndicatorConfig> contraIndicatorScores) {
         return usersContraIndicators.stream()
-                .filter(ContraIndicator::isMitigated)
+                .filter(this::isMitigated)
                 .map(
                         contraIndicator ->
                                 contraIndicatorScores
                                         .get(contraIndicator.getCode())
                                         .getCheckedScore())
                 .reduce(0, Integer::sum);
+    }
+
+    private boolean isMitigated(ContraIndicator ci) {
+        return ci.getMitigation() != null && !ci.getMitigation().isEmpty();
     }
 }

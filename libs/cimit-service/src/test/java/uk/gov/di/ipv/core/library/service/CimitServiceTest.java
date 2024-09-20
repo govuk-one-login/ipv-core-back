@@ -225,9 +225,10 @@ class CimitServiceTest {
                         .headers()
                         .map()
                         .containsKey(CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER));
+
         assertEquals(
-                "ContraIndicators(usersContraIndicators=[ContraIndicator(code=D01, issuers=[https://issuing-cri.example], issuanceDate=2022-09-20T15:54:50.000Z, document=passport/GBR/824159121, txn=[abcdef], mitigation=[Mitigation(code=M01, mitigatingCredential=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50.000Z, txn=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigation=[Mitigation(code=M02, mitigatingCredential=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50.000Z, txn=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])])",
-                cis.toString());
+                "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
+                OBJECT_MAPPER.writeValueAsString(cis.usersContraIndicators()));
     }
 
     @Test
@@ -316,7 +317,7 @@ class CimitServiceTest {
                                 null,
                                 SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
-        assertTrue(contraIndicators.getUsersContraIndicators().isEmpty());
+        assertTrue(contraIndicators.usersContraIndicators().isEmpty());
     }
 
     @Test

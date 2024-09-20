@@ -18,8 +18,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -68,16 +66,7 @@ class CriCheckingServiceTest {
     private static final String TEST_CRI_OAUTH_SESSION_ID = "test_cri_oauth_session_id";
     private static final String TEST_USER_ID = "test_user_id";
     private static final String TEST_GOVUK_SIGNIN_JOURNEY_ID = "test_govuk_signin_journey_id";
-    private static final String TEST_CI_CODE = "test_ci_code";
-    private static final ContraIndicators TEST_CONTRA_INDICATORS =
-            ContraIndicators.builder()
-                    .usersContraIndicators(
-                            List.of(
-                                    ContraIndicator.builder()
-                                            .code(TEST_CI_CODE)
-                                            .mitigation(List.of(Mitigation.builder().build()))
-                                            .build()))
-                    .build();
+    private static final ContraIndicators TEST_CONTRA_INDICATORS = new ContraIndicators(List.of());
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;

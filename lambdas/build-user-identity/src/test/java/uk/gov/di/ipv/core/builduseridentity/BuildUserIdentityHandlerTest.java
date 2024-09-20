@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -54,6 +53,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.Name;
 import uk.gov.di.model.NamePart;
@@ -61,6 +61,8 @@ import uk.gov.di.model.PassportDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -109,31 +111,23 @@ class BuildUserIdentityHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
     private static final ContraIndicators CONTRA_INDICATORS =
-            ContraIndicators.builder()
-                    .usersContraIndicators(
-                            List.of(
-                                    ContraIndicator.builder()
-                                            .code("X01")
-                                            .issuers(
-                                                    List.of(
-                                                            "https://review-d.account.gov.uk",
-                                                            "https://review-f.account.gov.uk"))
-                                            .build(),
-                                    ContraIndicator.builder()
-                                            .code("X02")
-                                            .issuers(
-                                                    List.of(
-                                                            "https://review-q.account.gov.uk",
-                                                            "https://review-f.account.gov.uk"))
-                                            .build(),
-                                    ContraIndicator.builder()
-                                            .code("Z03")
-                                            .issuers(
-                                                    List.of(
-                                                            "https://review-z.account.gov.uk",
-                                                            "https://review-f.account.gov.uk"))
-                                            .build()))
-                    .build();
+            new ContraIndicators(
+                    List.of(
+                            createCi(
+                                    "X01",
+                                    List.of(
+                                            "https://review-d.account.gov.uk",
+                                            "https://review-f.account.gov.uk")),
+                            createCi(
+                                    "X02",
+                                    List.of(
+                                            "https://review-q.account.gov.uk",
+                                            "https://review-f.account.gov.uk")),
+                            createCi(
+                                    "Z03",
+                                    List.of(
+                                            "https://review-z.account.gov.uk",
+                                            "https://review-f.account.gov.uk"))));
     private static final APIGatewayProxyRequestEvent testEvent = getEventWithAuthAndIpHeaders();
 
     @Mock private Context mockContext;
@@ -533,32 +527,24 @@ class BuildUserIdentityHandlerTest {
     void
             shouldReturnCredentialsWithCimitVCOnSuccessfulUserInfoRequestAndHasMitigationsFalseCiConfigForAuditEventReturnCodesAndCheckedDuplicateIssuers()
                     throws Exception {
-        ContraIndicators contraIndicators =
-                ContraIndicators.builder()
-                        .usersContraIndicators(
-                                List.of(
-                                        ContraIndicator.builder()
-                                                .code("X01")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-d.account.gov.uk",
-                                                                "https://review-f.account.gov.uk"))
-                                                .build(),
-                                        ContraIndicator.builder()
-                                                .code("X02")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-d.account.gov.uk",
-                                                                "https://review-f.account.gov.uk"))
-                                                .build(),
-                                        ContraIndicator.builder()
-                                                .code("Z03")
-                                                .issuers(
-                                                        List.of(
-                                                                "https://review-w.account.gov.uk",
-                                                                "https://review-x.account.gov.uk"))
-                                                .build()))
-                        .build();
+        var contraIndicators =
+                new ContraIndicators(
+                        List.of(
+                                createCi(
+                                        "X01",
+                                        List.of(
+                                                "https://review-d.account.gov.uk",
+                                                "https://review-f.account.gov.uk")),
+                                createCi(
+                                        "X02",
+                                        List.of(
+                                                "https://review-d.account.gov.uk",
+                                                "https://review-f.account.gov.uk")),
+                                createCi(
+                                        "Z03",
+                                        List.of(
+                                                "https://review-w.account.gov.uk",
+                                                "https://review-x.account.gov.uk"))));
 
         // Arrange
         when(mockConfigService.getContraIndicatorConfigMap())
@@ -1018,5 +1004,22 @@ class BuildUserIdentityHandlerTest {
                 .vtr(List.of("P2"))
                 .scope(scope)
                 .build();
+    }
+
+    private static ContraIndicator createCi(String code, List<String> issuers) {
+        var ci = new ContraIndicator();
+        ci.setCode(code);
+        ci.setIssuers(
+                issuers.stream()
+                        .map(
+                                iss -> {
+                                    try {
+                                        return new URI(iss);
+                                    } catch (URISyntaxException e) {
+                                        throw new RuntimeException(e); // Not expected in test setup
+                                    }
+                                })
+                        .toList());
+        return ci;
     }
 }
