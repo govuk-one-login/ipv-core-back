@@ -117,9 +117,7 @@ const renderTransitions = (journeyStates, formData) => {
         Object.entries(events).forEach(([eventName, def]) => {
             let resolvedEventTargets = resolveEventTargets(def, formData);
 
-            for (let t = 0; t < resolvedEventTargets.length; t++)  {
-                const resolvedTarget = resolvedEventTargets[t];
-
+            for (const resolvedTarget of resolvedEventTargets)  {
                 // Special case for disabling TICF, to match the special case in the journey engine
                 if (journeyStates[resolvedTarget.targetState]?.response?.lambda === 'call-ticf-cri' &&
                     formData.getAll('disabledCri').includes('ticf')) {
