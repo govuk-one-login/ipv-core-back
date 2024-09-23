@@ -1,6 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
-import { ConfigKeys, getConfigValue, getNumberConfigValue } from "./config-service";
+import { ConfigKeys, getNumberConfigValue } from "./config-service";
 
 const TABLE_NAME = process.env.CLIENT_AUTH_JWT_IDS_TABLE_NAME || 'ipv-client-auth-jwts-table';
 

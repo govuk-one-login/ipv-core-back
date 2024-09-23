@@ -11,8 +11,7 @@ const BASE_BACKOFF_MILLIS = 50;
 const dynamoClient = DynamoDBDocument.from(
   new DynamoDBClient({ region: "eu-west-2" }));
 
-// Incomplete type for now
-export type IpvSessionItem = {
+export type IpvSession = {
   ipvSessionId: string;
   clientOAuthSessionId: string;
   criOAuthSessionId?: string;
@@ -37,7 +36,7 @@ export type IpvSessionItem = {
   stateStack: string[];
 };
 
-const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSessionItem | null> => {
+const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSession | null> => {
   const queryResult = await dynamoClient.query({
     TableName: TABLE_NAME,
     IndexName: 'authorizationCode',
@@ -52,14 +51,14 @@ const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSes
   }
 
   logger.info("Found session", { session: queryResult.Items[0] });
-  return queryResult.Items[0] as IpvSessionItem;
+  return queryResult.Items[0] as IpvSession;
 };
 
 const wait = async (millis: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, millis));
 };
 
-export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSessionItem> => {
+export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSession> => {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const result = await getIpvSessionByAuthCodeInternal(authCode);
 
@@ -75,7 +74,7 @@ export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSess
   throw new Error('No IPV Session found for auth code');
 };
 
-export const updateIpvSession = async (ipvSession: IpvSessionItem): Promise<void> => {
+export const updateIpvSession = async (ipvSession: IpvSession): Promise<void> => {
   await dynamoClient.put({
     TableName: TABLE_NAME,
     Item: ipvSession,

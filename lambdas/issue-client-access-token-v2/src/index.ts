@@ -1,11 +1,21 @@
 import { APIGatewayProxyHandlerV2, APIGatewayProxyEventV2 } from "aws-lambda";
 import { AccessTokenResponse, generateAccessTokenResponse } from "./services/access-token-service";
-import { getIpvSessionByAuthCode, IpvSessionItem, updateIpvSession } from "./services/ipv-session-service";
-import { AccessTokenRequest, validateTokenRequest } from "./services/token-request-validator";
+import { getIpvSessionByAuthCode, IpvSession, updateIpvSession } from "./services/ipv-session-service";
+import { validateTokenRequest } from "./services/token-request-validator";
 import { validateAuthCode } from "./services/auth-code-validator";
 import { sha256 } from "./helpers/hash-helper";
 import { ConfigKeys, getNumberConfigValue } from "./services/config-service";
-import { initialiseLogger, logger } from "./helpers/logger";
+import { addLogInfo, initialiseLogger, logger } from "./helpers/logger";
+import { getClientOauthSession } from "./services/client-oauth-session-service";
+import { proxyApiResponse } from "./helpers/response-helper";
+
+export type AccessTokenRequest = {
+  grant_type: string;
+  code: string;
+  redirect_uri: string;
+  client_assertion?: string; // JWT
+  client_assertion_type?: string;
+};
 
 const parseBody = (request: APIGatewayProxyEventV2): AccessTokenRequest => {
   const searchParams = new URLSearchParams(request.body);
@@ -16,7 +26,7 @@ const parseBody = (request: APIGatewayProxyEventV2): AccessTokenRequest => {
   return res as AccessTokenRequest;
 };
 
-const updateSessionWithAccessToken = async (ipvSession: IpvSessionItem, accessToken: string): Promise<void> => {
+const updateSessionWithAccessToken = async (ipvSession: IpvSession, accessToken: string): Promise<void> => {
   ipvSession.accessToken = sha256(accessToken);
   ipvSession.accessTokenMetadata = {
     creationDateTime: new Date().toISOString(),
@@ -27,41 +37,30 @@ const updateSessionWithAccessToken = async (ipvSession: IpvSessionItem, accessTo
 
 export const handler: APIGatewayProxyHandlerV2<AccessTokenResponse> = async (event, context) => {
   try {
+    // Initialise
     initialiseLogger(context);
-
     const request = parseBody(event);
-    await validateTokenRequest(request);
-
-    // Also need client oauth session for logs/audit (to get the govuk_signin_journeyid)
     const ipvSession = await getIpvSessionByAuthCode(request.code);
+    const clientOauthSession = await getClientOauthSession(ipvSession.clientOAuthSessionId);
+    addLogInfo(ipvSession, clientOauthSession);
+
+    // Validate request
+    await validateTokenRequest(request, clientOauthSession);
     await validateAuthCode(request, ipvSession);
 
+    // Generate access token
     const accessTokenResponse = await generateAccessTokenResponse();
     await updateSessionWithAccessToken(ipvSession, accessTokenResponse.access_token);
 
     logger.info("Successfully generated IPV client access token");
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(accessTokenResponse),
-      headers: {
-        "content-type": "application/json",
-      },
-      isBase64Encoded: false,
-    };
+    return proxyApiResponse(accessTokenResponse);
   } catch (error: unknown) {
     // TODO: proper error handling
     logger.error("Something went wrong", { error: error });
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        error: "server_error",
-        error_description: "Unexpected server error",
-      }),
-      headers: {
-        "content-type": "application/json",
-      },
-      isBase64Encoded: false,
-    };
+    return proxyApiResponse({
+      error: "server_error",
+      error_description: "Unexpected server error",
+    }, 500);
   }
 };
