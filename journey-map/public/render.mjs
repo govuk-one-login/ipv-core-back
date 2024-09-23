@@ -70,7 +70,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                 journeyMap[`${nestedState}_${subJourneyState}`] = expandedDefinition;
             });
 
-            // Make a copy of the event definition to avoid mutating the original
+            // Make a copy of the entry events to avoid mutating the original
             const entryEvents = JSON.parse(JSON.stringify(subjourney.entryEvents));
             // Update entry events on other states to expanded states
             Object.entries(entryEvents).forEach(([entryEvent, entryEventDef]) => {
@@ -79,7 +79,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                 Object.values(journeyMap).forEach((journeyDef) => {
                     if (journeyDef.events?.[entryEvent]) {
                         const target = resolveEventTargets(journeyDef.events[entryEvent], undefined, formData).find(t => !t.journeyContext)
-                        if (target.targetState === subJourneyState && !target.targetEntryEvent) {// if (target.targetState === subJourneyState && !target.targetEntryEvent) {
+                        if (target.targetState === subJourneyState && !target.targetEntryEvent) {
                             journeyDef.events[entryEvent] = entryEventDef;
                         }
                     }
