@@ -42,3 +42,9 @@ repos:
         language: system
         pass_filenames: false
         files: ^api-tests/
+      - id: run-npm-lint-journey-map
+        name: Lint Journey Map
+        entry: bash -c 'journey-map && npm run lint'
+        language: system
+        pass_filenames: false
+        files: ^journey-map/
