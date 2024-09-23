@@ -8,6 +8,8 @@ Globals:
     Timeout: 40
     SnapStart:
       ApplyOn: PublishedVersions
+    Architectures:
+      - arm64
     MemorySize: !If [IsDevelopment, 1024, 3072]
     Runtime: java17
     Environment:
