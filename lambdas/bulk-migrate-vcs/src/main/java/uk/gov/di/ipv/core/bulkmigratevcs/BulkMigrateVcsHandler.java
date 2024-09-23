@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.bulkmigratevcs;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -58,6 +60,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_ST
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_HASH_USER_ID;
 
 public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchReport> {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String HASH_USER_ID = "hashUserId";
     private static final String USER_ID = "userId";
@@ -67,6 +70,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     private static final String PAGE_ITEM_COUNT = "pageItemCount";
     private static final String PAGE_EXCLUSIVE_START_KEY = "pageExclusiveStartKey";
     private static final int EVCS_CLIENT_GOAWAY_LIMIT = 10_000;
+    private static final String REPORT = "report";
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
     private final VerifiableCredentialService verifiableCredentialService;
     private final ForkJoinPoolFactory forkJoinPoolFactory;
@@ -210,6 +214,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                 }
             }
         } finally {
+            logReport(report);
             try {
                 auditService.awaitAuditEvents();
             } catch (AuditException e) {
@@ -503,5 +508,15 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         new AuditEventUser(userId, "", "", ""),
                         extension));
+    }
+
+    private void logReport(BatchReport report) {
+        try {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Returning report")
+                            .with(REPORT, OBJECT_MAPPER.writeValueAsString(report)));
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to log report", e));
+        }
     }
 }
