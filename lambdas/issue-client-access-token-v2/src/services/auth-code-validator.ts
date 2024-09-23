@@ -1,16 +1,16 @@
+import { ConfigKeys, getConfigValue, getNumberConfigValue } from "./config-service";
 import { IpvSessionItem } from "./ipv-session-service";
 import { AccessTokenRequest } from "./token-request-validator";
 
-// Fetch from config
-const AUTH_CODE_EXPIRY = 300;
-
-export const validateAuthCode = (request: AccessTokenRequest, ipvSession: IpvSessionItem): void => {
+export const validateAuthCode = async (request: AccessTokenRequest, ipvSession: IpvSessionItem): Promise<void> => {
   if (ipvSession.accessToken) {
     throw Error("Auth code already used")
   }
 
+  var expiryCutoff = Date.now() - (await getNumberConfigValue(ConfigKeys.authCodeExpiry) * 1000);
+
   if (!ipvSession.authorizationCodeMetadata?.creationDateTime ||
-    Date.now() > Date.parse(ipvSession.authorizationCodeMetadata?.creationDateTime) + AUTH_CODE_EXPIRY) {
+    Date.parse(ipvSession.authorizationCodeMetadata?.creationDateTime) < expiryCutoff) {
     throw new Error("Auth code expired");
   }
 
