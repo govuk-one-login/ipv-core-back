@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.PageSummary;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
 import uk.gov.di.ipv.core.bulkmigratevcs.exceptions.TooManyBatchIdsException;
+import uk.gov.di.ipv.core.bulkmigratevcs.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -66,21 +67,21 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     public static final String PAGE_EXCLUSIVE_START_KEY = "pageExclusiveStartKey";
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
     private final VerifiableCredentialService verifiableCredentialService;
-    private final EvcsClient evcsClient;
     private final ForkJoinPoolFactory forkJoinPoolFactory;
+    private final EvcsClientFactory evcsClientFactory;
     private final ConfigService configService;
     private final AuditService auditService;
 
     public BulkMigrateVcsHandler(
             ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore,
             VerifiableCredentialService verifiableCredentialService,
-            EvcsClient evcsClient,
+            EvcsClientFactory evcsClientFactory,
             ForkJoinPoolFactory forkJoinPoolFactory,
             ConfigService configService,
             AuditService auditService) {
         this.reportUserIdentityScanDynamoDataStore = reportUserIdentityScanDynamoDataStore;
         this.verifiableCredentialService = verifiableCredentialService;
-        this.evcsClient = evcsClient;
+        this.evcsClientFactory = evcsClientFactory;
         this.forkJoinPoolFactory = forkJoinPoolFactory;
         this.configService = configService;
         this.auditService = auditService;
@@ -98,7 +99,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                         DynamoDataStore.getClient(),
                         configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.evcsClient = new EvcsClient(configService);
+        this.evcsClientFactory = new EvcsClientFactory(configService);
         this.forkJoinPoolFactory = new ForkJoinPoolFactory();
     }
 
@@ -202,6 +203,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             Page<ReportUserIdentityItem> page,
             PageSummary pageSummary,
             String batchId) {
+        var evcsClient = evcsClientFactory.getClient();
         try {
             forkJoinPool
                     .submit(
@@ -212,7 +214,8 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                                             migrateIdentity(
                                                                     reportItem,
                                                                     pageSummary,
-                                                                    batchId)))
+                                                                    batchId,
+                                                                    evcsClient)))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             if (e instanceof InterruptedException) {
@@ -227,7 +230,10 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     }
 
     private void migrateIdentity(
-            ReportUserIdentityItem reportItem, PageSummary pageSummary, String batchId) {
+            ReportUserIdentityItem reportItem,
+            PageSummary pageSummary,
+            String batchId,
+            EvcsClient evcsClient) {
         var userId = reportItem.getUserId();
         // Skip any non P2 identities
         if (!Vot.P2.name().equals(reportItem.getIdentity())) {
@@ -316,7 +322,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         // Migrate identity
         var timestamp = Instant.now();
         try {
-            storeVcsInEvcs(reportItem.getUserId(), vcs, batchId, timestamp);
+            storeVcsInEvcs(reportItem.getUserId(), vcs, batchId, timestamp, evcsClient);
         } catch (Exception e) {
             logError(
                     "Migration failed - error writing to EVCS",
@@ -384,7 +390,11 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     }
 
     private void storeVcsInEvcs(
-            String userId, List<VerifiableCredential> vcs, String batchId, Instant timestamp)
+            String userId,
+            List<VerifiableCredential> vcs,
+            String batchId,
+            Instant timestamp,
+            EvcsClient evcsClient)
             throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 userId,

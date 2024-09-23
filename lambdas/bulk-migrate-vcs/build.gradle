@@ -20,6 +20,7 @@ dependencies {
 	annotationProcessor libs.lombok
 
 	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,

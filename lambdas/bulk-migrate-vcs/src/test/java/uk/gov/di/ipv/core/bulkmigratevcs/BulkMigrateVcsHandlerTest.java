@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.RequestBatchDetails;
+import uk.gov.di.ipv.core.bulkmigratevcs.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -51,7 +52,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
@@ -72,6 +78,7 @@ class BulkMigrateVcsHandlerTest {
     @Captor private ArgumentCaptor<List<VerifiableCredential>> vcListCaptor;
     @Mock private ScanDynamoDataStore<ReportUserIdentityItem> mockScanDataStore;
     @Mock private VerifiableCredentialService mockVerifiableCredentialService;
+    @Mock private EvcsClientFactory mockEvcsClientFactory;
     @Mock private EvcsClient mockEvcsClient;
     @Mock private ForkJoinPoolFactory mockForkJoinPoolFactory;
     @Mock private ConfigService mockConfigService;
@@ -88,6 +95,7 @@ class BulkMigrateVcsHandlerTest {
     @BeforeEach
     public void setup() {
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
+        when(mockEvcsClientFactory.getClient()).thenReturn(mockEvcsClient);
     }
 
     @AfterEach
