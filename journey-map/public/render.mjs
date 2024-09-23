@@ -32,10 +32,6 @@ const mapTargetStateToExpandedState = (eventDef, subJourneyState) => {
         eventDef.targetState = `${eventDef.targetState}_${subJourneyState}`;
     }
 
-    // if (eventDef.checkIfDisabled) { TODO: figure out what to do with check if disabled
-    //
-    // }
-
     if (eventDef.checkJourneyContext) {
         const journeyCtx = Object.keys(eventDef.checkJourneyContext)[0];
         return mapTargetStateToExpandedState(eventDef.checkJourneyContext[journeyCtx], subJourneyState);

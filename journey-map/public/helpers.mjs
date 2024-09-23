@@ -57,12 +57,15 @@ export const resolveEventTargets = (definition, resolvedEventTargets, formData) 
             formData);
     }
 
-    const journeyContext = Object.keys(definition.checkJourneyContext || {})[0];
-    if (journeyContext) {
-        return resolveEventTargets(
-            {...definition.checkJourneyContext[journeyContext], journeyContext},
-            [...resolvedTargets, definition],
-            formData)
+    const journeyContexts = Object.keys(definition.checkJourneyContext || {});
+    if (journeyContexts.length > 0) {
+        for (let n = 0; n < journeyContexts.length; n++) {
+            const targets = resolveEventTargets(
+                    {...definition.checkJourneyContext[journeyContexts[n]], journeyContext: journeyContexts[n]},
+                    undefined,
+                    formData)
+            resolvedTargets.push(...targets);
+        }
     }
 
     // Look for an override for feature flags
