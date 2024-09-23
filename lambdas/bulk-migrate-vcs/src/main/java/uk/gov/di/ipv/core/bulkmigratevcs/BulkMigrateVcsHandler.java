@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exception.AuditException;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -61,16 +62,18 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     private static final String HASH_USER_ID = "hashUserId";
     private static final String USER_ID = "userId";
     private static final String IDENTITY = "identity";
-    public static final int DEFAULT_PARALLELISM = 4;
-    public static final int ONE_MINUTE_IN_MS = 60_000;
-    public static final String PAGE_ITEM_COUNT = "pageItemCount";
-    public static final String PAGE_EXCLUSIVE_START_KEY = "pageExclusiveStartKey";
+    private static final int DEFAULT_PARALLELISM = 4;
+    private static final int ONE_MINUTE_IN_MS = 60_000;
+    private static final String PAGE_ITEM_COUNT = "pageItemCount";
+    private static final String PAGE_EXCLUSIVE_START_KEY = "pageExclusiveStartKey";
+    private static final int EVCS_CLIENT_GOAWAY_LIMIT = 10_000;
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
     private final VerifiableCredentialService verifiableCredentialService;
     private final ForkJoinPoolFactory forkJoinPoolFactory;
     private final EvcsClientFactory evcsClientFactory;
     private final ConfigService configService;
     private final AuditService auditService;
+    private EvcsClient evcsClient;
 
     public BulkMigrateVcsHandler(
             ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore,
@@ -130,6 +133,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                         .with("parallelism", forkJoinPool.getParallelism())
                         .with("exclusiveStartKey", exclusiveStartKey));
 
+        evcsClient = evcsClientFactory.getClient();
+        var evcsClientCount = 1;
+
         try {
             for (var page :
                     reportUserIdentityScanDynamoDataStore.scan(
@@ -138,6 +144,19 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             HASH_USER_ID,
                             USER_ID,
                             IDENTITY)) {
+
+                int maxMigratedByEndOfPage = report.getTotalMigrated() + page.count();
+                if (maxMigratedByEndOfPage / EVCS_CLIENT_GOAWAY_LIMIT == evcsClientCount) {
+                    // API gateway seems to have a limit on the number of requests from one
+                    // connection
+                    LOGGER.info(
+                            LogHelper.buildLogMessage(
+                                            "Approaching EVCS client GOAWAY limit, refreshing client")
+                                    .with("evcsClientCount", evcsClientCount)
+                                    .with("maxMigratedByEndOfPage", maxMigratedByEndOfPage));
+                    evcsClient = evcsClientFactory.getClient();
+                    evcsClientCount++;
+                }
 
                 var pageSummary =
                         new PageSummary(previousPageLastEvaluatedHashUserId, page.count());
@@ -191,7 +210,13 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                 }
             }
         } finally {
-            auditService.awaitAuditEvents();
+            try {
+                auditService.awaitAuditEvents();
+            } catch (AuditException e) {
+                LOGGER.error(
+                        LogHelper.buildLogMessage(
+                                "Error awaiting audit events - returning report"));
+            }
             forkJoinPool.shutdown();
         }
 
@@ -203,7 +228,6 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             Page<ReportUserIdentityItem> page,
             PageSummary pageSummary,
             String batchId) {
-        var evcsClient = evcsClientFactory.getClient();
         try {
             forkJoinPool
                     .submit(
@@ -214,8 +238,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                                             migrateIdentity(
                                                                     reportItem,
                                                                     pageSummary,
-                                                                    batchId,
-                                                                    evcsClient)))
+                                                                    batchId)))
                     .get();
         } catch (InterruptedException | ExecutionException e) {
             if (e instanceof InterruptedException) {
@@ -230,10 +253,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     }
 
     private void migrateIdentity(
-            ReportUserIdentityItem reportItem,
-            PageSummary pageSummary,
-            String batchId,
-            EvcsClient evcsClient) {
+            ReportUserIdentityItem reportItem, PageSummary pageSummary, String batchId) {
         var userId = reportItem.getUserId();
         // Skip any non P2 identities
         if (!Vot.P2.name().equals(reportItem.getIdentity())) {
@@ -322,7 +342,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         // Migrate identity
         var timestamp = Instant.now();
         try {
-            storeVcsInEvcs(reportItem.getUserId(), vcs, batchId, timestamp, evcsClient);
+            storeVcsInEvcs(reportItem.getUserId(), vcs, batchId, timestamp);
         } catch (Exception e) {
             logError(
                     "Migration failed - error writing to EVCS",
@@ -390,11 +410,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     }
 
     private void storeVcsInEvcs(
-            String userId,
-            List<VerifiableCredential> vcs,
-            String batchId,
-            Instant timestamp,
-            EvcsClient evcsClient)
+            String userId, List<VerifiableCredential> vcs, String batchId, Instant timestamp)
             throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 userId,

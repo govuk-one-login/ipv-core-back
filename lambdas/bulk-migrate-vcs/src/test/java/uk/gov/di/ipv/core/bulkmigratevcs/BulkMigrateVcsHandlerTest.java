@@ -366,6 +366,25 @@ class BulkMigrateVcsHandlerTest {
         assertEquals(2, report.getPageSummaries().size());
     }
 
+    @Test
+    void handlerShouldRefreshEvcsClientWhenApproachingLimit() {
+        when(mockScanDataStore.scan(null, 100, HASH_USER_ID, USER_ID, IDENTITY))
+                .thenReturn(mockPageIterable);
+        when(mockContext.getRemainingTimeInMillis()).thenReturn(100_000);
+
+        var mockPage = (Page<ReportUserIdentityItem>) mock(Page.class);
+        when(mockPage.items()).thenReturn(List.of());
+        when(mockPage.count()).thenReturn(10_001).thenReturn(10_010).thenReturn(20_001);
+        when(mockPage.lastEvaluatedKey()).thenReturn(null);
+        when(mockPageIterable.iterator())
+                .thenReturn(List.of(mockPage, mockPage, mockPage).iterator());
+
+        bulkMigrateVcsHandler.handleRequest(
+                new Request(new RequestBatchDetails("batchId", null, 2000), 100, 1), mockContext);
+
+        verify(mockEvcsClientFactory, times(3)).getClient();
+    }
+
     @Nested
     class Rollbacks {
         @Test
