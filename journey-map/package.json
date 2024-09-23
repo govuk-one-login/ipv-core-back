@@ -6,7 +6,13 @@
   "type": "module",
   "author": "Government Digital Service",
   "license": "MIT",
+  "scripts": {
+    "prettier-fix": "prettier . --write"
+  },
   "dependencies": {
     "express": "5.0.0"
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
   }
 }
