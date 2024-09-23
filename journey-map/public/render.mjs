@@ -1,4 +1,4 @@
-import {getNestedJourneyStates, resolveEventTargets} from "./helpers.mjs";
+import { getNestedJourneyStates, resolveEventTargets } from "./helpers.mjs";
 
 const topDownJourneys = ['INITIAL_JOURNEY_SELECTION'];
 const errorJourneys = ['TECHNICAL_ERROR'];
@@ -78,7 +78,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
                 Object.values(journeyMap).forEach((journeyDef) => {
                     if (journeyDef.events?.[entryEvent]) {
-                        const target = resolveEventTargets(journeyDef.events[entryEvent], undefined, formData).find(t => !t.journeyContext)
+                        const target = resolveEventTargets(journeyDef.events[entryEvent], formData).find(t => !t.journeyContext)
                         if (target.targetState === subJourneyState && !target.targetEntryEvent) {
                             journeyDef.events[entryEvent] = entryEventDef;
                         }
@@ -86,7 +86,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
                     // Resolve targets with a `targetEntryEvent` override
                     Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
-                        const target = resolveEventTargets(eventDef, undefined, formData).find(t => !t.journeyContext);
+                        const target = resolveEventTargets(eventDef, formData).find(t => !t.journeyContext);
                         if (target.targetState === subJourneyState && target.targetEntryEvent === entryEvent) {
                             Object.assign(target, entryEventDef)
                             delete target.targetEntryEvent;
@@ -115,7 +115,7 @@ const renderTransitions = (journeyStates, formData) => {
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            let resolvedEventTargets = resolveEventTargets(def, undefined, formData);
+            let resolvedEventTargets = resolveEventTargets(def, formData);
 
             for (let t = 0; t < resolvedEventTargets.length; t++)  {
                 const resolvedTarget = resolvedEventTargets[t];
@@ -124,14 +124,11 @@ const renderTransitions = (journeyStates, formData) => {
                 if (journeyStates[resolvedTarget.targetState]?.response?.lambda === 'call-ticf-cri' &&
                     formData.getAll('disabledCri').includes('ticf')) {
                     resolvedEventTargets.push(...resolveEventTargets(
-                        journeyStates[resolvedTarget.targetState].events.next,
-                        undefined,
-                        formData
-                    ));
+                        journeyStates[resolvedTarget.targetState].events.next, formData));
                     continue;
                 }
 
-            const { targetJourney, targetState, targetEntryEvent, exitEventToEmit, journeyContext } = resolvedTarget;
+                const { targetJourney, targetState, targetEntryEvent, exitEventToEmit, journeyContext } = resolvedTarget;
 
                 const target = exitEventToEmit
                     ? `exit_${exitEventToEmit}`.toUpperCase()
@@ -148,12 +145,13 @@ const renderTransitions = (journeyStates, formData) => {
                     return;
                 }
 
-            if (!states.includes(target)) {
-                states.push(target);
-            }
+                if (!states.includes(target)) {
+                    states.push(target);
+                }
 
-            eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(`${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ''}${journeyContext ? ` - journeyContext: ${journeyContext}` : ''}`);
+                eventsByTarget[target] = eventsByTarget[target] || [];
+                const eventTransitionLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ''}${journeyContext ? ` - journeyContext: ${journeyContext}` : ''}`;
+                eventsByTarget[target].push(journeyContext ? `<span class="journeyCtxTransition">${eventTransitionLabel}</span>` : eventTransitionLabel);
 
                 if (!journeyStates[target]) {
                     if (targetJourney) {

@@ -44,7 +44,7 @@ export const getOptions = (journeyMaps, nestedJourneys) => {
     return { disabledOptions, featureFlagOptions };
 };
 
-export const resolveEventTargets = (definition, resolvedEventTargets, formData) => {
+export const resolveEventTargets = (definition, formData, resolvedEventTargets) => {
     const resolvedTargets = resolvedEventTargets || [];
 
     // Look for an override for disabled CRIs
@@ -53,20 +53,16 @@ export const resolveEventTargets = (definition, resolvedEventTargets, formData) 
     if (disabledResolution) {
         return resolveEventTargets(
             {...definition.checkIfDisabled[disabledResolution], journeyContext: definition.journeyContext},
-            resolvedTargets,
-            formData);
+            formData,
+            resolvedTargets);
     }
 
-    const journeyContexts = Object.keys(definition.checkJourneyContext || {});
-    if (journeyContexts.length > 0) {
-        for (let n = 0; n < journeyContexts.length; n++) {
-            const targets = resolveEventTargets(
-                    {...definition.checkJourneyContext[journeyContexts[n]], journeyContext: journeyContexts[n]},
-                    undefined,
-                    formData)
-            resolvedTargets.push(...targets);
-        }
-    }
+    Object.keys(definition.checkJourneyContext || {}).forEach(journeyContext => {
+        const targets = resolveEventTargets(
+            {...definition.checkJourneyContext[journeyContext], journeyContext: journeyContext},
+            formData)
+        resolvedTargets.push(...targets);
+    })
 
     // Look for an override for feature flags
     const featureFlags = formData.getAll('featureFlag');
@@ -74,8 +70,8 @@ export const resolveEventTargets = (definition, resolvedEventTargets, formData) 
     if (featureFlagResolution) {
         return resolveEventTargets(
             {...definition.checkFeatureFlag[featureFlagResolution], journeyContext: definition.journeyContext},
-            resolvedTargets,
-            formData);
+            formData,
+            resolvedTargets);
     }
 
     return [...resolvedTargets, definition];

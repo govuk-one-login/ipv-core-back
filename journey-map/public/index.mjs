@@ -2,7 +2,7 @@ import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.mi
 import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
 import { render } from './render.mjs';
-import {getJourneyContexts, getNestedJourneyStates, getOptions} from "./helpers.mjs";
+import { getJourneyContexts, getNestedJourneyStates, getOptions } from "./helpers.mjs";
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
@@ -276,20 +276,6 @@ const renderSvg = async (selectedJourney, selectedNestedJourney, formData) => {
     });
     // Pan to correct header offset
     svgPanZoomInstance.panBy({ x: 0, y: headerContent.offsetHeight / 2 });
-
-    // Style journeyContext transitions
-    Array.from(document.querySelectorAll('.edgeLabel'))
-        .filter(transitionLabel => /journeyContext: /.test(transitionLabel.innerText))
-        .forEach(transitionLabel => {
-            let labelHtml = transitionLabel.innerHTML;
-            const events = labelHtml.split('<br>');
-            events.forEach(event => {
-                if (/journeyContext: /.test(event)) {
-                    labelHtml = labelHtml.replace(event, `<span class="journeyCtxTransition">${event}</span>`)
-                }
-            })
-            transitionLabel.innerHTML = labelHtml;
-        })
 };
 
 const highlightState = (state) => {
