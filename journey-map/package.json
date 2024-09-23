@@ -7,12 +7,17 @@
   "author": "Government Digital Service",
   "license": "MIT",
   "scripts": {
-    "prettier-fix": "prettier . --write"
+    "lint": "eslint . && prettier . --check",
+    "lint-fix": "eslint --fix . && prettier . --write"
   },
   "dependencies": {
     "express": "5.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.11.0",
+    "eslint": "^9.11.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.9.0",
     "prettier": "3.3.3"
   }
 }
