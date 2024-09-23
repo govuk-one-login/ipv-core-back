@@ -3,14 +3,8 @@ import type { JWTPayload, JWTVerifyOptions } from "jose";
 import { ConfigKeys, getConfigValue, getNumberConfigValue } from "./config-service";
 import { logger } from "../helpers/logger";
 import { getClientAuthAssertion, persistClientAuthAssertion } from "./client-auth-assertion-service";
-
-export type AccessTokenRequest = {
-  grant_type: string;
-  code: string;
-  redirect_uri: string;
-  client_assertion?: string; // JWT
-  client_assertion_type?: string;
-};
+import { ClientOAuthSession } from "./client-oauth-session-service";
+import { AccessTokenRequest } from "..";
 
 const CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
@@ -31,13 +25,16 @@ const validateJwtId = async (clientAssertion: JWTPayload): Promise<void> => {
       jti: previousClientAuthAssertion.jwtId,
       usedAt: previousClientAuthAssertion.usedAtDateTime,
     });
-    // TODO: Java version does not currently validate this
+    // TODO: PYIC-7500 Java version does not currently enforce this
     // throw new Error("Client assertion already used");
   }
   await persistClientAuthAssertion(clientAssertion.jti);
 };
 
-export const validateTokenRequest = async (request: AccessTokenRequest): Promise<void> => {
+export const validateTokenRequest = async (
+  request: AccessTokenRequest,
+  clientOAuthSession: ClientOAuthSession,
+): Promise<void> => {
   if (request.grant_type !== "authorization_code") {
     throw new Error(`Invalid grant type: ${request.grant_type}`);
   }
@@ -48,20 +45,17 @@ export const validateTokenRequest = async (request: AccessTokenRequest): Promise
     throw new Error(`Invalid client_assertion_type: ${request.client_assertion_type}`);
   }
 
-  logger.info("token_request", request);
-
-  // TODO: should we verify anything else here - client id?
-  // iss and sub are both client id
-  // the other side should probably come from the clientoauthsession
   const options: JWTVerifyOptions = {
     audience: await getConfigValue(ConfigKeys.componentId),
+    issuer: clientOAuthSession.clientId,
+    subject: clientOAuthSession.clientId,
   };
 
   const signingKey = await importJWK(
     JSON.parse(
       await getConfigValue(
         ConfigKeys.clientPublicSigningKey,
-        "orchestrator")));
+        clientOAuthSession.clientId)));
 
   const clientAssertion = (await jwtVerify(request.client_assertion, signingKey, options)).payload;
 
