@@ -12,11 +12,14 @@ export const initialiseLogger = (context: Context): void => {
 };
 
 // Append log information about the session to all log messages
-export const addLogInfo = (ipvSession: IpvSession, clientOAuthSession: ClientOAuthSession): void => {
+export const addLogInfo = (
+  ipvSession: IpvSession | undefined,
+  clientOAuthSession: ClientOAuthSession | undefined,
+): void => {
   logger.appendKeys({
-    govuk_signin_journey_id: clientOAuthSession.govukSigninJourneyId,
-    ipvSessionId: ipvSession.ipvSessionId,
-    clientOAuthSessionId: clientOAuthSession.clientOAuthSessionId,
-    clientId: clientOAuthSession.clientId,
+    govuk_signin_journey_id: clientOAuthSession?.govukSigninJourneyId,
+    ipvSessionId: ipvSession?.ipvSessionId,
+    clientOAuthSessionId: clientOAuthSession?.clientOAuthSessionId,
+    clientId: clientOAuthSession?.clientId,
   });
 };
