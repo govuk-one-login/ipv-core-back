@@ -134,6 +134,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                         .with("exclusiveStartKey", exclusiveStartKey));
 
         evcsClient = evcsClientFactory.getClient();
+        var evcsClientCount = 1;
 
         try {
             for (var page :
@@ -144,13 +145,17 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                             USER_ID,
                             IDENTITY)) {
 
-                if ((report.getTotalMigrated() + page.count()) > EVCS_CLIENT_GOAWAY_LIMIT) {
+                int maxMigratedByEndOfPage = report.getTotalMigrated() + page.count();
+                if (maxMigratedByEndOfPage / EVCS_CLIENT_GOAWAY_LIMIT == evcsClientCount) {
                     // API gateway seems to have a limit on the number of requests from one
                     // connection
                     LOGGER.info(
                             LogHelper.buildLogMessage(
-                                    "Approaching EVCS client GOAWAY limit, refreshing client"));
+                                            "Approaching EVCS client GOAWAY limit, refreshing client")
+                                    .with("evcsClientCount", evcsClientCount)
+                                    .with("maxMigratedByEndOfPage", maxMigratedByEndOfPage));
                     evcsClient = evcsClientFactory.getClient();
+                    evcsClientCount++;
                 }
 
                 var pageSummary =
