@@ -5,28 +5,32 @@ import { logger } from "../helpers/logger";
 import { getClientAuthAssertion, persistClientAuthAssertion } from "./client-auth-assertion-service";
 import { ClientOAuthSession } from "./client-oauth-session-service";
 import { AccessTokenRequest } from "..";
+import { OAuthError, OAuthErrors } from "../errors/oauth-error";
 
 const CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
 
 const validateMaxExpiry = async (clientAssertion: JWTPayload): Promise<void> => {
   var maxTtl = await getNumberConfigValue(ConfigKeys.maxClientAuthTtl);
   if (!clientAssertion.exp || clientAssertion.exp > Date.now() + maxTtl) {
-    throw new Error("Invalid client assertion expiry");
+    throw new OAuthError(
+      OAuthErrors.InvalidClient,
+      "Invalid client assertion expiry");
   }
 };
 
 const validateJwtId = async (clientAssertion: JWTPayload): Promise<void> => {
   if (!clientAssertion.jti) {
-    throw new Error("Invalid client assertion JTI");
+    throw new OAuthError(
+      OAuthErrors.InvalidClient,
+      "Missing JTI in client assertion");
   }
   const previousClientAuthAssertion = await getClientAuthAssertion(clientAssertion.jti);
   if (previousClientAuthAssertion) {
+    // TODO: PYIC-7500 Enforce this
     logger.error("Client assertion already used", {
       jti: previousClientAuthAssertion.jwtId,
       usedAt: previousClientAuthAssertion.usedAtDateTime,
     });
-    // TODO: PYIC-7500 Java version does not currently enforce this
-    // throw new Error("Client assertion already used");
   }
   await persistClientAuthAssertion(clientAssertion.jti);
 };
@@ -36,13 +40,19 @@ export const validateTokenRequest = async (
   clientOAuthSession: ClientOAuthSession,
 ): Promise<void> => {
   if (request.grant_type !== "authorization_code") {
-    throw new Error(`Invalid grant type: ${request.grant_type}`);
+    throw new OAuthError(
+      OAuthErrors.InvalidGrant,
+      `Invalid grant type ${request.grant_type}`);
   }
   if (!request.client_assertion) {
-    throw new Error("Missing client_assertion");
+    throw new OAuthError(
+      OAuthErrors.InvalidClient,
+      "Missing client_assertion");
   }
   if (request.client_assertion_type !== CLIENT_ASSERTION_TYPE) {
-    throw new Error(`Invalid client_assertion_type: ${request.client_assertion_type}`);
+    throw new OAuthError(
+      OAuthErrors.InvalidClient,
+      `Invalid client_assertion_type: ${request.client_assertion_type}`);
   }
 
   const options: JWTVerifyOptions = {

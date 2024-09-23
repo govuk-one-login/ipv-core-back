@@ -8,6 +8,7 @@ import { ConfigKeys, getNumberConfigValue } from "./services/config-service";
 import { addLogInfo, initialiseLogger, logger } from "./helpers/logger";
 import { getClientOauthSession } from "./services/client-oauth-session-service";
 import { proxyApiResponse } from "./helpers/response-helper";
+import { OAuthError, OAuthErrors } from "./errors/oauth-error";
 
 export type AccessTokenRequest = {
   grant_type: string;
@@ -41,10 +42,13 @@ export const handler: APIGatewayProxyHandlerV2<AccessTokenResponse> = async (eve
     initialiseLogger(context);
     const request = parseBody(event);
     const ipvSession = await getIpvSessionByAuthCode(request.code);
-    const clientOauthSession = await getClientOauthSession(ipvSession.clientOAuthSessionId);
+    const clientOauthSession = ipvSession && await getClientOauthSession(ipvSession?.clientOAuthSessionId);
     addLogInfo(ipvSession, clientOauthSession);
 
     // Validate request
+    if (!ipvSession || !clientOauthSession) {
+      throw new OAuthError(OAuthErrors.InvalidAuthCode, "No IPV session found for auth code");
+    }
     await validateTokenRequest(request, clientOauthSession);
     await validateAuthCode(request, ipvSession);
 
@@ -56,11 +60,23 @@ export const handler: APIGatewayProxyHandlerV2<AccessTokenResponse> = async (eve
 
     return proxyApiResponse(accessTokenResponse);
   } catch (error: unknown) {
-    // TODO: proper error handling
-    logger.error("Something went wrong", { error: error });
-    return proxyApiResponse({
-      error: "server_error",
-      error_description: "Unexpected server error",
-    }, 500);
+    const oAuthError = error instanceof OAuthError
+      ? error.oAuthError
+      : OAuthErrors.ServerError;
+
+    const errorResponse = {
+      error: oAuthError.errorCode,
+      error_description: oAuthError.errorDescription,
+    };
+
+    logger.error(`Returning ${errorResponse.error} error`, {
+      error: {
+        ...oAuthError,
+        message: (error as Error)?.message,
+        stack: (error as Error)?.stack,
+      },
+    });
+
+    return proxyApiResponse(errorResponse, oAuthError.statusCode);
   }
 };

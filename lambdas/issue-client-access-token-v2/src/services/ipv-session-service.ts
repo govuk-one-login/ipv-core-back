@@ -2,6 +2,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { sha256 } from "../helpers/hash-helper";
 import { logger } from "../helpers/logger";
+import { OAuthError, OAuthErrors } from "../errors/oauth-error";
 
 const TABLE_NAME = process.env.IPV_SESSIONS_TABLE_NAME || 'ipv-session-table';
 
@@ -36,7 +37,7 @@ export type IpvSession = {
   stateStack: string[];
 };
 
-const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSession | null> => {
+const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSession | undefined> => {
   const queryResult = await dynamoClient.query({
     TableName: TABLE_NAME,
     IndexName: 'authorizationCode',
@@ -47,7 +48,7 @@ const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSes
   });
 
   if (!queryResult.Items?.length) {
-    return null;
+    return undefined;
   }
 
   logger.info("Found session", { session: queryResult.Items[0] });
@@ -58,7 +59,7 @@ const wait = async (millis: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, millis));
 };
 
-export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSession> => {
+export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSession | undefined> => {
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const result = await getIpvSessionByAuthCodeInternal(authCode);
 
@@ -71,7 +72,7 @@ export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSess
       await wait(BASE_BACKOFF_MILLIS * Math.pow(2, attempt - 1));
     }
   }
-  throw new Error('No IPV Session found for auth code');
+  return undefined;
 };
 
 export const updateIpvSession = async (ipvSession: IpvSession): Promise<void> => {
