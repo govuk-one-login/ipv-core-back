@@ -220,6 +220,7 @@ const displayJourneyContextInfo = (ctxOptions) => {
     journeyContextsList.append(ctxDesc);
 
     const list = document.createElement('ul');
+    list.setAttribute("class", "journeyCtxList")
     journeyContextsList.append(list);
     ctxOptions.forEach(ctx => {
         const bulletPoint = document.createElement('li');

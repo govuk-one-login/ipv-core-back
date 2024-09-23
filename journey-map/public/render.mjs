@@ -153,7 +153,7 @@ const renderTransitions = (journeyStates, formData) => {
             }
 
             eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(targetEntryEvent ? `${eventName}/${targetEntryEvent}` : journeyContext ? `${eventName} - journeyContext: ${journeyContext}` : eventName);
+            eventsByTarget[target].push(`${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ''}${journeyContext ? ` - journeyContext: ${journeyContext}` : ''}`);
 
                 if (!journeyStates[target]) {
                     if (targetJourney) {

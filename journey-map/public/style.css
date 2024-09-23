@@ -5,9 +5,6 @@
 h3 {
     padding-bottom: 8px;
 }
-ul {
-    padding: 4px 24px 0;
-}
 body {
     height: 100vh;
     display: flex;
@@ -218,4 +215,7 @@ form fieldset p {
 }
 .journeyCtxTransition {
     background-color: #f5daa4;
+}
+.journeyCtxList {
+    padding: 4px 24px 0;
 }
