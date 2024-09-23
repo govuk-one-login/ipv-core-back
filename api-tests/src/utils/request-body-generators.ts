@@ -22,13 +22,14 @@ type JsonType = "credentialSubject" | "evidence";
 
 export const generateInitialiseIpvSessionBody = async (
   session: IpvSessionDetails,
+  redirectUrl?: string,
 ): Promise<AuthRequestBody> => {
-  const jarPayload = await generateJarPayload(session);
+  const jarPayload = await generateJarPayload(session, redirectUrl);
 
   return {
     responseType: "code",
     clientId: jarPayload.client_id,
-    redirectUri: config.orch.redirectUrl,
+    redirectUri: redirectUrl || config.orch.redirectUrl,
     state: "api-tests-state",
     scope: jarPayload.scope,
     request: await encryptJarRequest(jarPayload),

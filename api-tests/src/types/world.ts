@@ -24,4 +24,7 @@ export interface World extends CucumberWorld {
 
   // JWKS result
   jwksResult?: JSONWebKeySet;
+
+  // Latest error to assert against
+  error?: Error;
 }

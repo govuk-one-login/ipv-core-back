@@ -19,6 +19,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateJarPayload = async (
   session: IpvSessionDetails,
+  redirectUrl: string | undefined,
 ): Promise<JarRequest> => {
   const payloadData = JSON.parse(
     await fs.readFile(
@@ -37,7 +38,7 @@ export const generateJarPayload = async (
       sub: session.subject,
       govuk_signin_journey_id: session.journeyId,
       state: getRandomString(16),
-      redirect_uri: config.orch.redirectUrl,
+      redirect_uri: redirectUrl || config.orch.redirectUrl,
     },
   };
 

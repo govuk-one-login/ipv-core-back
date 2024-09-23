@@ -33,6 +33,7 @@ import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
 import { VcJwtPayload } from "../types/external-api.js";
 import * as jose from "jose";
 import { buildCredentialIssuerUrl } from "../clients/cri-stub-client.js";
+import { ApiRequestError } from "../types/errors.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -83,18 +84,22 @@ const startNewJourney = async (
   reproveIdentity: boolean,
   inheritedIdentityId: string | undefined,
   featureSet: string | undefined,
+  redirectUrl: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
   world.featureSet = featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody({
-      subject: world.userId,
-      journeyId: world.journeyId,
-      journeyType,
-      isReproveIdentity: reproveIdentity,
-      inheritedIdentityId,
-    }),
+    await generateInitialiseIpvSessionBody(
+      {
+        subject: world.userId,
+        journeyId: world.journeyId,
+        journeyType,
+        isReproveIdentity: reproveIdentity,
+        inheritedIdentityId,
+      },
+      redirectUrl,
+    ),
     world.featureSet,
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -126,7 +131,52 @@ When(
       !!reproveIdentity,
       inheritedIdentityId,
       featureSet,
+      undefined,
     );
+  },
+);
+
+When(
+  "I start a new {string} journey with invalid redirect url {string}",
+  async function (
+    this: World,
+    journeyType: string,
+    redirectUrl: string,
+  ): Promise<void> {
+    try {
+      await startNewJourney(
+        this,
+        journeyType,
+        false,
+        undefined,
+        undefined,
+        redirectUrl,
+      );
+    } catch (e) {
+      if (e instanceof Error) {
+        this.error = e;
+      }
+    }
+  },
+);
+
+Then(
+  /I get a(?:n)? '(\w+)' error(?: with '([\w,: ]+)' message)?(?: and)?(?: with status code '(\d{3})')?/,
+  function (
+    this: World,
+    errorType: string,
+    expectedMessage: string,
+    expectedStatusCode: number,
+  ) {
+    if (!this.error) {
+      throw new Error("No errors recorded.");
+    }
+
+    assert.equal(this.error.message, expectedMessage);
+
+    if (this.error instanceof ApiRequestError) {
+      assert.equal(this.error.statusCode, expectedStatusCode);
+    }
   },
 );
 
@@ -148,6 +198,7 @@ When(
         false,
         undefined,
         featureSet || undefined,
+        undefined,
       );
 
       if (!this.lastJourneyEngineResponse) {
