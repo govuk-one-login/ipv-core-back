@@ -69,7 +69,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
     private static final int ONE_MINUTE_IN_MS = 60_000;
     private static final String PAGE_ITEM_COUNT = "pageItemCount";
     private static final String PAGE_EXCLUSIVE_START_KEY = "pageExclusiveStartKey";
-    private static final int EVCS_CLIENT_GOAWAY_LIMIT = 10_000;
+    private static final int EVCS_CLIENT_GOAWAY_LIMIT = 9_000;
     private static final String REPORT = "report";
     private final ScanDynamoDataStore<ReportUserIdentityItem> reportUserIdentityScanDynamoDataStore;
     private final VerifiableCredentialService verifiableCredentialService;
@@ -168,7 +168,8 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                 LOGGER.info(
                         LogHelper.buildLogMessage("Processing page")
                                 .with(PAGE_EXCLUSIVE_START_KEY, pageSummary.getExclusiveStartKey())
-                                .with(PAGE_ITEM_COUNT, pageSummary.getCount()));
+                                .with(PAGE_ITEM_COUNT, pageSummary.getCount())
+                                .with("pageCount", report.getPageSummaries().size() + 1));
 
                 // Updating for next loop while we still have access to the page
                 previousPageLastEvaluatedHashUserId = getPageLastEvaluatedHashUserId(page);
