@@ -7,6 +7,7 @@ import { getRandomString } from "./random-string-generator.js";
 import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 import { IpvSessionDetails } from "./ipv-session.js";
 import { JarRequest } from "../types/jar-request.js";
+import { JWTPayload } from "jose";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -19,7 +20,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateJarPayload = async (
   session: IpvSessionDetails,
-  redirectUrl: string | undefined,
 ): Promise<JarRequest> => {
   const payloadData = JSON.parse(
     await fs.readFile(
@@ -38,7 +38,7 @@ export const generateJarPayload = async (
       sub: session.subject,
       govuk_signin_journey_id: session.journeyId,
       state: getRandomString(16),
-      redirect_uri: redirectUrl || config.orch.redirectUrl,
+      redirect_uri: session.redirectUrl || config.orch.redirectUrl,
     },
   };
 
@@ -46,22 +46,38 @@ export const generateJarPayload = async (
     "https://vocab.account.gov.uk/v1/storageAccessToken"
   ].values = [await createEvcsAccessToken(session.subject)];
 
-  if (session.inheritedIdentityId) {
-    const inheritedIdentity = JSON.parse(
-      await fs.readFile(
-        path.join(
-          __dirname,
-          `../../data/inherited-identities/${session.inheritedIdentityId}.json`,
-        ),
-        "utf8",
-      ),
-    );
-    payload.claims.userinfo[
-      "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
-    ] = { values: [await createSignedJwt(inheritedIdentity)] };
+  if (session.inheritedIdentity) {
+    const { inheritedIdentityId, errorJwt } = session.inheritedIdentity;
+
+    if (errorJwt) {
+      payload.claims.userinfo[
+        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
+      ] = { values: ["invalid-jwt"] };
+    } else if (inheritedIdentityId) {
+      const inheritedIdentity =
+        await getInheritedIdentityData(inheritedIdentityId);
+
+      payload.claims.userinfo[
+        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
+      ] = { values: [await createSignedJwt(inheritedIdentity)] };
+    }
   }
 
   return payload;
+};
+
+const getInheritedIdentityData = async (
+  inheritedIdentityId: string,
+): Promise<JWTPayload> => {
+  return JSON.parse(
+    await fs.readFile(
+      path.join(
+        __dirname,
+        `../../data/inherited-identities/${inheritedIdentityId}.json`,
+      ),
+      "utf8",
+    ),
+  );
 };
 
 export const encryptJarRequest = async (payload: JarRequest): Promise<string> =>

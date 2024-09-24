@@ -82,7 +82,9 @@ const startNewJourney = async (
   world: World,
   journeyType: string,
   reproveIdentity: boolean,
-  inheritedIdentityId: string | undefined,
+  inheritedIdentity:
+    | { inheritedIdentityId?: string; errorJwt?: boolean }
+    | undefined,
   featureSet: string | undefined,
   redirectUrl: string | undefined,
 ): Promise<void> => {
@@ -90,16 +92,14 @@ const startNewJourney = async (
   world.journeyId = getRandomString(16);
   world.featureSet = featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
-    await generateInitialiseIpvSessionBody(
-      {
-        subject: world.userId,
-        journeyId: world.journeyId,
-        journeyType,
-        isReproveIdentity: reproveIdentity,
-        inheritedIdentityId,
-      },
+    await generateInitialiseIpvSessionBody({
+      subject: world.userId,
+      journeyId: world.journeyId,
+      journeyType,
+      isReproveIdentity: reproveIdentity,
+      inheritedIdentity,
       redirectUrl,
-    ),
+    }),
     world.featureSet,
   );
   world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
@@ -129,7 +129,7 @@ When(
       this,
       journeyType,
       !!reproveIdentity,
-      inheritedIdentityId,
+      { inheritedIdentityId },
       featureSet,
       undefined,
     );
@@ -176,6 +176,26 @@ Then(
 
     if (this.error instanceof ApiRequestError) {
       assert.equal(this.error.statusCode, expectedStatusCode);
+    }
+  },
+);
+
+When(
+  "I start a new {string} inherited identity journey with an invalid inherited identity jwt",
+  async function (this: World, journeyType: string): Promise<void> {
+    try {
+      await startNewJourney(
+        this,
+        journeyType,
+        false,
+        { errorJwt: true },
+        undefined,
+        undefined,
+      );
+    } catch (e) {
+      if (e instanceof Error) {
+        this.error = e;
+      }
     }
   },
 );
