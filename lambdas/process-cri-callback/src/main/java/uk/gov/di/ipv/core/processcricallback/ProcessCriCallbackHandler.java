@@ -164,7 +164,7 @@ public class ProcessCriCallbackHandler
                     ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST);
         } catch (InvalidCriCallbackRequestException e) {
             if (e.getErrorResponse() == ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION) {
-                LOGGER.error(e.getErrorResponse(), e);
+                LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
                 var pageOutput =
                         StepFunctionHelpers.generatePageOutputMap(
                                 "error",
@@ -180,7 +180,7 @@ public class ProcessCriCallbackHandler
                         HttpStatus.SC_UNAUTHORIZED, pageOutput);
             }
             if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
-                LOGGER.error(e.getErrorResponse(), e);
+                LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST,
                         StepFunctionHelpers.generatePageOutputMap(

@@ -36,13 +36,13 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_IN
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionIdAllowMissing;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getEncodedDeviceInformation;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getHeaderByKey;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowBlank;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowMissing;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getLanguage;
 
 class RequestHelperTest {
@@ -184,7 +184,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIpAddressShouldReturnIpAddress() throws HttpResponseExceptionWithErrorBody {
+    void getIpAddressShouldReturnIpAddress() {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IP_ADDRESS_HEADER, "a-client-source-ip"));
 
@@ -192,35 +192,13 @@ class RequestHelperTest {
     }
 
     @Test
-    void getIpAddressShouldThrowIfIpAddressIsNull() {
+    void getIpAddressIdShouldReturnNullIfIpAddressIsEmptyString() {
         var event = new APIGatewayProxyRequestEvent();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put(IP_ADDRESS_HEADER, null);
-
-        event.setHeaders(headers);
-
-        var exception =
-                assertThrows(HttpResponseExceptionWithErrorBody.class, () -> getIpAddress(event));
-
-        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
-        assertEquals(
-                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
-                exception.getErrorResponse().getMessage());
-    }
-
-    @Test
-    void getIpAddressIdShouldThrowIfIpAddressIsEmptyString() {
-        var event = new APIGatewayProxyRequestEvent();
-
         event.setHeaders(Map.of(IP_ADDRESS_HEADER, ""));
 
-        var exception =
-                assertThrows(HttpResponseExceptionWithErrorBody.class, () -> getIpAddress(event));
+        var result = getIpAddress(event);
 
-        assertEquals(SC_BAD_REQUEST, exception.getResponseCode());
-        assertEquals(
-                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
-                exception.getErrorResponse().getMessage());
+        assertNull(result);
     }
 
     @Test
@@ -229,7 +207,7 @@ class RequestHelperTest {
         String clientSessionIdInHeader = "client-session-id";
         event.setClientOAuthSessionId(clientSessionIdInHeader);
 
-        assertEquals(clientSessionIdInHeader, getClientOAuthSessionId(event));
+        assertEquals(clientSessionIdInHeader, getClientOAuthSessionIdAllowMissing(event));
     }
 
     @Test
@@ -237,11 +215,11 @@ class RequestHelperTest {
         var event = new JourneyRequest();
         event.setClientOAuthSessionId(null);
 
-        assertNull(getClientOAuthSessionId(event));
+        assertNull(getClientOAuthSessionIdAllowMissing(event));
     }
 
     @Test
-    void getLanguageInCriRequestShouldReturnLanguage() throws HttpResponseExceptionWithErrorBody {
+    void getLanguageInCriRequestShouldReturnLanguage() {
         // Arrange
         var event = new CriJourneyRequest();
         String language = "some-language";
@@ -252,20 +230,16 @@ class RequestHelperTest {
     }
 
     @Test
-    void getLanguageInCriRequestShouldThrowIfLanguageIsNull() {
+    void getLanguageInCriRequestShouldReturnNullIfLanguageIsEmpty() {
         // Arrange
         var event = new CriJourneyRequest();
-        event.setLanguage(null);
+        event.setLanguage("");
 
         // Act
-        HttpResponseExceptionWithErrorBody exception =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            getLanguage(event);
-                        });
+        var result = getLanguage(event);
+
         // Assert
-        assertEquals(ErrorResponse.MISSING_LANGUAGE, exception.getErrorResponse());
+        assertNull(result);
     }
 
     @Test
@@ -283,7 +257,7 @@ class RequestHelperTest {
                         .featureSet(featureSet)
                         .build();
 
-        assertEquals(clientSessionId, getClientOAuthSessionId(event));
+        assertEquals(clientSessionId, getClientOAuthSessionIdAllowMissing(event));
         assertEquals(ipvSessionId, getIpvSessionId(event));
         assertEquals(ipAddress, getIpAddress(event));
         assertEquals(List.of(featureSet), getFeatureSet(event));
@@ -303,7 +277,7 @@ class RequestHelperTest {
                         .featureSet(featureSet)
                         .build();
 
-        assertNull(getIpvSessionIdAllowBlank(event));
+        assertNull(getIpvSessionIdAllowMissing(event));
     }
 
     @Test

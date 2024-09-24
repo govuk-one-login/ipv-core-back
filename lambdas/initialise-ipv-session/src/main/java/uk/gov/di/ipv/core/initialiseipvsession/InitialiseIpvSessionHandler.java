@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -293,10 +292,6 @@ public class InitialiseIpvSessionHandler
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body into map.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body.", e));
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         } catch (CredentialParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Failed to check if stronger vot vc present.", e));

@@ -58,8 +58,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
@@ -170,28 +168,12 @@ public class UserIdentityService {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
             return false;
         }
 
         if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
             return false;
         }
         return true;
@@ -205,28 +187,12 @@ public class UserIdentityService {
                 getNameProperty(
                         getIdentityClaimsForNameCorrelation(successfulVcs),
                         NamePart.NamePartType.GIVEN_NAME))) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
             return false;
         }
 
         if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
             return false;
         }
         return true;
@@ -238,28 +204,12 @@ public class UserIdentityService {
 
         if (!checkNamesForCorrelation(
                 getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_NAME_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
             return false;
         }
 
         if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_ERROR_CODE.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
-                            .with(
-                                    LOG_ERROR_DESCRIPTION.getFieldName(),
-                                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage()));
-
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
             return false;
         }
         return true;
@@ -507,7 +457,6 @@ public class UserIdentityService {
         var addressVc = findVc(ADDRESS, vcs);
 
         if (addressVc.isEmpty()) {
-            LOGGER.warn(LogHelper.buildLogMessage("Failed to find Address CRI credential"));
             return Optional.empty();
         }
 
@@ -515,9 +464,7 @@ public class UserIdentityService {
             var credentialSubject = addressCredential.getCredentialSubject();
 
             if (credentialSubject == null) {
-                LOGGER.error(
-                        LogHelper.buildLogMessage(
-                                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+                LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.CREDENTIAL_SUBJECT_MISSING));
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
             }
@@ -561,27 +508,14 @@ public class UserIdentityService {
             var nino = credentialSubject.getSocialSecurityRecord();
 
             if (isNullOrEmpty(nino)) {
-                StringMapMessage mapMessage =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "SocialSecurityRecord property is missing from VC or empty SocialSecurityRecord property.")
-                                .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
-                LOGGER.warn(mapMessage);
-
                 return Optional.empty();
             }
 
             return Optional.of(nino);
         } else {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    MUST_BE_IDENTITYCHECK_MESSAGE)
-                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
-
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
+                            .with(LOG_CRI_ISSUER.getFieldName(), ninoVc.get().getCri().getId()));
             return Optional.empty();
         }
     }
@@ -591,7 +525,6 @@ public class UserIdentityService {
         var passportVc = findVc(PASSPORT_CRI_TYPES, vcs);
 
         if (passportVc.isEmpty()) {
-            LOGGER.warn(LogHelper.buildLogMessage("Failed to find Passport CRI credential"));
             return Optional.empty();
         }
 
@@ -603,27 +536,16 @@ public class UserIdentityService {
             var passport = credentialSubject.getPassport();
 
             if (isNullOrEmpty(passport)) {
-                StringMapMessage mapMessage =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Passport property is missing from VC or empty passport property.")
-                                .with(
-                                        LOG_CRI_ISSUER.getFieldName(),
-                                        passportVc.get().getCri().getId());
-                LOGGER.warn(mapMessage);
                 return Optional.empty();
             }
 
             return Optional.of(passport);
         } else {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
                             .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    MUST_BE_IDENTITYCHECK_MESSAGE)
-                            .with(LOG_CRI_ISSUER.getFieldName(), passportVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
+                                    LOG_CRI_ISSUER.getFieldName(),
+                                    passportVc.get().getCri().getId()));
             return Optional.empty();
         }
     }
@@ -634,7 +556,6 @@ public class UserIdentityService {
         var drivingPermitVc = findVc(DRIVING_PERMIT_CRI_TYPES, verifiableCredentials);
 
         if (drivingPermitVc.isEmpty()) {
-            LOGGER.warn(LogHelper.buildLogMessage("Failed to find Driving Permit CRI credential"));
             return Optional.empty();
         }
 
@@ -646,15 +567,6 @@ public class UserIdentityService {
             var drivingPermit = credentialSubject.getDrivingPermit();
 
             if (isNullOrEmpty(drivingPermit)) {
-                StringMapMessage mapMessage =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Driving Permit property is missing from VC or empty driving permit property.")
-                                .with(
-                                        LOG_CRI_ISSUER.getFieldName(),
-                                        drivingPermitVc.get().getCri().getId());
-                LOGGER.warn(mapMessage);
                 return Optional.empty();
             }
 
@@ -666,15 +578,11 @@ public class UserIdentityService {
 
             return Optional.of(drivingPermit);
         } else {
-            StringMapMessage mapMessage =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    MUST_BE_IDENTITYCHECK_MESSAGE)
+            LOGGER.warn(
+                    LogHelper.buildLogMessage(MUST_BE_IDENTITYCHECK_MESSAGE)
                             .with(
                                     LOG_CRI_ISSUER.getFieldName(),
-                                    drivingPermitVc.get().getCri().getId());
-            LOGGER.warn(mapMessage);
+                                    drivingPermitVc.get().getCri().getId()));
             return Optional.empty();
         }
     }
@@ -712,9 +620,7 @@ public class UserIdentityService {
         var credentialSubject = identityCheckCredential.getCredentialSubject();
 
         if (credentialSubject == null) {
-            LOGGER.error(
-                    LogHelper.buildLogMessage(
-                            ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage()));
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.CREDENTIAL_SUBJECT_MISSING));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
         }

@@ -48,12 +48,11 @@ import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequest
 import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator.IPV_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionIdAllowMissing;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowBlank;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowMissing;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler
@@ -102,31 +101,25 @@ public class BuildClientOauthResponseHandler
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = getIpvSessionIdAllowBlank(input);
-            String ipAddress = getIpAddress(input);
-            String clientSessionId = getClientOAuthSessionId(input);
-            List<String> featureSet = getFeatureSet(input);
+            var ipvSessionId = getIpvSessionIdAllowMissing(input);
+            var ipAddress = getIpAddress(input);
+            var clientSessionId = getClientOAuthSessionIdAllowMissing(input);
+            var featureSet = getFeatureSet(input);
             configService.setFeatureSet(featureSet);
-
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             IpvSessionItem ipvSessionItem;
             ClientOAuthSessionItem clientOAuthSessionItem;
-            if (!StringUtils.isBlank(ipvSessionId)) {
+            if (ipvSessionId != null) {
                 ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
                 clientOAuthSessionItem =
                         clientOAuthSessionService.getClientOAuthSession(
                                 ipvSessionItem.getClientOAuthSessionId());
-            } else if (!StringUtils.isBlank(clientSessionId)) {
+            } else if (clientSessionId != null) {
                 clientOAuthSessionItem =
                         clientOAuthSessionService.getClientOAuthSession(clientSessionId);
-                var mapMessage =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "No ipvSession for existing ClientOAuthSession.")
-                                .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId);
-                LOGGER.warn(mapMessage);
+                LOGGER.warn(
+                        LogHelper.buildLogMessage("No ipvSession for existing ClientOAuthSession.")
+                                .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId));
                 return generateClientOAuthSessionErrorResponse(clientOAuthSessionItem)
                         .toObjectMap();
             } else {

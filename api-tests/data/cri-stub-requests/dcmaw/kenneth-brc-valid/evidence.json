@@ -2,7 +2,7 @@
   "type": "IdentityCheck",
   "strengthScore": 3,
   "validityScore": 2,
-  "activityHistory": 1,
+  "activityHistoryScore": 1,
   "checkDetails": [
     {
       "checkMethod": "vcrypt",

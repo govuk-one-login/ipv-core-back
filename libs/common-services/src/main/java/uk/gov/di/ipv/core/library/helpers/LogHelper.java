@@ -7,6 +7,7 @@ import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
@@ -150,6 +151,11 @@ public class LogHelper {
 
     public static StringMapMessage buildErrorMessage(String message, ErrorObject err) {
         return buildErrorMessage(message, err.getDescription(), err.getCode());
+    }
+
+    public static StringMapMessage buildErrorMessage(ErrorResponse errorResponse) {
+        return buildErrorMessage(
+                errorResponse.getMessage(), errorResponse.getMessage(), errorResponse.getCode());
     }
 
     public static StringMapMessage buildErrorMessage(

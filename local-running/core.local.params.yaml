@@ -361,6 +361,7 @@ core:
     p1JourneysEnabled: false
     sqsAsync: true
     updateDetailsAccountDeletion: false
+    kidJarHeaderEnabled: true
   features:
     mfaReset:
       featureFlags:

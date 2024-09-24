@@ -221,7 +221,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        ADDRESS, TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
+                        TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
 
         // Assert
         assertEquals(TEST_API_KEY, request.getHeaderMap().get(API_KEY_HEADER).get(0));
@@ -238,7 +238,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        ADDRESS, TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
+                        TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
 
         // Assert
         assertEquals(
@@ -263,7 +263,7 @@ class CriApiServiceTest {
                     () ->
                             criApiService
                                     .buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                                            ADDRESS, TEST_AUTHORISATION_CODE, null));
+                                            TEST_AUTHORISATION_CODE, null));
         }
     }
 
@@ -279,7 +279,7 @@ class CriApiServiceTest {
         // Act
         var httpRequest =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        ADDRESS, TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
+                        TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
 
         // Assert
         assertNotEquals("InvalidApiKey", httpRequest.getAuthorization());
@@ -296,7 +296,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        ADDRESS, TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
+                        TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
 
         // Assert
         assertTrue(request.getBody().contains("code=" + TEST_AUTHORISATION_CODE));
@@ -313,7 +313,7 @@ class CriApiServiceTest {
         // Act
         var request =
                 criApiService.buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
-                        ADDRESS, TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
+                        TEST_AUTHORISATION_CODE, TEST_CRI_SESSION);
 
         // Assert
         assertTrue(request.getBody().contains("redirect_uri="));
