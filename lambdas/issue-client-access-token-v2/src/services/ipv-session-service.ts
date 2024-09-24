@@ -3,11 +3,9 @@ import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import AWSXRay from "aws-xray-sdk";
 import { sha256 } from "../helpers/hash-helper";
 import { logger } from "../helpers/logger";
+import { retryOptionalTask } from "../helpers/retry-helper";
 
 const TABLE_NAME = process.env.IPV_SESSIONS_TABLE_NAME || 'ipv-session-table';
-
-const MAX_ATTEMPTS = 5;
-const BASE_BACKOFF_MILLIS = 50;
 
 const dynamoClient = DynamoDBDocument.from(
   AWSXRay.captureAWSv3Client(
@@ -55,24 +53,9 @@ const getIpvSessionByAuthCodeInternal = async (authCode: string): Promise<IpvSes
   return queryResult.Items[0] as IpvSession;
 };
 
-const wait = async (millis: number): Promise<void> => {
-  return new Promise((resolve) => setTimeout(resolve, millis));
-};
 
-export const getIpvSessionByAuthCode = async (authCode: string): Promise<IpvSession | undefined> => {
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const result = await getIpvSessionByAuthCodeInternal(authCode);
-
-    if (result) {
-      return result;
-    }
-
-    if (attempt < MAX_ATTEMPTS) {
-      logger.info("No IPV session found, retrying...");
-      await wait(BASE_BACKOFF_MILLIS * Math.pow(2, attempt - 1));
-    }
-  }
-  return undefined;
+export const getIpvSessionByAuthCode = (authCode: string): Promise<IpvSession | undefined> => {
+  return retryOptionalTask(() => getIpvSessionByAuthCodeInternal(authCode));
 };
 
 export const updateIpvSession = async (ipvSession: IpvSession): Promise<void> => {
