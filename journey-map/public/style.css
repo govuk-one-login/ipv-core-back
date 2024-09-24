@@ -1,221 +1,226 @@
 * {
-    margin: 0;
-    box-sizing: border-box;
+  margin: 0;
+  box-sizing: border-box;
 }
 h3 {
-    padding-bottom: 8px;
+  padding-bottom: 8px;
 }
 body {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    font-family: sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: sans-serif;
 }
 #header {
-    position: relative;
-    border-bottom: 3px solid black;
-    background: white;
-    z-index: 1;
+  position: relative;
+  border-bottom: 3px solid black;
+  background: white;
+  z-index: 1;
 }
 #header-bar {
-    display: flex;
-    background: black;
-    color: white;
-    padding: 8px;
-    align-items: center;
+  display: flex;
+  background: black;
+  color: white;
+  padding: 8px;
+  align-items: center;
 }
 #header-bar h1 {
-    flex: 0 0 auto;
-    display: flex;
-    gap: 8px;
- }
- #header-bar h1 a {
-    text-decoration: none;
- }
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+#header-bar h1 a {
+  text-decoration: none;
+}
 #header-bar a {
-    flex: 1 1 auto;
-    color: white;
-    text-align: center;
+  flex: 1 1 auto;
+  color: white;
+  text-align: center;
 }
 #header-content {
-    display: flex;
-    margin: 16px 0;
-    overflow: hidden;
-    max-height: 500px;
-    transition: max-height 0.15s ease-out, margin 0.15s ease-out;
+  display: flex;
+  margin: 16px 0;
+  overflow: hidden;
+  max-height: 500px;
+  transition:
+    max-height 0.15s ease-out,
+    margin 0.15s ease-out;
 }
 #header-content.hidden {
-    max-height: 0;
-    margin: 0;
+  max-height: 0;
+  margin: 0;
 }
 #header-content > *:not(:first-child) {
-    border-left: 1px solid black;
+  border-left: 1px solid black;
 }
 #header-toggle {
-    position: absolute;
-    left: 50%;
-    top: 100%;
-    width: 100px;
-    margin-left: -50px;
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 100px;
+  margin-left: -50px;
 
-    background: white;
-    border: 3px solid black;
-    cursor: pointer;
+  background: white;
+  border: 3px solid black;
+  cursor: pointer;
 }
 #diagram {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    flex: 1 1 auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  flex: 1 1 auto;
 }
 #diagram > * {
-    height: 100%;
-    width: 100%;
-    max-width: unset !important;
+  height: 100%;
+  width: 100%;
+  max-width: unset !important;
 }
 form {
-    flex: 0 1 525px;
-    padding: 8px 32px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  flex: 0 1 525px;
+  padding: 8px 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 form button {
-    width: 180px;
+  width: 180px;
 }
 form label {
-    display: flex;
-    gap: 8px;
-    margin: 2px 0;
+  display: flex;
+  gap: 8px;
+  margin: 2px 0;
 }
 form select {
-    flex: 0 0 30%;
+  flex: 0 0 30%;
 }
-form input[type=checkbox] {
-    margin-left: 8px;
+form input[type="checkbox"] {
+  margin-left: 8px;
 }
 form fieldset {
-    margin-top: 8px;
-    padding: 8px;
+  margin-top: 8px;
+  padding: 8px;
 }
 form fieldset legend {
-    font-weight: bold;
+  font-weight: bold;
 }
 form fieldset p {
-    color: #555;
-    margin-bottom: 8px;
+  color: #555;
+  margin-bottom: 8px;
 }
 #checkbox-controls {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 16px;
 }
 #checkbox-controls fieldset {
-    flex: 1 0 0;
+  flex: 1 0 0;
 }
 #nodeInfo {
-    flex: 1 1 auto;
-    padding: 8px 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 60%;
+  flex: 1 1 auto;
+  padding: 8px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 60%;
 }
 #nodeDef {
-    background: #f3f2f1;
-    padding: 8px;
+  background: #f3f2f1;
+  padding: 8px;
 }
 #nodeDef:empty {
-    display: none;
+  display: none;
 }
 #nodeDesc {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 #journeyDesc {
-    max-height: 100px;
-    overflow: auto;
+  max-height: 100px;
+  overflow: auto;
 }
 #key {
-    flex: 0 1 525px;
-    padding: 16px 32px;
-    display: flex;
-    gap: 16px;
-    flex-direction: column;
-    align-items: start;
+  flex: 0 1 525px;
+  padding: 16px 32px;
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+  align-items: start;
 }
 .key-item {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 .key-node {
-    flex: 0 0 auto;
-    border: 1px solid black;
-    text-align: center;
-    padding: 8px;
+  flex: 0 0 auto;
+  border: 1px solid black;
+  text-align: center;
+  padding: 8px;
 }
 /* These styles should be kept in sync with the mermaid in render.js */
 .key-node.page {
-    background: #ae8;
+  background: #ae8;
 }
 .key-node.cri {
-    background: #faf;
-    border-radius: 16px;
+  background: #faf;
+  border-radius: 16px;
 }
 .key-node.process {
-    background: #ffa;
-    border-radius: 4px;
+  background: #ffa;
+  border-radius: 4px;
 }
 .key-node.journey_transition {
-    background: #aaf;
-    border-radius: 4px;
+  background: #aaf;
+  border-radius: 4px;
 }
 .key-node.nested_journey {
-    background: #aaedff;
-    border-radius: 4px;
+  background: #aaedff;
+  border-radius: 4px;
 }
 .key-node.error_transition {
-    background: #f99;
-    border-radius: 4px;
+  background: #f99;
+  border-radius: 4px;
 }
 .key-node.other {
-    background: #f3f2f1;
+  background: #f3f2f1;
 }
 #diagramSvg .highlight.outgoingEdge {
-    stroke-width: 3px;
-    filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00) drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
+  stroke-width: 3px;
+  filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00)
+    drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
 }
 #diagramSvg .highlight.incomingEdge {
-    stroke-width: 3px;
-    filter: drop-shadow(1px 0 0 cyan) drop-shadow(-1px 0 0 cyan) drop-shadow(0 1px 0 cyan) drop-shadow(0 -1px 0 cyan);
+  stroke-width: 3px;
+  filter: drop-shadow(1px 0 0 cyan) drop-shadow(-1px 0 0 cyan)
+    drop-shadow(0 1px 0 cyan) drop-shadow(0 -1px 0 cyan);
 }
 #diagramSvg .highlight.node rect {
-    stroke-width: 3px;
-    filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00) drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
+  stroke-width: 3px;
+  filter: drop-shadow(1px 0 0 #ffdd00) drop-shadow(-1px 0 0 #ffdd00)
+    drop-shadow(0 1px 0 #ffdd00) drop-shadow(0 -1px 0 #ffdd00);
 }
 #header-actions {
-    margin-left: auto;
-    display: flex;
-    height: 100%;
-    align-items: center;
+  margin-left: auto;
+  display: flex;
+  height: 100%;
+  align-items: center;
 }
 #journey-select {
-    font-size: 1rem;
-    margin-right: 30px;
-    margin-left: 5px;
+  font-size: 1rem;
+  margin-right: 30px;
+  margin-left: 5px;
 }
-#state-search{
-    font-size: 1rem;
+#state-search {
+  font-size: 1rem;
 }
 .journeyCtxTransition {
-    background-color: #f5daa4;
+  background-color: #f5daa4;
 }
 .journeyCtxList {
-    padding: 4px 24px 0;
+  padding: 4px 24px 0;
 }

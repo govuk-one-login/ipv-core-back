@@ -1,105 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <title>IPV Core Journey Map</title>
-        <link rel="icon" href="./favicon.ico" type="image/x-icon">
-        <link rel="stylesheet" href="./style.css" type="text/css">
-    </head>
-    <body>
-        <div id="header">
-            <div id="header-bar">
-                <h1>
-                    <a id="header-title" href="javascript:void(0)">
-                        <svg aria-hidden="true" focusable="false" class="govuk-header__logotype-crown" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 30" height="30" width="32">
-                            <path fill="currentColor" fill-rule="evenodd" d="M22.6 10.4c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4m-5.9 6.7c-.9.4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4m10.8-3.7c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s0 2-1 2.4m3.3 4.8c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4M17 4.7l2.3 1.2V2.5l-2.3.7-.2-.2.9-3h-3.4l.9 3-.2.2c-.1.1-2.3-.7-2.3-.7v3.4L15 4.7c.1.1.1.2.2.2l-1.3 4c-.1.2-.1.4-.1.6 0 1.1.8 2 1.9 2.2h.7c1-.2 1.9-1.1 1.9-2.1 0-.2 0-.4-.1-.6l-1.3-4c-.1-.2 0-.2.1-.3m-7.6 5.7c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s0 2 1 2.4m-5 3c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s.1 2 1 2.4m-3.2 4.8c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s0 2 1 2.4m14.8 11c4.4 0 8.6.3 12.3.8 1.1-4.5 2.4-7 3.7-8.8l-2.5-.9c.2 1.3.3 1.9 0 2.7-.4-.4-.8-1.1-1.1-2.3l-1.2 4c.7-.5 1.3-.8 2-.9-1.1 2.5-2.6 3.1-3.5 3-1.1-.2-1.7-1.2-1.5-2.1.3-1.2 1.5-1.5 2.1-.1 1.1-2.3-.8-3-2-2.3 1.9-1.9 2.1-3.5.6-5.6-2.1 1.6-2.1 3.2-1.2 5.5-1.2-1.4-3.2-.6-2.5 1.6.9-1.4 2.1-.5 1.9.8-.2 1.1-1.7 2.1-3.5 1.9-2.7-.2-2.9-2.1-2.9-3.6.7-.1 1.9.5 2.9 1.9l.4-4.3c-1.1 1.1-2.1 1.4-3.2 1.4.4-1.2 2.1-3 2.1-3h-5.4s1.7 1.9 2.1 3c-1.1 0-2.1-.2-3.2-1.4l.4 4.3c1-1.4 2.2-2 2.9-1.9-.1 1.5-.2 3.4-2.9 3.6-1.9.2-3.4-.8-3.5-1.9-.2-1.3 1-2.2 1.9-.8.7-2.3-1.2-3-2.5-1.6.9-2.2.9-3.9-1.2-5.5-1.5 2-1.3 3.7.6 5.6-1.2-.7-3.1 0-2 2.3.6-1.4 1.8-1.1 2.1.1.2.9-.3 1.9-1.5 2.1-.9.2-2.4-.5-3.5-3 .6 0 1.2.3 2 .9l-1.2-4c-.3 1.1-.7 1.9-1.1 2.3-.3-.8-.2-1.4 0-2.7l-2.9.9C1.3 23 2.6 25.5 3.7 30c3.7-.5 7.9-.8 12.3-.8"></path>
-                        </svg>
-                        <span>IPV Core Journey Map</span>
-                    </a>
-                </h1>
-                <div id="header-actions">
-                    <label for="journey-select">Current Journey</label>
-                        <select id="journey-select"></select>
-                    </label>
-                    <input id="state-search" type="search" placeholder="Search for state...">
-                </div>
-            </div>
-            <div id="header-content">
-                <form id="configuration-form">
-                    <h2>Options</h2>
-                    <div id="checkbox-controls">
-                        <fieldset id="disabledInput">
-                            <legend>Turn off a CRI</legend>
-                            <p>See what happens when you turn off a service.</p>
-                        </fieldset>
-                        <fieldset id="featureFlagInput">
-                            <legend>Turn on a feature flag</legend>
-                            <p>Show a feature currently in development.</p>
-                        </fieldset>
-                    </div>
-                    <fieldset id="otherOptions">
-                        <legend>Turn on other options</legend>
-                        <p>By default, only successful identity journeys are displayed.</p>
-                        <label>
-                            <input id="includeFailuresInput" name="otherOption" value="includeFailures" type="checkbox">
-                            <span>Show journeys that end in <strong>failures</strong></span>
-                        </label>
-                        <label>
-                            <input id="includeErrorsInput" name="otherOption" value="includeErrors" type="checkbox">
-                            <span>Show unexpected <strong>errors</strong></span>
-                        </label>
-                        <label>
-                            <input id="onlyOrphanStatesInput" name="otherOption" value="onlyOrphanStates" type="checkbox">
-                            <span>Show only <strong>orphaned states</strong></span>
-                        </label>
-                        <label>
-                            <input id="expandNestedJourneysInput" name="otherOption" value="expandNestedJourneys" type="checkbox">
-                            <span>Show all states within <strong>nested journeys</strong></span>
-                        </label>
-                    </fieldset>
-                </form>
-                <div id="nodeInfo">
-                    <h2 id="journeyName"></h2>
-                    <p id="journeyDesc"></p>
-                    <div id="journeyContextsList"></div>
-                    <hr />
-                    <h3 id="nodeTitle"></h3>
-                    <pre id="nodeDef"></pre>
-                    <div id="nodeDesc">
-                        <p>Use the <strong>Options</strong> panel to tailor what you see.</p>
-                        <p>Click on a node to display more information.</p>
-                    </div>
-                </div>
-                <div id="key">
-                    <h2>Key</h2>
-                    <div class="key-item">
-                        <div class="key-node page">Page state</div>
-                        Page displayed by IPV Core
-                    </div>
-                    <div class="key-item">
-                        <div class="key-node process">Process state</div>
-                        IPV Core backend process
-                    </div>
-                    <div class="key-item">
-                        <div class="key-node cri">Credential issuer</div>
-                        Redirection to a credential issuer
-                    </div>
-                    <div class="key-item">
-                        <div class="key-node journey_transition">Journey transition</div>
-                        Transition to another journey type
-                    </div>
-                    <div class="key-item">
-                        <div class="key-node error_transition">Failure transition</div>
-                        Transition to a failed or error journey
-                    </div>
-                    <div class="key-item">
-                        <div class="key-node nested_journey">Nested journey</div>
-                        State representing more than one other state
-                    </div>
-                </div>
-            </div>
-            <button id="header-toggle">Hide header</button>
+  <head>
+    <title>IPV Core Journey Map</title>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./style.css" type="text/css" />
+  </head>
+  <body>
+    <div id="header">
+      <div id="header-bar">
+        <h1>
+          <a id="header-title" href="javascript:void(0)">
+            <svg
+              aria-hidden="true"
+              focusable="false"
+              class="govuk-header__logotype-crown"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 32 30"
+              height="30"
+              width="32"
+            >
+              <path
+                fill="currentColor"
+                fill-rule="evenodd"
+                d="M22.6 10.4c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4m-5.9 6.7c-.9.4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4m10.8-3.7c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s0 2-1 2.4m3.3 4.8c-1 .4-2-.1-2.4-1-.4-.9.1-2 1-2.4.9-.4 2 .1 2.4 1s-.1 2-1 2.4M17 4.7l2.3 1.2V2.5l-2.3.7-.2-.2.9-3h-3.4l.9 3-.2.2c-.1.1-2.3-.7-2.3-.7v3.4L15 4.7c.1.1.1.2.2.2l-1.3 4c-.1.2-.1.4-.1.6 0 1.1.8 2 1.9 2.2h.7c1-.2 1.9-1.1 1.9-2.1 0-.2 0-.4-.1-.6l-1.3-4c-.1-.2 0-.2.1-.3m-7.6 5.7c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s0 2 1 2.4m-5 3c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s.1 2 1 2.4m-3.2 4.8c.9.4 2-.1 2.4-1 .4-.9-.1-2-1-2.4-.9-.4-2 .1-2.4 1s0 2 1 2.4m14.8 11c4.4 0 8.6.3 12.3.8 1.1-4.5 2.4-7 3.7-8.8l-2.5-.9c.2 1.3.3 1.9 0 2.7-.4-.4-.8-1.1-1.1-2.3l-1.2 4c.7-.5 1.3-.8 2-.9-1.1 2.5-2.6 3.1-3.5 3-1.1-.2-1.7-1.2-1.5-2.1.3-1.2 1.5-1.5 2.1-.1 1.1-2.3-.8-3-2-2.3 1.9-1.9 2.1-3.5.6-5.6-2.1 1.6-2.1 3.2-1.2 5.5-1.2-1.4-3.2-.6-2.5 1.6.9-1.4 2.1-.5 1.9.8-.2 1.1-1.7 2.1-3.5 1.9-2.7-.2-2.9-2.1-2.9-3.6.7-.1 1.9.5 2.9 1.9l.4-4.3c-1.1 1.1-2.1 1.4-3.2 1.4.4-1.2 2.1-3 2.1-3h-5.4s1.7 1.9 2.1 3c-1.1 0-2.1-.2-3.2-1.4l.4 4.3c1-1.4 2.2-2 2.9-1.9-.1 1.5-.2 3.4-2.9 3.6-1.9.2-3.4-.8-3.5-1.9-.2-1.3 1-2.2 1.9-.8.7-2.3-1.2-3-2.5-1.6.9-2.2.9-3.9-1.2-5.5-1.5 2-1.3 3.7.6 5.6-1.2-.7-3.1 0-2 2.3.6-1.4 1.8-1.1 2.1.1.2.9-.3 1.9-1.5 2.1-.9.2-2.4-.5-3.5-3 .6 0 1.2.3 2 .9l-1.2-4c-.3 1.1-.7 1.9-1.1 2.3-.3-.8-.2-1.4 0-2.7l-2.9.9C1.3 23 2.6 25.5 3.7 30c3.7-.5 7.9-.8 12.3-.8"
+              ></path>
+            </svg>
+            <span>IPV Core Journey Map</span>
+          </a>
+        </h1>
+        <div id="header-actions">
+          <label for="journey-select">Current Journey</label>
+          <select id="journey-select"></select>
+          <input
+            id="state-search"
+            type="search"
+            placeholder="Search for state..."
+          />
         </div>
-        <div id="diagram"></div>
-        <script type="module" src="./index.mjs"></script>
-    </body>
+      </div>
+      <div id="header-content">
+        <form id="configuration-form">
+          <h2>Options</h2>
+          <div id="checkbox-controls">
+            <fieldset id="disabledInput">
+              <legend>Turn off a CRI</legend>
+              <p>See what happens when you turn off a service.</p>
+            </fieldset>
+            <fieldset id="featureFlagInput">
+              <legend>Turn on a feature flag</legend>
+              <p>Show a feature currently in development.</p>
+            </fieldset>
+          </div>
+          <fieldset id="otherOptions">
+            <legend>Turn on other options</legend>
+            <p>By default, only successful identity journeys are displayed.</p>
+            <label>
+              <input
+                id="includeFailuresInput"
+                name="otherOption"
+                value="includeFailures"
+                type="checkbox"
+              />
+              <span>Show journeys that end in <strong>failures</strong></span>
+            </label>
+            <label>
+              <input
+                id="includeErrorsInput"
+                name="otherOption"
+                value="includeErrors"
+                type="checkbox"
+              />
+              <span>Show unexpected <strong>errors</strong></span>
+            </label>
+            <label>
+              <input
+                id="onlyOrphanStatesInput"
+                name="otherOption"
+                value="onlyOrphanStates"
+                type="checkbox"
+              />
+              <span>Show only <strong>orphaned states</strong></span>
+            </label>
+            <label>
+              <input
+                id="expandNestedJourneysInput"
+                name="otherOption"
+                value="expandNestedJourneys"
+                type="checkbox"
+              />
+              <span
+                >Show all states within <strong>nested journeys</strong></span
+              >
+            </label>
+          </fieldset>
+        </form>
+        <div id="nodeInfo">
+          <h2 id="journeyName"></h2>
+          <p id="journeyDesc"></p>
+          <div id="journeyContextsList"></div>
+          <hr />
+          <h3 id="nodeTitle"></h3>
+          <pre id="nodeDef"></pre>
+          <div id="nodeDesc">
+            <p>
+              Use the <strong>Options</strong> panel to tailor what you see.
+            </p>
+            <p>Click on a node to display more information.</p>
+          </div>
+        </div>
+        <div id="key">
+          <h2>Key</h2>
+          <div class="key-item">
+            <div class="key-node page">Page state</div>
+            Page displayed by IPV Core
+          </div>
+          <div class="key-item">
+            <div class="key-node process">Process state</div>
+            IPV Core backend process
+          </div>
+          <div class="key-item">
+            <div class="key-node cri">Credential issuer</div>
+            Redirection to a credential issuer
+          </div>
+          <div class="key-item">
+            <div class="key-node journey_transition">Journey transition</div>
+            Transition to another journey type
+          </div>
+          <div class="key-item">
+            <div class="key-node error_transition">Failure transition</div>
+            Transition to a failed or error journey
+          </div>
+          <div class="key-item">
+            <div class="key-node nested_journey">Nested journey</div>
+            State representing more than one other state
+          </div>
+        </div>
+      </div>
+      <button id="header-toggle">Hide header</button>
+    </div>
+    <div id="diagram"></div>
+    <script type="module" src="./index.mjs"></script>
+  </body>
 </html>

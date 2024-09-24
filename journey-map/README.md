@@ -25,5 +25,6 @@ We run a very lightweight express server to serve the static HTML and JS,
 and provide a route to expose the journey map as a JSON object.
 
 The frontend converts this to mermaid format, and renders using two publicly available libraries:
+
 - [mermaid-js](https://mermaid.js.org/)
 - [svg-pan-zoom](https://github.com/bumbu/svg-pan-zoom)
