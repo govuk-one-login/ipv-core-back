@@ -374,7 +374,12 @@ class BulkMigrateVcsHandlerTest {
 
         var mockPage = (Page<ReportUserIdentityItem>) mock(Page.class);
         when(mockPage.items()).thenReturn(List.of());
-        when(mockPage.count()).thenReturn(10_001).thenReturn(10_010).thenReturn(20_001);
+        when(mockPage.count())
+                .thenReturn(9_000)
+                .thenReturn(9_000)
+                .thenReturn(9_010)
+                .thenReturn(9_010)
+                .thenReturn(18_001);
         when(mockPage.lastEvaluatedKey()).thenReturn(null);
         when(mockPageIterable.iterator())
                 .thenReturn(List.of(mockPage, mockPage, mockPage).iterator());
