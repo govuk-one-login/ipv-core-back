@@ -1,52 +1,8 @@
+import { getNestedJourneyStates, resolveEventTargets } from "./helpers.mjs";
+
 const topDownJourneys = ['INITIAL_JOURNEY_SELECTION'];
 const errorJourneys = ['TECHNICAL_ERROR'];
 const failureJourneys = ['INELIGIBLE', 'FAILED'];
-
-const addDefinitionOptions = (definition, disabledOptions, featureFlagOptions) => {
-    Object.entries(definition.checkIfDisabled || {}).forEach(([opt, def]) => {
-        if (!disabledOptions.includes(opt)) {
-            disabledOptions.push(opt);
-        }
-        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-    Object.entries(definition.checkFeatureFlag || {}).forEach(([opt, def]) => {
-        if (!featureFlagOptions.includes(opt)) {
-            featureFlagOptions.push(opt);
-        }
-        addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-    });
-};
-
-// Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
-export const getOptions = (journeyMaps, nestedJourneys) => {
-    const disabledOptions = ['ticf'];
-    const featureFlagOptions = [];
-
-    const states = [
-        ...Object.values(journeyMaps)
-            .flatMap(journeyMap => Object.values(journeyMap.states)),
-        ...Object.values(nestedJourneys)
-            .flatMap(nestedJourney => Object.values(nestedJourney.nestedJourneyStates)),
-    ];
-
-    states.forEach((definition) => {
-        const events = definition.events || definition.exitEvents || {};
-        Object.values(events).forEach((def) => {
-            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-        });
-    });
-
-    Object.values(nestedJourneys).forEach(nestedJourney => {
-        Object.values(nestedJourney.entryEvents).forEach((def) => {
-            addDefinitionOptions(def, disabledOptions, featureFlagOptions);
-        });
-    });
-
-    disabledOptions.sort();
-    featureFlagOptions.sort();
-
-    return { disabledOptions, featureFlagOptions };
-};
 
 // Expand out parent states
 // Will also search 'otherStates' (e.g. for nested journeys)
@@ -70,30 +26,24 @@ const expandParents = (journeyStates, otherStates) => {
     parentStates.forEach((state) => delete journeyStates[state]);
 };
 
-// Should match logic in BasicEvent.java
-const resolveEventTarget = (definition, formData) => {
-    // Look for an override for disabled CRIs
-    const disabledCris = formData.getAll('disabledCri');
-    const disabledResolution = Object.keys(definition.checkIfDisabled || {}).find((k) => disabledCris.includes(k));
-    if (disabledResolution) {
-        return resolveEventTarget(definition.checkIfDisabled[disabledResolution], formData);
+const mapTargetStateToExpandedState = (eventDef, subJourneyState) => {
+    // Map target states to expanded states
+    if (eventDef.targetState && !eventDef.targetJourney) {
+        eventDef.targetState = `${eventDef.targetState}_${subJourneyState}`;
     }
 
-    // Look for an override for feature flags
-    const featureFlags = formData.getAll('featureFlag');
-    const featureFlagResolution = Object.keys(definition.checkFeatureFlag || {}).find((k) => featureFlags.includes(k));
-    if (featureFlagResolution) {
-        return resolveEventTarget(definition.checkFeatureFlag[featureFlagResolution], formData);
+    if (eventDef.checkJourneyContext) {
+        const journeyCtx = Object.keys(eventDef.checkJourneyContext)[0];
+        return mapTargetStateToExpandedState(eventDef.checkJourneyContext[journeyCtx], subJourneyState);
     }
-
-    return definition;
-};
+}
 
 // Expand out nested states
 const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
     Object.entries(journeyMap).forEach(([state, definition]) => {
         if (definition.nestedJourney && subjourneys[definition.nestedJourney]) {
-            delete journeyMap[state];
+            const subJourneyState = state;
+            delete journeyMap[subJourneyState];
             const subjourney = subjourneys[definition.nestedJourney];
 
             // Expand out each of the nested states
@@ -101,42 +51,44 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
                 // Copy to avoid mutating different versions of the expanded definition
                 const expandedDefinition = JSON.parse(JSON.stringify(nestedDefinition));
 
-                Object.entries(expandedDefinition.events || {}).forEach(([evt, def]) => {
-                    // Map target states to expanded states
-                    if (def.targetState && !def.targetJourney) {
-                        def.targetState = `${def.targetState}_${state}`;
-                    }
+                Object.entries(expandedDefinition.events || {}).forEach(([evt, eventDef]) => {
+                    mapTargetStateToExpandedState(eventDef, subJourneyState);
 
                     // Map exit events to targets in the parent definition
-                    const exitEvent = def.exitEventToEmit;
+                    const exitEvent = eventDef.exitEventToEmit;
                     if (exitEvent) {
-                        delete def.exitEventToEmit;
+                        delete eventDef.exitEventToEmit;
                         if (definition.exitEvents[exitEvent]) {
-                            Object.assign(def, definition.exitEvents[exitEvent]);
+                            Object.assign(eventDef, definition.exitEvents[exitEvent]);
                         } else {
-                            console.warn(`Unhandled exit event from ${state}:`, exitEvent)
+                            console.warn(`Unhandled exit event from ${subJourneyState}:`, exitEvent)
                             delete expandedDefinition.events[evt];
                         }
                     }
                 });
 
-                journeyMap[`${nestedState}_${state}`] = expandedDefinition;
+                journeyMap[`${nestedState}_${subJourneyState}`] = expandedDefinition;
             });
 
+            // Make a copy of the entry events to avoid mutating the original
+            const entryEvents = JSON.parse(JSON.stringify(subjourney.entryEvents));
             // Update entry events on other states to expanded states
-            Object.entries(subjourney.entryEvents).forEach(([entryEvent, def]) => {
+            Object.entries(entryEvents).forEach(([entryEvent, entryEventDef]) => {
+                mapTargetStateToExpandedState(entryEventDef, subJourneyState);
+
                 Object.values(journeyMap).forEach((journeyDef) => {
                     if (journeyDef.events?.[entryEvent]) {
-                        const target = resolveEventTarget(journeyDef.events[entryEvent], formData);
-                        if (target.targetState === state && !target.targetEntryEvent) {
-                            target.targetState = `${def.targetState}_${state}`;
+                        const target = resolveEventTargets(journeyDef.events[entryEvent], formData).find(t => !t.journeyContext)
+                        if (target.targetState === subJourneyState && !target.targetEntryEvent) {
+                            journeyDef.events[entryEvent] = entryEventDef;
                         }
                     }
+
                     // Resolve targets with a `targetEntryEvent` override
                     Object.values(journeyDef.events ?? {}).forEach((eventDef) => {
-                        const target = resolveEventTarget(eventDef, formData);
-                        if (target.targetState === state && target.targetEntryEvent === entryEvent) {
-                            target.targetState = `${def.targetState}_${state}`;
+                        const target = resolveEventTargets(eventDef, formData).find(t => !t.journeyContext);
+                        if (target.targetState === subJourneyState && target.targetEntryEvent === entryEvent) {
+                            Object.assign(target, entryEventDef)
                             delete target.targetEntryEvent;
                         }
                     });
@@ -163,54 +115,58 @@ const renderTransitions = (journeyStates, formData) => {
 
         const eventsByTarget = {};
         Object.entries(events).forEach(([eventName, def]) => {
-            let resolvedTarget = resolveEventTarget(def, formData);
+            let resolvedEventTargets = resolveEventTargets(def, formData);
 
-            // Special case for disabling TICF, to match the special case in the journey engine
-            if (journeyStates[resolvedTarget.targetState]?.response?.lambda === 'call-ticf-cri' &&
-                formData.getAll('disabledCri').includes('ticf')) {
-                resolvedTarget = resolveEventTarget(
-                    journeyStates[resolvedTarget.targetState].events.next, formData);
-            }
+            for (const resolvedTarget of resolvedEventTargets)  {
+                // Special case for disabling TICF, to match the special case in the journey engine
+                if (journeyStates[resolvedTarget.targetState]?.response?.lambda === 'call-ticf-cri' &&
+                    formData.getAll('disabledCri').includes('ticf')) {
+                    resolvedEventTargets.push(...resolveEventTargets(
+                        journeyStates[resolvedTarget.targetState].events.next, formData));
+                    continue;
+                }
 
-            const { targetJourney, targetState, targetEntryEvent, exitEventToEmit } = resolvedTarget;
+                const { targetJourney, targetState, targetEntryEvent, exitEventToEmit, journeyContext } = resolvedTarget;
 
-            const target = exitEventToEmit
-                ? `exit_${exitEventToEmit}`.toUpperCase()
-                : targetJourney
-                  ? `${targetJourney}__${targetState}`
-                  : targetState;
+                const target = exitEventToEmit
+                    ? `exit_${exitEventToEmit}`.toUpperCase()
+                    : targetJourney
+                        ? `${targetJourney}__${targetState}`
+                        : targetState;
 
-            if (errorJourneys.includes(targetJourney) &&
-                !formData.getAll('otherOption').includes('includeErrors')) {
-                return;
-            }
-            if (failureJourneys.includes(targetJourney) &&
-                !formData.getAll('otherOption').includes('includeFailures')) {
-                return;
-            }
+                if (errorJourneys.includes(targetJourney) &&
+                    !formData.getAll('otherOption').includes('includeErrors')) {
+                    return;
+                }
+                if (failureJourneys.includes(targetJourney) &&
+                    !formData.getAll('otherOption').includes('includeFailures')) {
+                    return;
+                }
 
-            if (!states.includes(target)) {
-                states.push(target);
-            }
+                if (!states.includes(target)) {
+                    states.push(target);
+                }
 
-            eventsByTarget[target] = eventsByTarget[target] || [];
-            eventsByTarget[target].push(targetEntryEvent ? `${eventName}/${targetEntryEvent}` : eventName);
+                eventsByTarget[target] = eventsByTarget[target] || [];
+                const eventTransitionLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ''}${journeyContext ? ` - journeyContext: ${journeyContext}` : ''}`;
+                eventsByTarget[target].push(journeyContext ? `<span class="journeyCtxTransition">${eventTransitionLabel}</span>` : eventTransitionLabel);
 
-            if (!journeyStates[target]) {
-                if (targetJourney) {
-                    journeyStates[target] = {
-                        response: {
-                            type: 'journeyTransition',
-                            targetJourney,
-                            targetState,
-                        }
-                    };
-                } else if (exitEventToEmit) {
-                    journeyStates[target] = {
-                        exitEvent: exitEventToEmit,
-                    };
-                } else {
-                    throw new Error(`Failed to resolve state ${target} from ${state}`);
+                if (!journeyStates[target]) {
+                    if (targetJourney) {
+                        journeyStates[target] = {
+                            response: {
+                                type: 'journeyTransition',
+                                targetJourney,
+                                targetState,
+                            }
+                        };
+                    } else if (exitEventToEmit) {
+                        journeyStates[target] = {
+                            exitEvent: exitEventToEmit,
+                        };
+                    } else {
+                        throw new Error(`Failed to resolve state ${target} from ${state}`);
+                    }
                 }
             }
         });
@@ -301,21 +257,6 @@ const calcOrphanStates = (journeyMap) => {
 
     return Object.keys(journeyMap).filter(state => !uniqueTargetedStates.includes(state));
 };
-
-const getNestedJourneyStates = (nestedJourney) => ({
-    ...nestedJourney.nestedJourneyStates,
-    // Create an entry state for each entry event
-    ...Object.fromEntries(
-        Object.entries(nestedJourney.entryEvents)
-            .map(([event, def]) => [
-                `entry_${event}`.toUpperCase(),
-                {
-                    entryEvent: event,
-                    events: { [event]: def }
-                }
-            ]),
-    ),
-});
 
 const getMermaidGraph = (graphDirection, statesMermaid, transitionsMermaid) =>
     // These styles should be kept in sync with the key in style.css

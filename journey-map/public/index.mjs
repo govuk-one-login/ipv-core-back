@@ -1,7 +1,8 @@
 import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
 import svgPanZoom from 'https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/+esm';
 import yaml from 'https://cdn.jsdelivr.net/npm/yaml@2.3.2/+esm';
-import { getOptions, render } from './render.mjs';
+import { render } from './render.mjs';
+import { getJourneyContexts, getNestedJourneyStates, getOptions } from "./helpers.mjs";
 
 const DEFAULT_JOURNEY_TYPE = 'INITIAL_JOURNEY_SELECTION';
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = 'nestedJourneyType';
@@ -208,6 +209,26 @@ const setupOtherOptions = () => {
     }
 }
 
+const displayJourneyContextInfo = (ctxOptions) => {
+    journeyContextsList.innerText = '';
+    const ctxHeader = document.createElement('h3');
+    ctxHeader.innerText = "Journey Contexts"
+    journeyContextsList.append(ctxHeader);
+
+    const ctxDesc = document.createElement('p');
+    ctxDesc.innerText = "This journey checks for the following contexts:"
+    journeyContextsList.append(ctxDesc);
+
+    const list = document.createElement('ul');
+    list.setAttribute("class", "journeyCtxList")
+    journeyContextsList.append(list);
+    ctxOptions.forEach(ctx => {
+        const bulletPoint = document.createElement('li');
+        bulletPoint.innerText = ctx;
+        list.append(bulletPoint)
+    });
+}
+
 const updateView = async () => {
     const formData = new FormData(form);
     const selectedNestedJourney = new URLSearchParams(window.location.search).get(NESTED_JOURNEY_TYPE_SEARCH_PARAM);
@@ -219,14 +240,20 @@ const updateView = async () => {
         journeyDesc.innerText = nestedJourneys[selectedNestedJourney].description;
     } else {
         journeyName.innerText = journeyMaps[selectedJourney].name || 'Details';
-
         const desc = journeyMaps[selectedJourney].description;
 
         journeySelect.value = selectedJourney;
         journeyDesc.innerText = desc || '';
     }
 
-    return renderSvg(selectedJourney, selectedNestedJourney, formData);
+    const ctxOptions = getJourneyContexts(selectedNestedJourney ? getNestedJourneyStates(nestedJourneys[selectedNestedJourney]) : journeyMaps[selectedJourney].states);
+    if (ctxOptions.length > 0) {
+        displayJourneyContextInfo(ctxOptions);
+    } else {
+        journeyContextsList.innerText = '';
+    }
+
+    await renderSvg(selectedJourney, selectedNestedJourney, formData);
 };
 
 // Render the journey map SVG

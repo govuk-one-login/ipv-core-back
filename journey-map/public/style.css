@@ -2,6 +2,9 @@
     margin: 0;
     box-sizing: border-box;
 }
+h3 {
+    padding-bottom: 8px;
+}
 body {
     height: 100vh;
     display: flex;
@@ -209,4 +212,10 @@ form fieldset p {
 }
 #state-search{
     font-size: 1rem;
+}
+.journeyCtxTransition {
+    background-color: #f5daa4;
+}
+.journeyCtxList {
+    padding: 4px 24px 0;
 }
