@@ -1,14 +1,20 @@
 import { format } from "util";
 import { SecretsProvider } from "@aws-lambda-powertools/parameters/secrets";
 import { SSMProvider } from "@aws-lambda-powertools/parameters/ssm";
-import { logger } from "../helpers/logger";
+import { SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { SSMClient } from "@aws-sdk/client-ssm";
+import AWSXRay from "aws-xray-sdk";
 
 const ENVIRONMENT = process.env.ENVIRONMENT;
 
-const CACHE_LIFETIME = parseInt(process.env.CONFIG_SERVICE_CACHE_DURATION_MINUTES || "180");
+const CACHE_LIFETIME = parseInt(process.env.CONFIG_SERVICE_CACHE_DURATION_MINUTES || "3") * 60;
 
-const ssmProvider = new SSMProvider();
-const secretsProvider = new SecretsProvider();
+const ssmProvider = new SSMProvider({
+  awsSdkV3Client: AWSXRay.captureAWSv3Client(new SSMClient()),
+});
+const secretsProvider = new SecretsProvider({
+  awsSdkV3Client: AWSXRay.captureAWSv3Client(new SecretsManagerClient()),
+});
 
 const resolvePath = (path: string, ...params: string[]): string => `/${ENVIRONMENT}/core/${format(path, ...params)}`;
 
@@ -26,7 +32,6 @@ type ConfigKey = typeof ConfigKeys[keyof typeof ConfigKeys];
 // TODO: featureset overrides
 export const getConfigValue = async (key: ConfigKey, ...params: string[]): Promise<string> => {
   const path = resolvePath(key, ...params);
-  logger.info(`Fetching config ${path}`);
   const value = await ssmProvider.get(path, {
     maxAge: CACHE_LIFETIME,
   });

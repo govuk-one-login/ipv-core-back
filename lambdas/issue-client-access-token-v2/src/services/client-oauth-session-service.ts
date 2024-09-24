@@ -1,10 +1,12 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
+import AWSXRay from "aws-xray-sdk";
 
 const TABLE_NAME = process.env.CLIENT_OAUTH_SESSIONS_TABLE_NAME || 'ipv-client-oauth-session-table';
 
 const dynamoClient = DynamoDBDocument.from(
-  new DynamoDBClient({ region: "eu-west-2" }));
+  AWSXRay.captureAWSv3Client(
+    new DynamoDBClient({ region: "eu-west-2" })));
 
 export type ClientOAuthSession = {
   clientOAuthSessionId: string;

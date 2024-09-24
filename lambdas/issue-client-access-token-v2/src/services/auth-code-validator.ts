@@ -1,4 +1,4 @@
-import { ConfigKeys, getConfigValue, getNumberConfigValue } from "./config-service";
+import { ConfigKeys, getNumberConfigValue } from "./config-service";
 import { IpvSession } from "./ipv-session-service";
 import { AccessTokenRequest } from "..";
 import { OAuthError, OAuthErrors } from "../errors/oauth-error";
