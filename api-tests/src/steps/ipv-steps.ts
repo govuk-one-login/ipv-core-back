@@ -161,7 +161,7 @@ When(
 );
 
 Then(
-  /I get a(?:n)? '(\w+)' error(?: with '([\w,: ]+)' message)?(?: and)?(?: with status code '(\d{3})')?/,
+  /I get an? '(\w+)' error(?: with '([\w,: ]+)' message)?(?: and)?(?: with status code '(\d{3})')?/,
   function (
     this: World,
     errorType: string,
@@ -181,22 +181,16 @@ Then(
 );
 
 When(
-  "I start a new {string} inherited identity journey with an invalid inherited identity jwt",
+  "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
   async function (this: World, journeyType: string): Promise<void> {
-    try {
-      await startNewJourney(
-        this,
-        journeyType,
-        false,
-        { errorJwt: true },
-        undefined,
-        undefined,
-      );
-    } catch (e) {
-      if (e instanceof Error) {
-        this.error = e;
-      }
-    }
+    await startNewJourney(
+      this,
+      journeyType,
+      false,
+      { errorJwt: true },
+      undefined,
+      undefined,
+    );
   },
 );
 

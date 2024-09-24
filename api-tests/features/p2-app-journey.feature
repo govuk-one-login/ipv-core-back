@@ -31,3 +31,28 @@ Feature: P2 App journey
   Scenario: DCMAW returns a 404 from user-info endpoint
     Given the CRI stub returns a 404 from its user-info endpoint
     Then I get a 'page-multiple-doc-check' page response
+
+  Scenario Outline: <error> from DCMAW
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I get an '<error>' OAuth error from the CRI stub
+    Then I get a '<expected_page>' page response
+
+    Examples:
+      | error                     | expected_page           |
+      | server_error              | pyi-technical           |
+      | temporarily_unavailable   | page-multiple-doc-check |
+      | invalid_request           | pyi-no-match            |
+      | unauthorized_client       | pyi-technical           |
+      | unsupported_response_type | pyi-technical           |
+      | invalid_scope             | pyi-technical           |
+
+  Scenario: Fail DCMAW with no CI
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-fail-no-ci' details to the CRI stub
+    Then I get a 'page-multiple-doc-check' page response

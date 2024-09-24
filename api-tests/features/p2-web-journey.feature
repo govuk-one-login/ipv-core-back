@@ -246,3 +246,18 @@ Feature: P2 Web document journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+
+  Scenario Outline: Failed P2 journey via Web using <cri>
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-0-breaching' details to the CRI stub
+    Then I get a 'pyi-no-match' page response
+
+    Examples:
+    | cri            | details                      |
+    | drivingLicence | kenneth-driving-permit-valid |
+    | ukPassport     | kenneth-passport-valid       |

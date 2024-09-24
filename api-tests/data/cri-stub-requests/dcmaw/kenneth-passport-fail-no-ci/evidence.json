@@ -2,8 +2,9 @@
   "activityHistoryScore": 0,
   "failedCheckDetails": [
     {
-      "checkMethod": "vcrypt",
-      "identityCheckPolicy": "published"
+      "checkMethod": "vri",
+      "identityCheckPolicy": "published",
+      "activityFrom": "2019-01-01"
     },
     {
       "checkMethod": "bvr",
@@ -11,7 +12,6 @@
     }
   ],
   "validityScore": 0,
-  "strengthScore": 0,
-  "type": "IdentityCheck",
-  "ci": ["BREACHING"]
+  "strengthScore": 4,
+  "type": "IdentityCheck"
 }

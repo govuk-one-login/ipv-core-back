@@ -14,7 +14,7 @@ export const createSignedJwt = async (
 ): Promise<string> => {
   return await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: sigAlg })
-    .setAudience(config.core.componentId)
+    .setAudience(payload?.aud || config.core.componentId)
     .setNotBefore(new Date())
     .setIssuedAt()
     .setExpirationTime("15 minutes")
