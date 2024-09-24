@@ -7,7 +7,6 @@ import { getRandomString } from "./random-string-generator.js";
 import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 import { IpvSessionDetails } from "./ipv-session.js";
 import { JarRequest } from "../types/jar-request.js";
-import { JWTPayload } from "jose";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
@@ -54,8 +53,15 @@ export const generateJarPayload = async (
         "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
       ] = { values: ["invalid-jwt"] };
     } else if (inheritedIdentityId) {
-      const inheritedIdentity =
-        await getInheritedIdentityData(inheritedIdentityId);
+      const inheritedIdentity = JSON.parse(
+        await fs.readFile(
+          path.join(
+            __dirname,
+            `../../data/inherited-identities/${inheritedIdentityId}.json`,
+          ),
+          "utf8",
+        ),
+      );
 
       payload.claims.userinfo[
         "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
@@ -64,20 +70,6 @@ export const generateJarPayload = async (
   }
 
   return payload;
-};
-
-const getInheritedIdentityData = async (
-  inheritedIdentityId: string,
-): Promise<JWTPayload> => {
-  return JSON.parse(
-    await fs.readFile(
-      path.join(
-        __dirname,
-        `../../data/inherited-identities/${inheritedIdentityId}.json`,
-      ),
-      "utf8",
-    ),
-  );
 };
 
 export const encryptJarRequest = async (payload: JarRequest): Promise<string> =>

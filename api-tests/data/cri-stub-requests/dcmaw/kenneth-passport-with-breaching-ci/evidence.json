@@ -7,7 +7,7 @@
     },
     {
       "checkMethod": "bvr",
-      "biometricVerificationProcessLevel": 3
+      "biometricVerificationProcessLevel": 0
     }
   ],
   "validityScore": 0,

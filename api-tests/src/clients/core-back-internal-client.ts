@@ -33,8 +33,8 @@ export const initialiseIpvSession = async (
   if (!response.ok) {
     throw new ApiRequestError(
       response.status,
-      response.statusText,
       "InitialiseIpvSession",
+      response.statusText,
       responseBody.message,
     );
   }

@@ -161,10 +161,10 @@ When(
 );
 
 Then(
-  /I get an? '(\w+)' error(?: with '([\w,: ]+)' message)?(?: and)?(?: with status code '(\d{3})')?/,
+  /I get an error from '(\w+)'(?: with message '([\w,: ]+)')?(?: and)?(?: with status code '(\d{3})')?/,
   function (
     this: World,
-    errorType: string,
+    origin: string,
     expectedMessage: string,
     expectedStatusCode: number,
   ) {
@@ -176,6 +176,7 @@ Then(
 
     if (this.error instanceof ApiRequestError) {
       assert.equal(this.error.statusCode, expectedStatusCode);
+      assert.equal(this.error.origin, origin);
     }
   },
 );
