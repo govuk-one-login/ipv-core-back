@@ -17,6 +17,7 @@
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.8.0",
     "@aws-lambda-powertools/parameters": "^2.8.0",
+    "aws-xray-sdk": "^3.10.1",
     "jose": "^5.4.1"
   }
 }
