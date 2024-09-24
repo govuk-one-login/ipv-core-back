@@ -178,7 +178,11 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
 
                 report.addPageSummary(pageSummary);
 
-                if (context.getRemainingTimeInMillis() <= ONE_MINUTE_IN_MS) {
+                var remainingMillis = context.getRemainingTimeInMillis();
+                LOGGER.info(
+                        LogHelper.buildLogMessage("Remaining time in millis")
+                                .with("remaining", remainingMillis));
+                if (remainingMillis <= ONE_MINUTE_IN_MS) {
                     LOGGER.warn(
                             LogHelper.buildLogMessage(
                                             "Lambda close to timeout - stopping execution")
