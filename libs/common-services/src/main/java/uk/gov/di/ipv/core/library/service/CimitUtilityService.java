@@ -1,14 +1,17 @@
 package uk.gov.di.ipv.core.library.service;
 
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -22,18 +25,63 @@ public class CimitUtilityService {
         this.configService = configService;
     }
 
+    public int getContraIndicatorScore(List<ContraIndicator> contraIndicators)
+            throws UnrecognisedCiException {
+        var scores = configService.getContraIndicatorConfigMap();
+        validateContraIndicators(contraIndicators, scores);
+        return calculateDetectedScore(contraIndicators, scores)
+                + calculateCheckedScore(contraIndicators, scores);
+    }
+
+    private void validateContraIndicators(
+            List<ContraIndicator> contraIndicators,
+            Map<String, ContraIndicatorConfig> contraIndicatorScores)
+            throws UnrecognisedCiException {
+        final Set<String> knownContraIndicators = contraIndicatorScores.keySet();
+        final List<String> unknownContraIndicators =
+                contraIndicators.stream()
+                        .map(ContraIndicator::getCode)
+                        .filter(ci -> !knownContraIndicators.contains(ci))
+                        .toList();
+        if (!unknownContraIndicators.isEmpty()) {
+            throw new UnrecognisedCiException("Unrecognised CI code received from CIMIT");
+        }
+    }
+
+    private int calculateDetectedScore(
+            List<ContraIndicator> contraIndicators,
+            Map<String, ContraIndicatorConfig> contraIndicatorScores) {
+        return contraIndicators.stream()
+                .map(ContraIndicator::getCode)
+                .map(
+                        contraIndicatorCode ->
+                                contraIndicatorScores.get(contraIndicatorCode).getDetectedScore())
+                .reduce(0, Integer::sum);
+    }
+
+    private int calculateCheckedScore(
+            List<ContraIndicator> contraIndicators,
+            Map<String, ContraIndicatorConfig> contraIndicatorScores) {
+        return contraIndicators.stream()
+                .filter(this::isMitigated)
+                .map(
+                        contraIndicator ->
+                                contraIndicatorScores
+                                        .get(contraIndicator.getCode())
+                                        .getCheckedScore())
+                .reduce(0, Integer::sum);
+    }
+
     public boolean isBreachingCiThreshold(
-            ContraIndicators contraIndicators, Vot confidenceRequested) {
+            List<ContraIndicator> contraIndicators, Vot confidenceRequested) {
         return isScoreBreachingCiThreshold(
-                contraIndicators.getContraIndicatorScore(
-                        configService.getContraIndicatorConfigMap()),
-                confidenceRequested);
+                getContraIndicatorScore(contraIndicators), confidenceRequested);
     }
 
     public boolean isBreachingCiThresholdIfMitigated(
-            ContraIndicator ci, ContraIndicators cis, Vot confidenceRequested) {
+            ContraIndicator ci, List<ContraIndicator> cis, Vot confidenceRequested) {
         var scoreOnceMitigated =
-                cis.getContraIndicatorScore(configService.getContraIndicatorConfigMap())
+                getContraIndicatorScore(cis)
                         + configService
                                 .getContraIndicatorConfigMap()
                                 .get(ci.getCode())
@@ -47,7 +95,7 @@ public class CimitUtilityService {
     }
 
     public Optional<JourneyResponse> getMitigationJourneyIfBreaching(
-            ContraIndicators cis, Vot confidenceRequested) throws ConfigException {
+            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
             return Optional.of(
                     getCiMitigationJourneyResponse(cis, confidenceRequested)
@@ -57,10 +105,11 @@ public class CimitUtilityService {
     }
 
     private Optional<JourneyResponse> getCiMitigationJourneyResponse(
-            ContraIndicators contraIndicators, Vot confidenceRequested) throws ConfigException {
+            List<ContraIndicator> contraIndicators, Vot confidenceRequested)
+            throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
         var cimitConfig = configService.getCimitConfig();
-        for (var ci : contraIndicators.getUsersContraIndicators()) {
+        for (var ci : contraIndicators) {
             if (isCiMitigatable(ci)
                     && !isBreachingCiThresholdIfMitigated(
                             ci, contraIndicators, confidenceRequested)) {
@@ -79,17 +128,15 @@ public class CimitUtilityService {
     public Optional<JourneyResponse> getMitigatedCiJourneyResponse(ContraIndicator ci)
             throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        if (cimitConfig.containsKey(ci.getCode()) && ci.isMitigated()) {
+        if (cimitConfig.containsKey(ci.getCode()) && isMitigated(ci)) {
             return getMitigationJourneyResponse(cimitConfig.get(ci.getCode()), ci.getDocument());
         }
         return Optional.empty();
     }
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
-            ContraIndicators contraIndicators) {
-        return contraIndicators.getUsersContraIndicators().stream()
-                .filter(ContraIndicator::isMitigated)
-                .findFirst();
+            List<ContraIndicator> contraIndicators) {
+        return contraIndicators.stream().filter(this::isMitigated).findFirst();
     }
 
     private Optional<JourneyResponse> getMitigationJourneyResponse(
@@ -102,8 +149,12 @@ public class CimitUtilityService {
                 .map(JourneyResponse::new);
     }
 
+    private boolean isMitigated(ContraIndicator ci) {
+        return ci.getMitigation() != null && !ci.getMitigation().isEmpty();
+    }
+
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        return cimitConfig.containsKey(ci.getCode()) && !ci.isMitigated();
+        return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
     }
 }

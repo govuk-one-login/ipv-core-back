@@ -9,7 +9,6 @@ plugins {
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
-			libs.diVocab,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			libs.powertoolsTracing,

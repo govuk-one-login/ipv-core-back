@@ -10,7 +10,6 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
-			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 

@@ -10,7 +10,6 @@ dependencies {
 			libs.awsSdkUrlConnectionClient,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
-			libs.diVocab,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials")

@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -41,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Map;
@@ -75,7 +75,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
     private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
-    private static final ContraIndicators CONTRAINDICATORS = ContraIndicators.builder().build();
+    private static final List<ContraIndicator> CONTRAINDICATORS = List.of();
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse("/journey/unmet");
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
