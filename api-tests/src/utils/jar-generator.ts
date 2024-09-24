@@ -37,7 +37,7 @@ export const generateJarPayload = async (
       sub: session.subject,
       govuk_signin_journey_id: session.journeyId,
       state: getRandomString(16),
-      redirect_uri: session.redirectUrl || config.orch.redirectUrl,
+      redirect_uri: payloadData.redirect_uri || config.orch.redirectUrl,
     },
   };
 

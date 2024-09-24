@@ -28,7 +28,7 @@ export const generateInitialiseIpvSessionBody = async (
   return {
     responseType: "code",
     clientId: jarPayload.client_id,
-    redirectUri: session.redirectUrl || config.orch.redirectUrl,
+    redirectUri: jarPayload.redirect_uri,
     state: "api-tests-state",
     scope: jarPayload.scope,
     request: await encryptJarRequest(jarPayload),

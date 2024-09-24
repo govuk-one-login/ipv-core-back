@@ -132,3 +132,5 @@ Feature: Inherited Identity
   Scenario: Invalid inherited identity JWT from orch
     When I start a new 'medium-confidence-pcl200-pcl250' inherited identity journey with an invalid inherited identity JWT
     Then I get a 'pyi-technical' page response
+    When I submit a 'next' event
+    Then I get an OAuth response with error code 'invalid_inherited_identity'

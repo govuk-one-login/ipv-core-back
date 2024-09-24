@@ -261,3 +261,17 @@ Feature: P2 Web document journey
     | cri            | details                      |
     | drivingLicence | kenneth-driving-permit-valid |
     | ukPassport     | kenneth-passport-valid       |
+
+  Scenario: Driving permit with fraud score 1 results in failed journey
+    When I submit a 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-1' details to the CRI stub
+    Then I get a 'pyi-no-match' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity

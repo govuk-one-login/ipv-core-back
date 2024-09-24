@@ -7,5 +7,4 @@ export interface IpvSessionDetails {
     inheritedIdentityId?: string;
     errorJwt?: boolean;
   };
-  redirectUrl?: string;
 }

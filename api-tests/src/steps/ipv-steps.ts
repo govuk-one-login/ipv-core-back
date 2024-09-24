@@ -86,7 +86,6 @@ const startNewJourney = async (
     | { inheritedIdentityId?: string; errorJwt?: boolean }
     | undefined,
   featureSet: string | undefined,
-  redirectUrl: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
@@ -98,7 +97,6 @@ const startNewJourney = async (
       journeyType,
       isReproveIdentity: reproveIdentity,
       inheritedIdentity,
-      redirectUrl,
     }),
     world.featureSet,
   );
@@ -131,27 +129,15 @@ When(
       !!reproveIdentity,
       { inheritedIdentityId },
       featureSet,
-      undefined,
     );
   },
 );
 
 When(
-  "I start a new {string} journey with invalid redirect url {string}",
-  async function (
-    this: World,
-    journeyType: string,
-    redirectUrl: string,
-  ): Promise<void> {
+  "I start a new {string} journey with invalid redirect uri",
+  async function (this: World, journeyType: string): Promise<void> {
     try {
-      await startNewJourney(
-        this,
-        journeyType,
-        false,
-        undefined,
-        undefined,
-        redirectUrl,
-      );
+      await startNewJourney(this, journeyType, false, undefined, undefined);
     } catch (e) {
       if (e instanceof Error) {
         this.error = e;
@@ -190,7 +176,6 @@ When(
       false,
       { errorJwt: true },
       undefined,
-      undefined,
     );
   },
 );
@@ -213,7 +198,6 @@ When(
         false,
         undefined,
         featureSet || undefined,
-        undefined,
       );
 
       if (!this.lastJourneyEngineResponse) {
@@ -285,21 +269,31 @@ Then(
   },
 );
 
-Then("I get an OAuth response", function (this: World): void {
-  if (!this.lastJourneyEngineResponse) {
-    throw new Error("No last journey engine response found.");
-  }
+Then(
+  /I get an OAuth response(?: with error code '([\w_]+)')?/,
+  function (this: World, expectedErrorCode: string | undefined): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
 
-  assert.ok(
-    isClientResponse(this.lastJourneyEngineResponse),
-    `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
-  );
-  const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
-  assert.equal(
-    `${url.protocol}//${url.host}${url.pathname}`,
-    config.orch.redirectUrl,
-  );
-});
+    assert.ok(
+      isClientResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
+    const redirectUrl = new URL(
+      this.lastJourneyEngineResponse.client.redirectUrl,
+    );
+    assert.equal(
+      `${redirectUrl.protocol}//${redirectUrl.host}${redirectUrl.pathname}`,
+      config.orch.redirectUrl,
+    );
+
+    if (expectedErrorCode) {
+      const errorCode = redirectUrl.searchParams.get("error");
+      assert.equal(errorCode, expectedErrorCode);
+    }
+  },
+);
 
 When(
   /^I use the OAuth response to get my (identity|MFA reset result)$/,
