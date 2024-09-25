@@ -32,7 +32,7 @@ Feature: Return exit codes
     Then I get a 'P0' identity
     And I get 'non-ci-breaching' return code
 
-  Scenario: Thin file and failure to complete journey - non-ci-breaching code returned
+  Scenario: KBV score zero and failure to complete journey - non-ci-breaching code returned
     Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -49,7 +49,7 @@ Feature: Return exit codes
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-thin-file' details to the CRI stub
+    When I submit 'kenneth-score-0' details to the CRI stub
     Then I get a 'pyi-cri-escape' page response
     When I submit a 'f2f' event
     Then I get a 'f2f' CRI response

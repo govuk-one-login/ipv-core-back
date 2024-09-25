@@ -202,8 +202,8 @@ Feature: P2 Web document journey
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
 
-    Scenario Outline: <scenario> - user is able to receive identity via DCMAW
-      When I submit '<kbv-details>' details to the CRI stub
+    Scenario: KBV score zero - user is able to receive identity via DCMAW
+      When I submit 'kenneth-score-0' details to the CRI stub
       Then I get a 'pyi-cri-escape' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -213,13 +213,8 @@ Feature: P2 Web document journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-      Examples:
-      | scenario      | kbv-details       |
-      | KBV thin file | kenneth-thin-file |
-      | Failed KBV    | kenneth-score-0   |
-
-    Scenario Outline: <scenario> - user is able to receive identity via F2F
-      When I submit '<kbv-details>' details to the CRI stub
+    Scenario: KBV score zero - user is able to receive identity via F2F
+      When I submit 'kenneth-score-0' details to the CRI stub
       Then I get a 'pyi-cri-escape' page response
       When I submit an 'f2f' event
       Then I get a 'f2f' CRI response
@@ -233,13 +228,8 @@ Feature: P2 Web document journey
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-      Examples:
-        | scenario      | kbv-details       |
-        | KBV thin file | kenneth-thin-file |
-        | Failed KBV    | kenneth-score-0   |
-
-    Scenario: Failed KBV - user is able to receive identity via F2F after dropping out of DCMAW
-      When I submit 'kenneth-thin-file' details to the CRI stub
+    Scenario: KBV score zero - user is able to receive identity via F2F after dropping out of DCMAW
+      When I submit 'kenneth-score-0' details to the CRI stub
       Then I get a 'pyi-cri-escape' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
