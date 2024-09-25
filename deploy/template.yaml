@@ -702,6 +702,10 @@ Resources:
             Path: /token
             Method: POST
       AutoPublishAlias: live
+      Layers:
+        - !Sub
+          - '{{resolve:secretsmanager:${SecretArn}:SecretString:NODE_LAYER}}' # pragma: allowlist secret
+          - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
