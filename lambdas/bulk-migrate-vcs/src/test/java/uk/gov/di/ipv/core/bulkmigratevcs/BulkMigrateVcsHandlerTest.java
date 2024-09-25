@@ -16,9 +16,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.RequestBatchDetails;
+import uk.gov.di.ipv.core.bulkmigratevcs.domain.metadata.MigrationMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -167,10 +167,14 @@ class BulkMigrateVcsHandlerTest {
         assertEquals(CURRENT, evcsCreateUserVCsDtoList.get(0).state());
         assertEquals(MIGRATED, evcsCreateUserVCsDtoList.get(0).provenance());
         assertEquals(
-                "batchId", ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata()).batchId());
+                "batchId",
+                ((MigrationMetadata) evcsCreateUserVCsDtoList.get(0).metadata())
+                        .migrationV001()
+                        .batchId());
         assertTrue(
                 Instant.parse(
-                                ((EvcsMetadata) evcsCreateUserVCsDtoList.get(0).metadata())
+                                ((MigrationMetadata) evcsCreateUserVCsDtoList.get(0).metadata())
+                                        .migrationV001()
                                         .timestamp())
                         .isAfter(Instant.now().minusSeconds(1)));
 
