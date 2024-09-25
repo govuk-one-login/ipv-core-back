@@ -2481,7 +2481,7 @@ Resources:
       Handler: uk.gov.di.ipv.core.bulkmigratevcs.BulkMigrateVcsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/bulk-migrate-vcs
-      Timeout: 600
+      Timeout: 900
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
