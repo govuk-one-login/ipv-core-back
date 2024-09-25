@@ -54,7 +54,7 @@ const submitAndProcessCriAction = async (
 };
 
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
+  /^I submit (expired )?'([<>\w-]+)' details to the (async )?CRI stub$/,
   async function (
     this: World,
     expired: "expired " | undefined,
