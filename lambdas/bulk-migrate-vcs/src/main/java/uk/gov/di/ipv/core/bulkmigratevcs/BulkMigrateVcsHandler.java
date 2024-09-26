@@ -11,9 +11,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.lambda.powertools.logging.Logging;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.BatchReport;
-import uk.gov.di.ipv.core.bulkmigratevcs.domain.EvcsMetadata;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.PageSummary;
 import uk.gov.di.ipv.core.bulkmigratevcs.domain.Request;
+import uk.gov.di.ipv.core.bulkmigratevcs.domain.metadata.MigrationMetadata;
+import uk.gov.di.ipv.core.bulkmigratevcs.domain.metadata.MigrationMetadataBatchDetails;
 import uk.gov.di.ipv.core.bulkmigratevcs.exceptions.TooManyBatchIdsException;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.bulkmigratevcs.factories.ForkJoinPoolFactory;
@@ -430,7 +431,9 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
                                         new EvcsCreateUserVCsDto(
                                                 vc.getVcString(),
                                                 CURRENT,
-                                                new EvcsMetadata(batchId, timestamp.toString()),
+                                                new MigrationMetadata(
+                                                        new MigrationMetadataBatchDetails(
+                                                                batchId, timestamp.toString())),
                                                 MIGRATED))
                         .toList());
     }
