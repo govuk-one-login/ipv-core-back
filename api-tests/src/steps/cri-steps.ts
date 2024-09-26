@@ -175,7 +175,7 @@ When(
 );
 
 When(
-  "I call call the CRI stub with attributes and get a(n) {string} OAuth error",
+  "I call the CRI stub with attributes and get a(n) {string} OAuth error",
   async function (
     this: World,
     error: string,
