@@ -175,6 +175,44 @@ When(
 );
 
 When(
+  "I call the CRI stub with attributes and get a(n) {string} OAuth error",
+  async function (
+    this: World,
+    error: string,
+    dataTable: DataTable | undefined,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      generateCriStubOAuthErrorBody(
+        error,
+        this.lastJourneyEngineResponse.cri.redirectUrl,
+      ),
+    );
+
+    if (!jarPayload) {
+      throw new Error("No payload returned from CRI stub");
+    }
+
+    if (dataTable?.rows) {
+      dataTable.rows().forEach(([key, expected]) => {
+        const actualValue = jarPayload[key as keyof typeof jarPayload];
+        const expectedValue = JSON.parse(expected);
+
+        assert.deepStrictEqual(actualValue, expectedValue);
+      });
+    }
+  },
+);
+
+When(
   "the CRI stub returns a 404 from its user-info endpoint",
   async function (this: World): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
