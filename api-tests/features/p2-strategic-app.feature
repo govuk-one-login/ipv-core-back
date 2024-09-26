@@ -9,7 +9,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-mobile-download-app' page response
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
   Scenario: MAM journey android
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
@@ -19,7 +19,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response
     When I submit an 'android' event
-    Then I get a 'pyi-triage-mobile-download-app' page response
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
   Scenario: MAM journey no compatible smartphone
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
@@ -39,7 +39,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'computer-or-tablet' event
     Then I get a 'pyi-triage-select-smartphone' page response
     When I submit an 'iphone' event
-    Then I get a 'pyi-triage-desktop-download-app' page response
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
 
   Scenario: DAD journey android
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
@@ -49,7 +49,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'computer-or-tablet' event
     Then I get a 'pyi-triage-select-smartphone' page response
     When I submit an 'android' event
-    Then I get a 'pyi-triage-desktop-download-app' page response
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
 
   Scenario: DAD journey no compatible smartphone
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'

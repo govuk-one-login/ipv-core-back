@@ -146,7 +146,7 @@ Feature: CIMIT - Alternate doc
     When I submit a 'next' event
     Then I get a '<mitigating-cri>' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
-    Then I get a 'prove-identity-no-other-photo-id' page response
+    Then I get a 'prove-identity-no-other-photo-id' page response with context '<prove-identity-no-other-photo-id-context>'
     When I submit a 'back' event
     Then I get a '<mitigating-cri>' CRI response
     When I submit '<mitigating-doc>' details to the CRI stub that mitigate the 'NEEDS-ALTERNATE-DOC' CI
@@ -165,9 +165,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'P2' identity
 
     Examples:
-      | initial-cri    | initial-invalid-doc                        | no-match-page                            | mitigating-cri | mitigating-doc               |
-      | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid |
-      | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       |
+      | initial-cri    | initial-invalid-doc                        | no-match-page                            | mitigating-cri | mitigating-doc               | prove-identity-no-other-photo-id-context |
+      | ukPassport     | kenneth-passport-needs-alternate-doc       | pyi-passport-no-match-another-way        | drivingLicence | kenneth-driving-permit-valid | drivingLicence                           |
+      | drivingLicence | kenneth-driving-permit-needs-alternate-doc | pyi-driving-licence-no-match-another-way | ukPassport     | kenneth-passport-valid       | passport                                 |
 
   Scenario: Returns P0 when user continues to service from prove-identity-no-other-photo-id page during CI mitigation
     When I submit a 'ukPassport' event
@@ -177,7 +177,7 @@ Feature: CIMIT - Alternate doc
     When I submit a 'next' event
     Then I get a 'drivingLicence' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
-    Then I get a 'prove-identity-no-other-photo-id' page response
+    Then I get a 'prove-identity-no-other-photo-id' page response with context 'drivingLicence'
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity

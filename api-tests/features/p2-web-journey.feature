@@ -131,7 +131,7 @@ Feature: P2 Web document journey
     When I submit a '<initial-cri>' event
     Then I get a '<initial-cri>' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
-    Then I get a 'prove-identity-another-type-photo-id' page response
+    Then I get a 'prove-identity-another-type-photo-id' page response with context '<prove-identity-another-type-photo-id-context>'
     When I submit a 'otherPhotoId' event
     Then I get a '<alternative-doc-cri>' CRI response
     When I submit '<alternative-doc>' details to the CRI stub
@@ -150,15 +150,15 @@ Feature: P2 Web document journey
     Then I get a 'P2' identity
 
     Examples:
-      | initial-cri    | alternative-doc-cri | alternative-doc              |
-      | ukPassport     | drivingLicence      | kenneth-driving-permit-valid |
-      | drivingLicence | ukPassport          | kenneth-passport-valid       |
+      | initial-cri    | alternative-doc-cri | alternative-doc              | prove-identity-another-type-photo-id-context |
+      | ukPassport     | drivingLicence      | kenneth-driving-permit-valid | passport                                     |
+      | drivingLicence | ukPassport          | kenneth-passport-valid       | drivingLicence                               |
 
   Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without an identity
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
-    Then I get a 'prove-identity-another-type-photo-id' page response
+    Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -168,7 +168,7 @@ Feature: P2 Web document journey
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
     When I get an 'access_denied' OAuth error from the CRI stub
-    Then I get a 'prove-identity-another-type-photo-id' page response
+    Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
     When I submit an 'f2f' event
     Then I get a 'pyi-post-office' page response
     When I submit a 'next' event
