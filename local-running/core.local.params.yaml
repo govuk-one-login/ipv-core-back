@@ -362,7 +362,11 @@ core:
     sqsAsync: true
     updateDetailsAccountDeletion: false
     kidJarHeaderEnabled: true
+    drivingLicenceAuthCheck: false
   features:
+    drivingLicenceAuthCheck:
+      featureFlags:
+        drivingLicenceAuthCheck: true
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
