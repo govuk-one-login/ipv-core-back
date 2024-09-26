@@ -33,6 +33,7 @@ import { decodeCredentialJwts } from "../utils/jwt-decoder.js";
 import { VcJwtPayload } from "../types/external-api.js";
 import * as jose from "jose";
 import { buildCredentialIssuerUrl } from "../clients/cri-stub-client.js";
+import { ApiRequestError } from "../types/errors.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -81,7 +82,9 @@ const startNewJourney = async (
   world: World,
   journeyType: string,
   reproveIdentity: boolean,
-  inheritedIdentityId: string | undefined,
+  inheritedIdentity:
+    | { inheritedIdentityId?: string; errorJwt?: boolean }
+    | undefined,
   featureSet: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
@@ -93,7 +96,7 @@ const startNewJourney = async (
       journeyId: world.journeyId,
       journeyType,
       isReproveIdentity: reproveIdentity,
-      inheritedIdentityId,
+      inheritedIdentity,
     }),
     world.featureSet,
   );
@@ -124,8 +127,55 @@ When(
       this,
       journeyType,
       !!reproveIdentity,
-      inheritedIdentityId,
+      { inheritedIdentityId },
       featureSet,
+    );
+  },
+);
+
+When(
+  "I start a new {string} journey with invalid redirect uri",
+  async function (this: World, journeyType: string): Promise<void> {
+    try {
+      await startNewJourney(this, journeyType, false, undefined, undefined);
+    } catch (e) {
+      if (e instanceof Error) {
+        this.error = e;
+      }
+    }
+  },
+);
+
+Then(
+  /I get an error from '(\w+)'(?: with message '([\w,: ]+)')?(?: and)?(?: with status code '(\d{3})')?/,
+  function (
+    this: World,
+    origin: string,
+    expectedMessage: string,
+    expectedStatusCode: number,
+  ) {
+    if (!this.error) {
+      throw new Error("No errors recorded.");
+    }
+
+    assert.equal(this.error.message, expectedMessage);
+
+    if (this.error instanceof ApiRequestError) {
+      assert.equal(this.error.statusCode, expectedStatusCode);
+      assert.equal(this.error.origin, origin);
+    }
+  },
+);
+
+When(
+  "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
+  async function (this: World, journeyType: string): Promise<void> {
+    await startNewJourney(
+      this,
+      journeyType,
+      false,
+      { errorJwt: true },
+      undefined,
     );
   },
 );
@@ -219,21 +269,31 @@ Then(
   },
 );
 
-Then("I get an OAuth response", function (this: World): void {
-  if (!this.lastJourneyEngineResponse) {
-    throw new Error("No last journey engine response found.");
-  }
+Then(
+  /I get an OAuth response(?: with error code '([\w_]+)')?/,
+  function (this: World, expectedErrorCode: string | undefined): void {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
 
-  assert.ok(
-    isClientResponse(this.lastJourneyEngineResponse),
-    `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
-  );
-  const url = new URL(this.lastJourneyEngineResponse.client.redirectUrl);
-  assert.equal(
-    `${url.protocol}//${url.host}${url.pathname}`,
-    config.orch.redirectUrl,
-  );
-});
+    assert.ok(
+      isClientResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
+    const redirectUrl = new URL(
+      this.lastJourneyEngineResponse.client.redirectUrl,
+    );
+    assert.equal(
+      `${redirectUrl.protocol}//${redirectUrl.host}${redirectUrl.pathname}`,
+      config.orch.redirectUrl,
+    );
+
+    if (expectedErrorCode) {
+      const errorCode = redirectUrl.searchParams.get("error");
+      assert.equal(errorCode, expectedErrorCode);
+    }
+  },
+);
 
 When(
   /^I use the OAuth response to get my (identity|MFA reset result)$/,

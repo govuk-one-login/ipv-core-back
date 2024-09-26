@@ -128,3 +128,9 @@ Feature: Inherited Identity
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And my identity 'GivenName' is 'Kenneth'
+
+  Scenario: Invalid inherited identity JWT from orch
+    When I start a new 'medium-confidence-pcl200-pcl250' inherited identity journey with an invalid inherited identity JWT
+    Then I get a 'pyi-technical' page response
+    When I submit a 'next' event
+    Then I get an OAuth response with error code 'invalid_inherited_identity'

@@ -3,5 +3,8 @@ export interface IpvSessionDetails {
   journeyId: string;
   journeyType: string;
   isReproveIdentity: boolean;
-  inheritedIdentityId?: string;
+  inheritedIdentity?: {
+    inheritedIdentityId?: string;
+    errorJwt?: boolean;
+  };
 }

@@ -25,7 +25,7 @@ Feature: TICF failed/error journeys
     Scenario: TICF failed enhanced-verification journey - PYI_NO_MATCH
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-passport-invalid' details to the CRI stub
+      When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
       Then I get a 'pyi-no-match' page response
       When I submit a 'next' event
       Then I get an OAuth response

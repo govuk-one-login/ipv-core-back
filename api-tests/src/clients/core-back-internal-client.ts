@@ -7,6 +7,7 @@ import {
   ProcessCriCallbackRequest,
 } from "../types/internal-api.js";
 import { ProvenUserIdentity } from "../types/internal-api.js";
+import { ApiRequestError } from "../types/errors.js";
 
 const JOURNEY_PREFIX = "/journey/";
 const POST = "POST";
@@ -28,12 +29,15 @@ export const initialiseIpvSession = async (
     },
   );
 
+  const responseBody = await response.json();
   if (!response.ok) {
-    throw new Error(
-      `InitialiseIpvSession request failed: ${response.statusText}`,
+    throw new ApiRequestError(
+      response.status,
+      "InitialiseIpvSession",
+      response.statusText,
+      responseBody.message,
     );
   }
-  const responseBody = await response.json();
 
   return responseBody.ipvSessionId as string;
 };

@@ -1,12 +1,13 @@
 {
   "activityHistoryScore": 0,
-  "checkDetails": [
+  "failedCheckDetails": [
     {
-      "checkMethod": "vri"
+      "checkMethod": "vcrypt",
+      "identityCheckPolicy": "published"
     },
     {
-      "biometricVerificationProcessLevel": 0,
-      "checkMethod": "bvr"
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 0
     }
   ],
   "validityScore": 0,

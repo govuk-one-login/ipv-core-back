@@ -37,7 +37,7 @@ export const generateJarPayload = async (
       sub: session.subject,
       govuk_signin_journey_id: session.journeyId,
       state: getRandomString(16),
-      redirect_uri: config.orch.redirectUrl,
+      redirect_uri: payloadData.redirect_uri || config.orch.redirectUrl,
     },
   };
 
@@ -45,19 +45,28 @@ export const generateJarPayload = async (
     "https://vocab.account.gov.uk/v1/storageAccessToken"
   ].values = [await createEvcsAccessToken(session.subject)];
 
-  if (session.inheritedIdentityId) {
-    const inheritedIdentity = JSON.parse(
-      await fs.readFile(
-        path.join(
-          __dirname,
-          `../../data/inherited-identities/${session.inheritedIdentityId}.json`,
+  if (session.inheritedIdentity) {
+    const { inheritedIdentityId, errorJwt } = session.inheritedIdentity;
+
+    if (errorJwt) {
+      payload.claims.userinfo[
+        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
+      ] = { values: ["invalid-jwt"] };
+    } else if (inheritedIdentityId) {
+      const inheritedIdentity = JSON.parse(
+        await fs.readFile(
+          path.join(
+            __dirname,
+            `../../data/inherited-identities/${inheritedIdentityId}.json`,
+          ),
+          "utf8",
         ),
-        "utf8",
-      ),
-    );
-    payload.claims.userinfo[
-      "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
-    ] = { values: [await createSignedJwt(inheritedIdentity)] };
+      );
+
+      payload.claims.userinfo[
+        "https://vocab.account.gov.uk/v1/inheritedIdentityJWT"
+      ] = { values: [await createSignedJwt(inheritedIdentity)] };
+    }
   }
 
   return payload;
