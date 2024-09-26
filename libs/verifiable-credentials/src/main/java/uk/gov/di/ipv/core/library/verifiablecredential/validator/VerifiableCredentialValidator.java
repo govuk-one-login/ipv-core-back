@@ -199,8 +199,14 @@ public class VerifiableCredentialValidator {
         try {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
         } catch (BadJWTException | ParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Verifiable credential claims set not valid", e));
+            if (e instanceof BadJWTException badJWTException
+                    && badJWTException.getMessage().contains("JWT sub claim has value")) {
+                LOGGER.error(LogHelper.buildLogMessage("JWT sub claim does not match expected"));
+            } else {
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Verifiable credential claims set not valid", e));
+            }
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);

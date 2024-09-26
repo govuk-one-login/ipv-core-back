@@ -5,6 +5,11 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +26,7 @@ import java.text.ParseException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -361,5 +367,46 @@ class VerifiableCredentialValidatorTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
+    }
+
+    @Test
+    void validateDoesNotLogUserIdWhenFailingValidation() {
+        var testAppender = new TestAppender();
+        var verifiableCredentialValidatorLogger =
+                (org.apache.logging.log4j.core.Logger)
+                        LogManager.getLogger(VerifiableCredentialValidator.class);
+        verifiableCredentialValidatorLogger.get().addAppender(testAppender, Level.ERROR, null);
+
+        assertThrows(
+                VerifiableCredentialException.class,
+                () ->
+                        vcJwtValidator.parseAndValidate(
+                                "not the user",
+                                PASSPORT,
+                                PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString(),
+                                VALID_EC_SIGNING_KEY,
+                                TEST_COMPONENT_ID,
+                                false));
+
+        assertEquals(
+                "description=\"JWT sub claim does not match expected\"",
+                testAppender.getLogMessages().get(0).getFormattedMessage());
+    }
+
+    private static class TestAppender extends AbstractAppender {
+        List<Message> logMessages = new ArrayList<>();
+
+        protected TestAppender() {
+            super("TestAppender", null, null, true, null);
+        }
+
+        @Override
+        public void append(LogEvent event) {
+            logMessages.add(event.getMessage());
+        }
+
+        public List<Message> getLogMessages() {
+            return logMessages;
+        }
     }
 }
