@@ -1,20 +1,17 @@
 {
   "type": "IdentityCheck",
   "verificationScore": 0,
-  "checkDetails": [
+  "failedCheckDetails": [
     {
       "kbvResponseMode": "multiple_choice",
-      "kbvQuality": 3,
       "checkMethod": "kbv"
     },
     {
       "kbvResponseMode": "multiple_choice",
-      "kbvQuality": 3,
       "checkMethod": "kbv"
     },
     {
       "kbvResponseMode": "multiple_choice",
-      "kbvQuality": 2,
       "checkMethod": "kbv"
     }
   ]
