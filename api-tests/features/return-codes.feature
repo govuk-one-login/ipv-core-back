@@ -37,7 +37,7 @@ Feature: Return exit codes
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -82,7 +82,7 @@ Feature: Return exit codes
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
-    When I get an 'temporarily_unavailable' OAuth error from the CRI stub
+    When I call the CRI stub and get a 'temporarily_unavailable' OAuth error
     Then I get a 'pyi-technical' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -114,7 +114,7 @@ Feature: Return exit codes
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response

@@ -217,7 +217,7 @@ When(
 // have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
 // CRI stub request directly.
 When(
-  "I get a(n) {string} OAuth error from the CRI stub",
+  "I call the CRI stub and get a(n) {string} OAuth error",
   async function (this: World, error: string): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");

@@ -37,7 +37,7 @@ Feature: P1 No Photo Id Journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit a 'nino' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'

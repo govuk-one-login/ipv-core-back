@@ -90,7 +90,7 @@ Feature: P2 F2F journey
       Given I start a new 'medium-confidence' journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'end' event
       Then I get a 'pyi-post-office' page response
@@ -171,7 +171,7 @@ Feature: P2 F2F journey
       Given I start a new 'medium-confidence' journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'end' event
       Then I get a 'pyi-post-office' page response

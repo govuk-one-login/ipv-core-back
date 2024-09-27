@@ -38,7 +38,7 @@ Feature: MFA reset journey
   Scenario: Failed MFA reset journey - DCMAW error
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access-denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access-denied' OAuth error
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result

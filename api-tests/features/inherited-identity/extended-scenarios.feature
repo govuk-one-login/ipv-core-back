@@ -5,7 +5,7 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -27,7 +27,7 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'pyi-post-office' page response
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
@@ -134,7 +134,7 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -185,7 +185,7 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<initial-cri>' event
     Then I get a '<initial-cri>' CRI response

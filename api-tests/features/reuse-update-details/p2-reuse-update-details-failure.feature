@@ -21,7 +21,7 @@ Feature: Identity reuse update details failures
         @FastFollow
         Scenario: DCMAW access denied OAuth error
             Given I activate the 'updateDetailsAccountDeletion' feature set
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'update-details-failed' page response
             When I submit a 'continue' event
             Then I get an OAuth response
@@ -33,7 +33,7 @@ Feature: Identity reuse update details failures
         @FastFollow
         Scenario: User is able to delete account from update-details-failed page
             Given I activate the 'updateDetailsAccountDeletion' feature set
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'update-details-failed' page response
             When I submit a 'delete' event
             Then I get a 'delete-handover' page response
@@ -191,7 +191,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'sorry-could-not-confirm-details' page response
             When I submit a 'end' event
             Then I get an OAuth response
@@ -207,7 +207,7 @@ Feature: Identity reuse update details failures
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
             When I submit a 'returnToRp' event
             Then I get an OAuth response
@@ -232,7 +232,7 @@ Feature: Identity reuse update details failures
             Then I get an 'address' CRI response
 
         Scenario: Address access denied OAuth error - receives P0
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'sorry-could-not-confirm-details' page response
             When I submit a 'end' event
             Then I get an OAuth response
@@ -244,7 +244,7 @@ Feature: Identity reuse update details failures
         @FastFollow
         Scenario: Address access denied OAuth error - receives old identity (P2) when continuing to service
             Given I activate the 'updateDetailsAccountDeletion' feature set
-            When I get an 'access_denied' OAuth error from the CRI stub
+            When I call the CRI stub and get an 'access_denied' OAuth error
             Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
             When I submit a 'returnToRp' event
             Then I get an OAuth response

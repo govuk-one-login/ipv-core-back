@@ -7,7 +7,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -44,7 +44,7 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
     Scenario: Same session DCMAW enhanced verification mitigation - user abandons DCMAW then escapes
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get a 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'pyi-post-office' page response
       When I submit an 'end' event
       Then I get a 'pyi-another-way' page response

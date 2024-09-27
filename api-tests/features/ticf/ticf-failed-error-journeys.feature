@@ -7,7 +7,7 @@ Feature: TICF failed/error journeys
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
       When I submit a 'ukPassport' event
       Then I get a 'ukPassport' CRI response
@@ -40,7 +40,7 @@ Feature: TICF failed/error journeys
     Scenario: TICF failed enhanced-verification journey - PYI_ANOTHER_WAY
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'pyi-post-office' page response
       When I submit a 'end' event
       Then I get a 'pyi-another-way' page response
@@ -89,7 +89,7 @@ Feature: TICF failed/error journeys
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
       When I submit an 'end' event
       Then I get a 'pyi-post-office' page response

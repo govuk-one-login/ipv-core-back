@@ -5,7 +5,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario Outline: Successful P2 identity via Web using <cri>
@@ -39,7 +39,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -72,7 +72,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -105,7 +105,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -136,7 +136,7 @@ Feature: P2 Web document journey
   Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI
     When I submit a '<initial-cri>' event
     Then I get a '<initial-cri>' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-another-type-photo-id' page response with context '<prove-identity-another-type-photo-id-context>'
     When I submit a 'otherPhotoId' event
     Then I get a '<alternative-doc-cri>' CRI response
@@ -165,7 +165,7 @@ Feature: P2 Web document journey
   Scenario: User is able to continue to service from the prove-identity-another-type-photo-id page without an identity
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
     When I submit a 'returnToRp' event
     Then I get an OAuth response
@@ -175,7 +175,7 @@ Feature: P2 Web document journey
   Scenario: User can use F2F from the prove-identity-another-type-photo-id page to receive an identity
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
     When I submit an 'f2f' event
     Then I get a 'pyi-post-office' page response
@@ -280,7 +280,7 @@ Feature: P2 Web document journey
       Then I get a 'pyi-cri-escape' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'pyi-post-office' page response
       When I submit an 'next' event
       Then I get a 'f2f' CRI response

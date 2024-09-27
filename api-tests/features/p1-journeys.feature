@@ -25,7 +25,7 @@ Feature: P1 journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -52,7 +52,7 @@ Feature: P1 journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
@@ -79,7 +79,7 @@ Feature: P1 journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'end' event
     Then I get a 'pyi-post-office' page response
@@ -101,15 +101,15 @@ Feature: P1 journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response with context 'nino'
     When I submit an 'ukPassport' event
     Then I get a 'ukPassport' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-another-type-photo-id' page response with context 'passport'
     When I submit an 'otherPhotoId' event
     Then I get a 'drivingLicence' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-another-type-photo-id' page response with context 'drivingLicence'
     When I submit an 'otherPhotoId' event
     Then I get a 'ukPassport' CRI response
