@@ -15,7 +15,9 @@ Feature: P2 F2F journey
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
-      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
     Scenario: Pending F2F request
@@ -65,7 +67,9 @@ Feature: P2 F2F journey
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
-      When I submit '<details>' details to the async CRI stub
+      When I submit '<details>' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -98,7 +102,9 @@ Feature: P2 F2F journey
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'f2f' CRI response
-      When I submit '<details>' details to the async CRI stub
+      When I submit '<details>' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -131,12 +137,16 @@ Feature: P2 F2F journey
 
     Scenario: Oauth access_denied error F2F
       # Initial journey
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'pyi-another-way' page response
 
     Scenario: Oauth temporarily_unavailable error F2F
       # Initial journey
-      When I get an 'temporarily_unavailable' OAuth error from the CRI stub
+      When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'pyi-technical' page response
 
     Scenario: Async queue error

@@ -19,7 +19,9 @@ Feature: TICF failed/error journeys
       Then I get a 'page-pre-experian-kbv-transition' page response
       When I submit a 'next' event
       Then I get a 'kbv' CRI response
-      When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
+      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'pyi-suggest-other-options' page response
 
     Scenario: TICF failed enhanced-verification journey - PYI_NO_MATCH
@@ -53,7 +55,9 @@ Feature: TICF failed/error journeys
     Scenario: TICF failed enhanced-verification journey - PYI_TECHNICAL
       When I submit an 'f2f' event
       Then I get a 'f2f' CRI response
-      When I get an 'temporarily_unavailable' OAuth error from the CRI stub
+      When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
+        | Attribute          | Values                                          |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
       Then I get a 'pyi-technical' page response
       When I submit a 'next' event
       Then I get an OAuth response

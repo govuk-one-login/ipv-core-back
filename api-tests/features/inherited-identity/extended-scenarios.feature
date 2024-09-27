@@ -17,7 +17,9 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
+    When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'pyi-suggest-other-options' page response
 
     # New journey with inherited identity - user still needs to mitigate the CI
@@ -35,7 +37,9 @@ Feature: Inherited identity extended scenarios
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'f2f' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
@@ -79,7 +83,9 @@ Feature: Inherited identity extended scenarios
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'f2f' CRI response
-    When I submit 'kenneth-passport-breaching' details to the CRI stub
+    When I submit 'kenneth-passport-breaching' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-pending' page response
@@ -140,7 +146,9 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -199,7 +207,9 @@ Feature: Inherited identity extended scenarios
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response

@@ -25,7 +25,9 @@ Feature: Reprove Identity Journey
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-score-2' details to the CRI stub
         Then I get a 'f2f' CRI response
-        When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+        When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+            | Attribute          | Values                                          |
+            | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
         Then I get a 'page-face-to-face-handoff' page response
         When I start a new 'medium-confidence' journey with reprove identity
         Then I get a 'reprove-identity-start' page response

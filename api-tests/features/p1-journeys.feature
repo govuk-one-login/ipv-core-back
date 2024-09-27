@@ -37,7 +37,9 @@ Feature: P1 journey
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -62,7 +64,9 @@ Feature: P1 journey
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -87,7 +91,9 @@ Feature: P1 journey
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-1' details to the CRI stub
     Then I get a 'f2f' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute          | Values                                      |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get a 'page-face-to-face-handoff' page response
 
   Scenario: P1 Passport after multiple dropouts
@@ -115,7 +121,9 @@ Feature: P1 journey
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-1' details to the CRI stub
+    When I submit 'kenneth-score-1' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -144,7 +152,9 @@ Feature: P1 journey
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-0' details to the CRI stub
+    When I submit 'kenneth-score-0' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'no-photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -171,5 +181,7 @@ Feature: P1 journey
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-1' details to the CRI stub
     Then I get a 'f2f' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub
+    When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
+      | Attribute          | Values                                      |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get a 'page-face-to-face-handoff' page response

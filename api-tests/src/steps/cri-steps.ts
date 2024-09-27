@@ -18,7 +18,10 @@ import {
   JourneyResponse,
   PageResponse,
 } from "../types/internal-api.js";
-import { CriStubRequest } from "../types/cri-stub.js";
+import {
+  CriStubRequest,
+  CriStubResponseJarPayload,
+} from "../types/cri-stub.js";
 import { getRandomString } from "../utils/random-string-generator.js";
 import assert from "assert";
 
@@ -78,37 +81,6 @@ When("I clear my session id", function (this: World) {
 });
 
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
-  async function (
-    this: World,
-    expired: "expired " | undefined,
-    scenario: string,
-    async: "async " | undefined,
-  ): Promise<void> {
-    if (!this.lastJourneyEngineResponse) {
-      throw new Error("No last journey engine response found.");
-    }
-
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
-
-    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
-    await submitAndProcessCriAction(
-      this,
-      await generateCriStubBody(
-        this.lastJourneyEngineResponse.cri.id,
-        scenario,
-        redirectUrl,
-        expired ? EXPIRED_NBF : undefined,
-        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
-      ),
-      redirectUrl,
-    );
-  },
-);
-
-When(
   "I re-submit the same request to the previous CRI stub",
   async function (this: World): Promise<void> {
     if (!this.lastCriRequest) {
@@ -150,7 +122,44 @@ When(
 );
 
 // This step sends a request to a CRI stub and then processes that response in core back. It also validates that
-// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted so we
+// the initial request to the CRI stub didn't contain any extra attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
+When(
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
+  async function (
+    this: World,
+    expired: "expired " | undefined,
+    scenario: string,
+    async: "async " | undefined,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        redirectUrl,
+        expired ? EXPIRED_NBF : undefined,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
+      ),
+      redirectUrl,
+    );
+
+    assertNoUnexpectedJarProperties(jarPayload);
+  },
+);
+
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted, so we
 // have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
 // CRI stub request directly.
 When(
@@ -187,17 +196,26 @@ When(
       throw new Error("No payload returned from CRI stub");
     }
 
-    if (dataTable?.rows) {
-      dataTable.rows().forEach(([key, expected]) => {
-        const actualValue = jarPayload[key as keyof typeof jarPayload];
-        const expectedValue = JSON.parse(expected);
-
-        assert.deepStrictEqual(actualValue, expectedValue);
-      });
+    if (!dataTable?.rows()) {
+      throw new Error("No data specified for test");
     }
+
+    dataTable?.rows().forEach(([key, expected]) => {
+      const actualValue = jarPayload[key as keyof typeof jarPayload];
+      const expectedValue = JSON.parse(expected);
+
+      assert.deepStrictEqual(actualValue, expectedValue);
+    });
+
+    const expectedValueNames = dataTable?.rows().map((r) => r[0]);
+    assertNoUnexpectedJarProperties(jarPayload, expectedValueNames);
   },
 );
 
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub didn't contain any extra attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
 When(
   "I get a(n) {string} OAuth error from the CRI stub",
   async function (this: World, error: string): Promise<void> {
@@ -210,14 +228,20 @@ When(
     }
 
     const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
-    await submitAndProcessCriAction(
+    const jarPayload = await submitAndProcessCriAction(
       this,
       generateCriStubOAuthErrorBody(error, redirectUrl),
       redirectUrl,
     );
+
+    assertNoUnexpectedJarProperties(jarPayload);
   },
 );
 
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
 When(
   "I call the CRI stub with attributes and get a(n) {string} OAuth error",
   async function (
@@ -252,6 +276,96 @@ When(
         assert.deepStrictEqual(actualValue, expectedValue);
       });
     }
+
+    const expectedValueNames = dataTable?.rows().map((r) => r[0]);
+    assertNoUnexpectedJarProperties(jarPayload, expectedValueNames);
+  },
+);
+
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub didn't contain any extra attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
+When(
+  /^I submit '([\w-]+)' details to the (async )?CRI stub that mitigate the '([\w-]+)' CI$/,
+  async function (
+    this: World,
+    scenario: string,
+    async: "async " | undefined,
+    mitigatedCis: string,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        redirectUrl,
+        undefined,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
+        mitigatedCis.split(","),
+      ),
+      redirectUrl,
+    );
+
+    assertNoUnexpectedJarProperties(jarPayload);
+  },
+);
+
+// This step sends a request to a CRI stub and then processes that response in core back. It also validates that
+// the initial request to the CRI stub contained the specified attributes. These attributes are encrypted, so we
+// have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
+// CRI stub request directly.
+When(
+  /^I submit '([\w-]+)' details with attributes to the (async )?CRI stub that mitigate the '([\w-]+)' CI$/,
+  async function (
+    this: World,
+    scenario: string,
+    async: "async " | undefined,
+    mitigatedCis: string,
+    dataTable: DataTable | undefined,
+  ): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    if (!isCriResponse(this.lastJourneyEngineResponse)) {
+      throw new Error("Last journey engine response was not a CRI response");
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
+    const jarPayload = await submitAndProcessCriAction(
+      this,
+      await generateCriStubBody(
+        this.lastJourneyEngineResponse.cri.id,
+        scenario,
+        redirectUrl,
+        undefined,
+        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
+        mitigatedCis.split(","),
+      ),
+      redirectUrl,
+    );
+
+    if (dataTable?.rows) {
+      dataTable.rows().forEach(([key, expected]) => {
+        const actualValue = jarPayload[key as keyof typeof jarPayload];
+        const expectedValue = JSON.parse(expected);
+
+        assert.deepStrictEqual(actualValue, expectedValue);
+      });
+    }
+
+    const expectedValueNames = dataTable?.rows().map((r) => r[0]);
+    assertNoUnexpectedJarProperties(jarPayload, expectedValueNames);
   },
 );
 
@@ -270,38 +384,6 @@ When(
     await submitAndProcessCriAction(
       this,
       generateCriStubUserInfoEndpointErrorBody(redirectUrl),
-      redirectUrl,
-    );
-  },
-);
-
-When(
-  /^I submit '([\w-]+)' details to the (async )?CRI stub that mitigate the '([\w-]+)' CI$/,
-  async function (
-    this: World,
-    scenario: string,
-    async: "async " | undefined,
-    mitigatedCis: string,
-  ): Promise<void> {
-    if (!this.lastJourneyEngineResponse) {
-      throw new Error("No last journey engine response found.");
-    }
-
-    if (!isCriResponse(this.lastJourneyEngineResponse)) {
-      throw new Error("Last journey engine response was not a CRI response");
-    }
-
-    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
-    await submitAndProcessCriAction(
-      this,
-      await generateCriStubBody(
-        this.lastJourneyEngineResponse.cri.id,
-        scenario,
-        redirectUrl,
-        undefined,
-        async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
-        mitigatedCis.split(","),
-      ),
       redirectUrl,
     );
   },
@@ -336,3 +418,38 @@ When(
     );
   },
 );
+
+function assertNoUnexpectedJarProperties(
+  jarPayload: CriStubResponseJarPayload,
+  expectedNonStandardValues: string[] | undefined = undefined,
+) {
+  for (const key of removeStandardJarValues(Object.keys(jarPayload))) {
+    const expectedValueExists =
+      expectedNonStandardValues === undefined
+        ? false
+        : expectedNonStandardValues.includes(key);
+    assert.equal(
+      expectedValueExists,
+      true,
+      `Non-standard JAR property ${key} with value ${JSON.stringify(jarPayload[key as keyof typeof jarPayload])} sent to CRI but not specified in test`,
+    );
+  }
+}
+
+function removeStandardJarValues(jarValues: string[]): string[] {
+  return jarValues.filter(
+    (v) =>
+      v !== "sub" &&
+      v !== "shared_claims" &&
+      v !== "iss" &&
+      v !== "response_type" &&
+      v !== "client_id" &&
+      v !== "govuk_signin_journey_id" &&
+      v !== "aud" &&
+      v !== "nbf" &&
+      v !== "redirect_uri" &&
+      v !== "state" &&
+      v !== "exp" &&
+      v !== "iat",
+  );
+}
