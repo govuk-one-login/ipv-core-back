@@ -38,6 +38,7 @@ export const callHeadlessApi = async (
   );
 
   if (criStubResponse.status !== 200) {
+    console.log(criStubResponse);
     throw new Error(
       `callHeadlessApi request failed: ${criStubResponse.statusText}`,
     );

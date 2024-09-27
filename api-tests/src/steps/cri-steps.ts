@@ -15,6 +15,7 @@ import {
   CriResponse,
   isCriResponse,
   isJourneyResponse,
+  isPageResponse,
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
 import { getRandomString } from "../utils/random-string-generator.js";
@@ -25,6 +26,7 @@ const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const submitAndProcessCriAction = async (
   world: World,
   criStubRequest: CriStubRequest,
+  isMissingSessionId?: boolean,
 ) => {
   const criResponse = (world.lastJourneyEngineResponse as CriResponse).cri;
   const criStubResponse = await criStubClient.callHeadlessApi(
@@ -32,34 +34,37 @@ const submitAndProcessCriAction = async (
     criStubRequest,
   );
 
-  const journeyResponse = await internalClient.processCriCallback(
+  const response = await internalClient.processCriCallback(
     generateProcessCriCallbackBody(criStubResponse),
-    world.ipvSessionId,
+    isMissingSessionId ? undefined : world.ipvSessionId,
     world.featureSet,
   );
 
-  if (!isJourneyResponse(journeyResponse)) {
+  if (isPageResponse(response)) {
+    world.lastJourneyEngineResponse = response;
+  } else if (isJourneyResponse(response)) {
+    world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+      response.journey,
+      world.ipvSessionId,
+      world.featureSet,
+    );
+  } else {
     throw new Error(
-      "response from process CRI callback is not a journey response",
+      "response from process CRI callback is not a journey or page response",
     );
   }
-
-  world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
-    journeyResponse.journey,
-    world.ipvSessionId,
-    world.featureSet,
-  );
 
   return criStubResponse.jarPayload;
 };
 
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub( with a missing session id)?$/,
   async function (
     this: World,
     expired: "expired " | undefined,
     scenario: string,
     async: "async " | undefined,
+    missingSessionId: " with a missing session id" | undefined,
   ): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
@@ -78,6 +83,7 @@ When(
         expired ? EXPIRED_NBF : undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
       ),
+      !!missingSessionId,
     );
   },
 );

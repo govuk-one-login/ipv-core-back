@@ -67,20 +67,23 @@ export const sendJourneyEvent = async (
 
 export const processCriCallback = async (
   requestBody: ProcessCriCallbackRequest,
-  ipvSessionId: string,
+  ipvSessionId: string | undefined,
   featureSet: string | undefined,
 ): Promise<JourneyResponse | PageResponse> => {
+  const headers = {
+    ...internalApiHeaders,
+    ...(featureSet ? { "feature-set": featureSet } : {}),
+  };
+
   const response = await fetch(`${config.core.internalApiUrl}/cri/callback`, {
     method: POST,
-    headers: {
-      ...internalApiHeaders,
-      ...(featureSet ? { "feature-set": featureSet } : {}),
-      ...{ "ipv-session-id": ipvSessionId },
-    },
+    headers: ipvSessionId
+      ? { ...headers, "ipv-session-id": ipvSessionId }
+      : headers,
     body: JSON.stringify(requestBody),
   });
 
-  if (!response.ok) {
+  if (!response.ok && response.statusText != "Unauthorized") {
     throw new Error(
       `processCriCallback request failed: ${response.statusText}`,
     );

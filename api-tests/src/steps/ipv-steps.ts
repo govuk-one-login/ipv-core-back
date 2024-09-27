@@ -224,11 +224,19 @@ When(
 );
 
 Then(
-  /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?$/,
-  function (this: World, expectedPage: string, expectedContext: string): void {
+  /^I get an? '([\w-]+)' page response(?: with context '([\w-]+)')?( with a non-empty clientOAuthSessionId)?$/,
+  function (
+    this: World,
+    expectedPage: string,
+    expectedContext: string,
+    clientOAuthSessionIdExists:
+      | " with a non-empty clientOAuthSessionId"
+      | undefined,
+  ): void {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
     }
+
     assert.ok(
       isPageResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
@@ -238,6 +246,10 @@ Then(
       this.lastJourneyEngineResponse.context,
       expectedContext === "null" ? null : expectedContext,
     );
+
+    if (clientOAuthSessionIdExists) {
+      assert.ok(!!this.lastJourneyEngineResponse.clientOAuthSessionId);
+    }
   },
 );
 
