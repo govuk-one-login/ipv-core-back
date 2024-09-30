@@ -127,7 +127,7 @@ Feature: P1 journey
     Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
     When I submit a 'next' event
     Then I get a 'claimedIdentity' CRI response
     When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -160,7 +160,7 @@ Feature: P1 journey
     Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
     When I submit a 'next' event

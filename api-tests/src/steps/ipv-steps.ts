@@ -234,12 +234,10 @@ Then(
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
     assert.equal(this.lastJourneyEngineResponse.page, expectedPage);
-    if (expectedContext) {
-      assert.equal(
-        this.lastJourneyEngineResponse.context,
-        expectedContext === "null" ? null : expectedContext,
-      );
-    }
+    assert.equal(
+      this.lastJourneyEngineResponse.context,
+      expectedContext === "null" ? null : expectedContext,
+    );
   },
 );
 
