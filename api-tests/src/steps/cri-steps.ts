@@ -12,7 +12,6 @@ import {
   generateVcRequestBody,
 } from "../utils/request-body-generators.js";
 import {
-  CriResponse,
   isCriResponse,
   isJourneyResponse,
   isPageResponse,
@@ -26,11 +25,15 @@ const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const submitAndProcessCriAction = async (
   world: World,
   criStubRequest: CriStubRequest,
+  redirectUrl: string,
   isMissingSessionId?: boolean,
 ) => {
-  const criResponse = (world.lastJourneyEngineResponse as CriResponse).cri;
+  world.lastCriRequest = {
+    redirectUrl,
+    body: criStubRequest,
+  };
   const criStubResponse = await criStubClient.callHeadlessApi(
-    criResponse.redirectUrl,
+    redirectUrl,
     criStubRequest,
   );
 
@@ -83,7 +86,23 @@ When(
         expired ? EXPIRED_NBF : undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
       ),
+      this.lastJourneyEngineResponse.cri.redirectUrl,
       !!missingSessionId,
+    );
+  },
+);
+
+When(
+  "I re-submit the same request to the previous CRI stub",
+  async function (this: World): Promise<void> {
+    if (!this.lastCriRequest) {
+      throw new Error("No previous CRI request made");
+    }
+
+    await submitAndProcessCriAction(
+      this,
+      this.lastCriRequest.body,
+      this.lastCriRequest.redirectUrl,
     );
   },
 );
@@ -99,15 +118,17 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     await submitAndProcessCriAction(
       this,
       await generateCriStubBody(
         this.lastJourneyEngineResponse.cri.id,
         undefined,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
+        redirectUrl,
         undefined,
         { sendVcToQueue: false, sendErrorToQueue: true },
       ),
+      redirectUrl,
     );
   },
 );
@@ -133,15 +154,17 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     const jarPayload = await submitAndProcessCriAction(
       this,
       await generateCriStubBody(
         this.lastJourneyEngineResponse.cri.id,
         scenario,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
+        redirectUrl,
         expired ? EXPIRED_NBF : undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
       ),
+      redirectUrl,
     );
 
     if (!jarPayload) {
@@ -170,12 +193,11 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     await submitAndProcessCriAction(
       this,
-      generateCriStubOAuthErrorBody(
-        error,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
-      ),
+      generateCriStubOAuthErrorBody(error, redirectUrl),
+      redirectUrl,
     );
   },
 );
@@ -195,12 +217,11 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     const jarPayload = await submitAndProcessCriAction(
       this,
-      generateCriStubOAuthErrorBody(
-        error,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
-      ),
+      generateCriStubOAuthErrorBody(error, redirectUrl),
+      redirectUrl,
     );
 
     if (!jarPayload) {
@@ -229,11 +250,11 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     await submitAndProcessCriAction(
       this,
-      generateCriStubUserInfoEndpointErrorBody(
-        this.lastJourneyEngineResponse.cri.redirectUrl,
-      ),
+      generateCriStubUserInfoEndpointErrorBody(redirectUrl),
+      redirectUrl,
     );
   },
 );
@@ -254,16 +275,18 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     await submitAndProcessCriAction(
       this,
       await generateCriStubBody(
         this.lastJourneyEngineResponse.cri.id,
         scenario,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
+        redirectUrl,
         undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
         mitigatedCis.split(","),
       ),
+      redirectUrl,
     );
   },
 );

@@ -84,13 +84,13 @@ export const processCriCallback = async (
     body: JSON.stringify(requestBody),
   });
 
-  if (!response.ok && response.statusText != "Unauthorized") {
+  const result = await response.json();
+  if (!response.ok && !result.page) {
     throw new Error(
       `processCriCallback request failed: ${response.statusText}`,
     );
   }
-
-  return await response.json();
+  return result;
 };
 
 export const getProvenIdentityDetails = async (

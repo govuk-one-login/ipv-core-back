@@ -3,6 +3,7 @@ import { MfaResetResult, UserIdentity } from "./external-api.js";
 import { World as CucumberWorld } from "@cucumber/cucumber";
 import { VcJwtPayload } from "./external-api.js";
 import { JSONWebKeySet } from "jose";
+import { CriStubRequest } from "./cri-stub.js";
 
 export interface World extends CucumberWorld {
   // Journey properties
@@ -11,6 +12,10 @@ export interface World extends CucumberWorld {
   journeyId: string;
   featureSet: string | undefined;
   lastJourneyEngineResponse?: JourneyEngineResponse;
+  lastCriRequest?: {
+    redirectUrl: string;
+    body: CriStubRequest;
+  };
 
   // Identity proving results
   identity?: UserIdentity;
