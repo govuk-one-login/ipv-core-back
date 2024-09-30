@@ -15,6 +15,8 @@ import {
   isCriResponse,
   isJourneyResponse,
   isPageResponse,
+  JourneyResponse,
+  PageResponse,
 } from "../types/internal-api.js";
 import { CriStubRequest } from "../types/cri-stub.js";
 import { getRandomString } from "../utils/random-string-generator.js";
@@ -26,7 +28,6 @@ const submitAndProcessCriAction = async (
   world: World,
   criStubRequest: CriStubRequest,
   redirectUrl: string,
-  isMissingSessionId?: boolean,
 ) => {
   world.lastCriRequest = {
     redirectUrl,
@@ -39,35 +40,47 @@ const submitAndProcessCriAction = async (
 
   const response = await internalClient.processCriCallback(
     generateProcessCriCallbackBody(criStubResponse),
-    isMissingSessionId ? undefined : world.ipvSessionId,
+    world.ipvSessionId,
     world.featureSet,
   );
 
+  await handleCriResponse(world, response);
+
+  return criStubResponse.jarPayload;
+};
+
+const handleCriResponse = async (
+  world: World,
+  response: PageResponse | JourneyResponse,
+) => {
   if (isPageResponse(response)) {
     world.lastJourneyEngineResponse = response;
-  } else if (isJourneyResponse(response)) {
+    world.clientOAuthSessionId = response.clientOAuthSessionId;
+    return;
+  }
+
+  if (isJourneyResponse(response)) {
     world.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
       response.journey,
       world.ipvSessionId,
       world.featureSet,
     );
-  } else {
-    throw new Error(
-      "response from process CRI callback is not a journey or page response",
-    );
+    return;
   }
 
-  return criStubResponse.jarPayload;
+  throw new Error(
+    "response from process CRI callback is not a journey or page response",
+  );
 };
 
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub( with a missing session id)?$/,
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub( with a missing ipv session id)?$/,
   async function (
     this: World,
     expired: "expired " | undefined,
     scenario: string,
     async: "async " | undefined,
-    missingSessionId: " with a missing session id" | undefined,
+    isMissingIpvSessionId: " with a missing ipv session id" | undefined,
   ): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
@@ -77,17 +90,21 @@ When(
       throw new Error("Last journey engine response was not a CRI response");
     }
 
+    if (isMissingIpvSessionId) {
+      this.ipvSessionId = undefined;
+    }
+
+    const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     await submitAndProcessCriAction(
       this,
       await generateCriStubBody(
         this.lastJourneyEngineResponse.cri.id,
         scenario,
-        this.lastJourneyEngineResponse.cri.redirectUrl,
+        redirectUrl,
         expired ? EXPIRED_NBF : undefined,
         async ? { sendVcToQueue: true, sendErrorToQueue: false } : undefined,
       ),
-      this.lastJourneyEngineResponse.cri.redirectUrl,
-      !!missingSessionId,
+      redirectUrl,
     );
   },
 );

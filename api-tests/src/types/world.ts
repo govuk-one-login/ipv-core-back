@@ -8,7 +8,7 @@ import { CriStubRequest } from "./cri-stub.js";
 export interface World extends CucumberWorld {
   // Journey properties
   userId: string;
-  ipvSessionId: string;
+  ipvSessionId: string | undefined;
   journeyId: string;
   featureSet: string | undefined;
   lastJourneyEngineResponse?: JourneyEngineResponse;
@@ -16,6 +16,7 @@ export interface World extends CucumberWorld {
     redirectUrl: string;
     body: CriStubRequest;
   };
+  clientOAuthSessionId?: string;
 
   // Identity proving results
   identity?: UserIdentity;

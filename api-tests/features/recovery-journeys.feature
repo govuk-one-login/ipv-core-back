@@ -1,3 +1,4 @@
+@Build
 Feature: Recovery journeys
 
   Scenario: Recovery event from page state - the same page is returned
@@ -19,9 +20,9 @@ Feature: Recovery journeys
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub with a missing session id
+    When I submit 'kenneth-passport-valid' details to the CRI stub with a missing ipv session id
     Then I get a 'pyi-timeout-recoverable' page response with a non-empty clientOAuthSessionId
-    When I submit a 'build-client-oauth-response' event with no session id
+    When I submit a 'build-client-oauth-response' event
     Then I get an OAuth response with error code 'access_denied'
 
   Scenario: User submits CRI callback for wrong CRI - user is able to continue journey
