@@ -264,6 +264,29 @@ When(
   },
 );
 
+When(
+  "I submit a(n) {string} event with no session id",
+  async function (this: World, event: string): Promise<void> {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("no last response");
+    }
+
+    if (
+      !isPageResponse(this.lastJourneyEngineResponse) ||
+      !this.lastJourneyEngineResponse.clientOAuthSessionId
+    ) {
+      throw new Error("no clientOAuthSessionId associated with session");
+    }
+
+    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+      event,
+      undefined,
+      this.featureSet,
+      this.lastJourneyEngineResponse.clientOAuthSessionId,
+    );
+  },
+);
+
 Then(
   "I get a(n) {string} CRI response",
   function (this: World, expectedCri: string): void {
@@ -285,7 +308,6 @@ Then(
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
     }
-
     assert.ok(
       isClientResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,

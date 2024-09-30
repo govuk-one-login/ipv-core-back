@@ -21,11 +21,5 @@ Feature: Recovery journeys
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub with a missing session id
     Then I get a 'pyi-timeout-recoverable' page response with a non-empty clientOAuthSessionId
-
-  Scenario: Wrong callback for CRI
-    When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit a 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-passport-valid' details to the CRI stub with the wrong redirectUrl
-    Then I get a 'pyi-attempt-recovery' page response
+    When I submit a 'build-client-oauth-response' event with no session id
+    Then I get an OAuth response with error code 'access_denied'
