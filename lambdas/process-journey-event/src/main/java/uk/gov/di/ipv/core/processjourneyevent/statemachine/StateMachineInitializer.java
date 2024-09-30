@@ -15,9 +15,11 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyD
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
@@ -182,7 +184,18 @@ public class StateMachineInitializer {
     }
 
     private String getNestedJourneyDefinitionsConfig() throws IOException {
-        return readFileToString("nested-journey-definitions");
+        var folder = new File(String.format("statemachine/%s", mode.getPathPart()));
+        var nestedJourneyFiles = folder.listFiles();
+
+        if (nestedJourneyFiles == null) {
+            throw new JourneyMapDeserializationException("Could not find nested journey maps");
+        }
+
+        StringJoiner joiner = new StringJoiner("\n");
+        for (var file : nestedJourneyFiles) {
+            joiner.add(readFileToString(file.getName()));
+        }
+        return joiner.toString();
     }
 
     private String readFileToString(String filename) throws IOException {
