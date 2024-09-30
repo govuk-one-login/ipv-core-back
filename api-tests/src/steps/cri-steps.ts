@@ -73,14 +73,17 @@ const handleCriResponse = async (
   );
 };
 
+When("I clear my session id", function (this: World) {
+  this.ipvSessionId = undefined;
+});
+
 When(
-  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub( with a missing ipv session id)?$/,
+  /^I submit (expired )?'([\w-]+)' details to the (async )?CRI stub$/,
   async function (
     this: World,
     expired: "expired " | undefined,
     scenario: string,
     async: "async " | undefined,
-    isMissingIpvSessionId: " with a missing ipv session id" | undefined,
   ): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
@@ -88,10 +91,6 @@ When(
 
     if (!isCriResponse(this.lastJourneyEngineResponse)) {
       throw new Error("Last journey engine response was not a CRI response");
-    }
-
-    if (isMissingIpvSessionId) {
-      this.ipvSessionId = undefined;
     }
 
     const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
