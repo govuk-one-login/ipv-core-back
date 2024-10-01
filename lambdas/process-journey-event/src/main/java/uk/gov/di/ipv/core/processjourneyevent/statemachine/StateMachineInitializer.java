@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.enums.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
@@ -15,7 +16,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyD
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -184,17 +184,18 @@ public class StateMachineInitializer {
     }
 
     private String getNestedJourneyDefinitionsConfig() throws IOException {
-        var folder = new File(String.format("statemachine/%s", mode.getPathPart()));
-        var nestedJourneyFiles = folder.listFiles();
+        var nestedJourneySubFolder = "nested-journeys";
+        var joiner = new StringJoiner("\n");
 
-        if (nestedJourneyFiles == null) {
-            throw new JourneyMapDeserializationException("Could not find nested journey maps");
+        for (var nestedJourneyFile : NestedJourneyTypes.values()) {
+            var contents =
+                    readFileToString(
+                            String.format(
+                                    "%s/%s",
+                                    nestedJourneySubFolder, nestedJourneyFile.getJourneyName()));
+            joiner.add(contents);
         }
 
-        StringJoiner joiner = new StringJoiner("\n");
-        for (var file : nestedJourneyFiles) {
-            joiner.add(readFileToString(file.getName()));
-        }
         return joiner.toString();
     }
 
