@@ -32,6 +32,8 @@ export interface PageResponse {
   page: string;
   statusCode?: string;
   context?: string;
+  type?: string;
+  clientOAuthSessionId?: string;
 }
 
 export const isPageResponse = (

@@ -44,8 +44,9 @@ export const initialiseIpvSession = async (
 
 export const sendJourneyEvent = async (
   event: string,
-  ipvSessionId: string,
+  ipvSessionId: string | undefined,
   featureSet: string | undefined,
+  clientOAuthSessionId?: string,
 ): Promise<JourneyEngineResponse> => {
   const url = `${config.core.internalApiUrl}${event.startsWith(JOURNEY_PREFIX) ? event : JOURNEY_PREFIX + event}`;
   const response = await fetch(url, {
@@ -53,7 +54,10 @@ export const sendJourneyEvent = async (
     headers: {
       ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
-      "ipv-session-id": ipvSessionId,
+      ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
+      ...(clientOAuthSessionId
+        ? { "client-session-id": clientOAuthSessionId }
+        : {}),
       language: "en",
     },
   });
@@ -67,7 +71,7 @@ export const sendJourneyEvent = async (
 
 export const processCriCallback = async (
   requestBody: ProcessCriCallbackRequest,
-  ipvSessionId: string,
+  ipvSessionId: string | undefined,
   featureSet: string | undefined,
 ): Promise<JourneyResponse | PageResponse> => {
   const response = await fetch(`${config.core.internalApiUrl}/cri/callback`, {
@@ -75,18 +79,18 @@ export const processCriCallback = async (
     headers: {
       ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
-      ...{ "ipv-session-id": ipvSessionId },
+      ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
     },
     body: JSON.stringify(requestBody),
   });
 
-  if (!response.ok) {
+  const result = await response.json();
+  if (!response.ok && !result.page) {
     throw new Error(
       `processCriCallback request failed: ${response.statusText}`,
     );
   }
-
-  return await response.json();
+  return result;
 };
 
 export const getProvenIdentityDetails = async (
