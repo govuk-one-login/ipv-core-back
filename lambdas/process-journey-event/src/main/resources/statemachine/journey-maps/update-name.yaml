@@ -174,7 +174,40 @@ states:
         resetType: NAME_ONLY_CHANGE
     events:
       next:
+        targetState: STRATEGIC_APP_DETECT_GIVEN_ONLY
+
+  STRATEGIC_APP_DETECT_GIVEN_ONLY:
+    response:
+      type: page
+      pageId: identify-device
+    events:
+      appTriage:
         targetState: DCMAW_GIVEN_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageAndroid:
+        targetState: DCMAW_GIVEN_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageIphone:
+        targetState: DCMAW_GIVEN_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   RESET_IDENTITY_FAMILY_ONLY:
     response:
@@ -184,7 +217,40 @@ states:
         resetType: NAME_ONLY_CHANGE
     events:
       next:
+        targetState: STRATEGIC_APP_DETECT_FAMILY_ONLY
+
+  STRATEGIC_APP_DETECT_FAMILY_ONLY:
+    response:
+      type: page
+      pageId: identify-device
+    events:
+      appTriage:
         targetState: DCMAW_FAMILY_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageAndroid:
+        targetState: DCMAW_FAMILY_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageIphone:
+        targetState: DCMAW_FAMILY_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   DCMAW_GIVEN_ONLY:
     response:
@@ -340,7 +406,40 @@ states:
         resetType: ALL
     events:
       next:
+        targetState: STRATEGIC_APP_DETECT_GIVEN_WITH_ADDRESS
+
+  STRATEGIC_APP_DETECT_GIVEN_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: identify-device
+    events:
+      appTriage:
         targetState: DCMAW_GIVEN_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageAndroid:
+        targetState: DCMAW_GIVEN_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageIphone:
+        targetState: DCMAW_GIVEN_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   RESET_IDENTITY_FAMILY_WITH_ADDRESS:
     response:
@@ -350,7 +449,40 @@ states:
         resetType: ALL
     events:
       next:
+        targetState: STRATEGIC_APP_DETECT_FAMILY_WITH_ADDRESS
+
+  STRATEGIC_APP_DETECT_FAMILY_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: identify-device
+    events:
+      appTriage:
         targetState: DCMAW_FAMILY_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageAndroid:
+        targetState: DCMAW_FAMILY_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageIphone:
+        targetState: DCMAW_FAMILY_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
 
   DCMAW_GIVEN_WITH_ADDRESS:
     response:
@@ -429,6 +561,19 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+
+  STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+      multipleDocCheckPage:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # SHARED STATES
 

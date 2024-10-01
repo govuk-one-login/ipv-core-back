@@ -82,7 +82,45 @@ states:
     events:
       appTriage:
         targetState: CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageAndroid:
+        targetState: CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmawIphone:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
+      appTriageIphone:
+        targetState: CRI_DCMAW
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+        checkIfDisabled:
+          dcmaw:
+            targetJourney: TECHNICAL_ERROR
+            targetState: ERROR
       end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+
+  STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE
+      multipleDocCheckPage:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
 

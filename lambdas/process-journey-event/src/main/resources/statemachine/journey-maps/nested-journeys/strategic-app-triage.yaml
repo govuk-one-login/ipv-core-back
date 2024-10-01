@@ -5,11 +5,9 @@ description: >-
 entryEvents:
   appTriage:
     targetState: SELECT_DEVICE_PAGE
-  appTriageSmartphone:
-    targetState: MAM_SELECT_SMARTPHONE
-  appTriageSmartphoneIphone:
+  appTriageIphone:
     targetState: MOBILE_IPHONE_CONFIRM_PAGE
-  appTriageSmartphoneAndroid:
+  appTriageAndroid:
     targetState: MOBILE_ANDROID_CONFIRM_PAGE
 
 nestedJourneyStates:
