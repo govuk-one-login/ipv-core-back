@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.processjourneyevent.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.ExitNestedJourneyEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.JourneyMapDeserializationException;
@@ -14,7 +15,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyI
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +28,8 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 
 class StateMachineInitializerTest {
+    private static final List<String> TEST_NESTED_JOURNEY_TYPES =
+            Stream.of(NestedJourneyTypes.values()).map(NestedJourneyTypes::getJourneyName).toList();
 
     @ParameterizedTest
     @EnumSource
@@ -37,7 +42,8 @@ class StateMachineInitializerTest {
         StateMachineInitializerMode modeMock = mock(StateMachineInitializerMode.class);
         when(modeMock.getPathPart()).thenReturn("some-rubbish");
         StateMachineInitializer initializer =
-                new StateMachineInitializer(INITIAL_JOURNEY_SELECTION, modeMock);
+                new StateMachineInitializer(
+                        INITIAL_JOURNEY_SELECTION, modeMock, TEST_NESTED_JOURNEY_TYPES);
         assertThrows(JourneyMapDeserializationException.class, initializer::initialize);
     }
 
@@ -47,7 +53,10 @@ class StateMachineInitializerTest {
         when(journeyTypeMock.getPath()).thenReturn("journey-map-with-duplicate-keys");
 
         var stateMachineInitializer =
-                new StateMachineInitializer(journeyTypeMock, StateMachineInitializerMode.TEST);
+                new StateMachineInitializer(
+                        journeyTypeMock,
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var jsonMappingException =
                 assertThrows(JsonMappingException.class, stateMachineInitializer::initialize);
@@ -60,7 +69,9 @@ class StateMachineInitializerTest {
     void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
         Map<String, State> journeyMap =
                 new StateMachineInitializer(
-                                INITIAL_JOURNEY_SELECTION, StateMachineInitializerMode.TEST)
+                                INITIAL_JOURNEY_SELECTION,
+                                StateMachineInitializerMode.TEST,
+                                TEST_NESTED_JOURNEY_TYPES)
                         .initialize();
 
         State parentState = journeyMap.get("PARENT_STATE");

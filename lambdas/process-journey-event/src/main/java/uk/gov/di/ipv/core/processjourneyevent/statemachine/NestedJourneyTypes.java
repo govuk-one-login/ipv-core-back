@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.enums;
+package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;

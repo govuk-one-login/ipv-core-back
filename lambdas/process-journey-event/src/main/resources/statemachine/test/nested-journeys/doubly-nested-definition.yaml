@@ -1,0 +1,21 @@
+name: Doubly nested definition
+description: >-
+  A test nested journey that is called within another nested journey
+entryEvents:
+  eventTwo:
+    targetState: DOUBLY_NESTED_STATE_ONE
+nestedJourneyStates:
+  DOUBLY_NESTED_STATE_ONE:
+    response:
+      type: page
+      pageId: page-id-doubly-nested-state-one
+    events:
+      eventOne:
+        targetState: DOUBLY_NESTED_STATE_TWO
+  DOUBLY_NESTED_STATE_TWO:
+    response:
+      type: page
+      pageId: page-id-doubly-nested-state-two
+    events:
+      eventOne:
+        exitEventToEmit: exitEventFromDoublyNestedStateTwo
