@@ -195,7 +195,7 @@ public class StateMachineInitializer {
     }
 
     private String transformToUpperSnakeCase(String input) {
-        return input.toUpperCase().replaceAll("-", "_");
+        return input.toUpperCase().replace("-", "_");
     }
 
     private void getNestedJourneysFromConfig() throws IOException {
