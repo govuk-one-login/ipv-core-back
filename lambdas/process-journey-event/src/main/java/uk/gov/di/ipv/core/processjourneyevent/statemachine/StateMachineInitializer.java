@@ -18,8 +18,8 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.StringJoiner;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
@@ -28,7 +28,8 @@ public class StateMachineInitializer {
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
     private static final ObjectMapper om = new ObjectMapper();
     private Map<String, State> journeyStates;
-    private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
+    private final HashMap<String, NestedJourneyDefinition> nestedJourneyDefinitions =
+            new HashMap<>();
     private final StateMachineInitializerMode mode;
 
     public StateMachineInitializer(IpvJourneyTypes journeyType) {
@@ -45,8 +46,7 @@ public class StateMachineInitializer {
     public Map<String, State> initialize() throws IOException {
         Journey journey = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
         journeyStates = journey.states();
-        nestedJourneyDefinitions =
-                yamlOm.readValue(getNestedJourneyDefinitionsConfig(), new TypeReference<>() {});
+        getNestedJourneysFromConfig();
 
         initializeJourneyStates();
 
@@ -183,9 +183,12 @@ public class StateMachineInitializer {
         return readFileToString(journeyType.getPath());
     }
 
-    private String getNestedJourneyDefinitionsConfig() throws IOException {
+    private String transformToUpperSnakeCase(String input) {
+        return input.toUpperCase().replaceAll("-", "_");
+    }
+
+    private void getNestedJourneysFromConfig() throws IOException {
         var nestedJourneySubFolder = "nested-journeys";
-        var joiner = new StringJoiner("\n");
 
         for (var nestedJourneyFile : NestedJourneyTypes.values()) {
             var contents =
@@ -193,10 +196,11 @@ public class StateMachineInitializer {
                             String.format(
                                     "%s/%s",
                                     nestedJourneySubFolder, nestedJourneyFile.getJourneyName()));
-            joiner.add(contents);
-        }
 
-        return joiner.toString();
+            var journeyName = transformToUpperSnakeCase(nestedJourneyFile.getJourneyName());
+            var journeyDef = yamlOm.readValue(contents, NestedJourneyDefinition.class);
+            nestedJourneyDefinitions.put(journeyName, journeyDef);
+        }
     }
 
     private String readFileToString(String filename) throws IOException {

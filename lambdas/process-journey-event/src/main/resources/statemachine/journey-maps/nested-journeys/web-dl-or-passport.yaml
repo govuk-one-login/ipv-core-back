@@ -1,206 +1,205 @@
-WEB_DL_OR_PASSPORT:
-  name: Web Driving Licence or Passport
-  description: >-
-    The combined journey for web Driving Licence and Passport CRIs.
-  entryEvents:
-    ukPassport:
-      targetState: CRI_UK_PASSPORT
-    drivingLicence:
-      targetState: CRI_DRIVING_LICENCE
-    alternate-doc-invalid-dl:
-      targetState: MITIGATION_DL_NO_MATCH
-    alternate-doc-invalid-passport:
-      targetState: MITIGATION_PP_NO_MATCH
-  nestedJourneyStates:
-    CRI_UK_PASSPORT:
-      response:
-        type: cri
-        criId: ukPassport
-      parent: CRI_STATE
-      events:
-        next:
-          targetState: ADDRESS_AND_FRAUD_AFTER_PASSPORT
-        access-denied:
-          targetState: PROVE_ANOTHER_WAY_AFTER_PASSPORT
-          checkIfDisabled:
-            f2f:
-              targetState: MULTIPLE_DOC_CHECK_PAGE
-        alternate-doc-invalid-passport:
-          targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
-          auditEvents:
-            - IPV_MITIGATION_START
-          auditContext:
-            mitigationType: invalid-passport
-    ADDRESS_AND_FRAUD_AFTER_PASSPORT:
-      nestedJourney: ADDRESS_AND_FRAUD
-      exitEvents:
-        next:
-          exitEventToEmit: next-passport
-        enhanced-verification:
-          exitEventToEmit: next-passport
-    PROVE_ANOTHER_WAY_AFTER_PASSPORT:
-      response:
-        type: page
-        pageId: prove-identity-another-type-photo-id
-        context: passport
-      events:
-        otherPhotoId:
-          targetState: CRI_DRIVING_LICENCE
-        f2f:
-          exitEventToEmit: end
-        returnToRp:
-          exitEventToEmit: return-to-rp
-    CRI_DRIVING_LICENCE:
-      response:
-        type: cri
-        criId: drivingLicence
-      parent: CRI_STATE
-      events:
-        next:
-          targetState: ADDRESS_AND_FRAUD_AFTER_DL
-        access-denied:
-          targetState: PROVE_ANOTHER_WAY_AFTER_DL
-          checkIfDisabled:
-            f2f:
-              targetState: MULTIPLE_DOC_CHECK_PAGE
-        alternate-doc-invalid-dl:
-          targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
-          auditEvents:
-            - IPV_MITIGATION_START
-          auditContext:
-            mitigationType: invalid-dl
-    ADDRESS_AND_FRAUD_AFTER_DL:
-      nestedJourney: ADDRESS_AND_FRAUD
-      exitEvents:
-        next:
-          exitEventToEmit: next-dl
-        enhanced-verification:
-          exitEventToEmit: next-dl
-    PROVE_ANOTHER_WAY_AFTER_DL:
-      response:
-        type: page
-        pageId: prove-identity-another-type-photo-id
-        context: drivingLicence
-      events:
-        otherPhotoId:
-          targetState: CRI_UK_PASSPORT
-        f2f:
-          exitEventToEmit: end
-        returnToRp:
-          exitEventToEmit: return-to-rp
+name: Web Driving Licence or Passport
+description: >-
+  The combined journey for web Driving Licence and Passport CRIs.
+entryEvents:
+  ukPassport:
+    targetState: CRI_UK_PASSPORT
+  drivingLicence:
+    targetState: CRI_DRIVING_LICENCE
+  alternate-doc-invalid-dl:
+    targetState: MITIGATION_DL_NO_MATCH
+  alternate-doc-invalid-passport:
+    targetState: MITIGATION_PP_NO_MATCH
+nestedJourneyStates:
+  CRI_UK_PASSPORT:
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_AFTER_PASSPORT
+      access-denied:
+        targetState: PROVE_ANOTHER_WAY_AFTER_PASSPORT
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-passport:
+        targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+  ADDRESS_AND_FRAUD_AFTER_PASSPORT:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        exitEventToEmit: next-passport
+      enhanced-verification:
+        exitEventToEmit: next-passport
+  PROVE_ANOTHER_WAY_AFTER_PASSPORT:
+    response:
+      type: page
+      pageId: prove-identity-another-type-photo-id
+      context: passport
+    events:
+      otherPhotoId:
+        targetState: CRI_DRIVING_LICENCE
+      f2f:
+        exitEventToEmit: end
+      returnToRp:
+        exitEventToEmit: return-to-rp
+  CRI_DRIVING_LICENCE:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_AFTER_DL
+      access-denied:
+        targetState: PROVE_ANOTHER_WAY_AFTER_DL
+        checkIfDisabled:
+          f2f:
+            targetState: MULTIPLE_DOC_CHECK_PAGE
+      alternate-doc-invalid-dl:
+        targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+  ADDRESS_AND_FRAUD_AFTER_DL:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        exitEventToEmit: next-dl
+      enhanced-verification:
+        exitEventToEmit: next-dl
+  PROVE_ANOTHER_WAY_AFTER_DL:
+    response:
+      type: page
+      pageId: prove-identity-another-type-photo-id
+      context: drivingLicence
+    events:
+      otherPhotoId:
+        targetState: CRI_UK_PASSPORT
+      f2f:
+        exitEventToEmit: end
+      returnToRp:
+        exitEventToEmit: return-to-rp
 
-    # Invalid passport mitigation routes
-    MITIGATION_PP_NO_MATCH:
-      response:
-        type: page
-        pageId: pyi-passport-no-match
-      events:
-        next:
-          targetState: MITIGATION_DL_START
-          auditEvents:
-            - IPV_MITIGATION_START
-          auditContext:
-            mitigationType: invalid-passport
-    MITIGATION_DL_START:
-      response:
-        type: page
-        pageId: pyi-continue-with-driving-licence
-      events:
-        next:
-          targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
-        end:
-          exitEventToEmit: return-to-rp
-    MITIGATION_PP_NO_MATCH_ANOTHER_WAY:
-      response:
-        type: page
-        pageId: pyi-passport-no-match-another-way
-      events:
-        next:
-          targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
-        end:
-          exitEventToEmit: return-to-rp
-    MITIGATION_DL_CRI_DRIVING_LICENCE:
-      response:
-        type: cri
-        criId: drivingLicence
-      parent: CRI_STATE
-      events:
-        next:
-          targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
-        access-denied:
-          targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
-    MITIGATION_DL_PROVE_ANOTHER_WAY:
-      response:
-        type: page
-        pageId: prove-identity-no-other-photo-id
-        context: drivingLicence
-      events:
-        back:
-          targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
-        returnToRp:
-          exitEventToEmit: return-to-rp
-    MITIGATION_DL_ADDRESS_AND_FRAUD:
-      nestedJourney: ADDRESS_AND_FRAUD
-      exitEvents:
-        next:
-          exitEventToEmit: alternate-doc-next-dl
-        enhanced-verification:
-          exitEventToEmit: failed
+  # Invalid passport mitigation routes
+  MITIGATION_PP_NO_MATCH:
+    response:
+      type: page
+      pageId: pyi-passport-no-match
+    events:
+      next:
+        targetState: MITIGATION_DL_START
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-passport
+  MITIGATION_DL_START:
+    response:
+      type: page
+      pageId: pyi-continue-with-driving-licence
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        exitEventToEmit: return-to-rp
+  MITIGATION_PP_NO_MATCH_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: pyi-passport-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      end:
+        exitEventToEmit: return-to-rp
+  MITIGATION_DL_CRI_DRIVING_LICENCE:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
+  MITIGATION_DL_PROVE_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: drivingLicence
+    events:
+      back:
+        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+      returnToRp:
+        exitEventToEmit: return-to-rp
+  MITIGATION_DL_ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        exitEventToEmit: alternate-doc-next-dl
+      enhanced-verification:
+        exitEventToEmit: failed
 
-    # Invalid DL mitigation routes
-    MITIGATION_DL_NO_MATCH:
-      response:
-        type: page
-        pageId: pyi-driving-licence-no-match
-      events:
-        next:
-          targetState: MITIGATION_PP_START
-          auditEvents:
-            - IPV_MITIGATION_START
-          auditContext:
-            mitigationType: invalid-dl
-    MITIGATION_PP_START:
-      response:
-        type: page
-        pageId: pyi-continue-with-passport
-      events:
-        next:
-          targetState: MITIGATION_PP_CRI_UK_PASSPORT
-        end:
-          exitEventToEmit: return-to-rp
-    MITIGATION_DL_NO_MATCH_ANOTHER_WAY:
-      response:
-        type: page
-        pageId: pyi-driving-licence-no-match-another-way
-      events:
-        next:
-          targetState: MITIGATION_PP_CRI_UK_PASSPORT
-        end:
-          exitEventToEmit: return-to-rp
-    MITIGATION_PP_CRI_UK_PASSPORT:
-      response:
-        type: cri
-        criId: ukPassport
-      parent: CRI_STATE
-      events:
-        next:
-          targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
-        access-denied:
-          targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
-    MITIGATION_PP_ADDRESS_AND_FRAUD:
-      nestedJourney: ADDRESS_AND_FRAUD
-      exitEvents:
-        next:
-          exitEventToEmit: alternate-doc-next-passport
-        enhanced-verification:
-          exitEventToEmit: failed
-    MITIGATION_PP_PROVE_ANOTHER_WAY:
-      response:
-        type: page
-        pageId: prove-identity-no-other-photo-id
-        context: passport
-      events:
-        back:
-          targetState: MITIGATION_PP_CRI_UK_PASSPORT
-        returnToRp:
-          exitEventToEmit: return-to-rp
+  # Invalid DL mitigation routes
+  MITIGATION_DL_NO_MATCH:
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match
+    events:
+      next:
+        targetState: MITIGATION_PP_START
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
+  MITIGATION_PP_START:
+    response:
+      type: page
+      pageId: pyi-continue-with-passport
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        exitEventToEmit: return-to-rp
+  MITIGATION_DL_NO_MATCH_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: pyi-driving-licence-no-match-another-way
+    events:
+      next:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      end:
+        exitEventToEmit: return-to-rp
+  MITIGATION_PP_CRI_UK_PASSPORT:
+    response:
+      type: cri
+      criId: ukPassport
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
+      access-denied:
+        targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
+  MITIGATION_PP_ADDRESS_AND_FRAUD:
+    nestedJourney: ADDRESS_AND_FRAUD
+    exitEvents:
+      next:
+        exitEventToEmit: alternate-doc-next-passport
+      enhanced-verification:
+        exitEventToEmit: failed
+  MITIGATION_PP_PROVE_ANOTHER_WAY:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: passport
+    events:
+      back:
+        targetState: MITIGATION_PP_CRI_UK_PASSPORT
+      returnToRp:
+        exitEventToEmit: return-to-rp
