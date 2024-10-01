@@ -1,7 +1,7 @@
 @Build
 Feature: M2B Strategic App Journeys
 
-  Scenario: MAM journey iphone
+  Scenario: MAM journey declared iphone
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -11,7 +11,15 @@ Feature: M2B Strategic App Journeys
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
-  Scenario: MAM journey android
+  Scenario: MAM journey detected iphone
+    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriageIphone' event
+    Then I get a 'pyi-triage-mobile-confirm' page response
+    When I submit an 'next' event
+    Then I get a 'pyi-triage-mobile-download-app' page response
+
+  Scenario: MAM journey declared android
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -20,6 +28,14 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response
     When I submit an 'android' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
+
+  Scenario: MAM journey detected android
+    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriageAndroid' event
+    Then I get a 'pyi-triage-mobile-confirm' page response
+    When I submit an 'next' event
+    Then I get a 'pyi-triage-mobile-download-app' page response
 
   Scenario: MAM journey no compatible smartphone
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
