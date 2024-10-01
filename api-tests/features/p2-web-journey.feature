@@ -156,6 +156,39 @@ Feature: P2 Web document journey
       | drivingLicence | kenneth-driving-permit-valid |
       | ukPassport     | kenneth-passport-valid       |
 
+  Scenario Outline: User drops out of HMRC KBV CRI via thin file or failed checks using <cri> - HMRC KBV
+    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'nino' CRI response
+    When I submit 'kenneth' details to the CRI stub
+    Then I get a 'hmrcKbv' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+    Examples:
+      | cri            | details                      |
+      | drivingLicence | kenneth-driving-permit-valid |
+      | ukPassport     | kenneth-passport-valid       |
+
   Scenario Outline: Allows use of <alternative-doc-cri> when user drops out of <initial-cri> CRI
     When I submit a '<initial-cri>' event
     Then I get a '<initial-cri>' CRI response
