@@ -322,8 +322,23 @@ states:
         resetType: REINSTATE
     events:
       next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START_NO_STORE
+        targetState: EVALUATE_GPG45_SCORES
+
+  EVALUATE_GPG45_SCORES:
+    response:
+      type: process
+      lambda: evaluate-gpg45-scores
+    events:
+      met:
+        targetState: RETURN_TO_RP
+      # The user should always have a valid profile to reach this point,
+      # if they don't then it's an error.
+      unmet:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      vcs-not-correlated:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   DELETE_HANDOVER_PAGE:
     response:
