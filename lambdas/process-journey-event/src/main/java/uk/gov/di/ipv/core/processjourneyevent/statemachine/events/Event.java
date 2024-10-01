@@ -17,5 +17,6 @@ import java.util.Map;
 public interface Event {
     TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException;
 
-    void initialize(String name, Map<String, State> states);
+    void initialize(
+            String name, Map<String, State> states, Map<String, Event> nestedJourneyExitEvents);
 }

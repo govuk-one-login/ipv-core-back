@@ -230,6 +230,8 @@ states:
         targetState: MITIGATION_CHECK_FRAUD_AFTER_DL
       alternate-doc-next-passport:
         targetState: MITIGATION_KBVS
+      access-denied-passport-or-dl:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:

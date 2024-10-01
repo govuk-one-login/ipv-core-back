@@ -80,7 +80,8 @@ public class BasicEvent implements Event {
     }
 
     @Override
-    public void initialize(String name, Map<String, State> states) {
+    public void initialize(
+            String name, Map<String, State> states, Map<String, Event> nestedJourneyExitEvents) {
         this.name = name;
         if (targetJourney != null) {
             this.targetStateObj =
@@ -89,13 +90,31 @@ public class BasicEvent implements Event {
             this.targetStateObj = states.get(targetState);
         }
         if (checkIfDisabled != null) {
-            checkIfDisabled.forEach((eventName, event) -> event.initialize(eventName, states));
+            checkIfDisabled.forEach(
+                    (eventName, event) ->
+                            initialiseEvent(event, eventName, states, nestedJourneyExitEvents));
         }
         if (checkFeatureFlag != null) {
-            checkFeatureFlag.forEach((eventName, event) -> event.initialize(eventName, states));
+            checkFeatureFlag.forEach(
+                    (eventName, event) ->
+                            initialiseEvent(event, eventName, states, nestedJourneyExitEvents));
         }
         if (checkJourneyContext != null) {
-            checkJourneyContext.forEach((eventName, event) -> event.initialize(eventName, states));
+            checkJourneyContext.forEach(
+                    (eventName, event) ->
+                            initialiseEvent(event, eventName, states, nestedJourneyExitEvents));
+        }
+    }
+
+    private void initialiseEvent(
+            Event event,
+            String eventName,
+            Map<String, State> states,
+            Map<String, Event> nestedJourneyExitEvents) {
+        if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
+            exitNestedJourneyEvent.setNestedJourneyExitEvents(nestedJourneyExitEvents);
+        } else {
+            event.initialize(eventName, states, nestedJourneyExitEvents);
         }
     }
 }
