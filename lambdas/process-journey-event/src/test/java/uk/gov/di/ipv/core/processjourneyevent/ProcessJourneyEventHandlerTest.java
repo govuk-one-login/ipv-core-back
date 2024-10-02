@@ -85,9 +85,7 @@ class ProcessJourneyEventHandlerTest {
     private static final String STATUS_CODE = "statusCode";
     private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
     private static final List<String> TEST_NESTED_JOURNEY_TYPES =
-            Stream.of(uk.gov.di.ipv.core.processjourneyevent.NestedJourneyTypes.values())
-                    .map(uk.gov.di.ipv.core.processjourneyevent.NestedJourneyTypes::getJourneyName)
-                    .toList();
+            List.of("nested-journey-definition", "doubly-nested-definition");
     private static final List<String> REAL_NESTED_JOURNEY_TYPES =
             Stream.of(NestedJourneyTypes.values()).map(NestedJourneyTypes::getJourneyName).toList();
 

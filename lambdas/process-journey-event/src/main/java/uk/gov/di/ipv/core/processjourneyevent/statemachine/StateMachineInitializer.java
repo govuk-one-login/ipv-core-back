@@ -25,12 +25,13 @@ import java.util.stream.Stream;
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public class StateMachineInitializer {
+    private static final String NESTED_JOURNEYS_SUBFOLDER = "nested-journeys";
+
     private static final ObjectMapper yamlOm =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
     private static final ObjectMapper om = new ObjectMapper();
     private Map<String, State> journeyStates;
-    private final HashMap<String, NestedJourneyDefinition> nestedJourneyDefinitions =
-            new HashMap<>();
+    private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
     private final StateMachineInitializerMode mode;
     private final List<String> nestedJourneyTypes;
 
@@ -57,7 +58,7 @@ public class StateMachineInitializer {
     public Map<String, State> initialize() throws IOException {
         Journey journey = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
         journeyStates = journey.states();
-        getNestedJourneysFromConfig();
+        nestedJourneyDefinitions = getNestedJourneysFromConfig();
 
         initializeJourneyStates();
 
@@ -198,17 +199,18 @@ public class StateMachineInitializer {
         return input.toUpperCase().replace("-", "_");
     }
 
-    private void getNestedJourneysFromConfig() throws IOException {
-        var nestedJourneySubFolder = "nested-journeys";
-
+    private Map<String, NestedJourneyDefinition> getNestedJourneysFromConfig() throws IOException {
+        var map = new HashMap<String, NestedJourneyDefinition>();
         for (var nestedJourney : nestedJourneyTypes) {
             var contents =
-                    readFileToString(String.format("%s/%s", nestedJourneySubFolder, nestedJourney));
+                    readFileToString(
+                            String.format("%s/%s", NESTED_JOURNEYS_SUBFOLDER, nestedJourney));
 
             var journeyName = transformToUpperSnakeCase(nestedJourney);
             var journeyDef = yamlOm.readValue(contents, NestedJourneyDefinition.class);
-            nestedJourneyDefinitions.put(journeyName, journeyDef);
+            map.put(journeyName, journeyDef);
         }
+        return map;
     }
 
     private String readFileToString(String filename) throws IOException {
