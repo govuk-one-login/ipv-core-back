@@ -5,6 +5,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Map;
@@ -46,8 +47,11 @@ class ExitNestedJourneyEventTest {
     @Test
     void initializeShouldThrowAnUnsupportedOperationException() {
         ExitNestedJourneyEvent exitNestedJourneyEvent = new ExitNestedJourneyEvent();
+        Map<String, State> emptyStateMap = Map.of();
+        Map<String, Event> emptyEventMap = Map.of();
+
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> exitNestedJourneyEvent.initialize("name", Map.of(), Map.of()));
+                () -> exitNestedJourneyEvent.initialize("name", emptyStateMap, emptyEventMap));
     }
 }

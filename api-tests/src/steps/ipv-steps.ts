@@ -89,7 +89,7 @@ const startNewJourney = async (
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
-  world.featureSet = featureSet;
+  world.featureSet = featureSet || world.featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
     await generateInitialiseIpvSessionBody({
       subject: world.userId,
