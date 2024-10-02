@@ -41,7 +41,8 @@ export const createValidator = async (
     validator.addSchema(schema, `/${key}`),
   );
 
-  for (const ref of validator.unresolvedRefs) {
+  while (validator.unresolvedRefs.length) {
+    const ref = validator.unresolvedRefs[0];
     const schema = await fetchVocabSchema(ref);
     validator.addSchema(schema);
 
