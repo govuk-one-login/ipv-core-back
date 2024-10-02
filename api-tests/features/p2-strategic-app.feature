@@ -17,7 +17,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriageIphone' event
     Then I get a 'pyi-triage-mobile-confirm' page response
     When I submit an 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
   Scenario: MAM journey declared android
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
@@ -35,7 +35,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriageAndroid' event
     Then I get a 'pyi-triage-mobile-confirm' page response
     When I submit an 'next' event
-    Then I get a 'pyi-triage-mobile-download-app' page response
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
   Scenario: MAM journey no compatible smartphone
     Given I start a new 'medium-confidence' journey with feature set 'strategicApp'

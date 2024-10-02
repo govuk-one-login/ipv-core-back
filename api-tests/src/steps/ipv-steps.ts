@@ -245,6 +245,7 @@ Then(
     assert.equal(
       this.lastJourneyEngineResponse.context,
       expectedContext === "null" ? null : expectedContext,
+      `Expected context ${expectedContext} but got ${this.lastJourneyEngineResponse.context}`
     );
 
     if (clientOAuthSessionIdExists) {
