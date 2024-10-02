@@ -13,7 +13,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/tokenResponse"
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "POST"
@@ -30,9 +30,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "array"
-                items:
-                  type: "object"
+                $ref: "#/components/schemas/userIdentityResponse"
         403:
           description: "403 Response"
           content: {}
@@ -52,7 +50,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/reverificationResponse"
         403:
           description: "403 Response"
           content: {}
@@ -72,7 +70,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/jwksResponse"
         500:
           description: 500 response
           content: {}
@@ -107,7 +105,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/healthcheckResponse"
       x-amazon-apigateway-integration:
         type: "MOCK"
         requestTemplates:
@@ -117,3 +115,123 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: "{\"healthcheck\": \"ok\"}"
+
+components:
+  schemas:
+    tokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        scope:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: number
+      required:
+        - access_token
+        - scope
+        - token_type
+        - expires_in
+      additionalProperties: false
+
+    userIdentityResponse:
+      type: object
+      properties:
+        sub:
+          type: string
+        vot:
+          type: string
+        vtm:
+          type: string
+        "https://vocab.account.gov.uk/v1/credentialJWT":
+          type: array
+          items:
+            type: string
+        "https://vocab.account.gov.uk/v1/coreIdentity":
+          type: "object"
+          properties:
+            name:
+              type: array
+              items:
+                $ref: https://vocab.account.gov.uk/v1/json-schemas/Name.json
+            birthDate:
+              type: array
+              items:
+                # TODO: we should export the BirthDate schema as well!
+                # $ref: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
+                type: object
+          required:
+            - name
+            - birthDate
+          additionalProperties: false
+        "https://vocab.account.gov.uk/v1/address":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/PostalAddress.json
+        "https://vocab.account.gov.uk/v1/passport":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/PassportDetails.json
+        "https://vocab.account.gov.uk/v1/drivingPermit":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/DrivingPermit.json
+        "https://vocab.account.gov.uk/v1/socialSecurityRecord":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/SocialSecurityRecord.json
+        "https://vocab.account.gov.uk/v1/returnCode":
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+            required:
+              - code
+            additionalProperties: false
+      required:
+        - sub
+        - vot
+        - vtm
+        - "https://vocab.account.gov.uk/v1/credentialJWT"
+        - "https://vocab.account.gov.uk/v1/returnCode"
+      additionalProperties: false
+
+    reverificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sub:
+          type: string
+        error_code:
+          type: string
+        error_description:
+          type: string
+      required:
+        - success
+        - sub
+      additionalProperties: false
+
+    jwksResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+      required:
+        - keys
+      additionalProperties: false
+
+    healthcheckResponse:
+      type: object
+      properties:
+        healthcheck:
+          type: string
+      required:
+        - healthcheck
+      additionalProperties: false
