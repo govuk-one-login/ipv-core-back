@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
@@ -57,6 +58,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
@@ -90,13 +92,15 @@ public class ProcessJourneyEventHandler
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             List<IpvJourneyTypes> journeyTypes,
-            StateMachineInitializerMode stateMachineInitializerMode)
+            StateMachineInitializerMode stateMachineInitializerMode,
+            List<String> nestedJourneyTypes)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.stateMachines = loadStateMachines(journeyTypes, stateMachineInitializerMode);
+        this.stateMachines =
+                loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -110,9 +114,17 @@ public class ProcessJourneyEventHandler
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
+
+        var nestedJourneyTypes =
+                Stream.of(NestedJourneyTypes.values())
+                        .map(NestedJourneyTypes::getJourneyName)
+                        .toList();
+
         this.stateMachines =
                 loadStateMachines(
-                        List.of(IpvJourneyTypes.values()), StateMachineInitializerMode.STANDARD);
+                        List.of(IpvJourneyTypes.values()),
+                        StateMachineInitializerMode.STANDARD,
+                        nestedJourneyTypes);
     }
 
     @Override
@@ -384,7 +396,8 @@ public class ProcessJourneyEventHandler
 
     private Map<IpvJourneyTypes, StateMachine> loadStateMachines(
             List<IpvJourneyTypes> journeyTypes,
-            StateMachineInitializerMode stateMachineInitializerMode)
+            StateMachineInitializerMode stateMachineInitializerMode,
+            List<String> nestedJourneyTypes)
             throws IOException {
         EnumMap<IpvJourneyTypes, StateMachine> stateMachinesMap =
                 new EnumMap<>(IpvJourneyTypes.class);
@@ -392,7 +405,8 @@ public class ProcessJourneyEventHandler
             stateMachinesMap.put(
                     journeyType,
                     new StateMachine(
-                            new StateMachineInitializer(journeyType, stateMachineInitializerMode)));
+                            new StateMachineInitializer(
+                                    journeyType, stateMachineInitializerMode, nestedJourneyTypes)));
         }
         return stateMachinesMap;
     }

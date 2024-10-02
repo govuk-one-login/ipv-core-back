@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 
 import java.io.IOException;
@@ -83,6 +84,10 @@ class ProcessJourneyEventHandlerTest {
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
     private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
+    private static final List<String> TEST_NESTED_JOURNEY_TYPES =
+            List.of("nested-journey-definition", "doubly-nested-definition");
+    private static final List<String> REAL_NESTED_JOURNEY_TYPES =
+            Stream.of(NestedJourneyTypes.values()).map(NestedJourneyTypes::getJourneyName).toList();
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -105,7 +110,8 @@ class ProcessJourneyEventHandlerTest {
         var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_IP).build();
 
         Map<String, Object> output =
-                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
+                        .handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT.getCode(), output.get(CODE));
@@ -199,7 +205,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(),
-                        StateMachineInitializerMode.STANDARD);
+                        StateMachineInitializerMode.STANDARD,
+                        REAL_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -241,7 +248,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -269,7 +277,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -296,7 +305,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -337,7 +347,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -598,7 +609,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -625,7 +637,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -668,7 +681,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
 
@@ -732,7 +746,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -782,7 +797,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
@@ -835,7 +851,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -880,7 +897,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -910,7 +928,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -940,7 +959,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -972,7 +992,8 @@ class ProcessJourneyEventHandlerTest {
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
-                        StateMachineInitializerMode.TEST);
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -1007,10 +1028,16 @@ class ProcessJourneyEventHandlerTest {
 
     private ProcessJourneyEventHandler getProcessJourneyStepHandler(
             StateMachineInitializerMode stateMachineInitializerMode) throws IOException {
+
         var journeyTypes =
                 stateMachineInitializerMode.equals(StateMachineInitializerMode.TEST)
                         ? List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR)
                         : List.of(IpvJourneyTypes.values());
+
+        var nestedJourneyTypes =
+                stateMachineInitializerMode.equals(StateMachineInitializerMode.TEST)
+                        ? TEST_NESTED_JOURNEY_TYPES
+                        : REAL_NESTED_JOURNEY_TYPES;
 
         return new ProcessJourneyEventHandler(
                 mockAuditService,
@@ -1018,7 +1045,8 @@ class ProcessJourneyEventHandlerTest {
                 mockConfigService,
                 mockClientOAuthSessionService,
                 journeyTypes,
-                stateMachineInitializerMode);
+                stateMachineInitializerMode,
+                nestedJourneyTypes);
     }
 
     private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {

@@ -1,0 +1,32 @@
+name: Nested journey definition
+description: >-
+  A test nested journey
+entryEvents:
+  enterNestedJourneyAtStateOne:
+    targetState: NESTED_STATE_ONE
+  enterNestedJourneyAtStateTwo:
+    targetState: NESTED_STATE_TWO
+nestedJourneyStates:
+  NESTED_STATE_ONE:
+    response:
+      type: page
+      pageId: page-id-nested-state-one
+    parent: PARENT_STATE
+    events:
+      eventOne:
+        targetState: NESTED_STATE_TWO
+  NESTED_STATE_TWO:
+    response:
+      type: page
+      pageId: page-id-nested-state-two
+    events:
+      eventOne:
+        exitEventToEmit: exitEventFromNestedStateTwo
+      eventTwo:
+        targetState: DOUBLY_NESTED_INVOKE_STATE
+
+  DOUBLY_NESTED_INVOKE_STATE:
+    nestedJourney: DOUBLY_NESTED_DEFINITION
+    exitEvents:
+      exitEventFromDoublyNestedStateTwo:
+        exitEventToEmit: exitEventFromDoublyNestedInvokeState

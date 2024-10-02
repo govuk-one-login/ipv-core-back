@@ -7,56 +7,16 @@ import {
   getNestedJourneyStates,
   getOptions,
 } from "./helpers.mjs";
+import {
+  COMMON_JOURNEY_TYPES,
+  CRI_NAMES,
+  JOURNEY_TYPES,
+  NESTED_JOURNEY_TYPES,
+} from "./constants.mjs";
 
 const DEFAULT_JOURNEY_TYPE = "INITIAL_JOURNEY_SELECTION";
 const NESTED_JOURNEY_TYPE_SEARCH_PARAM = "nestedJourneyType";
 const JOURNEY_TYPE_SEARCH_PARAM = "journeyType";
-
-const JOURNEY_TYPES = {
-  INITIAL_JOURNEY_SELECTION: "Initial journey selection",
-  NEW_P1_IDENTITY: "New P1 identity",
-  NEW_P2_IDENTITY: "New P2 identity",
-  EVALUATE_SCORES: "Evaluate scores",
-  REUSE_EXISTING_IDENTITY: "Reuse existing identity",
-  UPDATE_NAME: "Update name",
-  UPDATE_ADDRESS: "Update address",
-  INELIGIBLE: "Ineligible journey",
-  FAILED: "Failed journey",
-  TECHNICAL_ERROR: "Technical error",
-  REPEAT_FRAUD_CHECK: "Repeat fraud check",
-  SESSION_TIMEOUT: "Session timeout",
-  F2F_HAND_OFF: "F2F hand off",
-  F2F_PENDING: "F2F pending",
-  F2F_FAILED: "F2F failed",
-  OPERATIONAL_PROFILE_MIGRATION: "Operational profile migration",
-  OPERATIONAL_PROFILE_REUSE: "Operational profile reuse",
-  REVERIFICATION: "Reverification",
-};
-
-const COMMON_JOURNEY_TYPES = [
-  "NEW_P2_IDENTITY",
-  "REUSE_EXISTING_IDENTITY",
-  "REPEAT_FRAUD_CHECK",
-  "REVERIFICATION",
-  "UPDATE_ADDRESS",
-  "UPDATE_NAME",
-];
-
-const CRI_NAMES = {
-  address: "Address",
-  claimedIdentity: "Claimed Identity",
-  bav: "Bank account",
-  dcmaw: "DCMAW (app)",
-  drivingLicence: "Driving licence (web)",
-  dwpKbv: "DWP KBV",
-  f2f: "Face-to-face",
-  fraud: "Experian fraud",
-  hmrcKbv: "HMRC KBV",
-  kbv: "Experian KBV",
-  nino: "HMRC check (NINO)",
-  ukPassport: "Passport (web)",
-  ticf: "TICF",
-};
 
 mermaid.initialize({
   startOnLoad: false,
@@ -92,18 +52,20 @@ let selectedState = null;
 
 const upperToKebab = (str) => str.toLowerCase().replaceAll("_", "-");
 
-const loadJourneyMaps = async () => {
+const loadJourneyMaps = async (journeyTypes, subFolder) => {
+  const maps = {};
   await Promise.all(
-    Object.keys(JOURNEY_TYPES).map(async (journeyType) => {
-      const journeyResponse = await fetch(
-        `./${encodeURIComponent(upperToKebab(journeyType))}.yaml`,
+    Object.keys(journeyTypes).map(async (journeyType) => {
+      const encodedFilePath = encodeURIComponent(upperToKebab(journeyType));
+
+      const response = await fetch(
+        `./${subFolder ? [subFolder, encodedFilePath].join("/") : encodedFilePath}.yaml`,
       );
-      journeyMaps[journeyType] = yaml.parse(await journeyResponse.text());
+      maps[journeyType] = yaml.parse(await response.text());
     }),
   );
 
-  const nestedResponse = await fetch("./nested-journey-definitions.yaml");
-  nestedJourneys = yaml.parse(await nestedResponse.text());
+  return maps;
 };
 
 const getPageUrl = (id, context) => {
@@ -472,7 +434,12 @@ const setupSearchHandler = () => {
 
 const initialize = async () => {
   setupHeader();
-  await loadJourneyMaps();
+  journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
+  nestedJourneys = await loadJourneyMaps(
+    NESTED_JOURNEY_TYPES,
+    "nested-journeys",
+  );
+
   const { disabledOptions, featureFlagOptions } = getOptions(
     journeyMaps,
     nestedJourneys,

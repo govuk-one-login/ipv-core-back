@@ -17,25 +17,40 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION;
 
 public class StateMachineInitializer {
+    private static final String NESTED_JOURNEYS_SUBFOLDER = "nested-journeys";
+
     private static final ObjectMapper yamlOm =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
     private static final ObjectMapper om = new ObjectMapper();
     private Map<String, State> journeyStates;
     private Map<String, NestedJourneyDefinition> nestedJourneyDefinitions;
     private final StateMachineInitializerMode mode;
+    private final List<String> nestedJourneyTypes;
 
     public StateMachineInitializer(IpvJourneyTypes journeyType) {
-        this(journeyType, StateMachineInitializerMode.STANDARD);
+        this(
+                journeyType,
+                StateMachineInitializerMode.STANDARD,
+                Stream.of(NestedJourneyTypes.values())
+                        .map(NestedJourneyTypes::getJourneyName)
+                        .toList());
     }
 
-    public StateMachineInitializer(IpvJourneyTypes journeyType, StateMachineInitializerMode mode) {
+    public StateMachineInitializer(
+            IpvJourneyTypes journeyType,
+            StateMachineInitializerMode mode,
+            List<String> nestedJourneyTypes) {
         this.journeyType = journeyType;
         this.mode = mode;
+        this.nestedJourneyTypes = nestedJourneyTypes;
     }
 
     private final IpvJourneyTypes journeyType;
@@ -43,8 +58,7 @@ public class StateMachineInitializer {
     public Map<String, State> initialize() throws IOException {
         Journey journey = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
         journeyStates = journey.states();
-        nestedJourneyDefinitions =
-                yamlOm.readValue(getNestedJourneyDefinitionsConfig(), new TypeReference<>() {});
+        nestedJourneyDefinitions = getNestedJourneysFromConfig();
 
         initializeJourneyStates();
 
@@ -181,8 +195,22 @@ public class StateMachineInitializer {
         return readFileToString(journeyType.getPath());
     }
 
-    private String getNestedJourneyDefinitionsConfig() throws IOException {
-        return readFileToString("nested-journey-definitions");
+    private String transformToUpperSnakeCase(String input) {
+        return input.toUpperCase().replace("-", "_");
+    }
+
+    private Map<String, NestedJourneyDefinition> getNestedJourneysFromConfig() throws IOException {
+        var map = new HashMap<String, NestedJourneyDefinition>();
+        for (var nestedJourney : nestedJourneyTypes) {
+            var contents =
+                    readFileToString(
+                            String.format("%s/%s", NESTED_JOURNEYS_SUBFOLDER, nestedJourney));
+
+            var journeyName = transformToUpperSnakeCase(nestedJourney);
+            var journeyDef = yamlOm.readValue(contents, NestedJourneyDefinition.class);
+            map.put(journeyName, journeyDef);
+        }
+        return map;
     }
 
     private String readFileToString(String filename) throws IOException {
