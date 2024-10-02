@@ -35,7 +35,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Copy yaml
-        run: 'cp ./lambdas/process-journey-event/src/main/resources/statemachine/journey-maps/* ./journey-map/public/'
+        run: 'cp -r ./lambdas/process-journey-event/src/main/resources/statemachine/journey-maps/* ./journey-map/public/'
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
