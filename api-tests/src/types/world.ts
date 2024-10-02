@@ -26,7 +26,7 @@ export interface World extends CucumberWorld {
   mfaResetResult?: MfaResetResult;
 
   // Healthcheck results
-  healthCheckResult?: boolean;
+  healthCheckResult?: string;
 
   // JWKS result
   jwksResult?: JSONWebKeySet;
