@@ -7,6 +7,12 @@ paths:
   /token:
     post:
       description: "Exchange an authorization code for an access token"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/tokenRequest"
       responses:
         200:
           description: "The access token"
@@ -42,6 +48,8 @@ paths:
   /user-identity:
     get:
       description: "List of Verifiable Credentials and claims representing the user's identity"
+      security:
+        - bearerAuth: ["user-identity"]
       responses:
         200:
           description: "The list of Verifiable Credentials"
@@ -77,6 +85,8 @@ paths:
   /reverification:
     get:
       description: "Result of a reverification journey"
+      security:
+        - bearerAuth: ["reverification"]
       responses:
         200:
           description: "Reverification success or failure response"
@@ -165,7 +175,37 @@ paths:
               application/json: "{\"healthcheck\": \"ok\"}"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
   schemas:
+    tokenRequest:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum: ["authorization_code"]
+        code:
+          type: string
+        redirect_uri:
+          type: string
+        client_id:
+          type: string
+        client_assertion_type:
+          type: string
+          enum: ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"]
+        client_assertion:
+          type: string
+      required:
+        - grant_type
+        - code
+        - redirect_uri
+        - client_id
+        - client_assertion_type
+        - client_assertion
+
     tokenResponse:
       type: object
       properties:
