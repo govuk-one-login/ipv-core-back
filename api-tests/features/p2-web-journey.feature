@@ -142,7 +142,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -156,11 +156,15 @@ Feature: P2 Web document journey
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'dwpKbv' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -178,7 +182,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -190,7 +194,9 @@ Feature: P2 Web document journey
     Then I get a 'nino' CRI response
     When I submit 'kenneth' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -208,7 +214,7 @@ Feature: P2 Web document journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a '<cri>' event
     Then I get a '<cri>' CRI response
@@ -220,11 +226,15 @@ Feature: P2 Web document journey
     Then I get a 'nino' CRI response
     When I submit 'kenneth' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
