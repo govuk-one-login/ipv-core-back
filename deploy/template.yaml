@@ -2482,6 +2482,7 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/bulk-migrate-vcs
       Timeout: 900
+      ReservedConcurrentExecutions: 1
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
