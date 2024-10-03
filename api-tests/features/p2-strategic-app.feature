@@ -2,7 +2,8 @@
 Feature: M2B Strategic App Journeys
 
   Scenario: MAM journey iphone
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -12,7 +13,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
   Scenario: MAM journey android
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -22,7 +24,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
   Scenario: MAM journey no compatible smartphone
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -32,7 +35,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario: DAD journey iphone
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -42,7 +46,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
 
   Scenario: DAD journey android
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -52,7 +57,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
 
   Scenario: DAD journey no compatible smartphone
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
@@ -62,7 +68,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario: Strategic app no photo ID goes to F2F
-    Given I start a new 'medium-confidence' journey with feature set 'strategicApp'
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response

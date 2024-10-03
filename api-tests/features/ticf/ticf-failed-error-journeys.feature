@@ -81,7 +81,8 @@ Feature: TICF failed/error journeys
 
   Rule: Via no-photo-id
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
-      When I start a new 'medium-confidence' journey with feature set 'm2bBetaExperianKbv'
+      Given I activate the 'm2bBetaExperianKbv' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

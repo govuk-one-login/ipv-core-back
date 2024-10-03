@@ -2,7 +2,8 @@
 Feature: P1 journey
 
   Scenario: P1 App Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -21,7 +22,8 @@ Feature: P1 journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Passport after DCMAW dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -46,7 +48,8 @@ Feature: P1 journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Driving Licence after DCMAW dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -71,7 +74,8 @@ Feature: P1 journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Face to Face after DCMAW dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -91,7 +95,8 @@ Feature: P1 journey
     Then I get a 'page-face-to-face-handoff' page response
 
   Scenario: P1 Passport after multiple dropouts
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -124,7 +129,8 @@ Feature: P1 journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 DCMAW after KBV dropout Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -157,7 +163,8 @@ Feature: P1 journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 F2F Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'

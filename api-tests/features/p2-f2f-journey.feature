@@ -25,7 +25,8 @@ Feature: P2 F2F journey
 
     Scenario: Pending F2F request delete identity
       # Initial journey
-      Given I start a new 'medium-confidence' journey with feature set 'pendingF2FResetEnabled'
+      Given I activate the 'pendingF2FResetEnabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
       When I submit a 'next' event
       Then I get a 'pyi-f2f-delete-details' page response
@@ -37,7 +38,8 @@ Feature: P2 F2F journey
 
     Scenario: Pending F2F request continue without delete identity
       # Initial journey
-      Given I start a new 'medium-confidence' journey with feature set 'pendingF2FResetEnabled'
+      Given I activate the 'pendingF2FResetEnabled' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
       When I submit a 'next' event
       Then I get a 'pyi-f2f-delete-details' page response
