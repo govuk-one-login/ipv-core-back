@@ -72,7 +72,8 @@ Feature: CIMIT - Alternate doc
       | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
   Scenario Outline: Alternate doc mitigation user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
-    Given I start a new 'medium-confidence' journey with feature set 'dwpKbvTest'
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -181,7 +182,8 @@ Feature: CIMIT - Alternate doc
       | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
   Scenario Outline: Alternate doc mitigation via passport or DL - HMRC KBV
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -214,7 +216,8 @@ Feature: CIMIT - Alternate doc
       | 'ukPassport'        | 'kenneth-passport-needs-alternate-doc'       | 'pyi-passport-no-match-another-way'        | 'drivingLicence'| 'kenneth-driving-permit-valid' |
 
   Scenario Outline: Alternate doc mitigation user drops out of HMRC KBV CRI via thin file or failed checks - HMRC KBV
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
