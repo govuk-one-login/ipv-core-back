@@ -419,37 +419,33 @@ When(
   },
 );
 
-function assertNoUnexpectedJarProperties(
+const assertNoUnexpectedJarProperties = (
   jarPayload: CriStubResponseJarPayload,
   expectedNonStandardValues: string[] | undefined = undefined,
-) {
-  for (const key of removeStandardJarValues(Object.keys(jarPayload))) {
-    const expectedValueExists =
-      expectedNonStandardValues === undefined
-        ? false
-        : expectedNonStandardValues.includes(key);
-    assert.equal(
-      expectedValueExists,
-      true,
+) => {
+  for (const key of Object.keys(jarPayload)) {
+    const propertyIsExpected =
+      STANDARD_JAR_VALUES.includes(key) ||
+      expectedNonStandardValues?.includes(key);
+
+    assert.ok(
+      propertyIsExpected,
       `Non-standard JAR property ${key} with value ${JSON.stringify(jarPayload[key as keyof typeof jarPayload])} sent to CRI but not specified in test`,
     );
   }
-}
+};
 
-function removeStandardJarValues(jarValues: string[]): string[] {
-  return jarValues.filter(
-    (v) =>
-      v !== "sub" &&
-      v !== "shared_claims" &&
-      v !== "iss" &&
-      v !== "response_type" &&
-      v !== "client_id" &&
-      v !== "govuk_signin_journey_id" &&
-      v !== "aud" &&
-      v !== "nbf" &&
-      v !== "redirect_uri" &&
-      v !== "state" &&
-      v !== "exp" &&
-      v !== "iat",
-  );
-}
+const STANDARD_JAR_VALUES = [
+  "sub",
+  "shared_claims",
+  "iss",
+  "response_type",
+  "client_id",
+  "govuk_signin_journey_id",
+  "aud",
+  "nbf",
+  "redirect_uri",
+  "state",
+  "exp",
+  "iat",
+];
