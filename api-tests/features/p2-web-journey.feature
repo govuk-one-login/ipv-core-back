@@ -131,7 +131,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: User drops out of DWP KBV CRI via thin file or failed checks using <cri> - DWP KBV
-    Given I start a new 'medium-confidence' journey with feature set 'dwpKbvTest'
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -166,7 +167,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: Successful P2 identity via Web using <cri> - HMRC KBV
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -195,7 +197,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: User drops out of HMRC KBV CRI via thin file or failed checks using <cri> - HMRC KBV
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

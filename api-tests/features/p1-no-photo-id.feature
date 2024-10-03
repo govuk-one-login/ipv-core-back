@@ -120,7 +120,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,dwpKbvTest'
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -220,7 +221,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - HMRC KBV
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,m2bBetaHmrcKbv'
+    Given I activate the 'p1Journeys,m2bBetaHmrcKbv' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -246,7 +248,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey user drops out of HMRC KBV CRI via thin file or failed checks - HMRC KBV
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,m2bBetaHmrcKbv'
+    Given I activate the 'p1Journeys,m2bBetaHmrcKbv' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
