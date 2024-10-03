@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 
 import java.util.Map;
 
+@SuppressWarnings({"javaarchitecture:S7027"}) // Circular dependency with implementations
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = BasicEvent.class),
