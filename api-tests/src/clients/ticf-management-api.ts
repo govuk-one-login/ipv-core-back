@@ -7,25 +7,24 @@ export const parseTableForTicfManagementParameters = (table: DataTable) => {
   const rowsHash = table.rowsHash();
   const responseDelay = parseInt(rowsHash.responseDelay) || 0;
   const cis = rowsHash.cis && rowsHash.cis.split(",");
+  const statusCode = parseInt(rowsHash.statusCode) || 200;
 
   return {
-    ci: cis || undefined,
+    evidence: {
+      ci: cis || undefined,
+      type: rowsHash.type || "RiskAssessment",
+      txn: rowsHash.txn === "" ? undefined : getRandomString(16),
+    },
     responseDelay,
-    type: rowsHash.type || "RiskAssessment",
-    txn: rowsHash.txn === "" ? undefined : getRandomString(16),
-    statusCode: rowsHash.statusCode,
+    statusCode,
   };
 };
 
 export const postUserToTicfManagementApi = async (
   userId: string,
-  parsedTicfManagementParameters: {
-    statusCode: string;
-  } & TicfManagementParameters,
+  parsedTicfManagementParameters: TicfManagementParameters,
 ) => {
-  const { statusCode } = parsedTicfManagementParameters;
-  const statusCodeUrlParam = statusCode ? `/statuscode/${statusCode}` : "";
-  const url = `${config.ticf.managementTicfUrl}/management/user/${userId}${statusCodeUrlParam}`;
+  const url = `${config.ticf.managementTicfUrl}/management/user/${userId}`;
 
   const response = await fetch(url, {
     method: "POST",
@@ -33,10 +32,7 @@ export const postUserToTicfManagementApi = async (
       "x-api-key": config.ticf.managementTicfApiKey,
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      ...parsedTicfManagementParameters,
-      statusCode: undefined,
-    }),
+    body: JSON.stringify(parsedTicfManagementParameters),
   });
 
   if (!response.ok) {
