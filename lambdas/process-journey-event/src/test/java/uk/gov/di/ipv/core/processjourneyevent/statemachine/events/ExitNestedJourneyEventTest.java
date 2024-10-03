@@ -47,9 +47,11 @@ class ExitNestedJourneyEventTest {
     @Test
     void initializeShouldThrowAnUnsupportedOperationException() {
         ExitNestedJourneyEvent exitNestedJourneyEvent = new ExitNestedJourneyEvent();
-        Map<String, State> emptyMap = Map.of();
+        Map<String, State> emptyStateMap = Map.of();
+        Map<String, Event> emptyEventMap = Map.of();
+
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> exitNestedJourneyEvent.initialize("name", emptyMap));
+                () -> exitNestedJourneyEvent.initialize("name", emptyStateMap, emptyEventMap));
     }
 }

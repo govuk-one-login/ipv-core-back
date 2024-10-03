@@ -35,7 +35,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: Successful P2 identity via Web using <cri> - DWP KBV
-    Given I start a new 'medium-confidence' journey with feature set 'dwpKbvTest'
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -68,7 +69,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: Successful P2 identity via Web using <cri> - DWP KBV PIP page dropout
-    Given I start a new 'medium-confidence' journey with feature set 'dwpKbvTest'
+    Given I activate the 'dwpKbvTest' feature sets
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -101,7 +103,8 @@ Feature: P2 Web document journey
       | ukPassport     | kenneth-passport-valid       |
 
   Scenario Outline: Successful P2 identity via Web using - DWP KBV transition page dropout
-    Given I start a new 'medium-confidence' journey with feature set 'dwpKbvTest'
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -122,6 +125,106 @@ Feature: P2 Web document journey
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+    Examples:
+      | cri            | details                      |
+      | drivingLicence | kenneth-driving-permit-valid |
+      | ukPassport     | kenneth-passport-valid       |
+
+  Scenario Outline: User drops out of DWP KBV CRI via thin file or failed checks using <cri> - DWP KBV
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'next' event
+    Then I get a 'page-pre-dwp-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'dwpKbv' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+    Examples:
+      | cri            | details                      |
+      | drivingLicence | kenneth-driving-permit-valid |
+      | ukPassport     | kenneth-passport-valid       |
+
+  Scenario Outline: Successful P2 identity via Web using <cri> - HMRC KBV
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'nino' CRI response
+    When I submit 'kenneth' details to the CRI stub
+    Then I get a 'hmrcKbv' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+    Examples:
+      | cri            | details                      |
+      | drivingLicence | kenneth-driving-permit-valid |
+      | ukPassport     | kenneth-passport-valid       |
+
+  Scenario Outline: User drops out of HMRC KBV CRI via thin file or failed checks using <cri> - HMRC KBV
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'nino' CRI response
+    When I submit 'kenneth' details to the CRI stub
+    Then I get a 'hmrcKbv' CRI response
+    When I get an 'access_denied' OAuth error from the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response

@@ -24,7 +24,8 @@ public class ExitNestedJourneyEvent implements Event {
     }
 
     @Override
-    public void initialize(String name, Map<String, State> states) {
+    public void initialize(
+            String name, Map<String, State> states, Map<String, Event> nestedJourneyExitEvents) {
         throw new UnsupportedOperationException(
                 "Initialize of ExitNestedJourneyEvent not supported");
     }

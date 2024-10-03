@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 
 import java.util.Map;
 
+@SuppressWarnings({"javaarchitecture:S7027"}) // Circular dependency with implementations
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @JsonSubTypes({
     @JsonSubTypes.Type(value = BasicEvent.class),
@@ -17,5 +18,6 @@ import java.util.Map;
 public interface Event {
     TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException;
 
-    void initialize(String name, Map<String, State> states);
+    void initialize(
+            String name, Map<String, State> states, Map<String, Event> nestedJourneyExitEvents);
 }

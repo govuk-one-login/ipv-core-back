@@ -3,6 +3,7 @@ import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
 import * as evcsStubClient from "../clients/evcs-stub-client.js";
+import * as cimitStubClient from "../clients/cimit-stub-client.js";
 import {
   generateCriStubBody,
   generateCriStubOAuthErrorBody,
@@ -416,6 +417,9 @@ When(
       this.userId,
       generatePostVcsBody(credentials),
     );
+    for (const credential of credentials) {
+      await cimitStubClient.postDetectCi({ signed_jwt: credential });
+    }
   },
 );
 

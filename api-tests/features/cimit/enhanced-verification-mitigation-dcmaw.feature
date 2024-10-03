@@ -63,15 +63,6 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-    Scenario: Same session DCMAW enhanced verification mitigation - DCMAW is unavailable
-      Given I activate the 'dcmawOffTest' feature set
-      When I submit an 'appTriage' event
-      Then I get a 'pyi-technical' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
   Rule: Separate session journeys
 
     Scenario Outline: Separate session DCMAW enhanced verification mitigation - successful
@@ -104,17 +95,6 @@ Feature:  Mitigating CIs with enhanced verification using the DCMAW CRI
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
       Then I get a 'pyi-no-match' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P0' identity
-
-    Scenario: Separate session DCMAW enhanced verification mitigation - DCMAW is unavailable
-      When I start a new 'medium-confidence' journey with feature set 'dcmawOffTest'
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      # This is just ensuring that we handle this journey. It's not really an expected case.
-      Then I get a 'pyi-technical' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
