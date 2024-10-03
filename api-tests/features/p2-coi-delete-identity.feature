@@ -7,7 +7,8 @@ Feature: Delete identity
         | dcmaw   | kenneth-driving-permit-valid |
         | address | kenneth-current              |
         | fraud   | kenneth-score-2              |
-    When I start a new 'medium-confidence' journey with feature set 'updateDetailsAccountDeletion'
+    And I activate the 'updateDetailsAccountDeletion' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'update-details' event
     Then I get a 'update-details' page response

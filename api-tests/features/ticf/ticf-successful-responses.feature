@@ -69,7 +69,8 @@ Feature: TICF successful responses
     Scenario: Via app - TICF request has a response delay less than 5s
       Given TICF CRI will respond with default parameters
         | responseDelay | 4         |
-      When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
+      And I activate the 'ticfCriBeta' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -94,7 +95,8 @@ Feature: TICF successful responses
       # To prime TICF to time out, we set txn to be undefined
       Given TICF CRI will respond with default parameters
         | txn   |                             |
-      When I start a new 'medium-confidence' journey with feature set 'ticfCriBeta'
+      And I activate the 'ticfCriBeta' feature set
+      When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

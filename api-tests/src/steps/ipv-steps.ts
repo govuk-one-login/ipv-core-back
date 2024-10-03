@@ -85,11 +85,9 @@ const startNewJourney = async (
   inheritedIdentity:
     | { inheritedIdentityId?: string; errorJwt?: boolean }
     | undefined,
-  featureSet: string | undefined,
 ): Promise<void> => {
   world.userId = world.userId ?? getRandomString(16);
   world.journeyId = getRandomString(16);
-  world.featureSet = featureSet || world.featureSet;
   world.ipvSessionId = await internalClient.initialiseIpvSession(
     await generateInitialiseIpvSessionBody({
       subject: world.userId,
@@ -115,21 +113,16 @@ When(
 );
 
 When(
-  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: and)?(?: with inherited identity '([<>\w-]+)')?(?: with feature set '([<>\w-,]+)')?$/,
+  /^I start a new ?'([<>\w-]+)' journey( with reprove identity)?(?: and)?(?: with inherited identity '([<>\w-]+)')?$/,
   async function (
     this: World,
     journeyType: string,
     reproveIdentity: " with reprove identity" | undefined,
     inheritedIdentityId: string | undefined,
-    featureSet: string | undefined,
   ): Promise<void> {
-    await startNewJourney(
-      this,
-      journeyType,
-      !!reproveIdentity,
-      { inheritedIdentityId },
-      featureSet,
-    );
+    await startNewJourney(this, journeyType, !!reproveIdentity, {
+      inheritedIdentityId,
+    });
   },
 );
 
@@ -137,7 +130,7 @@ When(
   "I start a new {string} journey with invalid redirect uri",
   async function (this: World, journeyType: string): Promise<void> {
     try {
-      await startNewJourney(this, journeyType, false, undefined, undefined);
+      await startNewJourney(this, journeyType, false, undefined);
     } catch (e) {
       if (e instanceof Error) {
         this.error = e;
@@ -170,35 +163,22 @@ Then(
 When(
   "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
   async function (this: World, journeyType: string): Promise<void> {
-    await startNewJourney(
-      this,
-      journeyType,
-      false,
-      { errorJwt: true },
-      undefined,
-    );
+    await startNewJourney(this, journeyType, false, { errorJwt: true });
   },
 );
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response(?: with feature set '([\w-,]+)')?$/,
+  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
     expectedPage: string,
-    featureSet: string | undefined,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(
-        this,
-        journeyType,
-        false,
-        undefined,
-        featureSet || undefined,
-      );
+      await startNewJourney(this, journeyType, false, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");

@@ -256,7 +256,7 @@ Feature: Disabled CRI journeys
   Rule: HMRC KBV is disabled
 
     Scenario: Experian KBV is offered if DWP KBV unsuitable
-      Given I activate the 'dwpKbvTest' feature sets
+      Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event

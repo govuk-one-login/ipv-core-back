@@ -2,7 +2,8 @@
 Feature: P1 No Photo Id Journey
 
   Scenario: P1 No Photo Id Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -33,7 +34,8 @@ Feature: P1 No Photo Id Journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -68,7 +70,8 @@ Feature: P1 No Photo Id Journey
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 No Photo Id Journey - NINO dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,dwpKbvTest'
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -84,7 +87,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'no-photo-id-abandon-find-another-way' page response
 
   Scenario: P1 No Photo Id Journey - DWP KBV
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,dwpKbvTest'
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -116,7 +120,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV PIP page dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,dwpKbvTest'
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -148,7 +153,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No Photo Id Journey - DWP KBV transition page dropout
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys,dwpKbvTest'
+    Given I activate the 'p1Journeys,dwpKbvTest' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
@@ -180,7 +186,8 @@ Feature: P1 No Photo Id Journey
     Then I get a 'P1' identity
 
   Scenario: P1 No suitable ID
-    Given I start a new 'low-confidence' journey with feature set 'p1Journeys'
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
