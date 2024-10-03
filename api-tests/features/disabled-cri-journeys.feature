@@ -101,7 +101,7 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-    Scenario Outline: Access denied from passport or driving licence CRI returns user to multidoc page
+    Scenario Outline: Choosing another way after access-denied from passport or DL CRIs leads to escape page
       Given I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
@@ -112,12 +112,14 @@ Feature: Disabled CRI journeys
       When I submit a '<cri>' event
       Then I get a '<cri>' CRI response
       When I submit an 'access-denied' event
-      Then I get a 'page-multiple-doc-check' page response
+      Then I get a 'prove-identity-another-type-photo-id' page response with context '<context>'
+      When I submit an 'f2f' event
+      Then I get a 'pyi-escape' page response
 
       Examples:
-        | cri            |
-        | ukPassport     |
-        | drivingLicence |
+        | cri            | context        |
+        | ukPassport     | passport       |
+        | drivingLicence | drivingLicence |
 
     Scenario: Separate session mitigation with enhanced verification and no photo ID leads to ineligible
       Given the subject already has the following credentials
