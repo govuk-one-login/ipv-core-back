@@ -338,6 +338,5 @@ When(
     for (const credential of credentials) {
       await cimitStubClient.postDetectCi({ signed_jwt: credential });
     }
-    await cimitStubClient.postMitigateCi({ signed_jwts: credentials });
   },
 );
