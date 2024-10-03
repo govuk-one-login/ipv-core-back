@@ -100,7 +100,9 @@ states:
           updateDetailsAccountDeletion:
             targetJourney: FAILED
             targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-
+      dl-auth-source-check:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
 
   # Journey States
 
@@ -202,6 +204,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_GIVEN_ONLY
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -215,6 +219,15 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
 
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_GIVEN_ONLY:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY
+
   DCMAW_FAMILY_ONLY:
     response:
       type: cri
@@ -223,6 +236,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_ONLY
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_FAMILY_ONLY
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -235,6 +250,15 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_FAMILY_ONLY:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_ONLY
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_ONLY:
     response:
@@ -376,6 +400,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_GIVEN_WITH_ADDRESS
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -389,6 +415,15 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
 
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_GIVEN_WITH_ADDRESS:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS
+
   DCMAW_FAMILY_WITH_ADDRESS:
     response:
       type: cri
@@ -397,6 +432,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_WITH_ADDRESS
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_FAMILY_WITH_ADDRESS
       not-found:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
@@ -409,6 +446,15 @@ states:
       fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_FAMILY_WITH_ADDRESS:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE_FAMILY_WITH_ADDRESS
 
   POST_DCMAW_SUCCESS_PAGE_GIVEN_WITH_ADDRESS:
     response:

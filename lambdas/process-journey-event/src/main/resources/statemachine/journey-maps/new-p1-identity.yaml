@@ -79,6 +79,9 @@ states:
       alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: FAILED
+        targetState: FAILED
 
   CRI_TICF_STATE:
     events:
@@ -189,6 +192,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
       not-found:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       access-denied:
@@ -197,6 +202,41 @@ states:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       fail-with-no-ci:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      access-denied:
+        targetState: RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL
+      alternate-doc-invalid-dl:
+        targetState: RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION
+
+  RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: another-way-after-dl
+
+  RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl-another-way
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
