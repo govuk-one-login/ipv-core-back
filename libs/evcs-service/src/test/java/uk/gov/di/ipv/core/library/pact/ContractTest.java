@@ -43,10 +43,9 @@ import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
 @PactTestFor(providerName = "EvcsProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
-    private static final String EVCS_API_KEY =
-            "L2BGccX59Ea9PMJ3ipu9t7r99ykD2Tlh1KYpdjdg"; // pragma: allowlist secret
-    private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
-    private static final String TEST_USER_ID = "9bd7f130-4238-4532-83cd-01cb29584834";
+    private static final String EVCS_API_KEY = "test-evcs-api-key"; // pragma: allowlist secret
+    private static final String TEST_EVCS_ACCESS_TOKEN = "test-acess-token";
+    private static final String TEST_USER_ID = "test-user-id";
     private static final String INVALID_USER_ID = "invalid-user-id";
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(PENDING_RETURN);
 
@@ -82,13 +81,16 @@ class ContractTest {
                 .thenReturn(EVCS_API_KEY);
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRetrieveVcRequestReturnsUsersVcWith200(
             PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("VCS exist")
                 .given("EVC has users VC")
-                .uponReceiving("A request to get VCS")
+                .given("test-evcs-api-key is a valid API key")
+                .given("test-acess-token is a valid access token")
+                .given("test-user-id has one PENDING_RETURN VC")
+                .uponReceiving("A request to get users VCS")
                 .path("/vcs/" + TEST_USER_ID)
                 .query("state=" + PENDING_RETURN)
                 .method("GET")
@@ -113,13 +115,12 @@ class ContractTest {
                                         vcs.object(
                                                 vc -> {
                                                     vc.stringType("vc", "vc");
-                                                    vc.stringType("state", "ABANDONED");
+                                                    vc.stringType("state", "PENDING_RETURN");
                                                     vc.object(
                                                             "metadata",
                                                             metadata -> {
                                                                 metadata.stringType(
-                                                                        "reason",
-                                                                        "abandoned due inactivity");
+                                                                        "reason", "testing");
                                                                 metadata.numberType(
                                                                         "timestampMs",
                                                                         1711721297123L);
@@ -145,21 +146,19 @@ class ContractTest {
         assertEquals(1, evcsGetUserVCsDto.vcs().size());
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidRetrieveVcRequestReturnsWith400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("VCS exist")
                 .given("EVC has users VC")
-                .uponReceiving("A request to get VCS")
-                .path("/vcs/" + INVALID_USER_ID)
+                .given("test-evcs-api-key is not provided")
+                .given("test-acess-token is a valid access token")
+                .given("test-user-id has one PENDING_RETURN VC")
+                .uponReceiving("An invalid request to get VCS")
+                .path("/vcs/" + TEST_USER_ID)
                 .query("state=" + PENDING_RETURN)
                 .method("GET")
-                .headers(
-                        Map.of(
-                                "x-api-key",
-                                EVCS_API_KEY,
-                                "Authorization",
-                                "Bearer " + TEST_EVCS_ACCESS_TOKEN))
+                .headers(Map.of("Authorization", "Bearer " + TEST_EVCS_ACCESS_TOKEN))
                 .willRespondWith()
                 .status(400)
                 .toPact();
@@ -174,17 +173,20 @@ class ContractTest {
                 EvcsServiceException.class,
                 () -> {
                     evcsClient.getUserVcs(
-                            INVALID_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
                 });
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidRetrieveVcRequestReturnsWith404(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("VCS exist")
-                .given("EVC has users VC")
+                .given("EVC has users has no VC")
+                .given("test-evcs-api-key is a valid API key")
+                .given("test-acess-token is a valid access token")
+                .given("test-user-id has no PENDING_RETURN VC")
                 .uponReceiving("A request to get VCS")
-                .path("/vcs/" + INVALID_USER_ID)
+                .path("/vcs/" + TEST_USER_ID)
                 .query("state=" + PENDING_RETURN)
                 .method("GET")
                 .headers(
@@ -204,15 +206,18 @@ class ContractTest {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
         var userVcs =
-                evcsClient.getUserVcs(INVALID_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
+                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
         assertEquals(Collections.emptyList(), userVcs.vcs());
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
-    public RequestResponsePact invalidRetrieveVcRequestReturnsWith401(PactDslWithProvider builder) {
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidApiKeyReturns401(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("VCS exist")
-                .given("EVC has users VC")
+                .given("EVC has users has VC")
+                .given("invalid-api-key is an invalid API key")
+                .given("test-acess-token is a valid access token")
+                .given("test-user-id has no PENDING_RETURN VC")
                 .uponReceiving("A request to get VCS")
                 .path("/vcs/" + INVALID_USER_ID)
                 .query("state=" + PENDING_RETURN)
@@ -229,7 +234,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidRetrieveVcRequestReturnsWith401")
+    @PactTestFor(pactMethod = "invalidApiKeyReturns401")
     void testRetrieveVcRequestReturns401(MockServer mockServer) {
         // Mock Data
         lenient()
@@ -246,11 +251,53 @@ class ContractTest {
                 });
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidAuthorizationTokenReturns403(PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("VCS exist")
+                .given("EVC has users has VC")
+                .given("test-evcs-api-key is a valid API key")
+                .given("invalid-access-token is an invalid access token")
+                .given("test-user-id has no PENDING_RETURN VC")
+                .uponReceiving("A request to get VCS")
+                .path("/vcs/" + INVALID_USER_ID)
+                .query("state=" + PENDING_RETURN)
+                .method("GET")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                "Authorization",
+                                "Bearer " + "invalid-access-token"))
+                .willRespondWith()
+                .status(403)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "invalidAuthorizationTokenReturns403")
+    void testRetrieveVcRequestReturns403(MockServer mockServer) {
+        // Mock Data
+        lenient()
+                .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
+                .thenReturn(EVCS_API_KEY);
+
+        // Under Test
+        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+        assertThrows(
+                EvcsServiceException.class,
+                () -> {
+                    evcsClient.getUserVcs(
+                            INVALID_USER_ID, "invalid-access-token", VC_STATES_FOR_QUERY);
+                });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validCreateUserVcReturnsMessageIdWith200(
             PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("User has a valid VC")
+                .given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
@@ -277,7 +324,7 @@ class ContractTest {
                                         vcObject.object(
                                                 "metadata",
                                                 metadata -> {
-                                                    metadata.stringType("reason", "ABANDON");
+                                                    metadata.stringType("reason", "testing");
                                                     metadata.stringType(
                                                             "timestampMs", "1711721297123");
                                                     metadata.stringType(
@@ -310,20 +357,14 @@ class ContractTest {
         }
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
-    public RequestResponsePact invalidCreateUserVcReturnsMessageIdWith400(
-            PactDslWithProvider builder) {
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidCreateUserVcReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("User has a valid VC")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + INVALID_USER_ID)
                 .method("POST")
-                .headers(
-                        Map.of(
-                                "x-api-key",
-                                EVCS_API_KEY,
-                                CONTENT_TYPE,
-                                ContentType.APPLICATION_JSON.toString()))
+                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
                 .body(getRequestBodyForUserVC())
                 .willRespondWith()
                 .status(400)
@@ -331,7 +372,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidCreateUserVcReturnsMessageIdWith400")
+    @PactTestFor(pactMethod = "invalidCreateUserVcReturns400")
     void testCreateUserVcRequestReturns400(MockServer mockServer) {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
@@ -342,11 +383,45 @@ class ContractTest {
                 });
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validCreateUserVcReturns409(PactDslWithProvider builder) {
+        return builder.given("EVCS client exist")
+                .given("User has a valid VC")
+                .given("User already has VC in EVCS")
+                .given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create EVCS user VCs")
+                .path("/vcs/" + TEST_USER_ID)
+                .method("POST")
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
+                .body(getRequestBodyForUserVC())
+                .willRespondWith()
+                .status(409)
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validCreateUserVcReturns409")
+    void testCreateUserVcRequestReturns409(MockServer mockServer) {
+        // Under Test
+        EvcsClient evcsClient = new EvcsClient(mockConfigService);
+        assertThrows(
+                EvcsServiceException.class,
+                () -> {
+                    evcsClient.storeUserVCs(TEST_USER_ID, EVCS_CREATE_USER_VCS_DTO);
+                });
+    }
+
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validUpdateUserVcReturnsMessageIdWith204(
             PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("User has a valid VC")
+                .given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("PATCH")
@@ -372,7 +447,7 @@ class ContractTest {
                                         vcObject.object(
                                                 "metadata",
                                                 metadata -> {
-                                                    metadata.stringType("reason", "ABANDON");
+                                                    metadata.stringType("reason", "testing");
                                                     metadata.stringType(
                                                             "timestampMs", "1711721297123");
                                                     metadata.stringType(
@@ -396,20 +471,14 @@ class ContractTest {
         }
     }
 
-    @Pact(provider = "EvcsProvider", consumer = "EvcsConsumer")
-    public RequestResponsePact invalidUpdateUserVcReturnsMessageIdWith400(
-            PactDslWithProvider builder) {
+    @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact invalidUpdateUserVcReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("User has a valid VC")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + INVALID_USER_ID)
                 .method("PATCH")
-                .headers(
-                        Map.of(
-                                "x-api-key",
-                                EVCS_API_KEY,
-                                CONTENT_TYPE,
-                                ContentType.APPLICATION_JSON.toString()))
+                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
                 .body(getRequestBodyUpdateVC())
                 .willRespondWith()
                 .status(400)
@@ -417,7 +486,7 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidUpdateUserVcReturnsMessageIdWith400")
+    @PactTestFor(pactMethod = "invalidUpdateUserVcReturns400")
     void testUpdateVcRequestReturns400(MockServer mockServer) {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
