@@ -89,24 +89,6 @@ states:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
-      appTriageAndroid:
-        targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-        checkIfDisabled:
-          dcmawIphone:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      appTriageIphone:
-        targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE

@@ -16,8 +16,6 @@ Feature: Identity reuse update details
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
         When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -31,8 +29,6 @@ Feature: Identity reuse update details
         When I submit a 'given-names-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -50,8 +46,6 @@ Feature: Identity reuse update details
         When I submit a 'family-name-only' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
         When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
@@ -82,8 +76,6 @@ Feature: Identity reuse update details
         When I submit a 'family-name-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
         When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
@@ -104,8 +96,6 @@ Feature: Identity reuse update details
         When I submit a 'given-names-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
         Then I get a 'dcmaw' CRI response
         When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'

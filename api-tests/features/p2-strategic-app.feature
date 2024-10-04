@@ -6,6 +6,8 @@ Feature: M2B Strategic App Journeys
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response
@@ -16,6 +18,8 @@ Feature: M2B Strategic App Journeys
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
     When I submit an 'appTriageIphone' event
     Then I get a 'pyi-triage-mobile-confirm' page response
     When I submit an 'next' event
@@ -25,6 +29,8 @@ Feature: M2B Strategic App Journeys
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
@@ -36,6 +42,8 @@ Feature: M2B Strategic App Journeys
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
     When I submit an 'appTriageAndroid' event
     Then I get a 'pyi-triage-mobile-confirm' page response
     When I submit an 'next' event
@@ -45,6 +53,8 @@ Feature: M2B Strategic App Journeys
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
@@ -57,6 +67,8 @@ Feature: M2B Strategic App Journeys
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
     Then I get a 'pyi-triage-select-smartphone' page response
@@ -68,6 +80,8 @@ Feature: M2B Strategic App Journeys
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
     Then I get a 'pyi-triage-select-smartphone' page response
@@ -78,6 +92,8 @@ Feature: M2B Strategic App Journeys
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event

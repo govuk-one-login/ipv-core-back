@@ -4,13 +4,21 @@ description: >-
   and handover to the appropriate journey type.
 entryEvents:
   appTriage:
-    targetState: SELECT_DEVICE_PAGE
-  appTriageIphone:
-    targetState: MOBILE_IPHONE_CONFIRM_PAGE
-  appTriageAndroid:
-    targetState: MOBILE_ANDROID_CONFIRM_PAGE
+    targetState: IDENTIFY_DEVICE
 
 nestedJourneyStates:
+  IDENTIFY_DEVICE:
+    response:
+      type: page
+      pageId: identify-device
+    events:
+      appTriage:
+        targetState: SELECT_DEVICE_PAGE
+      appTriageIphone:
+        targetState: MOBILE_IPHONE_CONFIRM_PAGE
+      appTriageAndroid:
+        targetState: MOBILE_ANDROID_CONFIRM_PAGE
+
   SELECT_DEVICE_PAGE:
     response:
       type: page

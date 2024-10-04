@@ -16,8 +16,6 @@ Feature: Identity reuse update details failures
             When I submit a 'given-names-only' event
             Then I get a 'page-update-name' page response
             When I submit an 'update-name' event
-            Then I get a 'identify-device' page response
-            When I submit an 'appTriage' event
             Then I get a 'dcmaw' CRI response
 
         @FastFollow
