@@ -42,6 +42,8 @@ const config = {
   cimit: {
     managementCimitUrl: getMandatoryConfig("CIMIT_STUB_BASE_URL"),
     managementCimitApiKey: getMandatoryConfig("MANAGEMENT_CIMIT_STUB_API_KEY"),
+    internalApiUrl: getMandatoryConfig("CIMIT_INTERNAL_API_URL"),
+    internalApiKey: getMandatoryConfig("CIMIT_INTERNAL_API_KEY"),
   },
   credentialIssuers: {
     generateCredentialApiKey: getMandatoryConfig("CRI_STUB_GEN_CRED_API_KEY"),

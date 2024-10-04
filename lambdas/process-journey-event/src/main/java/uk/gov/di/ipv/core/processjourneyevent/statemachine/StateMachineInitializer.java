@@ -112,7 +112,7 @@ public class StateMachineInitializer {
                     if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
                         exitNestedJourneyEvent.setNestedJourneyExitEvents(nestedJourneyExitEvents);
                     } else {
-                        event.initialize(eventName, eventStatesSource);
+                        event.initialize(eventName, eventStatesSource, nestedJourneyExitEvents);
                     }
                 });
     }
@@ -124,12 +124,11 @@ public class StateMachineInitializer {
             Map<String, Event> nestedJourneyExitEvents) {
         state.setName(stateName);
         state.setJourneyType(journeyType);
-        NestedJourneyDefinition nestedJourneyDefinition =
-                nestedJourneyDefinitions.get(state.getNestedJourney());
-        NestedJourneyDefinition nestedJourneyDefinitionCopy =
-                deepCopyNestedJourneyDefinition(nestedJourneyDefinition);
         state.setNestedJourneyDefinition(
-                initializeNestedJourneyDefinition(state, nestedJourneyDefinitionCopy));
+                initializeNestedJourneyDefinition(
+                        state,
+                        deepCopyNestedJourneyDefinition(
+                                nestedJourneyDefinitions.get(state.getNestedJourney()))));
         initializeExitStateEvents(state, journeyStates, nestedJourneyExitEvents);
     }
 

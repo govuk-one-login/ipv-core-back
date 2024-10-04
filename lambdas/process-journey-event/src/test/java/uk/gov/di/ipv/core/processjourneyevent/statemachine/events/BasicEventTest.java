@@ -108,26 +108,60 @@ class BasicEventTest {
 
     @Test
     void initializeShouldSetAttributes() {
-        BasicEvent basicEvent = new BasicEvent();
-        BasicState targetStateObj = new BasicState();
+        var basicEvent = new BasicEvent();
+        var targetStateObj = new BasicState();
         basicEvent.setTargetState("TARGET_STATE");
 
-        BasicEvent checkIfDisabledEvent = new BasicEvent();
-        checkIfDisabledEvent.setTargetState("CHECK_STATE");
-        BasicState checkStateObj = new BasicState();
+        var checkIfDisabledEvent = new BasicEvent();
+        checkIfDisabledEvent.setTargetState("CHECK_IF_DISABLED_STATE");
+        var checkIfDisabledStateObj = new BasicState();
 
-        basicEvent.setCheckIfDisabled(new LinkedHashMap<>(Map.of("aCriId", checkIfDisabledEvent)));
+        var exitNestedJourneyEvent = new ExitNestedJourneyEvent();
+        exitNestedJourneyEvent.setExitEventToEmit("getMetOut");
+        var nestedJourneyExitEvent = new BasicEvent();
+
+        var checkFeatureFlagEvent = new BasicEvent();
+        checkFeatureFlagEvent.setTargetState("CHECK_FLAG_STATE");
+        var checkFeatureFlagStateObj = new BasicState();
+
+        var checkJourneyContextEvent = new BasicEvent();
+        checkJourneyContextEvent.setTargetState("CHECK_CONTEXT_STATE");
+        var checkJourneyContextStateObj = new BasicState();
+
+        basicEvent.setCheckIfDisabled(
+                new LinkedHashMap<>(
+                        Map.of(
+                                "aCriId",
+                                checkIfDisabledEvent,
+                                "exitEvent",
+                                exitNestedJourneyEvent)));
+        basicEvent.setCheckFeatureFlag(new LinkedHashMap<>(Map.of("aFlag", checkFeatureFlagEvent)));
+        basicEvent.setCheckJourneyContext(
+                new LinkedHashMap<>(Map.of("aContext", checkJourneyContextEvent)));
 
         basicEvent.initialize(
                 "eventName",
                 Map.of(
                         "TARGET_STATE", targetStateObj,
-                        "CHECK_STATE", checkStateObj));
+                        "CHECK_IF_DISABLED_STATE", checkIfDisabledStateObj,
+                        "CHECK_FLAG_STATE", checkFeatureFlagStateObj,
+                        "CHECK_CONTEXT_STATE", checkJourneyContextStateObj),
+                Map.of("getMeOut", nestedJourneyExitEvent));
 
         assertEquals("eventName", basicEvent.getName());
         assertEquals(targetStateObj, basicEvent.getTargetStateObj());
         assertEquals(
-                checkStateObj,
+                checkIfDisabledStateObj,
                 ((BasicEvent) basicEvent.getCheckIfDisabled().get("aCriId")).getTargetStateObj());
+        assertEquals(
+                checkFeatureFlagStateObj,
+                ((BasicEvent) basicEvent.getCheckFeatureFlag().get("aFlag")).getTargetStateObj());
+        assertEquals(
+                checkJourneyContextStateObj,
+                ((BasicEvent) basicEvent.getCheckJourneyContext().get("aContext"))
+                        .getTargetStateObj());
+        assertEquals(
+                nestedJourneyExitEvent,
+                exitNestedJourneyEvent.getNestedJourneyExitEvents().get("getMeOut"));
     }
 }

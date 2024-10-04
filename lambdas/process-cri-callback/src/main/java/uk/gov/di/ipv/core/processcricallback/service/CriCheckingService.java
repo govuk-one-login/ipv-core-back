@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
@@ -35,13 +36,17 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
+import uk.gov.di.model.PersonWithDocuments;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
@@ -61,7 +66,8 @@ public class CriCheckingService {
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
     private static final JourneyResponse JOURNEY_INVALID_REQUEST =
             new JourneyResponse(JourneyUris.JOURNEY_INVALID_REQUEST_PATH);
-
+    private static final JourneyResponse JOURNEY_DL_AUTH_SOURCE_CHECK =
+            new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH);
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -239,9 +245,10 @@ public class CriCheckingService {
             }
         }
 
-        if (!userIdentityService.areVcsCorrelated(
+        var sessionCredentials =
                 sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))) {
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
+        if (!userIdentityService.areVcsCorrelated(sessionCredentials)) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
@@ -251,6 +258,30 @@ public class CriCheckingService {
             }
         }
 
+        if (configService.enabled(DL_AUTH_SOURCE_CHECK)
+                && getDcmawDlVc(newVcs).isPresent()
+                && getSuccessfulDlVc(sessionCredentials).isEmpty()) {
+            return JOURNEY_DL_AUTH_SOURCE_CHECK;
+        }
+
         return JOURNEY_NEXT;
+    }
+
+    private Optional<VerifiableCredential> getDcmawDlVc(List<VerifiableCredential> vcs) {
+        return vcs.stream()
+                .filter(vc -> Cri.DCMAW.equals(vc.getCri()))
+                .filter(
+                        vc ->
+                                vc.getCredential().getCredentialSubject()
+                                                instanceof PersonWithDocuments personWithDocuments
+                                        && personWithDocuments.getDrivingPermit() != null)
+                .findFirst();
+    }
+
+    private Optional<VerifiableCredential> getSuccessfulDlVc(List<VerifiableCredential> vcs) {
+        return vcs.stream()
+                .filter(vc -> Cri.DRIVING_LICENCE.equals(vc.getCri()))
+                .filter(VcHelper::isSuccessfulVc)
+                .findFirst();
     }
 }

@@ -15,5 +15,6 @@
       "checkMethod": "kbv"
     }
   ],
-  "ci": ["NEEDS-ENHANCED-VERIFICATION"]
+  "ci": ["NEEDS-ENHANCED-VERIFICATION"],
+  "txn": "9Q9RQKCWJA"
 }

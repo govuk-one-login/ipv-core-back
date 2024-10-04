@@ -288,6 +288,45 @@ class JourneyMapTest {
                     if (event instanceof ExitNestedJourneyEvent exitNestedJourneyEvent) {
                         actualExitEvents.add(exitNestedJourneyEvent.getExitEventToEmit());
                     }
+                    if (event instanceof BasicEvent basicEvent) {
+                        if (basicEvent.getCheckIfDisabled() != null) {
+                            basicEvent.getCheckIfDisabled().values().stream()
+                                    .filter(
+                                            disableEvent ->
+                                                    disableEvent instanceof ExitNestedJourneyEvent)
+                                    .forEach(
+                                            disabledEvent ->
+                                                    actualExitEvents.add(
+                                                            ((ExitNestedJourneyEvent) disabledEvent)
+                                                                    .getExitEventToEmit()));
+                        }
+                        if (basicEvent.getCheckFeatureFlag() != null) {
+                            basicEvent.getCheckFeatureFlag().values().stream()
+                                    .filter(
+                                            checkFlagEvent ->
+                                                    checkFlagEvent
+                                                            instanceof ExitNestedJourneyEvent)
+                                    .forEach(
+                                            checkFlagEvent ->
+                                                    actualExitEvents.add(
+                                                            ((ExitNestedJourneyEvent)
+                                                                            checkFlagEvent)
+                                                                    .getExitEventToEmit()));
+                        }
+                        if (basicEvent.getCheckJourneyContext() != null) {
+                            basicEvent.getCheckJourneyContext().values().stream()
+                                    .filter(
+                                            checkContextEvent ->
+                                                    checkContextEvent
+                                                            instanceof ExitNestedJourneyEvent)
+                                    .forEach(
+                                            checkContextEvent ->
+                                                    actualExitEvents.add(
+                                                            ((ExitNestedJourneyEvent)
+                                                                            checkContextEvent)
+                                                                    .getExitEventToEmit()));
+                        }
+                    }
                 }
             }
             if (nestedState instanceof NestedJourneyInvokeState nestedNestedState) {

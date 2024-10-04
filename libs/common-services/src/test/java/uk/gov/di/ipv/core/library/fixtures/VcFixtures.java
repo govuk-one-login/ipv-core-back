@@ -941,6 +941,28 @@ public interface VcFixtures {
                             .build(),
                     Instant.ofEpochSecond(1705986521));
 
+    VerifiableCredential DCMAW_PASSPORT_VC =
+            generateVerifiableCredential(
+                    "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                    DCMAW,
+                    TestVc.builder()
+                            .evidence(
+                                    List.of(
+                                            TestVc.TestEvidence.builder()
+                                                    .txn("bcd2346")
+                                                    .strengthScore(4)
+                                                    .validityScore(2)
+                                                    .verificationScore(3)
+                                                    .build()))
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .name(List.of(MORGAN_SARAH_MEREDYTH_NAME))
+                                            .address(List.of(ADDRESS_4))
+                                            .passport(PASSPORT_DETAILS)
+                                            .build())
+                            .build(),
+                    Instant.ofEpochSecond(1705986521));
+
     static VerifiableCredential vcF2fM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()

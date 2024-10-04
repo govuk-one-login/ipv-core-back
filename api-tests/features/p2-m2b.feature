@@ -2,7 +2,8 @@
 Feature: M2B No Photo Id Journey
 
   Scenario: M2B Journey
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaExperianKbv'
+    Given I activate the 'm2bBetaExperianKbv' feature set
+    Given I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -34,7 +35,8 @@ Feature: M2B No Photo Id Journey
     Then I get a 'P2' identity
 
   Scenario: M2B Journey with HMRC KBV
-    Given I start a new 'medium-confidence' journey with feature set 'm2bBetaHmrcKbv'
+    Given I activate the 'm2bBetaHmrcKbv' feature set
+    When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response

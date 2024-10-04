@@ -386,47 +386,15 @@ core:
     updateDetailsAccountDeletion:
       featureFlags:
         updateDetailsAccountDeletion: true
-    hmrcKbvBeta:
-      credentialIssuers:
-        hmrcKbv:
-          enabled: true
-    drivingLicenseTest:
-      credentialIssuers:
-        drivingLicence:
-          enabled: false
-    dcmawOffTest:
-      credentialIssuers:
-        dcmaw:
-          enabled: false
-    hmrcKbvAndCimitSepSession:
-      credentialIssuers:
-        hmrcKbv:
-          enabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
-    m2bBetaHmrcKbv:
-      credentialIssuers:
-        bav:
-          enabled: true
-        hmrcKbv:
-          enabled: true
-    m2bBetaExperianKbv:
-      credentialIssuers:
-        bav:
-          enabled: true
-        hmrcKbv:
-          enabled: false
     deleteDetailsTestJourney:
       featureFlags:
         deleteDetailsEnabled: true
     pendingF2FResetEnabled:
       featureFlags:
         pendingF2FResetEnabled: true
-    ticfCriBeta:
-      credentialIssuers:
-        ticf:
-          enabled: true
     strategicApp:
       featureFlags:
         strategicAppEnabled: true
@@ -439,6 +407,61 @@ core:
     p1Journeys:
       featureFlags:
         p1JourneysEnabled: true
+    # Disabling CRIs
+    f2fDisabled:
+      credentialIssuers:
+        f2f:
+          enabled: false
+    ticfDisabled:
+      credentialIssuers:
+        ticf:
+          enabled: false
+    bavDisabled:
+      credentialIssuers:
+        bav:
+          enabled: false
+    hmrcKbvDisabled:
+      credentialIssuers:
+        hmrcKbv:
+          enabled: false
+    dwpKbvDisabled:
+      credentialIssuers:
+        dwpKbv:
+          enabled: false
+    drivingLicenseTest:
+      credentialIssuers:
+        drivingLicence:
+          enabled: false
+    dcmawOffTest:
+      credentialIssuers:
+        dcmaw:
+          enabled: false
+    # Enabling CRIs
+    hmrcKbvBeta:
+      credentialIssuers:
+        hmrcKbv:
+          enabled: true
+    hmrcKbvAndCimitSepSession:
+      credentialIssuers:
+        hmrcKbv:
+          enabled: true
+    ticfCriBeta:
+      credentialIssuers:
+        ticf:
+          enabled: true
+    # CRI enablement combinations
+    m2bBetaHmrcKbv:
+      credentialIssuers:
+        bav:
+          enabled: true
+        hmrcKbv:
+          enabled: true
+    m2bBetaExperianKbv:
+      credentialIssuers:
+        bav:
+          enabled: true
+        hmrcKbv:
+          enabled: false
     dwpKbvTest:
       credentialIssuers:
         dwpKbv:
