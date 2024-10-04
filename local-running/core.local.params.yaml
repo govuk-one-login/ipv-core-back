@@ -367,6 +367,9 @@ core:
     drivingLicenceAuthCheck:
       featureFlags:
         drivingLicenceAuthCheck: true
+      credentialIssuers:
+        drivingLicence:
+          allowedSharedAttributes: "name,birthDate,address,drivingPermit"
     mfaReset:
       featureFlags:
         mfaResetEnabled: true

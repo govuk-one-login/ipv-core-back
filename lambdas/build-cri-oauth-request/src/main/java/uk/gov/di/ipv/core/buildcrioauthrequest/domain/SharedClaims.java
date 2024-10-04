@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.domain.BaseClaim;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.Name;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -25,4 +26,5 @@ public class SharedClaims extends BaseClaim {
     private Set<PostalAddress> address = new HashSet<>();
     private String emailAddress;
     private Set<SocialSecurityRecordDetails> socialSecurityRecord = new HashSet<>();
+    private Set<DrivingPermitDetails> drivingPermit = new HashSet<>();
 }

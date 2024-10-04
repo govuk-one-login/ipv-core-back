@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
@@ -94,7 +95,8 @@ class AuthorizationRequestHelperTest {
                     Set.of(BirthDateGenerator.createBirthDate("2011-01-01")),
                     Set.of(new PostalAddress()),
                     TEST_EMAIL_ADDRESS,
-                    Set.of(new SocialSecurityRecordDetails()));
+                    Set.of(new SocialSecurityRecordDetails()),
+                    Set.of(new DrivingPermitDetails()));
 
     private ECDSASigner signer;
 

@@ -21,6 +21,7 @@ public class SharedClaimsHelper {
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
     public static final String SHARED_CLAIM_ATTR_EMAIL = "emailAddress";
     public static final String SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD = "socialSecurityRecord";
+    public static final String SHARED_CLAIM_ATTR_DRIVING_PERMIT = "drivingPermit";
 
     private SharedClaimsHelper() {}
 
@@ -44,7 +45,8 @@ public class SharedClaimsHelper {
                         .with("emails", sharedClaims.getEmailAddress() == null ? 0 : 1)
                         .with(
                                 "socialSecurityRecords",
-                                sharedClaims.getSocialSecurityRecord().size()));
+                                sharedClaims.getSocialSecurityRecord().size())
+                        .with("drivingPermits", sharedClaims.getDrivingPermit().size()));
 
         stripDisallowedSharedClaims(sharedClaims, allowedSharedClaims);
 
@@ -73,6 +75,10 @@ public class SharedClaimsHelper {
                     .getSocialSecurityRecord()
                     .addAll(personWithDocuments.getSocialSecurityRecord());
         }
+        if (credentialSubject instanceof PersonWithDocuments personWithDocuments
+                && personWithDocuments.getDrivingPermit() != null) {
+            sharedClaims.getDrivingPermit().addAll(personWithDocuments.getDrivingPermit());
+        }
     }
 
     private static void stripDisallowedSharedClaims(
@@ -91,6 +97,9 @@ public class SharedClaimsHelper {
         }
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD)) {
             credentialsSharedClaims.setSocialSecurityRecord(null);
+        }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_DRIVING_PERMIT)) {
+            credentialsSharedClaims.setDrivingPermit(null);
         }
     }
 }
