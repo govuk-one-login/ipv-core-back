@@ -10,6 +10,7 @@ public class PageSummary {
     private final String exclusiveStartKey;
     private final int count;
     private int migrated;
+    private int migratedVcs;
     private int skippedNonP2;
     private int skippedAlreadyMigrated;
     private int skippedPartiallyMigrated;
@@ -40,6 +41,10 @@ public class PageSummary {
     public synchronized void incrementMigrated() {
         migrated++;
         total++;
+    }
+
+    public synchronized void incrementMigratedVcs(int migratedVcsCount) {
+        migratedVcs += migratedVcsCount;
     }
 
     public synchronized void incrementSkippedNonP2() {

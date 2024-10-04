@@ -354,6 +354,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
         var timestamp = Instant.now();
         try {
             storeVcsInEvcs(reportItem.getUserId(), vcs, batchId, timestamp);
+            pageSummary.incrementMigratedVcs(vcs.size());
         } catch (Exception e) {
             logError(
                     "Migration failed - error writing to EVCS",
