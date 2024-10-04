@@ -289,6 +289,11 @@ Resources:
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Private API Gateway ${Environment}
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: true
       EndpointConfiguration:
         Type: PRIVATE
         VPCEndpointIds:
@@ -353,6 +358,11 @@ Resources:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Private Testing API Gateway ${Environment}
       Description: A parallel to the private internal API but opened up for testing
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: true
       EndpointConfiguration:
         Type: REGIONAL
       DefinitionBody:
@@ -524,6 +534,11 @@ Resources:
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
+      MethodSettings:
+        - LoggingLevel: INFO
+          ResourcePath: '/*'
+          HttpMethod: '*'
+          MetricsEnabled: true
       StageName: !Sub ${Environment}
       TracingEnabled: true
       DefinitionBody:
