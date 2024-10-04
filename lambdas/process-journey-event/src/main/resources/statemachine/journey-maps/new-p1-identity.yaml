@@ -476,21 +476,12 @@ states:
       type: page
       pageId: no-photo-id-abandon-find-another-way
     events:
-#      PYIC-6736 Delete once core front is updated to use appTriage
       mobileApp:
         targetState: CRI_DCMAW
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      appTriage:
-        targetState: CRI_DCMAW
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
         checkIfDisabled:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
