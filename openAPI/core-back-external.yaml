@@ -258,9 +258,7 @@ components:
             birthDate:
               type: array
               items:
-                # TODO: we should export the BirthDate schema as well!
-                # $ref: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
-                type: object
+                $ref: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
           required:
             - name
             - birthDate
