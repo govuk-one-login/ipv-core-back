@@ -49,7 +49,7 @@ paths:
     get:
       description: "List of Verifiable Credentials and claims representing the user's identity"
       security:
-        - bearerAuth: ["user-identity"]
+        - bearerAuth: []
       responses:
         200:
           description: "The list of Verifiable Credentials"
@@ -86,7 +86,7 @@ paths:
     get:
       description: "Result of a reverification journey"
       security:
-        - bearerAuth: ["reverification"]
+        - bearerAuth: []
       responses:
         200:
           description: "Reverification success or failure response"
