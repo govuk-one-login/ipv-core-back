@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +28,6 @@ import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 @Setter
 @ExcludeFromGeneratedCoverageReport
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserIdentity {
 
     @JsonProperty(VCS_CLAIM_NAME)

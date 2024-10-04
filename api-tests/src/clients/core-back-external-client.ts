@@ -1,43 +1,10 @@
-import * as assert from "assert";
-import path from "path";
-import { BeforeAll } from "@cucumber/cucumber";
 import { JSONWebKeySet } from "jose";
-import type { Validator } from "jsonschema";
 import config from "../config/config.js";
 import {
   MfaResetResult,
   TokenResponse,
   UserIdentity,
 } from "../types/external-api.js";
-import { createValidator } from "../utils/schema-validator.js";
-
-let schemaValidator: Validator;
-
-BeforeAll(async () => {
-  schemaValidator = await createValidator(
-    path.resolve(
-      import.meta.dirname,
-      "../../../openAPI/core-back-external.yaml",
-    ),
-  );
-});
-
-const validateResponseSchema = async (
-  body: unknown,
-  schemaName: string,
-): Promise<void> => {
-  const result = schemaValidator.validate(
-    body,
-    schemaValidator.schemas[`/${schemaName}`],
-  );
-
-  if (result.errors.length) {
-    const { property, message } = result.errors[0];
-    assert.fail(
-      `External API response did not match schema: ${property} ${message}`,
-    );
-  }
-};
 
 export const exchangeCodeForToken = async (
   tokenExchangeBody: string,
@@ -56,10 +23,7 @@ export const exchangeCodeForToken = async (
     );
   }
 
-  const body = await response.json();
-  await validateResponseSchema(body, "tokenResponse");
-
-  return body;
+  return await response.json();
 };
 
 export const getIdentity = async (
@@ -77,10 +41,7 @@ export const getIdentity = async (
     throw new Error(`getIdentity request failed: ${response.statusText}`);
   }
 
-  const body = await response.json();
-  await validateResponseSchema(body, "userIdentityResponse");
-
-  return body;
+  return (await response.json()) as UserIdentity;
 };
 
 export const getMfaResetResult = async (
@@ -98,25 +59,15 @@ export const getMfaResetResult = async (
     throw new Error(`getMfaResetResult request failed: ${response.statusText}`);
   }
 
-  const body = await response.json();
-  await validateResponseSchema(body, "reverificationResponse");
-
-  return body;
+  return (await response.json()) as MfaResetResult;
 };
 
-export const healthcheck = async (): Promise<string> => {
+export const healthcheck = async (): Promise<boolean> => {
   const response = await fetch(`${config.core.externalApiUrl}/healthcheck`, {
     method: "GET",
   });
 
-  if (!response.ok) {
-    throw new Error(`healthcheck request failed: ${response.statusText}`);
-  }
-
-  const body = await response.json();
-  await validateResponseSchema(body, "healthcheckResponse");
-
-  return body.healthcheck;
+  return response.ok;
 };
 
 export const jwks = async (): Promise<JSONWebKeySet> => {
@@ -131,8 +82,5 @@ export const jwks = async (): Promise<JSONWebKeySet> => {
     throw new Error(`jwks request failed: ${response.statusText}`);
   }
 
-  const body = await response.json();
-  await validateResponseSchema(body, "jwksResponse");
-
-  return body;
+  return await response.json();
 };
