@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processasynccricredential.domain;
 import lombok.Builder;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.Cri;
 
 import java.util.List;
 
@@ -14,11 +13,8 @@ public class SuccessAsyncCriResponse extends BaseAsyncCriResponse {
 
     @Builder
     private SuccessAsyncCriResponse(
-            Cri credentialIssuer,
-            String userId,
-            String oauthState,
-            List<String> verifiableCredentialJWTs) {
-        super(credentialIssuer, userId, oauthState);
+            String userId, String oauthState, List<String> verifiableCredentialJWTs) {
+        super(userId, oauthState);
         this.verifiableCredentialJWTs = verifiableCredentialJWTs;
     }
 }
