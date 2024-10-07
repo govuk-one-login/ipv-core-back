@@ -205,12 +205,10 @@ public class ProcessAsyncCriCredentialHandler
                         oauthCriConfig.getComponentId());
 
         for (var vc : vcs) {
-            AuditEventUser auditEventUser = new AuditEventUser(userId, null, null, null);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
-            if (Cri.F2F.equals(cri)) {
-                boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
-                sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
-            }
+            AuditEventUser auditEventUser = new AuditEventUser(userId, null, null, null);
+            sendIpvVcReceivedAuditEvent(auditEventUser, vc, cri, isSuccessful);
 
             submitVcToCiStorage(vc);
             postMitigatingVc(vc);
@@ -230,9 +228,7 @@ public class ProcessAsyncCriCredentialHandler
             }
             verifiableCredentialService.persistUserCredentials(vc);
 
-            if (Cri.F2F.equals(cri)) {
-                sendIpvVcConsumedAuditEvent(auditEventUser, vc);
-            }
+            sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri);
         }
     }
 
@@ -240,33 +236,39 @@ public class ProcessAsyncCriCredentialHandler
         final List<CriResponseItem> criResponseItems =
                 criResponseService.getCriResponseItemsByUserId(userId);
         return criResponseItems.stream()
-                .filter((item) -> Objects.equals(item.getOauthState(), state))
+                .filter(item -> Objects.equals(item.getOauthState(), state))
                 .findFirst();
     }
 
     private void sendIpvVcReceivedAuditEvent(
             AuditEventUser auditEventUser,
             VerifiableCredential verifiableCredential,
+            Cri cri,
             boolean isSuccessful)
             throws UnrecognisedVotException {
-        AuditEvent auditEvent =
-                AuditEvent.createWithoutDeviceInformation(
-                        AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        getExtensionsForAudit(verifiableCredential, isSuccessful));
-        auditService.sendAuditEvent(auditEvent);
+        if (Cri.F2F.equals(cri)) {
+            AuditEvent auditEvent =
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            getExtensionsForAudit(verifiableCredential, isSuccessful));
+            auditService.sendAuditEvent(auditEvent);
+        }
     }
 
-    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, VerifiableCredential vc) {
-        AuditEvent auditEvent =
-                AuditEvent.createWithoutDeviceInformation(
-                        AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        null,
-                        getRestrictedAuditDataForF2F(vc));
-        auditService.sendAuditEvent(auditEvent);
+    void sendIpvVcConsumedAuditEvent(
+            AuditEventUser auditEventUser, VerifiableCredential vc, Cri cri) {
+        if (Cri.F2F.equals(cri)) {
+            AuditEvent auditEvent =
+                    AuditEvent.createWithoutDeviceInformation(
+                            AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            null,
+                            getRestrictedAuditDataForF2F(vc));
+            auditService.sendAuditEvent(auditEvent);
+        }
     }
 
     private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse) {
