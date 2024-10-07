@@ -7,13 +7,37 @@ paths:
   /token:
     post:
       description: "Exchange an authorization code for an access token"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/tokenRequest"
       responses:
         200:
           description: "The access token"
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/tokenResponse"
+        400:
+          description: "Bad request - e.g. an malformed request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
+        401:
+          description: "Unauthorized - e.g. bad client authentication"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "POST"
@@ -23,19 +47,34 @@ paths:
 
   /user-identity:
     get:
-      description: "Returns a list of Verifiable Credentials representig the users identity"
+      description: "List of Verifiable Credentials and claims representing the user's identity"
+      security:
+        - bearerAuth: []
       responses:
         200:
           description: "The list of Verifiable Credentials"
           content:
             application/json:
               schema:
-                type: "array"
-                items:
-                  type: "object"
+                $ref: "#/components/schemas/userIdentityResponse"
+        401:
+          description: "Unauthorized - e.g. missing access token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
         403:
-          description: "403 Response"
-          content: {}
+          description: "Forbidden - e.g. expired access token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "POST"
@@ -45,17 +84,34 @@ paths:
 
   /reverification:
     get:
-      description: "Returns a success or failure response based on the results of the reverification journey"
+      description: "Result of a reverification journey"
+      security:
+        - bearerAuth: []
       responses:
         200:
           description: "Reverification success or failure response"
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/reverificationResponse"
+        401:
+          description: "Unauthorized - e.g. missing access token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
         403:
-          description: "403 Response"
-          content: {}
+          description: "Forbidden - e.g. expired access token"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
+        500:
+          description: "Internal server error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/oauthError"
       x-amazon-apigateway-integration:
         type: "aws_proxy"
         httpMethod: "POST"
@@ -65,16 +121,16 @@ paths:
 
   /.well-known/jwks.json:
     get:
-      description: "returns JWKS Json"
+      description: "JSON Web Key Set (JWKS) for IPV Core public keys"
       responses:
         200:
           description: "The list of public keys"
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/jwksResponse"
         500:
-          description: 500 response
+          description: "Error fetching public keys"
           content: {}
       x-amazon-apigateway-integration:
         type: aws
@@ -100,14 +156,14 @@ paths:
 
   /healthcheck:
     get:
-      description: "returns a 200 for Route53 health checks to use"
+      description: "Stub endpoint for service health checks to use"
       responses:
         200:
           description: "A healthcheck response"
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/healthcheckResponse"
       x-amazon-apigateway-integration:
         type: "MOCK"
         requestTemplates:
@@ -117,3 +173,162 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: "{\"healthcheck\": \"ok\"}"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    tokenRequest:
+      type: object
+      properties:
+        grant_type:
+          type: string
+          enum: ["authorization_code"]
+        code:
+          type: string
+        redirect_uri:
+          type: string
+        client_id:
+          type: string
+        client_assertion_type:
+          type: string
+          enum: ["urn:ietf:params:oauth:client-assertion-type:jwt-bearer"]
+        client_assertion:
+          type: string
+      required:
+        - grant_type
+        - code
+        - redirect_uri
+        - client_id
+        - client_assertion_type
+        - client_assertion
+
+    tokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        scope:
+          type: string
+        token_type:
+          type: string
+        expires_in:
+          type: number
+      required:
+        - access_token
+        - scope
+        - token_type
+        - expires_in
+      additionalProperties: false
+
+    oauthError:
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string
+      required:
+        - error
+      additionalProperties: false
+
+    userIdentityResponse:
+      type: object
+      properties:
+        sub:
+          type: string
+        vot:
+          type: string
+        vtm:
+          type: string
+        "https://vocab.account.gov.uk/v1/credentialJWT":
+          type: array
+          items:
+            type: string
+        "https://vocab.account.gov.uk/v1/coreIdentity":
+          type: "object"
+          properties:
+            name:
+              type: array
+              items:
+                $ref: https://vocab.account.gov.uk/v1/json-schemas/Name.json
+            birthDate:
+              type: array
+              items:
+                $ref: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
+          required:
+            - name
+            - birthDate
+          additionalProperties: false
+        "https://vocab.account.gov.uk/v1/address":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/PostalAddress.json
+        "https://vocab.account.gov.uk/v1/passport":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/PassportDetails.json
+        "https://vocab.account.gov.uk/v1/drivingPermit":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/DrivingPermit.json
+        "https://vocab.account.gov.uk/v1/socialSecurityRecord":
+          type: "array"
+          items:
+            $ref: https://vocab.account.gov.uk/v1/json-schemas/SocialSecurityRecord.json
+        "https://vocab.account.gov.uk/v1/returnCode":
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+            required:
+              - code
+            additionalProperties: false
+      required:
+        - sub
+        - vot
+        - vtm
+        - "https://vocab.account.gov.uk/v1/credentialJWT"
+        - "https://vocab.account.gov.uk/v1/returnCode"
+      additionalProperties: false
+
+    reverificationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        sub:
+          type: string
+        error_code:
+          type: string
+        error_description:
+          type: string
+      required:
+        - success
+        - sub
+      additionalProperties: false
+
+    jwksResponse:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: object
+      required:
+        - keys
+      additionalProperties: false
+
+    healthcheckResponse:
+      type: object
+      properties:
+        healthcheck:
+          type: string
+      required:
+        - healthcheck
+      additionalProperties: false
