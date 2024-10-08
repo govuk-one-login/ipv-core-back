@@ -52,7 +52,9 @@ paths:
         - bearerAuth: []
       responses:
         200:
-          description: "The list of Verifiable Credentials"
+          description: >-
+            The list of Verifiable Credentials
+            Details of the identity claims can be found in the vocab schema: https://vocab.account.gov.uk/
           content:
             application/json:
               schema:
@@ -254,11 +256,17 @@ components:
             name:
               type: array
               items:
-                $ref: https://vocab.account.gov.uk/v1/json-schemas/Name.json
+                type: object
+                # API Gateway doesn't support these external references
+                # but they may be turned into $ref's by tooling that does
+                description: https://vocab.account.gov.uk/v1/json-schemas/Name.json
             birthDate:
               type: array
               items:
-                $ref: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
+                type: object
+                # API Gateway doesn't support these external references
+                # but they may be turned into $ref's by tooling that does
+                description: https://vocab.account.gov.uk/v1/json-schemas/BirthDate.json
           required:
             - name
             - birthDate
@@ -266,19 +274,31 @@ components:
         "https://vocab.account.gov.uk/v1/address":
           type: "array"
           items:
-            $ref: https://vocab.account.gov.uk/v1/json-schemas/PostalAddress.json
+            type: object
+            # API Gateway doesn't support these external references
+            # but they may be turned into $ref's by tooling that does
+            description: https://vocab.account.gov.uk/v1/json-schemas/PostalAddress.json
         "https://vocab.account.gov.uk/v1/passport":
           type: "array"
           items:
-            $ref: https://vocab.account.gov.uk/v1/json-schemas/PassportDetails.json
+            type: object
+            # API Gateway doesn't support these external references
+            # but they may be turned into $ref's by tooling that does
+            description: https://vocab.account.gov.uk/v1/json-schemas/PassportDetails.json
         "https://vocab.account.gov.uk/v1/drivingPermit":
           type: "array"
           items:
-            $ref: https://vocab.account.gov.uk/v1/json-schemas/DrivingPermit.json
+            type: object
+            # API Gateway doesn't support these external references
+            # but they may be turned into $ref's by tooling that does
+            description: https://vocab.account.gov.uk/v1/json-schemas/DrivingPermit.json
         "https://vocab.account.gov.uk/v1/socialSecurityRecord":
           type: "array"
           items:
-            $ref: https://vocab.account.gov.uk/v1/json-schemas/SocialSecurityRecord.json
+            type: object
+            # API Gateway doesn't support these external references
+            # but they may be turned into $ref's by tooling that does
+            description: https://vocab.account.gov.uk/v1/json-schemas/SocialSecurityRecord.json
         "https://vocab.account.gov.uk/v1/returnCode":
           type: array
           items:

@@ -12,10 +12,12 @@ interface VocabSchema extends Schema {
   $defs: Record<string, Schema>;
 }
 
+const VOCAB_ORIGIN = "https://vocab.account.gov.uk";
+
 // Fetch an external schema from https://vocab.account.gov.uk
 const fetchVocabSchema = async (ref: string): Promise<VocabSchema> => {
   const refUri = new URL(ref);
-  if (refUri.origin !== "https://vocab.account.gov.uk") {
+  if (refUri.origin !== VOCAB_ORIGIN) {
     throw new Error(`Refusing to import schema from ${ref}`);
   }
   const res = await fetch(refUri);
@@ -29,17 +31,41 @@ const fetchVocabSchema = async (ref: string): Promise<VocabSchema> => {
   return vocabSchema;
 };
 
+// Because API Gateway doesn't support the $ref field linking to external schemas
+// we store the ref on a non-standard property and rewrite it here
+const restoreRefs = (schema: Schema): void => {
+  if (
+    schema.type === "object" &&
+    schema.description?.startsWith(VOCAB_ORIGIN)
+  ) {
+    schema.$ref = schema.description;
+    delete schema.type;
+  }
+
+  if (schema.items) {
+    if (Array.isArray(schema.items)) {
+      schema.items.forEach(restoreRefs);
+    } else {
+      restoreRefs(schema.items);
+    }
+  }
+
+  if (schema.properties) {
+    Object.values(schema.properties).forEach(restoreRefs);
+  }
+};
+
 export const createValidator = async (
   openApiPath: string,
 ): Promise<Validator> => {
   const validator = new Validator();
-  const openApiSchema = YAML.parse(
-    await readFile(openApiPath, "utf-8"),
-  ) as OpenApiSchema;
+  const schemaFile = await readFile(openApiPath, "utf-8");
+  const openApiSchema = YAML.parse(schemaFile) as OpenApiSchema;
 
-  Object.entries(openApiSchema.components.schemas).forEach(([key, schema]) =>
-    validator.addSchema(schema, `/${key}`),
-  );
+  Object.entries(openApiSchema.components.schemas).forEach(([key, schema]) => {
+    restoreRefs(schema);
+    validator.addSchema(schema, `/${key}`);
+  });
 
   while (validator.unresolvedRefs.length) {
     const ref = validator.unresolvedRefs[0];
