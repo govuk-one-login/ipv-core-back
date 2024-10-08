@@ -105,6 +105,7 @@ class BulkMigrateVcsHandlerTest {
         auditInOrder.verifyNoMoreInteractions();
     }
 
+    @SuppressWarnings("java:S5961") // Too many assertions
     @Test
     void handlerShouldCorrectlyHandleMigrateAndSkip() throws Exception {
         var reportUserIdentityItems =
@@ -142,6 +143,7 @@ class BulkMigrateVcsHandlerTest {
                         mockContext);
 
         assertEquals(1, report.getTotalMigrated());
+        assertEquals(3, report.getTotalMigratedVcs());
         assertEquals(1, report.getTotalSkippedNoVcs());
         assertEquals(1, report.getTotalSkippedAlreadyMigrated());
         assertEquals(1, report.getTotalSkippedPartiallyMigrated());
@@ -421,6 +423,7 @@ class BulkMigrateVcsHandlerTest {
 
             assertEquals(1, report.getTotalEvaluated());
             assertEquals(1, report.getTotalMigrated());
+            assertEquals(3, report.getTotalMigratedVcs());
 
             verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(1, auditEventArgumentCaptor.getAllValues().size());
@@ -464,6 +467,7 @@ class BulkMigrateVcsHandlerTest {
 
             assertEquals(1, report.getTotalEvaluated());
             assertEquals(0, report.getTotalMigrated());
+            assertEquals(0, report.getTotalMigratedVcs());
 
             verify(mockAuditService).sendAuditEvent(auditEventArgumentCaptor.capture());
             assertEquals(1, auditEventArgumentCaptor.getAllValues().size());
@@ -508,6 +512,7 @@ class BulkMigrateVcsHandlerTest {
             assertEquals(3, report.getTotalEvaluated());
             assertEquals(2, report.getTotalFailedTooManyBatchIds());
             assertEquals(1, report.getTotalMigrated());
+            assertEquals(1, report.getTotalMigratedVcs());
             assertEquals(2, report.getAllFailedTooManyBatchIdsHashUserIds().size());
             assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(0).startsWith("f34"));
             assertTrue(report.getAllFailedTooManyBatchIdsHashUserIds().get(1).startsWith("b45"));

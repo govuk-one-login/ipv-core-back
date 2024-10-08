@@ -12,6 +12,7 @@ public class BatchReport {
     private final List<PageSummary> pageSummaries;
     private int totalEvaluated;
     private int totalMigrated;
+    private int totalMigratedVcs;
     private int totalSkippedNonP2;
     private int totalSkippedAlreadyMigrated;
     private int totalSkippedPartiallyMigrated;
@@ -38,6 +39,7 @@ public class BatchReport {
 
     public void addPageSummary(PageSummary summary) {
         totalMigrated += summary.getMigrated();
+        totalMigratedVcs += summary.getMigratedVcs();
         totalSkippedNonP2 += summary.getSkippedNonP2();
         totalSkippedAlreadyMigrated += summary.getSkippedAlreadyMigrated();
         totalSkippedPartiallyMigrated += summary.getSkippedPartiallyMigrated();
