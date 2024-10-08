@@ -50,7 +50,6 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -315,16 +314,9 @@ public class CriApiService {
             request.setBody(bodyString);
             request.setHeader(HEADER_CONTENT_TYPE, "application/json");
         } else {
-            if (configService.getEnvironmentVariable(ENVIRONMENT) != null
-                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-                LOGGER.info(
-                        "Credential request default content-type: "
-                                + request.getEntityContentType());
-            } else {
-                request.setHeader(
-                        HEADER_CONTENT_TYPE,
-                        ""); // remove the default, no request body so we don't need a content type
-            }
+            request.setHeader(
+                    HEADER_CONTENT_TYPE,
+                    ""); // remove the default, no request body so we don't need a content type
         }
 
         if (apiKey != null) {
