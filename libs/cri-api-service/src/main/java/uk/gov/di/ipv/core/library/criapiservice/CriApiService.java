@@ -50,7 +50,9 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
@@ -240,6 +242,14 @@ public class CriApiService {
         try {
             var response = credentialRequest.send();
 
+            if (configService.getEnvironmentVariable(ENVIRONMENT) != null
+                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
+                    && cri.equals(DWP_KBV)) {
+                LOGGER.info("Credential response status: " + response.getStatusCode());
+                LOGGER.info("Credential response message: " + response.getStatusMessage());
+                LOGGER.info("Credential response body: " + response.getBody());
+            }
+
             if (!response.indicatesSuccess()) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -314,9 +324,16 @@ public class CriApiService {
             request.setBody(bodyString);
             request.setHeader(HEADER_CONTENT_TYPE, "application/json");
         } else {
-            request.setHeader(
-                    HEADER_CONTENT_TYPE,
-                    ""); // remove the default, no request body so we don't need a content type
+            if (configService.getEnvironmentVariable(ENVIRONMENT) != null
+                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
+                    && cri.equals(DWP_KBV)) {
+                request.setHeader(HEADER_CONTENT_TYPE, "text/plain");
+                request.setHeader("Content-Length", "0");
+            } else {
+                request.setHeader(
+                        HEADER_CONTENT_TYPE,
+                        ""); // remove the default, no request body so we don't need a content type
+            }
         }
 
         if (apiKey != null) {
