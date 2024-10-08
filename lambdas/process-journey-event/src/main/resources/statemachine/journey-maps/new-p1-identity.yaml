@@ -481,6 +481,7 @@ states:
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
         checkIfDisabled:
           dcmaw:
             targetJourney: TECHNICAL_ERROR

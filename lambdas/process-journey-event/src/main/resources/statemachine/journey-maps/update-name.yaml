@@ -175,6 +175,10 @@ states:
     events:
       next:
         targetState: DCMAW_GIVEN_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
 
   RESET_IDENTITY_FAMILY_ONLY:
     response:
@@ -185,6 +189,10 @@ states:
     events:
       next:
         targetState: DCMAW_FAMILY_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
 
   DCMAW_GIVEN_ONLY:
     response:
@@ -341,6 +349,10 @@ states:
     events:
       next:
         targetState: DCMAW_GIVEN_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
 
   RESET_IDENTITY_FAMILY_WITH_ADDRESS:
     response:
@@ -351,6 +363,10 @@ states:
     events:
       next:
         targetState: DCMAW_FAMILY_WITH_ADDRESS
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
 
   DCMAW_GIVEN_WITH_ADDRESS:
     response:
@@ -429,6 +445,21 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+
+  # Once the `next` event here is developed it's likely that we'll need to split this into four separate sub-journey
+  # instantiations.
+  STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      end:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+      multipleDocCheckPage:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # SHARED STATES
 
