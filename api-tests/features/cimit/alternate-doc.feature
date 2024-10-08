@@ -5,7 +5,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario Outline: Alternate doc mitigation via passport or DL
@@ -23,7 +23,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -41,7 +43,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -59,7 +61,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'dwpKbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -77,7 +81,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -95,11 +99,15 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-pre-dwp-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'dwpKbv' CRI response
-    When I get an 'invalid_request' OAuth error from the CRI stub
+    When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -117,7 +125,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -135,7 +143,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -153,7 +163,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -187,7 +197,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -203,7 +213,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'nino' CRI response
     When I submit 'kenneth' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -221,7 +233,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit an <initialCri> event
     Then I get a <initialCri> CRI response
@@ -237,11 +249,15 @@ Feature: CIMIT - Alternate doc
     Then I get a 'nino' CRI response
     When I submit 'kenneth' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
-    When I get an 'invalid_request' OAuth error from the CRI stub
+    When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -260,7 +276,7 @@ Feature: CIMIT - Alternate doc
     Then I get a '<no-match-page>' page response
     When I submit a 'next' event
     Then I get a '<mitigating-cri>' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-no-other-photo-id' page response with context '<prove-identity-no-other-photo-id-context>'
     When I submit a 'back' event
     Then I get a '<mitigating-cri>' CRI response
@@ -272,7 +288,9 @@ Feature: CIMIT - Alternate doc
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
@@ -291,7 +309,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'pyi-passport-no-match-another-way' page response
     When I submit a 'next' event
     Then I get a 'drivingLicence' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'prove-identity-no-other-photo-id' page response with context 'drivingLicence'
     When I submit a 'returnToRp' event
     Then I get an OAuth response

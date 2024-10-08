@@ -5,7 +5,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an 'access_denied' OAuth error from the CRI stub
+    When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'ukPassport' event
     Then I get a 'ukPassport' CRI response
@@ -17,7 +17,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response
-    When I submit 'kenneth-needs-enhanced-verification' details to the CRI stub
+    When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
     Then I get a 'pyi-suggest-other-options' page response
 
   Rule: Same session journeys
@@ -25,7 +27,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     Scenario Outline: Same session F2F enhanced verification mitigation - successful
       When I submit an 'f2f' event
       Then I get an 'f2f' CRI response
-      When I submit '<document-details>' details to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -43,17 +47,21 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     Scenario: Same session F2F enhanced verification mitigation - OAuth error from F2F CRI
       When I submit an 'f2f' event
       Then I get an 'f2f' CRI response
-      When I get a 'temporarily_unavailable' OAuth error from the CRI stub
+      When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
       Then I get a 'pyi-technical' page response
 
     Scenario: Same session F2F enhanced verification mitigation - user abandons DCMAW then mitigates with F2F
       When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'pyi-post-office' page response
       When I submit a 'next' event
       Then I get an 'f2f' CRI response
-      When I submit 'kenneth-passport-valid' details to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":0} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -77,7 +85,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get an 'f2f' CRI response
-      When I submit '<document-details>' details to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit '<document-details>' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey
@@ -104,7 +114,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get an 'f2f' CRI response
-      When I get a 'temporarily_unavailable' OAuth error from the CRI stub
+      When I call the CRI stub with attributes and get a 'temporarily_unavailable' OAuth error
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'pyi-technical' page response
 
     Scenario: Separate session F2F enhanced verification mitigation - user abandons DCMAW and mitigates with F2F
@@ -112,7 +124,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
-      When I get an 'access_denied' OAuth error from the CRI stub
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'pyi-post-office' page response
       When I submit a 'next' event
       Then I get a 'claimedIdentity' CRI response
@@ -122,7 +134,9 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get an 'f2f' CRI response
-      When I submit 'kenneth-passport-valid' details to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+      When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
       Then I get a 'page-face-to-face-handoff' page response
 
       # Return journey

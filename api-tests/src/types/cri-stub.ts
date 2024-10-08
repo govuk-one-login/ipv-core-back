@@ -34,10 +34,12 @@ interface CriStubUserInfoEndpointErrorRequest {
 
 export interface CriStubResponse {
   redirectUri: string;
-  jarPayload: {
-    context?: string;
-    evidence_requested?: { strength?: number; validity?: number };
-  };
+  jarPayload: CriStubResponseJarPayload;
+}
+
+export interface CriStubResponseJarPayload {
+  context?: string;
+  evidence_requested?: { strength?: number; validity?: number };
 }
 
 export interface CriStubGenerateVcRequest {

@@ -37,7 +37,7 @@ Feature: P2 App journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I get an '<error>' OAuth error from the CRI stub
+    When I call the CRI stub and get an '<error>' OAuth error
     Then I get a '<expected_page>' page response
 
     Examples:
