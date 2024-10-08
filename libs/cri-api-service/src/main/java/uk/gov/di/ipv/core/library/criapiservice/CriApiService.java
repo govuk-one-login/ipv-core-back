@@ -242,12 +242,17 @@ public class CriApiService {
         try {
             var response = credentialRequest.send();
 
-            if (configService.getEnvironmentVariable(ENVIRONMENT) != null
-                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
-                    && cri.equals(DWP_KBV)) {
-                LOGGER.info("Credential response status: " + response.getStatusCode());
-                LOGGER.info("Credential response message: " + response.getStatusMessage());
-                LOGGER.info("Credential response body: " + response.getBody());
+            // Temp debug logging
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("credential response status", response.getStatusCode())
+                            .with("credential response message", response.getStatusMessage()));
+            if (cri.equals(DWP_KBV)
+                    && configService.getEnvironmentVariable(ENVIRONMENT) != null
+                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with("credential response body", response.getBody()));
             }
 
             if (!response.indicatesSuccess()) {
