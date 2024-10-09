@@ -7,6 +7,7 @@ RUN apt update && \
 
 COPY api-tests /api-tests
 COPY api-tests/secure-pipeline/run-tests.sh /
+COPY openAPI /openAPI
 
 WORKDIR /api-tests
 
