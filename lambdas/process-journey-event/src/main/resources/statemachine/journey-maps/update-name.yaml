@@ -223,6 +223,7 @@ states:
     response:
       type: cri
       criId: drivingLicence
+      context: check_details
     parent: CRI_STATE
     events:
       next:
@@ -255,6 +256,7 @@ states:
     response:
       type: cri
       criId: drivingLicence
+      context: check_details
     parent: CRI_STATE
     events:
       next:
@@ -419,6 +421,7 @@ states:
     response:
       type: cri
       criId: drivingLicence
+      context: check_details
     parent: CRI_STATE
     events:
       next:
@@ -451,6 +454,7 @@ states:
     response:
       type: cri
       criId: drivingLicence
+      context: check_details
     parent: CRI_STATE
     events:
       next:
