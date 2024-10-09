@@ -172,11 +172,24 @@ public class CriApiService {
                             clientAuthClaims, signerFactory.getSigner());
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
+            var authorizationGrant = new AuthorizationCodeGrant(authorizationCode, redirectionUri);
+
+            if (criOAuthSessionItem.getCriId() != null
+                    && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
+                    && configService.getEnvironmentVariable(ENVIRONMENT) != null
+                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+                var clientAuthenticationParams = clientAuthentication.toParameters();
+                var authorizationGrantParams = authorizationGrant.toParameters();
+                for (String key : clientAuthenticationParams.keySet()) {
+                    LOGGER.info(key + "=" + clientAuthenticationParams.get(key).get(0));
+                }
+                for (String key : authorizationGrantParams.keySet()) {
+                    LOGGER.info(key + "=" + authorizationGrantParams.get(key).get(0));
+                }
+            }
 
             return buildAccessTokenRequest(
-                    criOAuthSessionItem,
-                    clientAuthentication,
-                    new AuthorizationCodeGrant(authorizationCode, redirectionUri));
+                    criOAuthSessionItem, clientAuthentication, authorizationGrant);
         } catch (JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CriApiException(
