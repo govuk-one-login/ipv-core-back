@@ -118,6 +118,12 @@ public class CriApiService {
             var httpResponse = accessTokenRequest.send();
             var tokenResponse = TokenResponse.parse(httpResponse);
 
+            // Temp debug logging
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with("token response status", httpResponse.getStatusCode())
+                            .with("token response message", httpResponse.getStatusMessage()));
+
             if (tokenResponse instanceof TokenErrorResponse) {
                 var errorResponse = tokenResponse.toErrorResponse();
                 var errorObject =
