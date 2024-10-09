@@ -47,13 +47,10 @@ services:
       PORT: 4501
       CDN_DOMAIN:
       ENABLE_PREVIEW: "development"
+      NPM_CONFIG_NODE_OPTIONS: "--inspect=0.0.0.0"
     ports:
       - "4501:4501"
       - "5001:9229"
-    command:
-      - node
-      - "--inspect=0.0.0.0"
-      - "src/app.js"
 
   core-back:
     image: core-back:latest
