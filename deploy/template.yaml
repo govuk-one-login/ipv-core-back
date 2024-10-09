@@ -1892,7 +1892,7 @@ Resources:
   CheckGpg45ScoreFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1978,7 +1978,7 @@ Resources:
   CallTicfCriFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/call-ticf-cri-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2057,7 +2057,7 @@ Resources:
   CallDcmawAsyncCriFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/call-dcmaw-async-cri-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2138,7 +2138,7 @@ Resources:
   ReplayCimitVcsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/replay-cimit-vcs-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2221,7 +2221,7 @@ Resources:
   StoreIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/store-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2306,7 +2306,7 @@ Resources:
   ResetSessionIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/reset-session-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2391,7 +2391,7 @@ Resources:
   CheckCoiFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/check-coi-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2457,7 +2457,7 @@ Resources:
   ReportUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/report-user-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2537,7 +2537,7 @@ Resources:
   BulkMigrateVcsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/bulk-migrate-vcs-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
