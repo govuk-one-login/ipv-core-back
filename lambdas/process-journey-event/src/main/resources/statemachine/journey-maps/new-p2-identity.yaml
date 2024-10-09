@@ -689,8 +689,6 @@ states:
         targetState: POST_DCMAW_SUCCESS_PAGE
       access-denied:
         targetState: MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE
-      temporarily-unavailable:
-        targetState: MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE
 
   MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE:
     response:
