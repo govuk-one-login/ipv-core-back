@@ -46,8 +46,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       dl-auth-source-check:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   CRI_TICF_STATE:
     events:

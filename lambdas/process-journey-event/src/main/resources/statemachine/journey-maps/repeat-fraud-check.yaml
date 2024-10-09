@@ -49,8 +49,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       dl-auth-source-check:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # Journey States
 
