@@ -75,7 +75,7 @@ paths:
               \"clientOAuthSessionId\":\"$util.escapeJavaScript($input.params('client-session-id'))\",
               \"language\":\"$util.escapeJavaScript($input.params('language'))\"
               }",
-              "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
+              "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}:live"
               }
         responses:
           default:
