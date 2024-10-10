@@ -102,6 +102,8 @@ Feature: CIMIT - Alternate doc
     When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'page-different-security-questions' page response
+    When I submit a 'next' event
     Then I get a 'page-pre-experian-kbv-transition' page response
     When I submit a 'next' event
     Then I get a 'kbv' CRI response

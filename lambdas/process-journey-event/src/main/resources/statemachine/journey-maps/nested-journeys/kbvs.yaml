@@ -43,7 +43,7 @@ nestedJourneyStates:
       enhanced-verification:
         exitEventToEmit: enhanced-verification
       invalid-request:
-        targetState: PRE_EXPERIAN_PAGE
+        targetState: DWP_THIN_FILE_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
   CRI_HMRC_KBV:
@@ -100,3 +100,10 @@ nestedJourneyStates:
         targetState: CRI_DWP_KBV
       end:
         exitEventToEmit: end
+  DWP_THIN_FILE_PAGE:
+    response:
+      type: page
+      pageId: page-different-security-questions
+    events:
+      next:
+        targetState: PRE_EXPERIAN_PAGE
