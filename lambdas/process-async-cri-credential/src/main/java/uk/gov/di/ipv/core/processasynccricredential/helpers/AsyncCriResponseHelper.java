@@ -7,8 +7,6 @@ import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 
-import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-
 public class AsyncCriResponseHelper {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -21,14 +19,12 @@ public class AsyncCriResponseHelper {
 
         if (criResponseMessageDto.getError() == null) {
             return SuccessAsyncCriResponse.builder()
-                    .credentialIssuer(F2F)
                     .userId(criResponseMessageDto.getUserId())
                     .oauthState(criResponseMessageDto.getOauthState())
                     .verifiableCredentialJWTs(criResponseMessageDto.getVerifiableCredentialJWTs())
                     .build();
         } else {
             return ErrorAsyncCriResponse.builder()
-                    .credentialIssuer(F2F)
                     .userId(criResponseMessageDto.getUserId())
                     .oauthState(criResponseMessageDto.getOauthState())
                     .error(criResponseMessageDto.getError())
