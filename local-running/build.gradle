@@ -54,6 +54,9 @@ java {
 
 application {
 	mainClass = 'uk.gov.di.ipv.coreback.App'
+	applicationDefaultJvmArgs = [
+		"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5002"
+	]
 }
 
 sonar {
