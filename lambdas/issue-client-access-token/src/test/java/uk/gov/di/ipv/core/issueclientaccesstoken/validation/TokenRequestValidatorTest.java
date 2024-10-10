@@ -249,7 +249,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldStoreJwtIdAndCheckItHasNotAlreadyBeenUsed() throws Exception {
+    void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
@@ -262,9 +262,19 @@ class TokenRequestValidatorTest {
         when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(jti))
                 .thenReturn(clientAuthJwtIdItem);
 
-        validator.authenticateClient(queryMapToString(getValidQueryParams(clientAssertion)));
+        ClientAuthenticationException exception =
+                assertThrows(
+                        ClientAuthenticationException.class,
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(getValidQueryParams(clientAssertion))));
 
-        verify(mockClientAuthJwtIdService).getClientAuthJwtIdItem(jti);
+        assertTrue(
+                exception
+                        .getMessage()
+                        .contains(
+                                "InvalidClientException: The client auth JWT id (jti) has already been used."));
+        verify(mockClientAuthJwtIdService, Mockito.times(0)).persistClientAuthJwtId(anyString());
     }
 
     private RSAPrivateKey getRsaPrivateKey()
