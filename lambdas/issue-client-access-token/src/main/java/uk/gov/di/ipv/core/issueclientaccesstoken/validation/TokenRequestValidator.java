@@ -72,16 +72,17 @@ public class TokenRequestValidator {
         }
     }
 
-    private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) {
+    private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) throws InvalidClientException {
         JWTID jwtId = claimsSet.getJWTID();
         if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
-            LOGGER.warn(LogHelper.buildLogMessage("The client auth JWT id (jti) is missing"));
-            return;
+            LOGGER.error(LogHelper.buildLogMessage("The client auth JWT id (jti) is missing."));
+            throw new InvalidClientException("The client auth JWT id (jti) is missing.");
         }
         ClientAuthJwtIdItem clientAuthJwtIdItem =
                 clientAuthJwtIdService.getClientAuthJwtIdItem(jwtId.getValue());
         if (clientAuthJwtIdItem != null) {
-            logWarningJtiHasAlreadyBeenUsed(clientAuthJwtIdItem);
+            logErrorJtiHasAlreadyBeenUsed(clientAuthJwtIdItem);
+            throw new InvalidClientException("The client auth JWT id (jti) has already been used.");
         }
         clientAuthJwtIdService.persistClientAuthJwtId(jwtId.getValue());
     }
@@ -94,13 +95,13 @@ public class TokenRequestValidator {
                 Set.of(new Audience(configService.getParameter(COMPONENT_ID))));
     }
 
-    private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
+    private void logErrorJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
         LoggingUtils.appendKey(
                 LogHelper.LogField.LOG_JTI.getFieldName(), clientAuthJwtIdItem.getJwtId());
         LoggingUtils.appendKey(
                 LogHelper.LogField.LOG_JTI_USED_AT.getFieldName(),
                 clientAuthJwtIdItem.getUsedAtDateTime());
-        LOGGER.warn(
+        LOGGER.error(
                 LogHelper.buildLogMessage("The client auth JWT id (jti) has already been used"));
         LoggingUtils.removeKeys(
                 LogHelper.LogField.LOG_JTI.getFieldName(),
