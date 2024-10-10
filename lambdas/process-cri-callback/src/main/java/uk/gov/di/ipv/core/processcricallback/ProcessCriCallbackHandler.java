@@ -62,7 +62,6 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
@@ -284,9 +283,8 @@ public class ProcessCriCallbackHandler
 
         // Retrieve, store and check cri credentials
         var accessToken = criApiService.fetchAccessToken(callbackRequest, criOAuthSessionItem);
-        // Temporarily logging DWP KBV token for integration debugging
-        if (callbackRequest.getCredentialIssuer().equals(DWP_KBV)
-                && configService.getEnvironmentVariable(ENVIRONMENT) != null
+        // Temporarily logging staging token for debugging purposes
+        if (configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
             LOGGER.info("test bearer token: " + accessToken.getValue());
         }
