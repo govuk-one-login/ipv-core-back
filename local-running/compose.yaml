@@ -67,7 +67,6 @@ services:
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
       ENVIRONMENT: local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
-      JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:
       - "4502:4502"
       - "5002:5002"
