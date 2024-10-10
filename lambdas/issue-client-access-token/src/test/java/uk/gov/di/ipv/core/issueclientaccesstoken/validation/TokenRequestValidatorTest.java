@@ -235,7 +235,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldCheckIfJwtIdIsMissingOrEmpty() throws Exception {
+    void shouldThrowIfJwtIdIsMissingOrEmpty() throws Exception {
         when(mockConfigService.getParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
@@ -243,9 +243,21 @@ class TokenRequestValidatorTest {
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 
-        validator.authenticateClient(queryMapToString(getValidQueryParams(clientAssertion)));
+        ClientAuthenticationException exception =
+                assertThrows(
+                        ClientAuthenticationException.class,
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(getValidQueryParams(clientAssertion))));
+
+        assertTrue(
+                exception
+                        .getMessage()
+                        .contains(
+                                "InvalidClientException: The client auth JWT id (jti) is missing."));
 
         verify(mockClientAuthJwtIdService, Mockito.times(0)).getClientAuthJwtIdItem(anyString());
+        verify(mockClientAuthJwtIdService, Mockito.times(0)).persistClientAuthJwtId(anyString());
     }
 
     @Test
