@@ -55,6 +55,9 @@ states:
       alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   CRI_TICF_STATE:
     events:
@@ -123,6 +126,18 @@ states:
       temporarily-unavailable:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
 
   POST_DCMAW_SUCCESS_PAGE:
     response:
