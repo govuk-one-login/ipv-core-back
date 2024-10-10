@@ -49,6 +49,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -223,6 +224,14 @@ public class CriApiService {
                         criConfig.getTokenUrl(), clientAuthentication, authorizationGrant, null);
 
         var httpRequest = tokenRequest.toHTTPRequest();
+
+        if (criOAuthSessionItem.getCriId() != null
+                && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
+                && configService.getEnvironmentVariable(ENVIRONMENT) != null
+                && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+            LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
+        }
+
         if (apiKey != null) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -258,6 +267,11 @@ public class CriApiService {
     @Tracing
     private VerifiableCredentialResponse fetchVerifiableCredential(
             Cri cri, HTTPRequest credentialRequest) throws CriApiException {
+        if (cri.equals(DWP_KBV)
+                && configService.getEnvironmentVariable(ENVIRONMENT) != null
+                && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+            LOGGER.info(buildRequestDebugLog(credentialRequest, "credential request"));
+        }
         try {
             var response = credentialRequest.send();
 
@@ -388,5 +402,23 @@ public class CriApiService {
                     VerifiableCredentialStatus.fromStatusString(vcResponse.getCredentialStatus()));
         }
         return vcResponseBuilder.build();
+    }
+
+    private StringMapMessage buildRequestDebugLog(HTTPRequest request, String description) {
+        return new StringMapMessage()
+                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), description)
+                .with("url", request.getURL())
+                .with("method", request.getMethod())
+                .with("body", Objects.toString(request.getBody(), ""))
+                .with(
+                        "query",
+                        request.getQueryStringParameters().entrySet().stream()
+                                .map(e -> e.getKey() + ":" + e.getValue())
+                                .collect(Collectors.joining(",")))
+                .with(
+                        "headers",
+                        request.getHeaderMap().entrySet().stream()
+                                .map(e -> e.getKey() + ":'" + e.getValue().get(0) + "'")
+                                .collect(Collectors.joining(",")));
     }
 }
