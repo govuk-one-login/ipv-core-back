@@ -27,6 +27,20 @@ import { getRandomString } from "../utils/random-string-generator.js";
 import assert from "assert";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
+const STANDARD_JAR_VALUES = [
+  "sub",
+  "shared_claims",
+  "iss",
+  "response_type",
+  "client_id",
+  "govuk_signin_journey_id",
+  "aud",
+  "nbf",
+  "redirect_uri",
+  "state",
+  "exp",
+  "iat",
+];
 
 const submitAndProcessCriAction = async (
   world: World,
@@ -438,18 +452,3 @@ const assertNoUnexpectedJarProperties = (
     );
   }
 };
-
-const STANDARD_JAR_VALUES = [
-  "sub",
-  "shared_claims",
-  "iss",
-  "response_type",
-  "client_id",
-  "govuk_signin_journey_id",
-  "aud",
-  "nbf",
-  "redirect_uri",
-  "state",
-  "exp",
-  "iat",
-];

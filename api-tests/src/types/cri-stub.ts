@@ -37,6 +37,7 @@ export interface CriStubResponse {
   jarPayload: CriStubResponseJarPayload;
 }
 
+// Note that this is not the full interface of a JAR payload, just some properties we're interested in.
 export interface CriStubResponseJarPayload {
   context?: string;
   evidence_requested?: { strength?: number; validity?: number };
