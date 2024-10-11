@@ -93,7 +93,7 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_IPHONE_START_SESSION
-      end:
+      otherDevice:
         targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_ANDROID_CONFIRM_PAGE:
@@ -104,7 +104,7 @@ nestedJourneyStates:
     events:
       next:
         targetState: MOBILE_ANDROID_START_SESSION
-      end:
+      otherDevice:
         targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_START_SESSION:
