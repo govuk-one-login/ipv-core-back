@@ -16,7 +16,6 @@ anything bad™️ happens in Dynatrace. If you update a dashboard you should pr
 * Receive file
 
 ## How to upload a dashboard in Dynatrace
-
 * Open Dynatrace
 * Navigate to the "Dashboards" app
 * Click the "Upload" button
