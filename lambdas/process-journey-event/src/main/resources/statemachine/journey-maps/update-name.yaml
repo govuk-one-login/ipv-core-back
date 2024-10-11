@@ -501,15 +501,12 @@ states:
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
-      next:
+      sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      end:
+      anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
-      multipleDocCheckPage:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
 
   # SHARED STATES
 

@@ -99,13 +99,10 @@ states:
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
-      next:
+      sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
-      multipleDocCheckPage:
+      anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
 
