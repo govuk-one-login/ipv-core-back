@@ -55,7 +55,7 @@
     "10": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha`, duration }, filter: { (`sam-stack-name` == \"core-back-build\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-build\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -82,8 +82,8 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
               "interval"
             ],
@@ -96,10 +96,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -138,169 +139,24 @@
           "customColors": [
             {
               "id": 0,
-              "value": 1,
-              "comparator": "≥",
+              "value": "true",
+              "comparator": "=",
               "color": "#7DC540"
             },
             {
-              "id": 238674,
-              "value": 0,
-              "comparator": "≥",
+              "id": 1044877,
+              "value": "false",
+              "comparator": "=",
               "color": "#DC172A"
             }
           ],
-          "colorPalette": "blue",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha",
-            "duration"
-          ]
-        },
-        "histogram": {
-          "legend": "auto",
-          "yAxis": {
-            "label": "Frequency",
-            "scale": "linear"
-          },
-          "colorPalette": "categorical",
-          "dataMappings": [
-            {
-              "valueAxis": "interval",
-              "rangeAxis": ""
-            }
-          ]
-        },
-        "unitsOverrides": [
-          {
-            "identifier": "deployment",
-            "unitCategory": "unspecified",
-            "baseUnit": "unspecified",
-            "displayUnit": "",
-            "decimals": 0,
-            "suffix": "",
-            "delimiter": false,
-            "added": 0,
-            "id": "deployment"
-          }
-        ]
-      },
-      "querySettings": {
-        "maxResultRecords": 1000,
-        "defaultScanLimitGbytes": 500,
-        "maxResultMegaBytes": 1,
-        "defaultSamplingRatio": 10,
-        "enableSampling": false
-      }
-    },
-    "11": {
-      "type": "data",
-      "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-build\") AND (stage == \"test\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
-      "davis": {
-        "enabled": false,
-        "davisVisualization": {
-          "isAvailable": true
-        }
-      },
-      "visualization": "honeycomb",
-      "visualizationSettings": {
-        "thresholds": [],
-        "chartSettings": {
-          "xAxisScaling": "analyzedTimeframe",
-          "gapPolicy": "gap",
-          "circleChartSettings": {
-            "groupingThresholdType": "relative",
-            "groupingThresholdValue": 0,
-            "valueType": "relative"
-          },
-          "categoryOverrides": {},
-          "curve": "linear",
-          "pointsDisplay": "auto",
-          "categoricalBarChartSettings": {
-            "layout": "vertical",
-            "categoryAxisTickLayout": "horizontal",
-            "scale": "absolute",
-            "groupMode": "stacked",
-            "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
-            "valueAxis": [
-              "interval"
-            ],
-            "valueAxisLabel": "interval",
-            "tooltipVariant": "single"
-          },
-          "colorPalette": "categorical",
-          "truncationMode": "middle",
-          "hiddenLegendFields": [],
-          "fieldMapping": {
-            "timestamp": "timeframe",
-            "leftAxisValues": [
-              "interval"
-            ],
-            "leftAxisDimensions": [
-              "stage"
-            ]
-          }
-        },
-        "singleValue": {
-          "showLabel": true,
-          "label": "",
-          "prefixIcon": "",
-          "recordField": "stage",
-          "autoscale": true,
-          "alignment": "center",
-          "colorThresholdTarget": "value"
-        },
-        "table": {
-          "rowDensity": "condensed",
-          "enableSparklines": false,
-          "hiddenColumns": [],
-          "linewrapEnabled": false,
-          "lineWrapIds": [],
-          "monospacedFontEnabled": false,
-          "monospacedFontColumns": [],
-          "columnWidths": {},
-          "columnTypeOverrides": []
-        },
-        "honeycomb": {
-          "shape": "hexagon",
-          "legend": {
-            "0": "h",
-            "1": "i",
-            "2": "d",
-            "3": "d",
-            "4": "e",
-            "5": "n",
-            "hidden": true
-          },
-          "colorMode": "custom-colors",
-          "customColors": [
-            {
-              "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
-            },
-            {
-              "id": 2,
-              "color": "#DC172A",
-              "comparator": "≥",
-              "value": 0
-            }
-          ],
-          "colorPalette": "purple-yellow",
-          "dataMappings": {
-            "value": "interval"
-          },
-          "displayedFields": [
-            "stage",
-            "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -342,7 +198,7 @@
     "12": {
       "type": "data",
       "title": "api tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (stage == \"parallel-test\") AND (`sam-stack-name` == \"core-back-build\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-build\") AND (stage == \"parallel-test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -369,12 +225,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -383,10 +239,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -425,25 +282,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1401855,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -456,10 +312,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -489,7 +341,7 @@
     "13": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-staging\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-staging\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -516,8 +368,8 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
               "interval"
             ],
@@ -530,10 +382,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -572,25 +425,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1462413,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -632,7 +484,7 @@
     "14": {
       "type": "data",
       "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-staging\") AND (stage == \"test\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-staging\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -659,8 +511,8 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
               "interval"
             ],
@@ -673,10 +525,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -715,25 +568,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1502138,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -746,10 +598,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -779,7 +627,7 @@
     "15": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-integration\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-integration\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -806,12 +654,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -820,10 +668,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -862,25 +711,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1553997,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -922,7 +770,7 @@
     "16": {
       "type": "data",
       "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-integration\") AND (stage == \"test\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-integration\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -949,12 +797,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -963,10 +811,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1005,25 +854,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1625630,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1065,7 +913,7 @@
     "17": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-back-production\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-production\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1092,12 +940,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1106,10 +954,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1148,25 +997,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1675680,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1179,154 +1027,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            }
-          ]
-        },
-        "unitsOverrides": [
-          {
-            "identifier": "deployment",
-            "unitCategory": "unspecified",
-            "baseUnit": "unspecified",
-            "displayUnit": "",
-            "decimals": 0,
-            "suffix": "",
-            "delimiter": false,
-            "added": 0,
-            "id": "deployment"
-          }
-        ]
-      },
-      "querySettings": {
-        "maxResultRecords": 1000,
-        "defaultScanLimitGbytes": 500,
-        "maxResultMegaBytes": 1,
-        "defaultSamplingRatio": 10,
-        "enableSampling": false
-      }
-    },
-    "18": {
-      "type": "data",
-      "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha`, duration }, filter: { (`sam-stack-name` == \"core-front-build\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
-      "davis": {
-        "enabled": false,
-        "davisVisualization": {
-          "isAvailable": true
-        }
-      },
-      "visualization": "honeycomb",
-      "visualizationSettings": {
-        "thresholds": [],
-        "chartSettings": {
-          "xAxisScaling": "analyzedTimeframe",
-          "gapPolicy": "gap",
-          "circleChartSettings": {
-            "groupingThresholdType": "relative",
-            "groupingThresholdValue": 0,
-            "valueType": "relative"
-          },
-          "categoryOverrides": {},
-          "curve": "linear",
-          "pointsDisplay": "auto",
-          "categoricalBarChartSettings": {
-            "layout": "vertical",
-            "categoryAxisTickLayout": "horizontal",
-            "scale": "absolute",
-            "groupMode": "stacked",
-            "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
-            "valueAxis": [
-              "deployment"
-            ],
-            "valueAxisLabel": "deployment",
-            "tooltipVariant": "single"
-          },
-          "colorPalette": "categorical",
-          "truncationMode": "middle",
-          "hiddenLegendFields": [],
-          "fieldMapping": {
-            "timestamp": "timeframe",
-            "leftAxisValues": [
-              "interval"
-            ],
-            "leftAxisDimensions": [
-              "stage"
-            ]
-          }
-        },
-        "singleValue": {
-          "showLabel": true,
-          "label": "",
-          "prefixIcon": "",
-          "recordField": "stage",
-          "autoscale": true,
-          "alignment": "center",
-          "colorThresholdTarget": "value"
-        },
-        "table": {
-          "rowDensity": "condensed",
-          "enableSparklines": false,
-          "hiddenColumns": [],
-          "linewrapEnabled": false,
-          "lineWrapIds": [],
-          "monospacedFontEnabled": false,
-          "monospacedFontColumns": [],
-          "columnWidths": {},
-          "columnTypeOverrides": []
-        },
-        "honeycomb": {
-          "shape": "hexagon",
-          "legend": {
-            "0": "h",
-            "1": "i",
-            "2": "d",
-            "3": "d",
-            "4": "e",
-            "5": "n",
-            "hidden": true
-          },
-          "colorMode": "custom-colors",
-          "customColors": [
-            {
-              "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
-            },
-            {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
-            }
-          ],
-          "colorPalette": "purple-yellow",
-          "dataMappings": {
-            "value": "interval"
-          },
-          "displayedFields": [
-            "stage",
-            "end-time-utc",
-            "commit-sha",
-            "duration"
-          ]
-        },
-        "histogram": {
-          "legend": "auto",
-          "yAxis": {
-            "label": "Frequency",
-            "scale": "linear"
-          },
-          "colorPalette": "categorical",
-          "dataMappings": [
-            {
-              "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -1356,7 +1056,7 @@
     "19": {
       "type": "data",
       "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-front-build\") AND (stage == \"test\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-build\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1383,12 +1083,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1397,10 +1097,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1439,25 +1140,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1828573,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1470,10 +1170,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -1503,7 +1199,7 @@
     "20": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-front-staging\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-staging\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1530,12 +1226,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1544,10 +1240,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1586,25 +1283,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1889656,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
           "colorPalette": "purple-yellow",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1646,7 +1342,7 @@
     "21": {
       "type": "data",
       "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-front-staging\") AND (stage == \"test\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-staging\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1673,12 +1369,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1687,10 +1383,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1729,25 +1426,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 1957606,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
           "colorPalette": "purple-yellow",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1760,10 +1456,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -1793,7 +1485,7 @@
     "22": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (stage == \"deploy\") AND (`sam-stack-name` == \"core-front-integration\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-integration\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1820,12 +1512,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1834,10 +1526,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -1876,25 +1569,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 2039406,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
-          "colorPalette": "purple-yellow",
+          "colorPalette": "categorical",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -1907,10 +1599,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -1940,7 +1628,7 @@
     "23": {
       "type": "data",
       "title": "selenium tests",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (stage == \"test\") AND (`sam-stack-name` == \"core-front-integration\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-integration\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -1967,12 +1655,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -1981,10 +1669,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -2023,25 +1712,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 2069574,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
           "colorPalette": "purple-yellow",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -2054,10 +1742,6 @@
           "dataMappings": [
             {
               "valueAxis": "interval",
-              "rangeAxis": ""
-            },
-            {
-              "valueAxis": "deployment",
               "rangeAxis": ""
             }
           ]
@@ -2087,7 +1771,7 @@
     "24": {
       "type": "data",
       "title": "deploy",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { stage, `end-time-utc`, `commit-sha` }, filter: { (`sam-stack-name` == \"core-front-production\") AND (stage == \"deploy\") }\n| fieldsAdd deployment = arrayLast(deployment)\n| limit 1",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-production\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -2114,12 +1798,12 @@
             "scale": "absolute",
             "groupMode": "stacked",
             "colorPaletteMode": "multi-color",
-            "categoryAxis": "stage",
-            "categoryAxisLabel": "stage",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
             "valueAxis": [
-              "deployment"
+              "interval"
             ],
-            "valueAxisLabel": "deployment",
+            "valueAxisLabel": "interval",
             "tooltipVariant": "single"
           },
           "colorPalette": "categorical",
@@ -2128,10 +1812,11 @@
           "fieldMapping": {
             "timestamp": "timeframe",
             "leftAxisValues": [
-              "interval"
+              "deployment"
             ],
             "leftAxisDimensions": [
-              "stage"
+              "end-time-utc",
+              "lastSuccess"
             ]
           }
         },
@@ -2170,25 +1855,24 @@
           "customColors": [
             {
               "id": 0,
-              "color": "#7dc540",
-              "comparator": "≥",
-              "value": 1
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
             },
             {
-              "id": 2,
-              "color": "#dc172a",
-              "comparator": "≥",
-              "value": 0
+              "id": 2118474,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
             }
           ],
           "colorPalette": "purple-yellow",
           "dataMappings": {
-            "value": "interval"
+            "value": "lastSuccess"
           },
           "displayedFields": [
-            "stage",
             "end-time-utc",
-            "commit-sha"
+            "lastSuccess"
           ]
         },
         "histogram": {
@@ -2230,7 +1914,7 @@
     "25": {
       "type": "data",
       "title": "Build history - core-back",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-build\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-build\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -2408,7 +2092,7 @@
     "33": {
       "type": "data",
       "title": "Staging history - core-back",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-staging\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-staging\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -2587,7 +2271,7 @@
     "34": {
       "type": "data",
       "title": "Integration history - core-back",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-integration\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-integration\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -2765,7 +2449,7 @@
     "35": {
       "type": "data",
       "title": "Production history - core-back",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-production\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-back-production\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -2896,6 +2580,7 @@
           "displayedFields": [
             "end-time-utc",
             "stage",
+            "commit-msg",
             "duration"
           ]
         },
@@ -2942,7 +2627,7 @@
     "36": {
       "type": "data",
       "title": "Build history - core-front",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-build\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-build\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -3120,7 +2805,7 @@
     "37": {
       "type": "data",
       "title": "Staging history - core-front",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-staging\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-staging\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -3233,7 +2918,7 @@
           "selectedColumnForRowThreshold": "deployment",
           "columnWidths": {
             "[\"commit-sha\"]": 134.95001220703125,
-            "[\"duration\"]": 102.10000610351562,
+            "[\"duration\"]": 120.10000610351562,
             "[\"commit-msg\"]": 267.95001220703125
           }
         },
@@ -3298,7 +2983,7 @@
     "38": {
       "type": "data",
       "title": "Integration history - core-front",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-integration\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-integration\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -3412,7 +3097,7 @@
           "columnWidths": {
             "[\"commit-sha\"]": 134.95001220703125,
             "[\"duration\"]": 103.10000610351562,
-            "[\"commit-msg\"]": 301.3500061035156
+            "[\"commit-msg\"]": 316.3500061035156
           }
         },
         "honeycomb": {
@@ -3429,6 +3114,7 @@
           "displayedFields": [
             "end-time-utc",
             "stage",
+            "commit-msg",
             "duration"
           ]
         },
@@ -3475,7 +3161,7 @@
     "39": {
       "type": "data",
       "title": "Production history - core-front",
-      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-production\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 10",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), by: { `end-time-utc`, stage, `commit-msg`, duration }, filter: { (`sam-stack-name` == \"core-front-production\") AND ((stage == \"test\") OR (stage == \"deploy\") OR (stage == \"parallel-test\")) }\n| fieldsAdd deployment = arrayLast(deployment)\n| sort `end-time-utc` desc\n| limit 20",
       "davis": {
         "enabled": false,
         "davisVisualization": {
@@ -3588,8 +3274,8 @@
           "selectedColumnForRowThreshold": "deployment",
           "columnWidths": {
             "[\"commit-sha\"]": 134.95001220703125,
-            "[\"duration\"]": 102.10000610351562,
-            "[\"commit-msg\"]": 268.3500061035156
+            "[\"duration\"]": 119.10000610351562,
+            "[\"commit-msg\"]": 279.3500061035156
           }
         },
         "honeycomb": {
@@ -3633,6 +3319,292 @@
             "unitCategory": "unspecified",
             "baseUnit": "none",
             "displayUnit": null,
+            "decimals": 0,
+            "suffix": "",
+            "delimiter": false,
+            "added": 0,
+            "id": "deployment"
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "41": {
+      "type": "data",
+      "title": "deploy",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-front-build\") AND (stage == \"deploy\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "honeycomb",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "gap",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "curve": "linear",
+          "pointsDisplay": "auto",
+          "categoricalBarChartSettings": {
+            "layout": "vertical",
+            "categoryAxisTickLayout": "horizontal",
+            "scale": "absolute",
+            "groupMode": "stacked",
+            "colorPaletteMode": "multi-color",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
+            "valueAxis": [
+              "interval"
+            ],
+            "valueAxisLabel": "interval",
+            "tooltipVariant": "single"
+          },
+          "colorPalette": "categorical",
+          "truncationMode": "middle",
+          "hiddenLegendFields": [],
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "deployment"
+            ],
+            "leftAxisDimensions": [
+              "end-time-utc",
+              "lastSuccess"
+            ]
+          }
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "",
+          "prefixIcon": "",
+          "recordField": "stage",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "linewrapEnabled": false,
+          "lineWrapIds": [],
+          "monospacedFontEnabled": false,
+          "monospacedFontColumns": [],
+          "columnWidths": {},
+          "columnTypeOverrides": []
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": {
+            "0": "h",
+            "1": "i",
+            "2": "d",
+            "3": "d",
+            "4": "e",
+            "5": "n",
+            "hidden": true
+          },
+          "colorMode": "custom-colors",
+          "customColors": [
+            {
+              "id": 0,
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
+            },
+            {
+              "id": 1781131,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
+            }
+          ],
+          "colorPalette": "categorical",
+          "dataMappings": {
+            "value": "lastSuccess"
+          },
+          "displayedFields": [
+            "end-time-utc",
+            "lastSuccess"
+          ]
+        },
+        "histogram": {
+          "legend": "auto",
+          "yAxis": {
+            "label": "Frequency",
+            "scale": "linear"
+          },
+          "colorPalette": "categorical",
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            }
+          ]
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "deployment",
+            "unitCategory": "unspecified",
+            "baseUnit": "unspecified",
+            "displayUnit": "",
+            "decimals": 0,
+            "suffix": "",
+            "delimiter": false,
+            "added": 0,
+            "id": "deployment"
+          }
+        ]
+      },
+      "querySettings": {
+        "maxResultRecords": 1000,
+        "defaultScanLimitGbytes": 500,
+        "maxResultMegaBytes": 1,
+        "defaultSamplingRatio": 10,
+        "enableSampling": false
+      }
+    },
+    "42": {
+      "type": "data",
+      "title": "selenium tests",
+      "query": "timeseries deployment = max(`devplatform.sam-pipelines.deployment`), \n  by: { `end-time-utc` }, \n  filter: { (`sam-stack-name` == \"core-back-build\") AND (stage == \"test\") }\n| fieldsAdd lastSuccess = if(arrayLast(deployment) == 1, \"true\", else: \"false\")\n| sort `end-time-utc` desc\n| limit 1",
+      "davis": {
+        "enabled": false,
+        "davisVisualization": {
+          "isAvailable": true
+        }
+      },
+      "visualization": "honeycomb",
+      "visualizationSettings": {
+        "thresholds": [],
+        "chartSettings": {
+          "xAxisScaling": "analyzedTimeframe",
+          "gapPolicy": "gap",
+          "circleChartSettings": {
+            "groupingThresholdType": "relative",
+            "groupingThresholdValue": 0,
+            "valueType": "relative"
+          },
+          "categoryOverrides": {},
+          "curve": "linear",
+          "pointsDisplay": "auto",
+          "categoricalBarChartSettings": {
+            "layout": "vertical",
+            "categoryAxisTickLayout": "horizontal",
+            "scale": "absolute",
+            "groupMode": "stacked",
+            "colorPaletteMode": "multi-color",
+            "categoryAxis": "end-time-utc",
+            "categoryAxisLabel": "end-time-utc",
+            "valueAxis": [
+              "interval"
+            ],
+            "valueAxisLabel": "interval",
+            "tooltipVariant": "single"
+          },
+          "colorPalette": "categorical",
+          "truncationMode": "middle",
+          "hiddenLegendFields": [],
+          "fieldMapping": {
+            "timestamp": "timeframe",
+            "leftAxisValues": [
+              "deployment"
+            ],
+            "leftAxisDimensions": [
+              "end-time-utc",
+              "lastSuccess"
+            ]
+          }
+        },
+        "singleValue": {
+          "showLabel": true,
+          "label": "",
+          "prefixIcon": "",
+          "recordField": "stage",
+          "autoscale": true,
+          "alignment": "center",
+          "colorThresholdTarget": "value"
+        },
+        "table": {
+          "rowDensity": "condensed",
+          "enableSparklines": false,
+          "hiddenColumns": [],
+          "linewrapEnabled": false,
+          "lineWrapIds": [],
+          "monospacedFontEnabled": false,
+          "monospacedFontColumns": [],
+          "columnWidths": {},
+          "columnTypeOverrides": []
+        },
+        "honeycomb": {
+          "shape": "hexagon",
+          "legend": {
+            "0": "h",
+            "1": "i",
+            "2": "d",
+            "3": "d",
+            "4": "e",
+            "5": "n",
+            "hidden": true
+          },
+          "colorMode": "custom-colors",
+          "customColors": [
+            {
+              "id": 0,
+              "value": "true",
+              "comparator": "=",
+              "color": "#7DC540"
+            },
+            {
+              "id": 1174363,
+              "value": "false",
+              "comparator": "=",
+              "color": "#DC172A"
+            }
+          ],
+          "colorPalette": "categorical",
+          "dataMappings": {
+            "value": "lastSuccess"
+          },
+          "displayedFields": [
+            "end-time-utc",
+            "lastSuccess"
+          ]
+        },
+        "histogram": {
+          "legend": "auto",
+          "yAxis": {
+            "label": "Frequency",
+            "scale": "linear"
+          },
+          "colorPalette": "categorical",
+          "dataMappings": [
+            {
+              "valueAxis": "interval",
+              "rangeAxis": ""
+            }
+          ]
+        },
+        "unitsOverrides": [
+          {
+            "identifier": "deployment",
+            "unitCategory": "unspecified",
+            "baseUnit": "unspecified",
+            "displayUnit": "",
             "decimals": 0,
             "suffix": "",
             "delimiter": false,
@@ -3706,19 +3678,13 @@
       "h": 1
     },
     "9": {
-      "x": 54,
+      "x": 55,
       "y": 19,
       "w": 13,
       "h": 1
     },
     "10": {
       "x": 0,
-      "y": 2,
-      "w": 8,
-      "h": 3
-    },
-    "11": {
-      "x": 8,
       "y": 2,
       "w": 8,
       "h": 3
@@ -3756,12 +3722,6 @@
     "17": {
       "x": 62,
       "y": 2,
-      "w": 8,
-      "h": 3
-    },
-    "18": {
-      "x": 0,
-      "y": 20,
       "w": 8,
       "h": 3
     },
@@ -3834,20 +3794,32 @@
     "37": {
       "x": 44,
       "y": 23,
-      "w": 39,
+      "w": 40,
       "h": 6
     },
     "38": {
       "x": 0,
       "y": 29,
-      "w": 41,
+      "w": 42,
       "h": 6
     },
     "39": {
       "x": 44,
       "y": 29,
-      "w": 39,
+      "w": 40,
       "h": 6
+    },
+    "41": {
+      "x": 0,
+      "y": 20,
+      "w": 8,
+      "h": 3
+    },
+    "42": {
+      "x": 8,
+      "y": 2,
+      "w": 8,
+      "h": 3
     }
   },
   "importedWithCode": false,
