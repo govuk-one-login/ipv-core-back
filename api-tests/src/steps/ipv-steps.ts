@@ -320,11 +320,12 @@ When(
 );
 
 Then(
-  /^I get a '([<>\w-]+)' identity( without a TICF VC)?$/,
+  /^I get a '([<>\w-]+)' identity(?: (with|without) a (.+) VC)?$/,
   function (
     this: World,
     vot: string,
-    checkForTicfAbsence: " without a TICF VC" | undefined,
+    withOrWithout: string | undefined,
+    criToCheckNoVc: string | undefined,
   ): void {
     if (!this.identity) {
       throw new Error("No identity found.");
@@ -335,7 +336,13 @@ Then(
     }
 
     assert.equal(this.identity.vot, vot);
-    assertIdentityContainsVc("ticf", !!checkForTicfAbsence, this.vcs);
+    if (criToCheckNoVc) {
+      assertIdentityContainsVc(
+        criToCheckNoVc,
+        withOrWithout === "without",
+        this.vcs,
+      );
+    }
   },
 );
 
