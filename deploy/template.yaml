@@ -125,7 +125,7 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_build"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
@@ -136,7 +136,7 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_build"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       asyncCriLambdaTimeout: 30
       dynatraceSecretArn: arn:aws:secretsmanager:eu-west-2:216552277552:secret:DynatraceNonProductionVariables
