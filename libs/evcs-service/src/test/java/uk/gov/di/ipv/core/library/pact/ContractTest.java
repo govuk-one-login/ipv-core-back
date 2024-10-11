@@ -62,6 +62,11 @@ class ContractTest {
                                     "timestampMs", "1714478033959"),
                             ONLINE));
 
+    private static final List<EvcsCreateUserVCsDto> INVALID_CREATE_USER_VCS_DTO =
+            List.of(
+                    new EvcsCreateUserVCsDto(
+                            VcFixtures.VC_ADDRESS.getVcString(), EvcsVCState.CURRENT, null, null));
+
     private static final List<EvcsUpdateUserVCsDto> EVCS_UPDATE_USER_VCS_DTO =
             List.of(
                     new EvcsUpdateUserVCsDto(
@@ -118,18 +123,7 @@ class ContractTest {
                                                             VcFixtures.DCMAW_PASSPORT_VC
                                                                     .getVcString());
                                                     vc.stringType("state", "PENDING_RETURN");
-                                                    vc.object(
-                                                            "metadata",
-                                                            metadata -> {
-                                                                metadata.stringType(
-                                                                        "reason", "testing");
-                                                                metadata.numberType(
-                                                                        "timestampMs",
-                                                                        1711721297123L);
-                                                                metadata.stringType(
-                                                                        "txmaEventId",
-                                                                        "1a116fe7-2ff9-4f7c-940d-d55fa7d03d66");
-                                                            });
+                                                    vc.object("metadata", metadata -> {});
                                                 });
                                     });
                         })
@@ -323,13 +317,25 @@ class ContractTest {
         return builder.given("EVCS client exist")
                 .given("User has a valid VC")
                 .uponReceiving("A request to create EVCS user VCs")
-                .path("/vcs/" + INVALID_USER_ID)
+                .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
                 .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
-                .body(getRequestBodyForUserVC())
+                .body(invalidRequestBodyForUserVC())
                 .willRespondWith()
                 .status(400)
                 .toPact();
+    }
+
+    private DslPart invalidRequestBodyForUserVC() {
+        return newJsonArray(
+                        array -> {
+                            array.object(
+                                    vcObject -> {
+                                        vcObject.stringType("vc", "invalid-vc-string");
+                                        vcObject.stringType("state", "CURRENT");
+                                    });
+                        })
+                .build();
     }
 
     @Test
@@ -340,7 +346,7 @@ class ContractTest {
         assertThrows(
                 EvcsServiceException.class,
                 () -> {
-                    evcsClient.storeUserVCs(INVALID_USER_ID, EVCS_CREATE_USER_VCS_DTO);
+                    evcsClient.storeUserVCs(TEST_USER_ID, INVALID_CREATE_USER_VCS_DTO);
                 });
     }
 
