@@ -282,21 +282,6 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
-  MULTIPLE_DOC_F2F_NINO_CHECK_PAGE:
-    response:
-      type: page
-      context: nino
-      pageId: page-multiple-doc-check
-    events:
-      ukPassport:
-        targetState: WEB_DL_OR_PASSPORT
-      drivingLicence:
-        targetState: WEB_DL_OR_PASSPORT
-      nino:
-        targetState: NINO_START_PAGE
-      end:
-        targetState: F2F_PYI_POST_OFFICE
-
   PYI_ESCAPE:
     response:
       type: page
