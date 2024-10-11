@@ -1,3 +1,3 @@
-package uk.gov.di.ipv.core.bulkmigratevcs.domain.metadata;
+package uk.gov.di.ipv.core.library.metadata;
 
 public record MigrationMetadata(MigrationMetadataBatchDetails migrationV001) {}
