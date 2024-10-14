@@ -229,6 +229,11 @@ public class CriApiService {
                 && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+            try {
+                httpRequest.setContentType("application/x-www-form-urlencoded");
+            } catch (ParseException ex) {
+                LOGGER.error("Failed to set content type", ex);
+            }
             LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
         }
 
@@ -270,6 +275,11 @@ public class CriApiService {
         if (cri.equals(DWP_KBV)
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
+            try {
+                credentialRequest.setContentType("text/plain");
+            } catch (ParseException ex) {
+                LOGGER.error("Failed to set content type", ex);
+            }
             LOGGER.info(buildRequestDebugLog(credentialRequest, "credential request"));
         }
         try {
