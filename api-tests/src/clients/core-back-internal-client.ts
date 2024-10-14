@@ -87,7 +87,7 @@ export const processCriCallback = async (
   const result = await response.json();
   if (!response.ok && !result.page) {
     throw new Error(
-      `processCriCallback request failed: ${JSON.stringify(result)}`,
+      `processCriCallback request failed: ${response.statusText}`,
     );
   }
   return result;
