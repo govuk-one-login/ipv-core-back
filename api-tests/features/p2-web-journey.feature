@@ -192,7 +192,7 @@ Feature: P2 Web document journey
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details to the CRI stub
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                          |
@@ -224,7 +224,7 @@ Feature: P2 Web document journey
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details to the CRI stub
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error
       | Attribute          | Values                                          |

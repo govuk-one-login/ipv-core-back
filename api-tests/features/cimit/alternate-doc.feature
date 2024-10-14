@@ -213,7 +213,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details to the CRI stub
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
     When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                          |
@@ -249,7 +249,7 @@ Feature: CIMIT - Alternate doc
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details to the CRI stub
+    When I submit 'kenneth-score-2' details to the CRI stub
     Then I get a 'hmrcKbv' CRI response
     When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
       | Attribute          | Values                                          |

@@ -13,7 +13,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -49,7 +49,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -98,7 +98,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -131,7 +131,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -170,7 +170,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -203,7 +203,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -236,7 +236,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
@@ -265,7 +265,7 @@ Feature: P1 No Photo Id Journey
       | Attribute | Values         |
       | context   | "hmrc_check"   |
     Then I get a 'nino' CRI response
-    When I submit 'kenneth' details with attributes to the CRI stub
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get an 'address' CRI response
