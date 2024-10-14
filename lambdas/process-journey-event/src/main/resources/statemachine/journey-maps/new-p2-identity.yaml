@@ -79,6 +79,9 @@ states:
       alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   CRI_TICF_STATE:
     events:
@@ -194,6 +197,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
       not-found:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       access-denied:
@@ -202,6 +207,42 @@ states:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       fail-with-no-ci:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      access-denied:
+        targetState: RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL
+      alternate-doc-invalid-dl:
+        targetState: RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION
+
+  RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: another-way-after-dl
+
+  RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl-another-way
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -607,6 +648,8 @@ states:
     events:
       next:
         targetState: POST_DCMAW_SUCCESS_PAGE
+      dl-auth-source-check:
+        targetState: MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
       not-found:
         targetJourney: FAILED
         targetState: FAILED
@@ -629,6 +672,32 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       enhanced-verification:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
+      access-denied:
+        targetState: MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE
+
+  MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
@@ -700,6 +769,8 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_AFTER_PYI_ESCAPE
       not-found:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -730,6 +801,17 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_AFTER_PYI_ESCAPE:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:

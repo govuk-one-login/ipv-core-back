@@ -48,6 +48,9 @@ states:
       alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   # Journey States
 
