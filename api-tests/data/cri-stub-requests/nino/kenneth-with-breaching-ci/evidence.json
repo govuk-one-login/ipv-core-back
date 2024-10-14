@@ -1,0 +1,12 @@
+{
+  "type": "IdentityCheck",
+  "strengthScore": 0,
+  "validityScore": 0,
+  "checkDetails": [
+    {
+      "checkMethod": "data",
+      "identityCheckPolicy": "none"
+    }
+  ],
+  "ci": ["BREACHING"]
+}
