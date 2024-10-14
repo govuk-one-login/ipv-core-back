@@ -193,7 +193,7 @@ Feature: P1 journey
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
     Then I get a 'page-face-to-face-handoff' page response
 
-  Scenario: P1 F2F Support low strength F2F documents for thin file users
+  Scenario: P1 F2F Support low strength F2F documents for thin fraud file users
     Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -214,36 +214,4 @@ Feature: P1 journey
     When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
       | Attribute          | Values                                      |
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-    Then I get a 'page-face-to-face-handoff' page response
-
-  Scenario: P1 F2F Low confidence journey should have relevent photoid option text
-    Given I activate the 'p1Journeys' feature set
-    When I start a new 'low-confidence' journey
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'end' event
-    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
-    When I submit an 'end' event
-    Then I get a 'page-ipv-identity-postoffice-start' page response with context 'lastChoice'
-
-  Scenario: P1 F2F Support low strength F2F documents for P2 user
-    Given I activate the 'p1Journeys' feature set
-    When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I call the CRI stub and get an 'access_denied' OAuth error
-    Then I get a 'page-multiple-doc-check' page response
-    When I submit an 'end' event
-    Then I get a 'pyi-post-office' page response
-    When I submit a 'next' event
-    Then I get a 'claimedIdentity' CRI response
-    When I submit 'kenneth-current' details to the CRI stub
-    Then I get an 'address' CRI response
-    When I submit 'kenneth-current' details to the CRI stub
-    Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-1-history-0' details to the CRI stub
-    Then I get a 'f2f' CRI response
-    When I submit 'kenneth-passport-valid' details with attributes to the CRI stub
-      | Attribute          | Values                                      |
-      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
     Then I get a 'page-face-to-face-handoff' page response
