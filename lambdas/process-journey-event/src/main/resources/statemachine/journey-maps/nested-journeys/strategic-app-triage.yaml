@@ -89,21 +89,23 @@ nestedJourneyStates:
     response:
       type: page
       pageId: pyi-triage-mobile-confirm
+      context: iphone
     events:
       next:
         targetState: MOBILE_IPHONE_START_SESSION
-      end:
-        exitEventToEmit: end
+      otherDevice:
+        targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_ANDROID_CONFIRM_PAGE:
     response:
       type: page
       pageId: pyi-triage-mobile-confirm
+      context: android
     events:
       next:
         targetState: MOBILE_ANDROID_START_SESSION
-      end:
-        exitEventToEmit: end
+      otherDevice:
+        targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_START_SESSION:
     response:

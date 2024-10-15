@@ -21,7 +21,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
     When I submit an 'appTriageIphone' event
-    Then I get a 'pyi-triage-mobile-confirm' page response
+    Then I get a 'pyi-triage-mobile-confirm' page response with context 'iphone'
     When I submit an 'next' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
@@ -45,7 +45,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
     When I submit an 'appTriageAndroid' event
-    Then I get a 'pyi-triage-mobile-confirm' page response
+    Then I get a 'pyi-triage-mobile-confirm' page response with context 'android'
     When I submit an 'next' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
