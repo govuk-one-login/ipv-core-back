@@ -215,3 +215,44 @@ Feature: P2 F2F journey
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":4} |
       Then I get a 'page-face-to-face-handoff' page response
+
+  Rule: Failed F2F journeys are only shown the fail page once
+    Background:
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-passport-verification-1' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+    Scenario: User chooses to prove their identity again
+      # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      And I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+
+      # Start another return journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+
+    Scenario: User chooses to return to the service
+      # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
+      And I submit an 'end' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity without a TICF VC
+
+      # Start another return journey
+      When I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
