@@ -48,6 +48,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DOB_EXPERIAN_CHECK_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -319,7 +320,15 @@ public class UserIdentityService {
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCri())) {
+                List<Cri> criTypesExcludedForDobCorrelation =
+                        new ArrayList<>(CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION);
+                if (configService.enabled(DOB_EXPERIAN_CHECK_ENABLED)) {
+                    criTypesExcludedForDobCorrelation =
+                            criTypesExcludedForDobCorrelation.stream()
+                                    .filter(cri -> !BAV.equals(cri))
+                                    .toList();
+                }
+                if (criTypesExcludedForDobCorrelation.contains(vc.getCri())) {
                     continue;
                 }
                 addLogMessage(vc, "Birthdate property is missing from VC");
