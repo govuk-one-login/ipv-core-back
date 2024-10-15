@@ -264,7 +264,6 @@ class ContractTest {
                 .body(getRequestBodyForUserVC())
                 .willRespondWith()
                 .status(200)
-                .body(getResponseBodyCreateUserVC())
                 .toPact();
     }
 
@@ -283,19 +282,10 @@ class ContractTest {
                                                     metadata.stringType(
                                                             "timestampMs", "1711721297123");
                                                     metadata.stringType(
-                                                            "txmaEventId",
-                                                            "1a116fe7-2ff9-4f7c-940d-d55fa7d03d66");
+                                                            "txmaEventId", "txma-testing-event-id");
                                                 });
                                         vcObject.stringType("provenance", "ONLINE");
                                     });
-                        })
-                .build();
-    }
-
-    private DslPart getResponseBodyCreateUserVC() {
-        return newJsonBody(
-                        body -> {
-                            body.stringType("messageId", "bd8359d9-d559-47dd-9467-2a31e88a9e2d");
                         })
                 .build();
     }
@@ -314,9 +304,7 @@ class ContractTest {
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidCreateUserVcReturns400(PactDslWithProvider builder) {
-        return builder.given("EVCS client exist")
-                .given("User has a valid VC")
-                .uponReceiving("A request to create EVCS user VCs")
+        return builder.uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
                 .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
@@ -415,8 +403,7 @@ class ContractTest {
                                                     metadata.stringType(
                                                             "timestampMs", "1711721297123");
                                                     metadata.stringType(
-                                                            "txmaEventId",
-                                                            "1a116fe7-2ff9-4f7c-940d-d55fa7d03d66");
+                                                            "txmaEventId", "txma-testing-event-id");
                                                 });
                                     });
                         })
