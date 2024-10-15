@@ -45,6 +45,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 
 import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -229,12 +232,34 @@ public class CriApiService {
                 && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-            try {
-                httpRequest.setContentType("application/x-www-form-urlencoded");
-            } catch (ParseException ex) {
-                LOGGER.error("Failed to set content type", ex);
-            }
             LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
+            // Try making barebones http request
+            var client = HttpClient.newHttpClient();
+            var request =
+                    HttpRequest.newBuilder(criConfig.getTokenUrl())
+                            .POST(HttpRequest.BodyPublishers.noBody())
+                            .build();
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "barebones token request")
+                            .with("uri", request.uri().toString())
+                            .with("method", request.method())
+                            .with("headers", request.headers().toString()));
+            try {
+                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "barebones token response")
+                                .with("raw string response", response)
+                                .with("status code", response.statusCode())
+                                .with("body", response.body()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         if (apiKey != null) {
