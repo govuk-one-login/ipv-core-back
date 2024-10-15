@@ -42,6 +42,9 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
 
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
     events:
       anotherWay:
         exitEventToEmit: anotherWay
@@ -80,6 +83,9 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
 
   DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
     events:
       anotherWay:
         exitEventToEmit: anotherWay
@@ -98,6 +104,9 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
     events:
       anotherWay:
         exitEventToEmit: anotherWay
@@ -170,6 +179,9 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
     events:
       anotherWay:
         exitEventToEmit: anotherWay
@@ -188,6 +200,9 @@ nestedJourneyStates:
         exitEventToEmit: anotherWay
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
     events:
       anotherWay:
         exitEventToEmit: anotherWay
