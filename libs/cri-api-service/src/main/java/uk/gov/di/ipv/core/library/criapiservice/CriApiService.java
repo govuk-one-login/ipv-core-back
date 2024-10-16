@@ -233,7 +233,7 @@ public class CriApiService {
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
             httpRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
-            httpRequest.setAccept("application/json");
+            httpRequest.setHeader("Accept", "application/json");
             LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
             // Try making barebones http request
             var client = HttpClient.newHttpClient();
@@ -302,11 +302,8 @@ public class CriApiService {
         if (cri.equals(DWP_KBV)
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-            try {
-                credentialRequest.setContentType("text/plain");
-            } catch (ParseException ex) {
-                LOGGER.error("Failed to set content type", ex);
-            }
+            credentialRequest.setHeader("Content-Type", "text/plain");
+            credentialRequest.setHeader("Accept", "application/json");
             LOGGER.info(buildRequestDebugLog(credentialRequest, "credential request"));
         }
         try {
