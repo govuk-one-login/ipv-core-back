@@ -143,12 +143,10 @@ states:
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
-      next:
+      sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      end:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      multipleDocCheckPage:
+      anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
 
   F2F_START_PAGE:
@@ -628,17 +626,15 @@ states:
   MITIGATION_01_STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
-      next:
+      sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      end:
+      anotherWay:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      multipleDocCheckPage:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   MITIGATION_01_CRI_DCMAW:
     response:
@@ -748,17 +744,15 @@ states:
   STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
-      next:
+      sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      end:
+      anotherWay:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      multipleDocCheckPage:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
 
   CRI_DCMAW_PYI_ESCAPE:
     response:

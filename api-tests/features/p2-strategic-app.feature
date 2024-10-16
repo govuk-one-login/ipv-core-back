@@ -59,7 +59,11 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-    When I submit an 'end' event
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit an 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario: DAD journey iphone
@@ -98,7 +102,9 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
     Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
-    When I submit an 'end' event
+    When I submit a 'neither' event
+    Then I get a 'pyi-triage-buffer' page response
+    When I submit an 'anotherWay' event
     Then I get a 'page-multiple-doc-check' page response
 
   Scenario: Strategic app no photo ID goes to F2F

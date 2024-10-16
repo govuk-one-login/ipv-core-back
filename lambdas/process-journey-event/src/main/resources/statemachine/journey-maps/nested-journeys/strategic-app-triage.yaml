@@ -39,8 +39,18 @@ nestedJourneyStates:
         targetState: DAD_IPHONE_START_SESSION
       android:
         targetState: DAD_ANDROID_START_SESSION
-      end:
-        exitEventToEmit: end
+      neither:
+        targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+
+  DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
+    events:
+      anotherWay:
+        exitEventToEmit: anotherWay
+      back:
+        targetState: DAD_SELECT_SMARTPHONE
 
   DAD_IPHONE_START_SESSION:
     response:
@@ -50,7 +60,7 @@ nestedJourneyStates:
       next:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: multipleDocCheckPage
+        exitEventToEmit: sessionError
 
   DAD_ANDROID_START_SESSION:
     response:
@@ -60,19 +70,49 @@ nestedJourneyStates:
       next:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: multipleDocCheckPage
+        exitEventToEmit: sessionError
 
   DESKTOP_IPHONE_DOWNLOAD_PAGE:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: iphone
+    events:
+      preferNoApp:
+        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
+    events:
+      anotherWay:
+        exitEventToEmit: anotherWay
+      back:
+        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE:
     response:
       type: page
       pageId: pyi-triage-desktop-download-app
       context: android
+    events:
+      preferNoApp:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
+    events:
+      anotherWay:
+        exitEventToEmit: anotherWay
+      back:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
   MAM_SELECT_SMARTPHONE:
     response:
@@ -84,8 +124,8 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_START_SESSION
       android:
         targetState: MOBILE_ANDROID_START_SESSION
-      end:
-        exitEventToEmit: end
+      neither:
+        targetState: DAD_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_CONFIRM_PAGE:
     response:
@@ -117,7 +157,7 @@ nestedJourneyStates:
       next:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: multipleDocCheckPage
+        exitEventToEmit: sessionError
 
   MOBILE_ANDROID_START_SESSION:
     response:
@@ -127,7 +167,7 @@ nestedJourneyStates:
       next:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: multipleDocCheckPage
+        exitEventToEmit: sessionError
 
   MOBILE_IPHONE_DOWNLOAD_PAGE:
     response:
@@ -135,8 +175,20 @@ nestedJourneyStates:
       pageId: pyi-triage-mobile-download-app
       context: iphone
     events:
-      next:
-        exitEventToEmit: next
+      preferNoApp:
+        targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
+    events:
+      anotherWay:
+        exitEventToEmit: anotherWay
+      back:
+        targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
 
   MOBILE_ANDROID_DOWNLOAD_PAGE:
     response:
@@ -144,5 +196,17 @@ nestedJourneyStates:
       pageId: pyi-triage-mobile-download-app
       context: android
     events:
-      next:
-        exitEventToEmit: next
+      preferNoApp:
+        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+      anotherWay:
+        exitEventToEmit: anotherWay
+
+  MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
+    response:
+      type: page
+      pageId: pyi-triage-buffer
+    events:
+      anotherWay:
+        exitEventToEmit: anotherWay
+      back:
+        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
