@@ -11,7 +11,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessJourneyStepResult"
+      "Next": "ProcessJourneyStepResult",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "ProcessJourneyStepResult": {
       "Type": "Choice",
@@ -85,7 +92,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "ResetSessionIdentityLambda": {
       "Type": "Task",
@@ -99,7 +113,14 @@
         "deviceInformation.$": "$$.Execution.Input.deviceInformation",
         "lambdaInput.$": "$.lambdaInput"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "BuildCriOauthRequestLambda": {
       "Type": "Task",
@@ -113,7 +134,14 @@
         "deviceInformation.$": "$$.Execution.Input.deviceInformation",
         "language.$": "$$.Execution.Input.language"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "BuildClientOauthResponseLambda": {
       "Type": "Task",
@@ -126,7 +154,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "EvaluateGpg45Scores": {
       "Type": "Task",
@@ -139,7 +174,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "CheckGpg45ScoreLambda": {
       "Type": "Task",
@@ -152,7 +194,14 @@
         "lambdaInput.$": "$.lambdaInput",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "CallTicfCriLambda": {
       "Type": "Task",
@@ -164,7 +213,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "CallDcmawAsyncCriLambda": {
       "Type": "Task",
@@ -176,7 +232,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "StoreIdentityLambda": {
       "Type": "Task",
@@ -188,7 +251,14 @@
         "lambdaInput.$": "$.lambdaInput",
         "deviceInformation.$": "$$.Execution.Input.deviceInformation"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "CheckCoiLambda": {
       "Type": "Task",
@@ -198,7 +268,14 @@
         "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput"
       },
-      "Next": "ProcessNextJourney"
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
     },
     "ProcessNextJourney": {
       "Type": "Choice",

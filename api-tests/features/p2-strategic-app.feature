@@ -10,7 +10,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
 
@@ -34,7 +34,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'android' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'android'
 
@@ -58,9 +58,9 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'smartphone' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit a 'neither' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
     When I submit an 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
@@ -75,7 +75,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
 
@@ -88,7 +88,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
     When I submit an 'android' event
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'android'
 
@@ -101,7 +101,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
     When I submit a 'neither' event
     Then I get a 'pyi-triage-buffer' page response
     When I submit an 'anotherWay' event
