@@ -233,6 +233,7 @@ public class CriApiService {
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
             httpRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
+            httpRequest.setAccept("application/json");
             LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
             // Try making barebones http request
             var client = HttpClient.newHttpClient();
@@ -240,17 +241,12 @@ public class CriApiService {
                     HttpRequest.newBuilder(criConfig.getTokenUrl())
                             .POST(HttpRequest.BodyPublishers.noBody())
                             .build();
-            var requestWithBody =
-                    HttpRequest.newBuilder(criConfig.getTokenUrl())
-                            .headers("Content-Type", "application/x-www-form-urlencoded")
-                            .POST(HttpRequest.BodyPublishers.ofString(httpRequest.getBody()))
-                            .build();
             LOGGER.info(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "barebones token request")
-                            .with("uri", requestWithBody.uri().toString())
-                            .with("method", requestWithBody.method())
-                            .with("headers", requestWithBody.headers().toString()));
+                            .with("uri", request.uri().toString())
+                            .with("method", request.method())
+                            .with("headers", request.headers().toString()));
             try {
                 var response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 LOGGER.info(
@@ -261,16 +257,6 @@ public class CriApiService {
                                 .with("raw string response", response)
                                 .with("status code", response.statusCode())
                                 .with("body", response.body()));
-                var responseWithBody =
-                        client.send(requestWithBody, HttpResponse.BodyHandlers.ofString());
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "barebones token response with body")
-                                .with("raw string response", responseWithBody)
-                                .with("status code", responseWithBody.statusCode())
-                                .with("body", responseWithBody.body()));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (InterruptedException e) {
