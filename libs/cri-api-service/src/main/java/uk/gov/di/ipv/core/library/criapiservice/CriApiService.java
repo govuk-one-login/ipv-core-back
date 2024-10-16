@@ -45,14 +45,10 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 
 import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -65,6 +61,7 @@ public class CriApiService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
+    private static final String HEADER_ACCEPT = "Accept";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final SignerFactory signerFactory;
@@ -122,12 +119,6 @@ public class CriApiService {
             var httpResponse = accessTokenRequest.send();
             var tokenResponse = TokenResponse.parse(httpResponse);
 
-            // Temp debug logging
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("token response status", httpResponse.getStatusCode())
-                            .with("token response message", httpResponse.getStatusMessage()));
-
             if (tokenResponse instanceof TokenErrorResponse) {
                 var errorResponse = tokenResponse.toErrorResponse();
                 var errorObject =
@@ -178,20 +169,6 @@ public class CriApiService {
             var redirectionUri = criConfig.getClientCallbackUrl();
             var authorizationGrant = new AuthorizationCodeGrant(authorizationCode, redirectionUri);
 
-            if (criOAuthSessionItem.getCriId() != null
-                    && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
-                    && configService.getEnvironmentVariable(ENVIRONMENT) != null
-                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-                var clientAuthenticationParams = clientAuthentication.toParameters();
-                var authorizationGrantParams = authorizationGrant.toParameters();
-                for (String key : clientAuthenticationParams.keySet()) {
-                    LOGGER.info(key + "=" + clientAuthenticationParams.get(key).get(0));
-                }
-                for (String key : authorizationGrantParams.keySet()) {
-                    LOGGER.info(key + "=" + authorizationGrantParams.get(key).get(0));
-                }
-            }
-
             return buildAccessTokenRequest(
                     criOAuthSessionItem, clientAuthentication, authorizationGrant);
         } catch (JOSEException e) {
@@ -228,40 +205,13 @@ public class CriApiService {
 
         var httpRequest = tokenRequest.toHTTPRequest();
 
+        // Temporary for DWP integration testing
         if (criOAuthSessionItem.getCriId() != null
                 && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-            httpRequest.setHeader("Content-Type", "application/x-www-form-urlencoded");
-            httpRequest.setHeader("Accept", "application/json");
-            LOGGER.info(buildRequestDebugLog(httpRequest, "token request"));
-            // Try making barebones http request
-            var client = HttpClient.newHttpClient();
-            var request =
-                    HttpRequest.newBuilder(criConfig.getTokenUrl())
-                            .POST(HttpRequest.BodyPublishers.noBody())
-                            .build();
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "barebones token request")
-                            .with("uri", request.uri().toString())
-                            .with("method", request.method())
-                            .with("headers", request.headers().toString()));
-            try {
-                var response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "barebones token response no body")
-                                .with("raw string response", response)
-                                .with("status code", response.statusCode())
-                                .with("body", response.body()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            httpRequest.setHeader(HEADER_CONTENT_TYPE, "application/x-www-form-urlencoded");
+            httpRequest.setHeader(HEADER_ACCEPT, "application/json");
         }
 
         if (apiKey != null) {
@@ -299,29 +249,8 @@ public class CriApiService {
     @Tracing
     private VerifiableCredentialResponse fetchVerifiableCredential(
             Cri cri, HTTPRequest credentialRequest) throws CriApiException {
-        if (cri.equals(DWP_KBV)
-                && configService.getEnvironmentVariable(ENVIRONMENT) != null
-                && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-            credentialRequest.setHeader("Content-Type", "text/plain");
-            credentialRequest.setHeader("Accept", "application/json");
-            LOGGER.info(buildRequestDebugLog(credentialRequest, "credential request"));
-        }
         try {
             var response = credentialRequest.send();
-
-            // Temp debug logging
-            LOGGER.info(
-                    new StringMapMessage()
-                            .with("credential response status", response.getStatusCode())
-                            .with("credential response message", response.getStatusMessage()));
-            if (cri.equals(DWP_KBV)
-                    && configService.getEnvironmentVariable(ENVIRONMENT) != null
-                    && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with("credential response body", response.getBody()));
-            }
-
             if (!response.indicatesSuccess()) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -396,11 +325,12 @@ public class CriApiService {
             request.setBody(bodyString);
             request.setHeader(HEADER_CONTENT_TYPE, "application/json");
         } else {
+            // Temporary for DWP integration testing
             if (configService.getEnvironmentVariable(ENVIRONMENT) != null
                     && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
                     && cri.equals(DWP_KBV)) {
                 request.setHeader(HEADER_CONTENT_TYPE, "text/plain");
-                request.setHeader("Content-Length", "0");
+                request.setHeader(HEADER_ACCEPT, "application/jwt");
             } else {
                 request.setHeader(
                         HEADER_CONTENT_TYPE,
@@ -436,23 +366,5 @@ public class CriApiService {
                     VerifiableCredentialStatus.fromStatusString(vcResponse.getCredentialStatus()));
         }
         return vcResponseBuilder.build();
-    }
-
-    private StringMapMessage buildRequestDebugLog(HTTPRequest request, String description) {
-        return new StringMapMessage()
-                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), description)
-                .with("url", request.getURL())
-                .with("method", request.getMethod())
-                .with("body", Objects.toString(request.getBody(), ""))
-                .with(
-                        "query",
-                        request.getQueryStringParameters().entrySet().stream()
-                                .map(e -> e.getKey() + ":" + e.getValue())
-                                .collect(Collectors.joining(",")))
-                .with(
-                        "headers",
-                        request.getHeaderMap().entrySet().stream()
-                                .map(e -> e.getKey() + ":'" + e.getValue().get(0) + "'")
-                                .collect(Collectors.joining(",")));
     }
 }
