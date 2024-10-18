@@ -2507,6 +2507,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           REPORT_USER_IDENTITY_TABLE_NAME: !Ref ReportUserIdentityTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CONFIG_SERVICE_CACHE_DURATION_MINUTES: 16
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
