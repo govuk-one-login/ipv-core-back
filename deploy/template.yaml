@@ -71,6 +71,10 @@ Globals:
         - !Sub
           - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
           - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+    DeploymentPreference:
+      Type: !Ref LambdaDeploymentPreference
+      Role: !GetAtt CodeDeployServiceRole.Arn
+    AutoPublishAlias: live
 
 Parameters:
   Environment:
@@ -89,6 +93,28 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
     Default: "none"
+  LambdaDeploymentPreference:
+    Description: "Specifies the configuration to enable gradual Lambda deployments."
+    Type: String
+    Default: "AllAtOnce"
+    AllowedValues:
+      - AllAtOnce
+      - Canary10Percent5Minutes
+      - Canary10Percent10Minutes
+      - Canary10Percent15Minutes
+      - Canary10Percent30Minutes
+      - Linear10PercentEvery10Minutes
+      - Linear10PercentEvery1Minute
+      - Linear10PercentEvery2Minutes
+      - Linear10PercentEvery3Minutes
+  StepFunctionDeploymentPreference:
+    Description: "Specifies the configuration to enable gradual StepFunction deployment."
+    Type: String
+    Default: "ALL_AT_ONCE"
+    AllowedValues:
+      - ALL_AT_ONCE
+      - CANARY
+      - LINEAR
 
 Conditions:
   IsDevelopment: !Or
@@ -114,6 +140,9 @@ Conditions:
   IsTestApiEnv: !Or
     - !Condition IsDevelopment
     - !Equals [ !Ref Environment, build ]
+  UseCanaryDeploymentAlarms: !Or
+    - !Not [ !Equals [ !Ref StepFunctionDeploymentPreference, ALL_AT_ONCE ]]
+    - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ]]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -626,6 +655,11 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref IssueClientAccessTokenFunctionErrorCanaryAlarm, !Ref IssueClientAccessTokenFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -781,6 +815,11 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref InitialiseIpvSessionFunctionErrorCanaryAlarm, !Ref InitialiseIpvSessionFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -981,6 +1020,11 @@ Resources:
       CodeUri: ../lambdas/process-cri-callback
       MemorySize: 2048
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref ProcessCriCallbackFunctionErrorCanaryAlarm, !Ref ProcessCriCallbackFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1099,6 +1143,11 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref BuildUserIdentityFunctionErrorCanaryAlarm, !Ref BuildUserIdentityFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1264,17 +1313,39 @@ Resources:
     Properties:
       DefinitionUri: journeyEngineStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
-        CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Alias
-        BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
-        BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
-        CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
-        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
-        CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Alias
-        CallDcmawAsyncCriLambdaArn: !Ref CallDcmawAsyncCriFunction.Alias
-        StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Alias
-        ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Alias
-        CheckCoiFunctionArn: !Ref CheckCoiFunction.Alias
+        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Version
+        CheckExistingIdentityFunctionArn: !Ref CheckExistingIdentityFunction.Version
+        BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Version
+        BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Version
+        CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Version
+        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Version
+        CallTicfCriLambdaArn: !Ref CallTicfCriFunction.Version
+        CallDcmawAsyncCriLambdaArn: !Ref CallDcmawAsyncCriFunction.Version
+        StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Version
+        ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
+        CheckCoiFunctionArn: !Ref CheckCoiFunction.Version
+      AutoPublishAlias: live
+      DeploymentPreference:
+        Type: !Ref StepFunctionDeploymentPreference
+        Interval: 10
+        Percentage: 10
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - - !Ref JourneyEngineStepFunctionExecutionFailedCanaryAlarm
+            - !Ref JourneyEngineStepFunctionTaskFailedCanaryAlarm
+            - !Ref IPVProcessJourneyEventFunctionErrorCanaryAlarm
+            - !Ref CheckExistingIdentityFunctionErrorCanaryAlarm
+            - !Ref BuildCriOauthRequestFunctionErrorCanaryAlarm
+            - !Ref BuildClientOauthResponseFunctionErrorCanaryAlarm
+            - !Ref CheckGpg45ScoreFunctionErrorCanaryAlarm
+            - !Ref EvaluateGpg45ScoresFunctionErrorCanaryAlarm
+            - !Ref CallTicfCriFunctionErrorCanaryAlarm
+            - !Ref CallDcmawAsyncCriFunctionErrorCanaryAlarm
+            - !Ref StoreIdentityFunctionErrorCanaryAlarm
+            - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
+            - !Ref CheckCoiFunctionErrorCanaryAlarm
+          - !Ref AWS::NoValue
+        StateMachineVersionArn: !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction}:live"
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1558,6 +1629,11 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref BuildProvenUserIdentityDetailsFunctionErrorCanaryAlarm,!Ref BuildProvenUserIdentityDetailsFunction5xxErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1741,6 +1817,11 @@ Resources:
       CodeUri: ../lambdas/process-async-cri-credential
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
       Tracing: Active
+      DeploymentPreference:
+        Alarms: !If
+          - UseCanaryDeploymentAlarms
+          - [!Ref ProcessAsyncCriCredentialFunctionErrorCanaryAlarm]
+          - [!Ref AWS::NoValue]
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -2860,6 +2941,22 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
+      PermissionsBoundary: !If [ UsePermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue ]
+
   ####################################################################
   #                                                                  #
   # Monitoring & Alerts                                              #
@@ -3018,6 +3115,728 @@ Resources:
       DatapointsToAlarm: 3
       Threshold: 30000 #30k milliseconds = 30 seconds
       ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+
+  ####################################################################
+  #                                                                  #
+  # Canary Alarms for individual lambdas                             #
+  #                                                                  #
+  ####################################################################
+
+
+  IssueClientAccessTokenFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: "Error returned from the IssueClientAccessTokenFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-IssueClientAccessTokenFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-IssueClientAccessTokenFunction:live"
+        - Name: FunctionName
+          Value: !Ref IssueClientAccessTokenFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt IssueClientAccessTokenFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  IssueClientAccessTokenFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "IssueClientAccessTokenFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-IssueClientAccessTokenFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core External API Gateway ${Environment}
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /token
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  InitialiseIpvSessionFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the InitialiseIpvSessionFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-InitialiseIpvSessionFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-InitialiseIpvSessionFunction:live"
+        - Name: FunctionName
+          Value: !Ref InitialiseIpvSessionFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt InitialiseIpvSessionFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  InitialiseIpvSessionFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "InitialiseIpvSessionFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-InitialiseIpvSessionFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core Private API Gateway ${Environment}
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /session/initialise
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessCriCallbackFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the ProcessCriCallbackFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessCriCallbackFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-ProcessCriCallbackFunction:live"
+        - Name: FunctionName
+          Value: !Ref ProcessCriCallbackFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt ProcessCriCallbackFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessCriCallbackFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "ProcessCriCallbackFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessCriCallbackFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core Private API Gateway ${Environment}
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /cri/callback
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildUserIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the BuildUserIdentityFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildUserIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-BuildUserIdentityFunction:live"
+        - Name: FunctionName
+          Value: !Ref BuildUserIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt BuildUserIdentityFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildUserIdentityFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "BuildUserIdentityFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildUserIdentityFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core External API Gateway ${Environment}
+        - Name: Method
+          Value: GET
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /user-identity
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessAsyncCriCredentialFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the ProcessAsyncCriCredentialFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessAsyncCriCredentialFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-ProcessAsyncCriCredentialFunction:live"
+        - Name: FunctionName
+          Value: !Ref ProcessAsyncCriCredentialFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt ProcessAsyncCriCredentialFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildProvenUserIdentityDetailsFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the BuildProvenUserIdentityDetailsFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildProvenUserIdentityDetailsFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-BuildProvenUserIdentityDetailsFunction:live"
+        - Name: FunctionName
+          Value: !Ref BuildProvenUserIdentityDetailsFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt BuildProvenUserIdentityDetailsFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildProvenUserIdentityDetailsFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "BuildProvenUserIdentityDetailsFunction returning 5xx response."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildProvenUserIdentityDetailsFunction-5xxErrorCanary
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core Private API Gateway ${Environment}
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /user/proven-identity-details
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ####################################################################
+  #                                                                  #
+  # Canary Alarms for step function and its lambdas                  #
+  #                                                                  #
+  ####################################################################
+
+  JourneyEngineStepFunctionExecutionFailedCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-ExecutionFailedCanary
+      AlarmDescription: !Sub "Error returned from the JourneyEngineStepFunction ${JourneyEngineStepFunction.StateMachineRevisionId}"
+      MetricName: ExecutionsFailed
+      Dimensions:
+        - Name: StateMachineArn
+          Value: !GetAtt JourneyEngineStepFunction.Arn
+      Namespace: AWS/States
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  JourneyEngineStepFunctionTaskFailedMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
+      FilterPattern: '{$.type = "TaskFailed"}'
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricName: "JourneyEngineStepFunctionTaskFailed"
+          MetricNamespace: !Sub "${AWS::StackName}/LogMessages"
+
+  JourneyEngineStepFunctionTaskFailedCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-TaskFailedCanary
+      AlarmDescription: !Sub "TaskFailed error returned from the JourneyEngineStepFunction"
+      MetricName: "JourneyEngineStepFunctionTaskFailed"
+      Namespace: !Sub ${AWS::StackName}/LogMessages
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  JourneyEngineStepFunction5xxErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-5xxErrorCanary
+      AlarmDescription: "JourneyEngineStepFunction returning 5xx response."
+      Namespace: AWS/ApiGateway
+      MetricName: 5XXError
+      Dimensions:
+        - Name: ApiName
+          Value: !Sub IPV Core Private API Gateway ${Environment}
+        - Name: Method
+          Value: POST
+        - Name: Stage
+          Value: !Ref Environment
+        - Name: Resource
+          Value: /journey/{journeyStep+}
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  IPVProcessJourneyEventFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the IPVProcessJourneyEventFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-IPVProcessJourneyEventFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-IPVProcessJourneyEventFunction:live"
+        - Name: FunctionName
+          Value: !Ref IPVProcessJourneyEventFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt IPVProcessJourneyEventFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckExistingIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CheckExistingIdentityFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckExistingIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-CheckExistingIdentityFunction:live"
+        - Name: FunctionName
+          Value: !Ref CheckExistingIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CheckExistingIdentityFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildCriOauthRequestFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the BuildCriOauthRequestFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildCriOauthRequestFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-BuildCriOauthRequestFunction:live"
+        - Name: FunctionName
+          Value: !Ref BuildCriOauthRequestFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt BuildCriOauthRequestFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  BuildClientOauthResponseFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the BuildClientOauthResponseFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildClientOauthResponseFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-BuildClientOauthResponseFunction:live"
+        - Name: FunctionName
+          Value: !Ref BuildClientOauthResponseFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt BuildClientOauthResponseFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckGpg45ScoreFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CheckGpg45ScoreFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckGpg45ScoreFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-CheckGpg45ScoreFunction:live"
+        - Name: FunctionName
+          Value: !Ref CheckGpg45ScoreFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CheckGpg45ScoreFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  EvaluateGpg45ScoresFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the EvaluateGpg45ScoresFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-EvaluateGpg45ScoresFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-EvaluateGpg45ScoresFunction:live"
+        - Name: FunctionName
+          Value: !Ref EvaluateGpg45ScoresFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt EvaluateGpg45ScoresFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CallTicfCriFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CallTicfCriFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-CallTicfCriFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-CallTicfCriFunction:live"
+        - Name: FunctionName
+          Value: !Ref CallTicfCriFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CallTicfCriFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CallDcmawAsyncCriFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CallDcmawAsyncCriFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-CallDcmawAsyncCriFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-CallDcmawAsyncCriFunction:live"
+        - Name: FunctionName
+          Value: !Ref CallDcmawAsyncCriFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CallDcmawAsyncCriFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  StoreIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the StoreIdentityFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-StoreIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-StoreIdentityFunction:live"
+        - Name: FunctionName
+          Value: !Ref StoreIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt StoreIdentityFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ResetSessionIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the ResetSessionIdentityFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-ResetSessionIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-ResetSessionIdentityFunction:live"
+        - Name: FunctionName
+          Value: !Ref ResetSessionIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt ResetSessionIdentityFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckCoiFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      OKActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CheckCoiFunction."
+      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckCoiFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${AWS::StackName}-CheckCoiFunction:live"
+        - Name: FunctionName
+          Value: !Ref CheckCoiFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CheckCoiFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
 Outputs:
