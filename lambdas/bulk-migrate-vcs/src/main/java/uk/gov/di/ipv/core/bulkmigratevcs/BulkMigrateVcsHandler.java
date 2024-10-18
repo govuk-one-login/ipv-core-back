@@ -257,6 +257,7 @@ public class BulkMigrateVcsHandler implements RequestHandler<Request, BatchRepor
             }
             LOGGER.error(
                     LogHelper.buildErrorMessage("Parallel execution failed", e)
+                            .with(LOG_ERROR_STACK.getFieldName(), e.getStackTrace())
                             .with(LOG_BATCH_ID.getFieldName(), batchId)
                             .with(PAGE_EXCLUSIVE_START_KEY, pageSummary.getExclusiveStartKey())
                             .with(PAGE_ITEM_COUNT, pageSummary.getCount()));
