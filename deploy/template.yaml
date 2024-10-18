@@ -3128,7 +3128,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3156,7 +3156,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3177,7 +3177,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3186,7 +3186,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3214,7 +3214,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3235,7 +3235,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3244,7 +3244,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3272,7 +3272,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3293,7 +3293,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3302,7 +3302,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3330,7 +3330,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3351,7 +3351,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3360,7 +3360,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3388,7 +3388,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3416,7 +3416,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3437,7 +3437,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3452,7 +3452,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3466,7 +3466,7 @@ Resources:
       Namespace: AWS/States
       Statistic: Sum
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3485,7 +3485,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3496,7 +3496,7 @@ Resources:
       Namespace: !Sub ${AWS::StackName}/LogMessages
       Statistic: Sum
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3505,7 +3505,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3526,7 +3526,7 @@ Resources:
       Statistic: Sum
       Unit: Count
       Period: 60
-      EvaluationPeriods: 1
+      EvaluationPeriods: 3
       Threshold: 1
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
@@ -3535,7 +3535,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3563,7 +3563,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3591,7 +3591,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3619,7 +3619,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3647,7 +3647,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3675,7 +3675,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3703,7 +3703,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3731,7 +3731,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3759,7 +3759,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3787,7 +3787,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
@@ -3815,7 +3815,7 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: UseCanaryDeploymentAlarms
     Properties:
-      ActionsEnabled: false
+      ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
       OKActions:
