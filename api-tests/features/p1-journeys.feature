@@ -381,3 +381,26 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
+
+  Scenario: P1 thin file for low confidence users with photo ID
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response with context 'nino'
+    When I submit an 'ukPassport' event
+    Then I get a 'ukPassport' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-1' details to the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-0' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
+    Then I get a 'pyi-cri-escape' page response
