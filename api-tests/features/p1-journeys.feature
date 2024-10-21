@@ -292,7 +292,7 @@ Feature: P1 journey
     Then I get a 'hmrcKbv' CRI response
     When I submit 'kenneth-score-1' details with attributes to the CRI stub
       | Attribute          | Values                                          |
-      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":1} |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
