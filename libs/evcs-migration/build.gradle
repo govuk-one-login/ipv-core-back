@@ -9,7 +9,8 @@ dependencies {
 			libs.awsSdkDynamodbEnhanced,
 			libs.commonsCodec,
 			libs.jacksonDatabind,
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:evcs-service")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
