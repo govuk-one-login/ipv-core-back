@@ -8,6 +8,8 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
@@ -27,8 +29,11 @@ public class CriResponseService {
         this.dataStore = dataStore;
     }
 
-    public List<CriResponseItem> getCriResponseItemsByUserId(String userId) {
-        return dataStore.getItems(userId);
+    public Optional<CriResponseItem> getCriResponseItemsWithState(String userId, String state) {
+        final List<CriResponseItem> criResponseItems = dataStore.getItems(userId);
+        return criResponseItems.stream()
+                .filter(item -> Objects.equals(item.getOauthState(), state))
+                .findFirst();
     }
 
     public CriResponseItem getCriResponseItem(String userId, Cri cri) {

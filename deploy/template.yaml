@@ -1086,6 +1086,90 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ProcessCriCallbackLogGroup
 
+  ProcessMobileAppCallbackFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "ProcessMobileAppCallbackLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "process-mobile-app-callback-${Environment}"
+      Handler: uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/process-mobile-app-callback
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Events:
+        IPVCoreMobileAppCallback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCorePrivateAPI
+            Path: /app/callback
+            Method: POST
+      AutoPublishAlias: live
+
+  ProcessMobileAppCallbackFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsTestApiEnv
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref ProcessMobileAppCallbackFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/POST/app/callback"
+
+  ProcessMobileAppCallbackLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/process-mobile-app-callback-${Environment}"
+
+  ProcessMobileAppCallbackLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
+
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
