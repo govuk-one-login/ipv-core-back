@@ -1,8 +1,10 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +21,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.net.URI;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -33,6 +37,8 @@ class DcmawAsyncCriServiceTest {
     private static final String CRI_OAUTH_STATE = "cri-oauth-state";
     public static final String TEST_SECRET = "test-secret";
     public static final String CRI_CLIENT_ID = "cri-client-id";
+    public static final String MAM_CONTEXT = "mam";
+    public static final String DAD_CONTEXT = "dad";
     public static final String CREDENTIAL_URL = "https://example.com/credentialbackUrl";
     public static final String TOKEN_URL = "https://example.com/tokenUrl";
     private static final String REDIRECT_URL = "https://example.com/callbackUrl";
@@ -50,8 +56,10 @@ class DcmawAsyncCriServiceTest {
 
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
-    @Test
-    void startDcmawAsyncSession_WhenCalled_ReturnsAVc() throws Exception {
+    @ParameterizedTest
+    @MethodSource("contextsAndClientCallbackUrls")
+    void startDcmawAsyncSession_WhenCalled_ReturnsAVc(String context, String expectedRedirectUrl)
+            throws Exception {
         // Arrange
         var clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -111,15 +119,21 @@ class DcmawAsyncCriServiceTest {
                                                 && JOURNEY_ID.equals(crbd.getJourneyId())
                                                 && CRI_CLIENT_ID.equals(crbd.getClientId())
                                                 && CRI_OAUTH_STATE.equals(crbd.getState())
-                                                && REDIRECT_URL.equals(crbd.getRedirectUri()))))
+                                                && Objects.equals(
+                                                        expectedRedirectUrl,
+                                                        crbd.getRedirectUri()))))
                 .thenReturn(vcResponse);
 
         // Act
         var response =
                 dcmawAsyncCriService.startDcmawAsyncSession(
-                        CRI_OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem);
+                        CRI_OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem, context);
 
         // Assert
         assertEquals(vcResponse, response);
+    }
+
+    private static Stream<Arguments> contextsAndClientCallbackUrls() {
+        return Stream.of(Arguments.of(MAM_CONTEXT, REDIRECT_URL), Arguments.of(DAD_CONTEXT, null));
     }
 }

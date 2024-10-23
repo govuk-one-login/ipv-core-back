@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -8,6 +9,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
@@ -26,6 +29,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class DcmawAsyncCriService {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String DAD_CONTEXT = "dad";
+    private static final String MAM_CONTEXT = "mam";
 
     private final ConfigService configService;
     private final CriApiService criApiService;
@@ -60,8 +65,9 @@ public class DcmawAsyncCriService {
     public VerifiableCredentialResponse startDcmawAsyncSession(
             String oauthState,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
-            throws CriApiException, JsonProcessingException {
+            IpvSessionItem ipvSessionItem,
+            String context)
+            throws CriApiException, JsonProcessingException, HttpResponseExceptionWithErrorBody {
 
         String connection = configService.getActiveConnection(DCMAW_ASYNC);
 
@@ -94,13 +100,25 @@ public class DcmawAsyncCriService {
                 criApiService.fetchAccessToken(
                         criConfig.getClientId(), dcmawAsyncClientSecret, criOAuthSessionItem);
 
+        String clientCallbackUrl = null;
+        switch (context) {
+            case DAD_CONTEXT:
+                break;
+            case MAM_CONTEXT:
+                clientCallbackUrl = criConfig.getClientCallbackUrl().toString();
+                break;
+            default:
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.INVALID_PROCESS_CONTEXT);
+        }
+
         var credentialRequestBody =
                 new AsyncCredentialRequestBodyDto(
                         clientOAuthSessionItem.getUserId(),
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         criConfig.getClientId(),
                         oauthState,
-                        criConfig.getClientCallbackUrl().toString());
+                        clientCallbackUrl);
 
         return criApiService.fetchVerifiableCredential(
                 accessToken, DCMAW_ASYNC, criOAuthSessionItem, credentialRequestBody);

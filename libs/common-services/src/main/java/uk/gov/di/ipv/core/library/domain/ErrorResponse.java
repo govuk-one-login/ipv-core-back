@@ -108,7 +108,8 @@ public enum ErrorResponse {
     MISSING_LANGUAGE(1095, "Missing language choice from the frontend"),
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
             1096, "Failed to validate verifiable credential response"),
-    ERROR_CRI_RESPONSE_STATUS(1097, "Cri response has status error");
+    ERROR_MOBILE_APP_RESPONSE_STATUS(1097, "Mobile app response has status error"),
+    INVALID_PROCESS_CONTEXT(1098, "Invalid process context");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

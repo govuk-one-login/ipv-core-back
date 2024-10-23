@@ -153,7 +153,7 @@ public class ProcessAsyncCriCredentialHandler
         var userId = errorAsyncCriResponse.getUserId();
         var state = errorAsyncCriResponse.getOauthState();
         Optional<CriResponseItem> criResponseItem =
-                criResponseService.getCriResponseItemsWithState(userId, state);
+                criResponseService.getCriResponseItemWithState(userId, state);
 
         criResponseItem.ifPresent(
                 responseItem -> {
@@ -186,7 +186,7 @@ public class ProcessAsyncCriCredentialHandler
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
         Optional<CriResponseItem> criResponseItem =
-                criResponseService.getCriResponseItemsWithState(userId, state);
+                criResponseService.getCriResponseItemWithState(userId, state);
 
         if (criResponseItem.isEmpty()) {
             LOGGER.error(

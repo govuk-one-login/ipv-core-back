@@ -39,6 +39,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,16 +75,6 @@ class ProcessAsyncCriCredentialHandlerTest {
                     TEST_CREDENTIAL_ISSUER_ID,
                     null,
                     TEST_OAUTH_STATE,
-                    null,
-                    CriResponseService.STATUS_PENDING,
-                    0,
-                    List.of(EVCS_ASYNC_WRITE_ENABLED.getName()));
-    private static final CriResponseItem TEST_CRI_RESPONSE_ITEM_WITH_DIFFERENT_STATE =
-            new CriResponseItem(
-                    TEST_USER_ID,
-                    TEST_CREDENTIAL_ISSUER_ID_DIFFERENT,
-                    null,
-                    TEST_OAUTH_STATE_2,
                     null,
                     CriResponseService.STATUS_PENDING,
                     0,
@@ -131,11 +122,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                TEST_CRI_RESPONSE_ITEM,
-                                TEST_CRI_RESPONSE_ITEM_WITH_DIFFERENT_STATE));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
         when(configService.enabled(EVCS_ASYNC_WRITE_ENABLED)).thenReturn(evcsAsyncWrites);
 
@@ -158,8 +146,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
         when(configService.enabled(EVCS_ASYNC_WRITE_ENABLED)).thenReturn(true);
         doThrow(EvcsServiceException.class).when(evcsService).storePendingVc(F2F_VC);
@@ -177,8 +165,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
         final SQSEvent testEvent = createErrorTestEvent();
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -197,8 +185,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     void shouldRejectValidUnexpectedVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2);
 
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE_2))
+                .thenReturn(Optional.empty());
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -210,8 +198,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     void shouldRejectValidUnsolicitedVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM_WITH_DIFFERENT_STATE));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.empty());
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -224,8 +212,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     void shouldRejectInvalidVerifiableCredential() throws Exception {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         when(configService.getOauthCriActiveConnectionConfig(F2F))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         doThrow(VerifiableCredentialException.class)
@@ -246,8 +234,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
 
         doThrow(new CiPutException("Lambda execution failed"))
@@ -277,8 +265,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID), eq(F2F), anyList(), any(), any()))
                 .thenReturn(List.of(F2F_VC));
-        when(criResponseService.getCriResponseItemsByUserId(TEST_USER_ID))
-                .thenReturn(List.of(TEST_CRI_RESPONSE_ITEM));
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
         mockCredentialIssuerConfig();
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))

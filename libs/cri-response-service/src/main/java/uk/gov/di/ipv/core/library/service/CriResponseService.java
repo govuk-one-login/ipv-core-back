@@ -29,7 +29,7 @@ public class CriResponseService {
         this.dataStore = dataStore;
     }
 
-    public Optional<CriResponseItem> getCriResponseItemsWithState(String userId, String state) {
+    public Optional<CriResponseItem> getCriResponseItemWithState(String userId, String state) {
         final List<CriResponseItem> criResponseItems = dataStore.getItems(userId);
         return criResponseItems.stream()
                 .filter(item -> Objects.equals(item.getOauthState(), state))

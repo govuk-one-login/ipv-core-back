@@ -122,7 +122,7 @@ public class ProcessMobileAppCallbackHandler
 
         // Retrieve and validate cri response
         var criResponse =
-                criResponseService.getCriResponseItemsWithState(userId, callbackRequest.getState());
+                criResponseService.getCriResponseItemWithState(userId, callbackRequest.getState());
         validateCriResponse(criResponse);
 
         return JOURNEY_NEXT;
@@ -154,7 +154,7 @@ public class ProcessMobileAppCallbackHandler
         }
 
         if (CriResponseService.STATUS_ERROR.equals(criResponse.get().getStatus())) {
-            throw new InvalidCriResponseException(ErrorResponse.ERROR_CRI_RESPONSE_STATUS);
+            throw new InvalidCriResponseException(ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS);
         }
     }
 

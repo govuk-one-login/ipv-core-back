@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -141,6 +142,16 @@ public class RequestHelper {
                 .map(queryParam -> queryParam.split("=", 2)[1])
                 .filter(StringUtils::isNotBlank)
                 .orElse(null);
+    }
+
+    public static String getJourneyParameterOrThrow(JourneyRequest request, String key)
+            throws HttpResponseExceptionWithErrorBody {
+        String parameter = getJourneyParameter(request, key);
+        if (Objects.isNull(parameter)) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.INVALID_PROCESS_CONTEXT);
+        }
+        return parameter;
     }
 
     public static String getScoreType(ProcessRequest request)

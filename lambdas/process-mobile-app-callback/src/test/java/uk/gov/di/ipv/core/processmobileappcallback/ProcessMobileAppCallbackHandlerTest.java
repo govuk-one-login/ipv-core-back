@@ -51,7 +51,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(criResponseService.getCriResponseItemsWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
                 .thenReturn(buildValidCriResponseItem());
 
         // Act
@@ -140,7 +140,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(criResponseService.getCriResponseItemsWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
                 .thenReturn(Optional.empty());
 
         // Act
@@ -167,7 +167,7 @@ class ProcessMobileAppCallbackHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ERROR);
-        when(criResponseService.getCriResponseItemsWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
                 .thenReturn(criResponseItem);
 
         // Act
@@ -181,7 +181,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
                         HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.ERROR_CRI_RESPONSE_STATUS),
+                        ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS),
                 journeyResponse);
     }
 
