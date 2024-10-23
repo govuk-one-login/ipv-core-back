@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -36,6 +38,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 public class ProcessMobileAppCallbackHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -86,14 +89,20 @@ public class ProcessMobileAppCallbackHandler
         }
     }
 
-    private MobileAppCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input) {
-        var callbackRequest = new MobileAppCallbackRequest();
-        callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
-        callbackRequest.setState(input.getHeaders().get("oauth-state"));
-        callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
-        callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
-        callbackRequest.setDeviceInformation(input.getHeaders().get("txma-audit-encoded"));
-        return callbackRequest;
+    private MobileAppCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
+            throws InvalidMobileAppCallbackRequestException {
+        try {
+            var callbackRequest =
+                    OBJECT_MAPPER.readValue(input.getBody(), MobileAppCallbackRequest.class);
+            callbackRequest.setIpvSessionId(input.getHeaders().get("ipv-session-id"));
+            callbackRequest.setFeatureSet(RequestHelper.getFeatureSet(input.getHeaders()));
+            callbackRequest.setIpAddress(input.getHeaders().get("ip-address"));
+            callbackRequest.setDeviceInformation(input.getHeaders().get("txma-audit-encoded"));
+            return callbackRequest;
+        } catch (JsonProcessingException e) {
+            throw new InvalidMobileAppCallbackRequestException(
+                    ErrorResponse.FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY);
+        }
     }
 
     private JourneyResponse getJourneyResponse(MobileAppCallbackRequest callbackRequest)
