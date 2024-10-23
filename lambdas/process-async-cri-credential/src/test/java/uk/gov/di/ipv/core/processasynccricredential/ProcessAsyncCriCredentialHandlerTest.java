@@ -54,7 +54,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -63,7 +62,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_MESSAGE_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER_ID = F2F.getId();
-    private static final String TEST_CREDENTIAL_ISSUER_ID_DIFFERENT = DCMAW.getId();
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
     private static final Cri TEST_CRI = Cri.F2F;
     private static final String TEST_COMPONENT_ID = TEST_CRI.getId();

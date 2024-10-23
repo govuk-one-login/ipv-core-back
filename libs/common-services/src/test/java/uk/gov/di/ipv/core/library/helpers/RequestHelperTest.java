@@ -65,6 +65,7 @@ class RequestHelperTest {
                     CONTEXT, BANK_ACCOUNT_CONTEXT, SCOPE, IDENTITY_CHECK_SCOPE);
     private static final String TEST_JOURNEY_WITH_EMPTY_CONTEXT =
             String.format("claimedIdentity?%s=", CONTEXT);
+    private static final String TEST_JOURNEY_WITH_NO_QUERY_PARAMS = "claimedIdentity";
 
     @Test
     void getHeaderByKeyShouldReturnNullIfHeaderNotFound() {
@@ -377,6 +378,21 @@ class RequestHelperTest {
                         BANK_ACCOUNT_CONTEXT,
                         IDENTITY_CHECK_SCOPE),
                 Arguments.of(TEST_JOURNEY_WITH_EMPTY_CONTEXT, null, null));
+    }
+
+    @Test
+    void getJourneyParameterOrThrowShouldThrowIfQueryMissing() {
+        var event =
+                JourneyRequest.builder()
+                        .journey(TEST_JOURNEY_WITH_NO_QUERY_PARAMS)
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .build();
+
+        assertThrows(
+                HttpResponseExceptionWithErrorBody.class,
+                () -> RequestHelper.getJourneyParameterOrThrow(event, "non-existent-query-param"));
     }
 
     @Test
