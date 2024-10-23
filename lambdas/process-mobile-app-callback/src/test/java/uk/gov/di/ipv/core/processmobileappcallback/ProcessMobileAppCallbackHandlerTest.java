@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processmobileappcallback;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +48,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnNextWhenCriResponseStatusNotError() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
@@ -67,7 +69,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnErrorWhenCallbackRequestMissingIpvSessionId() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         requestEvent.setHeaders(Map.of());
 
         // Act
@@ -88,7 +90,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnErrorWhenIpvSessionNotFound() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenThrow(new IpvSessionNotFoundException(""));
 
@@ -110,8 +112,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnErrorWhenMissingOAuthState() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
-        requestEvent.setHeaders(Map.of("ipv-session-id", TEST_IPV_SESSION_ID));
+        var requestEvent = buildValidRequestEventWithState(null);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
@@ -135,7 +136,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnErrorWhenCriResponseNotFound() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
@@ -161,7 +162,7 @@ class ProcessMobileAppCallbackHandlerTest {
     @Test
     void shouldReturnErrorWhenCriResponseStatusError() throws Exception {
         // Arrange
-        var requestEvent = buildValidRequestEvent();
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
@@ -185,10 +186,13 @@ class ProcessMobileAppCallbackHandlerTest {
                 journeyResponse);
     }
 
-    private APIGatewayProxyRequestEvent buildValidRequestEvent() {
+    private APIGatewayProxyRequestEvent buildValidRequestEventWithState(String state)
+            throws JsonProcessingException {
         var event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(
-                Map.of("ipv-session-id", TEST_IPV_SESSION_ID, "oauth-state", TEST_OAUTH_STATE));
+        event.setHeaders(Map.of("ipv-session-id", TEST_IPV_SESSION_ID));
+        event.setBody(
+                OBJECT_MAPPER.writeValueAsString(
+                        MobileAppCallbackRequest.builder().state(state).build()));
         return event;
     }
 
