@@ -226,6 +226,7 @@
       "Type": "Task",
       "Resource": "${CallDcmawAsyncCriLambdaArn}",
       "Parameters": {
+        "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",

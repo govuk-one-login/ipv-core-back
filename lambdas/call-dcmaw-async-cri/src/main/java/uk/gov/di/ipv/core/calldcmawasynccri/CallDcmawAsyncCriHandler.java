@@ -131,7 +131,7 @@ public class CallDcmawAsyncCriHandler
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error calling DCMAW Async CRI", e));
+            LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
