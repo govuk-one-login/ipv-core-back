@@ -1117,6 +1117,8 @@ Resources:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
         - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
