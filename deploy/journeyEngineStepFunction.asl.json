@@ -75,7 +75,7 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/call-dcmaw-async-cri",
+          "StringMatches": "/journey/call-dcmaw-async-cri*",
           "Next": "CallDcmawAsyncCriLambda"
         }
       ],
