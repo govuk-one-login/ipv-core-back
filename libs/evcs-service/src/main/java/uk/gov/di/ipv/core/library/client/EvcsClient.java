@@ -109,6 +109,49 @@ public class EvcsClient {
     }
 
     @Tracing
+    public EvcsGetUserVCsDto getUserVcsForMigrationReconciliation(String userId)
+            throws EvcsServiceException {
+        LOGGER.info(LogHelper.buildLogMessage("Retrieving migrated user VCs from EVCS"));
+        var baseUri =
+                "%s/migration/%s"
+                        .formatted(
+                                configService.getParameter(EVCS_APPLICATION_URL),
+                                URLEncoder.encode(userId, StandardCharsets.UTF_8));
+        try {
+            HttpRequest.Builder httpRequestBuilder =
+                    HttpRequest.newBuilder()
+                            .uri(
+                                    new URIBuilder(baseUri)
+                                            .addParameter(
+                                                    VC_STATE_PARAM, EvcsVCState.CURRENT.name())
+                                            .build())
+                            .GET()
+                            .header(
+                                    X_API_KEY_HEADER,
+                                    configService.getSecret(ConfigurationVariable.EVCS_API_KEY));
+
+            var evcsHttpResponse = sendHttpRequest(httpRequestBuilder.build());
+
+            EvcsGetUserVCsDto evcsGetUserVCs =
+                    evcsHttpResponse.statusCode() != 404
+                            ? OBJECT_MAPPER.readValue(
+                                    evcsHttpResponse.body(), new TypeReference<>() {})
+                            : new EvcsGetUserVCsDto(Collections.emptyList());
+
+            if (CollectionUtils.isEmpty(evcsGetUserVCs.vcs())) {
+                LOGGER.info(LogHelper.buildLogMessage("No user VCs found in EVCS response"));
+            }
+            return evcsGetUserVCs;
+        } catch (JsonProcessingException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
+        } catch (URISyntaxException e) {
+            throw new EvcsServiceException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI);
+        }
+    }
+
+    @Tracing
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
         LOGGER.info(

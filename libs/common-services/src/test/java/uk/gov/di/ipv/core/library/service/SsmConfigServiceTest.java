@@ -62,8 +62,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -304,6 +306,19 @@ class SsmConfigServiceTest {
             assertEquals(
                     expectedActiveConnection, configService.getActiveConnection(credentialIssuer));
         }
+    }
+
+    @Test
+    void shouldReturnSlashSeparatedHistoricSigningKeys() {
+        environmentVariables.set("ENVIRONMENT", "test");
+
+        when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/historicSigningKeys"))
+                .thenReturn(String.format("%s/%s", TEST_EC_PUBLIC_JWK, EC_PUBLIC_JWK_2));
+
+        var result = configService.getHistoricSigningKeys(Cri.PASSPORT.getId());
+
+        assertEquals(TEST_EC_PUBLIC_JWK, result.get(0));
+        assertEquals(EC_PUBLIC_JWK_2, result.get(1));
     }
 
     @ParameterizedTest

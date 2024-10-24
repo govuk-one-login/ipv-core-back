@@ -1,6 +1,5 @@
-package uk.gov.di.ipv.core.bulkmigratevcs.factories;
+package uk.gov.di.ipv.core.library.factories;
 
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -13,7 +12,6 @@ public class EvcsClientFactory {
         this.configService = configService;
     }
 
-    @Tracing
     public EvcsClient getClient() {
         return new EvcsClient(configService);
     }

@@ -377,6 +377,37 @@ class EvcsClientTest {
     }
 
     @Test
+    void testGetUserVcsForMigrationReconciliation() throws Exception {
+        when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
+                .thenReturn(EVCS_APPLICATION_URL);
+        // Arrange
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
+
+        // Act
+        var evcsGetUserVCsDto = evcsClient.getUserVcsForMigrationReconciliation(TEST_USER_ID);
+
+        // Assert
+        verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
+        HttpRequest httpRequest = httpRequestCaptor.getValue();
+        assertEquals("GET", httpRequest.method());
+        assertFalse(httpRequest.headers().map().containsKey(AUTHORIZATION));
+        assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
+        var baseUri =
+                "%s/migration/%s"
+                        .formatted(
+                                EVCS_APPLICATION_URL,
+                                URLEncoder.encode(TEST_USER_ID, StandardCharsets.UTF_8));
+        var expectedUri =
+                new URIBuilder(baseUri).addParameter(VC_STATE_PARAM, CURRENT.name()).build();
+        assertEquals(expectedUri.toString(), httpRequest.uri().toString());
+        assertEquals(2, evcsGetUserVCsDto.vcs().size());
+    }
+
+    @Test
     void testCreateUserVCs() throws Exception {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
