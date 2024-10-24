@@ -76,7 +76,7 @@ public class ProcessJourneyEventHandler
     private static final String NEXT_EVENT = "next";
     private static final String BUILD_CLIENT_OAUTH_RESPONSE_EVENT = "build-client-oauth-response";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
-            new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
+            new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null, null);
     public static final String BACK_EVENT = "back";
     private static final String TICF_CRI_LAMBDA = "call-ticf-cri";
 

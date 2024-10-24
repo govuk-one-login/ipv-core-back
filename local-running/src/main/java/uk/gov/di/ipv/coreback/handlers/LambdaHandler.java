@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
+import uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler;
 import uk.gov.di.ipv.core.userreverification.UserReverificationHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 
@@ -20,6 +21,8 @@ public class LambdaHandler {
     private final BuildProvenUserIdentityDetailsHandler provenUserIdentityHandler =
             new BuildProvenUserIdentityDetailsHandler();
     private final ProcessCriCallbackHandler criCallbackHandler = new ProcessCriCallbackHandler();
+    private final ProcessMobileAppCallbackHandler appCallbackHandler =
+            new ProcessMobileAppCallbackHandler();
     private final IssueClientAccessTokenHandler tokenHandler = new IssueClientAccessTokenHandler();
     private final BuildUserIdentityHandler userIdentityHandler = new BuildUserIdentityHandler();
     private final UserReverificationHandler userReverificationHandler =
@@ -53,6 +56,10 @@ public class LambdaHandler {
 
     public void criCallback(Context ctx) {
         handleApiGatewayProxyRoute(ctx, this.criCallbackHandler);
+    }
+
+    public void appCallback(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.appCallbackHandler);
     }
 
     public void getToken(Context ctx) {

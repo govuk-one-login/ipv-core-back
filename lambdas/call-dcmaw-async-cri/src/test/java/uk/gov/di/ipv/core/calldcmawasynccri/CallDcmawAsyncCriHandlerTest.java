@@ -38,6 +38,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 class CallDcmawAsyncCriHandlerTest {
     public static final String TEST_USER_ID = "a-user-id";
     public static final String TEST_OAUTH_STATE = "some_dummy_state_value";
+    public static final String MAM_CONTEXT = "mam";
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
@@ -49,7 +50,7 @@ class CallDcmawAsyncCriHandlerTest {
                     .ipvSessionId("a-session-id")
                     .ipAddress("an-ip-address")
                     .clientOAuthSessionId("an-oauth-session-id")
-                    .journey("a-journey")
+                    .journey(String.format("a-journey?context=%s", MAM_CONTEXT))
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
     @Mock private Context mockContext;
@@ -87,7 +88,10 @@ class CallDcmawAsyncCriHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.PENDING)
                         .build();
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(
-                        any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
+                        any(String.class),
+                        eq(clientOAuthSessionItem),
+                        eq(mockIpvSessionItem),
+                        eq(MAM_CONTEXT)))
                 .thenReturn(vcResponse);
 
         // Act
@@ -130,7 +134,7 @@ class CallDcmawAsyncCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorIfRespnseIsNotPending() throws Exception {
+    void handleRequestShouldReturnJourneyErrorIfResponseIsNotPending() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -141,7 +145,10 @@ class CallDcmawAsyncCriHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(
-                        any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
+                        any(String.class),
+                        eq(clientOAuthSessionItem),
+                        eq(mockIpvSessionItem),
+                        eq(MAM_CONTEXT)))
                 .thenReturn(vcResponse);
 
         // Act
@@ -159,7 +166,7 @@ class CallDcmawAsyncCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorIfRespnseIsUserIdDoesntMatch() throws Exception {
+    void handleRequestShouldReturnJourneyErrorIfResponseIsUserIdDoesntMatch() throws Exception {
         // Arrange
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -170,7 +177,10 @@ class CallDcmawAsyncCriHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.PENDING)
                         .build();
         when(mockDcmawAsyncCriService.startDcmawAsyncSession(
-                        any(String.class), eq(clientOAuthSessionItem), eq(mockIpvSessionItem)))
+                        any(String.class),
+                        eq(clientOAuthSessionItem),
+                        eq(mockIpvSessionItem),
+                        eq(MAM_CONTEXT)))
                 .thenReturn(vcResponse);
 
         // Act

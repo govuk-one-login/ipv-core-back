@@ -35,6 +35,7 @@ public class CoreBack {
         app.post("/session/initialise", lambdaHandler::initialiseSession);
         app.post("/journey/{event}", journeyEngineHandler::journeyEngine);
         app.post("/cri/callback", lambdaHandler::criCallback);
+        app.post("/app/callback", lambdaHandler::appCallback);
         app.get("/user/proven-identity-details", lambdaHandler::getProvenUserIdentityDetails);
 
         // External APIs
