@@ -69,10 +69,8 @@ public class ProcessMobileAppCallbackHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        MobileAppCallbackRequest callbackRequest;
-
         try {
-            callbackRequest = parseCallbackRequest(input);
+            var callbackRequest = parseCallbackRequest(input);
 
             var journeyResponse = getJourneyResponse(callbackRequest);
 
