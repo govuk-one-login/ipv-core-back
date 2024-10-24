@@ -28,6 +28,8 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE
       smartphone:
         targetState: MAM_SELECT_SMARTPHONE
+      back:
+        targetState: IDENTIFY_DEVICE
 
   DAD_SELECT_SMARTPHONE:
     response:
@@ -41,6 +43,8 @@ nestedJourneyStates:
         targetState: DAD_ANDROID_START_SESSION
       neither:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+      back:
+        targetState: SELECT_DEVICE_PAGE
 
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
     response:
@@ -126,6 +130,8 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_START_SESSION
       neither:
         targetState: DAD_SELECT_SMARTPHONE
+      back:
+        targetState: SELECT_DEVICE_PAGE
 
   MOBILE_IPHONE_CONFIRM_PAGE:
     response:
@@ -137,6 +143,8 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_START_SESSION
       otherDevice:
         targetState: DAD_SELECT_SMARTPHONE
+      back:
+        targetState: IDENTIFY_DEVICE
 
   MOBILE_ANDROID_CONFIRM_PAGE:
     response:
@@ -148,6 +156,8 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_START_SESSION
       otherDevice:
         targetState: DAD_SELECT_SMARTPHONE
+      back:
+        targetState: IDENTIFY_DEVICE
 
   MOBILE_IPHONE_START_SESSION:
     response:
@@ -179,6 +189,8 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
       anotherWay:
         exitEventToEmit: anotherWay
+      back:
+        targetState: MOBILE_IPHONE_START_SESSION
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
@@ -200,6 +212,8 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
       anotherWay:
         exitEventToEmit: anotherWay
+      back:
+        targetState: MOBILE_ANDROID_START_SESSION
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
