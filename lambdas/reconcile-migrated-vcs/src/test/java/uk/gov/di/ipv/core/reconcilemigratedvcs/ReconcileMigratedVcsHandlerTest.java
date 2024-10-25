@@ -35,14 +35,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTTP_REQUEST_SEND;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_SIGNING_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudMissingName;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 @ExtendWith(MockitoExtension.class)
@@ -150,17 +155,31 @@ class ReconcileMigratedVcsHandlerTest {
 
     @Test
     void handlerShouldHandleValidateSignatures() throws Exception {
-        var vc = vcDrivingPermit();
-        when(mockConfigService.getCriByIssuer(vc.getClaimsSet().getIssuer()))
-                .thenReturn(DRIVING_LICENCE);
-        when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
+        var ecVc = vcExperianFraudMissingName();
+        var rsaVc = PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC;
+
+        when(mockConfigService.getCriByIssuer(ecVc.getClaimsSet().getIssuer()))
+                .thenReturn(EXPERIAN_FRAUD);
+        when(mockConfigService.getCriByIssuer(rsaVc.getClaimsSet().getIssuer()))
+                .thenReturn(PASSPORT);
+        when(mockConfigService.getHistoricSigningKeys("fraud"))
                 .thenReturn(List.of(TEST_EC_PUBLIC_JWK));
+        when(mockConfigService.getHistoricSigningKeys("ukPassport"))
+                .thenReturn(List.of(RSA_SIGNING_PUBLIC_JWK));
+
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
         when(mockEvcsClientFactory.getClient()).thenReturn(mockEvcsClient);
         when(mockEvcsClient.getUserVcsForMigrationReconciliation("userId1"))
-                .thenReturn(new EvcsGetUserVCsDto(List.of(evcsGetDtoOf(vc.getVcString()))));
+                .thenReturn(
+                        new EvcsGetUserVCsDto(
+                                List.of(
+                                        evcsGetDtoOf(ecVc.getVcString()),
+                                        evcsGetDtoOf(rsaVc.getVcString()))));
         when(mockTacticalDataStore.getItems("userId1"))
-                .thenReturn(List.of(vcStoreItemOf(vc.getVcString())));
+                .thenReturn(
+                        List.of(
+                                vcStoreItemOf(ecVc.getVcString()),
+                                vcStoreItemOf(rsaVc.getVcString())));
         var request = new Request("vcs-valid-sig-batch-id", List.of("userId1"), 4, true, false);
 
         var reconciliationReport = handler.handleRequest(request, mockContext);
