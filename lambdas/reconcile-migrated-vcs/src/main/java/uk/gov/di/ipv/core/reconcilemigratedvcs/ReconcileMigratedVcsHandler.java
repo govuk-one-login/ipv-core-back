@@ -7,8 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
-import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -42,6 +43,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
+import static com.nimbusds.jose.jwk.KeyType.EC;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BATCH_ID;
@@ -136,10 +138,14 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            LOGGER.error(
+            var logMessage =
                     LogHelper.buildErrorMessage("Parallel execution failed", e)
                             .with(LOG_BATCH_ID.getFieldName(), reconciliationReport.getBatchId())
-                            .with(LOG_ERROR_STACK.getFieldName(), e.getStackTrace()));
+                            .with(LOG_ERROR_STACK.getFieldName(), e.getStackTrace());
+            if (e.getCause() != null && e.getCause().getStackTrace() != null) {
+                logMessage.with("causeErrorStack", e.getCause().getStackTrace());
+            }
+            LOGGER.error(logMessage);
             reconciliationReport.setExitReason("Parallel execution failed");
         } finally {
             forkJoinPool.shutdownNow();
@@ -294,13 +300,19 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private boolean validSignature(VerifiableCredential vc, String hashedUserId)
             throws JOSEException, ParseException {
         // try all known keys until VC is validated, or return false
         for (var publicKey : configService.getHistoricSigningKeys(vc.getCri().getId())) {
             if (verifierMap.get(publicKey) == null) {
                 try {
-                    verifierMap.put(publicKey, new ECDSAVerifier(ECKey.parse(publicKey)));
+                    var parsedJwk = JWK.parse(publicKey);
+                    verifierMap.put(
+                            publicKey,
+                            parsedJwk.getKeyType() == EC
+                                    ? new ECDSAVerifier(parsedJwk.toECKey())
+                                    : new RSASSAVerifier(parsedJwk.toRSAKey()));
                 } catch (JOSEException | ParseException e) {
                     logError(
                             String.format("Error creating validator for %s", vc.getCri().getId()),
@@ -311,12 +323,17 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
                 }
             }
             SignedJWT formattedVc;
-            try {
-                formattedVc = transcodeSignatureIfDerFormat(vc.getSignedJwt());
-            } catch (JOSEException | ParseException e) {
-                logError("Error transcoding signature", hashedUserId, e);
-                throw e;
+            if (verifierMap.get(publicKey) instanceof ECDSAVerifier) {
+                try {
+                    formattedVc = transcodeSignatureIfDerFormat(vc.getSignedJwt());
+                } catch (JOSEException | ParseException e) {
+                    logError("Error transcoding signature", hashedUserId, e);
+                    throw e;
+                }
+            } else {
+                formattedVc = vc.getSignedJwt();
             }
+
             if (formattedVc.verify(verifierMap.get(publicKey))) {
                 return true;
             }
