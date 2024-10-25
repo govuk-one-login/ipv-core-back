@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.library.factories.ForkJoinPoolFactory;
@@ -35,7 +36,7 @@ import uk.gov.di.ipv.core.reconcilemigratedvcs.domain.Request;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -47,6 +48,7 @@ import static com.nimbusds.jose.jwk.KeyType.EC;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BATCH_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_STACK;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_HASH_USER_ID;
@@ -62,7 +64,6 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private final EvcsClientFactory evcsClientFactory;
     private final ForkJoinPoolFactory forkJoinPoolFactory;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    private final Map<String, JWSVerifier> verifierMap = new HashMap<>();
     private final DataStore<VcStoreItem> tacticalDataStore;
 
     private ReconciliationReport reconciliationReport;
@@ -72,6 +73,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private ConcurrentSkipListSet<String> processedIdentities;
     private AtomicBoolean timeoutClose;
     private Map<String, Cri> criIssuersMap;
+    private Map<Cri, List<JWSVerifier>> historicSigningKeyVerifiers;
 
     public ReconcileMigratedVcsHandler(
             ConfigService configService,
@@ -103,7 +105,24 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     public ReconciliationReport handleRequest(Request request, Context context) {
         reconciliationReport = new ReconciliationReport(request);
         processedIdentities = new ConcurrentSkipListSet<>();
-        criIssuersMap = configService.getAllCrisByIssuer();
+        if (reconciliationReport.isCheckSignatures() || reconciliationReport.isCheckP2()) {
+            criIssuersMap = configService.getAllCrisByIssuer();
+        }
+        if (reconciliationReport.isCheckSignatures()) {
+            try {
+                historicSigningKeyVerifiers = getHistoricSigningKeyVerifiers();
+            } catch (ParseException | JOSEException e) {
+                var message = "Failed to generate verifiers";
+                LOGGER.error(
+                        LogHelper.buildErrorMessage("Failed to generate verifiers", e)
+                                .with(
+                                        LOG_BATCH_ID.getFieldName(),
+                                        reconciliationReport.getBatchId())
+                                .with(LOG_ERROR_STACK.getFieldName(), e.getStackTrace()));
+                reconciliationReport.setExitReason(message);
+                return reconciliationReport;
+            }
+        }
         var forkJoinPool =
                 forkJoinPoolFactory.getForkJoinPool(
                         request.parallelism() == null
@@ -306,26 +325,9 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private boolean validSignature(VerifiableCredential vc, String hashedUserId)
             throws JOSEException, ParseException {
         // try all known keys until VC is validated, or return false
-        for (var publicKey : configService.getHistoricSigningKeys(vc.getCri().getId())) {
-            if (verifierMap.get(publicKey) == null) {
-                try {
-                    var parsedJwk = JWK.parse(publicKey);
-                    verifierMap.put(
-                            publicKey,
-                            parsedJwk.getKeyType() == EC
-                                    ? new ECDSAVerifier(parsedJwk.toECKey())
-                                    : new RSASSAVerifier(parsedJwk.toRSAKey()));
-                } catch (JOSEException | ParseException e) {
-                    logError(
-                            String.format("Error creating validator for %s", vc.getCri().getId()),
-                            hashedUserId,
-                            e);
-
-                    throw e;
-                }
-            }
+        for (var verifier : historicSigningKeyVerifiers.get(vc.getCri())) {
             SignedJWT formattedVc;
-            if (verifierMap.get(publicKey) instanceof ECDSAVerifier) {
+            if (verifier instanceof ECDSAVerifier) {
                 try {
                     formattedVc = transcodeSignatureIfDerFormat(vc.getSignedJwt());
                 } catch (JOSEException | ParseException e) {
@@ -336,7 +338,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
                 formattedVc = vc.getSignedJwt();
             }
 
-            if (formattedVc.verify(verifierMap.get(publicKey))) {
+            if (formattedVc.verify(verifier)) {
                 return true;
             }
         }
@@ -426,5 +428,32 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
         } catch (JsonProcessingException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to log report", e));
         }
+    }
+
+    private Map<Cri, List<JWSVerifier>> getHistoricSigningKeyVerifiers()
+            throws ParseException, JOSEException {
+        Map<Cri, List<JWSVerifier>> verifiers = new EnumMap<>(Cri.class);
+        for (var cri : Cri.values()) {
+            try {
+                for (var publicKey : configService.getHistoricSigningKeys(cri.getId())) {
+                    var parsedJwk = JWK.parse(publicKey);
+                    verifiers
+                            .computeIfAbsent(cri, k -> new ArrayList<>())
+                            .add(
+                                    parsedJwk.getKeyType() == EC
+                                            ? new ECDSAVerifier(parsedJwk.toECKey())
+                                            : new RSASSAVerifier(parsedJwk.toRSAKey()));
+                }
+            } catch (ConfigParameterNotFoundException e) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Historic signing keys not found", e)
+                                .with(
+                                        LOG_BATCH_ID.getFieldName(),
+                                        reconciliationReport.getBatchId())
+                                .with(LOG_ERROR_STACK.getFieldName(), e.getStackTrace())
+                                .with(LOG_CRI_ID.getFieldName(), cri.getId()));
+            }
+        }
+        return verifiers;
     }
 }

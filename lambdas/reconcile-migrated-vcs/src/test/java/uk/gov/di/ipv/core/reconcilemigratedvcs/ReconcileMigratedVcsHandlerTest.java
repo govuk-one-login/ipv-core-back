@@ -7,9 +7,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.library.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -18,6 +20,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.reconcilemigratedvcs.domain.Request;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,6 +166,7 @@ class ReconcileMigratedVcsHandlerTest {
                         Map.of(
                                 ecVc.getClaimsSet().getIssuer(), EXPERIAN_FRAUD,
                                 rsaVc.getClaimsSet().getIssuer(), PASSPORT));
+        mockHistoricSigningKeysExcept("fraud", "ukPassport");
         when(mockConfigService.getHistoricSigningKeys("fraud"))
                 .thenReturn(List.of(TEST_EC_PUBLIC_JWK));
         when(mockConfigService.getHistoricSigningKeys("ukPassport"))
@@ -202,6 +206,7 @@ class ReconcileMigratedVcsHandlerTest {
         var vc = vcDrivingPermit();
         when(mockConfigService.getAllCrisByIssuer())
                 .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
+        mockHistoricSigningKeysExcept("drivingLicence");
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
@@ -231,6 +236,7 @@ class ReconcileMigratedVcsHandlerTest {
         var vc = vcDrivingPermit();
         when(mockConfigService.getAllCrisByIssuer())
                 .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
+        mockHistoricSigningKeysExcept("drivingLicence");
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2, TEST_EC_PUBLIC_JWK));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
@@ -260,6 +266,7 @@ class ReconcileMigratedVcsHandlerTest {
         var vc = vcDrivingPermit();
         when(mockConfigService.getAllCrisByIssuer())
                 .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
+        mockHistoricSigningKeysExcept("drivingLicence");
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2, TEST_EC_PUBLIC_JWK));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
@@ -428,5 +435,16 @@ class ReconcileMigratedVcsHandlerTest {
                 .credential(vcString)
                 .credentialIssuer("drivingLicence")
                 .build();
+    }
+
+    private void mockHistoricSigningKeysExcept(String... doNotMockCriId) {
+        var doNotMockList = Arrays.asList(doNotMockCriId);
+        for (var cri : Cri.values()) {
+            if (doNotMockList.contains(cri.getId())) {
+                continue;
+            }
+            when(mockConfigService.getHistoricSigningKeys(cri.getId()))
+                    .thenThrow(new ConfigParameterNotFoundException(cri.getId()));
+        }
     }
 }
