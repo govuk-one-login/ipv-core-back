@@ -75,6 +75,12 @@ public abstract class ConfigService {
         return Long.parseLong(getParameter(configurationVariable, pathProperties));
     }
 
+    public List<String> getHistoricSigningKeys(String criId) {
+        return Arrays.asList(
+                getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS, criId)
+                        .split("/"));
+    }
+
     public List<String> getStringListParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
