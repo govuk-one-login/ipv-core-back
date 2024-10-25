@@ -104,6 +104,7 @@ class CallDcmawAsyncCriHandlerTest {
                         eq(Collections.emptyList()));
 
         verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        verify(mockDcmawAsyncCriService).sendAuditEventForAppHandoff(any(), any());
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
     }
