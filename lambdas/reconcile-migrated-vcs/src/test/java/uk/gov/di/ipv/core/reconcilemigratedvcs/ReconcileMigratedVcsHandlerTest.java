@@ -39,6 +39,9 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
@@ -64,15 +67,15 @@ class ReconcileMigratedVcsHandlerTest {
                 .thenReturn(
                         new EvcsGetUserVCsDto(
                                 List.of(
-                                        evcsGetDtoOf("vcString1"),
-                                        evcsGetDtoOf("vcString2"),
-                                        evcsGetDtoOf("vcString3"))));
+                                        evcsGetDtoOf(DCMAW_PASSPORT_VC.getVcString()),
+                                        evcsGetDtoOf(M1A_EXPERIAN_FRAUD_VC.getVcString()),
+                                        evcsGetDtoOf(M1A_ADDRESS_VC.getVcString()))));
         when(mockTacticalDataStore.getItems("userId1"))
                 .thenReturn(
                         List.of(
-                                vcStoreItemOf("vcString1"),
-                                vcStoreItemOf("vcString2"),
-                                vcStoreItemOf("vcString3")));
+                                vcStoreItemOf(DCMAW_PASSPORT_VC.getVcString()),
+                                vcStoreItemOf(M1A_EXPERIAN_FRAUD_VC.getVcString()),
+                                vcStoreItemOf(M1A_ADDRESS_VC.getVcString())));
         var request = new Request("vcs-match-batch-id", List.of("userId1"), 4, false, false);
 
         var reconciliationReport = handler.handleRequest(request, mockContext);
@@ -94,15 +97,15 @@ class ReconcileMigratedVcsHandlerTest {
                 .thenReturn(
                         new EvcsGetUserVCsDto(
                                 List.of(
-                                        evcsGetDtoOf("vcString1"),
-                                        evcsGetDtoOf("vcString2"),
-                                        evcsGetDtoOf("vcString3"))));
+                                        evcsGetDtoOf(DCMAW_PASSPORT_VC.getVcString()),
+                                        evcsGetDtoOf(M1A_EXPERIAN_FRAUD_VC.getVcString()),
+                                        evcsGetDtoOf(M1A_ADDRESS_VC.getVcString()))));
         when(mockTacticalDataStore.getItems("userId1"))
                 .thenReturn(
                         List.of(
-                                vcStoreItemOf("vcString1"),
-                                vcStoreItemOf("vcString2"),
-                                vcStoreItemOf("vcStringNOPE")));
+                                vcStoreItemOf(DCMAW_PASSPORT_VC.getVcString()),
+                                vcStoreItemOf(M1A_EXPERIAN_FRAUD_VC.getVcString()),
+                                vcStoreItemOf(M1A_ADDRESS_VC.getVcString().toLowerCase())));
         var request = new Request("vcs-no-match-batch-id", List.of("userId1"), null, false, false);
 
         var reconciliationReport = handler.handleRequest(request, mockContext);
@@ -123,13 +126,15 @@ class ReconcileMigratedVcsHandlerTest {
         when(mockEvcsClient.getUserVcsForMigrationReconciliation("userId1"))
                 .thenReturn(
                         new EvcsGetUserVCsDto(
-                                List.of(evcsGetDtoOf("vcString1"), evcsGetDtoOf("vcString3"))));
+                                List.of(
+                                        evcsGetDtoOf(DCMAW_PASSPORT_VC.getVcString()),
+                                        evcsGetDtoOf(M1A_ADDRESS_VC.getVcString()))));
         when(mockTacticalDataStore.getItems("userId1"))
                 .thenReturn(
                         List.of(
-                                vcStoreItemOf("vcString1"),
-                                vcStoreItemOf("vcString2"),
-                                vcStoreItemOf("vcString3")));
+                                vcStoreItemOf(DCMAW_PASSPORT_VC.getVcString()),
+                                vcStoreItemOf(M1A_EXPERIAN_FRAUD_VC.getVcString()),
+                                vcStoreItemOf(M1A_ADDRESS_VC.getVcString())));
         var request = new Request("vcs-missing-batch-id", List.of("userId1"), 4, false, false);
 
         var reconciliationReport = handler.handleRequest(request, mockContext);

@@ -55,6 +55,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private static final int DEFAULT_PARALLELISM = 4;
     private static final int EVCS_CLIENT_GOAWAY_LIMIT = 9_000;
     private static final int TEN_SECS_IN_MS = 10_000;
+    public static final int SIGNATURE_LENGTH = 87;
 
     private final ConfigService configService;
     private final EvcsClientFactory evcsClientFactory;
@@ -370,33 +371,31 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
                 tacticalVcsStrings.stream()
                         .filter(tacticalVc -> !evcsVcsStrings.contains(tacticalVc))
                         .toList();
-        if (evcsNotInTactical.size() != tacticalNotInEvcs.size()) {
-            LOGGER.info(
-                    annotateLog("EVCS and tactical contain different number of VCs", hashedUserId)
-                            .with("evcsNotInTacticalCount", evcsNotInTactical.size())
-                            .with("tacticalNotInEvcsCount", tacticalNotInEvcs.size()));
-        } else {
-            var logMap =
-                    annotateLog("Differences between VCs", hashedUserId)
-                            .with("differentVcPairs", evcsNotInTactical.size());
-            for (int i = 0; i < tacticalNotInEvcs.size(); i++) {
-                var evcsVc = evcsNotInTactical.get(i);
-                var tacticalVc = tacticalNotInEvcs.get(i);
-                int evcsVcLength = evcsVc.length();
-                int tacticalVcLength = tacticalVc.length();
-                var shortestLength = Math.min(evcsVcLength, tacticalVcLength);
-                int diffCount = 0;
-                for (int j = 0; j < shortestLength; j++) {
-                    if (evcsVc.charAt(j) != tacticalVc.charAt(j)) {
-                        diffCount++;
-                    }
-                }
-                logMap.with(String.format("pair%dDiffCount", i), diffCount)
-                        .with(String.format("evcsVc%dLength", i), evcsVcLength)
-                        .with(String.format("tacticalVc%dLength", i), evcsVcLength);
-            }
-            LOGGER.info(logMap);
-        }
+
+        LOGGER.info(
+                annotateLog("Difference in EVCS and tactical VCs", hashedUserId)
+                        .with(
+                                "evcsNotInTacticalSigs",
+                                evcsNotInTactical.stream()
+                                        .map(
+                                                vc ->
+                                                        vc.substring(
+                                                                vc.length()
+                                                                        - Math.min(
+                                                                                vc.length(),
+                                                                                SIGNATURE_LENGTH)))
+                                        .toList())
+                        .with(
+                                "tacticalNotInEvcsSigs",
+                                tacticalNotInEvcs.stream()
+                                        .map(
+                                                vc ->
+                                                        vc.substring(
+                                                                vc.length()
+                                                                        - Math.min(
+                                                                                vc.length(),
+                                                                                SIGNATURE_LENGTH)))
+                                        .toList()));
     }
 
     private void logReport() {

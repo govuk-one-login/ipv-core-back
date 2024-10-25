@@ -33,7 +33,7 @@ public class ReconciliationReport {
     private final List<String> failedToParseEvcsVcsHashedUserIds = new ArrayList<>();
     private final List<String> signatureValidationErrorHashedUserIdAndSigs = new ArrayList<>();
     private final List<String> identityWithAnyInvalidSignaturesHashedUserIds = new ArrayList<>();
-    private final List<String> invalidVcSignatureHashedUserIdAndSigs = new ArrayList<>();
+    private final List<String> invalidVcSignatureHashedUserIdAndCri = new ArrayList<>();
     private final List<String> failedToAttainP2HashedUserIds = new ArrayList<>();
     private final List<String> differenceInVcsHashedUserIds = new ArrayList<>();
     @Setter private List<String> unprocessedHashedUserIds = new ArrayList<>();
@@ -80,9 +80,8 @@ public class ReconciliationReport {
     public synchronized void incrementInvalidVcSignatureCount(
             String hashedUserId, VerifiableCredential vc) {
         invalidVcSignatureCount++;
-        invalidVcSignatureHashedUserIdAndSigs.add(
-                String.format(
-                        "%s - %s", hashedUserId, vc.getSignedJwt().getSignature().toString()));
+        invalidVcSignatureHashedUserIdAndCri.add(
+                String.format("%s - %s", hashedUserId, vc.getCri().getId()));
     }
 
     public synchronized void incrementSignatureValidationErrorCount(
