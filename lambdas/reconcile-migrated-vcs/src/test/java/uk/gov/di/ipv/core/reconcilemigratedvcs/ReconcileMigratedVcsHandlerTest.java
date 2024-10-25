@@ -158,10 +158,11 @@ class ReconcileMigratedVcsHandlerTest {
         var ecVc = vcExperianFraudMissingName();
         var rsaVc = PASSPORT_NON_DCMAW_SUCCESSFUL_RSA_SIGNED_VC;
 
-        when(mockConfigService.getCriByIssuer(ecVc.getClaimsSet().getIssuer()))
-                .thenReturn(EXPERIAN_FRAUD);
-        when(mockConfigService.getCriByIssuer(rsaVc.getClaimsSet().getIssuer()))
-                .thenReturn(PASSPORT);
+        when(mockConfigService.getAllCrisByIssuer())
+                .thenReturn(
+                        Map.of(
+                                ecVc.getClaimsSet().getIssuer(), EXPERIAN_FRAUD,
+                                rsaVc.getClaimsSet().getIssuer(), PASSPORT));
         when(mockConfigService.getHistoricSigningKeys("fraud"))
                 .thenReturn(List.of(TEST_EC_PUBLIC_JWK));
         when(mockConfigService.getHistoricSigningKeys("ukPassport"))
@@ -199,8 +200,8 @@ class ReconcileMigratedVcsHandlerTest {
     @Test
     void handlerShouldHandleInvalidSignatures() throws Exception {
         var vc = vcDrivingPermit();
-        when(mockConfigService.getCriByIssuer(vc.getClaimsSet().getIssuer()))
-                .thenReturn(DRIVING_LICENCE);
+        when(mockConfigService.getAllCrisByIssuer())
+                .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
@@ -228,8 +229,8 @@ class ReconcileMigratedVcsHandlerTest {
     @Test
     void handlerShouldCheckSignaturesWithAllKeys() throws Exception {
         var vc = vcDrivingPermit();
-        when(mockConfigService.getCriByIssuer(vc.getClaimsSet().getIssuer()))
-                .thenReturn(DRIVING_LICENCE);
+        when(mockConfigService.getAllCrisByIssuer())
+                .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2, TEST_EC_PUBLIC_JWK));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();
@@ -257,8 +258,8 @@ class ReconcileMigratedVcsHandlerTest {
     @Test
     void handlerShouldHandleIdentityWithP2() throws Exception {
         var vc = vcDrivingPermit();
-        when(mockConfigService.getCriByIssuer(vc.getClaimsSet().getIssuer()))
-                .thenReturn(DRIVING_LICENCE);
+        when(mockConfigService.getAllCrisByIssuer())
+                .thenReturn(Map.of(vc.getClaimsSet().getIssuer(), DRIVING_LICENCE));
         when(mockConfigService.getHistoricSigningKeys("drivingLicence"))
                 .thenReturn(List.of(EC_PUBLIC_JWK_2, TEST_EC_PUBLIC_JWK));
         when(mockForkJoinPoolFactory.getForkJoinPool(anyInt())).thenCallRealMethod();

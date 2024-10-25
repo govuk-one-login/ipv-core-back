@@ -179,6 +179,16 @@ public abstract class ConfigService {
         }
     }
 
+    public Map<String, Cri> getAllCrisByIssuer() {
+        Map<String, Cri> issuerMap = new HashMap<>();
+        for (var cri : Cri.values()) {
+            for (var componentId : getCriComponentIds(cri)) {
+                issuerMap.put(componentId, cri);
+            }
+        }
+        return issuerMap;
+    }
+
     public Cri getCriByIssuer(String issuer) throws NoCriForIssuerException {
         for (var cri : Cri.values()) {
             for (var componentId : getCriComponentIds(cri)) {
