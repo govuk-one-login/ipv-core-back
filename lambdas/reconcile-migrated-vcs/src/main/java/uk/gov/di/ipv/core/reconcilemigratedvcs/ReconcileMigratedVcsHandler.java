@@ -52,7 +52,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_HASH_USE
 public class ReconcileMigratedVcsHandler implements RequestHandler<Request, ReconciliationReport> {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int DEFAULT_PARALLELISM = 4;
     private static final int EVCS_CLIENT_GOAWAY_LIMIT = 9_000;
     private static final int TEN_SECS_IN_MS = 10_000;
     public static final int SIGNATURE_LENGTH = 87;
@@ -104,7 +103,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
         var forkJoinPool =
                 forkJoinPoolFactory.getForkJoinPool(
                         request.parallelism() == null
-                                ? DEFAULT_PARALLELISM
+                                ? Runtime.getRuntime().availableProcessors()
                                 : request.parallelism());
         timeoutClose = new AtomicBoolean(false);
 
