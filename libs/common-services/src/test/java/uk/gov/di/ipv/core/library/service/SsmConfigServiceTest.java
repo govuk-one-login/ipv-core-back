@@ -44,6 +44,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -700,6 +701,17 @@ class SsmConfigServiceTest {
             assertThrows(
                     NoCriForIssuerException.class,
                     () -> configService.getCriByIssuer("https://non-existant-component-id"));
+        }
+
+        @Test
+        void getAllCrisByIssuerShouldReturnMapOfAllIssuersAndCri() {
+            Map<String, Cri> expectedMap = new HashMap<>();
+            for (var cri : Cri.values()) {
+                expectedMap.put(String.format("https://main-%s-component-id", cri.getId()), cri);
+                expectedMap.put(String.format("https://stub-%s-component-id", cri.getId()), cri);
+            }
+            var actual = configService.getAllCrisByIssuer();
+            assertEquals(expectedMap, actual);
         }
     }
 }

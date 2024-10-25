@@ -19,10 +19,10 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.factories.EvcsClientFactory;
 import uk.gov.di.ipv.core.library.factories.ForkJoinPoolFactory;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -71,6 +71,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private int evcsCallCount;
     private ConcurrentSkipListSet<String> processedIdentities;
     private AtomicBoolean timeoutClose;
+    private Map<String, Cri> criIssuersMap;
 
     public ReconcileMigratedVcsHandler(
             ConfigService configService,
@@ -102,6 +103,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     public ReconciliationReport handleRequest(Request request, Context context) {
         reconciliationReport = new ReconciliationReport(request);
         processedIdentities = new ConcurrentSkipListSet<>();
+        criIssuersMap = configService.getAllCrisByIssuer();
         var forkJoinPool =
                 forkJoinPoolFactory.getForkJoinPool(
                         request.parallelism() == null
@@ -213,9 +215,9 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
             for (var vcString : evcsVcsStrings) {
                 try {
                     var jwt = SignedJWT.parse(vcString);
-                    var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+                    var cri = criIssuersMap.get(jwt.getJWTClaimsSet().getIssuer());
                     evcsVcs.add(VerifiableCredential.fromValidJwt(userId, cri, jwt));
-                } catch (ParseException | CredentialParseException | NoCriForIssuerException e) {
+                } catch (ParseException | CredentialParseException e) {
                     logError("Error parsing VC from EVCS", hashedUserId, e);
                     reconciliationReport.incrementFailedToParseEvcsVcs(hashedUserId);
                     reconciliationReport.incrementIdentitiesFullyProcessed();
