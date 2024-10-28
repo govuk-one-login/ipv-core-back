@@ -72,9 +72,9 @@ public class ProcessMobileAppCallbackHandler
         try {
             var callbackRequest = parseCallbackRequest(input);
 
-            var journeyResponse = getJourneyResponse(callbackRequest);
+            validateCallback(callbackRequest);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
         } catch (InvalidMobileAppCallbackRequestException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
@@ -103,7 +103,7 @@ public class ProcessMobileAppCallbackHandler
         }
     }
 
-    private JourneyResponse getJourneyResponse(MobileAppCallbackRequest callbackRequest)
+    private void validateCallback(MobileAppCallbackRequest callbackRequest)
             throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
                     ClientOauthSessionNotFoundException, InvalidCriResponseException {
         // Validate callback sessions
@@ -131,8 +131,6 @@ public class ProcessMobileAppCallbackHandler
         var criResponse =
                 criResponseService.getCriResponseItemWithState(userId, callbackRequest.getState());
         validateCriResponse(criResponse);
-
-        return JOURNEY_NEXT;
     }
 
     private void validateSessionId(MobileAppCallbackRequest callbackRequest)

@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -38,7 +39,6 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourneyParameterOrThrow;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -47,7 +47,6 @@ public class CallDcmawAsyncCriHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
-    public static final String CONTEXT = "context";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -105,7 +104,8 @@ public class CallDcmawAsyncCriHandler
         try {
             final String ipvSessionId = RequestHelper.getIpvSessionId(request);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            final String criContext = getJourneyParameterOrThrow(request, CONTEXT);
+            final MobileAppJourneyType mobileAppJourneyType =
+                    RequestHelper.getMobileAppJourneyType(request);
 
             final String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -118,7 +118,10 @@ public class CallDcmawAsyncCriHandler
 
             var vcResponse =
                     dcmawAsyncCriService.startDcmawAsyncSession(
-                            oauthState, clientOAuthSessionItem, ipvSessionItem, criContext);
+                            oauthState,
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            mobileAppJourneyType);
 
             if (!VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
                 throw new DcmawAsyncCriHttpResponseException(

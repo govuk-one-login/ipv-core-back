@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -38,7 +39,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 class CallDcmawAsyncCriHandlerTest {
     public static final String TEST_USER_ID = "a-user-id";
     public static final String TEST_OAUTH_STATE = "some_dummy_state_value";
-    public static final String MAM_CONTEXT = "mam";
     public static final ClientOAuthSessionItem clientOAuthSessionItem =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
@@ -50,8 +50,8 @@ class CallDcmawAsyncCriHandlerTest {
                     .ipvSessionId("a-session-id")
                     .ipAddress("an-ip-address")
                     .clientOAuthSessionId("an-oauth-session-id")
-                    .journey(String.format("a-journey?context=%s", MAM_CONTEXT))
-                    .lambdaInput(Map.of("journeyType", "ipv"))
+                    .journey("a-journey")
+                    .lambdaInput(Map.of("mobileAppJourneyType", "mam"))
                     .build();
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
@@ -91,7 +91,7 @@ class CallDcmawAsyncCriHandlerTest {
                         any(String.class),
                         eq(clientOAuthSessionItem),
                         eq(mockIpvSessionItem),
-                        eq(MAM_CONTEXT)))
+                        eq(MobileAppJourneyType.MAM)))
                 .thenReturn(vcResponse);
 
         // Act
@@ -148,7 +148,7 @@ class CallDcmawAsyncCriHandlerTest {
                         any(String.class),
                         eq(clientOAuthSessionItem),
                         eq(mockIpvSessionItem),
-                        eq(MAM_CONTEXT)))
+                        eq(MobileAppJourneyType.MAM)))
                 .thenReturn(vcResponse);
 
         // Act
@@ -180,7 +180,7 @@ class CallDcmawAsyncCriHandlerTest {
                         any(String.class),
                         eq(clientOAuthSessionItem),
                         eq(mockIpvSessionItem),
-                        eq(MAM_CONTEXT)))
+                        eq(MobileAppJourneyType.MAM)))
                 .thenReturn(vcResponse);
 
         // Act

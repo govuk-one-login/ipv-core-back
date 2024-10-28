@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -29,8 +30,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
 public class DcmawAsyncCriService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String DAD_CONTEXT = "dad";
-    private static final String MAM_CONTEXT = "mam";
 
     private final ConfigService configService;
     private final CriApiService criApiService;
@@ -66,7 +65,7 @@ public class DcmawAsyncCriService {
             String oauthState,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
-            String context)
+            MobileAppJourneyType mobileAppJourneyType)
             throws CriApiException, JsonProcessingException, HttpResponseExceptionWithErrorBody {
 
         String connection = configService.getActiveConnection(DCMAW_ASYNC);
@@ -100,16 +99,19 @@ public class DcmawAsyncCriService {
                 criApiService.fetchAccessToken(
                         criConfig.getClientId(), dcmawAsyncClientSecret, criOAuthSessionItem);
 
+        // Callback URL only wanted for MAM case where mobile users can return to a valid site
+        // session.
         String clientCallbackUrl = null;
-        switch (context) {
-            case DAD_CONTEXT:
+        switch (mobileAppJourneyType) {
+            case DAD:
                 break;
-            case MAM_CONTEXT:
+            case MAM:
                 clientCallbackUrl = criConfig.getClientCallbackUrl().toString();
                 break;
             default:
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.INVALID_PROCESS_CONTEXT);
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE);
         }
 
         var credentialRequestBody =

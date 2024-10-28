@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -37,8 +38,6 @@ class DcmawAsyncCriServiceTest {
     private static final String CRI_OAUTH_STATE = "cri-oauth-state";
     public static final String TEST_SECRET = "test-secret";
     public static final String CRI_CLIENT_ID = "cri-client-id";
-    public static final String MAM_CONTEXT = "mam";
-    public static final String DAD_CONTEXT = "dad";
     public static final String CREDENTIAL_URL = "https://example.com/credentialbackUrl";
     public static final String TOKEN_URL = "https://example.com/tokenUrl";
     private static final String REDIRECT_URL = "https://example.com/callbackUrl";
@@ -57,8 +56,9 @@ class DcmawAsyncCriServiceTest {
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
     @ParameterizedTest
-    @MethodSource("contextsAndClientCallbackUrls")
-    void startDcmawAsyncSession_WhenCalled_ReturnsAVc(String context, String expectedRedirectUrl)
+    @MethodSource("mobileAppJourneyTypesAndClientCallbackUrls")
+    void startDcmawAsyncSession_WhenCalled_ReturnsAVc(
+            MobileAppJourneyType mobileAppJourneyType, String expectedRedirectUrl)
             throws Exception {
         // Arrange
         var clientOAuthSessionItem =
@@ -127,13 +127,18 @@ class DcmawAsyncCriServiceTest {
         // Act
         var response =
                 dcmawAsyncCriService.startDcmawAsyncSession(
-                        CRI_OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem, context);
+                        CRI_OAUTH_STATE,
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        mobileAppJourneyType);
 
         // Assert
         assertEquals(vcResponse, response);
     }
 
-    private static Stream<Arguments> contextsAndClientCallbackUrls() {
-        return Stream.of(Arguments.of(MAM_CONTEXT, REDIRECT_URL), Arguments.of(DAD_CONTEXT, null));
+    private static Stream<Arguments> mobileAppJourneyTypesAndClientCallbackUrls() {
+        return Stream.of(
+                Arguments.of(MobileAppJourneyType.MAM, REDIRECT_URL),
+                Arguments.of(MobileAppJourneyType.DAD, null));
     }
 }

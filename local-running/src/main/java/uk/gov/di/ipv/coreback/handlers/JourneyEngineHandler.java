@@ -109,6 +109,8 @@ public class JourneyEngineHandler {
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case "/journey/call-dcmaw-async-cri" -> callDcmawAsyncHandler.handleRequest(
+                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case "/journey/check-coi" -> checkCoiHandler.handleRequest(
@@ -117,9 +119,6 @@ public class JourneyEngineHandler {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {
                     yield buildCriOauthRequestHandler.handleRequest(
                             buildCriJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-                } else if (journeyStep.matches("/journey/call-dcmaw-async-cri.*")) {
-                    yield callDcmawAsyncHandler.handleRequest(
-                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
                 } else {
                     throw new UnrecognisedJourneyException(
                             String.format("Journey not configured: %s", journeyStep));
