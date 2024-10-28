@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
@@ -125,12 +126,16 @@ public class DcmawAsyncCriService {
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         journeyRequest.getIpAddress());
 
+        var deviceInformation =
+                new AuditRestrictedDeviceInformation(journeyRequest.getDeviceInformation());
+
         LOGGER.info("Sending app handoff audit event");
 
         auditService.sendAuditEvent(
-                AuditEvent.createWithoutDeviceInformation(
+                AuditEvent.createWithDeviceInformation(
                         AuditEventTypes.IPV_APP_HANDOFF_START,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser));
+                        auditEventUser,
+                        deviceInformation));
     }
 }
