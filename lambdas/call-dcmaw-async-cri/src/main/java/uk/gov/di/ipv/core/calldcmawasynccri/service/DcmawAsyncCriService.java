@@ -116,8 +116,7 @@ public class DcmawAsyncCriService {
     }
 
     public void sendAuditEventForAppHandoff(
-            JourneyRequest journeyRequest,
-            ClientOAuthSessionItem clientOAuthSessionItem) {
+            JourneyRequest journeyRequest, ClientOAuthSessionItem clientOAuthSessionItem) {
 
         var auditEventUser =
                 new AuditEventUser(
