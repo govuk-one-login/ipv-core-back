@@ -157,7 +157,11 @@ public class ProcessAsyncCriCredentialHandler
 
         criResponseItem.ifPresent(
                 responseItem -> {
-                    responseItem.setStatus(CriResponseService.STATUS_ERROR);
+                    if ("access_denied".equals(errorAsyncCriResponse.getError())) {
+                        responseItem.setStatus(CriResponseService.STATUS_ABANDON);
+                    } else {
+                        responseItem.setStatus(CriResponseService.STATUS_ERROR);
+                    }
                     criResponseService.updateCriResponseItem(responseItem);
                 });
 
