@@ -3,15 +3,21 @@ package uk.gov.di.ipv.core.calldcmawasynccri.service;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -23,6 +29,7 @@ import java.net.URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -44,8 +51,8 @@ class DcmawAsyncCriServiceTest {
 
     @Mock private ConfigService mockConfigService;
     @Mock private CriApiService mockCriApiService;
-
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private AuditService auditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
 
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
@@ -121,5 +128,39 @@ class DcmawAsyncCriServiceTest {
 
         // Assert
         assertEquals(vcResponse, response);
+    }
+
+    @Test
+    void sendAuditEventForAppHandoff_WhenCalled_RaisesAnAuditEvent() {
+        var journeyRequest =
+                JourneyRequest.builder()
+                        .ipvSessionId("ipvSessionId")
+                        .ipAddress("ipAddress")
+                        .deviceInformation("deviceInformation")
+                        .build();
+        var clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .userId("userId")
+                        .govukSigninJourneyId("journeyId")
+                        .build();
+
+        // Act
+        dcmawAsyncCriService.sendAuditEventForAppHandoff(journeyRequest, clientOAuthSessionItem);
+
+        // Assert
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent auditEvent = auditEventCaptor.getValue();
+
+        assertEquals(AuditEventTypes.IPV_APP_HANDOFF_START, auditEvent.getEventName());
+        assertEquals("ipvSessionId", auditEvent.getUser().getSessionId());
+        assertEquals("ipAddress", auditEvent.getUser().getIpAddress());
+        assertEquals(
+                "deviceInformation",
+                ((AuditRestrictedDeviceInformation) auditEvent.getRestricted())
+                        .deviceInformation()
+                        .getEncoded());
+        assertEquals("userId", auditEvent.getUser().getUserId());
+        assertEquals("journeyId", auditEvent.getUser().getGovukSigninJourneyId());
     }
 }
