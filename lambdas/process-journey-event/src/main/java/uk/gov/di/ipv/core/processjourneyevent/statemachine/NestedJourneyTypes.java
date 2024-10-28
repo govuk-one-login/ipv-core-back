@@ -14,7 +14,7 @@ public enum NestedJourneyTypes {
     KBVS("kbvs"),
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
     WEB_DL_OR_PASSPORT("web-dl-or-passport"),
-    DCMAW_DRIVING_LICENCE("dcmaw-driving-licence");
+    APP_DOC_CHECK("app-doc-check");
 
     private final String journeyName;
 

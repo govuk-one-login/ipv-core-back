@@ -126,7 +126,7 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: DCMAW_DRIVING_LICENCE
+        targetState: APP_DOC_CHECK
         targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
@@ -141,28 +141,21 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
 
-  DCMAW_DRIVING_LICENCE:
-    nestedJourney: DCMAW_DRIVING_LICENCE
+  APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
     exitEvents:
-      next-address:
+      next:
         targetState: ADDRESS_AND_FRAUD_J1
-      next-multiple-doc:
+      incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
-      next-prove-another-way-after-dl:
+      incomplete-not-found:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+      incomplete-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: another-way-after-dl
-      next-alternate-doc-invalid-dl-another-way:
+      alternate-doc-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
-      failed:
-        targetJourney: FAILED
-        targetState: FAILED
-      mitigation-f2f:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -519,7 +512,7 @@ states:
       pageId: no-photo-id-abandon-find-another-way
     events:
       mobileApp:
-        targetState: DCMAW_DRIVING_LICENCE
+        targetState: APP_DOC_CHECK
         targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
@@ -569,8 +562,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: DCMAW_DRIVING_LICENCE
-        targetEntryEvent: mitigation-dcmaw
+        targetState: MITIGATION_01_APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
@@ -592,6 +585,33 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       anotherWay:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  MITIGATION_01_APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J1
+      incomplete-not-found:
+        targetJourney: FAILED
+        targetState: FAILED
+      incomplete:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      incomplete-invalid-dl:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      alternate-doc-invalid-dl:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
