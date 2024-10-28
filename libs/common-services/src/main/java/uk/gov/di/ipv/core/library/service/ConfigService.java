@@ -75,6 +75,12 @@ public abstract class ConfigService {
         return Long.parseLong(getParameter(configurationVariable, pathProperties));
     }
 
+    public List<String> getHistoricSigningKeys(String criId) {
+        return Arrays.asList(
+                getParameter(ConfigurationVariable.CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS, criId)
+                        .split("/"));
+    }
+
     public List<String> getStringListParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
         return Arrays.asList(getParameter(configurationVariable, pathProperties).split(","));
@@ -171,6 +177,16 @@ public abstract class ConfigService {
                             "SSM parameter not found for feature flag: " + featureFlagValue));
             return false;
         }
+    }
+
+    public Map<String, Cri> getAllCrisByIssuer() {
+        Map<String, Cri> issuerMap = new HashMap<>();
+        for (var cri : Cri.values()) {
+            for (var componentId : getCriComponentIds(cri)) {
+                issuerMap.put(componentId, cri);
+            }
+        }
+        return issuerMap;
     }
 
     public Cri getCriByIssuer(String issuer) throws NoCriForIssuerException {

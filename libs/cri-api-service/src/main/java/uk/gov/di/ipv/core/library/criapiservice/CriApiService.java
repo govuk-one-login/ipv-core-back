@@ -62,6 +62,7 @@ public class CriApiService {
     private static final String API_KEY_HEADER = "x-api-key";
     private static final String HEADER_CONTENT_TYPE = "Content-Type";
     private static final String HEADER_ACCEPT = "Accept";
+    private static final String MIME_TYPE_APPLICATION_JSON = "application/json";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final ConfigService configService;
     private final SignerFactory signerFactory;
@@ -211,7 +212,7 @@ public class CriApiService {
                 && configService.getEnvironmentVariable(ENVIRONMENT) != null
                 && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
             httpRequest.setHeader(HEADER_CONTENT_TYPE, "application/x-www-form-urlencoded");
-            httpRequest.setHeader(HEADER_ACCEPT, "application/json");
+            httpRequest.setHeader(HEADER_ACCEPT, MIME_TYPE_APPLICATION_JSON);
         }
 
         if (apiKey != null) {
@@ -323,13 +324,13 @@ public class CriApiService {
         if (requestBody != null) {
             var bodyString = OBJECT_MAPPER.writeValueAsString(requestBody);
             request.setBody(bodyString);
-            request.setHeader(HEADER_CONTENT_TYPE, "application/json");
+            request.setHeader(HEADER_CONTENT_TYPE, MIME_TYPE_APPLICATION_JSON);
         } else {
             // Temporary for DWP integration testing
             if (configService.getEnvironmentVariable(ENVIRONMENT) != null
                     && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
                     && cri.equals(DWP_KBV)) {
-                request.setHeader(HEADER_CONTENT_TYPE, "text/plain");
+                request.setHeader(HEADER_CONTENT_TYPE, MIME_TYPE_APPLICATION_JSON);
                 request.setHeader(HEADER_ACCEPT, "application/jwt");
             } else {
                 request.setHeader(

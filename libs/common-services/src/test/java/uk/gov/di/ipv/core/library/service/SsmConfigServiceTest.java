@@ -44,6 +44,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -62,8 +63,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -304,6 +307,19 @@ class SsmConfigServiceTest {
             assertEquals(
                     expectedActiveConnection, configService.getActiveConnection(credentialIssuer));
         }
+    }
+
+    @Test
+    void shouldReturnSlashSeparatedHistoricSigningKeys() {
+        environmentVariables.set("ENVIRONMENT", "test");
+
+        when(ssmProvider.get("/test/core/credentialIssuers/ukPassport/historicSigningKeys"))
+                .thenReturn(String.format("%s/%s", TEST_EC_PUBLIC_JWK, EC_PUBLIC_JWK_2));
+
+        var result = configService.getHistoricSigningKeys(Cri.PASSPORT.getId());
+
+        assertEquals(TEST_EC_PUBLIC_JWK, result.get(0));
+        assertEquals(EC_PUBLIC_JWK_2, result.get(1));
     }
 
     @ParameterizedTest
@@ -685,6 +701,17 @@ class SsmConfigServiceTest {
             assertThrows(
                     NoCriForIssuerException.class,
                     () -> configService.getCriByIssuer("https://non-existant-component-id"));
+        }
+
+        @Test
+        void getAllCrisByIssuerShouldReturnMapOfAllIssuersAndCri() {
+            Map<String, Cri> expectedMap = new HashMap<>();
+            for (var cri : Cri.values()) {
+                expectedMap.put(String.format("https://main-%s-component-id", cri.getId()), cri);
+                expectedMap.put(String.format("https://stub-%s-component-id", cri.getId()), cri);
+            }
+            var actual = configService.getAllCrisByIssuer();
+            assertEquals(expectedMap, actual);
         }
     }
 }

@@ -23,6 +23,7 @@ public enum ConfigurationVariable {
     CREDENTIAL_ISSUER_CONNECTION_PREFIX("credentialIssuers/%s/connections"),
     CREDENTIAL_ISSUER_CONFIG("credentialIssuers/%s/connections/%s"),
     CREDENTIAL_ISSUER_ENABLED("credentialIssuers/%s/enabled"),
+    CREDENTIAL_ISSUER_HISTORIC_SIGNING_KEYS("credentialIssuers/%s/historicSigningKeys"),
     CREDENTIAL_ISSUER_SHARED_ATTRIBUTES("credentialIssuers/%s/allowedSharedAttributes"),
     CREDENTIAL_ISSUER_CLIENT_OAUTH_SECRET("credentialIssuers/%s/connections/%s/oAuthClientSecret"),
     CREDENTIAL_ISSUER_API_KEY("credentialIssuers/%s/connections/%s/apiKey"),
