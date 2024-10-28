@@ -126,7 +126,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: CRI_DCMAW
+        targetState: DCMAW_DRIVING_LICENCE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -135,6 +136,29 @@ states:
             targetState: MULTIPLE_DOC_CHECK_PAGE
       end:
         targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+
+  DCMAW_DRIVING_LICENCE:
+    nestedJourney: DCMAW_DRIVING_LICENCE
+    exitEvents:
+      next-address:
+        targetState: ADDRESS_AND_FRAUD_J1
+      next-multiple-doc:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+      next-prove-another-way-after-dl:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: another-way-after-dl
+      next-alternate-doc-invalid-dl-another-way:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl-another-way
+      failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      mitigation-f2f:
+        targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
@@ -186,61 +210,6 @@ states:
           - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
-
-  CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      not-found:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      access-denied:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      temporarily-unavailable:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      fail-with-no-ci:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-
-  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      access-denied:
-        targetState: RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL
-      alternate-doc-invalid-dl:
-        targetState: RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION
-
-  RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: another-way-after-dl
-
-  RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl-another-way
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -393,15 +362,6 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
-
-  # DCMAW journey (J1)
-  POST_DCMAW_SUCCESS_PAGE:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-    events:
-      next:
-        targetState: ADDRESS_AND_FRAUD_J1
 
   ADDRESS_AND_FRAUD_J1:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -559,7 +519,8 @@ states:
       pageId: no-photo-id-abandon-find-another-way
     events:
       mobileApp:
-        targetState: CRI_DCMAW
+        targetState: DCMAW_DRIVING_LICENCE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -608,7 +569,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: MITIGATION_01_CRI_DCMAW
+        targetState: DCMAW_DRIVING_LICENCE
+        targetEntryEvent: mitigation-dcmaw
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
@@ -630,70 +592,6 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       anotherWay:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-
-  MITIGATION_01_CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      dl-auth-source-check:
-        targetState: MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      not-found:
-        targetJourney: FAILED
-        targetState: FAILED
-      access-denied:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      temporarily-unavailable:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      fail-with-no-ci:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      enhanced-verification:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-
-  MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      access-denied:
-        targetState: MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE
-
-  MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:

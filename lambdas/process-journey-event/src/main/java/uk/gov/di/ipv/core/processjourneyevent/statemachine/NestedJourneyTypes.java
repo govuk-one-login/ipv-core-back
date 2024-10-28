@@ -13,7 +13,8 @@ public enum NestedJourneyTypes {
     ADDRESS_AND_FRAUD("address-and-fraud"),
     KBVS("kbvs"),
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
-    WEB_DL_OR_PASSPORT("web-dl-or-passport");
+    WEB_DL_OR_PASSPORT("web-dl-or-passport"),
+    DCMAW_DRIVING_LICENCE("dcmaw-driving-licence");
 
     private final String journeyName;
 
