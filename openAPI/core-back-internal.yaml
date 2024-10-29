@@ -60,6 +60,24 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ProcessMobileAppCallbackFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
+  /app/check-vc-receipt:
+    get:
+      description: |
+        Called each poll of the backend by the frontend when checking receipt of the verifiable credentials associated to a mobile app journey. This triggers CRI response and verifiable credential retrieval.
+      responses:
+        200:
+          description: "Credential result received"
+        404:
+          description: "Credential result not found yet, poll again"
+        500:
+          description: "Error finding CRI response"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckMobileAppVcReceiptFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+
   /journey/{journeyStep+}:
     post:
       description: Called when the user selects a journey event. Triggers an express step function

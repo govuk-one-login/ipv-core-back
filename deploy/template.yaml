@@ -1216,6 +1216,93 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
 
+  CheckMobileAppVcReceiptFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "CheckMobileAppVcReceiptLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/check-mobile-app-vc-receipt
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Events:
+        IPVCoreCheckMobileAppVcReceipt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCorePrivateAPI
+            Path: /app/check-vc-receipt
+            Method: GET
+      AutoPublishAlias: live
+
+  CheckMobileAppVcReceiptFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsTestApiEnv
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref CheckMobileAppVcReceiptFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/GET/app/check-vc-receipt"
+
+  CheckMobileAppVcReceiptLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/check-mobile-app-vc-receipt-${Environment}"
+
+  CheckMobileAppVcReceiptLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CheckMobileAppVcReceiptLogGroup
+
+
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
