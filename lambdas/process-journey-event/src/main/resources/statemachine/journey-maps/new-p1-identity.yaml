@@ -439,10 +439,8 @@ states:
     exitEvents:
       next:
         targetState: KBV_NO_PHOTO_ID
-        targetEntryEvent: next-with-nino
       enhanced-verification:
         targetState: KBV_NO_PHOTO_ID
-        targetEntryEvent: next-with-nino
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS

@@ -9,29 +9,8 @@ entryEvents:
     targetState: PRE_DWP_KBV_PIP_PAGE
     checkIfDisabled:
       dwpKbv:
-        targetState: CRI_NINO
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_PAGE
-  next-with-nino:
-    targetState: PRE_DWP_KBV_PIP_PAGE
-    checkIfDisabled:
-      dwpKbv:
-        targetState: CRI_HMRC_KBV
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_PAGE
-nestedJourneyStates:
-  CRI_NINO:
-    response:
-      type: cri
-      criId: nino
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CRI_HMRC_KBV
-      fail-with-no-ci:
         targetState: PRE_EXPERIAN_PAGE
+nestedJourneyStates:
   CRI_DWP_KBV:
     response:
       type: cri
@@ -44,20 +23,6 @@ nestedJourneyStates:
         exitEventToEmit: enhanced-verification
       invalid-request:
         targetState: DWP_THIN_FILE_PAGE
-      access-denied:
-        targetState: PRE_EXPERIAN_PAGE
-  CRI_HMRC_KBV:
-    response:
-      type: cri
-      criId: hmrcKbv
-    parent: CRI_STATE
-    events:
-      next:
-        exitEventToEmit: next
-      enhanced-verification:
-        exitEventToEmit: enhanced-verification
-      invalid-request:
-        targetState: PRE_EXPERIAN_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
   CRI_EXPERIAN_KBV:
@@ -87,10 +52,7 @@ nestedJourneyStates:
       next:
         targetState: PRE_DWP_KBV_TRANSITION_PAGE
       end:
-        targetState: CRI_NINO
-        checkIfDisabled:
-          hmrcKbv:
-            targetState: PRE_EXPERIAN_PAGE
+        targetState: PRE_EXPERIAN_PAGE
   PRE_DWP_KBV_TRANSITION_PAGE:
     response:
       type: page
