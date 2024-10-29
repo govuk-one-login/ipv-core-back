@@ -222,12 +222,12 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
         // Compare VCs
         if (!evcsVcsStrings.equals(tacticalVcsStrings)) {
             logVcDifferences(evcsVcsStrings, tacticalVcsStrings, hashedUserId);
-            reconciliationReport.incrementDifferenceInVcs(hashedUserId);
+            reconciliationReport.incrementIdentitiesWithDifferentVcs(hashedUserId);
             reconciliationReport.incrementIdentitiesFullyProcessed();
             processedIdentities.add(userId);
             return;
         } else {
-            reconciliationReport.incrementVcsMatch();
+            reconciliationReport.incrementIdentitiesWithMatchingVcs(evcsVcsStrings.size());
         }
 
         if (reconciliationReport.isCheckSignatures() || reconciliationReport.isCheckP2()) {

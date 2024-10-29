@@ -91,8 +91,9 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals("vcs-match-batch-id", reconciliationReport.getBatchId());
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
-        assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(1, reconciliationReport.getIdentitiesWithMatchingVcs());
+        assertEquals(3, reconciliationReport.getVcsMatchedCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertFalse(reconciliationReport.isCheckSignatures());
         assertFalse(reconciliationReport.isCheckP2());
     }
@@ -122,7 +123,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(0, reconciliationReport.getVcsMatchedCount());
-        assertEquals(1, reconciliationReport.getVcsDifferentCount());
+        assertEquals(1, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertFalse(reconciliationReport.isCheckSignatures());
         assertFalse(reconciliationReport.isCheckP2());
     }
@@ -151,7 +152,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(0, reconciliationReport.getVcsMatchedCount());
-        assertEquals(1, reconciliationReport.getVcsDifferentCount());
+        assertEquals(1, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertFalse(reconciliationReport.isCheckSignatures());
         assertFalse(reconciliationReport.isCheckP2());
     }
@@ -193,8 +194,9 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals("vcs-valid-sig-batch-id", reconciliationReport.getBatchId());
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
-        assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(1, reconciliationReport.getIdentitiesWithMatchingVcs());
+        assertEquals(2, reconciliationReport.getVcsMatchedCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals(1, reconciliationReport.getIdentityWithValidSignaturesCount());
         assertEquals(0, reconciliationReport.getIdentityWithInvalidSignaturesCount());
         assertEquals(0, reconciliationReport.getInvalidVcSignatureCount());
@@ -224,7 +226,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals(0, reconciliationReport.getIdentityWithValidSignaturesCount());
         assertEquals(1, reconciliationReport.getIdentityWithInvalidSignaturesCount());
         assertEquals(1, reconciliationReport.getInvalidVcSignatureCount());
@@ -254,7 +256,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals(1, reconciliationReport.getIdentityWithValidSignaturesCount());
         assertEquals(0, reconciliationReport.getIdentityWithInvalidSignaturesCount());
         assertEquals(0, reconciliationReport.getInvalidVcSignatureCount());
@@ -287,7 +289,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals(1, reconciliationReport.getIdentityWithValidSignaturesCount());
         assertEquals(0, reconciliationReport.getIdentityWithInvalidSignaturesCount());
         assertEquals(0, reconciliationReport.getInvalidVcSignatureCount());
@@ -317,7 +319,7 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals(1, reconciliationReport.getBatchSize());
         assertEquals(1, reconciliationReport.getIdentitiesFullyProcessed());
         assertEquals(1, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals(0, reconciliationReport.getIdentityWithValidSignaturesCount());
         assertEquals(0, reconciliationReport.getIdentityWithInvalidSignaturesCount());
         assertEquals(0, reconciliationReport.getInvalidVcSignatureCount());
@@ -344,8 +346,8 @@ class ReconcileMigratedVcsHandlerTest {
         assertEquals("timeout-batch-id", reconciliationReport.getBatchId());
         assertEquals(2, reconciliationReport.getBatchSize());
         assertEquals(2, reconciliationReport.getIdentitiesFullyProcessed());
-        assertEquals(2, reconciliationReport.getVcsMatchedCount());
-        assertEquals(0, reconciliationReport.getVcsDifferentCount());
+        assertEquals(2, reconciliationReport.getIdentitiesWithMatchingVcs());
+        assertEquals(0, reconciliationReport.getIdentitiesWithDifferentVcsCount());
         assertEquals("Lambda close to timeout", reconciliationReport.getExitReason());
     }
 
