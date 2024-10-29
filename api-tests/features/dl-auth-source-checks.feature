@@ -12,7 +12,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get an 'address' CRI response
+    Then I get a 'page-dcmaw-success' page response
 
     Examples:
       | journey-type       |
@@ -78,7 +78,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get an 'address' CRI response
+    Then I get a 'page-dcmaw-success' page response
 
   Scenario: Same session enhanced verification mitigation with DCMAW and driving licence requires auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
@@ -177,11 +177,11 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit '<vc-scenario>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get an '<expected-next-cri>' CRI response
+    Then I get a 'page-dcmaw-success' page response with context '<context>'
 
     Examples:
-      | update-type             | vc-scenario                                      | expected-next-cri |
-      | given-names-only        | kenneth-changed-given-name-driving-permit-valid  | fraud             |
-      | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | address           |
-      | family-name-only        | kenneth-changed-family-name-driving-permit-valid | fraud             |
-      | family-name-and-address | kenneth-changed-family-name-driving-permit-valid | address           |
+      | update-type             | vc-scenario                                      | context      |
+      | given-names-only        | kenneth-changed-given-name-driving-permit-valid  | coiNoAddress |
+      | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | coiAddress   |
+      | family-name-only        | kenneth-changed-family-name-driving-permit-valid | coiNoAddress |
+      | family-name-and-address | kenneth-changed-family-name-driving-permit-valid | coiAddress   |

@@ -35,8 +35,8 @@ Feature: Recovery journeys
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
-    Then I get an 'address' CRI response
+    Then I get a 'page-dcmaw-success' page response
     When I re-submit the same request to the previous CRI stub
     Then I get a 'pyi-attempt-recovery' page response
     When I submit an 'attempt-recovery' event
-    Then I get an 'address' CRI response
+    Then I get a 'page-dcmaw-success' page response
