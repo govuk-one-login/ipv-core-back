@@ -179,6 +179,8 @@ nestedJourneyStates:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
       anotherWay:
         exitEventToEmit: anotherWay
+      back:
+        targetState: MAM_SELECT_SMARTPHONE
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
@@ -200,6 +202,8 @@ nestedJourneyStates:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
       anotherWay:
         exitEventToEmit: anotherWay
+      back:
+        targetState: MAM_SELECT_SMARTPHONE
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
