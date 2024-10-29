@@ -198,10 +198,10 @@ Feature: Disabled CRI journeys
       When I submit an 'end' event
       Then I get a 'pyi-escape' page response
 
-  Rule: HMRC and DWP KBVs are disabled
+  Rule: DWP KBVs are disabled or unsuitable
 
     Scenario: Experian KBV is offered first
-      Given I activate the 'hmrcKbvDisabled,dwpKbvDisabled' feature sets
+      Given I activate the 'dwpKbvDisabled' feature sets
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -216,50 +216,6 @@ Feature: Disabled CRI journeys
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-score-2' details to the CRI stub
       Then I get a 'page-pre-experian-kbv-transition' page response
-
-  Rule: DWP KBV is disabled and HMRC KBV is enabled
-
-    Scenario: NINO then HMRC KBV is offered if user doesn't have an existing NINO
-      Given I activate the 'dwpKbvDisabled,hmrcKbvBeta' feature sets
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'appTriage' event
-      Then I get a 'dcmaw' CRI response
-      When I submit an 'access-denied' event
-      Then I get a 'page-multiple-doc-check' page response
-      When I submit a 'ukPassport' event
-      Then I get a 'ukPassport' CRI response
-      When I submit 'kenneth-passport-valid' details to the CRI stub
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit a 'next' event
-      Then I get an 'hmrcKbv' CRI response
-
-    Scenario: HMRC KBV is offered if user already has a NINO
-      Given I activate the 'dwpKbvDisabled,m2bBetaHmrcKbv' feature sets
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
-      Then I get a 'claimedIdentity' CRI response
-      When I submit a 'next' event
-      Then I get a 'bav' CRI response
-      When I submit a 'next' event
-      Then I get a 'nino' CRI response
-      When I submit a 'next' event
-      Then I get an 'address' CRI response
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit a 'next' event
-      Then I get a 'hmrcKbv' CRI response
-
-  Rule: HMRC KBV is disabled
 
     Scenario: Experian KBV is offered if DWP KBV unsuitable
       Given I activate the 'dwpKbvTest' feature set
