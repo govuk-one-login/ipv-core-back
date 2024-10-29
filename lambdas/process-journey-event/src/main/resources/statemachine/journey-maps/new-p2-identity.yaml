@@ -145,7 +145,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: ADDRESS_AND_FRAUD_J1
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       incomplete-invalid-dl:
@@ -353,6 +353,15 @@ states:
               - IPV_MITIGATION_START
             auditContext:
               mitigationType: enhanced-verification
+
+  # DCMAW journey (J1)
+  POST_APP_DOC_CHECK_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J1
 
   ADDRESS_AND_FRAUD_J1:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -593,7 +602,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: ADDRESS_AND_FRAUD_J1
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       incomplete:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:

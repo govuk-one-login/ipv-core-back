@@ -200,7 +200,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: FRAUD_CHECK_GIVEN_ONLY
+        targetState: POST_APP_DOC_CHECK_GIVEN_ONLY
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -215,7 +215,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: FRAUD_CHECK_FAMILY_ONLY
+        targetState: POST_APP_DOC_CHECK_FAMILY_ONLY
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -225,6 +225,25 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+
+
+  POST_APP_DOC_CHECK_GIVEN_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiNoAddress
+    events:
+      next:
+        targetState: FRAUD_CHECK_GIVEN_ONLY
+
+  POST_APP_DOC_CHECK_FAMILY_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiNoAddress
+    events:
+      next:
+        targetState: FRAUD_CHECK_FAMILY_ONLY
 
   FRAUD_CHECK_GIVEN_ONLY:
     response:
@@ -344,7 +363,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: ADDRESS_AND_FRAUD_GIVEN
+        targetState: POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -359,7 +378,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: ADDRESS_AND_FRAUD_FAMILY
+        targetState: POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
@@ -369,6 +388,24 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+
+  POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiAddress
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_GIVEN
+
+  POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiAddress
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_FAMILY
 
   ADDRESS_AND_FRAUD_GIVEN:
     nestedJourney: ADDRESS_AND_FRAUD
