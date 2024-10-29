@@ -12,11 +12,11 @@ nestedJourneyStates:
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
+        exitEventToEmit: next
       dl-auth-source-check:
         targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
       not-found:
-        exitEventToEmit: incomplete-not-found
+        exitEventToEmit: incomplete
       access-denied:
         exitEventToEmit: incomplete
       temporarily-unavailable:
@@ -34,13 +34,13 @@ nestedJourneyStates:
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
+        exitEventToEmit: next
       access-denied:
-        targetState: RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL
+        targetState: RESET_SESSION_INCOMPLETE_DL
       alternate-doc-invalid-dl:
-        targetState: RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION
+        targetState: RESET_SESSION_INVALID_DL
 
-  RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL:
+  RESET_SESSION_INCOMPLETE_DL:
     response:
       type: process
       lambda: reset-session-identity
@@ -50,7 +50,7 @@ nestedJourneyStates:
       next:
         exitEventToEmit: incomplete-invalid-dl
 
-  RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION:
+  RESET_SESSION_INVALID_DL:
     response:
       type: process
       lambda: reset-session-identity
@@ -59,11 +59,3 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: alternate-doc-invalid-dl
-
-  POST_DCMAW_SUCCESS_PAGE:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-    events:
-      next:
-        exitEventToEmit: next

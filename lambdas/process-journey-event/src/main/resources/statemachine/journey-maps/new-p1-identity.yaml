@@ -190,8 +190,6 @@ states:
         targetState: ADDRESS_AND_FRAUD_J1
       incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
-      incomplete-not-found:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
       incomplete-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: another-way-after-dl
@@ -547,9 +545,6 @@ states:
     exitEvents:
       next:
         targetState: ADDRESS_AND_FRAUD_J1
-      incomplete-not-found:
-        targetJourney: FAILED
-        targetState: FAILED
       incomplete:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
