@@ -154,7 +154,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
                         HttpStatus.SC_BAD_REQUEST,
-                        ErrorResponse.INVALID_OAUTH_STATE),
+                        ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND),
                 journeyResponse);
     }
 

@@ -153,7 +153,7 @@ public class ProcessMobileAppCallbackHandler
     private void validateCriResponse(CriResponseItem criResponse, String state)
             throws InvalidMobileAppCallbackRequestException, InvalidCriResponseException {
         if (criResponse == null || !Objects.equals(criResponse.getOauthState(), state)) {
-            throw new InvalidMobileAppCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
+            throw new InvalidMobileAppCallbackRequestException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
         if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {

@@ -8,10 +8,14 @@ plugins {
 dependencies {
 
 	implementation libs.bundles.awsLambda,
+			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(":libs:cri-response-service"),
 			project(':libs:journey-uris'),
-			project(":libs:verifiable-credentials")
+			project(":libs:verifiable-credentials"),
+			project(":libs:cimit-service"),
+			project(":libs:user-identity-service"),
+			project(":lambdas:process-cri-callback")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

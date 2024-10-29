@@ -286,7 +286,7 @@ public class ProcessCriCallbackHandler
                         ipvSessionItem);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                vcs, callbackRequest.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(

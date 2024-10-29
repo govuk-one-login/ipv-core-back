@@ -474,7 +474,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        vcs,
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
@@ -499,7 +502,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        vcs,
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
@@ -520,7 +526,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
@@ -538,7 +547,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
@@ -560,7 +572,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
@@ -581,7 +596,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
@@ -605,7 +623,10 @@ class CriCheckingServiceTest {
         // Act
         JourneyResponse result =
                 criCheckingService.checkVcResponse(
-                        vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                        vcs,
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
@@ -636,7 +657,7 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
-                            callbackRequest,
+                            callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem);
 
@@ -662,7 +683,7 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
-                            callbackRequest,
+                            callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem);
 
@@ -684,7 +705,7 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
-                            callbackRequest,
+                            callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem);
 
@@ -704,7 +725,7 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(DCMAW_PASSPORT_VC),
-                            callbackRequest,
+                            callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem);
 

@@ -108,10 +108,11 @@ public enum ErrorResponse {
     MISSING_LANGUAGE(1095, "Missing language choice from the frontend"),
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
             1096, "Failed to validate verifiable credential response"),
-    ERROR_MOBILE_APP_RESPONSE_STATUS(1097, "Mobile app response has status error"),
+    ERROR_MOBILE_APP_RESPONSE_STATUS(1097, "Mobile app cri response has status error"),
     INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE(1098, "Invalid process mobile app journey type"),
     FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY(
-            1099, "Failed to parse mobile app callback request bpdy");
+            1099, "Failed to parse mobile app callback request bpdy"),
+    CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
