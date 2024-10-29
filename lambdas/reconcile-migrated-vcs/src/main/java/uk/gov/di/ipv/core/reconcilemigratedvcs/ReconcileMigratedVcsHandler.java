@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
@@ -33,6 +32,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.reconcilemigratedvcs.domain.ReconciliationReport;
 import uk.gov.di.ipv.core.reconcilemigratedvcs.domain.Request;
+import uk.gov.di.ipv.core.reconcilemigratedvcs.domain.VerifierAndUseCount;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
@@ -73,7 +74,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private ConcurrentSkipListSet<String> processedIdentities;
     private AtomicBoolean timeoutClose;
     private Map<String, Cri> criIssuersMap;
-    private Map<Cri, List<JWSVerifier>> historicSigningKeyVerifiers;
+    private Map<Cri, List<VerifierAndUseCount>> historicSigningKeyVerifiers;
 
     public ReconcileMigratedVcsHandler(
             ConfigService configService,
@@ -174,6 +175,7 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
             unprocessedIdentities.removeAll(processedIdentities);
             reconciliationReport.setUnprocessedHashedUserIds(
                     unprocessedIdentities.stream().map(DigestUtils::sha256Hex).toList());
+            reconciliationReport.setVerifierUse(historicSigningKeyVerifiers);
             logReport();
         }
 
@@ -325,9 +327,9 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private boolean validSignature(VerifiableCredential vc, String hashedUserId)
             throws JOSEException, ParseException {
         // try all known keys until VC is validated, or return false
-        for (var verifier : historicSigningKeyVerifiers.get(vc.getCri())) {
+        for (var verifierAndUseCount : historicSigningKeyVerifiers.get(vc.getCri())) {
             SignedJWT formattedVc;
-            if (verifier instanceof ECDSAVerifier) {
+            if (verifierAndUseCount.getVerifier() instanceof ECDSAVerifier) {
                 try {
                     formattedVc = transcodeSignatureIfDerFormat(vc.getSignedJwt());
                 } catch (JOSEException | ParseException e) {
@@ -338,7 +340,8 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
                 formattedVc = vc.getSignedJwt();
             }
 
-            if (formattedVc.verify(verifier)) {
+            if (formattedVc.verify(verifierAndUseCount.getVerifier())) {
+                verifierAndUseCount.getUseCount().incrementAndGet();
                 return true;
             }
         }
@@ -430,9 +433,9 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
         }
     }
 
-    private Map<Cri, List<JWSVerifier>> getHistoricSigningKeyVerifiers()
+    private Map<Cri, List<VerifierAndUseCount>> getHistoricSigningKeyVerifiers()
             throws ParseException, JOSEException {
-        Map<Cri, List<JWSVerifier>> verifiers = new EnumMap<>(Cri.class);
+        Map<Cri, List<VerifierAndUseCount>> verifiers = new EnumMap<>(Cri.class);
         for (var cri : Cri.values()) {
             try {
                 for (var publicKey : configService.getHistoricSigningKeys(cri.getId())) {
@@ -440,9 +443,12 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
                     verifiers
                             .computeIfAbsent(cri, k -> new ArrayList<>())
                             .add(
-                                    parsedJwk.getKeyType() == EC
-                                            ? new ECDSAVerifier(parsedJwk.toECKey())
-                                            : new RSASSAVerifier(parsedJwk.toRSAKey()));
+                                    new VerifierAndUseCount(
+                                            parsedJwk.getKeyType() == EC
+                                                    ? new ECDSAVerifier(parsedJwk.toECKey())
+                                                    : new RSASSAVerifier(parsedJwk.toRSAKey()),
+                                            publicKey,
+                                            new AtomicInteger(0)));
                 }
             } catch (ConfigParameterNotFoundException e) {
                 LOGGER.warn(

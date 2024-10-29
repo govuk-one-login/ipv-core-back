@@ -3,10 +3,12 @@ package uk.gov.di.ipv.core.reconcilemigratedvcs.domain;
 import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @ExcludeFromGeneratedCoverageReport
@@ -37,6 +39,7 @@ public class ReconciliationReport {
     private final List<String> failedToAttainP2HashedUserIds = new ArrayList<>();
     private final List<String> differenceInVcsHashedUserIds = new ArrayList<>();
     @Setter private List<String> unprocessedHashedUserIds = new ArrayList<>();
+    @Setter private Map<Cri, List<VerifierAndUseCount>> verifierUse;
 
     public ReconciliationReport(Request request) {
         batchId = request.batchId();
