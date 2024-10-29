@@ -162,8 +162,6 @@ Feature: Disabled CRI journeys
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
       Then I get an 'address' CRI response
       When I submit 'kenneth-current' details to the CRI stub
       Then I get a 'fraud' CRI response

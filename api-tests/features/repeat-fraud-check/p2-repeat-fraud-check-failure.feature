@@ -70,8 +70,6 @@ Feature: Repeat fraud check failures
 
     Scenario: Zero score in fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-0' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
@@ -86,8 +84,6 @@ Feature: Repeat fraud check failures
     Scenario: Zero score in fraud CRI
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-0' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
@@ -100,8 +96,6 @@ Feature: Repeat fraud check failures
 
     Scenario: Breaching CI received from fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-breaching-ci' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
@@ -116,8 +110,6 @@ Feature: Repeat fraud check failures
     Scenario: Breaching CI received from fraud CRI
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-breaching-ci' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
@@ -130,8 +122,6 @@ Feature: Repeat fraud check failures
 
     Scenario: Failed COI check
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response
@@ -140,8 +130,6 @@ Feature: Repeat fraud check failures
     Scenario: Failed COI check
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
@@ -156,8 +144,6 @@ Feature: Repeat fraud check failures
       Given TICF CRI will respond with default parameters and
         | cis | BREACHING |
       When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
       Then I get a 'pyi-no-match' page response
@@ -171,8 +157,6 @@ Feature: Repeat fraud check failures
 
     Scenario: Fraud access denied OAuth error
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get an 'sorry-could-not-confirm-details' page response
@@ -187,8 +171,6 @@ Feature: Repeat fraud check failures
     Scenario: Fraud access denied OAuth error
       Given I activate the 'updateDetailsAccountDeletion' feature set
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
       Then I get a 'fraud' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
