@@ -162,7 +162,7 @@ Feature: P2 no photo id journey
 
   Rule: Abandon
     Background: Abandon P2 no photo id journey
-      Given I activate the 'm2bBetaHmrcKbv' feature set
+      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
@@ -210,7 +210,7 @@ Feature: P2 no photo id journey
 
   Rule: Escape
     Background: Escape P2 no photo id journey
-      Given I activate the 'm2bBetaHmrcKbv' feature set
+      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
