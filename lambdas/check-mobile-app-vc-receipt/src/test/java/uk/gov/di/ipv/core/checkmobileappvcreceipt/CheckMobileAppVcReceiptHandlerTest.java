@@ -33,7 +33,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -144,7 +143,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         when(verifiableCredentialService.getVc(TEST_USER_ID, Cri.DCMAW_ASYNC.toString()))
                 .thenReturn(vc);
         when(criCheckingService.checkVcResponse(
-                        eq(List.of(vc)), eq(null), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -178,7 +177,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync"))
                 .thenReturn(vc);
         when(criCheckingService.checkVcResponse(
-                        eq(List.of(vc)), eq(null), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act

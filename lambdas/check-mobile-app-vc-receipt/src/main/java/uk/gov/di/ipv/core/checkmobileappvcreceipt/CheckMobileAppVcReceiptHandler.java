@@ -115,7 +115,7 @@ public class CheckMobileAppVcReceiptHandler
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
@@ -124,8 +124,6 @@ public class CheckMobileAppVcReceiptHandler
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-        } catch (VerifiableCredentialException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (ConfigException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
