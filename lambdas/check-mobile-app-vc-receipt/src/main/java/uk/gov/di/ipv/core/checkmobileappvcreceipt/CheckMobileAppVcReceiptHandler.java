@@ -67,9 +67,9 @@ public class CheckMobileAppVcReceiptHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
-            var callbackRequest = parseCallbackRequest(input);
+            var request = parseRequest(input);
 
-            var status = getStatus(callbackRequest);
+            var status = getStatus(request);
 
             return ApiGatewayResponseGenerator.proxyResponse(status);
         } catch (InvalidCheckMobileAppVcReceiptRequestException e) {
@@ -90,7 +90,7 @@ public class CheckMobileAppVcReceiptHandler
         }
     }
 
-    private CheckMobileAppVcReceiptRequest parseCallbackRequest(APIGatewayProxyRequestEvent input) {
+    private CheckMobileAppVcReceiptRequest parseRequest(APIGatewayProxyRequestEvent input) {
         return new CheckMobileAppVcReceiptRequest(
                 input.getHeaders().get("ipv-session-id"),
                 input.getHeaders().get("ip-address"),
@@ -98,26 +98,26 @@ public class CheckMobileAppVcReceiptHandler
                 RequestHelper.getFeatureSet(input.getHeaders()));
     }
 
-    private int getStatus(CheckMobileAppVcReceiptRequest callbackRequest)
+    private int getStatus(CheckMobileAppVcReceiptRequest request)
             throws InvalidCheckMobileAppVcReceiptRequestException, IpvSessionNotFoundException,
                     ClientOauthSessionNotFoundException, InvalidCriResponseException,
                     CredentialParseException {
-        // Validate callback sessions
-        validateSessionId(callbackRequest);
+        // Validate sessions
+        validateSessionId(request);
 
         // Get/ set session items/ config
-        var ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
+        var ipvSessionItem = ipvSessionService.getIpvSession(request.getIpvSessionId());
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
         var userId = clientOAuthSessionItem.getUserId();
-        configService.setFeatureSet(callbackRequest.getFeatureSet());
+        configService.setFeatureSet(request.getFeatureSet());
 
         // Attach variables to logs
         LogHelper.attachGovukSigninJourneyIdToLogs(
                 clientOAuthSessionItem.getGovukSigninJourneyId());
-        LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
-        LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
+        LogHelper.attachIpvSessionIdToLogs(request.getIpvSessionId());
+        LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
         LogHelper.attachComponentId(configService);
 
         // Retrieve and check cri response
@@ -135,9 +135,9 @@ public class CheckMobileAppVcReceiptHandler
         return HttpStatus.SC_NOT_FOUND;
     }
 
-    private void validateSessionId(CheckMobileAppVcReceiptRequest callbackRequest)
+    private void validateSessionId(CheckMobileAppVcReceiptRequest request)
             throws InvalidCheckMobileAppVcReceiptRequestException {
-        var ipvSessionId = callbackRequest.getIpvSessionId();
+        var ipvSessionId = request.getIpvSessionId();
 
         if (StringUtils.isBlank(ipvSessionId)) {
             throw new InvalidCheckMobileAppVcReceiptRequestException(

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processmobileappcallback;
+package uk.gov.di.ipv.core.checkmobileappvcreceipt;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
