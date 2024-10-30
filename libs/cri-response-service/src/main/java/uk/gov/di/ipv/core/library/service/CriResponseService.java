@@ -18,6 +18,7 @@ public class CriResponseService {
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_ABANDON = "abandon";
+    public static final String ERROR_ACCESS_DENIED = "access_denied";
     private final DataStore<CriResponseItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport

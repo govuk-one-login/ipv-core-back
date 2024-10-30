@@ -179,6 +179,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(1, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(CriResponseService.STATUS_ERROR, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
     @Test
