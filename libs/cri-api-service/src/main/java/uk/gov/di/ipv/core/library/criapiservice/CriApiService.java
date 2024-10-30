@@ -206,15 +206,6 @@ public class CriApiService {
 
         var httpRequest = tokenRequest.toHTTPRequest();
 
-        // Temporary for DWP integration testing
-        if (criOAuthSessionItem.getCriId() != null
-                && criOAuthSessionItem.getCriId().equals(DWP_KBV.getId())
-                && configService.getEnvironmentVariable(ENVIRONMENT) != null
-                && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")) {
-            httpRequest.setHeader(HEADER_CONTENT_TYPE, "application/x-www-form-urlencoded");
-            httpRequest.setHeader(HEADER_ACCEPT, MIME_TYPE_APPLICATION_JSON);
-        }
-
         if (apiKey != null) {
             LOGGER.info(
                     LogHelper.buildLogMessage(
@@ -330,7 +321,6 @@ public class CriApiService {
             if (configService.getEnvironmentVariable(ENVIRONMENT) != null
                     && configService.getEnvironmentVariable(ENVIRONMENT).equals("staging")
                     && cri.equals(DWP_KBV)) {
-                request.setHeader(HEADER_CONTENT_TYPE, MIME_TYPE_APPLICATION_JSON);
                 request.setHeader(HEADER_ACCEPT, "application/jwt");
             } else {
                 request.setHeader(
