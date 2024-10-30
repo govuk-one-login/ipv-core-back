@@ -440,7 +440,8 @@ states:
       next:
         targetState: KBV_NO_PHOTO_ID
       enhanced-verification:
-        targetState: KBV_NO_PHOTO_ID
+        targetJourney: FAILED
+        targetState: FAILED
 
   KBV_NO_PHOTO_ID:
     nestedJourney: KBVS
