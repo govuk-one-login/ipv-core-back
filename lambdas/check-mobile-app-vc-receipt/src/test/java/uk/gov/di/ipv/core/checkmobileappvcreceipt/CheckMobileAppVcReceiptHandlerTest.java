@@ -140,7 +140,7 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(verifiableCredentialService.getVc(TEST_USER_ID, Cri.DCMAW_ASYNC.toString()))
+        when(verifiableCredentialService.getVc(TEST_USER_ID, Cri.DCMAW_ASYNC.getId()))
                 .thenReturn(vc);
         when(criCheckingService.checkVcResponse(
                         List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
@@ -174,8 +174,7 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync"))
-                .thenReturn(vc);
+        when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync")).thenReturn(vc);
         when(criCheckingService.checkVcResponse(
                         List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));

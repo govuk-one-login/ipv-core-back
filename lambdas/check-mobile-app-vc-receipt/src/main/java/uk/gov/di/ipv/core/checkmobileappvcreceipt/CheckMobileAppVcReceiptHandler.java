@@ -110,13 +110,11 @@ public class CheckMobileAppVcReceiptHandler
             }
 
             return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_NOT_FOUND);
-        } catch (InvalidCheckMobileAppVcReceiptRequestException | ClientOauthSessionNotFoundException e) {
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
         } catch (CredentialParseException e) {
@@ -186,10 +184,7 @@ public class CheckMobileAppVcReceiptHandler
         }
 
         return criCheckingService.checkVcResponse(
-                List.of(vc),
-                callbackRequest.getIpAddress(),
-                clientOAuthSessionItem,
-                ipvSessionItem);
+                List.of(vc), request.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)
