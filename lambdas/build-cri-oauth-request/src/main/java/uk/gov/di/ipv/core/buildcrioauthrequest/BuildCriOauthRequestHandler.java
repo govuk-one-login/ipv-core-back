@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
@@ -24,6 +25,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -53,6 +55,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +99,7 @@ public class BuildCriOauthRequestHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
+    private final CriApiService criApiService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -106,7 +110,8 @@ public class BuildCriOauthRequestHandler
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            CriApiService criApiService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -115,6 +120,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.criApiService = criApiService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -133,6 +139,12 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.criApiService =
+                new CriApiService(
+                        configService,
+                        this.signerFactory,
+                        SecureTokenHelper.getInstance(),
+                        Clock.systemDefaultZone());
         VcHelper.setConfigService(configService);
     }
 
@@ -333,8 +345,23 @@ public class BuildCriOauthRequestHandler
                         evidenceRequest,
                         context);
 
-        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
-        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+        var encKey = getCriEncryptionKey(oauthCriConfig);
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
+        return AuthorizationRequestHelper.createJweObject(
+                rsaEncrypter, signedJWT, encKey.getKeyID());
+    }
+
+    private RSAKey getCriEncryptionKey(OauthCriConfig criConfig) throws ParseException {
+        var jwksUrl = criConfig.getJwksUrl();
+
+        if (jwksUrl != null) {
+            var key = criApiService.getKeyFromJwksEndpoint(jwksUrl);
+
+            if (key.isPresent()) {
+                return key.get().toRSAKey();
+            }
+        }
+        return criConfig.getParsedEncryptionKey();
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
