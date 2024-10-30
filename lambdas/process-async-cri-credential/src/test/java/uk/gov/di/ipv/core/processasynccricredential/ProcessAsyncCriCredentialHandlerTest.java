@@ -78,7 +78,9 @@ class ProcessAsyncCriCredentialHandlerTest {
                     0,
                     List.of(EVCS_ASYNC_WRITE_ENABLED.getName()));
 
-    private static final String TEST_ASYNC_ERROR = "access_denied";
+    private static final String TEST_ASYNC_ACCESS_DENIED_ERROR = "access_denied";
+    private static final String TEST_ASYNC_ERROR = "invalid";
+
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
             "Additional information on the error";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -162,7 +164,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     @Test
     void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
-        final SQSEvent testEvent = createErrorTestEvent();
+        final SQSEvent testEvent = createErrorTestEvent(TEST_ASYNC_ERROR);
         when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
                 .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
 
@@ -177,6 +179,28 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(1, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(CriResponseService.STATUS_ERROR, TEST_CRI_RESPONSE_ITEM.getStatus());
+    }
+
+    @Test
+    void shouldProcessAccessDeniedErrorAsyncVerifiableCredentialSuccessfully()
+            throws JsonProcessingException {
+        final SQSEvent testEvent = createErrorTestEvent(TEST_ASYNC_ACCESS_DENIED_ERROR);
+        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+                .thenReturn(Optional.of(TEST_CRI_RESPONSE_ITEM));
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        verify(criResponseService, times(1)).updateCriResponseItem(TEST_CRI_RESPONSE_ITEM);
+
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(1, auditEvents.size());
+        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
     @Test
@@ -283,14 +307,14 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyBatchResponseFailures(testEvent, batchResponse);
     }
 
-    private SQSEvent createErrorTestEvent() throws JsonProcessingException {
+    private SQSEvent createErrorTestEvent(String errorType) throws JsonProcessingException {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
                         TEST_USER_ID,
                         TEST_OAUTH_STATE,
                         null,
-                        TEST_ASYNC_ERROR,
+                        errorType,
                         TEST_ASYNC_ERROR_DESCRIPTION);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
         message.setMessageId(TEST_MESSAGE_ID);
