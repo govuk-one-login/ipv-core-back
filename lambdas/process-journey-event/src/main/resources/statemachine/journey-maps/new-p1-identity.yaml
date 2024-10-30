@@ -257,7 +257,8 @@ states:
       pageId: pyi-cri-escape
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -275,7 +276,8 @@ states:
       pageId: pyi-cri-escape-no-f2f
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -443,7 +445,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -492,7 +495,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -593,7 +597,8 @@ states:
       pageId: pyi-suggest-other-options-no-f2f
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -618,40 +623,25 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
 
-  CRI_DCMAW_PYI_ESCAPE:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
+  APP_DOC_CHECK_PYI_ESCAPE:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
-      not-found:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: FAILED
-            targetState: FAILED
-      access-denied:
+      incomplete:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      temporarily-unavailable:
+      incomplete-invalid-dl:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      fail-with-no-ci:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      enhanced-verification:
+      alternate-doc-invalid-dl:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
@@ -667,7 +657,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
