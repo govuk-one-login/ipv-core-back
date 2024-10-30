@@ -1,13 +1,16 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -19,6 +22,8 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.net.URI;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -50,8 +55,11 @@ class DcmawAsyncCriServiceTest {
 
     @InjectMocks private DcmawAsyncCriService dcmawAsyncCriService;
 
-    @Test
-    void startDcmawAsyncSession_WhenCalled_ReturnsAVc() throws Exception {
+    @ParameterizedTest
+    @MethodSource("mobileAppJourneyTypesAndClientCallbackUrls")
+    void startDcmawAsyncSession_WhenCalled_ReturnsAVc(
+            MobileAppJourneyType mobileAppJourneyType, String expectedRedirectUrl)
+            throws Exception {
         // Arrange
         var clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -111,15 +119,26 @@ class DcmawAsyncCriServiceTest {
                                                 && JOURNEY_ID.equals(crbd.getJourneyId())
                                                 && CRI_CLIENT_ID.equals(crbd.getClientId())
                                                 && CRI_OAUTH_STATE.equals(crbd.getState())
-                                                && REDIRECT_URL.equals(crbd.getRedirectUri()))))
+                                                && Objects.equals(
+                                                        expectedRedirectUrl,
+                                                        crbd.getRedirectUri()))))
                 .thenReturn(vcResponse);
 
         // Act
         var response =
                 dcmawAsyncCriService.startDcmawAsyncSession(
-                        CRI_OAUTH_STATE, clientOAuthSessionItem, ipvSessionItem);
+                        CRI_OAUTH_STATE,
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        mobileAppJourneyType);
 
         // Assert
         assertEquals(vcResponse, response);
+    }
+
+    private static Stream<Arguments> mobileAppJourneyTypesAndClientCallbackUrls() {
+        return Stream.of(
+                Arguments.of(MobileAppJourneyType.MAM, REDIRECT_URL),
+                Arguments.of(MobileAppJourneyType.DAD, null));
     }
 }

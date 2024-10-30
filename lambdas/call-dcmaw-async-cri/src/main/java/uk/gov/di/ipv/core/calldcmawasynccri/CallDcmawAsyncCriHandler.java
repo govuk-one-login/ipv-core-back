@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -103,6 +104,8 @@ public class CallDcmawAsyncCriHandler
         try {
             final String ipvSessionId = RequestHelper.getIpvSessionId(request);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            final MobileAppJourneyType mobileAppJourneyType =
+                    RequestHelper.getMobileAppJourneyType(request);
 
             final String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -115,7 +118,10 @@ public class CallDcmawAsyncCriHandler
 
             var vcResponse =
                     dcmawAsyncCriService.startDcmawAsyncSession(
-                            oauthState, clientOAuthSessionItem, ipvSessionItem);
+                            oauthState,
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            mobileAppJourneyType);
 
             if (!VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
                 throw new DcmawAsyncCriHttpResponseException(
@@ -128,7 +134,7 @@ public class CallDcmawAsyncCriHandler
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Error calling DCMAW Async CRI", e));
+            LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
