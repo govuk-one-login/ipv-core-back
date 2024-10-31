@@ -76,13 +76,11 @@ public class ProcessMobileAppCallbackHandler
             validateCallback(callbackRequest);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
-        } catch (InvalidMobileAppCallbackRequestException e) {
+        } catch (InvalidMobileAppCallbackRequestException | ClientOauthSessionNotFoundException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (ClientOauthSessionNotFoundException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
         }
