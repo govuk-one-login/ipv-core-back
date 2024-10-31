@@ -832,7 +832,8 @@ class InitialiseIpvSessionHandlerTest {
                                 Vot.PCL200,
                                 Boolean.TRUE,
                                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now())
-                                        .getYears());
+                                        .getYears(),
+                                null);
                 assertEquals(expectedExtension, extension);
 
                 var restricted =
