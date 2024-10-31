@@ -28,6 +28,8 @@ nestedJourneyStates:
         targetState: DAD_SELECT_SMARTPHONE
       smartphone:
         targetState: MAM_SELECT_SMARTPHONE
+      back:
+        exitEventToEmit: back
 
   DAD_SELECT_SMARTPHONE:
     response:

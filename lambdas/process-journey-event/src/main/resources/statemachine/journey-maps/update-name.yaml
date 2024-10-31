@@ -436,6 +436,8 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      back:
+        targetState: IDENTITY_START_PAGE
 
   # SHARED STATES
 

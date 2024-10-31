@@ -145,6 +145,8 @@ states:
         targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+      back:
+        targetState: IDENTITY_START_PAGE
 
   F2F_START_PAGE:
     response:

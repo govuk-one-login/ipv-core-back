@@ -105,6 +105,8 @@ states:
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      back:
+        targetState: IDENTITY_START_PAGE
 
   CRI_DCMAW:
     response:
