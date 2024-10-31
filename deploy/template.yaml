@@ -2747,6 +2747,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "bulk-migrate-vcs-${Environment}"
+      MemorySize: 10240
       Handler: uk.gov.di.ipv.core.bulkmigratevcs.BulkMigrateVcsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/bulk-migrate-vcs
