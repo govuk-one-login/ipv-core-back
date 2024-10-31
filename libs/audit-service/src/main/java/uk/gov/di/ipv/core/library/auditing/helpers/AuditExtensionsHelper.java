@@ -28,7 +28,8 @@ public class AuditExtensionsHelper {
     }
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
-            VerifiableCredential vc, Boolean isSuccessful, String credentialIssuerId) throws UnrecognisedVotException {
+            VerifiableCredential vc, Boolean isSuccessful, String credentialIssuerId)
+            throws UnrecognisedVotException {
         var issuer = vc.getClaimsSet().getIssuer();
         var vot = VcHelper.getVcVot(vc);
         var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
@@ -45,10 +46,17 @@ public class AuditExtensionsHelper {
             var riskAssessments = riskAssessmentCredential.getEvidence();
 
             return new AuditExtensionsVcEvidence(
-                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age, credentialIssuerId);
+                    issuer,
+                    riskAssessments,
+                    isSuccessful,
+                    vot,
+                    isUkIssued,
+                    age,
+                    credentialIssuerId);
         }
 
-        return new AuditExtensionsVcEvidence(issuer, null, isSuccessful, vot, isUkIssued, age, credentialIssuerId);
+        return new AuditExtensionsVcEvidence(
+                issuer, null, isSuccessful, vot, isUkIssued, age, credentialIssuerId);
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {

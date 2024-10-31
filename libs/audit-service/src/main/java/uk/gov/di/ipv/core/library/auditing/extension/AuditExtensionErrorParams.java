@@ -21,7 +21,8 @@ public class AuditExtensionErrorParams implements AuditExtensions {
     public AuditExtensionErrorParams(
             @JsonProperty(value = "error_code", required = false) String errorCode,
             @JsonProperty(value = "error_description", required = false) String errorDescription,
-            @JsonProperty(value = "credential_issuer_id", required = false) String credentialIssuerId) {
+            @JsonProperty(value = "credential_issuer_id", required = false)
+                    String credentialIssuerId) {
         this.errorCode = errorCode;
         this.errorDescription = errorDescription;
         this.credentialIssuerId = credentialIssuerId;

@@ -258,7 +258,7 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     void sendIpvVcConsumedAuditEvent(
-        AuditEventUser auditEventUser, VerifiableCredential vc, Cri cri) {
+            AuditEventUser auditEventUser, VerifiableCredential vc, Cri cri) {
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED,
