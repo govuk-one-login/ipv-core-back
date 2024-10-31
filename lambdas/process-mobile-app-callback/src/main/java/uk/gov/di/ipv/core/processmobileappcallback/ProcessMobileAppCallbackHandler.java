@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -30,7 +31,7 @@ import uk.gov.di.ipv.core.library.service.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 import uk.gov.di.ipv.core.processmobileappcallback.exception.InvalidMobileAppCallbackRequestException;
 
-import java.util.Optional;
+import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
@@ -75,13 +76,11 @@ public class ProcessMobileAppCallbackHandler
             validateCallback(callbackRequest);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
-        } catch (InvalidMobileAppCallbackRequestException e) {
+        } catch (InvalidMobileAppCallbackRequestException | ClientOauthSessionNotFoundException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
-        } catch (ClientOauthSessionNotFoundException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
         }
@@ -128,9 +127,8 @@ public class ProcessMobileAppCallbackHandler
         validateCallbackRequest(callbackRequest);
 
         // Retrieve and validate cri response
-        var criResponse =
-                criResponseService.getCriResponseItemWithState(userId, callbackRequest.getState());
-        validateCriResponse(criResponse);
+        var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
+        validateCriResponse(criResponse, callbackRequest.getState());
     }
 
     private void validateSessionId(MobileAppCallbackRequest callbackRequest)
@@ -152,13 +150,13 @@ public class ProcessMobileAppCallbackHandler
         }
     }
 
-    private void validateCriResponse(Optional<CriResponseItem> criResponse)
+    private void validateCriResponse(CriResponseItem criResponse, String state)
             throws InvalidMobileAppCallbackRequestException, InvalidCriResponseException {
-        if (criResponse.isEmpty()) {
+        if (criResponse == null || !Objects.equals(criResponse.getOauthState(), state)) {
             throw new InvalidMobileAppCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
         }
 
-        if (CriResponseService.STATUS_ERROR.equals(criResponse.get().getStatus())) {
+        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
             throw new InvalidCriResponseException(ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS);
         }
     }

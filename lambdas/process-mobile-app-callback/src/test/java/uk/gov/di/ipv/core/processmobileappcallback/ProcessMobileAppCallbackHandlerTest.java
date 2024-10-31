@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -24,7 +25,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processmobileappcallback.dto.MobileAppCallbackRequest;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -53,7 +53,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(buildValidCriResponseItem());
 
         // Act
@@ -141,8 +141,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
-                .thenReturn(Optional.empty());
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC)).thenReturn(null);
 
         // Act
         var lambdaResponse =
@@ -168,7 +167,7 @@ class ProcessMobileAppCallbackHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ERROR);
-        when(criResponseService.getCriResponseItemWithState(TEST_USER_ID, TEST_OAUTH_STATE))
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
 
         // Act
@@ -207,16 +206,15 @@ class ProcessMobileAppCallbackHandlerTest {
         return ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
     }
 
-    private Optional<CriResponseItem> buildValidCriResponseItem() {
+    private CriResponseItem buildValidCriResponseItem() {
         return buildValidCriResponseItem(null);
     }
 
-    private Optional<CriResponseItem> buildValidCriResponseItem(String status) {
-        return Optional.of(
-                CriResponseItem.builder()
-                        .userId(TEST_USER_ID)
-                        .oauthState(TEST_OAUTH_STATE)
-                        .status(status)
-                        .build());
+    private CriResponseItem buildValidCriResponseItem(String status) {
+        return CriResponseItem.builder()
+                .userId(TEST_USER_ID)
+                .oauthState(TEST_OAUTH_STATE)
+                .status(status)
+                .build();
     }
 }
