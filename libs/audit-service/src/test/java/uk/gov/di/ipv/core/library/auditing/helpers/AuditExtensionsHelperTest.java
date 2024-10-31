@@ -71,6 +71,17 @@ class AuditExtensionsHelperTest {
     }
 
     @Test
+    void shouldGetDefaultVerifiableCredentialExtensionsForAudit() throws Exception {
+        var auditExtensions = getExtensionsForAudit(VC_ADDRESS, false);
+
+        assertFalse(auditExtensions.successful());
+        assertNull(auditExtensions.evidence());
+        assertNull(auditExtensions.isUkIssued());
+        assertNull(auditExtensions.age());
+        assertEquals("https://review-a.integration.account.gov.uk", auditExtensions.iss());
+    }
+
+    @Test
     void shouldGetPassportRestrictedDataForAudit() {
         var restrictedData = getRestrictedAuditDataForF2F(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
         var expectedName =
