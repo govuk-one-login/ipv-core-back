@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.kmses256signer;
+package uk.gov.di.ipv.core.library.signing;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

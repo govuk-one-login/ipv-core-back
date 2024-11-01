@@ -5,7 +5,6 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -23,15 +22,16 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.CoreSigner;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.helpers.JwtHelper.generateHeader;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
 public class AuthorizationRequestHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -44,7 +44,7 @@ public class AuthorizationRequestHelper {
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static SignedJWT createSignedJWT(
             SharedClaims sharedClaims,
-            JWSSigner signer,
+            CoreSigner signer,
             OauthCriConfig oauthCriConfig,
             ConfigService configService,
             String oauthState,
@@ -70,9 +70,8 @@ public class AuthorizationRequestHelper {
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
-                                        now.plus(
-                                                configService.getLongParameter(JWT_TTL_SECONDS),
-                                                ChronoUnit.SECONDS)))
+                                        now.plusSeconds(
+                                                configService.getLongParameter(JWT_TTL_SECONDS))))
                         .notBeforeTime(Date.from(now))
                         .subject(userId)
                         .claim("govuk_signin_journey_id", govukSigninJourneyId);
@@ -89,17 +88,14 @@ public class AuthorizationRequestHelper {
             claimsSetBuilder.claim(CONTEXT, context);
         }
 
-        SignedJWT signedJWT =
-                new SignedJWT(generateHeader(configService), claimsSetBuilder.build());
         try {
-            signedJWT.sign(signer);
+            return createSignedJwt(
+                    claimsSetBuilder.build(), signer, configService.enabled(KID_JAR_HEADER));
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to sign shared attributes", e));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_SIGN_SHARED_ATTRIBUTES);
         }
-
-        return signedJWT;
     }
 
     public static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)

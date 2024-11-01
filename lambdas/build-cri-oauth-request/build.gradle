@@ -8,7 +8,6 @@ plugins {
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:journey-uris"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),

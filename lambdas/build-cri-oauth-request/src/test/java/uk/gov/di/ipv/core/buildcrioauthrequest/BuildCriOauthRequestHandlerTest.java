@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
@@ -45,7 +44,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -54,6 +52,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -62,7 +62,6 @@ import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
@@ -96,7 +95,7 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -345,7 +344,8 @@ class BuildCriOauthRequestHandlerTest {
         when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -431,7 +431,8 @@ class BuildCriOauthRequestHandlerTest {
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -513,7 +514,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -596,7 +598,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -678,7 +681,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -761,7 +765,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -851,7 +856,8 @@ class BuildCriOauthRequestHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("P1"));
         when(mockGpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -910,7 +916,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -967,7 +974,8 @@ class BuildCriOauthRequestHandlerTest {
                                         IPV_ISSUER)));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -1017,7 +1025,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
+        when(mockSignerFactory.getSigner())
+                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
 
         CriJourneyRequest input =
                 CriJourneyRequest.builder()
@@ -1085,13 +1094,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(errorResponse.getMessage(), response.getMessage());
     }
 
-    private ECPrivateKey getSigningPrivateKey()
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (ECPrivateKey)
-                KeyFactory.getInstance("EC")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    private ECKey getSigningPrivateKey() throws Exception {
+        return ECKey.parse(EC_PRIVATE_KEY_JWK);
     }
 
     private PrivateKey getEncryptionPrivateKey()
