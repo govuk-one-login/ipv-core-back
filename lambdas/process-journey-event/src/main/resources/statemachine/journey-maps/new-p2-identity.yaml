@@ -126,7 +126,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: CRI_DCMAW
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -139,6 +140,20 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+
+  APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+      incomplete:
+        targetState: MULTIPLE_DOC_CHECK_PAGE
+      incomplete-invalid-dl:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: another-way-after-dl
+      alternate-doc-invalid-dl:
+        targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl-another-way
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -186,61 +201,6 @@ states:
           - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
         targetState: PYI_ESCAPE_NO_PHOTO_ID
-
-  CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      not-found:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      access-denied:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      temporarily-unavailable:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-      fail-with-no-ci:
-        targetState: MULTIPLE_DOC_CHECK_PAGE
-
-  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      access-denied:
-        targetState: RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL
-      alternate-doc-invalid-dl:
-        targetState: RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION
-
-  RESET_SESSION_BEFORE_PROVE_ANOTHER_WAY_AFTER_DL:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: another-way-after-dl
-
-  RESET_SESSION_BEFORE_DL_ALT_DOC_MITIGATION:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: alternate-doc-invalid-dl-another-way
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -328,7 +288,8 @@ states:
       pageId: pyi-cri-escape
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -346,7 +307,8 @@ states:
       pageId: pyi-cri-escape-no-f2f
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -395,7 +357,7 @@ states:
               mitigationType: enhanced-verification
 
   # DCMAW journey (J1)
-  POST_DCMAW_SUCCESS_PAGE:
+  POST_APP_DOC_CHECK_SUCCESS_PAGE:
     response:
       type: page
       pageId: page-dcmaw-success
@@ -528,7 +490,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -559,7 +522,8 @@ states:
       pageId: no-photo-id-abandon-find-another-way
     events:
       mobileApp:
-        targetState: CRI_DCMAW
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -589,7 +553,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -608,7 +573,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: MITIGATION_01_CRI_DCMAW
+        targetState: MITIGATION_01_APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: MITIGATION_01_STRATEGIC_APP_TRIAGE
@@ -636,64 +602,24 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
 
-  MITIGATION_01_CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
+  MITIGATION_01_APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      dl-auth-source-check:
-        targetState: MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      not-found:
-        targetJourney: FAILED
-        targetState: FAILED
-      access-denied:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+      incomplete:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      temporarily-unavailable:
+      incomplete-invalid-dl:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      fail-with-no-ci:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-      enhanced-verification:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-
-  MITIGATION_01_CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-      access-denied:
-        targetState: MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE
-
-  MITIGATION_01_RESET_SESSION_BEFORE_PYI_POST_OFFICE:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
+      alternate-doc-invalid-dl:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
@@ -729,7 +655,8 @@ states:
       pageId: pyi-suggest-other-options-no-f2f
     events:
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
@@ -754,58 +681,30 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
 
-  CRI_DCMAW_PYI_ESCAPE:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
+  APP_DOC_CHECK_PYI_ESCAPE:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_AFTER_PYI_ESCAPE
-      not-found:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: FAILED
-            targetState: FAILED
-      access-denied:
+      incomplete:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      temporarily-unavailable:
+      incomplete-invalid-dl:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      fail-with-no-ci:
+      alternate-doc-invalid-dl:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      enhanced-verification:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
-
-  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK_AFTER_PYI_ESCAPE:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetJourney: EVALUATE_SCORES
-        targetState: START
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:
@@ -816,7 +715,8 @@ states:
         targetJourney: F2F_HAND_OFF
         targetState: START
       appTriage:
-        targetState: CRI_DCMAW_PYI_ESCAPE
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE

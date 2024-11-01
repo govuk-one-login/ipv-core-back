@@ -1,0 +1,49 @@
+plugins {
+	id "java"
+	id "idea"
+	id "jacoco"
+	alias libs.plugins.postCompileWeaving
+}
+
+dependencies {
+
+	implementation libs.bundles.awsLambda,
+			project(":libs:common-services"),
+			project(":libs:cri-response-service"),
+			project(':libs:journey-uris'),
+			project(":libs:verifiable-credentials")
+
+	aspect libs.powertoolsLogging,
+			libs.powertoolsTracing,
+			libs.aspectj
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit,
+			libs.wiremock,
+			project(path: ':libs:common-services', configuration: 'tests')
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+	exclude 'uk/gov/di/ipv/core/checkmobileappvcreceipt/pact/**'
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

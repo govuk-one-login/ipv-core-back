@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
+import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
@@ -35,6 +36,7 @@ public class RequestHelper {
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String DELETE_ONLY_GPG45_VCS = "deleteOnlyGPG45VCs";
     public static final String IDENTITY_TYPE = "identityType";
+    public static final String MOBILE_APP_JOURNEY_TYPE = "mobileAppJourneyType";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
@@ -193,6 +195,21 @@ public class RequestHelper {
             return SessionCredentialsResetType.valueOf(resetType);
         } catch (IllegalArgumentException e) {
             throw new UnknownResetTypeException(resetType);
+        }
+    }
+
+    public static MobileAppJourneyType getMobileAppJourneyType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        String mobileAppJourneyType =
+                extractValueFromLambdaInput(
+                        request,
+                        MOBILE_APP_JOURNEY_TYPE,
+                        ErrorResponse.INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE);
+        try {
+            return MobileAppJourneyType.valueOf(mobileAppJourneyType.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    SC_BAD_REQUEST, ErrorResponse.INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE);
         }
     }
 

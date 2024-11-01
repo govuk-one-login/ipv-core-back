@@ -1,0 +1,61 @@
+name: DCMAW and Driving Licence
+description: >-
+  The combined journey for DCMAW and Driving Licence CRIs.
+entryEvents:
+  next:
+    targetState: CRI_DCMAW
+nestedJourneyStates:
+  CRI_DCMAW:
+    response:
+      type: cri
+      criId: dcmaw
+    parent: CRI_STATE
+    events:
+      next:
+        exitEventToEmit: next
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
+      not-found:
+        exitEventToEmit: incomplete
+      access-denied:
+        exitEventToEmit: incomplete
+      temporarily-unavailable:
+        exitEventToEmit: incomplete
+      fail-with-no-ci:
+        exitEventToEmit: incomplete
+      enhanced-verification:
+        exitEventToEmit: incomplete
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        exitEventToEmit: next
+      access-denied:
+        targetState: RESET_SESSION_INCOMPLETE_DL
+      alternate-doc-invalid-dl:
+        targetState: RESET_SESSION_INVALID_DL
+
+  RESET_SESSION_INCOMPLETE_DL:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        exitEventToEmit: incomplete-invalid-dl
+
+  RESET_SESSION_INVALID_DL:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: ALL
+    events:
+      next:
+        exitEventToEmit: alternate-doc-invalid-dl

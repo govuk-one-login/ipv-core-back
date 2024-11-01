@@ -50,15 +50,15 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 @PactTestFor(providerName = "DcmawAsyncCriProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
     @Mock private BearerAccessToken mockBearerAccessToken;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String SUBJECT_ID = "dummySubjectId";
-    private static final String CALLBACK_URL =
-            "https://identity.staging.account.gov.uk/credential-issuer/callback?id=dcmawAsync";
+    private static final String CALLBACK_URL_TEMPLATE =
+            "https://identity.staging.account.gov.uk/app/callback?state=%s";
+    private static final String TEST_OAUTH_STATE = "DUMMY_RANDOM_OAUTH_STATE";
     private static final String TEST_ISSUER = "dummyDcmawAsyncComponentId";
     private static final String IPV_CORE_CLIENT_ID = "ipv-core";
     private static final Clock CURRENT_TIME =
@@ -168,13 +168,14 @@ class ContractTest {
     }
 
     @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validRequestReturnsPendingCredential(PactDslWithProvider builder)
-            throws Exception {
+    public RequestResponsePact validRequestReturnsPendingCredentialForMamJourney(
+            PactDslWithProvider builder) throws Exception {
         return builder.given("dummyAccessToken is a valid access token")
+                .given("MAM journey")
                 .uponReceiving("Valid credential request")
                 .path("/async/credential")
                 .method("POST")
-                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID)))
+                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID, true)))
                 .headers(
                         "Content-Type",
                         "application/json",
@@ -195,12 +196,12 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "validRequestReturnsPendingCredential")
-    void fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCri_retrievesAPendingVc(
+    @PactTestFor(pactMethod = "validRequestReturnsPendingCredentialForMamJourney")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriForMamJourney_retrievesAPendingVc(
             MockServer mockServer)
             throws URISyntaxException, CriApiException, JsonProcessingException {
         // Arrange
-        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer, true);
         when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
                 .thenReturn(credentialIssuerConfig);
 
@@ -214,7 +215,63 @@ class ContractTest {
                         new BearerAccessToken("dummyAccessToken"),
                         DCMAW_ASYNC,
                         CRI_OAUTH_SESSION_ITEM,
-                        getCredentialRequestBody(SUBJECT_ID));
+                        getCredentialRequestBody(SUBJECT_ID, true));
+
+        // Assert
+        assertEquals(
+                VerifiableCredentialStatus.PENDING,
+                verifiableCredentialResponse.getCredentialStatus());
+    }
+
+    @Pact(provider = "DcmawAsyncCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsPendingCredentialForDadJourney(
+            PactDslWithProvider builder) throws Exception {
+        return builder.given("dummyAccessToken is a valid access token")
+                .given("DAD journey")
+                .uponReceiving("Valid credential request")
+                .path("/async/credential")
+                .method("POST")
+                .body(OBJECT_MAPPER.writeValueAsString(getCredentialRequestBody(SUBJECT_ID, false)))
+                .headers(
+                        "Content-Type",
+                        "application/json",
+                        "Authorization",
+                        "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(201)
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            body.stringValue("sub", SUBJECT_ID);
+                                            body.stringValue(
+                                                    "https://vocab.account.gov.uk/v1/credentialStatus",
+                                                    "pending");
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsPendingCredentialForDadJourney")
+    void fetchVerifiableCredential_whenCalledAgainstDcmawAsyncCriForDadJourney_retrievesAPendingVc(
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer, false);
+        when(mockConfigService.getOauthCriConfig(CRI_OAUTH_SESSION_ITEM))
+                .thenReturn(credentialIssuerConfig);
+
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"),
+                        DCMAW_ASYNC,
+                        CRI_OAUTH_SESSION_ITEM,
+                        getCredentialRequestBody(SUBJECT_ID, false));
 
         // Assert
         assertEquals(
@@ -318,17 +375,27 @@ class ContractTest {
     }
 
     private AsyncCredentialRequestBodyDto getCredentialRequestBody(String userId) {
+        return getCredentialRequestBody(userId, true);
+    }
+
+    private AsyncCredentialRequestBodyDto getCredentialRequestBody(String userId, boolean isMam) {
         return new AsyncCredentialRequestBodyDto(
                 userId,
                 "dummyJourneyId",
                 IPV_CORE_CLIENT_ID,
-                "DUMMY_RANDOM_OAUTH_STATE",
-                CALLBACK_URL);
+                TEST_OAUTH_STATE,
+                isMam ? String.format(CALLBACK_URL_TEMPLATE, TEST_OAUTH_STATE) : null);
     }
 
     @NotNull
     private static OauthCriConfig getMockCredentialIssuerConfig(MockServer mockServer)
             throws URISyntaxException {
+        return getMockCredentialIssuerConfig(mockServer, true);
+    }
+
+    @NotNull
+    private static OauthCriConfig getMockCredentialIssuerConfig(
+            MockServer mockServer, boolean isMam) throws URISyntaxException {
         return OauthCriConfig.builder()
                 .tokenUrl(new URI("http://localhost:" + mockServer.getPort() + "/async/token"))
                 .credentialUrl(
@@ -336,7 +403,10 @@ class ContractTest {
                 .authorizeUrl(new URI("http://localhost:" + mockServer.getPort() + "/authorize"))
                 .clientId(IPV_CORE_CLIENT_ID)
                 .componentId(TEST_ISSUER)
-                .clientCallbackUrl(URI.create(CALLBACK_URL))
+                .clientCallbackUrl(
+                        isMam
+                                ? URI.create(String.format(CALLBACK_URL_TEMPLATE, TEST_OAUTH_STATE))
+                                : null)
                 .requiresApiKey(false)
                 .requiresAdditionalEvidence(false)
                 .build();

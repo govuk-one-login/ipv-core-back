@@ -45,7 +45,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -153,11 +152,17 @@ public class ProcessAsyncCriCredentialHandler
     private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse) {
         var userId = errorAsyncCriResponse.getUserId();
         var state = errorAsyncCriResponse.getOauthState();
-        Optional<CriResponseItem> criResponseItem = getCriResponseItem(userId, state);
+        Optional<CriResponseItem> criResponseItem =
+                criResponseService.getCriResponseItemWithState(userId, state);
 
         criResponseItem.ifPresent(
                 responseItem -> {
-                    responseItem.setStatus(CriResponseService.STATUS_ERROR);
+                    if (CriResponseService.ERROR_ACCESS_DENIED.equals(
+                            errorAsyncCriResponse.getError())) {
+                        responseItem.setStatus(CriResponseService.STATUS_ABANDON);
+                    } else {
+                        responseItem.setStatus(CriResponseService.STATUS_ERROR);
+                    }
                     criResponseService.updateCriResponseItem(responseItem);
                 });
 
@@ -185,7 +190,8 @@ public class ProcessAsyncCriCredentialHandler
                     HttpResponseExceptionWithErrorBody {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
-        Optional<CriResponseItem> criResponseItem = getCriResponseItem(userId, state);
+        Optional<CriResponseItem> criResponseItem =
+                criResponseService.getCriResponseItemWithState(userId, state);
 
         if (criResponseItem.isEmpty()) {
             LOGGER.error(
@@ -233,14 +239,6 @@ public class ProcessAsyncCriCredentialHandler
 
             sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri);
         }
-    }
-
-    private Optional<CriResponseItem> getCriResponseItem(String userId, String state) {
-        final List<CriResponseItem> criResponseItems =
-                criResponseService.getCriResponseItemsByUserId(userId);
-        return criResponseItems.stream()
-                .filter(item -> Objects.equals(item.getOauthState(), state))
-                .findFirst();
     }
 
     private void sendIpvVcReceivedAuditEvent(

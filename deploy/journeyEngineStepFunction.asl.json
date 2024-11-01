@@ -230,7 +230,8 @@
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet",
-        "deviceInformation.$": "$$.Execution.Input.deviceInformation"
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation",
+        "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney",
       "Retry": [{

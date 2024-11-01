@@ -24,6 +24,7 @@ export const NESTED_JOURNEY_TYPES = {
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
   KBVS: "KBVs",
+  APP_DOC_CHECK: "App doc check",
 };
 
 export const COMMON_JOURNEY_TYPES = [

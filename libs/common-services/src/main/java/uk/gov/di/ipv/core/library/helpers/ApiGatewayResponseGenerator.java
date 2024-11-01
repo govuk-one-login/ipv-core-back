@@ -33,6 +33,14 @@ public class ApiGatewayResponseGenerator {
         }
     }
 
+    public static APIGatewayProxyResponseEvent proxyResponse(int statusCode) {
+        APIGatewayProxyResponseEvent apiGatewayProxyResponseEvent =
+                new APIGatewayProxyResponseEvent();
+        apiGatewayProxyResponseEvent.setStatusCode(statusCode);
+
+        return apiGatewayProxyResponseEvent;
+    }
+
     public static APIGatewayProxyResponseEvent proxyResponse(
             int statusCode, String body, Map<String, String> headers) {
         APIGatewayProxyResponseEvent apiGatewayProxyResponseEvent =

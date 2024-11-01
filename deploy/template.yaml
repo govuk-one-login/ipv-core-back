@@ -1130,6 +1130,180 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ProcessCriCallbackLogGroup
 
+  ProcessMobileAppCallbackFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "ProcessMobileAppCallbackLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "process-mobile-app-callback-${Environment}"
+      Handler: uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/process-mobile-app-callback
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Events:
+        IPVCoreMobileAppCallback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCorePrivateAPI
+            Path: /app/callback
+            Method: POST
+      AutoPublishAlias: live
+
+  ProcessMobileAppCallbackFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsTestApiEnv
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref ProcessMobileAppCallbackFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/POST/app/callback"
+
+  ProcessMobileAppCallbackLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/process-mobile-app-callback-${Environment}"
+
+  ProcessMobileAppCallbackLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ProcessMobileAppCallbackLogGroup
+
+  CheckMobileAppVcReceiptFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "CheckMobileAppVcReceiptLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/check-mobile-app-vc-receipt
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CRIResponseTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      Events:
+        IPVCoreCheckMobileAppVcReceipt:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCorePrivateAPI
+            Path: /app/check-vc-receipt
+            Method: GET
+      AutoPublishAlias: live
+
+  CheckMobileAppVcReceiptFunctionTestingApiPermission:
+    Type: AWS::Lambda::Permission
+    Condition: IsTestApiEnv
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !Ref CheckMobileAppVcReceiptFunction.Alias
+      Principal: "apigateway.amazonaws.com"
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${IPVCoreInternalTestingApi}/*/GET/app/check-vc-receipt"
+
+  CheckMobileAppVcReceiptLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/check-mobile-app-vc-receipt-${Environment}"
+
+  CheckMobileAppVcReceiptLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CheckMobileAppVcReceiptLogGroup
+
+
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -2574,6 +2748,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "bulk-migrate-vcs-${Environment}"
+      MemorySize: 10240
       Handler: uk.gov.di.ipv.core.bulkmigratevcs.BulkMigrateVcsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/bulk-migrate-vcs
@@ -3201,14 +3376,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: "Error returned from the IssueClientAccessTokenFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-IssueClientAccessTokenFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-IssueClientAccessTokenFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-IssueClientAccessTokenFunction:live"
+          Value: !Sub "issue-client-access-token-${Environment}:live"
         - Name: FunctionName
           Value: !Ref IssueClientAccessTokenFunction
         - Name: ExecutedVersion
@@ -3229,10 +3402,8 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "IssueClientAccessTokenFunction returning 5xx response."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-IssueClientAccessTokenFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-IssueClientAccessTokenFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
@@ -3259,14 +3430,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the InitialiseIpvSessionFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-InitialiseIpvSessionFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-InitialiseIpvSessionFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-InitialiseIpvSessionFunction:live"
+          Value: !Sub "initialise-ipv-session-${Environment}:live"
         - Name: FunctionName
           Value: !Ref InitialiseIpvSessionFunction
         - Name: ExecutedVersion
@@ -3287,10 +3456,8 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "InitialiseIpvSessionFunction returning 5xx response."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-InitialiseIpvSessionFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-InitialiseIpvSessionFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
@@ -3317,14 +3484,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the ProcessCriCallbackFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessCriCallbackFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-ProcessCriCallbackFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-ProcessCriCallbackFunction:live"
+          Value: !Sub "process-cri-callback-${Environment}:live"
         - Name: FunctionName
           Value: !Ref ProcessCriCallbackFunction
         - Name: ExecutedVersion
@@ -3345,10 +3510,8 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "ProcessCriCallbackFunction returning 5xx response."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessCriCallbackFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-ProcessCriCallbackFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
@@ -3375,14 +3538,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the BuildUserIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildUserIdentityFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildUserIdentityFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-BuildUserIdentityFunction:live"
+          Value: !Sub "build-user-identity-${Environment}:live"
         - Name: FunctionName
           Value: !Ref BuildUserIdentityFunction
         - Name: ExecutedVersion
@@ -3403,10 +3564,8 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "BuildUserIdentityFunction returning 5xx response."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildUserIdentityFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildUserIdentityFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
@@ -3433,14 +3592,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the ProcessAsyncCriCredentialFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-ProcessAsyncCriCredentialFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-ProcessAsyncCriCredentialFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-ProcessAsyncCriCredentialFunction:live"
+          Value: !Sub "process-async-cri-credential-${Environment}:live"
         - Name: FunctionName
           Value: !Ref ProcessAsyncCriCredentialFunction
         - Name: ExecutedVersion
@@ -3461,14 +3618,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the BuildProvenUserIdentityDetailsFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildProvenUserIdentityDetailsFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildProvenUserIdentityDetailsFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-BuildProvenUserIdentityDetailsFunction:live"
+          Value: !Sub "build-proven-user-identity-details-${Environment}:live"
         - Name: FunctionName
           Value: !Ref BuildProvenUserIdentityDetailsFunction
         - Name: ExecutedVersion
@@ -3489,10 +3644,8 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "BuildProvenUserIdentityDetailsFunction returning 5xx response."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildProvenUserIdentityDetailsFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildProvenUserIdentityDetailsFunction-5xxErrorCanary
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
       Dimensions:
@@ -3525,9 +3678,7 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-ExecutionFailedCanary
+      AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-ExecutionFailedCanary
       AlarmDescription: !Sub "Error returned from the JourneyEngineStepFunction ${JourneyEngineStepFunction.StateMachineRevisionId}"
       MetricName: ExecutionsFailed
       Dimensions:
@@ -3558,9 +3709,7 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-TaskFailedCanary
+      AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-TaskFailedCanary
       AlarmDescription: !Sub "TaskFailed error returned from the JourneyEngineStepFunction"
       MetricName: "JourneyEngineStepFunctionTaskFailed"
       Namespace: !Sub ${AWS::StackName}/LogMessages
@@ -3578,9 +3727,7 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-JourneyEngineStepFunction-5xxErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-JourneyEngineStepFunction-5xxErrorCanary
       AlarmDescription: "JourneyEngineStepFunction returning 5xx response."
       Namespace: AWS/ApiGateway
       MetricName: 5XXError
@@ -3608,14 +3755,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the IPVProcessJourneyEventFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-IPVProcessJourneyEventFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-IPVProcessJourneyEventFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-IPVProcessJourneyEventFunction:live"
+          Value: !Sub "process-journey-event-${Environment}:live"
         - Name: FunctionName
           Value: !Ref IPVProcessJourneyEventFunction
         - Name: ExecutedVersion
@@ -3636,14 +3781,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the CheckExistingIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckExistingIdentityFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-CheckExistingIdentityFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-CheckExistingIdentityFunction:live"
+          Value: !Sub "check-existing-identity-${Environment}:live"
         - Name: FunctionName
           Value: !Ref CheckExistingIdentityFunction
         - Name: ExecutedVersion
@@ -3664,14 +3807,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the BuildCriOauthRequestFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildCriOauthRequestFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildCriOauthRequestFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-BuildCriOauthRequestFunction:live"
+          Value: !Sub "build-cri-oauth-request-${Environment}:live"
         - Name: FunctionName
           Value: !Ref BuildCriOauthRequestFunction
         - Name: ExecutedVersion
@@ -3692,14 +3833,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the BuildClientOauthResponseFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-BuildClientOauthResponseFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-BuildClientOauthResponseFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-BuildClientOauthResponseFunction:live"
+          Value: !Sub "build-client-oauth-response-${Environment}:live"
         - Name: FunctionName
           Value: !Ref BuildClientOauthResponseFunction
         - Name: ExecutedVersion
@@ -3720,14 +3859,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the CheckGpg45ScoreFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckGpg45ScoreFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-CheckGpg45ScoreFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-CheckGpg45ScoreFunction:live"
+          Value: !Sub "check-gpg45-score-${Environment}:live"
         - Name: FunctionName
           Value: !Ref CheckGpg45ScoreFunction
         - Name: ExecutedVersion
@@ -3748,14 +3885,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the EvaluateGpg45ScoresFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-EvaluateGpg45ScoresFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-EvaluateGpg45ScoresFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-EvaluateGpg45ScoresFunction:live"
+          Value: !Sub "evaluate-gpg45-scores-${Environment}:live"
         - Name: FunctionName
           Value: !Ref EvaluateGpg45ScoresFunction
         - Name: ExecutedVersion
@@ -3776,14 +3911,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the CallTicfCriFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-CallTicfCriFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-CallTicfCriFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-CallTicfCriFunction:live"
+          Value: !Sub "call-ticf-cri-${Environment}:live"
         - Name: FunctionName
           Value: !Ref CallTicfCriFunction
         - Name: ExecutedVersion
@@ -3804,14 +3937,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the CallDcmawAsyncCriFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-CallDcmawAsyncCriFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-CallDcmawAsyncCriFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-CallDcmawAsyncCriFunction:live"
+          Value: !Sub "call-dcmaw-async-cri-${Environment}:live"
         - Name: FunctionName
           Value: !Ref CallDcmawAsyncCriFunction
         - Name: ExecutedVersion
@@ -3832,14 +3963,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the StoreIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-StoreIdentityFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-StoreIdentityFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-StoreIdentityFunction:live"
+          Value: !Sub "store-identity-${Environment}:live"
         - Name: FunctionName
           Value: !Ref StoreIdentityFunction
         - Name: ExecutedVersion
@@ -3860,14 +3989,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the ResetSessionIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-ResetSessionIdentityFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-ResetSessionIdentityFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-ResetSessionIdentityFunction:live"
+          Value: !Sub "reset-session-identity-${Environment}:live"
         - Name: FunctionName
           Value: !Ref ResetSessionIdentityFunction
         - Name: ExecutedVersion
@@ -3888,14 +4015,12 @@ Resources:
       ActionsEnabled: true
       AlarmActions:
         - !ImportValue alarm-alerts-topic
-      OKActions:
-        - !ImportValue alarm-alerts-topic
       AlarmDescription: !Sub "Error returned from the CheckCoiFunction."
-      AlarmName: !Sub ${AWS::StackName}-${Environment}-CheckCoiFunction-ErrorCanary
+      AlarmName: !Sub ${AWS::StackName}-CheckCoiFunction-ErrorCanary
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "${AWS::StackName}-CheckCoiFunction:live"
+          Value: !Sub "check-coi-${Environment}:live"
         - Name: FunctionName
           Value: !Ref CheckCoiFunction
         - Name: ExecutedVersion

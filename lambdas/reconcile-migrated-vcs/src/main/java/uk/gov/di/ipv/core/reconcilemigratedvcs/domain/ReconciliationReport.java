@@ -16,8 +16,9 @@ public class ReconciliationReport {
     private final boolean checkP2;
     private final int batchSize;
     private int identitiesFullyProcessed;
+    private int identitiesWithMatchingVcs;
     private int vcsMatchedCount;
-    private int vcsDifferentCount;
+    private int identitiesWithDifferentVcsCount;
     private int identityWithValidSignaturesCount;
     private int identityWithInvalidSignaturesCount;
     private int invalidVcSignatureCount;
@@ -35,7 +36,7 @@ public class ReconciliationReport {
     private final List<String> identityWithAnyInvalidSignaturesHashedUserIds = new ArrayList<>();
     private final List<String> invalidVcSignatureHashedUserIdAndCri = new ArrayList<>();
     private final List<String> failedToAttainP2HashedUserIds = new ArrayList<>();
-    private final List<String> differenceInVcsHashedUserIds = new ArrayList<>();
+    private final List<String> identitiesWithDifferentVcsHashedUserIds = new ArrayList<>();
     @Setter private List<String> unprocessedHashedUserIds = new ArrayList<>();
 
     public ReconciliationReport(Request request) {
@@ -49,8 +50,14 @@ public class ReconciliationReport {
         identitiesFullyProcessed++;
     }
 
-    public synchronized void incrementVcsMatch() {
-        vcsMatchedCount++;
+    public synchronized void incrementIdentitiesWithMatchingVcs(int vcCount) {
+        identitiesWithMatchingVcs++;
+        vcsMatchedCount += vcCount;
+    }
+
+    public synchronized void incrementIdentitiesWithDifferentVcs(String hashedUserId) {
+        identitiesWithDifferentVcsCount++;
+        identitiesWithDifferentVcsHashedUserIds.add(hashedUserId);
     }
 
     public synchronized void incrementFailedEvcsRead(String hashedUserId) {
@@ -98,10 +105,5 @@ public class ReconciliationReport {
 
     public synchronized void incrementSuccessfullyMatchedP2Count() {
         successfullyAttainedP2Count++;
-    }
-
-    public synchronized void incrementDifferenceInVcs(String hashedUserId) {
-        vcsDifferentCount++;
-        differenceInVcsHashedUserIds.add(hashedUserId);
     }
 }

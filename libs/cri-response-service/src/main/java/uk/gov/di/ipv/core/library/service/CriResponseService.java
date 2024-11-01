@@ -8,13 +8,18 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
 public class CriResponseService {
 
+    public static final String STATUS_RECEIVED = "received";
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ERROR = "error";
+    public static final String STATUS_ABANDON = "abandon";
+    public static final String ERROR_ACCESS_DENIED = "access_denied";
     private final DataStore<CriResponseItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
@@ -27,8 +32,11 @@ public class CriResponseService {
         this.dataStore = dataStore;
     }
 
-    public List<CriResponseItem> getCriResponseItemsByUserId(String userId) {
-        return dataStore.getItems(userId);
+    public Optional<CriResponseItem> getCriResponseItemWithState(String userId, String state) {
+        final List<CriResponseItem> criResponseItems = dataStore.getItems(userId);
+        return criResponseItems.stream()
+                .filter(item -> Objects.equals(item.getOauthState(), state))
+                .findFirst();
     }
 
     public CriResponseItem getCriResponseItem(String userId, Cri cri) {
