@@ -7,7 +7,6 @@ import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
-@Getter
 @Builder
 public record AuditExtensionErrorParams(@JsonProperty("error_code") String errorCode,
                                         @JsonProperty("error_description") String errorDescription,
