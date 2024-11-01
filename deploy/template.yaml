@@ -56,6 +56,10 @@ Globals:
           - IsDevelopment
           - 0
           - 3
+        OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES: !If
+          - IsDevelopment
+          - 0
+          - 5
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
