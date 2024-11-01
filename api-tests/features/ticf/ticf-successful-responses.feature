@@ -65,10 +65,10 @@ Feature: TICF successful responses
         | cis  | BREACHING                    |
         | type | RiskAssessment               |
 
-  Rule: TICF response delay less than 5s
+  Rule: TICF response delay less than 2s
     Scenario: Via app - TICF request has a response delay less than 5s
       Given TICF CRI will respond with default parameters
-        | responseDelay | 4         |
+        | responseDelay | 1         |
       And I activate the 'ticfCriBeta' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
