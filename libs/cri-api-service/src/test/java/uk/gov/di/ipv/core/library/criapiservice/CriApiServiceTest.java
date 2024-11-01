@@ -83,6 +83,8 @@ class CriApiServiceTest {
 
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
+    // TODO: replace wiremock with this standard mock!
+    // @Mock private HttpClient mockHttpClient;
     private CriApiService criApiService;
 
     @BeforeEach
@@ -93,6 +95,7 @@ class CriApiServiceTest {
                         mockSignerFactory,
                         SecureTokenHelper.getInstance(),
                         Clock.systemDefaultZone());
+        //                        new JavaHttpRequestSender(mockHttpClient));
 
         var criConfig = getOauthCriConfig(wmRuntimeInfo);
         when(mockConfigService.getOauthCriConfig(any())).thenReturn(criConfig);

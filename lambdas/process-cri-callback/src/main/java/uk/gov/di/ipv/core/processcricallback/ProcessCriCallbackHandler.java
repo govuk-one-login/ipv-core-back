@@ -32,9 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -56,7 +54,6 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
-import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 
@@ -117,12 +114,7 @@ public class ProcessCriCallbackHandler
         var sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
 
-        criApiService =
-                new CriApiService(
-                        configService,
-                        new SignerFactory(configService),
-                        SecureTokenHelper.getInstance(),
-                        Clock.systemDefaultZone());
+        criApiService = new CriApiService(configService);
         criCheckingService =
                 new CriCheckingService(
                         configService,

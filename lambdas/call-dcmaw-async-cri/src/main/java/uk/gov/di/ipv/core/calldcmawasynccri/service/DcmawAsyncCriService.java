@@ -13,16 +13,12 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
-
-import java.time.Clock;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CONNECTION;
@@ -39,12 +35,7 @@ public class DcmawAsyncCriService {
     @ExcludeFromGeneratedCoverageReport
     public DcmawAsyncCriService(ConfigService configService) {
         this.configService = configService;
-        this.criApiService =
-                new CriApiService(
-                        configService,
-                        new SignerFactory(configService),
-                        SecureTokenHelper.getInstance(),
-                        Clock.systemDefaultZone());
+        this.criApiService = new CriApiService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
     }
