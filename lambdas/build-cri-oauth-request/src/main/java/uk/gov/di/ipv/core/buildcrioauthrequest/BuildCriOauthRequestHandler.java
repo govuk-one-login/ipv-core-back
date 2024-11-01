@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.AuthorizationRequestHelper;
@@ -57,6 +58,7 @@ import java.security.InvalidParameterException;
 import java.text.ParseException;
 import java.time.Clock;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -65,6 +67,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -100,6 +103,9 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
     private final CriApiService criApiService;
+
+    private static final Integer DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES = 5;
+    private static CachedOAuthCriEncryptionKey cachedOAuthCriEncryptionKey;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -355,10 +361,29 @@ public class BuildCriOauthRequestHandler
         var jwksUrl = criConfig.getJwksUrl();
 
         if (jwksUrl != null) {
+            var cacheDuration =
+                    configService.getEnvironmentVariable(OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES)
+                                    == null
+                            ? DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES
+                            : Integer.parseInt(
+                                    configService.getEnvironmentVariable(
+                                            OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES));
+
+            if (cachedOAuthCriEncryptionKey != null
+                    && !cachedOAuthCriEncryptionKey.isExpired(cacheDuration)) {
+                return cachedOAuthCriEncryptionKey.key();
+            }
+
             var key = criApiService.getKeyFromJwksEndpoint(jwksUrl);
 
             if (key.isPresent()) {
-                return key.get().toRSAKey();
+                // Cache the key in a variable outside of the handler so it exists in
+                // the Lambda's memory and is still accessible between invocations that
+                // occur at short intervals from one another
+                var parsedKey = key.get().toRSAKey();
+                cachedOAuthCriEncryptionKey =
+                        new CachedOAuthCriEncryptionKey(parsedKey, new Date());
+                return parsedKey;
             }
         }
         return criConfig.getParsedEncryptionKey();
