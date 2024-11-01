@@ -322,7 +322,7 @@ class CriApiServiceTest {
 
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
-                    .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
+                    .when(() -> JwtHelper.createSignedJwtFromObject(any(), any(), any()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
             when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
             when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
