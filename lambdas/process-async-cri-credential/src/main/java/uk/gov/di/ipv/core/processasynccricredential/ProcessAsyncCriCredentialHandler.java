@@ -286,8 +286,7 @@ public class ProcessAsyncCriCredentialHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         extensionErrorParams);
-        LOGGER.info(
-                LogHelper.buildLogMessage("Sending audit event IPV_ASYNC_CRI_VC_ERROR message."));
+
         auditService.sendAuditEvent(auditEvent);
     }
 
