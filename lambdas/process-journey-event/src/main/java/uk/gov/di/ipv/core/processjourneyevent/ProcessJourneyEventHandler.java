@@ -295,16 +295,16 @@ public class ProcessJourneyEventHandler
                                 initialJourneyState.subJourney())));
 
         if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
-            var previousJourneyState = ipvSessionItem.getPreviousState();
+            State resultingState = getLastNonProcessState(initialJourneyState, ipvSessionItem);
 
-            if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
-                ipvSessionItem.popState();
-                return journeyStateToBasicState(previousJourneyState);
+            if (resultingState != null) {
+                return resultingState;
             }
 
             throw new UnknownEventException(
                     String.format(
-                            "Back event provided to state: '%s'", initialJourneyState.state()));
+                            "Back event provided from to state: '%s' has no non-process preceding states.",
+                            ipvSessionItem.getState()));
         }
 
         var result =
@@ -348,6 +348,25 @@ public class ProcessJourneyEventHandler
         }
 
         return result.state();
+    }
+
+    private State getLastNonProcessState(
+            JourneyState initialJourneyState, IpvSessionItem ipvSessionItem)
+            throws StateMachineNotFoundException, UnknownStateException {
+        int offset = 1;
+        State resultingState = null;
+        while (offset < ipvSessionItem.getStackLength() - 2) {
+            var previousJourneyState = ipvSessionItem.getPreviousState(offset);
+
+            if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+                ipvSessionItem.popState();
+                resultingState = journeyStateToBasicState(previousJourneyState);
+                break;
+            }
+
+            offset++;
+        }
+        return resultingState;
     }
 
     private void logStateChange(

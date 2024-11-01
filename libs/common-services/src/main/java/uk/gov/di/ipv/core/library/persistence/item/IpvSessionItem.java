@@ -91,11 +91,17 @@ public class IpvSessionItem implements PersistenceItem {
         return new JourneyState(stateStack.get(stateStack.size() - 1));
     }
 
-    public JourneyState getPreviousState() {
-        if (stateStack.size() < 2) {
+    public int getStackLength() {
+        return stateStack.size();
+    }
+
+    public JourneyState getPreviousState(int offset) {
+        int totalOffset = 2 + offset;
+
+        if (stateStack.size() < totalOffset) {
             throw new IllegalStateException();
         }
-        return new JourneyState(stateStack.get(stateStack.size() - 2));
+        return new JourneyState(stateStack.get(stateStack.size() - totalOffset));
     }
 
     // We need to know what vot to check for CI breaches against.
