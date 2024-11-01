@@ -203,11 +203,11 @@ class CriCheckingServiceTest {
                 capturedAuditEvent.getUser().getGovukSigninJourneyId());
         assertEquals(
                 TEST_ERROR,
-                ((AuditExtensionErrorParams) capturedAuditEvent.getExtensions()).getErrorCode());
+                ((AuditExtensionErrorParams) capturedAuditEvent.getExtensions()).errorCode());
         assertEquals(
                 TEST_ERROR_DESCRIPTION,
                 ((AuditExtensionErrorParams) capturedAuditEvent.getExtensions())
-                        .getErrorDescription());
+                        .errorDescription());
     }
 
     @Test

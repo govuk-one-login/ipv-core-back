@@ -93,9 +93,9 @@ class SqsAuditServiceTest {
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
-                new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(errorCode)
-                        .setErrorDescription(errorDescription)
+                AuditExtensionErrorParams.builder()
+                        .errorCode(errorCode)
+                        .errorDescription(errorDescription)
                         .build();
 
         var event =
@@ -121,9 +121,9 @@ class SqsAuditServiceTest {
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionErrorParams = messageBody.get("extensions");
         assertEquals(
-                extensions.getErrorCode(), auditExtensionErrorParams.get("error_code").asText());
+                extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
         assertEquals(
-                extensions.getErrorDescription(),
+                extensions.errorDescription(),
                 auditExtensionErrorParams.get("error_description").asText());
     }
 
@@ -133,9 +133,9 @@ class SqsAuditServiceTest {
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
-                new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(errorCode)
-                        .setErrorDescription(errorDescription)
+                AuditExtensionErrorParams.builder()
+                        .errorCode(errorCode)
+                        .errorDescription(errorDescription)
                         .build();
 
         AuditEventUser auditEventUser =
@@ -168,9 +168,9 @@ class SqsAuditServiceTest {
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionErrorParams = messageBody.get("extensions");
         assertEquals(
-                extensions.getErrorCode(), auditExtensionErrorParams.get("error_code").asText());
+                extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
         assertEquals(
-                extensions.getErrorDescription(),
+                extensions.errorDescription(),
                 auditExtensionErrorParams.get("error_description").asText());
         assertEquals("someUserId", messageBody.get("user").get("user_id").asText());
         assertEquals("someSessionId", messageBody.get("user").get("session_id").asText());

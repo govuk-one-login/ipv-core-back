@@ -116,9 +116,9 @@ public class CriCheckingService {
                         userId, callbackRequest.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
         AuditExtensionErrorParams extensions =
-                new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(errorCode)
-                        .setErrorDescription(errorDescription)
+                AuditExtensionErrorParams.builder()
+                        .errorCode(errorCode)
+                        .errorDescription(errorDescription)
                         .build();
 
         auditService.sendAuditEvent(

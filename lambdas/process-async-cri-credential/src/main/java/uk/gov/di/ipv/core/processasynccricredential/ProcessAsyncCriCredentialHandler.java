@@ -274,10 +274,10 @@ public class ProcessAsyncCriCredentialHandler
                 new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
 
         AuditExtensionErrorParams extensionErrorParams =
-                new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(errorAsyncCriResponse.getError())
-                        .setErrorDescription(errorAsyncCriResponse.getErrorDescription())
-                        .setCredentialIssuerId(cri.toString())
+                AuditExtensionErrorParams.builder()
+                        .errorCode(errorAsyncCriResponse.getError())
+                        .errorDescription(errorAsyncCriResponse.getErrorDescription())
+                        .credentialIssuerId(cri.toString())
                         .build();
 
         AuditEvent auditEvent =

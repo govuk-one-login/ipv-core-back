@@ -206,7 +206,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(
                 "F2F",
                 ((AuditExtensionErrorParams) auditEvents.get(0).getExtensions())
-                        .getCredentialIssuerId());
+                        .credentialIssuerId());
         assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
