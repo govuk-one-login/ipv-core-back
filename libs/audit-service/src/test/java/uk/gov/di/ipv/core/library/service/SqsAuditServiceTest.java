@@ -120,8 +120,7 @@ class SqsAuditServiceTest {
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionErrorParams = messageBody.get("extensions");
-        assertEquals(
-                extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
+        assertEquals(extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
         assertEquals(
                 extensions.errorDescription(),
                 auditExtensionErrorParams.get("error_description").asText());
@@ -167,8 +166,7 @@ class SqsAuditServiceTest {
                 AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionErrorParams = messageBody.get("extensions");
-        assertEquals(
-                extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
+        assertEquals(extensions.errorCode(), auditExtensionErrorParams.get("error_code").asText());
         assertEquals(
                 extensions.errorDescription(),
                 auditExtensionErrorParams.get("error_description").asText());
