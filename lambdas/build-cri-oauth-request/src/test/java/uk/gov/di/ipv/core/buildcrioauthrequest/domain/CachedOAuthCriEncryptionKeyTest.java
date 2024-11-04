@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
-public class CachedOAuthCriEncryptionKeyTest {
+class CachedOAuthCriEncryptionKeyTest {
     private Integer convertMinutesToMilliseconds(Integer minutes) {
         return minutes * 60 * 1000;
     }

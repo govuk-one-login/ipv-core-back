@@ -381,12 +381,15 @@ public class BuildCriOauthRequestHandler
                 // the Lambda's memory and is still accessible between invocations that
                 // occur at short intervals from one another
                 var parsedKey = key.get().toRSAKey();
-                cachedOAuthCriEncryptionKey =
-                        new CachedOAuthCriEncryptionKey(parsedKey, new Date());
+                cacheEncryptionKey(parsedKey);
                 return parsedKey;
             }
         }
         return criConfig.getParsedEncryptionKey();
+    }
+
+    private static void cacheEncryptionKey(RSAKey key) {
+        cachedOAuthCriEncryptionKey = new CachedOAuthCriEncryptionKey(key, new Date());
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
