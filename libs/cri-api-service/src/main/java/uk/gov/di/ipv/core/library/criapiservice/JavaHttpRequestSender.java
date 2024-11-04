@@ -44,9 +44,11 @@ public class JavaHttpRequestSender implements HTTPRequestSender {
         for (var header : joseHttpRequest.getHeaderMap().entrySet()) {
             var key = header.getKey();
             var values = header.getValue();
-            if (values != null && !values.isEmpty()) {
+            if (values != null) {
                 for (var value : values) {
-                    requestBuilder.header(key, value);
+                    if (value != null) {
+                        requestBuilder.header(key, value);
+                    }
                 }
             }
         }
