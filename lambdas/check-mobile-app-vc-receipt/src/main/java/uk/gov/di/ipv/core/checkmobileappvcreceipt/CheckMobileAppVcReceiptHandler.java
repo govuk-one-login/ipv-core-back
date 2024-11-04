@@ -72,14 +72,12 @@ public class CheckMobileAppVcReceiptHandler
             var status = getStatus(request);
 
             return ApiGatewayResponseGenerator.proxyResponse(status);
-        } catch (InvalidCheckMobileAppVcReceiptRequestException e) {
+        } catch (InvalidCheckMobileAppVcReceiptRequestException
+                | ClientOauthSessionNotFoundException e) {
             LOGGER.info(buildErrorMessage(e.getErrorResponse()));
             return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_BAD_REQUEST);
         } catch (IpvSessionNotFoundException e) {
             LOGGER.info(buildErrorMessage(ErrorResponse.IPV_SESSION_NOT_FOUND));
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_BAD_REQUEST);
-        } catch (ClientOauthSessionNotFoundException e) {
-            LOGGER.info(buildErrorMessage(e.getErrorResponse()));
             return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_BAD_REQUEST);
         } catch (InvalidCriResponseException e) {
             LOGGER.info(buildErrorMessage(e.getErrorResponse()));
