@@ -1256,6 +1256,8 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
