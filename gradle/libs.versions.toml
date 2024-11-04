@@ -40,7 +40,6 @@ powertoolsLogging = { module = "software.amazon.lambda:powertools-logging", vers
 powertoolsParameters = { module = "software.amazon.lambda:powertools-parameters", version.ref = "powertools" }
 powertoolsTracing = { module = "software.amazon.lambda:powertools-tracing", version.ref = "powertools" }
 systemStubs = "uk.org.webcompere:system-stubs-jupiter:2.1.3"
-wiremock = "com.github.tomakehurst:wiremock-jre8:3.0.1"
 
 [bundles]
 log4j = ["log4jApi", "log4jCore"]

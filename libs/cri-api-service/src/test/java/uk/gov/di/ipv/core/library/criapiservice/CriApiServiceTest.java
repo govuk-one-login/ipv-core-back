@@ -139,7 +139,7 @@ class CriApiServiceTest {
         when(mockResponse.body())
                 .thenReturn(
                         String.format(
-                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
+                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}",
                                 TEST_ACCESS_TOKEN));
 
         // Act
@@ -183,7 +183,7 @@ class CriApiServiceTest {
         when(mockResponse.body())
                 .thenReturn(
                         String.format(
-                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
+                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}",
                                 TEST_ACCESS_TOKEN));
 
         // Act
@@ -223,7 +223,7 @@ class CriApiServiceTest {
         when(mockResponse.body())
                 .thenReturn(
                         String.format(
-                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}%n",
+                                "{\"access_token\":\"%s\",\"token_type\":\"Bearer\",\"expires_in\":3600}",
                                 TEST_ACCESS_TOKEN));
 
         // Act
