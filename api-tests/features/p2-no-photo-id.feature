@@ -151,42 +151,6 @@ Feature: P2 no photo id journey
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'no-photo-id-security-questions-find-another-way' page response
 
-  Rule: HMRC KBV
-    Background: Start P2 no photo id with HMRC KBV
-      Given I activate the 'm2bBetaHmrcKbv' feature set
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-identity-document-start' page response
-      When I submit an 'end' event
-      Then I get a 'page-ipv-identity-postoffice-start' page response
-      When I submit an 'end' event
-      Then I get a 'prove-identity-no-photo-id' page response
-      When I submit an 'next' event
-
-    Scenario: P2 no photo id journey - HMRC - Happy path
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'hmrcKbv' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
     Scenario: P2 no photo id journey - Experian - Breaching BAV CI
       Then I get a 'claimedIdentity' CRI response
       When I submit 'kenneth-current' details with attributes to the CRI stub
@@ -196,95 +160,9 @@ Feature: P2 no photo id journey
       When I submit 'kenneth-with-breaching-ci' details to the CRI stub
       Then I get a 'pyi-no-match' page response with context 'bankAccount'
 
-    Scenario: P2 no photo id journey - HMRC - Breaching NINO CI
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get a 'pyi-no-match' page response with context 'nino'
-
-    Scenario: P2 no photo id journey - HMRC - Drops out via thin file or failed checks
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'hmrcKbv' CRI response
-      When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-pre-experian-kbv-transition' page response
-      When I submit a 'next' event
-      Then I get a 'kbv' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'page-ipv-success' page response
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-    Scenario: P2 no photo id journey - HMRC - Breaching KBV CI
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'hmrcKbv' CRI response
-      When I submit 'kenneth-with-breaching-ci' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'pyi-no-match' page response
-
-    Scenario: P2 no photo id journey - HMRC - KBV CI mitigation
-      Then I get a 'claimedIdentity' CRI response
-      When I submit 'kenneth-current' details with attributes to the CRI stub
-        | Attribute | Values         |
-        | context   | "bank_account" |
-      Then I get a 'bav' CRI response
-      When I submit 'kenneth' details to the CRI stub
-      Then I get a 'nino' CRI response
-      When I submit 'kenneth-score-2' details with attributes to the CRI stub
-        | Attribute          | Values                                      |
-        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":2} |
-      Then I get an 'address' CRI response
-      When I submit 'kenneth-current' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-score-2' details to the CRI stub
-      Then I get a 'hmrcKbv' CRI response
-      When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
-        | Attribute          | Values                                          |
-        | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'no-photo-id-security-questions-find-another-way' page response
-
   Rule: Abandon
     Background: Abandon P2 no photo id journey
-      Given I activate the 'm2bBetaHmrcKbv' feature set
+      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
@@ -332,7 +210,7 @@ Feature: P2 no photo id journey
 
   Rule: Escape
     Background: Escape P2 no photo id journey
-      Given I activate the 'm2bBetaHmrcKbv' feature set
+      Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
