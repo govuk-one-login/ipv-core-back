@@ -173,7 +173,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+    private HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
             String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
@@ -209,7 +209,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+    private HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
             String basicAuthClientId,
             String basicAuthClientSecret,
             CriOAuthSessionItem criOAuthSessionItem) {
@@ -330,7 +330,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildFetchVerifiableCredentialRequest(
+    private HTTPRequest buildFetchVerifiableCredentialRequest(
             BearerAccessToken accessToken,
             Cri cri,
             CriOAuthSessionItem criOAuthSessionItem,
