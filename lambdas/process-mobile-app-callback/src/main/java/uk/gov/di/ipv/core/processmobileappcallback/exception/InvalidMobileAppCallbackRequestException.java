@@ -8,6 +8,6 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 @Getter
 public class InvalidMobileAppCallbackRequestException extends HttpResponseExceptionWithErrorBody {
     public InvalidMobileAppCallbackRequestException(ErrorResponse errorResponse) {
-        super(HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
+        super(HttpStatusCode.BAD_REQUEST, errorResponse);
     }
 }
