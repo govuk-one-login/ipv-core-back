@@ -598,6 +598,10 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(LogHelper.buildLogMessage("F2F cri pending verification."));
                 return JOURNEY_PENDING;
             }
+            case CriResponseService.STATUS_ABANDON -> {
+                LOGGER.info(LogHelper.buildLogMessage("F2F cri abandon."));
+                return JOURNEY_F2F_FAIL;
+            }
             case CriResponseService.STATUS_ERROR -> {
                 LOGGER.warn(LogHelper.buildLogMessage("F2F cri error."));
                 return JOURNEY_F2F_FAIL;

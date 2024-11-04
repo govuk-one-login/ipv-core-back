@@ -735,7 +735,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
@@ -885,7 +886,8 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -906,7 +908,8 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
             throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -946,10 +949,32 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_ABANDON);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -976,7 +1001,8 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1284,7 +1310,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1317,7 +1344,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1353,7 +1381,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1666,13 +1695,13 @@ class CheckExistingIdentityHandlerTest {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
 
-    private CriResponseItem createCriResponseStoreItem() {
+    private CriResponseItem createCriResponseStoreItem(String criResponseStatus) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(Instant.now());
-        criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
+        criResponseItem.setStatus(criResponseStatus);
         return criResponseItem;
     }
 
