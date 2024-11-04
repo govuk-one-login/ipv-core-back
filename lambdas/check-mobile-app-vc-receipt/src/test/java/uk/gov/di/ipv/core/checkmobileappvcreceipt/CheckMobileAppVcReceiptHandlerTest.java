@@ -122,8 +122,7 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(verifiableCredentialService.getVc(TEST_USER_ID, Cri.DCMAW_ASYNC.toString()))
-                .thenReturn(vc);
+        when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync")).thenReturn(vc);
 
         // Act
         var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
@@ -171,7 +170,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     private CriResponseItem buildValidCriResponseItem(String status) {
         return CriResponseItem.builder()
                 .userId(TEST_USER_ID)
-                .credentialIssuer(Cri.DCMAW_ASYNC.toString())
+                .credentialIssuer(Cri.DCMAW_ASYNC.getId())
                 .status(status)
                 .build();
     }

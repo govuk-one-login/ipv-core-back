@@ -128,7 +128,7 @@ public class CheckMobileAppVcReceiptHandler
         }
 
         if (!CriResponseService.STATUS_PENDING.equals(criResponse.getStatus())
-                || verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.toString()) != null) {
+                || verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId()) != null) {
             return HttpStatus.SC_OK;
         }
 
