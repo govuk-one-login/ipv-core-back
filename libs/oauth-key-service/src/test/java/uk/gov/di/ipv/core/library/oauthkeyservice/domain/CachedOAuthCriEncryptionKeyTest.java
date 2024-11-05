@@ -13,18 +13,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 class CachedOAuthCriEncryptionKeyTest {
-    private final LocalDateTime MOCK_TODAY_DATE =
-            LocalDateTime.of(2024, Month.JANUARY, 10, 12, 5, 0);
+    private final LocalDateTime mockTodayDate = LocalDateTime.of(2024, Month.JANUARY, 10, 12, 5, 0);
 
     @Test
     void isExpiredShouldReturnFalseIfExpiryDateTimeIsAfterTodayDateTime() throws Exception {
         try (MockedStatic<LocalDateTime> mockedStatic = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStatic.when(LocalDateTime::now).thenReturn(MOCK_TODAY_DATE);
+            mockedStatic.when(LocalDateTime::now).thenReturn(mockTodayDate);
 
             var cachedKey =
                     new CachedOAuthCriEncryptionKey(
-                            RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                            MOCK_TODAY_DATE.plusMinutes(10));
+                            RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), mockTodayDate.plusMinutes(10));
 
             assertFalse(cachedKey.isExpired());
         }
@@ -33,12 +31,12 @@ class CachedOAuthCriEncryptionKeyTest {
     @Test
     void isExpiredShouldReturnTrueIfExpiryDateTimeIsBeforeTodayDateTime() throws Exception {
         try (MockedStatic<LocalDateTime> mockedStatic = Mockito.mockStatic(LocalDateTime.class)) {
-            mockedStatic.when(LocalDateTime::now).thenReturn(MOCK_TODAY_DATE);
+            mockedStatic.when(LocalDateTime::now).thenReturn(mockTodayDate);
 
             var cachedKey =
                     new CachedOAuthCriEncryptionKey(
                             RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                            MOCK_TODAY_DATE.minusMinutes(10));
+                            mockTodayDate.minusMinutes(10));
 
             assertTrue(cachedKey.isExpired());
         }

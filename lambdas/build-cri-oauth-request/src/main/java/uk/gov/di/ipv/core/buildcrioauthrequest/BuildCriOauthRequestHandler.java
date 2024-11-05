@@ -127,21 +127,11 @@ public class BuildCriOauthRequestHandler
         this.sessionCredentialsService = sessionCredentialsService;
         this.oAuthKeyService = oAuthKeyService;
         VcHelper.setConfigService(this.configService);
-
-        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
-        if (cachedOAuthCriEncryptionKeys == null) {
-            cachedOAuthCriEncryptionKeys = new HashMap<>();
-        }
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
         this(ConfigService.create());
-
-        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
-        if (cachedOAuthCriEncryptionKeys == null) {
-            cachedOAuthCriEncryptionKeys = new HashMap<>();
-        }
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -156,11 +146,6 @@ public class BuildCriOauthRequestHandler
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.oAuthKeyService = new OAuthKeyService();
         VcHelper.setConfigService(configService);
-
-        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
-        if (cachedOAuthCriEncryptionKeys == null) {
-            cachedOAuthCriEncryptionKeys = new HashMap<>();
-        }
     }
 
     @Override
@@ -361,7 +346,8 @@ public class BuildCriOauthRequestHandler
                         context);
 
         RSAKey encKey;
-        if (!cachedOAuthCriEncryptionKeys.isEmpty()
+        if (cachedOAuthCriEncryptionKeys != null
+                && !cachedOAuthCriEncryptionKeys.isEmpty()
                 && cachedOAuthCriEncryptionKeys.get(cri.getId()) != null
                 && !cachedOAuthCriEncryptionKeys.get(cri.getId()).isExpired()) {
             encKey = cachedOAuthCriEncryptionKeys.get(cri.getId()).key();
@@ -384,6 +370,10 @@ public class BuildCriOauthRequestHandler
     }
 
     private static void cacheEncryptionKey(RSAKey key, Cri cri, Integer cacheDuration) {
+        // Initialise cachedOAuthCriEncryptionKeys if still null
+        if (cachedOAuthCriEncryptionKeys == null) {
+            cachedOAuthCriEncryptionKeys = new HashMap<>();
+        }
         // Cache the key in a variable outside of the handler so it exists in
         // the Lambda's memory and is still accessible between invocations that
         // occur at short intervals from one another

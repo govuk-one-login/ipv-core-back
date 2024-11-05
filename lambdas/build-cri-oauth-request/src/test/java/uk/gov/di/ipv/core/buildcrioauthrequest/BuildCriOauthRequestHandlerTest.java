@@ -117,7 +117,6 @@ class BuildCriOauthRequestHandlerTest {
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     private static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
-    private static final String CRI_WELL_KNOWN_URL = "http://www.example.com/well-known";
     private static final String IPV_ISSUER = "http://www.example.com/issuer";
     private static final String ADDRESS_ISSUER = "http://www.example.com/address/issuer";
     private static final String IPV_CLIENT_ID = "ipv-core";
@@ -194,7 +193,7 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @BeforeEach
-    void setUp() throws URISyntaxException, IllegalAccessException {
+    void setUp() throws URISyntaxException {
         oauthCriConfig =
                 OauthCriConfig.builder()
                         .tokenUrl(new URI(CRI_TOKEN_URL))

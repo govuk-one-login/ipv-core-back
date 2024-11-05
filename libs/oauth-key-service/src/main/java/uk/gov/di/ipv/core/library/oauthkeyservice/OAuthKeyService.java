@@ -42,9 +42,6 @@ public class OAuthKeyService {
 
         if (jwksUrl != null) {
             var keys = getKeysFromJwksEndpoint(jwksUrl);
-            if (keys == null) {
-                return keyFromConfig;
-            }
 
             var firstEncKey =
                     keys.stream().filter(key -> key.getKeyUse() == KeyUse.ENCRYPTION).findFirst();
@@ -69,7 +66,7 @@ public class OAuthKeyService {
                                 String.format(
                                         "%d: Error retrieving public encryption key.",
                                         httpResponse.statusCode())));
-                return null;
+                return List.of();
             }
 
             return JWKSet.parse(httpResponse.body()).getKeys();
@@ -77,13 +74,13 @@ public class OAuthKeyService {
             LOGGER.warn(
                     LogHelper.buildLogMessage(
                             String.format("Error retrieving public encryption key: %s", e)));
-            return null;
+            return List.of();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOGGER.error(
+            LOGGER.warn(
                     LogHelper.buildLogMessage(
                             "Interrupted while trying to fetch public key for encryption."));
-            return null;
+            return List.of();
         }
     }
 }
