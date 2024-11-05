@@ -15,6 +15,7 @@ core:
     criResponseTtl: 3600
     sessionCredentialTtl: 3600
     authCodeExpirySeconds: 3600
+    oauthKeyCacheDurationMins: 5
     # Test CI scoring values
     ciScoringThreshold: 10
     ciScoringThresholdByVot:

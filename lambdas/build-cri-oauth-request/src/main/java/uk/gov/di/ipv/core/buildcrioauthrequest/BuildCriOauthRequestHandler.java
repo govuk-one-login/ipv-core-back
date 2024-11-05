@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.AuthorizationRequestHelper;
@@ -26,7 +25,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -42,6 +40,8 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
+import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -56,9 +56,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
-import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -67,7 +67,6 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -102,10 +101,10 @@ public class BuildCriOauthRequestHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
-    private final CriApiService criApiService;
+    private final OAuthKeyService oAuthKeyService;
 
     private static final Integer DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES = 5;
-    private static CachedOAuthCriEncryptionKey cachedOAuthCriEncryptionKey;
+    private static Map<String, CachedOAuthCriEncryptionKey> cachedOAuthCriEncryptionKeys;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -117,7 +116,7 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             SessionCredentialsService sessionCredentialsService,
-            CriApiService criApiService) {
+            OAuthKeyService oAuthKeyService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -126,13 +125,23 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.criApiService = criApiService;
+        this.oAuthKeyService = oAuthKeyService;
         VcHelper.setConfigService(this.configService);
+
+        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
+        if (cachedOAuthCriEncryptionKeys == null) {
+            cachedOAuthCriEncryptionKeys = new HashMap<>();
+        }
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
         this(ConfigService.create());
+
+        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
+        if (cachedOAuthCriEncryptionKeys == null) {
+            cachedOAuthCriEncryptionKeys = new HashMap<>();
+        }
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -145,13 +154,13 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.criApiService =
-                new CriApiService(
-                        configService,
-                        this.signerFactory,
-                        SecureTokenHelper.getInstance(),
-                        Clock.systemDefaultZone());
+        this.oAuthKeyService = new OAuthKeyService();
         VcHelper.setConfigService(configService);
+
+        // Initialise map if cachedOAuthCriEncryptionKeys is still yet to be initialised
+        if (cachedOAuthCriEncryptionKeys == null) {
+            cachedOAuthCriEncryptionKeys = new HashMap<>();
+        }
     }
 
     @Override
@@ -351,45 +360,36 @@ public class BuildCriOauthRequestHandler
                         evidenceRequest,
                         context);
 
-        var encKey = getCriEncryptionKey(oauthCriConfig);
+        RSAKey encKey;
+        if (!cachedOAuthCriEncryptionKeys.isEmpty()
+                && cachedOAuthCriEncryptionKeys.get(cri.getId()) != null
+                && !cachedOAuthCriEncryptionKeys.get(cri.getId()).isExpired()) {
+            encKey = cachedOAuthCriEncryptionKeys.get(cri.getId()).key();
+        } else {
+            encKey = oAuthKeyService.getValidEncryptionKey(oauthCriConfig);
+
+            var cacheDuration =
+                    configService.getParameter(ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS)
+                                    == null
+                            ? DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES
+                            : Integer.parseInt(
+                                    configService.getParameter(
+                                            ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS));
+            cacheEncryptionKey(encKey, cri, cacheDuration);
+        }
+
         RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
         return AuthorizationRequestHelper.createJweObject(
                 rsaEncrypter, signedJWT, encKey.getKeyID());
     }
 
-    private RSAKey getCriEncryptionKey(OauthCriConfig criConfig) throws ParseException {
-        var jwksUrl = criConfig.getJwksUrl();
-
-        if (jwksUrl != null) {
-            var cacheDuration =
-                    configService.getEnvironmentVariable(OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES)
-                                    == null
-                            ? DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES
-                            : Integer.parseInt(
-                                    configService.getEnvironmentVariable(
-                                            OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES));
-
-            if (cachedOAuthCriEncryptionKey != null
-                    && !cachedOAuthCriEncryptionKey.isExpired(cacheDuration)) {
-                return cachedOAuthCriEncryptionKey.key();
-            }
-
-            var key = criApiService.getKeyFromJwksEndpoint(jwksUrl);
-
-            if (key.isPresent()) {
-                // Cache the key in a variable outside of the handler so it exists in
-                // the Lambda's memory and is still accessible between invocations that
-                // occur at short intervals from one another
-                var parsedKey = key.get().toRSAKey();
-                cacheEncryptionKey(parsedKey);
-                return parsedKey;
-            }
-        }
-        return criConfig.getParsedEncryptionKey();
-    }
-
-    private static void cacheEncryptionKey(RSAKey key) {
-        cachedOAuthCriEncryptionKey = new CachedOAuthCriEncryptionKey(key, new Date());
+    private static void cacheEncryptionKey(RSAKey key, Cri cri, Integer cacheDuration) {
+        // Cache the key in a variable outside of the handler so it exists in
+        // the Lambda's memory and is still accessible between invocations that
+        // occur at short intervals from one another
+        var expiryDate = LocalDateTime.now().plusMinutes(cacheDuration);
+        cachedOAuthCriEncryptionKeys.put(
+                cri.getId(), new CachedOAuthCriEncryptionKey(key, expiryDate));
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(

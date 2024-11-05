@@ -47,6 +47,7 @@ include "lambdas",
 		"libs:pact-test-helpers",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
+		"libs:oauth-key-service",
 		"local-running"
 
 dependencyResolutionManagement {
@@ -62,3 +63,5 @@ dependencyResolutionManagement {
 		}
 	}
 }
+include 'libs:oauth-key-service:src:main:test'
+findProject(':libs:oauth-key-service:src:main:test')?.name = 'test'

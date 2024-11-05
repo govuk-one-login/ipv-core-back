@@ -1,36 +1,49 @@
 plugins {
-	id "java"
+	id 'java-library'
 	id "idea"
 	id "jacoco"
 	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
-	implementation libs.bundles.awsLambda,
+	implementation libs.bundles.log4j,
+			libs.jacksonDatabind,
+			libs.powertoolsTracing,
 			project(":libs:common-services"),
-			project(":libs:journey-uris"),
-			project(":libs:audit-service"),
-			project(":libs:gpg45-evaluator"),
-			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service"),
-			project(":libs:oauth-key-service")
+			project(":libs:kms-es256-signer"),
+			project(":libs:verifiable-credentials")
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	compileOnly libs.lombok
-	annotationProcessor libs.lombok
-
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
+			libs.wiremock,
 			project(path: ':libs:common-services', configuration: 'tests')
+
 	testRuntimeOnly libs.junitPlatform
 }
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
 }
 
 test {
