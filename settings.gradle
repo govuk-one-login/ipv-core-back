@@ -63,5 +63,3 @@ dependencyResolutionManagement {
 		}
 	}
 }
-include 'libs:oauth-key-service:src:main:test'
-findProject(':libs:oauth-key-service:src:main:test')?.name = 'test'
