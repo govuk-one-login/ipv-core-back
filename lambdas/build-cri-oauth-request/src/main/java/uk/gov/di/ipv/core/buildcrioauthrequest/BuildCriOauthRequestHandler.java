@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
-import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -56,9 +55,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.net.URISyntaxException;
 import java.security.InvalidParameterException;
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -103,9 +100,6 @@ public class BuildCriOauthRequestHandler
     private final SessionCredentialsService sessionCredentialsService;
     private final OAuthKeyService oAuthKeyService;
 
-    private static final Integer DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES = 5;
-    private static Map<String, CachedOAuthCriEncryptionKey> cachedOAuthCriEncryptionKeys;
-
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
             ConfigService configService,
@@ -144,7 +138,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.oAuthKeyService = new OAuthKeyService();
+        this.oAuthKeyService = new OAuthKeyService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -345,41 +339,11 @@ public class BuildCriOauthRequestHandler
                         evidenceRequest,
                         context);
 
-        RSAKey encKey;
-        if (cachedOAuthCriEncryptionKeys != null
-                && !cachedOAuthCriEncryptionKeys.isEmpty()
-                && cachedOAuthCriEncryptionKeys.get(cri.getId()) != null
-                && !cachedOAuthCriEncryptionKeys.get(cri.getId()).isExpired()) {
-            encKey = cachedOAuthCriEncryptionKeys.get(cri.getId()).key();
-        } else {
-            encKey = oAuthKeyService.getValidEncryptionKey(oauthCriConfig);
-
-            var cacheDuration =
-                    configService.getParameter(ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS)
-                                    == null
-                            ? DEFAULT_OAUTH_CRI_ENC_KEY_CACHE_DURATION_MINUTES
-                            : Integer.parseInt(
-                                    configService.getParameter(
-                                            ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS));
-            cacheEncryptionKey(encKey, cri, cacheDuration);
-        }
+        RSAKey encKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
         return AuthorizationRequestHelper.createJweObject(
                 rsaEncrypter, signedJWT, encKey.getKeyID());
-    }
-
-    private static void cacheEncryptionKey(RSAKey key, Cri cri, Integer cacheDuration) {
-        // Initialise cachedOAuthCriEncryptionKeys if still null
-        if (cachedOAuthCriEncryptionKeys == null) {
-            cachedOAuthCriEncryptionKeys = new HashMap<>();
-        }
-        // Cache the key in a variable outside of the handler so it exists in
-        // the Lambda's memory and is still accessible between invocations that
-        // occur at short intervals from one another
-        var expiryDate = LocalDateTime.now().plusMinutes(cacheDuration);
-        cachedOAuthCriEncryptionKeys.put(
-                cri.getId(), new CachedOAuthCriEncryptionKey(key, expiryDate));
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(

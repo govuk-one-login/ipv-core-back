@@ -24,7 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.platform.commons.util.ReflectionUtils;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -36,7 +35,6 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -48,7 +46,6 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
-import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -62,7 +59,6 @@ import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyFactory;
@@ -71,9 +67,7 @@ import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -165,7 +159,6 @@ class BuildCriOauthRequestHandlerTest {
     private OauthCriConfig hmrcKbvOauthCriConfig;
     private ClientOAuthSessionItem clientOAuthSessionItem;
     private final IpvSessionItem ipvSessionItem = new IpvSessionItem();
-    private static Field mockCachedOAuthCriEncryptionKeyField;
 
     @BeforeAll
     static void setUpAll() throws JsonProcessingException {
@@ -183,13 +176,6 @@ class BuildCriOauthRequestHandlerTest {
                         TEST_CONTEXT,
                         EVIDENCE_REQUEST,
                         TEST_EVIDENCE_REQUESTED.toBase64());
-        mockCachedOAuthCriEncryptionKeyField =
-                ReflectionUtils.findFields(
-                                BuildCriOauthRequestHandler.class,
-                                f -> f.getName().equals("cachedOAuthCriEncryptionKeys"),
-                                ReflectionUtils.HierarchyTraversalMode.TOP_DOWN)
-                        .get(0);
-        mockCachedOAuthCriEncryptionKeyField.setAccessible(true);
     }
 
     @BeforeEach
@@ -336,7 +322,9 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
             throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(oauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
@@ -422,16 +410,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
                     throws Exception {
         // Arrange
-        var mockedCachedOAuthCriEncryptionKey =
-                new HashMap<>(
-                        Map.of(
-                                PASSPORT.getId(),
-                                new CachedOAuthCriEncryptionKey(
-                                        RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                                        LocalDateTime.now().plusMinutes(30))));
-        mockCachedOAuthCriEncryptionKeyField.set(
-                buildCriOauthRequestHandler, mockedCachedOAuthCriEncryptionKey);
-
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -519,7 +499,7 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
                     throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(oauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
@@ -605,6 +585,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
                     throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -688,7 +670,7 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(dcmawOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
@@ -774,7 +756,7 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
             throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(dcmawOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
@@ -827,146 +809,6 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
-    void shouldUseCachedEncryptionKeyWhenNonNullAndNotExpired() throws Exception {
-        // Arrange
-        var mockedCachedOAuthCriEncryptionKey =
-                new HashMap<>(
-                        Map.of(
-                                DCMAW.getId(),
-                                new CachedOAuthCriEncryptionKey(
-                                        RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                                        LocalDateTime.now().plusMinutes(30))));
-        mockCachedOAuthCriEncryptionKeyField.set(
-                buildCriOauthRequestHandler, mockedCachedOAuthCriEncryptionKey);
-
-        when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
-                .thenReturn(dcmawOauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        verify(mockOauthKeyService, times(0)).getValidEncryptionKey(any());
-
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertEquals(
-                mockedCachedOAuthCriEncryptionKey.get(DCMAW.getId()).key().getKeyID(),
-                jweObject.getHeader().getKeyID());
-    }
-
-    @Test
-    void shouldCallOAuthCriServiceIfCachedEncryptionKeyIsExpired() throws Exception {
-        // Arrange
-        var mockedCachedOAuthCriEncryptionKey =
-                new HashMap<>(
-                        Map.of(
-                                DCMAW.getId(),
-                                new CachedOAuthCriEncryptionKey(
-                                        RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                                        LocalDateTime.now().minusMinutes(30))));
-        mockCachedOAuthCriEncryptionKeyField.set(
-                buildCriOauthRequestHandler, mockedCachedOAuthCriEncryptionKey);
-
-        when(mockOauthKeyService.getValidEncryptionKey(dcmawOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
-                .thenReturn(dcmawOauthCriConfig);
-        when(configService.getParameter(ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
-                .thenReturn(String.valueOf(5));
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
-                        .build();
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        verify(mockOauthKeyService, times(1)).getValidEncryptionKey(dcmawOauthCriConfig);
-
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertEquals(
-                RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK).getKeyID(),
-                jweObject.getHeader().getKeyID());
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-    }
-
-    @Test
     void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
         // Arrange
         CriJourneyRequest input = CriJourneyRequest.builder().journey(PASSPORT.getId()).build();
@@ -998,7 +840,7 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(f2FOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(Vot.P1);
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
@@ -1073,6 +915,8 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(hmrcKbvOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(P2);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
@@ -1131,7 +975,7 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
         // Arrange
-        when(mockOauthKeyService.getValidEncryptionKey(dcmawOauthCriConfig))
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(P1);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
@@ -1193,18 +1037,8 @@ class BuildCriOauthRequestHandlerTest {
     void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
             String journeyUri, Map<String, Object> expectedClaims) throws Exception {
         // Arrange
-        // We set the cached value here as otherwise, these tests will fail with a "Unnecessary
-        // stubbing" error if we just stub the call to OauthKeyService
-        var mockedCachedOAuthCriEncryptionKey =
-                new HashMap<>(
-                        Map.of(
-                                CLAIMED_IDENTITY.getId(),
-                                new CachedOAuthCriEncryptionKey(
-                                        RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK),
-                                        LocalDateTime.now().plusMinutes(30))));
-        mockCachedOAuthCriEncryptionKeyField.set(
-                buildCriOauthRequestHandler, mockedCachedOAuthCriEncryptionKey);
-
+        when(mockOauthKeyService.getEncryptionKey(claimedIdentityOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
                 .thenReturn(claimedIdentityOauthCriConfig);
