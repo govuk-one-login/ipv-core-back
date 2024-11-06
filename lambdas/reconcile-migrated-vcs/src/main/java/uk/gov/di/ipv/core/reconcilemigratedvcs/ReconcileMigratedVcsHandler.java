@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.factories.EvcsClientFactory;
@@ -45,8 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static com.nimbusds.jose.jwk.KeyType.EC;
-import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
-import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BATCH_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
@@ -288,7 +287,8 @@ public class ReconcileMigratedVcsHandler implements RequestHandler<Request, Reco
     private void checkIfP2(List<VerifiableCredential> evcsVcs, String hashedUserId) {
         var matchedP2Profile =
                 gpg45ProfileEvaluator.getFirstMatchingProfile(
-                        gpg45ProfileEvaluator.buildScore(evcsVcs), List.of(M1A, M1B));
+                        gpg45ProfileEvaluator.buildScore(evcsVcs),
+                        Vot.P2.getSupportedGpg45Profiles());
         if (matchedP2Profile.isEmpty()) {
             LOGGER.info(annotateLog("Failed to match a P2 profile", hashedUserId));
             reconciliationReport.incrementFailedToAttainP2(hashedUserId);
