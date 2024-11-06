@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processcricallback.service;
 
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -223,7 +222,7 @@ class CriCheckingServiceTest {
     void validateSessionIdsShouldThrowExceptionWhenIpvSessionIdIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setIpvSessionId(StringUtils.EMPTY);
+        callbackRequest.setIpvSessionId("");
 
         // Act & Assert
         assertThrows(
@@ -236,8 +235,8 @@ class CriCheckingServiceTest {
     void validateSessionIdsShouldThrowExceptionWhenBothSessionIdsAreBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setIpvSessionId(StringUtils.EMPTY);
-        callbackRequest.setState(StringUtils.EMPTY);
+        callbackRequest.setIpvSessionId("");
+        callbackRequest.setState("");
 
         // Act & Assert
         assertThrows(
@@ -250,7 +249,7 @@ class CriCheckingServiceTest {
     void validateSessionIdsShouldThrowExceptionWithNoIpvForCriOauthSessionError() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setIpvSessionId(StringUtils.EMPTY);
+        callbackRequest.setIpvSessionId("");
 
         // Act & Assert
         var exception =
@@ -264,7 +263,7 @@ class CriCheckingServiceTest {
     void validateSessionIdsShouldNotThrowExceptionWithMissingOauthStateErrorWhenOnlyStateIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setState(StringUtils.EMPTY);
+        callbackRequest.setState("");
 
         // Act & Assert
         assertDoesNotThrow(() -> criCheckingService.validateSessionIds(callbackRequest));
@@ -287,7 +286,7 @@ class CriCheckingServiceTest {
     void validateCallbackRequestShouldThrowExceptionWhenAuthorizationCodeIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setAuthorizationCode(StringUtils.EMPTY);
+        callbackRequest.setAuthorizationCode("");
 
         // Act & Assert
         assertThrows(
@@ -319,7 +318,7 @@ class CriCheckingServiceTest {
     void validateCallbackRequestShouldThrowExceptionWhenIpvSessionIdIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setIpvSessionId(StringUtils.EMPTY);
+        callbackRequest.setIpvSessionId("");
 
         // Act & Assert
         assertThrows(
@@ -335,7 +334,7 @@ class CriCheckingServiceTest {
     void validateCallbackRequestShouldThrowExceptionWhenStateIsBlank() {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
-        callbackRequest.setState(StringUtils.EMPTY);
+        callbackRequest.setState("");
 
         // Act & Assert
         assertThrows(

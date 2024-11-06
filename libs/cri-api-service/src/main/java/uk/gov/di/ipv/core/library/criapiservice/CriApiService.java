@@ -18,6 +18,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.HTTPRequestSender;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -40,6 +41,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
@@ -68,17 +70,44 @@ public class CriApiService {
     private final SignerFactory signerFactory;
     private final SecureTokenHelper secureTokenHelper;
     private final Clock clock;
+    private final HTTPRequestSender httpRequestSender;
 
     @ExcludeFromGeneratedCoverageReport
+    public CriApiService(ConfigService configService) {
+        this(
+                configService,
+                new SignerFactory(configService),
+                SecureTokenHelper.getInstance(),
+                Clock.systemDefaultZone(),
+                new JavaHttpRequestSender(TracingHttpClient.newHttpClient()));
+    }
+
+    // Used for contract tests
     public CriApiService(
             ConfigService configService,
             SignerFactory signerFactory,
             SecureTokenHelper secureTokenHelper,
             Clock clock) {
+        this(
+                configService,
+                signerFactory,
+                secureTokenHelper,
+                clock,
+                new JavaHttpRequestSender(TracingHttpClient.newHttpClient()));
+    }
+
+    // Used for unit tests
+    public CriApiService(
+            ConfigService configService,
+            SignerFactory signerFactory,
+            SecureTokenHelper secureTokenHelper,
+            Clock clock,
+            HTTPRequestSender httpRequestSender) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.secureTokenHelper = secureTokenHelper;
         this.clock = clock;
+        this.httpRequestSender = httpRequestSender;
     }
 
     private String getApiKey(OauthCriConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
@@ -117,7 +146,7 @@ public class CriApiService {
     private BearerAccessToken fetchAccessToken(HTTPRequest accessTokenRequest)
             throws CriApiException {
         try {
-            var httpResponse = accessTokenRequest.send();
+            var httpResponse = accessTokenRequest.send(httpRequestSender);
             var tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
@@ -144,7 +173,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+    private HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
             String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
@@ -180,7 +209,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+    private HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
             String basicAuthClientId,
             String basicAuthClientSecret,
             CriOAuthSessionItem criOAuthSessionItem) {
@@ -242,7 +271,7 @@ public class CriApiService {
     private VerifiableCredentialResponse fetchVerifiableCredential(
             Cri cri, HTTPRequest credentialRequest) throws CriApiException {
         try {
-            var response = credentialRequest.send();
+            var response = credentialRequest.send(httpRequestSender);
             if (!response.indicatesSuccess()) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -301,7 +330,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildFetchVerifiableCredentialRequest(
+    private HTTPRequest buildFetchVerifiableCredentialRequest(
             BearerAccessToken accessToken,
             Cri cri,
             CriOAuthSessionItem criOAuthSessionItem,

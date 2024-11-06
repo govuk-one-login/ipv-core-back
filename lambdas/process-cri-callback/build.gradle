@@ -30,7 +30,6 @@ dependencies {
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
-			libs.wiremock,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(":libs:pact-test-helpers")
 
