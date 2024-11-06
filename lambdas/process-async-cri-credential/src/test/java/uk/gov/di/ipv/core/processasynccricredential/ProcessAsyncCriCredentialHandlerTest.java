@@ -204,7 +204,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(1, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(0).getEventName());
         assertEquals(
-                "F2F",
+                "f2f",
                 ((AuditExtensionErrorParams) auditEvents.get(0).getExtensions())
                         .credentialIssuerId());
         assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
@@ -354,12 +354,12 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(2, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
         assertEquals(
-                "F2F",
+                "f2f",
                 ((AuditExtensionsVcEvidence) auditEvents.get(0).getExtensions())
                         .credentialIssuerId());
         assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
         assertEquals(
-                "F2F",
+                "f2f",
                 ((AuditExtensionsCredentialIssuerId) auditEvents.get(1).getExtensions())
                         .credentialIssuerId());
     }
