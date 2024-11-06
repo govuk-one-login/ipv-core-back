@@ -42,6 +42,10 @@ public enum Cri {
         return KBV_CRIS.contains(this);
     }
 
+    public String toId() {
+        return this.id;
+    }
+
     public static Cri fromId(String id) {
         for (var cri : values()) {
             if (cri.getId().equals(id)) {

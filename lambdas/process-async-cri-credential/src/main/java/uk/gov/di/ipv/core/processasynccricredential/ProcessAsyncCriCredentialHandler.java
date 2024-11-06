@@ -253,7 +253,7 @@ public class ProcessAsyncCriCredentialHandler
                         AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        getExtensionsForAudit(verifiableCredential, isSuccessful, cri.toString()));
+                        getExtensionsForAudit(verifiableCredential, isSuccessful, cri.toId()));
         auditService.sendAuditEvent(auditEvent);
     }
 
@@ -264,7 +264,7 @@ public class ProcessAsyncCriCredentialHandler
                         AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionsCredentialIssuerId(cri.toString()),
+                        new AuditExtensionsCredentialIssuerId(cri.toId()),
                         getRestrictedAuditDataForF2F(vc));
         auditService.sendAuditEvent(auditEvent);
     }
@@ -277,7 +277,7 @@ public class ProcessAsyncCriCredentialHandler
                 AuditExtensionErrorParams.builder()
                         .errorCode(errorAsyncCriResponse.getError())
                         .errorDescription(errorAsyncCriResponse.getErrorDescription())
-                        .credentialIssuerId(cri.toString())
+                        .credentialIssuerId(cri.toId())
                         .build();
 
         AuditEvent auditEvent =
