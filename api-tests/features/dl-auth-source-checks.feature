@@ -59,7 +59,7 @@ Feature: Authoritative source checks with driving licence CRI
       | low-confidence    |
       | medium-confidence |
 
-  Scenario: Separate session enhanced verification mitigation with DCMAW and driving licence requires auth source check
+  Scenario Outline: Separate session enhanced verification mitigation
     Given I activate the 'drivingLicenceAuthCheck' feature set
     And the subject already has the following credentials
       | CRI        | scenario                            |
@@ -75,12 +75,16 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
     Then I get a 'drivingLicence' CRI response
-    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+    When I submit '<dl_details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response
+    Then I get a '<page_response>' page response
+    Examples:
+      | dl_details                                 | page_response      |
+      | kenneth-driving-permit-valid               | page-dcmaw-success |
+      | kenneth-driving-permit-needs-alternate-doc | pyi-no-match       |
 
-  Scenario: Same session enhanced verification mitigation with DCMAW and driving licence requires auth source check
+  Scenario Outline: Same session enhanced verification mitigation
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -106,10 +110,49 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
     Then I get a 'drivingLicence' CRI response
-    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+    When I submit '<dl_details>' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-ipv-success' page response
+    Then I get a '<page_response>' page response
+    Examples:
+      | dl_details                                 | page_response    |
+      | kenneth-driving-permit-valid               | page-ipv-success |
+      | kenneth-driving-permit-needs-alternate-doc | pyi-no-match     |
+
+  Scenario Outline: KBV thin file
+    Given I activate the 'drivingLicenceAuthCheck' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a 'ukPassport' event
+    Then I get a 'ukPassport' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-0' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'pyi-cri-escape' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit '<dl_details>' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a '<page_response>' page response
+    Examples:
+      | dl_details                                 | page_response    |
+      | kenneth-driving-permit-valid               | page-ipv-success |
+      | kenneth-driving-permit-needs-alternate-doc | pyi-no-match     |
 
   Scenario: Auth source check is not required if user already has a good driving licence VC
     Given I activate the 'drivingLicenceAuthCheck' feature set
@@ -185,3 +228,32 @@ Feature: Authoritative source checks with driving licence CRI
       | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | coiAddress   |
       | family-name-only        | kenneth-changed-family-name-driving-permit-valid | coiNoAddress |
       | family-name-and-address | kenneth-changed-family-name-driving-permit-valid | coiAddress   |
+
+  Scenario Outline: Change of details journey that attracts an invalid doc CI from auth source check
+    Given I activate the 'drivingLicenceAuthCheck' feature set
+    And the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'update-details' event
+    Then I get a 'update-details' page response
+    When I submit a '<update-type>' event
+    Then I get a 'page-update-name' page response
+    When I submit a 'update-name' event
+    Then I get a 'dcmaw' CRI response
+    When I submit '<vc-scenario>' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'sorry-could-not-confirm-details' page response
+
+    Examples:
+      | update-type             | vc-scenario                                      |
+      | given-names-only        | kenneth-changed-given-name-driving-permit-valid  |
+      | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  |
+      | family-name-only        | kenneth-changed-family-name-driving-permit-valid |
+      | family-name-and-address | kenneth-changed-family-name-driving-permit-valid |
