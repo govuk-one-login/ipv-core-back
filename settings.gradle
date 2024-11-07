@@ -45,7 +45,7 @@ include "lambdas",
 		"libs:gpg45-evaluator",
 		"libs:journey-uris",
 		"libs:kms-es256-signer",
-		"libs:pact-test-helpers",
+		"libs:test-helpers",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
 		"local-running"

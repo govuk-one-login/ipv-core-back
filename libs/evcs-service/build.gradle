@@ -27,7 +27,7 @@ dependencies {
 			project(path: ':libs:evcs-migration'),
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
-			project(path: ':libs:pact-test-helpers')
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }

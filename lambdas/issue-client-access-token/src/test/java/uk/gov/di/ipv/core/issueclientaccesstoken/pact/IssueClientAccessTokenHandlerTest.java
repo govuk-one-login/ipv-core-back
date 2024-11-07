@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -34,6 +33,7 @@ import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.pact.LambdaHttpServer;
 
 import java.io.IOException;
 

@@ -10,6 +10,7 @@ dependencies {
 			libs.jacksonDatabind,
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
+			libs.powertoolsLogging,
 			project(path: ':libs:common-services')
 
 	testImplementation libs.junitJupiter,

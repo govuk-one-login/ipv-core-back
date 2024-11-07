@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.pacttesthelpers;
+package uk.gov.di.ipv.core.library.testhelpers.pact;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;

@@ -1,8 +1,9 @@
-package uk.gov.di.ipv.core.library.pacttesthelpers;
+package uk.gov.di.ipv.core.library.testhelpers.pact;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 
 import java.io.IOException;
 

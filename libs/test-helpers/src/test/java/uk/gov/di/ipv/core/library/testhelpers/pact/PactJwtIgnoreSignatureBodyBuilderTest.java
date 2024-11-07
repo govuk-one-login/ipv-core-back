@@ -1,9 +1,10 @@
-package uk.gov.di.ipv.core.library.pacttesthelpers;
+package uk.gov.di.ipv.core.library.testhelpers.pact;
 
 import au.com.dius.pact.core.model.matchingrules.RegexMatcher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtIgnoreSignatureBodyBuilder;
 
 import java.nio.charset.StandardCharsets;
 

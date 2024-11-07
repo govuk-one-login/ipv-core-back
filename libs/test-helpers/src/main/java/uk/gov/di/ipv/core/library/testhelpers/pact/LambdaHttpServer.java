@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.pacttesthelpers;
+package uk.gov.di.ipv.core.library.testhelpers.pact;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;

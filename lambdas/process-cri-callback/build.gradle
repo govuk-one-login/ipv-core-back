@@ -31,7 +31,7 @@ dependencies {
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
-			project(":libs:pact-test-helpers")
+			project(':libs:test-helpers',)
 
 	testRuntimeOnly libs.junitPlatform
 }
