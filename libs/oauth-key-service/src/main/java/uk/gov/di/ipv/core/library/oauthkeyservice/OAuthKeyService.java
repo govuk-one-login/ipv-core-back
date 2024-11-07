@@ -29,8 +29,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_C
 
 public class OAuthKeyService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ConcurrentHashMap<String, CachedOAuthCriEncryptionKey>
-            cachedOAuthEncryptionKeys = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CachedOAuthCriEncryptionKey> cachedOAuthEncryptionKeys =
+            new ConcurrentHashMap<>();
 
     private final HttpClient httpClient;
     private final ConfigService configService;
@@ -52,8 +52,7 @@ public class OAuthKeyService {
         var keyFromConfig = criConfig.getParsedEncryptionKey();
 
         if (jwksUrl != null) {
-            if (!cachedOAuthEncryptionKeys.isEmpty()
-                    && cachedOAuthEncryptionKeys.get(jwksUrl.toString()) != null
+            if (cachedOAuthEncryptionKeys.containsKey(jwksUrl.toString())
                     && !cachedOAuthEncryptionKeys.get(jwksUrl.toString()).isExpired()) {
                 return cachedOAuthEncryptionKeys.get(jwksUrl.toString()).key();
             }
@@ -76,7 +75,7 @@ public class OAuthKeyService {
         return keyFromConfig;
     }
 
-    private static void cacheEncryptionKey(RSAKey key, String jwksUrl, Integer cacheDuration) {
+    private void cacheEncryptionKey(RSAKey key, String jwksUrl, Integer cacheDuration) {
         // Cache the key in a variable outside of the handler so it exists in
         // the Lambda's memory and is still accessible between invocations that
         // occur at short intervals from one another
@@ -111,18 +110,5 @@ public class OAuthKeyService {
                             "Interrupted while trying to fetch public key for encryption."));
             return List.of();
         }
-    }
-
-    // This method is only used during testing to reset the cachedOAuthCriEncryptionKeys
-    // between tests
-    public void clearCache() {
-        cachedOAuthEncryptionKeys.clear();
-    }
-
-    // This method is only used during testing to create already existing cached keys
-    public void setCachedKeyForTesting(
-            CachedOAuthCriEncryptionKey cachedOAuthCriEncryptionKey, String jwksUrl) {
-        clearCache();
-        cachedOAuthEncryptionKeys.put(jwksUrl, cachedOAuthCriEncryptionKey);
     }
 }

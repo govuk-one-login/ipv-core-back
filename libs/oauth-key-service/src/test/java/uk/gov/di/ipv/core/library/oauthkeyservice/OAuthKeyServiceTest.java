@@ -1,8 +1,7 @@
 package uk.gov.di.ipv.core.library.oauthkeyservice;
 
 import com.nimbusds.jose.jwk.RSAKey;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,14 +15,12 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedOAuthCriEncryptionKey;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -49,19 +46,13 @@ class OAuthKeyServiceTest {
     @Mock private ConfigService mockConfigService;
     @InjectMocks private OAuthKeyService oAuthKeyService;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        oAuthKeyService = new OAuthKeyService(mockConfigService, mockHttpClient);
+    @BeforeAll
+    static void setUp() throws Exception {
         oauthCriConfig =
                 OauthCriConfig.builder()
                         .jwksUrl(new URI(TEST_JWKS_ENDPOINT))
                         .encryptionKey(TEST_KEY)
                         .build();
-    }
-
-    @AfterEach
-    void tearDown() {
-        oAuthKeyService.clearCache();
     }
 
     static Stream<Arguments> jwksEndpointResponses() throws Exception {
@@ -166,31 +157,8 @@ class OAuthKeyServiceTest {
     @Test
     void getEncryptionKeyShouldReturnCachedKeyIfItExistsAndIsNotExpired() throws Exception {
         // Set up
-        // Create a valid key already in the cache
-        var validKey =
-                new CachedOAuthCriEncryptionKey(
-                        RSAKey.parse(TEST_KEY), LocalDateTime.now().plusMinutes(60));
-        oAuthKeyService.setCachedKeyForTesting(validKey, TEST_JWKS_ENDPOINT);
-
-        // Act
-        var key = oAuthKeyService.getEncryptionKey(oauthCriConfig);
-
-        // Assert
-        verify(mockHttpClient, times(0)).send(httpRequestCaptor.capture(), any());
-        assertEquals(RSAKey.parse(TEST_KEY), key);
-    }
-
-    @Test
-    void getEncryptionKeyShouldCallJwksEndpointIfCachedKeyIsExpired() throws Exception {
-        // Set up
-        // Create an expired key already in the cache
-        var validKey =
-                new CachedOAuthCriEncryptionKey(
-                        RSAKey.parse(TEST_KEY), LocalDateTime.now().minusMinutes(60));
-        oAuthKeyService.setCachedKeyForTesting(validKey, TEST_JWKS_ENDPOINT);
-
         when(mockConfigService.getParameter(ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
-                .thenReturn("5");
+                .thenReturn("60");
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(200);
@@ -200,11 +168,41 @@ class OAuthKeyServiceTest {
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
-            var key = oAuthKeyService.getEncryptionKey(oauthCriConfig);
+            // First call to cache key
+            oAuthKeyService.getEncryptionKey(oauthCriConfig);
+
+            // Second call
+            var secondKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
 
             // Assert
-            verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-            assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), key);
+            verify(mockHttpClient, times(1)).send(httpRequestCaptor.capture(), any());
+            assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), secondKey);
+        }
+    }
+
+    @Test
+    void getEncryptionKeyShouldCallJwksEndpointIfCachedKeyIsExpired() throws Exception {
+        // Set up
+        when(mockConfigService.getParameter(ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
+                .thenReturn("0");
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+        when(mockHttpResponse.body())
+                .thenReturn(String.format("{\"keys\":[%s]}", RSA_ENCRYPTION_PUBLIC_JWK));
+
+        // Act
+        try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
+                mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
+            // First call to cache key
+            oAuthKeyService.getEncryptionKey(oauthCriConfig);
+
+            // Second call
+            var secondKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
+
+            // Assert
+            verify(mockHttpClient, times(2)).send(httpRequestCaptor.capture(), any());
+            assertEquals(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK), secondKey);
         }
     }
 }

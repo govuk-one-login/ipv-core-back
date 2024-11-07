@@ -64,6 +64,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -342,8 +343,13 @@ public class BuildCriOauthRequestHandler
         RSAKey encKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
-        return AuthorizationRequestHelper.createJweObject(
-                rsaEncrypter, signedJWT, encKey.getKeyID());
+
+        if (configService.enabled(KID_JAR_HEADER)) {
+            return AuthorizationRequestHelper.createJweObject(
+                    rsaEncrypter, signedJWT, encKey.getKeyID());
+        }
+
+        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT, null);
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(
