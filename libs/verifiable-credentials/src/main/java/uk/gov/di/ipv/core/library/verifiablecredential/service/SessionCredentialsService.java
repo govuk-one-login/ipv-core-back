@@ -22,6 +22,7 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SESSION_CREDENTIALS_TTL;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 
 public class SessionCredentialsService {
@@ -108,6 +109,9 @@ public class SessionCredentialsService {
                                         item ->
                                                 List.of(ADDRESS.getId(), EXPERIAN_FRAUD.getId())
                                                         .contains(item.getCriId()))
+                                .toList();
+                        case DCMAW -> sessionCredentialItems.stream()
+                                .filter(item -> DCMAW.getId().equals(item.getCriId()))
                                 .toList();
                         case NAME_ONLY_CHANGE -> sessionCredentialItems.stream()
                                 .filter(item -> !item.getCriId().equals(ADDRESS.getId()))

@@ -45,7 +45,7 @@ nestedJourneyStates:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL # TODO: make this only clear DCMAW VCs
+        resetType: DCMAW
     events:
       next:
         targetState: DL_DETAILS_INCORRECT_PAGE
