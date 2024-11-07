@@ -205,11 +205,22 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_ONLY
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_ONLY:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_GIVEN_ONLY
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_FAMILY_ONLY:
     nestedJourney: APP_DOC_CHECK
@@ -220,11 +231,22 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_ONLY
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_ONLY:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_FAMILY_ONLY
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   POST_APP_DOC_CHECK_GIVEN_ONLY:
     response:
@@ -367,11 +389,22 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: PROVE_IDENTITY_ANTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
@@ -382,11 +415,22 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_FAMILY_WITH_ADDRESS
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
     response:

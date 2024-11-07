@@ -149,11 +149,27 @@ states:
       incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       incomplete-invalid-dl:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: another-way-after-dl
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
       alternate-doc-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+      postOffice:
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -613,14 +629,27 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: MITIGATION_01_APP_DOC_CHECK
+        targetEntryEvent: next
+      postOffice:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_01_F2F_START_PAGE:
     response:
@@ -698,6 +727,23 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
+      postOffice:
+        targetState: PYI_POST_OFFICE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:

@@ -45,10 +45,10 @@ nestedJourneyStates:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: ALL # TODO: make this only clear DCMAW VCs
     events:
       next:
-        exitEventToEmit: incomplete-invalid-dl
+        targetState: DL_DETAILS_INCORRECT_PAGE
 
   RESET_SESSION_INVALID_DL:
     response:
@@ -59,3 +59,13 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: alternate-doc-invalid-dl
+
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct
+    events:
+      next:
+        targetState: CRI_DCMAW
+      end:
+        exitEventToEmit: incomplete-invalid-dl
