@@ -374,7 +374,7 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    updateDetailsAccountDeletion: false
+    updateDetailsAccountDeletion: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
   features:
@@ -400,9 +400,6 @@ core:
     evcsRead:
       featureFlags:
         evcsReadEnabled: true
-    updateDetailsAccountDeletion:
-      featureFlags:
-        updateDetailsAccountDeletion: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true

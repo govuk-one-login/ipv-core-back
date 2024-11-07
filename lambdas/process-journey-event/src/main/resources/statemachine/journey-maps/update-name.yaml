@@ -176,7 +176,7 @@ states:
         resetType: NAME_ONLY_CHANGE
     events:
       next:
-        targetState: APP_DOCK_CHECK_GIVEN_ONLY
+        targetState: APP_DOC_CHECK_GIVEN_ONLY
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -190,13 +190,13 @@ states:
         resetType: NAME_ONLY_CHANGE
     events:
       next:
-        targetState: APP_DOCK_CHECK_FAMILY_ONLY
+        targetState: APP_DOC_CHECK_FAMILY_ONLY
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
             targetEntryEvent: appTriage
 
-  APP_DOCK_CHECK_GIVEN_ONLY:
+  APP_DOC_CHECK_GIVEN_ONLY:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
@@ -209,9 +209,9 @@ states:
         targetState: FAILED_UPDATE_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
-  APP_DOCK_CHECK_FAMILY_ONLY:
+  APP_DOC_CHECK_FAMILY_ONLY:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
@@ -224,8 +224,7 @@ states:
         targetState: FAILED_UPDATE_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
   POST_APP_DOC_CHECK_GIVEN_ONLY:
     response:
@@ -339,7 +338,7 @@ states:
         resetType: ALL
     events:
       next:
-        targetState: APP_DOCK_CHECK_GIVEN_WITH_ADDRESS
+        targetState: APP_DOC_CHECK_GIVEN_WITH_ADDRESS
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -353,13 +352,13 @@ states:
         resetType: ALL
     events:
       next:
-        targetState: APP_DOCK_CHECK_FAMILY_WITH_ADDRESS
+        targetState: APP_DOC_CHECK_FAMILY_WITH_ADDRESS
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
             targetEntryEvent: appTriage
 
-  APP_DOCK_CHECK_GIVEN_WITH_ADDRESS:
+  APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
@@ -372,9 +371,9 @@ states:
         targetState: FAILED_UPDATE_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
-  APP_DOCK_CHECK_FAMILY_WITH_ADDRESS:
+  APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
@@ -387,7 +386,7 @@ states:
         targetState: FAILED_UPDATE_DETAILS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
   POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
     response:

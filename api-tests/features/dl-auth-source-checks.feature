@@ -249,7 +249,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'sorry-could-not-confirm-details' page response
+    Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
 
     Examples:
       | update-type             | vc-scenario                                      |
