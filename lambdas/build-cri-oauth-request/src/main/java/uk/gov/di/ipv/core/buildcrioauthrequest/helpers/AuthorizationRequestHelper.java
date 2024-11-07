@@ -98,16 +98,19 @@ public class AuthorizationRequestHelper {
         }
     }
 
-    public static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
+    public static JWEObject createJweObject(
+            RSAEncrypter rsaEncrypter, SignedJWT signedJWT, String keyId)
             throws HttpResponseExceptionWithErrorBody {
         try {
-            JWEObject jweObject =
-                    new JWEObject(
-                            new JWEHeader.Builder(
-                                            JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
-                                    .contentType("JWT")
-                                    .build(),
-                            new Payload(signedJWT));
+            var jweHeaderBuilder =
+                    new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
+                            .contentType("JWT");
+
+            if (keyId != null) {
+                jweHeaderBuilder.keyID(keyId);
+            }
+
+            JWEObject jweObject = new JWEObject(jweHeaderBuilder.build(), new Payload(signedJWT));
             jweObject.encrypt(rsaEncrypter);
             return jweObject;
         } catch (JOSEException e) {

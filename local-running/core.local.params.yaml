@@ -15,6 +15,7 @@ core:
     criResponseTtl: 3600
     sessionCredentialTtl: 3600
     authCodeExpirySeconds: 3600
+    oauthKeyCacheDurationMins: 5
     # Test CI scoring values
     ciScoringThreshold: 10
     ciScoringThresholdByVot:
@@ -82,7 +83,8 @@ core:
           "componentId":"https://address-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/address",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://address-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dcmaw:
       id: dcmaw
@@ -102,7 +104,8 @@ core:
           "componentId":"https://dcmaw-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmaw",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://dcmaw-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dcmawAsync:
       id: dcmawAsync
@@ -118,7 +121,8 @@ core:
           "clientId": "dummyClientId",
           "componentId":"https://dcmaw-async.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmawAsync",
-          "requiresApiKey": "false"
+          "requiresApiKey": "false",
+          "jwksUrl":"https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     fraud:
       id: fraud
@@ -138,7 +142,8 @@ core:
           "componentId":"https://fraud-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/fraud",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://fraud-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     kbv:
       id: kbv
@@ -158,7 +163,8 @@ core:
           "componentId":"https://experian-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/kbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://experian-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     ukPassport:
       id: ukPassport
@@ -178,7 +184,8 @@ core:
           "componentId":"https://passport-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/ukPassport",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://passport-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     drivingLicence:
       id: drivingLicence
@@ -198,7 +205,8 @@ core:
           "componentId":"https://driving-license-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/drivingLicence",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://driving-license-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     claimedIdentity:
       id: claimedIdentity
@@ -218,7 +226,8 @@ core:
           "componentId":"https://claimed-identity-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/claimedIdentity",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://claimed-identity-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     f2f:
       id: f2f
@@ -238,7 +247,8 @@ core:
           "componentId":"https://f2f-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/f2f",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://f2f-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     hmrcKbv:
       id: hmrcKbv
@@ -258,7 +268,8 @@ core:
           "componentId":"https://hmrc-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/hmrcKbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://hmrc-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     nino:
       id: nino
@@ -278,7 +289,8 @@ core:
           "componentId":"https://nino-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/nino",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://nino-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     bav:
       id: bav
@@ -298,7 +310,8 @@ core:
           "componentId":"https://bav-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/bav",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"true"
+          "requiresAdditionalEvidence":"true",
+          "jwksUrl":"https://bav-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dwpKbv:
       id: dwpKbv
@@ -318,7 +331,8 @@ core:
           "componentId":"https://dwp-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dwpKbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     ticf:
       id: ticf

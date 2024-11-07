@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -62,6 +64,7 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -96,6 +99,7 @@ public class BuildCriOauthRequestHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
+    private final OAuthKeyService oAuthKeyService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -106,7 +110,8 @@ public class BuildCriOauthRequestHandler
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            OAuthKeyService oAuthKeyService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -115,6 +120,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.oAuthKeyService = oAuthKeyService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -133,6 +139,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.oAuthKeyService = new OAuthKeyService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -333,8 +340,16 @@ public class BuildCriOauthRequestHandler
                         evidenceRequest,
                         context);
 
-        RSAEncrypter rsaEncrypter = new RSAEncrypter(oauthCriConfig.getParsedEncryptionKey());
-        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+        RSAKey encKey = oAuthKeyService.getEncryptionKey(oauthCriConfig);
+
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(encKey);
+
+        if (configService.enabled(KID_JAR_HEADER)) {
+            return AuthorizationRequestHelper.createJweObject(
+                    rsaEncrypter, signedJWT, encKey.getKeyID());
+        }
+
+        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT, null);
     }
 
     private EvidenceRequest getEvidenceRequestForF2F(

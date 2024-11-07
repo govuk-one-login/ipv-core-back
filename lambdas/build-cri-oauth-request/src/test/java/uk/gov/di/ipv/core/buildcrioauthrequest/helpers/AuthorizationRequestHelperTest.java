@@ -295,7 +295,7 @@ class AuthorizationRequestHelperTest {
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(
-                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT));
+                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT), null);
 
         assertEquals(JWEObject.State.ENCRYPTED, result.getState());
 
@@ -320,7 +320,9 @@ class AuthorizationRequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 AuthorizationRequestHelper.createJweObject(
-                                        mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
+                                        mock(RSAEncrypter.class),
+                                        SignedJWT.parse(SIGNED_JWT),
+                                        null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to encrypt JWT", exception.getErrorReason());
     }

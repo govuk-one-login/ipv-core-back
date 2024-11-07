@@ -10,6 +10,7 @@ import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
@@ -44,6 +45,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -144,6 +146,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private SessionCredentialsService mockSessionCredentialService;
+    @Mock private OAuthKeyService mockOauthKeyService;
     @Mock private MockedStatic<SharedClaimsHelper> mockSharedClaimsHelper;
     @Mock private MockedStatic<VcHelper> mockVcHelper;
     @Mock private SignerFactory mockSignerFactory;
@@ -319,6 +322,10 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
             throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -403,6 +410,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
                     throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -490,6 +499,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
                     throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -574,6 +585,8 @@ class BuildCriOauthRequestHandlerTest {
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
                     throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
                 .thenReturn(oauthCriConfig);
@@ -657,6 +670,8 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
                 .thenReturn(dcmawOauthCriConfig);
@@ -741,6 +756,8 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
             throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
                 .thenReturn(dcmawOauthCriConfig);
@@ -823,6 +840,8 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(Vot.P1);
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
@@ -896,6 +915,8 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(hmrcKbvOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(P2);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
@@ -954,6 +975,8 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         ipvSessionItem.setTargetVot(P1);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
@@ -1014,6 +1037,8 @@ class BuildCriOauthRequestHandlerTest {
     void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
             String journeyUri, Map<String, Object> expectedClaims) throws Exception {
         // Arrange
+        when(mockOauthKeyService.getEncryptionKey(claimedIdentityOauthCriConfig))
+                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
         when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
                 .thenReturn(claimedIdentityOauthCriConfig);
