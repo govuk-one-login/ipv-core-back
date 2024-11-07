@@ -1,8 +1,6 @@
-package uk.gov.di.ipv.core.library.kmses256signer;
+package uk.gov.di.ipv.core.library.signing;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.jwk.ECKey;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.services.kms.KmsClient;
@@ -30,15 +28,14 @@ public class SignerFactory {
                         .build();
     }
 
-    public JWSSigner getSigner() {
+    public CoreSigner getSigner() {
         if (ConfigService.isLocal()) {
             try {
-                return new ECDSASigner(ECKey.parse(configService.getSecret(SIGNING_KEY_JWK)));
+                return new LocalECDSASigner(ECKey.parse(configService.getSecret(SIGNING_KEY_JWK)));
             } catch (JOSEException | ParseException e) {
                 throw new IllegalArgumentException("Could not parse signing key", e);
             }
         }
-        var signingKeyId = configService.getParameter(SIGNING_KEY_ID);
-        return new KmsEs256Signer(kmsClient, signingKeyId);
+        return new KmsEs256Signer(kmsClient, configService.getParameter(SIGNING_KEY_ID));
     }
 }

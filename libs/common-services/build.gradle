@@ -12,6 +12,7 @@ dependencies {
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,
+			libs.awsSdkKms,
 			libs.commonsCodec,
 			libs.commonsCollections,
 			libs.jacksonDatabind,

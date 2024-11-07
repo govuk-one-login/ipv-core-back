@@ -2,23 +2,17 @@ package uk.gov.di.ipv.core.buildcrioauthrequest.helpers;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.RSAEncrypter;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
@@ -28,18 +22,16 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.CoreSigner;
 
-import java.text.ParseException;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_JWK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.JwtHelper.createSignedJwt;
 
 public class AuthorizationRequestHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -52,7 +44,7 @@ public class AuthorizationRequestHelper {
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static SignedJWT createSignedJWT(
             SharedClaims sharedClaims,
-            JWSSigner signer,
+            CoreSigner signer,
             OauthCriConfig oauthCriConfig,
             ConfigService configService,
             String oauthState,
@@ -62,12 +54,6 @@ public class AuthorizationRequestHelper {
             String context)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
-
-        var headerBuilder = new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT);
-        if (configService.enabled(KID_JAR_HEADER)) {
-            headerBuilder.keyID(getKid(configService));
-        }
-        JWSHeader header = headerBuilder.build();
 
         JWTClaimsSet authClaimsSet =
                 new AuthorizationRequest.Builder(
@@ -84,9 +70,8 @@ public class AuthorizationRequestHelper {
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
-                                        now.plus(
-                                                configService.getLongParameter(JWT_TTL_SECONDS),
-                                                ChronoUnit.SECONDS)))
+                                        now.plusSeconds(
+                                                configService.getLongParameter(JWT_TTL_SECONDS))))
                         .notBeforeTime(Date.from(now))
                         .subject(userId)
                         .claim("govuk_signin_journey_id", govukSigninJourneyId);
@@ -103,16 +88,14 @@ public class AuthorizationRequestHelper {
             claimsSetBuilder.claim(CONTEXT, context);
         }
 
-        SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());
         try {
-            signedJWT.sign(signer);
+            return createSignedJwt(
+                    claimsSetBuilder.build(), signer, configService.enabled(KID_JAR_HEADER));
         } catch (JOSEException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to sign shared attributes", e));
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_SIGN_SHARED_ATTRIBUTES);
         }
-
-        return signedJWT;
     }
 
     public static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
@@ -130,17 +113,5 @@ public class AuthorizationRequestHelper {
         } catch (JOSEException e) {
             throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
         }
-    }
-
-    private static String getKid(ConfigService configService) {
-        if (ConfigService.isLocal()) {
-            try {
-                return ECKey.parse(configService.getSecret(SIGNING_KEY_JWK)).getKeyID();
-            } catch (ParseException e) {
-                LOGGER.warn(LogHelper.buildLogMessage("Missing signing key JWK"));
-                return null;
-            }
-        }
-        return DigestUtils.sha256Hex(configService.getParameter(SIGNING_KEY_ID));
     }
 }

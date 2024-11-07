@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.criapiservice;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -25,9 +25,10 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.HttpRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.net.URI;
@@ -37,11 +38,6 @@ import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Clock;
 import java.util.Base64;
 import java.util.List;
@@ -54,12 +50,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -128,7 +125,7 @@ class CriApiServiceTest {
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
         when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.headers())
@@ -172,7 +169,7 @@ class CriApiServiceTest {
         // Arrange
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.headers())
@@ -262,7 +259,7 @@ class CriApiServiceTest {
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
         when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(400);
         when(mockResponse.headers())
@@ -290,7 +287,7 @@ class CriApiServiceTest {
         var callbackRequest = getValidCallbackRequest();
         when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(TEST_API_KEY);
         when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
+        when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
         when(mockResponse.statusCode()).thenReturn(200);
         when(mockResponse.headers())
@@ -322,10 +319,10 @@ class CriApiServiceTest {
 
         try (MockedStatic<JwtHelper> mockedJwtHelper = Mockito.mockStatic(JwtHelper.class)) {
             mockedJwtHelper
-                    .when(() -> JwtHelper.createSignedJwtFromObject(any(), any()))
+                    .when(() -> JwtHelper.createSignedJwt(any(), any(), anyBoolean()))
                     .thenThrow(new JOSEException("Test JOSE Exception"));
             when(mockConfigService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-            when(mockSignerFactory.getSigner()).thenReturn(new ECDSASigner(getPrivateKey()));
+            when(mockSignerFactory.getSigner()).thenReturn(new LocalECDSASigner(getPrivateKey()));
 
             // Act & Assert
             assertThrows(
@@ -581,11 +578,7 @@ class CriApiServiceTest {
                 .build();
     }
 
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (ECPrivateKey)
-                KeyFactory.getInstance("EC")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    private ECKey getPrivateKey() throws Exception {
+        return ECKey.parse(EC_PRIVATE_KEY_JWK);
     }
 }
