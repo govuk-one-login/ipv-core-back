@@ -351,6 +351,7 @@ core:
     deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: false
+    internationalAddressEnabled: false
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
     evcsWriteEnabled: true
@@ -364,6 +365,9 @@ core:
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
   features:
+    internationalAddress:
+      featureFlags:
+        internationalAddressEnabled: true
     drivingLicenceAuthCheck:
       featureFlags:
         drivingLicenceAuthCheck: true

@@ -10,6 +10,9 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: LIVE_IN_UK_PAGE
 
   ENHANCED_VERIFICATION:
     events:
@@ -766,3 +769,15 @@ states:
           mitigationType: enhanced-verification
       end:
         targetState: RETURN_TO_RP
+
+  # Live in uk journey
+  LIVE_IN_UK_PAGE:
+    response:
+      type: page
+      pageId: live-in-uk
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+      end:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
