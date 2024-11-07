@@ -619,11 +619,8 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       alternate-doc-invalid-dl:
-        targetState: MITIGATION_01_PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
+        targetJourney: FAILED
+        targetState: FAILED
 
   MITIGATION_01_F2F_START_PAGE:
     response:
@@ -699,11 +696,8 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       alternate-doc-invalid-dl:
-        targetState: PYI_POST_OFFICE
-        checkIfDisabled:
-          f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
+        targetJourney: FAILED
+        targetState: FAILED
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:
