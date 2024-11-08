@@ -430,7 +430,7 @@ class BuildClientOauthResponseHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .build();
 
-        var logCollector = LogCollector.GetLogCollectorFor(BuildClientOauthResponseHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(BuildClientOauthResponseHandler.class);
 
         // Act
         var thrown =

@@ -264,7 +264,7 @@ class UserReverificationHandlerTest {
         when(mockIpvSessionService.getIpvSessionByAccessToken(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(UserReverificationHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(UserReverificationHandler.class);
 
         // Act
         var thrown =

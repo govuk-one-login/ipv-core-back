@@ -197,7 +197,7 @@ class ProcessMobileAppCallbackHandlerTest {
                 .thenThrow(new RuntimeException("Test error"));
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
 
-        var logCollector = LogCollector.GetLogCollectorFor(ProcessMobileAppCallbackHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ProcessMobileAppCallbackHandler.class);
 
         // Act
         var thrown =

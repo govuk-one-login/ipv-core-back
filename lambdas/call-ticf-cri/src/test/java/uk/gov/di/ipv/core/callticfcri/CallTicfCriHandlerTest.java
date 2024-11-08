@@ -285,7 +285,7 @@ class CallTicfCriHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(CallTicfCriHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(CallTicfCriHandler.class);
 
         // Act
         var thrown =

@@ -398,7 +398,7 @@ class ProcessCriCallbackHandlerTest {
         var callbackRequest = buildValidCallbackRequest();
         var requestEvent = buildValidRequestEvent(callbackRequest);
 
-        var logCollector = LogCollector.GetLogCollectorFor(ProcessCriCallbackHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ProcessCriCallbackHandler.class);
 
         // Act
         var thrown =

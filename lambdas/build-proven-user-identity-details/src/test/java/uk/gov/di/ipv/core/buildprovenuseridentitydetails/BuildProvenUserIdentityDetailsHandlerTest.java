@@ -443,7 +443,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         var input = createRequestEvent();
 
         var logCollector =
-                LogCollector.GetLogCollectorFor(BuildProvenUserIdentityDetailsHandler.class);
+                LogCollector.getLogCollectorFor(BuildProvenUserIdentityDetailsHandler.class);
 
         // Act
         var thrown =

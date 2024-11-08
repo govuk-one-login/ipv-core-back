@@ -207,7 +207,7 @@ class CallDcmawAsyncCriHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(CallDcmawAsyncCriHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(CallDcmawAsyncCriHandler.class);
 
         // Act
         callDcmawAsyncCriHandler.handleRequest(input, mockContext);

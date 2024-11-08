@@ -649,7 +649,7 @@ class InitialiseIpvSessionHandlerTest {
         // Arrange
         doThrow(new RuntimeException("Test error")).when(mockConfigService).setFeatureSet(any());
 
-        var logCollector = LogCollector.GetLogCollectorFor(InitialiseIpvSessionHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(InitialiseIpvSessionHandler.class);
 
         // Act
         var thrown =

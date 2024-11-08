@@ -162,7 +162,7 @@ class CheckMobileAppVcReceiptHandlerTest {
                 .thenThrow(new RuntimeException("Test error"));
         var requestEvent = buildValidRequestEventWithState();
 
-        var logCollector = LogCollector.GetLogCollectorFor(CheckMobileAppVcReceiptHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(CheckMobileAppVcReceiptHandler.class);
 
         // Act
         var thrown =

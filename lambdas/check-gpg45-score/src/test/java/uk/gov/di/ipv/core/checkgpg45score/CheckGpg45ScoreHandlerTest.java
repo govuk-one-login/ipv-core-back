@@ -197,7 +197,7 @@ class CheckGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(CheckGpg45ScoreHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(CheckGpg45ScoreHandler.class);
 
         // Act
         var thrown =

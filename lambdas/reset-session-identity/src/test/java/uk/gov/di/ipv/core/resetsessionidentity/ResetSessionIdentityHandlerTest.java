@@ -415,7 +415,7 @@ class ResetSessionIdentityHandlerTest {
                         .lambdaInput(Map.of("resetType", "SAUSAGES"))
                         .build();
 
-        var logCollector = LogCollector.GetLogCollectorFor(ResetSessionIdentityHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ResetSessionIdentityHandler.class);
 
         // Act
         var thrown =

@@ -430,7 +430,7 @@ class StoreIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(StoreIdentityHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(StoreIdentityHandler.class);
 
         // Act
         var thrown =

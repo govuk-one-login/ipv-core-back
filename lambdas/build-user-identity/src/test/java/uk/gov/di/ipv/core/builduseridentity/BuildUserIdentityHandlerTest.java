@@ -997,7 +997,7 @@ class BuildUserIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSessionByAccessToken(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(BuildUserIdentityHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(BuildUserIdentityHandler.class);
 
         // Act
         var thrown =

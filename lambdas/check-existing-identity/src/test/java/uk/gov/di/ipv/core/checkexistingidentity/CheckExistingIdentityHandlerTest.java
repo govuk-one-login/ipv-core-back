@@ -1543,7 +1543,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(CheckExistingIdentityHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(CheckExistingIdentityHandler.class);
 
         // Act
         var thrown =

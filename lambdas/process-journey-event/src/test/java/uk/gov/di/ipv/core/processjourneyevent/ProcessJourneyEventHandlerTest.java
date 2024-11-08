@@ -1027,7 +1027,7 @@ class ProcessJourneyEventHandlerTest {
                         StateMachineInitializerMode.TEST,
                         TEST_NESTED_JOURNEY_TYPES);
 
-        var logCollector = LogCollector.GetLogCollectorFor(ProcessJourneyEventHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ProcessJourneyEventHandler.class);
 
         // Act
         var thrown =

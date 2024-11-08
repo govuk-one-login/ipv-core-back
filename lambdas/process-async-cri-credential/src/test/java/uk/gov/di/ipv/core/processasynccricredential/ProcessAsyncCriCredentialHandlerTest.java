@@ -319,7 +319,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(criResponseService.getCriResponseItemWithState(any(), any()))
                 .thenThrow(new RuntimeException("Test error"));
 
-        var logCollector = LogCollector.GetLogCollectorFor(ProcessAsyncCriCredentialHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(ProcessAsyncCriCredentialHandler.class);
 
         // Act
         var thrown =

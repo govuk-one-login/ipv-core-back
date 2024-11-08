@@ -744,7 +744,7 @@ class CheckCoiHandlerTest {
                             .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
                             .build();
 
-            var logCollector = LogCollector.GetLogCollectorFor(CheckCoiHandler.class);
+            var logCollector = LogCollector.getLogCollectorFor(CheckCoiHandler.class);
 
             // Act
             var thrown =

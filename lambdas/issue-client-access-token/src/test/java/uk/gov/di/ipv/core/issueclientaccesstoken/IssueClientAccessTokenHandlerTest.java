@@ -391,7 +391,7 @@ class IssueClientAccessTokenHandlerTest {
                 .authenticateClient(any());
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        var logCollector = LogCollector.GetLogCollectorFor(IssueClientAccessTokenHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(IssueClientAccessTokenHandler.class);
 
         // Act
         var thrown =

@@ -1111,7 +1111,7 @@ class BuildCriOauthRequestHandlerTest {
                         .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
                         .build();
 
-        var logCollector = LogCollector.GetLogCollectorFor(BuildCriOauthRequestHandler.class);
+        var logCollector = LogCollector.getLogCollectorFor(BuildCriOauthRequestHandler.class);
 
         // Act
         var thrown =
