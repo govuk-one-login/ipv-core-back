@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationE
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.OffsetDateTime;
@@ -30,25 +31,29 @@ public class TokenRequestValidator {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;
-
     private final ClientAuthJwtIdService clientAuthJwtIdService;
-    private ClientAuthenticationVerifier<Object> verifier;
+    private final OAuthKeyService oAuthKeyService;
+
+    private ClientAuthenticationVerifier<Object> clientAuthVerifier;
 
     public TokenRequestValidator(
-            ConfigService configService, ClientAuthJwtIdService clientAuthJwtIdService) {
+            ConfigService configService,
+            ClientAuthJwtIdService clientAuthJwtIdService,
+            OAuthKeyService oAuthKeyService) {
         this.configService = configService;
         this.clientAuthJwtIdService = clientAuthJwtIdService;
+        this.oAuthKeyService = oAuthKeyService;
     }
 
     public void authenticateClient(String requestBody) throws ClientAuthenticationException {
-        if (verifier == null) {
-            this.verifier = getClientAuthVerifier(configService);
+        if (clientAuthVerifier == null) {
+            this.clientAuthVerifier = getClientAuthVerifier(configService);
         }
         PrivateKeyJWT clientJwt;
         try {
             clientJwt = PrivateKeyJWT.parse(requestBody);
             LogHelper.attachClientIdToLogs(clientJwt.getClientID().getValue());
-            verifier.verify(clientJwt, null, null);
+            clientAuthVerifier.verify(clientJwt, null, null);
             JWTAuthenticationClaimsSet claimsSet = clientJwt.getJWTAuthenticationClaimsSet();
             validateMaxAllowedAuthClientTtl(claimsSet);
             validateJwtId(claimsSet);
@@ -91,7 +96,7 @@ public class TokenRequestValidator {
             ConfigService configService) {
 
         return new ClientAuthenticationVerifier<>(
-                new ConfigurationServicePublicKeySelector(configService),
+                new ConfigurationServicePublicKeySelector(oAuthKeyService),
                 Set.of(new Audience(configService.getParameter(COMPONENT_ID))));
     }
 

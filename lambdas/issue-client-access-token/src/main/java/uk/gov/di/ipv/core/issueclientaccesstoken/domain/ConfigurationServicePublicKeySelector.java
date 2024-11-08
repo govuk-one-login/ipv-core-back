@@ -1,37 +1,27 @@
 package uk.gov.di.ipv.core.issueclientaccesstoken.domain;
 
 import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientCredentialsSelector;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 
-import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.text.ParseException;
-import java.util.Base64;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class ConfigurationServicePublicKeySelector implements ClientCredentialsSelector<Object> {
 
-    private static final Base64.Decoder decoder = Base64.getDecoder();
-    private static final String ES256 = "ES256";
-    private static final String RS256 = "RS256";
+    private final OAuthKeyService oAuthKeyService;
 
-    private final ConfigService configService;
-
-    public ConfigurationServicePublicKeySelector(ConfigService configService) {
-        this.configService = configService;
+    public ConfigurationServicePublicKeySelector(OAuthKeyService oAuthKeyService) {
+        this.oAuthKeyService = oAuthKeyService;
     }
 
     @Override
@@ -49,32 +39,19 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
             Context context)
             throws InvalidClientException {
 
-        JWSAlgorithm algorithm = jwsHeader.getAlgorithm();
-        String clientId = claimedClientID.getValue();
-        String publicKeyMaterial =
-                configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
+        var clientId = claimedClientID.getValue();
+        var algorithm = jwsHeader.getAlgorithm();
+        if (algorithm != ES256) {
+            throw new InvalidClientException(
+                    String.format(
+                            "%s algorithm is not supported. Received from client ID '%s'",
+                            algorithm, clientId));
+        }
 
         try {
-            switch (algorithm.toString()) {
-                case ES256:
-                    return List.of(ECKey.parse(publicKeyMaterial).toECPublicKey());
-                case RS256:
-                    return List.of(
-                            CertificateFactory.getInstance("X.509")
-                                    .generateCertificate(
-                                            new ByteArrayInputStream(
-                                                    decoder.decode(publicKeyMaterial)))
-                                    .getPublicKey());
-                default:
-                    throw new InvalidClientException(
-                            String.format(
-                                    "%s algorithm is not supported. Received from client ID '%s'",
-                                    algorithm, clientId));
-            }
-        } catch (ParseException
-                | JOSEException
-                | CertificateException
-                | IllegalArgumentException e) {
+            return List.of(
+                    oAuthKeyService.getClientSigningKey(clientId, jwsHeader).toECPublicKey());
+        } catch (ParseException | JOSEException e) {
             throw new InvalidClientException(
                     String.format(
                             "Could not parse public key material for client ID '%s': %s",
