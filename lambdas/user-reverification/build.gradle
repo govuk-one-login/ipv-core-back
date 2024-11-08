@@ -17,7 +17,8 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactProviderJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),

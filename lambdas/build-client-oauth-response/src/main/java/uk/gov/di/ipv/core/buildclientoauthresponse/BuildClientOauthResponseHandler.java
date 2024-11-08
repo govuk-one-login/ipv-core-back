@@ -223,6 +223,9 @@ public class BuildClientOauthResponseHandler
         } catch (IpvSessionNotFoundException e) {
             return buildJourneyErrorResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }

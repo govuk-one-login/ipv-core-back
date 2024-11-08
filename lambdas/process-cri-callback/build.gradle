@@ -27,7 +27,8 @@ dependencies {
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),

@@ -19,6 +19,9 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
@@ -30,33 +33,38 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS;
 
+@ExtendWith(MockitoExtension.class)
 class IssueClientAccessTokenHandlerTest {
     private final String TEST_AUTHORIZATION_CODE = "12345";
     private final String TEST_ACCESS_TOKEN = "98765";
     private final String TEST_REDIRECT_URL = "https://callback.example.com";
     private final String TEST_SESSION_ID = "test-session-id";
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private IpvSessionItem mockSessionItem;
-    private Context context;
-    private ConfigService mockConfigService;
-    private AccessTokenService mockAccessTokenService;
-    private IpvSessionService mockSessionService;
-    private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
-    private TokenRequestValidator mockTokenRequestValidator;
+    private IpvSessionItem sessionItem;
+    @Mock private Context mockContext;
+    @Mock private ConfigService mockConfigService;
+    @Mock private AccessTokenService mockAccessTokenService;
+    @Mock private IpvSessionService mockSessionService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
+    @Mock private TokenRequestValidator mockTokenRequestValidator;
 
     private IssueClientAccessTokenHandler handler;
     private TokenResponse tokenResponse;
@@ -66,18 +74,10 @@ class IssueClientAccessTokenHandlerTest {
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 
-        mockAccessTokenService = mock(AccessTokenService.class);
-        when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
-
-        mockConfigService = mock(ConfigService.class);
-        when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn(3600L);
-
-        mockSessionService = mock(IpvSessionService.class);
-        mockClientOAuthSessionService = mock(ClientOAuthSessionDetailsService.class);
-
-        mockTokenRequestValidator = mock(TokenRequestValidator.class);
-
-        context = mock(Context.class);
+        lenient().when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
+        lenient()
+                .when(mockConfigService.getLongParameter(AUTH_CODE_EXPIRY_SECONDS))
+                .thenReturn(3600L);
 
         handler =
                 new IssueClientAccessTokenHandler(
@@ -91,11 +91,11 @@ class IssueClientAccessTokenHandlerTest {
         mockAuthorizationCodeMetadata.setCreationDateTime(Instant.now().toString());
         mockAuthorizationCodeMetadata.setRedirectUrl(TEST_REDIRECT_URL);
 
-        mockSessionItem = new IpvSessionItem();
-        mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
-        mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
-        mockSessionItem.setFeatureSet("someCoolNewThing");
+        sessionItem = new IpvSessionItem();
+        sessionItem.setIpvSessionId(TEST_SESSION_ID);
+        sessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
+        sessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
+        sessionItem.setFeatureSet("someCoolNewThing");
     }
 
     @Test
@@ -112,13 +112,13 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
+                .thenReturn(sessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -138,7 +138,7 @@ class IssueClientAccessTokenHandlerTest {
         String invalidTokenRequest = "invalid-token-request";
         event.setBody(invalidTokenRequest);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -157,7 +157,7 @@ class IssueClientAccessTokenHandlerTest {
                         + "&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -177,7 +177,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE));
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -203,7 +203,7 @@ class IssueClientAccessTokenHandlerTest {
                         new IpvSessionNotFoundException(
                                 "The supplied authorization code was not found in the database"));
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -227,7 +227,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
                 .thenThrow(new IpvSessionNotFoundException("Error"));
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -248,11 +248,11 @@ class IssueClientAccessTokenHandlerTest {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
+                .thenReturn(sessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
@@ -269,15 +269,11 @@ class IssueClientAccessTokenHandlerTest {
                         + "&client_assertion=eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id"; // pragma: allowlist secret
         event.setBody(tokenRequestBody);
 
-        when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
         doThrow(new ClientAuthenticationException("error"))
                 .when(mockTokenRequestValidator)
                 .authenticateClient(any());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
@@ -292,13 +288,11 @@ class IssueClientAccessTokenHandlerTest {
                 "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
-        when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
         doThrow(new ClientAuthenticationException("error"))
                 .when(mockTokenRequestValidator)
                 .authenticateClient(any());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_UNAUTHORIZED, response.getStatusCode());
@@ -317,15 +311,15 @@ class IssueClientAccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
+        sessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
+                .thenReturn(sessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
-        verify(mockSessionService).revokeAccessToken(mockSessionItem);
+        verify(mockSessionService).revokeAccessToken(sessionItem);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
@@ -344,18 +338,18 @@ class IssueClientAccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
+        sessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
+                .thenReturn(sessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
         String errorMessage = "Failed to revoke access token";
         doThrow(new IllegalArgumentException(errorMessage))
                 .when(mockSessionService)
-                .revokeAccessToken(mockSessionItem);
+                .revokeAccessToken(sessionItem);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
@@ -373,13 +367,13 @@ class IssueClientAccessTokenHandlerTest {
         event.setBody(tokenRequestBody);
 
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
-                .thenReturn(mockSessionItem);
+                .thenReturn(sessionItem);
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
@@ -387,6 +381,30 @@ class IssueClientAccessTokenHandlerTest {
         assertEquals(
                 "Redirect URL in token request does not match redirect URL received in auth code request",
                 errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        doThrow(new RuntimeException("Test error"))
+                .when(mockTokenRequestValidator)
+                .authenticateClient(any());
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        var logCollector = LogCollector.GetLogCollectorFor(IssueClientAccessTokenHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> handler.handleRequest(event, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {

@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
@@ -42,8 +43,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
@@ -305,6 +309,30 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(evcsService, never()).storePendingVc(any());
 
         verifyBatchResponseFailures(testEvent, batchResponse);
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
+
+        when(criResponseService.getCriResponseItemWithState(any(), any()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.GetLogCollectorFor(ProcessAsyncCriCredentialHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> handler.handleRequest(testEvent, null),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private SQSEvent createErrorTestEvent(String errorType) throws JsonProcessingException {

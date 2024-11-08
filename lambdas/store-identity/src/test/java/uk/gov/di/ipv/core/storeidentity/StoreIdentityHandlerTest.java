@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
@@ -40,9 +41,12 @@ import java.util.List;
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -128,13 +132,17 @@ class StoreIdentityHandlerTest {
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
 
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
+        Mockito.lenient()
+                .when(mockIpvSessionService.getIpvSession(SESSION_ID))
+                .thenReturn(ipvSessionItem);
+        Mockito.lenient()
+                .when(mockClientOauthSessionDetailsService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(clientOAuthSessionItem);
         Mockito.lenient()
                 .when(mockSessionCredentialService.getCredentials(SESSION_ID, USER_ID))
                 .thenReturn(VCS);
-        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+        Mockito.lenient()
+                .when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn(COMPONENT_ID);
     }
 
@@ -414,5 +422,29 @@ class StoreIdentityHandlerTest {
                         PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_IDENTITY_STORED_PATH, response.get(JOURNEY));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.GetLogCollectorFor(StoreIdentityHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () ->
+                                storeIdentityHandler.handleRequest(
+                                        PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 }

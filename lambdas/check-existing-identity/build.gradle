@@ -21,10 +21,13 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.jacksonDatabind,
+	testImplementation libs.hamcrest,
+			libs.jacksonDatabind,
 			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
+
 
 	testRuntimeOnly(libs.junitPlatform)
 }

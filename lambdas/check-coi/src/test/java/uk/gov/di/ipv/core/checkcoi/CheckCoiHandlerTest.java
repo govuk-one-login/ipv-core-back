@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.model.NamePart;
@@ -50,8 +51,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
@@ -725,6 +729,35 @@ class CheckCoiHandlerTest {
             assertEquals(
                     FAILED_TO_GENERATE_IDENTITY_CLAIM.getMessage(), responseMap.get("message"));
             verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        }
+
+        @Test
+        void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+            // Arrange
+            when(mockUserIdentityService.areGivenNamesAndDobCorrelated(
+                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                    .thenThrow(new RuntimeException("Test error"));
+
+            var request =
+                    ProcessRequest.processRequestBuilder()
+                            .ipvSessionId(IPV_SESSION_ID)
+                            .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                            .build();
+
+            var logCollector = LogCollector.GetLogCollectorFor(CheckCoiHandler.class);
+
+            // Act
+            var thrown =
+                    assertThrows(
+                            Exception.class,
+                            () -> checkCoiHandler.handleRequest(request, mockContext),
+                            "Expected handleRequest() to throw, but it didn't");
+
+            // Assert
+            assertEquals("Test error", thrown.getMessage());
+            var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+            assertThat(logMessage, containsString("Unhandled lambda exception"));
+            assertThat(logMessage, containsString("Test error"));
         }
     }
 
