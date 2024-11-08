@@ -53,7 +53,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a '<expected-identity>' identity
-    And I have a dcmaw VC without a 'drivingPermit'
+    And I have a dcmaw VC without 'drivingPermit' details
 
     Examples:
       | journey-type      | expected-identity |
@@ -89,16 +89,16 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     Then I get a 'page-face-to-face-handoff' page response
 
     # Return journey
-    When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+    When I start a new '<journey-type>' journey and return to a 'page-ipv-reuse' page response
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P2' identity without a 'dcmaw' VC
+    Then I get a '<expected-identity>' identity without a 'dcmaw' VC
 
     Examples:
-      | journey-type      | context    | evidence-requested-value                    |
-      | low-confidence    | lastChoice | {"scoringPolicy":"gpg45","strengthScore":2} |
-      | medium-confidence | null       | {"scoringPolicy":"gpg45","strengthScore":3} |
+      | journey-type      | context    | evidence-requested-value                    | expected-identity |
+      | low-confidence    | lastChoice | {"scoringPolicy":"gpg45","strengthScore":2} | P1                |
+      | medium-confidence | null       | {"scoringPolicy":"gpg45","strengthScore":3} | P2                |
 
   Scenario Outline: User backs out of DL CRI and selects to return to the RP - should not have a DCMAW VC
     When I start a new '<journey-type>' journey
@@ -158,7 +158,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a dcmaw VC without a 'drivingPermit'
+      And I have a dcmaw VC without 'drivingPermit' details
 
       Examples:
         | update-type             | dl-details                                       | passport-details                           | fraud-details                       |
@@ -190,7 +190,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And I have a dcmaw VC without a 'drivingPermit'
+      And I have a dcmaw VC without 'drivingPermit' details
 
       Examples:
         | update-type             | dl-details                                       | passport-details                           | fraud-details                                   |

@@ -228,8 +228,7 @@ states:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
-            targetJourney: INELIGIBLE
-            targetState: INELIGIBLE
+            targetState: PYI_ESCAPE
 
   WEB_DL_OR_PASSPORT:
     nestedJourney: WEB_DL_OR_PASSPORT

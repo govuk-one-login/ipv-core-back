@@ -347,7 +347,7 @@ Then(
 );
 
 Then(
-  /I have a dcmaw VC (with|without) a '(passport|drivingPermit)'/,
+  /I have a dcmaw VC (with|without) '(passport|drivingPermit)' details/,
   async function (
     this: World,
     withOrWithout: "with" | "without",
