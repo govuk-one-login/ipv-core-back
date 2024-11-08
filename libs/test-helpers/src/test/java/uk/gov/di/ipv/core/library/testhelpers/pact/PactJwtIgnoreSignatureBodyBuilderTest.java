@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class PactJwtIgnoreSignatureBodyBuilderTest {
-    private final String JWT_HEADER =
+    private static final String JWT_HEADER =
             """
             {
               "alg": "ES256",
@@ -21,9 +21,9 @@ class PactJwtIgnoreSignatureBodyBuilderTest {
             }
             """;
 
-    private final String JWT_HEADER_BASE64 = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9";
+    private static final String JWT_HEADER_BASE64 = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9";
 
-    private final String JWT_BODY =
+    private static final String JWT_BODY =
             """
             {
               "sub": "1234567890",
@@ -31,7 +31,7 @@ class PactJwtIgnoreSignatureBodyBuilderTest {
             }
             """;
 
-    private final String JWT_BODY_BASE64 =
+    private static final String JWT_BODY_BASE64 =
             "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0"; // pragma: allowlist secret
 
     @Test
