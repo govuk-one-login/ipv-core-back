@@ -155,7 +155,7 @@ states:
         targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
