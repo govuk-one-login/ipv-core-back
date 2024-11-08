@@ -10,7 +10,6 @@ dependencies {
 			libs.jacksonDatabind,
 			libs.powertoolsTracing,
 			project(":libs:common-services"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:verifiable-credentials")
 
 	compileOnly libs.lombok

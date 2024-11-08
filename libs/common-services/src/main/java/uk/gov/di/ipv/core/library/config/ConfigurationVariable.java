@@ -46,7 +46,8 @@ public enum ConfigurationVariable {
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),
-    SIGNING_KEY_JWK("self/signingKey");
+    SIGNING_KEY_JWK("self/signingKey"),
+    OAUTH_KEY_CACHE_DURATION_MINS("self/oauthKeyCacheDurationMins");
 
     private final String path;
 

@@ -24,6 +24,7 @@ public class OauthCriConfig extends RestCriConfig {
     private String encryptionKey;
     private URI clientCallbackUrl;
     private boolean requiresAdditionalEvidence;
+    private URI jwksUrl;
 
     public RSAKey getParsedEncryptionKey() throws ParseException {
         return RSAKey.parse(encryptionKey);

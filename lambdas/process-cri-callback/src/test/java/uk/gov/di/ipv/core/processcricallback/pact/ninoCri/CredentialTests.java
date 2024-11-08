@@ -27,9 +27,9 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtIgnoreSignatureBodyBuilder;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
@@ -58,7 +58,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @PactTestFor(providerName = "NinoCriVcProvider")
 @MockServerConfig(hostInterface = "localhost")
 class CredentialTests {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
@@ -135,13 +135,13 @@ class CredentialTests {
                                                 false);
 
                                 JsonNode credentialSubject =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc")
                                                 .get("credentialSubject");
 
                                 JsonNode vcClaim =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 
@@ -245,7 +245,7 @@ class CredentialTests {
                                                 false);
 
                                 JsonNode vcClaim =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 
@@ -348,7 +348,7 @@ class CredentialTests {
                                                 false);
 
                                 JsonNode credentialSubject =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc")
                                                 .get("credentialSubject");
@@ -443,7 +443,7 @@ class CredentialTests {
                                                 false);
 
                                 JsonNode vcClaim =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc");
 

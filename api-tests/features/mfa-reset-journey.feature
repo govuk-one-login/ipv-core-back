@@ -68,8 +68,8 @@ Feature: MFA reset journey
     When I submit 'alice-passport-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
-    Then I get a 'sorry-could-not-confirm-details' page response
-    When I submit a 'end' event
+    Then I get a 'pyi-no-match' page response
+    When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result

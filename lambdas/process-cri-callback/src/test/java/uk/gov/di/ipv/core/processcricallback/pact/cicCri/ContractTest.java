@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -34,9 +33,10 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.CoreSigner;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
@@ -70,10 +70,10 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @PactTestFor(providerName = "CicCriProvider")
 @MockServerConfig(hostInterface = "localhost")
 class ContractTest {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     @Mock private ConfigService mockConfigService;
     @Mock private SignerFactory mockSignerFactory;
-    @Mock private JWSSigner mockSigner;
+    @Mock private CoreSigner mockSigner;
     @Mock private SecureTokenHelper mockSecureTokenHelper;
 
     @Pact(provider = "CicCriProvider", consumer = "IpvCoreBack")
@@ -154,7 +154,7 @@ class ContractTest {
                                                 false);
 
                                 JsonNode credentialSubject =
-                                        objectMapper
+                                        OBJECT_MAPPER
                                                 .readTree(vc.getClaimsSet().toString())
                                                 .get("vc")
                                                 .get("credentialSubject");

@@ -44,10 +44,10 @@ include "lambdas",
 		"libs:evcs-migration",
 		"libs:gpg45-evaluator",
 		"libs:journey-uris",
-		"libs:kms-es256-signer",
 		"libs:test-helpers",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
+		"libs:oauth-key-service",
 		"local-running"
 
 dependencyResolutionManagement {

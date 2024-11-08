@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -30,7 +31,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
-import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -38,9 +38,9 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -48,10 +48,12 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 
 import java.io.IOException;
 import java.time.Clock;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
@@ -180,21 +182,26 @@ public class CriApiService {
         var authorizationCode = new AuthorizationCode(authorisationCode);
 
         try {
-            var dateTime = OffsetDateTime.now(clock);
-            var clientAuthClaims =
-                    new ClientAuthClaims(
-                            criConfig.getClientId(),
-                            criConfig.getClientId(),
-                            criConfig.getComponentId(),
-                            dateTime.plusSeconds(
-                                            configService.getLongParameter(
-                                                    ConfigurationVariable.JWT_TTL_SECONDS))
-                                    .toEpochSecond(),
-                            secureTokenHelper.generate());
+            var clientAuthClaimsSet =
+                    new JWTClaimsSet.Builder()
+                            .issuer(criConfig.getClientId())
+                            .subject(criConfig.getClientId())
+                            .audience(criConfig.getComponentId())
+                            .expirationTime(
+                                    Date.from(
+                                            Instant.now(clock)
+                                                    .plusSeconds(
+                                                            configService.getLongParameter(
+                                                                    ConfigurationVariable
+                                                                            .JWT_TTL_SECONDS))))
+                            .jwtID(secureTokenHelper.generate())
+                            .build();
 
             var signedClientJwt =
-                    JwtHelper.createSignedJwtFromObject(
-                            clientAuthClaims, signerFactory.getSigner());
+                    JwtHelper.createSignedJwt(
+                            clientAuthClaimsSet,
+                            signerFactory.getSigner(),
+                            configService.enabled(KID_JAR_HEADER));
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
             var authorizationGrant = new AuthorizationCodeGrant(authorizationCode, redirectionUri);

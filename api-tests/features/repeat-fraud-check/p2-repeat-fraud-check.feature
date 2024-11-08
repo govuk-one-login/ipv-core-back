@@ -121,40 +121,40 @@ Feature: Repeat fraud check journeys
   Scenario: Unsupported Changes
     # Repeat fraud check with various unsupported events and back navigation
     When I submit a 'dob' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-dob' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'dob-family' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'dob-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'family-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-family-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-dob-family-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-dob-family' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-dob-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
     When I submit a 'back' event
     Then I get a 'confirm-your-details' page response
     When I submit a 'address-family-given' event
-    Then I get a 'update-name-date-birth' page response with context 'repeatFraudCheck'
+    Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'

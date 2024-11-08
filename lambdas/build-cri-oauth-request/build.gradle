@@ -8,12 +8,12 @@ plugins {
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:journey-uris"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service")
+			project(":libs:user-identity-service"),
+			project(":libs:oauth-key-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

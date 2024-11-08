@@ -14,8 +14,7 @@ dependencies {
 			project(":libs:cri-storing-service"),
 			project(':libs:journey-uris'),
 			project(":libs:user-identity-service"),
-			project(":libs:verifiable-credentials"),
-			project(":libs:kms-es256-signer")
+			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

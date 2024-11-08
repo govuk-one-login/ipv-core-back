@@ -22,7 +22,7 @@ Feature: Identity reuse update details
         When I submit a 'next' event
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
-        Then I get a 'sorry-could-not-confirm-details' page response
+        Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
         And an 'IPV_USER_DETAILS_UPDATE_END' audit event was recorded [local only]
 
     Scenario: Given Name Change
@@ -114,40 +114,49 @@ Feature: Identity reuse update details
 
     Scenario: Unsupported Changes
         When I submit a 'dob' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'dob-family' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'dob-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'family-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-family-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-family-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-family' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-dob-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'back' event
         Then I get a 'update-details' page response
         When I submit a 'address-family-given' event
-        Then I get a 'update-name-date-birth' page response
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
+        When I submit a 'end' event
+        Then I get a 'delete-handover' page response
+
+    Scenario: Account deletion update aborted
+        When I submit a 'dob' event
+        Then I get a 'update-name-date-birth' page response with context 'reuse'
+        When I submit a 'continue' event
+        Then I get an OAuth response
+        And an 'IPV_USER_DETAILS_UPDATE_ABORTED' audit event was recorded [local only]
