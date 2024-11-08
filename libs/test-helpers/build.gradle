@@ -13,7 +13,11 @@ dependencies {
 			libs.powertoolsLogging,
 			project(path: ':libs:common-services')
 
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
 	testImplementation libs.junitJupiter,
+			libs.hamcrest,
 			libs.mockitoJunit
 
 	testRuntimeOnly libs.junitPlatform

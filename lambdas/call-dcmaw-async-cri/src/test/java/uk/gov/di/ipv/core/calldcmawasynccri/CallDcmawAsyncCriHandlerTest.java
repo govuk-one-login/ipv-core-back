@@ -213,7 +213,7 @@ class CallDcmawAsyncCriHandlerTest {
         callDcmawAsyncCriHandler.handleRequest(input, mockContext);
 
         // Assert
-        var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+        var logMessage = logCollector.getLogMessages().get(0);
         assertThat(logMessage, containsString("Error calling DCMAW Async CRI"));
         assertThat(logMessage, containsString("Test error"));
     }

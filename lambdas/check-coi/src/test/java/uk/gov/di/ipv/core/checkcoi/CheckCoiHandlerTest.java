@@ -755,7 +755,7 @@ class CheckCoiHandlerTest {
 
             // Assert
             assertEquals("Test error", thrown.getMessage());
-            var logMessage = logCollector.getLogMessages().get(0).getFormattedMessage();
+            var logMessage = logCollector.getLogMessages().get(0);
             assertThat(logMessage, containsString("Unhandled lambda exception"));
             assertThat(logMessage, containsString("Test error"));
         }

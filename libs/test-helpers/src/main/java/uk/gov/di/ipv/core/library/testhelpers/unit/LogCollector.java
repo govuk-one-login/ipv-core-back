@@ -4,13 +4,13 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
-import org.apache.logging.log4j.message.Message;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@lombok.Getter
 public class LogCollector extends AbstractAppender {
-    List<Message> logMessages = new ArrayList<>();
+    List<String> logMessages = new ArrayList<>();
 
     private LogCollector() {
         super("LogCollector", null, null, true, null);
@@ -18,11 +18,7 @@ public class LogCollector extends AbstractAppender {
 
     @Override
     public void append(LogEvent event) {
-        logMessages.add(event.getMessage());
-    }
-
-    public List<Message> getLogMessages() {
-        return logMessages;
+        logMessages.add(event.getMessage().getFormattedMessage());
     }
 
     public static LogCollector getLogCollectorFor(Class<?> clazz) {
