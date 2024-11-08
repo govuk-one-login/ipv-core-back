@@ -36,11 +36,11 @@ nestedJourneyStates:
       next:
         exitEventToEmit: next
       access-denied:
-        targetState: RESET_SESSION_INCOMPLETE_DL
+        targetState: RESET_DCMAW_INCOMPLETE_DL
       alternate-doc-invalid-dl:
         targetState: RESET_SESSION_INVALID_DL
 
-  RESET_SESSION_INCOMPLETE_DL:
+  RESET_DCMAW_INCOMPLETE_DL:
     response:
       type: process
       lambda: reset-session-identity

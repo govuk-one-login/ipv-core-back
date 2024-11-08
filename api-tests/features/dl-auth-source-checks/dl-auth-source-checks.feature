@@ -41,25 +41,7 @@ Feature: Authoritative source checks with driving licence CRI
       | low-confidence    |
       | medium-confidence |
 
-  Scenario Outline: Journey where user backs out of driving licence CRI leads to other doc type page
-    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
-    When I start a new '<journey-type>' journey
-    Then I get a 'page-ipv-identity-document-start' page response
-    When I submit an 'appTriage' event
-    Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
-    Then I get a 'drivingLicence' CRI response
-    When I call the CRI stub with attributes and get an 'access_denied' OAuth error
-      | Attribute | Values          |
-      | context   | "check_details" |
-    Then I get a 'prove-identity-another-type-photo-id' page response with context 'drivingLicence'
-
-    Examples:
-      | journey-type      |
-      | low-confidence    |
-      | medium-confidence |
-
-  Scenario Outline: Separate session enhanced verification mitigation
+  Scenario Outline: Separate session enhanced verification mitigation with DCMAW and driving licence requires auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
     And the subject already has the following credentials
       | CRI        | scenario                            |

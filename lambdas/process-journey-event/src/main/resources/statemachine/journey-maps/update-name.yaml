@@ -389,7 +389,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID

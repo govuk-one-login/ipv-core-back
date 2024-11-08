@@ -205,7 +205,10 @@ states:
         targetState: APP_DOC_CHECK
         targetEntryEvent: next
       postOffice:
-        targetState: NINO_START_PAGE
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetState: PYI_ESCAPE
       returnToRp:
         targetState: RETURN_TO_RP
 
