@@ -158,6 +158,8 @@ states:
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -591,6 +593,8 @@ states:
   MITIGATION_01_STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -667,6 +671,9 @@ states:
   STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
+      next:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

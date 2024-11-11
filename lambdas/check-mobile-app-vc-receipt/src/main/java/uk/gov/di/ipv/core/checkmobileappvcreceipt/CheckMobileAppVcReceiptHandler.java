@@ -104,11 +104,11 @@ public class CheckMobileAppVcReceiptHandler
             var journeyResponse = getJourneyResponse(request);
 
             if (journeyResponse != null) {
-                // Frontend will end polling
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK, journeyResponse);
             }
 
+            // Frontend will continue polling
             return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_NOT_FOUND);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
@@ -140,10 +140,9 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
-            throws InvalidCheckMobileAppVcReceiptRequestException, IpvSessionNotFoundException,
-                    HttpResponseExceptionWithErrorBody, InvalidCriResponseException,
-                    CredentialParseException, VerifiableCredentialException, ConfigException,
-                    CiRetrievalException {
+            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+                    InvalidCriResponseException, CredentialParseException,
+                    VerifiableCredentialException, ConfigException, CiRetrievalException {
         // Validate callback sessions
         validateSessionId(request);
 
@@ -164,13 +163,11 @@ public class CheckMobileAppVcReceiptHandler
 
         // Retrieve and validate cri response and vc
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
-
         if (criResponse == null) {
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
         var vc = verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId());
-
         if (CriResponseService.STATUS_PENDING.equals(criResponse.getStatus()) && vc == null) {
             return null;
         }
