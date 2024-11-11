@@ -440,6 +440,10 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_GIVEN
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: ADDRESS_AND_FRAUD_GIVEN
+            targetEntryEvent: askInternationalAddress
 
   POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
     response:
@@ -449,6 +453,10 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_FAMILY
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: ADDRESS_AND_FRAUD_FAMILY
+            targetEntryEvent: askInternationalAddress
 
   ADDRESS_AND_FRAUD_GIVEN:
     nestedJourney: ADDRESS_AND_FRAUD
