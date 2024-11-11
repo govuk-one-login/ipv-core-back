@@ -34,14 +34,14 @@ Feature: P2 Web document journey
       | drivingLicence | kenneth-driving-permit-valid |
       | ukPassport     | kenneth-passport-valid       |
 
-  Scenario Outline: Visit UK landing page - yes
+  Scenario: Visit UK landing page - yes
     Given I activate the 'internationalAddress' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'next' event
     Then I get a 'page-ipv-identity-document-start' page response
 
-  Scenario Outline: Visit UK landing page - no
+  Scenario: Visit UK landing page - no
     Given I activate the 'internationalAddress' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
