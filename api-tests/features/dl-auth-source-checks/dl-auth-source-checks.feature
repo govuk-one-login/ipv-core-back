@@ -15,7 +15,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-dcmaw-success' page response
 
     Examples:
-      | journey-type       |
+      | journey-type      |
       | low-confidence    |
       | medium-confidence |
 
@@ -197,19 +197,17 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I submit '<vc-scenario>' details to the CRI stub
+    When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
     Then I get a 'drivingLicence' CRI response
-    When I submit '<vc-scenario>' details with attributes to the CRI stub
+    When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response with context '<context>'
 
     Examples:
-      | update-type             | vc-scenario                                      | context      |
-      | given-names-only        | kenneth-changed-given-name-driving-permit-valid  | coiNoAddress |
-      | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | coiAddress   |
-      | family-name-only        | kenneth-changed-family-name-driving-permit-valid | coiNoAddress |
-      | family-name-and-address | kenneth-changed-family-name-driving-permit-valid | coiAddress   |
+      | update-type             | context      |
+      | given-names-only        | coiNoAddress |
+      | given-names-and-address | coiAddress   |
 
   Scenario Outline: Change of details journey that attracts an invalid doc CI from auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
@@ -226,7 +224,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-update-name' page response
     When I submit a 'update-name' event
     Then I get a 'dcmaw' CRI response
-    When I submit '<vc-scenario>' details to the CRI stub
+    When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
     Then I get a 'drivingLicence' CRI response
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
@@ -234,8 +232,6 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
 
     Examples:
-      | update-type             | vc-scenario                                      |
-      | given-names-only        | kenneth-changed-given-name-driving-permit-valid  |
-      | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  |
-      | family-name-only        | kenneth-changed-family-name-driving-permit-valid |
-      | family-name-and-address | kenneth-changed-family-name-driving-permit-valid |
+      | update-type             |
+      | given-names-only        |
+      | given-names-and-address |

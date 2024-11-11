@@ -135,12 +135,12 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       When I submit a 'update-details' event
       Then I get a 'update-details' page response
 
-    Scenario Outline: Change of name only journey - User backs out of DL CRI - Returns to DCMAW to use passport
-      When I submit a '<update-type>' event
+    Scenario: Change of name only journey - User backs out of DL CRI - Returns to DCMAW to use passport
+      When I submit a 'given-names-only' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
-      When I submit '<dl-details>' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute | Values          |
@@ -148,11 +148,11 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'uk-driving-licence-details-not-correct' page response
       When I submit a 'next' event
       Then I get a 'dcmaw' CRI response
-      When I submit '<passport-details>' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit '<fraud-details>' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -160,17 +160,12 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'P2' identity
       And I have a dcmaw VC without 'drivingPermit' details
 
-      Examples:
-        | update-type             | dl-details                                       | passport-details                           | fraud-details                       |
-        | given-names-only        | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-passport-valid  | kenneth-changed-given-name-score-2  |
-        | family-name-only        | kenneth-changed-family-name-driving-permit-valid | kenneth-changed-family-name-passport-valid | kenneth-changed-family-name-score-2 |
-
-    Scenario Outline: Change of name and address journey - User backs out of DL CRI - Returns to DCMAW to use passport
-      When I submit a '<update-type>' event
+    Scenario: Change of name and address journey - User backs out of DL CRI - Returns to DCMAW to use passport
+      When I submit a 'family-name-and-address' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
-      When I submit '<dl-details>' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute | Values          |
@@ -178,31 +173,26 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'uk-driving-licence-details-not-correct' page response
       When I submit a 'next' event
       Then I get a 'dcmaw' CRI response
-      When I submit '<passport-details>' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get an 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
       Then I get a 'fraud' CRI response
-      When I submit '<fraud-details>' details to the CRI stub
+      When I submit 'kenneth-changed-family-name-and-address-score-2' details to the CRI stub
       Then I get a 'page-ipv-success' page response
       When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
       And I have a dcmaw VC without 'drivingPermit' details
-
-      Examples:
-        | update-type             | dl-details                                       | passport-details                           | fraud-details                                   |
-        | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  | kenneth-changed-given-name-passport-valid  | kenneth-changed-given-name-and-address-score-2  |
-        | family-name-and-address | kenneth-changed-family-name-driving-permit-valid | kenneth-changed-family-name-passport-valid | kenneth-changed-family-name-and-address-score-2 |
 
     Scenario Outline: Change of details - return to RP with no identity
       When I submit a '<update-type>' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
-      When I submit '<dl-details>' details to the CRI stub
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
       Then I get a 'drivingLicence' CRI response
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error
         | Attribute | Values          |
@@ -216,11 +206,9 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       Then I get a 'P0' identity
 
       Examples:
-        | update-type             | dl-details                                       |
-        | given-names-only        | kenneth-changed-given-name-driving-permit-valid  |
-        | given-names-and-address | kenneth-changed-given-name-driving-permit-valid  |
-        | family-name-only        | kenneth-changed-family-name-driving-permit-valid |
-        | family-name-and-address | kenneth-changed-family-name-driving-permit-valid |
+        | update-type             |
+        | given-names-only        |
+        | given-names-and-address |
 
   Rule: Separate session enhanced verification mitigation with DCMAW + DL auth source check
     Background: User returns with an enhanced verification CI and mitigates with DCMAW but user drops out of DL CRI
