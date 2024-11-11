@@ -4,7 +4,10 @@ import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorder;
 import com.amazonaws.xray.entities.Namespace;
 import com.amazonaws.xray.entities.Subsegment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
@@ -26,6 +29,7 @@ import java.util.concurrent.Executor;
 // Implementation of java.net.HttpClient that includes AWS X-Ray tracing
 @ExcludeFromGeneratedCoverageReport
 public class TracingHttpClient extends HttpClient {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final HttpClient baseClient;
     private final AWSXRayRecorder recorder;
 
@@ -83,8 +87,7 @@ public class TracingHttpClient extends HttpClient {
         return baseClient.executor();
     }
 
-    @Override
-    public <T> HttpResponse<T> send(
+    private <T> HttpResponse<T> sendWithTracing(
             HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
             throws IOException, InterruptedException {
         var subsegment = recorder.beginSubsegment(request.uri().getHost());
@@ -97,6 +100,25 @@ public class TracingHttpClient extends HttpClient {
             throw e;
         } finally {
             recorder.endSubsegment();
+        }
+    }
+
+    @Override
+    public <T> HttpResponse<T> send(
+            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+            throws IOException, InterruptedException {
+        try {
+            return sendWithTracing(request, responseBodyHandler);
+        } catch (IOException e) {
+            // We see occasional HTTP/2 GOAWAY messages from AWS when connections last
+            // for a long time (>1 hour). Retry them once, to recreate the connection.
+            if (e.getMessage().contains("GOAWAY received")) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Retrying after GOAWAY response", e)
+                                .with("host", request.uri().getHost()));
+                return sendWithTracing(request, responseBodyHandler);
+            }
+            throw e;
         }
     }
 
