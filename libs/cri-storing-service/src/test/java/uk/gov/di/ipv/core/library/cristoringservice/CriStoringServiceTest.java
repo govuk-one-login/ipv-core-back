@@ -38,6 +38,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -179,6 +180,74 @@ class CriStoringServiceTest {
         verify(mockSessionCredentialsService)
                 .persistCredentials(List.of(vc), mockIpvSessionItem.getIpvSessionId(), true);
         verify(mockIpvSessionItem, times(0)).setRiskAssessmentCredential(vc.getVcString());
+    }
+
+    @Test
+    void storeVcsShouldSubmitSessionVcsWhenNotOnReverificationJourney() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setScope(
+                ScopeConstants.OPENID); // Ensure REVERIFICATION is not in scope
+        var sessionVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var sessionVcs = List.of(sessionVc);
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+        var ipAddress = callbackRequest.getIpAddress();
+
+        when(mockSessionCredentialsService.getCredentials(
+                        mockIpvSessionItem.getIpvSessionId(),
+                        clientOAuthSessionItem.getUserId(),
+                        true))
+                .thenReturn(sessionVcs);
+
+        // Act
+        criStoringService.storeVcs(
+                callbackRequest.getCredentialIssuer(),
+                ipAddress,
+                callbackRequest.getDeviceInformation(),
+                List.of(),
+                clientOAuthSessionItem,
+                mockIpvSessionItem);
+
+        // Assert
+        verify(mockCimitService).submitVC(sessionVc, govukSigninJourneyId, ipAddress);
+        verify(mockCimitService)
+                .submitMitigatingVcList(List.of(sessionVc), govukSigninJourneyId, ipAddress);
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
+    }
+
+    @Test
+    void storeVcsShouldSubmitVcsOnce() throws Exception {
+        // Arrange
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setScope(
+                ScopeConstants.OPENID); // Ensure REVERIFICATION is not in scope
+        var sessionVc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var sessionVcs = List.of(sessionVc);
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+        var ipAddress = callbackRequest.getIpAddress();
+
+        when(mockSessionCredentialsService.getCredentials(
+                        mockIpvSessionItem.getIpvSessionId(),
+                        clientOAuthSessionItem.getUserId(),
+                        true))
+                .thenReturn(sessionVcs);
+
+        // Act
+        criStoringService.storeVcs(
+                callbackRequest.getCredentialIssuer(),
+                ipAddress,
+                callbackRequest.getDeviceInformation(),
+                List.of(sessionVc),
+                clientOAuthSessionItem,
+                mockIpvSessionItem);
+
+        // Assert
+        verify(mockCimitService, times(1)).submitVC(sessionVc, govukSigninJourneyId, ipAddress);
+        verify(mockCimitService, times(1))
+                .submitMitigatingVcList(List.of(sessionVc), govukSigninJourneyId, ipAddress);
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
     }
 
     @Test
