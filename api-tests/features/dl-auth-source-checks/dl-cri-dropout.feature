@@ -116,7 +116,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity without a 'dcmaw' VC
+    Then I get a 'P0' identity
 
     Examples:
       | journey-type      |
@@ -213,7 +213,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a 'dcmaw' VC
+      Then I get a 'P0' identity
 
       Examples:
         | update-type             | dl-details                                       |
@@ -257,7 +257,7 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a 'dcmaw' VC
+      Then I get a 'P0' identity
 
   Rule: Same session enhanced verification mitigation with DCMAW + DL auth source check
     Background: User gets an enhanced verification CI in the same session
@@ -306,4 +306,4 @@ Feature: Dropping out of authoritative source checks with DL CRI (e.g. due to in
       When I submit an 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
-      Then I get a 'P0' identity without a 'dcmaw' VC
+      Then I get a 'P0' identity

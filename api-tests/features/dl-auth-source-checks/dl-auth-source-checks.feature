@@ -34,7 +34,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit an 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
-    Then I get a 'P0' identity without a 'dcmaw' VC
+    Then I get a 'P0' identity
 
     Examples:
       | journey-type       |

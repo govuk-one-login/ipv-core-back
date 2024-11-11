@@ -55,7 +55,7 @@ nestedJourneyStates:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: DCMAW
     events:
       next:
         exitEventToEmit: alternate-doc-invalid-dl
