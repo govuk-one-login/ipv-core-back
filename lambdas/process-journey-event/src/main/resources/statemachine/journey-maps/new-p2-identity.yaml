@@ -806,7 +806,19 @@ states:
       end:
         targetState: RETURN_TO_RP
 
-  # Live in uk journey
+  # International Address journey
+  APP_DOC_CHECK_INTERNATIONAL_ADDRESS:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+      incomplete:
+        targetState: NON_UK_NO_APP_PAGE
+      incomplete-invalid-dl:
+        targetState: NON_UK_NO_APP_PAGE
+      alternate-doc-invalid-dl:
+        targetState: NON_UK_NO_APP_PAGE
+
   LIVE_IN_UK_PAGE:
     response:
       type: page
@@ -815,5 +827,16 @@ states:
       next:
         targetState: IDENTITY_START_PAGE
       end:
-        targetState: STRATEGIC_APP_TRIAGE
-        targetEntryEvent: appTriage
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
+
+  NON_UK_NO_APP_PAGE:
+    response:
+      type: page
+      pageId: non-uk-no-app
+    events:
+      next:
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
+      end:
+        targetState: RETURN_TO_RP

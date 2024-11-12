@@ -46,7 +46,30 @@ Feature: P2 Web document journey
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'end' event
-    Then I get a 'identify-device' page response
+    Then I get a 'dcmaw' CRI response
+
+  Scenario Outline: International address user sends a next event on exit page from DCMAW
+    Given I activate the 'internationalAddress' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'end' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'non-uk-no-app' page response
+    When I submit a 'next' event
+    Then I get a 'dcmaw' CRI response
+
+  Scenario Outline: International address user sends an end event on exit page from DCMAW
+    Given I activate the 'internationalAddress' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'end' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'non-uk-no-app' page response
+    When I submit a 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
 
   Scenario Outline: Successful P2 identity via Web using <cri> - DWP KBV
     Given I activate the 'dwpKbvTest' feature set
