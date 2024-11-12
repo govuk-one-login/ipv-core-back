@@ -9,6 +9,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerConsumerVersionSelectors;
 import au.com.dius.pact.provider.junitsupport.loader.SelectorBuilder;
+import com.nimbusds.jose.jwk.ECKey;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,6 +27,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -37,10 +39,11 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
@@ -57,6 +60,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 @MockitoSettings(strictness = Strictness.LENIENT)
 class IssueClientAccessTokenHandlerTest {
 
+    public static final String TEST_CLIENT_ID = "authOrchestrator";
     private LambdaHttpServer httpServer;
     private IpvSessionItem ipvSessionItem;
     @Mock private ConfigService configService;
@@ -64,6 +68,7 @@ class IssueClientAccessTokenHandlerTest {
     @Mock private DataStore<ClientOAuthSessionItem> oAuthDataStore;
     @Mock private DataStore<ClientAuthJwtIdItem> jwtIdStore;
     @Mock private Sleeper mockSleeper;
+    @Mock private OAuthKeyService mockOauthKeyService;
 
     @PactBrokerConsumerVersionSelectors
     public static SelectorBuilder consumerVersionSelectors() {
@@ -84,7 +89,8 @@ class IssueClientAccessTokenHandlerTest {
         var clientOAuthSessionService = new ClientOAuthSessionDetailsService(oAuthDataStore);
         var clientAuthJwtIdService = new ClientAuthJwtIdService(jwtIdStore);
         var tokenRequestValidator =
-                new TokenRequestValidator(configService, clientAuthJwtIdService);
+                new TokenRequestValidator(
+                        configService, clientAuthJwtIdService, mockOauthKeyService);
         ipvSessionItem = new IpvSessionItem();
         var clientOAuthSessionItem = new ClientOAuthSessionItem();
         var authorizationCodeMetadata = new AuthorizationCodeMetadata();
@@ -132,22 +138,22 @@ class IssueClientAccessTokenHandlerTest {
 
     @State(
             "the JWT is signed with {\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}") // pragma: allowlist secret
-    public void setOrchSigningKey() {
+    public void setOrchSigningKey() throws Exception {
         var signingKey =
                 "{\"kty\":\"EC\",\"d\":\"A2cfN3vYKgOQ_r1S6PhGHCLLiVEqUshFYExrxMwkq_A\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"BMyQQqr3NEFYgb9sEo4hRBje_HHEsy87PbNIBGL4Uiw\",\"y\":\"qoXdkYVomy6HWT6yNLqjHSmYoICs6ioUF565Btx0apw\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
-        when(configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
-                .thenReturn(signingKey);
+        when(mockOauthKeyService.getClientSigningKey(eq(TEST_CLIENT_ID), any()))
+                .thenReturn(ECKey.parse(signingKey));
     }
 
     @State(
             "the JWT is signed with {\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}") // pragma: allowlist secret
-    public void setAuthSigningKey() {
+    public void setAuthSigningKey() throws Exception {
         var signingKey =
                 "{\"kty\":\"EC\",\"d\":\"4NLo4B5Oj5E_ga6-eYjTSehss85p_mL799NRQqmll64\",\"crv\":\"P-256\",\"kid\":\"14342354354353\",\"x\":\"emDeRQ0KISC_TdfkoAZdd4lWm2Nk5UOtmmboLEab850\",\"y\":\"-Ua4zzSzMG5lgpMyZoURg6Au60mHSxgnnf9pDtJmE2w\",\"alg\":\"ES256\"}"; // pragma: allowlist secret
 
-        when(configService.getParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "authOrchestrator"))
-                .thenReturn(signingKey);
+        when(mockOauthKeyService.getClientSigningKey(eq(TEST_CLIENT_ID), any()))
+                .thenReturn(ECKey.parse(signingKey));
     }
 
     @State("dummyInvalidAuthCode is a invalid authorization code")

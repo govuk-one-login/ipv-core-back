@@ -5,7 +5,6 @@ import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
-import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -22,6 +21,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
@@ -36,7 +36,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISS
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_VALID_SCOPES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
@@ -57,10 +56,15 @@ public class JarValidator {
 
     private final JWEDecrypter jweDecrypter;
     private final ConfigService configService;
+    private final OAuthKeyService oAuthKeyService;
 
-    public JarValidator(JWEDecrypter jweDecrypter, ConfigService configService) {
+    public JarValidator(
+            JWEDecrypter jweDecrypter,
+            ConfigService configService,
+            OAuthKeyService oAuthKeyService) {
         this.jweDecrypter = jweDecrypter;
         this.configService = configService;
+        this.oAuthKeyService = oAuthKeyService;
     }
 
     public SignedJWT decryptJWE(JWEObject jweObject) throws JarValidationException {
@@ -203,11 +207,8 @@ public class JarValidator {
             boolean valid =
                     concatSignatureJwt.verify(
                             new ECDSAVerifier(
-                                    ECKey.parse(
-                                                    configService.getParameter(
-                                                            PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,
-                                                            clientId))
-                                            .toECPublicKey()));
+                                    oAuthKeyService.getClientSigningKey(
+                                            clientId, signedJWT.getHeader())));
 
             if (!valid) {
                 LOGGER.error(LogHelper.buildLogMessage("JWT signature validation failed"));
