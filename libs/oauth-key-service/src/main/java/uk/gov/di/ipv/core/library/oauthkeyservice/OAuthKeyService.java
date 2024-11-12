@@ -130,10 +130,16 @@ public class OAuthKeyService {
     }
 
     private JWKSet getCachedJWKSet(URI jwksUrl) {
-        if (cachedJwkSets.computeIfAbsent(jwksUrl, this::createCachedJWKSet).isExpired()) {
-            cachedJwkSets.put(jwksUrl, createCachedJWKSet(jwksUrl));
-        }
-        return cachedJwkSets.get(jwksUrl).jwkSet();
+        return cachedJwkSets
+                .compute(
+                        jwksUrl,
+                        (key, existingCachedJWKSet) -> {
+                            if (existingCachedJWKSet == null || existingCachedJWKSet.isExpired()) {
+                                return createCachedJWKSet(jwksUrl);
+                            }
+                            return existingCachedJWKSet;
+                        })
+                .jwkSet();
     }
 
     private CachedJWKSet createCachedJWKSet(URI jwksEndpoint) {
