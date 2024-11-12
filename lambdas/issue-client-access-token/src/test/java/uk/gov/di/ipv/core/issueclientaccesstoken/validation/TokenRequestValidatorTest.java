@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
@@ -45,6 +46,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -187,6 +189,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
+    @MockitoSettings(strictness = LENIENT)
     void shouldThrowIfMissingClientAssertionParam() {
         var queryParamsWithNoClientAssertion = new HashMap<>(getValidQueryParams("to be dropped"));
         queryParamsWithNoClientAssertion.remove("client_assertion");
@@ -201,6 +204,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
+    @MockitoSettings(strictness = LENIENT)
     void shouldThrowIfMissingClientAssertionTypeParam() {
         var queryParamsWithNoClientAssertionType =
                 new HashMap<>(getValidQueryParams("to be dropped"));
