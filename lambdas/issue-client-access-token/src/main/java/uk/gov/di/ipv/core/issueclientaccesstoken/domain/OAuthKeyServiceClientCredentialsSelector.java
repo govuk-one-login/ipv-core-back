@@ -16,11 +16,11 @@ import java.util.List;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
-public class ConfigurationServicePublicKeySelector implements ClientCredentialsSelector<Object> {
+public class OAuthKeyServiceClientCredentialsSelector implements ClientCredentialsSelector<Object> {
 
     private final OAuthKeyService oAuthKeyService;
 
-    public ConfigurationServicePublicKeySelector(OAuthKeyService oAuthKeyService) {
+    public OAuthKeyServiceClientCredentialsSelector(OAuthKeyService oAuthKeyService) {
         this.oAuthKeyService = oAuthKeyService;
     }
 

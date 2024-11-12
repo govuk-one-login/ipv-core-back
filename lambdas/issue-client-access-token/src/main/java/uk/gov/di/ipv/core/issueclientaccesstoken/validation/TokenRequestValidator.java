@@ -10,7 +10,7 @@ import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.issueclientaccesstoken.domain.ConfigurationServicePublicKeySelector;
+import uk.gov.di.ipv.core.issueclientaccesstoken.domain.OAuthKeyServiceClientCredentialsSelector;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -94,7 +94,7 @@ public class TokenRequestValidator {
     private ClientAuthenticationVerifier<Object> getClientAuthVerifier(
             ConfigService configService) {
         return new ClientAuthenticationVerifier<>(
-                new ConfigurationServicePublicKeySelector(oAuthKeyService),
+                new OAuthKeyServiceClientCredentialsSelector(oAuthKeyService),
                 Set.of(new Audience(configService.getParameter(COMPONENT_ID))));
     }
 }

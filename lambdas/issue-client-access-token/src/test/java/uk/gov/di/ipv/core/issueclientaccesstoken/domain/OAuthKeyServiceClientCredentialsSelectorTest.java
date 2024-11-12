@@ -27,13 +27,13 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
-class ConfigServicePublicKeySelectorTest {
+class OAuthKeyServiceClientCredentialsSelectorTest {
     private static final JWSHeader JWS_HEADER = new JWSHeader(JWSAlgorithm.ES256);
     private static final String TEST_CLIENT_ID = "test-client-id";
 
     @Mock private OAuthKeyService mockOAuthKeyService;
 
-    @InjectMocks private ConfigurationServicePublicKeySelector keySelector;
+    @InjectMocks private OAuthKeyServiceClientCredentialsSelector keySelector;
 
     @Test
     void selectClientSecretsShouldThrow() {
