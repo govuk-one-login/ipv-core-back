@@ -67,6 +67,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
+import static uk.gov.di.ipv.core.library.journeyuris.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
@@ -74,7 +75,6 @@ public class ProcessJourneyEventHandler
     public static final String CURRENT_PAGE = "currentPage";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
-    private static final String BUILD_CLIENT_OAUTH_RESPONSE_EVENT = "build-client-oauth-response";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
     public static final String BACK_EVENT = "back";
@@ -136,7 +136,10 @@ public class ProcessJourneyEventHandler
         try {
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
 
-            // Handle route direct back to RP (used for recoverable timeouts)
+            // Special case
+            // Handle route direct back to RP (used for recoverable timeouts and cross browser
+            // callbacks).
+            // Users sending this event may not have a valid IPV session
             if (journeyEvent.equals(BUILD_CLIENT_OAUTH_RESPONSE_EVENT)) {
                 LOGGER.info(LogHelper.buildLogMessage("Returning end session response directly"));
                 return BUILD_CLIENT_OAUTH_RESPONSE.value();

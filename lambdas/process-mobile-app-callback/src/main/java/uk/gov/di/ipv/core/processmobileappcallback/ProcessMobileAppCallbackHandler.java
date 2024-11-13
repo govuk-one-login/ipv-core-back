@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.exception.InvalidCriResponseException;
@@ -33,6 +34,7 @@ import uk.gov.di.ipv.core.processmobileappcallback.exception.InvalidMobileAppCal
 
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -43,16 +45,19 @@ public class ProcessMobileAppCallbackHandler
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
+    private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
 
     public ProcessMobileAppCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
+            CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
+        this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
     }
@@ -61,6 +66,7 @@ public class ProcessMobileAppCallbackHandler
     public ProcessMobileAppCallbackHandler() {
         configService = ConfigService.create();
         ipvSessionService = new IpvSessionService(configService);
+        criOAuthSessionService = new CriOAuthSessionService(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
     }
@@ -73,6 +79,12 @@ public class ProcessMobileAppCallbackHandler
         try {
             var callbackRequest = parseCallbackRequest(input);
 
+            // Check whether we are dealing with a cross-browser callback
+            var crossBrowserResponse = handleCrossBrowserCallback(callbackRequest);
+            if (crossBrowserResponse != null) {
+                return crossBrowserResponse;
+            }
+
             validateCallback(callbackRequest);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
@@ -84,6 +96,33 @@ public class ProcessMobileAppCallbackHandler
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
         }
+    }
+
+    private APIGatewayProxyResponseEvent handleCrossBrowserCallback(
+            MobileAppCallbackRequest callbackRequest) {
+        // If we don't have an IPV session, but we do have a valid CRI state value then we may be
+        // dealing with a cross-browser callback. In that case we need to send the user back to
+        // orchestration to login again in this browser.
+        if (!StringUtils.isBlank(callbackRequest.getIpvSessionId())) {
+            return null;
+        }
+
+        var criState = callbackRequest.getState();
+        if (StringUtils.isBlank(criState)) {
+            return null;
+        }
+
+        var criOAuthSessionItem = criOAuthSessionService.getCriOauthSessionItem(criState);
+        if (criOAuthSessionItem == null) {
+            return null;
+        }
+
+        var response =
+                new JourneyResponse(
+                        JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH,
+                        criOAuthSessionItem.getClientOAuthSessionId());
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
     }
 
     private MobileAppCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
