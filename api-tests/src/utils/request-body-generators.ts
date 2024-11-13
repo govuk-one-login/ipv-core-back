@@ -16,7 +16,7 @@ import {
 } from "../types/internal-api.js";
 import { EvcsStubPostVcsRequest } from "../types/evcs-stub.js";
 
-const ORCHESTRATOR_CLIENT_ID = "orchestrator";
+const ORCHESTRATOR_CLIENT_ID = "orchStub";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 type JsonType = "credentialSubject" | "evidence";
 
