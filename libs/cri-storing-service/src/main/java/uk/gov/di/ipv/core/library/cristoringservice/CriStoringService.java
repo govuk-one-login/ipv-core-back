@@ -156,11 +156,14 @@ public class CriStoringService {
                                 ipvSessionItem.getIpvSessionId(), userId, true));
         sessionVcs.removeAll(vcs);
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        for (var sessionVc : sessionVcs) {
-            if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
-                cimitService.submitVC(sessionVc, govukSigninJourneyId, ipAddress);
-                cimitService.submitMitigatingVcList(
-                        List.of(sessionVc), govukSigninJourneyId, ipAddress);
+
+        if (!cri.equals(TICF)) {
+            for (var sessionVc : sessionVcs) {
+                if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+                    cimitService.submitVC(sessionVc, govukSigninJourneyId, ipAddress);
+                    cimitService.submitMitigatingVcList(
+                            List.of(sessionVc), govukSigninJourneyId, ipAddress);
+                }
             }
         }
 
