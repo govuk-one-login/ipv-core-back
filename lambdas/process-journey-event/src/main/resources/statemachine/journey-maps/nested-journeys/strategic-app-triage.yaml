@@ -240,14 +240,12 @@ nestedJourneyStates:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED
+        exitEventToEmit: anotherWay
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
       enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED
+        exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED

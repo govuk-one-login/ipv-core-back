@@ -127,24 +127,11 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Arrange
         var requestEvent = buildValidRequestEventWithState();
         var ipvSessionItem = buildValidIpvSessionItem();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
-                .thenReturn(buildValidCriResponseItem(CriResponseService.STATUS_RECEIVED));
-        when(mockSignedJwt.getJWTClaimsSet())
-                .thenReturn(
-                        JWTClaimsSet.parse(
-                                Map.of(
-                                        "vc",
-                                        Map.of("type", List.of("IdentityAssertionCredential")))));
-        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(verifiableCredentialService.getVc(TEST_USER_ID, Cri.DCMAW_ASYNC.getId()))
-                .thenReturn(vc);
-        when(criCheckingService.checkVcResponse(
-                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
-                .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
+                .thenReturn(buildValidCriResponseItem(CriResponseService.STATUS_ERROR));
 
         // Act
         var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
@@ -152,7 +139,7 @@ class CheckMobileAppVcReceiptHandlerTest {
 
         // Assert
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+        assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
     }
 
     @Test
