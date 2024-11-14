@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
 import java.text.ParseException;
 import java.time.Clock;
@@ -371,11 +372,7 @@ class VerifiableCredentialValidatorTest {
 
     @Test
     void validateDoesNotLogUserIdWhenFailingValidation() {
-        var testAppender = new TestAppender();
-        var verifiableCredentialValidatorLogger =
-                (org.apache.logging.log4j.core.Logger)
-                        LogManager.getLogger(VerifiableCredentialValidator.class);
-        verifiableCredentialValidatorLogger.get().addAppender(testAppender, Level.ERROR, null);
+        var logCollector = LogCollector.getLogCollectorFor(VerifiableCredentialValidator.class);
 
         assertThrows(
                 VerifiableCredentialException.class,
@@ -390,7 +387,7 @@ class VerifiableCredentialValidatorTest {
 
         assertEquals(
                 "description=\"JWT sub claim does not match expected\"",
-                testAppender.getLogMessages().get(0).getFormattedMessage());
+                logCollector.getLogMessages().get(0));
     }
 
     private static class TestAppender extends AbstractAppender {

@@ -24,7 +24,8 @@ dependencies {
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
-			project(":libs:common-services").sourceSets.test.output
+			project(":libs:common-services").sourceSets.test.output,
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }
