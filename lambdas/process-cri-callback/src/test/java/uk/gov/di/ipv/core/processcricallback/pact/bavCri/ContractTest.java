@@ -57,6 +57,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -299,6 +300,119 @@ class ContractTest {
                                 assertEquals("FamilyName", nameParts.get(1).get("type").asText());
                                 assertEquals("Kenneth", nameParts.get(0).get("value").asText());
                                 assertEquals("Decerqueira", nameParts.get(1).get("value").asText());
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "BavCriProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsBavResponseWithoutCi(
+            PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("test-subject is a valid subject")
+                .given("dummyBavComponentId is a valid issuer")
+                .given("VC evidence failedCheckDetails identityCheckPolicy is none")
+                .given("VC evidence failedCheckDetails checkMethod is data")
+                .given("VC evidence validityScore is 0")
+                .given("VC evidence strengthScore is 3")
+                .given("VC evidence txn is dummyTxn")
+                .given("VC evidence credentialSubject contains bankAccount")
+                .given("VC bankAccount accountNumber is 11111117")
+                .given("VC bankAccount sortCode is 204578")
+                .given("VC is for Bob Fossil")
+                .uponReceiving("Valid credential request for BAV failed VC with no CIs")
+                .path("/userinfo")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        newJsonBody(
+                                        body -> {
+                                            var jwtBuilder =
+                                                    new PactJwtBuilder(
+                                                            VALID_VC_HEADER,
+                                                            FAILED_BAV_NO_CI_VC_BODY,
+                                                            FAILED_BAV_NO_CI_VC_SIGNATURE);
+
+                                            body.stringValue("sub", "test-subject");
+                                            body.minMaxArrayLike(
+                                                    "https://vocab.account.gov.uk/v1/credentialJWT",
+                                                    1,
+                                                    1,
+                                                    PactDslJsonRootValue.stringMatcher(
+                                                            jwtBuilder
+                                                                    .buildRegexMatcherIgnoringSignature(),
+                                                            jwtBuilder.buildJwt()),
+                                                    1);
+                                        })
+                                .build())
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsBavResponseWithoutCi")
+    void fetchVerifiableCredential_whenCalledAgainstBavCri_retrievesAVcWithoutACi(
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+        configureMockConfigService(credentialIssuerConfig);
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"), BAV, CRI_OAUTH_SESSION_ITEM);
+
+        // Assert
+        var verifiableCredentialJwtValidator = getVerifiableCredentialJwtValidator();
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            System.out.println(credential);
+                            try {
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                BAV,
+                                                credential,
+                                                EC_PRIVATE_KEY_JWK,
+                                                TEST_ISSUER,
+                                                false);
+
+                                JsonNode vcClaim =
+                                        OBJECT_MAPPER
+                                                .readTree(vc.getClaimsSet().toString())
+                                                .get("vc");
+
+                                JsonNode credentialSubject = vcClaim.get("credentialSubject");
+                                JsonNode evidence = vcClaim.get("evidence").get(0);
+
+                                JsonNode ciNode = evidence.get("ci");
+                                JsonNode nameParts =
+                                        credentialSubject.get("name").get(0).get("nameParts");
+
+                                assertNull(ciNode);
+
+                                JsonNode bankAccountNode =
+                                        credentialSubject.get("bankAccount").get(0);
+
+                                assertEquals(
+                                        "11111117", bankAccountNode.get("accountNumber").asText());
+                                assertEquals("204578", bankAccountNode.get("sortCode").asText());
+
+                                assertEquals("GivenName", nameParts.get(0).get("type").asText());
+                                assertEquals("FamilyName", nameParts.get(1).get("type").asText());
+                                assertEquals("Bob", nameParts.get(0).get("value").asText());
+                                assertEquals("Fossil", nameParts.get(1).get("value").asText());
                             } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
                             }
@@ -717,4 +831,70 @@ class ContractTest {
     // change each time we run the tests.
     private static final String FAILED_BAV_VC_SIGNATURE =
             "JlGnDKxWr2ELrHzh1txDvG21xrINyWQ6fu9gTnoZaWlZzIe5pKrawn9ulwJ2B-0BUvUHMAKURj7sPODiOL-v_w"; // pragma: allowlist secret
+
+    private static final String FAILED_BAV_NO_CI_VC_BODY =
+            """
+            {
+              "nbf": 4070908800,
+              "iat": 4070908800,
+              "jti": "jti",
+              "iss": "dummyBavComponentId",
+              "sub": "test-subject",
+              "vc": {
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "type": [
+                  "VerifiableCredential",
+                  "IdentityCheckCredential"
+                ],
+                "credentialSubject": {
+                  "name": [
+                    {
+                      "nameParts": [
+                        {
+                          "type": "GivenName",
+                          "value": "Bob"
+                        },
+                        {
+                          "type": "FamilyName",
+                          "value": "Fossil"
+                        }
+                      ]
+                    }
+                  ],
+                  "birthDate": [
+                    {
+                      "value": "1960-02-02"
+                    }
+                  ],
+                  "bankAccount": [
+                    {
+                      "sortCode": "204578",
+                      "accountNumber": "11111117"
+                    }
+                  ]
+                },
+                "evidence": [
+                  {
+                    "type": "IdentityCheck",
+                    "strengthScore": 3,
+                    "validityScore": 0,
+                    "failedCheckDetails": [
+                      {
+                        "checkMethod": "data",
+                        "identityCheckPolicy": "none"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String FAILED_BAV_NO_CI_VC_SIGNATURE =
+            "SP4lmGdIwzBanmeQEtwJoBVY7dfBPrFLNnIbNPe8dYYqiqvrqM7KGNgoj5AZK4-QMBdeG6f5wClWb0DcA0cKAg"; // pragma: allowlist secret
 }
