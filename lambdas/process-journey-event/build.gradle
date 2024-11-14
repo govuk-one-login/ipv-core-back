@@ -9,8 +9,7 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.jacksonDataformatYaml,
 			project(":libs:audit-service"),
-			project(":libs:common-services"),
-			project(":libs:journey-uris")
+			project(":libs:common-services")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

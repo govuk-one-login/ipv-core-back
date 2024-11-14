@@ -53,7 +53,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSes
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowMissing;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {

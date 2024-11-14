@@ -1,7 +1,10 @@
-package uk.gov.di.ipv.core.library.journeyuris;
+package uk.gov.di.ipv.core.library.journeys;
+
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @java.lang.SuppressWarnings("java:S1075")
 public class JourneyUris {
+    @ExcludeFromGeneratedCoverageReport
     private JourneyUris() {
         throw new IllegalStateException("Utility class");
     }

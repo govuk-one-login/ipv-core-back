@@ -10,7 +10,6 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:cri-response-service"),
-			project(':libs:journey-uris'),
 			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,

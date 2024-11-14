@@ -67,7 +67,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
-import static uk.gov.di.ipv.core.library.journeyuris.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
+import static uk.gov.di.ipv.core.library.journeys.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {

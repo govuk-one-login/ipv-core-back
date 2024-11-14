@@ -56,7 +56,7 @@ import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class ResetSessionIdentityHandlerTest {

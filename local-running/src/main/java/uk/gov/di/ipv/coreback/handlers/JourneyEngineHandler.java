@@ -22,15 +22,15 @@ import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 import java.io.IOException;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CALL_TICF_CRI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CHECK_COI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CHECK_EXISTING_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_STORE_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_TICF_CRI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_COI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXISTING_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_STORE_IDENTITY_PATH;
 
 public class JourneyEngineHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();

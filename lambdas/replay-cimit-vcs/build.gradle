@@ -8,7 +8,6 @@ plugins {
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:journey-uris"),
 			project(":libs:cri-response-service"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:cimit-service")

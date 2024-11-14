@@ -1,6 +1,9 @@
-package uk.gov.di.ipv.core.library.journeyuris;
+package uk.gov.di.ipv.core.library.journeys;
+
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 public class Events {
+    @ExcludeFromGeneratedCoverageReport
     private Events() {
         throw new IllegalStateException("String constants class");
     }
