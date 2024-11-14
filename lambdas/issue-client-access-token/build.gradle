@@ -10,7 +10,8 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:oauth-key-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

@@ -18,9 +18,10 @@ services:
       IPV_BACKCHANNEL_USER_IDENTITY_PATH: user-identity
       IPV_CORE_AUDIENCE: https://identity.local.account.gov.uk
       IPV_ENDPOINT: http://localhost:4501/
-      ORCHESTRATOR_CLIENT_ID: orchestrator # pragma: allowlist secret
+      ORCHESTRATOR_CLIENT_ID: orchStub
       ORCHESTRATOR_CLIENT_JWT_TTL: 900
       ORCHESTRATOR_SIGNING_JWK: '{"kty":"EC","kid":"orch-signing-local-running-FI4xysvMVdRtkt6xmO5gqcaTF4Tf9NKD1zdg3T8y69M","use":"sig","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
+      AUTH_CLIENT_ID: authStub
       AUTH_SIGNING_JWK: '{"kty":"EC","kid":"auth-signing-local-running-FI4xysvMVdRtkt6xmO5gqcaTF4Tf9NKD1zdg3T8y69M","use":"sig","d":"OXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthU","crv":"P-256","x":"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM","y":"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04"}' # pragma: allowlist secret
       ORCHESTRATOR_DEFAULT_JAR_ENCRYPTION_PUBLIC_JWK: '{"kty":"RSA","kid":"test-encryption-key","use":"enc","e":"AQAB","alg":"RS256","n":"0465qJwo8nCkC2tvV4niuWF6IM6pNjmeYszhTwHPY609-HVAtO8PoRLUyA86rzQ-QzbT7XxbzCjfyRXoRFOGleZqTuwlc25ezDxV58bhecPiWFMaFYOS1W7zIDsVFo37gjjvtkcD6OqK8PKAv6n5tUphjDCcnnmpTMIyGAnzmQCbSkJWu6V_gc3tirAugXoZukMCohxw3_-c6prhMN0smDNv0qWmva3oqokabePwe1OS72DXyXR-TPd_Dtz4-tRr9jvZwHulX4Zcs1BBbjBpIim3WNY8asv9yjlBxkdt-nckhCMZekPuT7xWSTrvccB_fnnSUgEQW_5irLNdnr5MWQ"}'
       ORCHESTRATOR_PORT: 4500

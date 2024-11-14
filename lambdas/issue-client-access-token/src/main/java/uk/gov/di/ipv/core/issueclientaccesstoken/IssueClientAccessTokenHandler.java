@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -75,7 +76,10 @@ public class IssueClientAccessTokenHandler
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.tokenRequestValidator =
-                new TokenRequestValidator(configService, new ClientAuthJwtIdService(configService));
+                new TokenRequestValidator(
+                        configService,
+                        new ClientAuthJwtIdService(configService),
+                        new OAuthKeyService(configService));
     }
 
     @Override

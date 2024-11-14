@@ -14,6 +14,7 @@ public enum ConfigurationVariable {
     CI_CONFIG("self/ciConfig"),
     CI_SCORING_THRESHOLD("self/ciScoringThresholdByVot/%s"),
     CLIENT_ISSUER("clients/%s/issuer"),
+    CLIENT_JWKS_URL("clients/%s/jwksUrl"),
     CLIENT_VALID_SCOPES("clients/%s/validScopes"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     COI_CHECK_FAMILY_NAME_CHARS("self/coi/familyNameChars"),
@@ -41,13 +42,13 @@ public enum ConfigurationVariable {
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
     JWT_TTL_SECONDS("self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
+    OAUTH_KEY_CACHE_DURATION_MINS("self/oauthKeyCacheDurationMins"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),
-    SIGNING_KEY_JWK("self/signingKey"),
-    OAUTH_KEY_CACHE_DURATION_MINS("self/oauthKeyCacheDurationMins");
+    SIGNING_KEY_JWK("self/signingKey");
 
     private final String path;
 

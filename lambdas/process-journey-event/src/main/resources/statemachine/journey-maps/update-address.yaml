@@ -79,6 +79,10 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
+            targetEntryEvent: askInternationalAddress
 
   ADDRESS_AND_FRAUD_UPDATE_ADDRESS:
     nestedJourney: ADDRESS_AND_FRAUD

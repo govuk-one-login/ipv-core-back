@@ -6,11 +6,24 @@ entryEvents:
     targetState: CRI_ADDRESS
   enhanced-verification:
     targetState: CRI_ADDRESS
+  askInternationalAddress:
+    targetState: CRI_ADDRESS_ASK_INTERNATIONAL
 nestedJourneyStates:
   CRI_ADDRESS:
     response:
       type: cri
       criId: address
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CRI_FRAUD
+      enhanced-verification:
+        targetState: CRI_FRAUD
+  CRI_ADDRESS_ASK_INTERNATIONAL:
+    response:
+      type: cri
+      criId: address
+      context: international_user
     parent: CRI_STATE
     events:
       next:

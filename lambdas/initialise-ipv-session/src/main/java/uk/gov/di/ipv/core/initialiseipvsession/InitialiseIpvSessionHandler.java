@@ -47,6 +47,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -55,7 +56,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.text.ParseException;
@@ -112,7 +112,10 @@ public class InitialiseIpvSessionHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.jarValidator =
-                new JarValidator(JweDecrypterFactory.create(configService), configService);
+                new JarValidator(
+                        JweDecrypterFactory.create(configService),
+                        configService,
+                        new OAuthKeyService(configService));
         this.auditService = AuditService.create(configService);
         this.evcsService = new EvcsService(configService);
     }
@@ -124,7 +127,6 @@ public class InitialiseIpvSessionHandler
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             UserIdentityService userIdentityService,
             VerifiableCredentialValidator verifiableCredentialValidator,
-            VerifiableCredentialService verifiableCredentialService,
             JarValidator jarValidator,
             AuditService auditService,
             EvcsService evcsService) {
