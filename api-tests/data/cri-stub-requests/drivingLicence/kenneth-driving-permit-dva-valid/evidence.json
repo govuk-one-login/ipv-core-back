@@ -1,0 +1,14 @@
+{
+  "type": "IdentityCheck",
+  "txn": "d833dc7f-545b-4743-9ec8-ed01f969de17",
+  "activityHistoryScore": 1,
+  "strengthScore": 3,
+  "validityScore": 2,
+  "checkDetails": [
+    {
+      "checkMethod": "data",
+      "identityCheckPolicy": "published",
+      "activityFrom": "2018-04-19"
+    }
+  ]
+}

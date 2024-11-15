@@ -2621,7 +2621,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -2664,8 +2663,6 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
       AutoPublishAlias: live

@@ -7,11 +7,11 @@ plugins {
 
 dependencies {
 	implementation libs.bundles.awsLambda,
-			project(":libs:common-services"),
 			project(":libs:audit-service"),
-			project(":libs:verifiable-credentials"),
+			project(":libs:common-services"),
+			project(":libs:evcs-service"),
 			project(":libs:user-identity-service"),
-			project(":libs:evcs-service")
+			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
