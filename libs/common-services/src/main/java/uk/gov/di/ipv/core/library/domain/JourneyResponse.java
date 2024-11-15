@@ -8,11 +8,22 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 @EqualsAndHashCode(callSuper = false)
 public class JourneyResponse extends BaseResponse {
-    @JsonProperty private final String journey;
+    @JsonProperty(required = true)
+    private final String journey;
+
+    @JsonProperty(required = false)
+    private final String clientOAuthSessionId;
 
     @JsonCreator
-    public JourneyResponse(@JsonProperty(value = "journey", required = true) String journey) {
+    public JourneyResponse(
+            @JsonProperty(value = "journey", required = true) String journey,
+            @JsonProperty(value = "clientOAuthSessionId") String clientOAuthSessionId) {
         this.journey = journey;
+        this.clientOAuthSessionId = clientOAuthSessionId;
+    }
+
+    public JourneyResponse(String journey) {
+        this(journey, null);
     }
 
     public String getJourney() {

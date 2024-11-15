@@ -15,7 +15,6 @@ dependencies {
 			project(":libs:cri-response-service"),
 			project(":libs:cri-storing-service"),
 			project(":libs:gpg45-evaluator"),
-			project(":libs:journey-uris"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
