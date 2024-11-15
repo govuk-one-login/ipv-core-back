@@ -52,6 +52,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -684,6 +685,27 @@ class CriCheckingServiceTest {
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem);
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceIfDrivingPermitIdentifiersDiffer()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            when(mockSessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                    .thenReturn(List.of(vcDrivingPermitNonDcmaw()));
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(M1B_DCMAW_VC),
+                            callbackRequest,
                             clientOAuthSessionItem,
                             ipvSessionItem);
 

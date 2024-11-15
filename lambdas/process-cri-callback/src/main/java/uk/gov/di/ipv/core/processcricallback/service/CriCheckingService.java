@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PersonWithDocuments;
 
 import java.util.Arrays;
@@ -245,10 +246,10 @@ public class CriCheckingService {
             }
         }
 
-        var sessionCredentials =
+        var sessionVcs =
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
-        if (!userIdentityService.areVcsCorrelated(sessionCredentials)) {
+        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
@@ -259,29 +260,40 @@ public class CriCheckingService {
         }
 
         if (configService.enabled(DL_AUTH_SOURCE_CHECK)
-                && getDcmawDlVc(newVcs).isPresent()
-                && getSuccessfulDlVc(sessionCredentials).isEmpty()) {
+                && requiresAuthoritativeSourceCheck(newVcs, sessionVcs)) {
             return JOURNEY_DL_AUTH_SOURCE_CHECK;
         }
 
         return JOURNEY_NEXT;
     }
 
-    private Optional<VerifiableCredential> getDcmawDlVc(List<VerifiableCredential> vcs) {
+    private boolean requiresAuthoritativeSourceCheck(
+            List<VerifiableCredential> newVcs, List<VerifiableCredential> sessionVcs) {
+        return extractDrivingPermitIdentifier(newVcs, Cri.DCMAW, false)
+                .map(
+                        identifier ->
+                                !identifier.equals(
+                                        extractDrivingPermitIdentifier(
+                                                        sessionVcs, Cri.DRIVING_LICENCE, true)
+                                                .orElse(null)))
+                .orElse(false);
+    }
+
+    private Optional<String> extractDrivingPermitIdentifier(
+            List<VerifiableCredential> vcs, Cri cri, boolean successfulCheck) {
         return vcs.stream()
-                .filter(vc -> Cri.DCMAW.equals(vc.getCri()))
-                .filter(
+                .filter(vc -> cri.equals(vc.getCri()))
+                .filter(successfulCheck ? VcHelper::isSuccessfulVc : x -> true)
+                .map(
                         vc ->
                                 vc.getCredential().getCredentialSubject()
                                                 instanceof PersonWithDocuments personWithDocuments
-                                        && personWithDocuments.getDrivingPermit() != null)
-                .findFirst();
-    }
-
-    private Optional<VerifiableCredential> getSuccessfulDlVc(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(vc -> Cri.DRIVING_LICENCE.equals(vc.getCri()))
-                .filter(VcHelper::isSuccessfulVc)
+                                        ? personWithDocuments.getDrivingPermit()
+                                        : null)
+                .filter(Objects::nonNull)
+                .filter(drivingPermitDetailsList -> !drivingPermitDetailsList.isEmpty())
+                .map(drivingPermitDetailsList -> drivingPermitDetailsList.get(0))
+                .map(DrivingPermitDetails::getPersonalNumber)
                 .findFirst();
     }
 }
