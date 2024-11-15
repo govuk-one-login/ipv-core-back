@@ -21,6 +21,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +31,8 @@ import java.util.concurrent.Executor;
 @ExcludeFromGeneratedCoverageReport
 public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final List<String> HTTP_ERROR_MESSAGES_TO_RETRY =
+            List.of("GOAWAY received", "Connection reset");
     private final HttpClient baseClient;
     private final AWSXRayRecorder recorder;
 
@@ -112,9 +115,11 @@ public class TracingHttpClient extends HttpClient {
         } catch (IOException e) {
             // We see occasional HTTP/2 GOAWAY messages from AWS when connections last
             // for a long time (>1 hour). Retry them once, to recreate the connection.
-            if (e.getMessage().contains("GOAWAY received")) {
+            // In the build environment we see connection resets for idle connections in
+            // the pool. Retrying uses a different connection.
+            if (HTTP_ERROR_MESSAGES_TO_RETRY.contains(e.getMessage())) {
                 LOGGER.warn(
-                        LogHelper.buildErrorMessage("Retrying after GOAWAY response", e)
+                        LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
                                 .with("host", request.uri().getHost()));
                 return sendWithTracing(request, responseBodyHandler);
             }

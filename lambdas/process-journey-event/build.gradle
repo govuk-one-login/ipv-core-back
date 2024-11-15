@@ -18,8 +18,10 @@ dependencies {
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.junitJupiter,
-			libs.mockitoJunit
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
+			libs.mockitoJunit,
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }

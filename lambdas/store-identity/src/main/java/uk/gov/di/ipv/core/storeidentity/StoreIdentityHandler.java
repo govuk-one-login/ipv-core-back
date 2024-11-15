@@ -135,6 +135,9 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }

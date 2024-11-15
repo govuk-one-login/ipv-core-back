@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.pacttesthelpers;
+package uk.gov.di.ipv.core.library.testhelpers.pact;
 
 import au.com.dius.pact.consumer.dsl.BodyBuilder;
 import au.com.dius.pact.core.model.ContentType;

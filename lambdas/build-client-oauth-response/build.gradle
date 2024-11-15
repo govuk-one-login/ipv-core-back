@@ -16,7 +16,9 @@ dependencies {
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,
-			libs.mockitoJunit
+			libs.mockitoJunit,
+			libs.hamcrest,
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }
