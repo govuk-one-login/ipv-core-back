@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -150,23 +149,15 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        var sessionVcs =
-                new ArrayList<>(
-                        sessionCredentialsService.getCredentials(
-                                ipvSessionItem.getIpvSessionId(), userId, true));
-        sessionVcs.removeAll(vcs);
-        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
+        List<VerifiableCredential> mitigationVcList = new java.util.ArrayList<>(List.of());
 
         if (!cri.equals(TICF)) {
-            for (var sessionVc : sessionVcs) {
-                if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
-                    cimitService.submitVC(sessionVc, govukSigninJourneyId, ipAddress);
-                    cimitService.submitMitigatingVcList(
-                            List.of(sessionVc), govukSigninJourneyId, ipAddress);
-                }
-            }
+            var sessionVcs =
+                    sessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), userId, true);
+            mitigationVcList.addAll(sessionVcs);
         }
-
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
@@ -177,8 +168,10 @@ public class CriStoringService {
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
             if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+                mitigationVcList.add(vc);
                 cimitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-                cimitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+                cimitService.submitMitigatingVcList(
+                        mitigationVcList, govukSigninJourneyId, ipAddress);
             }
 
             if (cri.equals(TICF)) {
