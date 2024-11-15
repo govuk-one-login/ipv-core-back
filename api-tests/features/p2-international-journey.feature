@@ -6,10 +6,35 @@ Feature: P2 App journey
     And I activate the 'internationalAddress' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
-    When I submit an 'international' event
+
+  Scenario: Visit UK landing page - yes
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+
+  Scenario: Visit UK landing page - no
+    When I submit a 'international' event
     Then I get a 'dcmaw' CRI response
 
+  Scenario: International address user sends a next event on exit page from DCMAW
+    When I submit a 'international' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'non-uk-no-app' page response
+    When I submit a 'next' event
+    Then I get a 'dcmaw' CRI response
+
+  Scenario: International address user sends an end event on exit page from DCMAW
+    When I submit a 'international' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'non-uk-no-app' page response
+    When I submit a 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+
   Scenario: Successful P2 identity via DCMAW using passport
+    When I submit an 'international' event
+    Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
