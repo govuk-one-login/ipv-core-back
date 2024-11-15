@@ -25,13 +25,18 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -251,6 +256,28 @@ class UserReverificationHandlerTest {
         verify(mockUserIdentityService, never())
                 .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(UserReverificationHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> userReverificationHandler.handleRequest(testEvent, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {

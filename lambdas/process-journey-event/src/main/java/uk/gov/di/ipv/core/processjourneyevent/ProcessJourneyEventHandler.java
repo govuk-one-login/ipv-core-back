@@ -187,6 +187,9 @@ public class ProcessJourneyEventHandler
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }

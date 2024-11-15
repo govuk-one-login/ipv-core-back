@@ -127,6 +127,9 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         }
     }
 

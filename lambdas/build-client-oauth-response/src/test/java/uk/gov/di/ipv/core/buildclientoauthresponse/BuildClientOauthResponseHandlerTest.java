@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
@@ -47,8 +48,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -412,6 +416,34 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+        JourneyRequest event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .build();
+
+        var logCollector = LogCollector.getLogCollectorFor(BuildClientOauthResponseHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> handler.handleRequest(event, context),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private IpvSessionItem generateIpvSessionItem() {

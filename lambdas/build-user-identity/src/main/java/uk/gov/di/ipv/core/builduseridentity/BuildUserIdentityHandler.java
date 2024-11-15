@@ -167,6 +167,9 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }
