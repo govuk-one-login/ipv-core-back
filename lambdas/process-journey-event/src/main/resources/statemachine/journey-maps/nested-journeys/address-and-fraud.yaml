@@ -6,7 +6,7 @@ entryEvents:
     targetState: CRI_ADDRESS
   enhanced-verification:
     targetState: CRI_ADDRESS
-  askInternationalAddress:
+  internationalUser:
     targetState: CRI_ADDRESS_ASK_INTERNATIONAL
 nestedJourneyStates:
   CRI_ADDRESS:

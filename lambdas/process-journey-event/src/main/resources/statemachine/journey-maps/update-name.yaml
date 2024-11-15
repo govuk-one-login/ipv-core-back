@@ -491,7 +491,7 @@ states:
         checkFeatureFlag:
           internationalAddressEnabled:
             targetState: ADDRESS_AND_FRAUD_GIVEN
-            targetEntryEvent: askInternationalAddress
+            targetEntryEvent: internationalUser
 
   POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
     response:
@@ -504,7 +504,7 @@ states:
         checkFeatureFlag:
           internationalAddressEnabled:
             targetState: ADDRESS_AND_FRAUD_FAMILY
-            targetEntryEvent: askInternationalAddress
+            targetEntryEvent: internationalUser
 
   ADDRESS_AND_FRAUD_GIVEN:
     nestedJourney: ADDRESS_AND_FRAUD
