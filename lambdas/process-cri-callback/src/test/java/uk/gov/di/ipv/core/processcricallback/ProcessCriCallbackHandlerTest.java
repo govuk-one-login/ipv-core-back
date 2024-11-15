@@ -121,7 +121,10 @@ class ProcessCriCallbackHandlerTest {
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -178,7 +181,10 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem))
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -250,7 +256,10 @@ class ProcessCriCallbackHandlerTest {
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
                                 .build());
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem)))
                 .thenThrow(new ConfigException("bad config"));
 
         // Act

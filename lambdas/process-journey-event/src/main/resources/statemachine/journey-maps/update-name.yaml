@@ -179,8 +179,20 @@ states:
         targetState: APP_DOC_CHECK_GIVEN_ONLY
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+            targetState: STRATEGIC_APP_TRIAGE_GIVEN_ONLY
             targetEntryEvent: appTriage
+
+  STRATEGIC_APP_TRIAGE_GIVEN_ONLY:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_GIVEN_ONLY
+      sessionError:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
 
   RESET_IDENTITY_FAMILY_ONLY:
     response:
@@ -193,8 +205,20 @@ states:
         targetState: APP_DOC_CHECK_FAMILY_ONLY
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+            targetState: STRATEGIC_APP_TRIAGE_FAMILY_ONLY
             targetEntryEvent: appTriage
+
+  STRATEGIC_APP_TRIAGE_FAMILY_ONLY:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_FAMILY_ONLY
+      sessionError:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
 
   APP_DOC_CHECK_GIVEN_ONLY:
     nestedJourney: APP_DOC_CHECK
@@ -363,8 +387,20 @@ states:
         targetState: APP_DOC_CHECK_GIVEN_WITH_ADDRESS
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+            targetState: STRATEGIC_APP_TRIAGE_GIVEN_WITH_ADDRESS
             targetEntryEvent: appTriage
+
+  STRATEGIC_APP_TRIAGE_GIVEN_WITH_ADDRESS:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+      sessionError:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
 
   RESET_IDENTITY_FAMILY_WITH_ADDRESS:
     response:
@@ -377,8 +413,20 @@ states:
         targetState: APP_DOC_CHECK_FAMILY_WITH_ADDRESS
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
+            targetState: STRATEGIC_APP_TRIAGE_FAMILY_WITH_ADDRESS
             targetEntryEvent: appTriage
+
+  STRATEGIC_APP_TRIAGE_FAMILY_WITH_ADDRESS:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
+      sessionError:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
 
   APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
@@ -475,18 +523,6 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-
-  # Once the `next` event here is developed it's likely that we'll need to split this into four separate sub-journey
-  # instantiations.
-  STRATEGIC_APP_TRIAGE:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
 
   # SHARED STATES
 

@@ -57,4 +57,5 @@ public class JourneyUris {
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
     public static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
+    public static final String JOURNEY_ABANDON_PATH = "/journey/abandon";
 }

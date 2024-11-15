@@ -13,43 +13,63 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.dto.CheckMobileAppVcReceiptRequest;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAppVcReceiptRequestException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.service.exception.InvalidCriResponseException;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.buildErrorMessage;
+import java.util.List;
+
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final JourneyResponse JOURNEY_ABANDON =
+            new JourneyResponse(JOURNEY_ABANDON_PATH);
+    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
     private final VerifiableCredentialService verifiableCredentialService;
+    private final CriCheckingService criCheckingService;
 
     public CheckMobileAppVcReceiptHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            VerifiableCredentialService verifiableCredentialService) {
+            VerifiableCredentialService verifiableCredentialService,
+            CriCheckingService criCheckingService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
+        this.criCheckingService = criCheckingService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -59,6 +79,18 @@ public class CheckMobileAppVcReceiptHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
         verifiableCredentialService = new VerifiableCredentialService(configService);
+
+        var sessionCredentialsService = new SessionCredentialsService(configService);
+        var cimitService = new CimitService(configService);
+
+        criCheckingService =
+                new CriCheckingService(
+                        configService,
+                        AuditService.create(configService),
+                        new UserIdentityService(configService),
+                        cimitService,
+                        new CimitUtilityService(configService),
+                        sessionCredentialsService);
     }
 
     @Override
@@ -69,22 +101,33 @@ public class CheckMobileAppVcReceiptHandler
         try {
             var request = parseRequest(input);
 
-            var status = getStatus(request);
+            var journeyResponse = getJourneyResponse(request);
 
-            return ApiGatewayResponseGenerator.proxyResponse(status);
-        } catch (InvalidCheckMobileAppVcReceiptRequestException
-                | ClientOauthSessionNotFoundException e) {
-            LOGGER.info(buildErrorMessage(e.getErrorResponse()));
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_BAD_REQUEST);
+            if (journeyResponse != null) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, journeyResponse);
+            }
+
+            // Frontend will continue polling
+            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_NOT_FOUND);
+        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
-            LOGGER.info(buildErrorMessage(ErrorResponse.IPV_SESSION_NOT_FOUND));
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_BAD_REQUEST);
+            return buildErrorResponse(
+                    e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (InvalidCriResponseException e) {
-            LOGGER.info(buildErrorMessage(e.getErrorResponse()));
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
         } catch (CredentialParseException e) {
-            LOGGER.info(buildErrorMessage(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS));
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } catch (ConfigException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
+        } catch (CiRetrievalException e) {
+            return buildErrorResponse(
+                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -99,11 +142,11 @@ public class CheckMobileAppVcReceiptHandler
                 RequestHelper.getFeatureSet(input.getHeaders()));
     }
 
-    private int getStatus(CheckMobileAppVcReceiptRequest request)
-            throws InvalidCheckMobileAppVcReceiptRequestException, IpvSessionNotFoundException,
-                    ClientOauthSessionNotFoundException, InvalidCriResponseException,
-                    CredentialParseException {
-        // Validate sessions
+    private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
+            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+                    InvalidCriResponseException, CredentialParseException,
+                    VerifiableCredentialException, ConfigException, CiRetrievalException {
+        // Validate callback sessions
         validateSessionId(request);
 
         // Get/ set session items/ config
@@ -121,19 +164,27 @@ public class CheckMobileAppVcReceiptHandler
         LogHelper.attachFeatureSetToLogs(request.getFeatureSet());
         LogHelper.attachComponentId(configService);
 
-        // Retrieve and check cri response
+        // Retrieve and validate cri response and vc
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
-
         if (criResponse == null) {
-            return HttpStatus.SC_INTERNAL_SERVER_ERROR;
+            throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
-        if (!CriResponseService.STATUS_PENDING.equals(criResponse.getStatus())
-                || verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId()) != null) {
-            return HttpStatus.SC_OK;
+        var vc = verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId());
+        if (CriResponseService.STATUS_PENDING.equals(criResponse.getStatus()) && vc == null) {
+            return null;
         }
 
-        return HttpStatus.SC_NOT_FOUND;
+        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
+            return JOURNEY_ERROR;
+        }
+
+        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
+            return JOURNEY_ABANDON;
+        }
+
+        return criCheckingService.checkVcResponse(
+                List.of(vc), request.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)
@@ -144,5 +195,14 @@ public class CheckMobileAppVcReceiptHandler
             throw new InvalidCheckMobileAppVcReceiptRequestException(
                     ErrorResponse.MISSING_IPV_SESSION_ID);
         }
+    }
+
+    private APIGatewayProxyResponseEvent buildErrorResponse(
+            Exception e, int status, ErrorResponse errorResponse) {
+        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                status,
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH, status, errorResponse, e.getMessage()));
     }
 }

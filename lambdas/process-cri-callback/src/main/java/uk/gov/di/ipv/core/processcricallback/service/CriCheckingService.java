@@ -221,7 +221,7 @@ public class CriCheckingService {
 
     public JourneyResponse checkVcResponse(
             List<VerifiableCredential> newVcs,
-            CriCallbackRequest callbackRequest,
+            String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
@@ -233,7 +233,7 @@ public class CriCheckingService {
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            callbackRequest.getIpAddress());
+                            ipAddress);
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.

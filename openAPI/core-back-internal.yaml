@@ -67,6 +67,10 @@ paths:
       responses:
         200:
           description: "Credential result received"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
         404:
           description: "Credential result not found yet, poll again"
         500:
