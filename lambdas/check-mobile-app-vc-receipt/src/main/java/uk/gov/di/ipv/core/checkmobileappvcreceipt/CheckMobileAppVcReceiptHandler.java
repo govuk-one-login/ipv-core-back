@@ -41,8 +41,8 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ABANDON_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
