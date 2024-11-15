@@ -150,23 +150,14 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        var sessionVcs =
-                new ArrayList<>(
-                        sessionCredentialsService.getCredentials(
-                                ipvSessionItem.getIpvSessionId(), userId, true));
-        sessionVcs.removeAll(vcs);
-        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-
+        List<VerifiableCredential> mitigationVcList = new ArrayList<>();
         if (!cri.equals(TICF)) {
-            for (var sessionVc : sessionVcs) {
-                if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
-                    cimitService.submitVC(sessionVc, govukSigninJourneyId, ipAddress);
-                    cimitService.submitMitigatingVcList(
-                            List.of(sessionVc), govukSigninJourneyId, ipAddress);
-                }
-            }
+            mitigationVcList.addAll(
+                    sessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), userId, true));
         }
 
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
@@ -177,8 +168,10 @@ public class CriStoringService {
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
             if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+                mitigationVcList.add(vc);
                 cimitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-                cimitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+                cimitService.submitMitigatingVcList(
+                        mitigationVcList, govukSigninJourneyId, ipAddress);
             }
 
             if (cri.equals(TICF)) {
