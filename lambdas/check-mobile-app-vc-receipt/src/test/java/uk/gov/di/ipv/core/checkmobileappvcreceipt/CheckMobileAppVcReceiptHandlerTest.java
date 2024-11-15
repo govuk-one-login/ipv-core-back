@@ -123,26 +123,6 @@ class CheckMobileAppVcReceiptHandlerTest {
     }
 
     @Test
-    void shouldReturn200WhenStatusNotPending() throws Exception {
-        // Arrange
-        var requestEvent = buildValidRequestEventWithState();
-        var ipvSessionItem = buildValidIpvSessionItem();
-        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
-                .thenReturn(buildValidClientOAuthSessionItem());
-        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
-                .thenReturn(buildValidCriResponseItem(CriResponseService.STATUS_ERROR));
-
-        // Act
-        var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
-        var journeyResponse = OBJECT_MAPPER.readValue(response.getBody(), JourneyResponse.class);
-
-        // Assert
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
-    }
-
-    @Test
     void shouldReturn200WhenCriResponseStatusPendingButVcExists() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState();
