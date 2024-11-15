@@ -119,6 +119,9 @@ public class BuildProvenUserIdentityDetailsHandler
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
         } catch (IpvSessionNotFoundException e) {
             return buildJourneyErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         }
     }
 

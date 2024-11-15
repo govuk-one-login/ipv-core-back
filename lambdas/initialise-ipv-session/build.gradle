@@ -13,6 +13,7 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
 			project(":libs:evcs-service"),
+			project(":libs:oauth-key-service"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
@@ -23,9 +24,11 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.jacksonDatabind,
+	testImplementation libs.hamcrest,
+			libs.jacksonDatabind,
 			libs.junitJupiter,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly(libs.junitPlatform)
 }

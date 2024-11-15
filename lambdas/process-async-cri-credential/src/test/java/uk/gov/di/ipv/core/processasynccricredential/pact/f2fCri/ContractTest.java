@@ -23,8 +23,8 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
-import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 

@@ -21,14 +21,18 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 
 import java.util.Collections;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -195,5 +199,22 @@ class CallDcmawAsyncCriHandlerTest {
         assertEquals(
                 ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getMessage(),
                 lambdaResult.get("message"));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptions() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(CallDcmawAsyncCriHandler.class);
+
+        // Act
+        callDcmawAsyncCriHandler.handleRequest(input, mockContext);
+
+        // Assert
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Error calling DCMAW Async CRI"));
+        assertThat(logMessage, containsString("Test error"));
     }
 }

@@ -128,6 +128,9 @@ public class CheckMobileAppVcReceiptHandler
         } catch (CiRetrievalException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         }
     }
 

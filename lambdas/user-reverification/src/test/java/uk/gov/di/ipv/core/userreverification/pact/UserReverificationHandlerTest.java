@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.pacttesthelpers.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -28,6 +27,7 @@ import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.pact.LambdaHttpServer;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.userreverification.UserReverificationHandler;
 

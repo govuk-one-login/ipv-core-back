@@ -112,6 +112,9 @@ public class ProcessAsyncCriCredentialHandler
             }
 
             return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }

@@ -1,0 +1,15 @@
+{
+  "activityHistoryScore": 1,
+  "checkDetails": [
+    {
+      "checkMethod": "vri"
+    },
+    {
+      "biometricVerificationProcessLevel": 3,
+      "checkMethod": "bvr"
+    }
+  ],
+  "validityScore": 2,
+  "strengthScore": 4,
+  "type": "IdentityCheck"
+}

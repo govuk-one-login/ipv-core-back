@@ -10,6 +10,9 @@ states:
     events:
       next:
         targetState: IDENTITY_START_PAGE
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: LIVE_IN_UK_PAGE
 
   ENHANCED_VERIFICATION:
     events:
@@ -149,11 +152,27 @@ states:
       incomplete:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       incomplete-invalid-dl:
-        targetState: WEB_DL_OR_PASSPORT
-        targetEntryEvent: another-way-after-dl
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
       alternate-doc-invalid-dl:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-dl-another-way
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+      postOffice:
+        targetState: F2F_START_PAGE
+        checkIfDisabled:
+          f2f:
+            targetJourney: INELIGIBLE
+            targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -617,14 +636,27 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_MITIGATION_APP_DOC_CHECK:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: MITIGATION_01_APP_DOC_CHECK
+        targetEntryEvent: next
+      postOffice:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_01_F2F_START_PAGE:
     response:
@@ -697,14 +729,27 @@ states:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
       incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_PYI_ESCAPE
+        targetEntryEvent: next
+      postOffice:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:
@@ -765,5 +810,40 @@ states:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
+      end:
+        targetState: RETURN_TO_RP
+
+  # International Address journey
+  APP_DOC_CHECK_INTERNATIONAL_ADDRESS:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+      incomplete:
+        targetState: NON_UK_NO_APP_PAGE
+      incomplete-invalid-dl:
+        targetState: NON_UK_NO_APP_PAGE
+      alternate-doc-invalid-dl:
+        targetState: NON_UK_NO_APP_PAGE
+
+  LIVE_IN_UK_PAGE:
+    response:
+      type: page
+      pageId: live-in-uk
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+      end:
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
+
+  NON_UK_NO_APP_PAGE:
+    response:
+      type: page
+      pageId: non-uk-no-app
+    events:
+      next:
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
       end:
         targetState: RETURN_TO_RP

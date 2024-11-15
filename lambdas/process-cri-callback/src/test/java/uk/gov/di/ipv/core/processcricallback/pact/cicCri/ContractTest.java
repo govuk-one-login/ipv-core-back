@@ -33,11 +33,11 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.pacttesthelpers.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.signing.CoreSigner;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
+import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.net.URI;

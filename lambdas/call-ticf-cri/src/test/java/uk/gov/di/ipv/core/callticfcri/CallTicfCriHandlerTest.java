@@ -32,14 +32,19 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
@@ -272,5 +277,27 @@ class CallTicfCriHandlerTest {
         assertEquals(
                 ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(),
                 lambdaResult.get("message"));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(CallTicfCriHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> callTicfCriHandler.handleRequest(input, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 }

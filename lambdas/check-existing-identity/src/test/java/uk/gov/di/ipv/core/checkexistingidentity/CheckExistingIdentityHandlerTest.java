@@ -63,6 +63,7 @@ import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.model.ContraIndicator;
@@ -76,9 +77,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1531,6 +1535,28 @@ class CheckExistingIdentityHandlerTest {
         inOrder.verify(ipvSessionItem, never()).setVot(any());
         assertEquals(P2, ipvSessionItem.getVot());
         assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(CheckExistingIdentityHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> checkExistingIdentityHandler.handleRequest(event, context),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     @MockitoSettings(strictness = LENIENT)
