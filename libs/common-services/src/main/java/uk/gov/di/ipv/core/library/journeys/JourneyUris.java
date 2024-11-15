@@ -1,12 +1,24 @@
-package uk.gov.di.ipv.core.library.journeyuris;
+package uk.gov.di.ipv.core.library.journeys;
+
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @java.lang.SuppressWarnings("java:S1075")
 public class JourneyUris {
+    @ExcludeFromGeneratedCoverageReport
     private JourneyUris() {
         throw new IllegalStateException("Utility class");
     }
 
     public static final String JOURNEY_ACCESS_DENIED_PATH = "/journey/access-denied";
+    // This journey is a special value that is caught explicitly by the journey event handler
+    public static final String JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH =
+            "/journey/" + Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
+    public static final String JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH = "/journey/call-dcmaw-async-cri";
+    public static final String JOURNEY_CALL_TICF_CRI_PATH = "/journey/call-ticf-cri";
+    public static final String JOURNEY_CHECK_COI_PATH = "/journey/check-coi";
+    public static final String JOURNEY_CHECK_EXISTING_IDENTITY_PATH =
+            "/journey/check-existing-identity";
+    public static final String JOURNEY_CHECK_GPG45_SCORE_PATH = "/journey/check-gpg45-score";
     public static final String JOURNEY_COI_CHECK_FAILED_PATH = "/journey/coi-check-failed";
     public static final String JOURNEY_COI_CHECK_PASSED_PATH = "/journey/coi-check-passed";
     public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_PATH = "/journey/dl-auth-source-check";
@@ -15,6 +27,8 @@ public class JourneyUris {
     public static final String JOURNEY_ENHANCED_VERIFICATION_PATH =
             "/journey/enhanced-verification";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
+    public static final String JOURNEY_EVALUATE_GPG45_SCORES_PATH =
+            "/journey/evaluate-gpg45-scores";
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
@@ -34,8 +48,11 @@ public class JourneyUris {
             "/journey/reprove-identity";
     public static final String JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH =
             "/journey/reprove-identity-gpg45-low";
+    public static final String JOURNEY_RESET_SESSION_IDENTITY_PATH =
+            "/journey/reset-session-identity";
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_REUSE_WITH_STORE_PATH = "/journey/reuse-with-store";
+    public static final String JOURNEY_STORE_IDENTITY_PATH = "/journey/store-identity";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";

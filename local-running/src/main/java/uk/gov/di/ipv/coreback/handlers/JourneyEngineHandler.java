@@ -22,6 +22,16 @@ import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 import java.io.IOException;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CALL_TICF_CRI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_COI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXISTING_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_STORE_IDENTITY_PATH;
+
 public class JourneyEngineHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
 
@@ -97,23 +107,23 @@ public class JourneyEngineHandler {
         var journeyStep = (String) processJourneyEventOutput.get(JOURNEY);
 
         return switch (journeyStep) {
-            case "/journey/check-existing-identity" -> checkExistingIdentityHandler.handleRequest(
+            case JOURNEY_CHECK_EXISTING_IDENTITY_PATH -> checkExistingIdentityHandler.handleRequest(
                     buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-            case "/journey/reset-session-identity" -> resetSessionIdentityHandler.handleRequest(
+            case JOURNEY_RESET_SESSION_IDENTITY_PATH -> resetSessionIdentityHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/build-client-oauth-response" -> buildClientOauthResponseHandler
+            case JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH -> buildClientOauthResponseHandler
                     .handleRequest(buildJourneyRequest(ctx, journeyStep), EMPTY_CONTEXT);
-            case "/journey/evaluate-gpg45-scores" -> evaluateGpg45ScoresHandler.handleRequest(
+            case JOURNEY_EVALUATE_GPG45_SCORES_PATH -> evaluateGpg45ScoresHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/check-gpg45-score" -> checkGpg45ScoreHandler.handleRequest(
+            case JOURNEY_CHECK_GPG45_SCORE_PATH -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/call-ticf-cri" -> callTicfCriHandler.handleRequest(
+            case JOURNEY_CALL_TICF_CRI_PATH -> callTicfCriHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/call-dcmaw-async-cri" -> callDcmawAsyncHandler.handleRequest(
+            case JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH -> callDcmawAsyncHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/store-identity" -> storeIdentityHandler.handleRequest(
+            case JOURNEY_STORE_IDENTITY_PATH -> storeIdentityHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case "/journey/check-coi" -> checkCoiHandler.handleRequest(
+            case JOURNEY_CHECK_COI_PATH -> checkCoiHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {
                 if (journeyStep.matches("/journey/cri/build-oauth-request/.*")) {

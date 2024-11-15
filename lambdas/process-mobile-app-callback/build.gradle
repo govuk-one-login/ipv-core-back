@@ -9,8 +9,7 @@ dependencies {
 
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:cri-response-service"),
-			project(':libs:journey-uris')
+			project(":libs:cri-response-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

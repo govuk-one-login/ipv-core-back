@@ -58,8 +58,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_CONFIG;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessCriCallbackHandlerTest {

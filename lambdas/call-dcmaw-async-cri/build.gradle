@@ -12,7 +12,6 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:cri-api-service"),
 			project(":libs:cri-storing-service"),
-			project(':libs:journey-uris'),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 

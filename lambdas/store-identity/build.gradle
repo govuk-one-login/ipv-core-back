@@ -9,7 +9,6 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
-			project(':libs:journey-uris'),
 			project(":libs:verifiable-credentials"),
 			project(':libs:evcs-service')
 
