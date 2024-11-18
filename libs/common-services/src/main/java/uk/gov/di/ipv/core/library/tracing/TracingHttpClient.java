@@ -20,6 +20,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,16 +34,23 @@ public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> HTTP_ERROR_MESSAGES_TO_RETRY =
             List.of("GOAWAY received", "Connection reset");
+    private static final Duration MAX_CLIENT_AGE = Duration.ofHours(1);
     private final HttpClient baseClient;
     private final AWSXRayRecorder recorder;
+    private final Instant creationTime;
 
     private TracingHttpClient(HttpClient baseClient) {
         this.baseClient = baseClient;
         this.recorder = AWSXRay.getGlobalRecorder();
+        this.creationTime = Instant.now();
     }
 
     public static HttpClient newHttpClient() {
         return new TracingHttpClient(HttpClient.newHttpClient());
+    }
+
+    private boolean isClientTooOld() {
+        return Duration.between(creationTime, Instant.now()).compareTo(MAX_CLIENT_AGE) > 0;
     }
 
     @Override
@@ -110,6 +118,10 @@ public class TracingHttpClient extends HttpClient {
     public <T> HttpResponse<T> send(
             HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
             throws IOException, InterruptedException {
+        if (isClientTooOld()) {
+            LOGGER.info("Recreating HTTP client due to age");
+            return newHttpClient().send(request, responseBodyHandler);
+        }
         try {
             return sendWithTracing(request, responseBodyHandler);
         } catch (IOException e) {
