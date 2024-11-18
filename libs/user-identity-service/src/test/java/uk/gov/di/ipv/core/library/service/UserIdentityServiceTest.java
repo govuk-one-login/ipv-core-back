@@ -554,32 +554,32 @@ class UserIdentityServiceTest {
 
     @Nested
     class AreNamesAndDobCorrelated {
-        private VerifiableCredential PASSPORT_VC_JIMBO_JONES_2000_01_01 =
+        private VerifiableCredential jimboJones2000 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
                         createCredentialWithNameAndBirthDate("Jimbo", "Jones", "2000-01-01"));
-        private VerifiableCredential PASSPORT_VC_JIMBO_SMITH_2000_01_01 =
+        private VerifiableCredential jimboSmith2000 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
                         createCredentialWithNameAndBirthDate("Jimbo", "SMITH", "2000-01-01"));
-        private VerifiableCredential PASSPORT_VC_TIMMY_JONES_2000_01_01 =
+        private VerifiableCredential timmyJones2000 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
                         createCredentialWithNameAndBirthDate("Timmy", "Jones", "2000-01-01"));
-        private VerifiableCredential PASSPORT_VC_TIMMY_SMITH_2000_01_01 =
+        private VerifiableCredential timmySmith2000 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
                         createCredentialWithNameAndBirthDate("Timmy", "Smith", "2000-01-01"));
-        private VerifiableCredential PASSPORT_VC_JIMBO_JONES_2002_02_02 =
+        private VerifiableCredential jimboJones2002 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
                         createCredentialWithNameAndBirthDate("Timmy", "Smith", "2002-02-02"));
-        private VerifiableCredential PASSPORT_VC_JIMBO_JONATHON_JONES_2002_02_02 =
+        private VerifiableCredential jimboJonathonJones2002 =
                 generateVerifiableCredential(
                         USER_ID_1,
                         PASSPORT,
@@ -595,11 +595,7 @@ class UserIdentityServiceTest {
         void shouldReturnTrueForCorrelatedGivenNamesAndDobAndDifferentFamilyNames()
                 throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_SMITH_2000_01_01);
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
 
             // Act & Assert
             assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -609,11 +605,7 @@ class UserIdentityServiceTest {
         void shouldReturnTrueForCorrelatedFamilyNamesAndDobAndDifferentGivenNames()
                 throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_TIMMY_JONES_2000_01_01);
+            var vcs = List.of(jimboJones2000, jimboJones2000, timmyJones2000);
 
             // Act & Assert
             assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -623,11 +615,7 @@ class UserIdentityServiceTest {
         void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
             // Arrange
             when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_SMITH_2000_01_01);
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
 
             // Act & Assert
             assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -636,11 +624,7 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnFalseIfGivenNamesAndFamilyNamesBothDiffer() throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_TIMMY_SMITH_2000_01_01);
+            var vcs = List.of(jimboJones2000, jimboJones2000, timmySmith2000);
 
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -649,11 +633,7 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnFalseIfExtraGivenName() throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONATHON_JONES_2002_02_02);
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboJonathonJones2002);
 
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -662,11 +642,7 @@ class UserIdentityServiceTest {
         @Test
         void shouldReturnFalseIfDobDiffers() throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2002_02_02);
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboJones2002);
 
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
@@ -678,8 +654,8 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,
@@ -704,8 +680,8 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,
@@ -729,8 +705,8 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
-                            PASSPORT_VC_JIMBO_JONES_2000_01_01,
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,

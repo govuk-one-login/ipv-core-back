@@ -145,7 +145,7 @@ class CheckCoiHandlerTest {
         @DisplayName("Successful checks")
         class SuccessfulChecks {
             @Test
-            void shouldReturnPassedForSuccessfulGivenNamesAndDobCheck() throws Exception {
+            void shouldReturnPassedForSuccessfulNamesAndDobCheck() throws Exception {
                 when(mockUserIdentityService.areNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
@@ -178,48 +178,6 @@ class CheckCoiHandlerTest {
                         new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
 
-                var restrictedAuditData =
-                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
-                assertTrue(restrictedAuditData.has("newName"));
-                assertTrue(restrictedAuditData.has("oldName"));
-                assertTrue(restrictedAuditData.has("newBirthDate"));
-                assertTrue(restrictedAuditData.has("oldBirthDate"));
-                assertTrue(restrictedAuditData.has("device_information"));
-            }
-
-            @Test
-            void shouldReturnPassedForSuccessfulFamilyNameAndDobCheck() throws Exception {
-                when(mockUserIdentityService.areNamesAndDobCorrelated(
-                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                        .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
-
-                var request =
-                        ProcessRequest.processRequestBuilder()
-                                .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(
-                                        Map.of("checkType", GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
-                                .build();
-
-                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
-                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
-                var auditEventsCaptured = auditEventCaptor.getAllValues();
-
-                assertEquals(
-                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                        auditEventsCaptured.get(0).getEventName());
-                assertEquals(
-                        new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, null),
-                        auditEventsCaptured.get(0).getExtensions());
-                assertEquals(
-                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
-                        auditEventsCaptured.get(1).getEventName());
-                assertEquals(
-                        new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, true),
-                        auditEventsCaptured.get(1).getExtensions());
                 var restrictedAuditData =
                         getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
                 assertTrue(restrictedAuditData.has("newName"));
@@ -578,38 +536,7 @@ class CheckCoiHandlerTest {
         }
 
         @Test
-        void shouldReturnErrorIfFamilyNameCorrelationCheckThrowsHttpResponseException()
-                throws Exception {
-            when(mockUserIdentityService.areNamesAndDobCorrelated(
-                            List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                    .thenThrow(
-                            new HttpResponseExceptionWithErrorBody(
-                                    SC_SERVER_ERROR, FAILED_NAME_CORRELATION));
-
-            var request =
-                    ProcessRequest.processRequestBuilder()
-                            .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
-                            .build();
-
-            var responseMap = checkCoiHandler.handleRequest(request, mockContext);
-
-            assertEquals(JOURNEY_ERROR_PATH, responseMap.get("journey"));
-            assertEquals(FAILED_NAME_CORRELATION.getMessage(), responseMap.get("message"));
-            verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
-            var auditEventsCaptured = auditEventCaptor.getAllValues();
-
-            assertEquals(
-                    AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
-                    auditEventsCaptured.get(0).getEventName());
-            assertEquals(
-                    new AuditExtensionCoiCheck(CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB, null),
-                    auditEventsCaptured.get(0).getExtensions());
-        }
-
-        @Test
-        void shouldReturnErrorIfGivenNameCorrelationCheckThrowsHttpResponseException()
-                throws Exception {
+        void shouldReturnErrorIfNameCorrelationCheckThrowsHttpResponseException() throws Exception {
             when(mockUserIdentityService.areNamesAndDobCorrelated(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(
