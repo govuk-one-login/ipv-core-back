@@ -7,45 +7,25 @@ description: >-
 states:
 # Entry points
 
-  GIVEN_ONLY_AFTER_REUSE_START:
+  NAMES_ONLY_AFTER_REUSE_START:
     events:
       next:
-        targetState: GIVEN_ONLY_AFTER_REUSE
+        targetState: NAMES_ONLY_AFTER_REUSE
 
-  GIVEN_ONLY_AFTER_RFC_START:
+  NAMES_ONLY_AFTER_RFC_START:
     events:
       next:
-        targetState: GIVEN_ONLY_AFTER_RFC
+        targetState: NAMES_ONLY_AFTER_RFC
 
-  FAMILY_ONLY_AFTER_REUSE_START:
+  NAMES_WITH_ADDRESS_AFTER_REUSE_START:
     events:
       next:
-        targetState: FAMILY_ONLY_AFTER_REUSE
+        targetState: NAMES_WITH_ADDRESS_AFTER_REUSE
 
-  FAMILY_ONLY_AFTER_RFC_START:
+  NAMES_WITH_ADDRESS_AFTER_RFC_START:
     events:
       next:
-        targetState: FAMILY_ONLY_AFTER_RFC
-
-  GIVEN_WITH_ADDRESS_AFTER_REUSE_START:
-    events:
-      next:
-        targetState: GIVEN_WITH_ADDRESS_AFTER_REUSE
-
-  GIVEN_WITH_ADDRESS_AFTER_RFC_START:
-    events:
-      next:
-        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC
-
-  FAMILY_WITH_ADDRESS_AFTER_REUSE_START:
-    events:
-      next:
-        targetState: FAMILY_WITH_ADDRESS_AFTER_REUSE
-
-  FAMILY_WITH_ADDRESS_AFTER_RFC_START:
-    events:
-      next:
-        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC
+        targetState: NAMES_WITH_ADDRESS_AFTER_RFC
 
   # Parent States
 
@@ -106,28 +86,101 @@ states:
 
   # Journey States
 
-   # WITHOUT ADDRESS
+  # WITHOUT ADDRESS
 
-  GIVEN_ONLY_AFTER_REUSE:
+  NAMES_ONLY_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_GIVEN_ONLY
+        targetState: RESET_IDENTITY_NAMES_ONLY
       end:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
 
-  GIVEN_ONLY_AFTER_RFC:
+  RESET_IDENTITY_NAMES_ONLY:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: NAME_ONLY_CHANGE
+    events:
+      next:
+        targetState: APP_DOC_CHECK_NAMES_ONLY
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
+            targetEntryEvent: appTriage
+
+  APP_DOC_CHECK_NAMES_ONLY:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_NAMES_ONLY
+      incomplete:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+      incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK_NAMES_ONLY
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  STRATEGIC_APP_TRIAGE_NAMES_ONLY:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      next:
+        targetState: POST_APP_DOC_CHECK_NAMES_ONLY
+      sessionError:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        targetJourney: FAILED
+        targetState: FAILED_UPDATE_DETAILS
+
+  POST_APP_DOC_CHECK_NAMES_ONLY:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+      context: coiNoAddress
+    events:
+      next:
+        targetState: FRAUD_CHECK_NAMES_ONLY
+
+  FRAUD_CHECK_NAMES_ONLY:
+    response:
+      type: cri
+      criId: fraud
+    parent: CRI_STATE
+    events:
+      next:
+        targetState: CHECK_COI_NAMES
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+
+  NAMES_ONLY_AFTER_RFC:
     response:
       type: page
       pageId: page-update-name
       context: repeatFraudCheck
     events:
       update-name:
-        targetState: RESET_IDENTITY_GIVEN_ONLY
+        targetState: RESET_IDENTITY_NAMES_ONLY
       end:
         targetState: RETURN_TO_RP
         auditEvents:
@@ -137,205 +190,29 @@ states:
         targetState: START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  FAMILY_ONLY_AFTER_REUSE:
-    response:
-      type: page
-      pageId: page-update-name
-    events:
-      update-name:
-        targetState: RESET_IDENTITY_FAMILY_ONLY
-      end:
-        targetState: RETURN_TO_RP
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  FAMILY_ONLY_AFTER_RFC:
-    response:
-      type: page
-      pageId: page-update-name
-      context: repeatFraudCheck
-    events:
-      update-name:
-        targetState: RESET_IDENTITY_FAMILY_ONLY
-      end:
-        targetState: RETURN_TO_RP
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REPEAT_FRAUD_CHECK
-        targetState: START
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  RESET_IDENTITY_GIVEN_ONLY:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: NAME_ONLY_CHANGE
-    events:
-      next:
-        targetState: APP_DOC_CHECK_GIVEN_ONLY
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_GIVEN_ONLY
-            targetEntryEvent: appTriage
-
-  STRATEGIC_APP_TRIAGE_GIVEN_ONLY:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_GIVEN_ONLY
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-
-  RESET_IDENTITY_FAMILY_ONLY:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: NAME_ONLY_CHANGE
-    events:
-      next:
-        targetState: APP_DOC_CHECK_FAMILY_ONLY
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_FAMILY_ONLY
-            targetEntryEvent: appTriage
-
-  STRATEGIC_APP_TRIAGE_FAMILY_ONLY:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_FAMILY_ONLY
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-
-  APP_DOC_CHECK_GIVEN_ONLY:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_GIVEN_ONLY
-      incomplete:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_ONLY
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_ONLY:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-      context: noF2f
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_GIVEN_ONLY
-        targetEntryEvent: next
-      returnToRp:
-        targetState: RETURN_TO_RP
-
-  APP_DOC_CHECK_FAMILY_ONLY:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_FAMILY_ONLY
-      incomplete:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_ONLY
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_ONLY:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-      context: noF2f
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_FAMILY_ONLY
-        targetEntryEvent: next
-      returnToRp:
-        targetState: RETURN_TO_RP
-
-  POST_APP_DOC_CHECK_GIVEN_ONLY:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-      context: coiNoAddress
-    events:
-      next:
-        targetState: FRAUD_CHECK_GIVEN_ONLY
-
-  POST_APP_DOC_CHECK_FAMILY_ONLY:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-      context: coiNoAddress
-    events:
-      next:
-        targetState: FRAUD_CHECK_FAMILY_ONLY
-
-  FRAUD_CHECK_GIVEN_ONLY:
-    response:
-      type: cri
-      criId: fraud
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CHECK_COI_GIVEN
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-
-  FRAUD_CHECK_FAMILY_ONLY:
-    response:
-      type: cri
-      criId: fraud
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CHECK_COI_FAMILY
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
 
   # WITH ADDRESS
 
-  GIVEN_WITH_ADDRESS_AFTER_REUSE:
+  NAMES_WITH_ADDRESS_AFTER_REUSE:
     response:
       type: page
       pageId: page-update-name
     events:
       update-name:
-        targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
+        targetState: RESET_IDENTITY_NAMES_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
 
-  GIVEN_WITH_ADDRESS_AFTER_RFC:
+  NAMES_WITH_ADDRESS_AFTER_RFC:
     response:
       type: page
       pageId: page-update-name
       context: repeatFraudCheck
     events:
       update-name:
-        targetState: RESET_IDENTITY_GIVEN_WITH_ADDRESS
+        targetState: RESET_IDENTITY_NAMES_WITH_ADDRESS
       end:
         targetState: RETURN_TO_RP
         auditEvents:
@@ -346,37 +223,7 @@ states:
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_ABORTED
 
-  FAMILY_WITH_ADDRESS_AFTER_REUSE:
-    response:
-      type: page
-      pageId: page-update-name
-    events:
-      update-name:
-        targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
-      end:
-        targetState: RETURN_TO_RP
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  FAMILY_WITH_ADDRESS_AFTER_RFC:
-    response:
-      type: page
-      pageId: page-update-name
-      context: repeatFraudCheck
-    events:
-      update-name:
-        targetState: RESET_IDENTITY_FAMILY_WITH_ADDRESS
-      end:
-        targetState: RETURN_TO_RP
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-      back:
-        targetJourney: REPEAT_FRAUD_CHECK
-        targetState: START
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_ABORTED
-
-  RESET_IDENTITY_GIVEN_WITH_ADDRESS:
+  RESET_IDENTITY_NAMES_WITH_ADDRESS:
     response:
       type: process
       lambda: reset-session-identity
@@ -384,17 +231,17 @@ states:
         resetType: ALL
     events:
       next:
-        targetState: APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: APP_DOC_CHECK_NAMES_WITH_ADDRESS
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_GIVEN_WITH_ADDRESS
+            targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
             targetEntryEvent: appTriage
 
-  STRATEGIC_APP_TRIAGE_GIVEN_WITH_ADDRESS:
+  STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -402,152 +249,62 @@ states:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
 
-  RESET_IDENTITY_FAMILY_WITH_ADDRESS:
-    response:
-      type: process
-      lambda: reset-session-identity
-      lambdaInput:
-        resetType: ALL
-    events:
-      next:
-        targetState: APP_DOC_CHECK_FAMILY_WITH_ADDRESS
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_FAMILY_WITH_ADDRESS
-            targetEntryEvent: appTriage
-
-  STRATEGIC_APP_TRIAGE_FAMILY_WITH_ADDRESS:
-    nestedJourney: STRATEGIC_APP_TRIAGE
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-
-  APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
+  APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       incomplete:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
       incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
 
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
       type: page
       pageId: prove-identity-another-way
       context: noF2f
     events:
       anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_GIVEN_WITH_ADDRESS
+        targetState: APP_DOC_CHECK_NAMES_WITH_ADDRESS
         targetEntryEvent: next
       returnToRp:
         targetState: RETURN_TO_RP
 
-  APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
-    nestedJourney: APP_DOC_CHECK
-    exitEvents:
-      next:
-        targetState: POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
-      incomplete:
-        targetJourney: FAILED
-        targetState: FAILED_UPDATE_DETAILS
-      incomplete-invalid-dl:
-        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_WITH_ADDRESS
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
-
-  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
-    response:
-      type: page
-      pageId: prove-identity-another-way
-      context: noF2f
-    events:
-      anotherTypePhotoId:
-        targetState: APP_DOC_CHECK_FAMILY_WITH_ADDRESS
-        targetEntryEvent: next
-      returnToRp:
-        targetState: RETURN_TO_RP
-
-  POST_APP_DOC_CHECK_GIVEN_WITH_ADDRESS:
+  POST_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     response:
       type: page
       pageId: page-dcmaw-success
       context: coiAddress
     events:
       next:
-        targetState: ADDRESS_AND_FRAUD_GIVEN
+        targetState: ADDRESS_AND_FRAUD
         checkFeatureFlag:
           internationalAddressEnabled:
-            targetState: ADDRESS_AND_FRAUD_GIVEN
+            targetState: ADDRESS_AND_FRAUD
             targetEntryEvent: internationalUser
 
-  POST_APP_DOC_CHECK_FAMILY_WITH_ADDRESS:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-      context: coiAddress
-    events:
-      next:
-        targetState: ADDRESS_AND_FRAUD_FAMILY
-        checkFeatureFlag:
-          internationalAddressEnabled:
-            targetState: ADDRESS_AND_FRAUD_FAMILY
-            targetEntryEvent: internationalUser
-
-  ADDRESS_AND_FRAUD_GIVEN:
+  ADDRESS_AND_FRAUD:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CHECK_COI_GIVEN
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-
-  ADDRESS_AND_FRAUD_FAMILY:
-    nestedJourney: ADDRESS_AND_FRAUD
-    exitEvents:
-      next:
-        targetState: CHECK_COI_FAMILY
+        targetState: CHECK_COI_NAMES
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
 
   # SHARED STATES
 
-  CHECK_COI_GIVEN:
+  CHECK_COI_NAMES:
     response:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: FAMILY_NAME_AND_DOB
-    events:
-      coi-check-passed:
-        targetState: EVALUATE_GPG45_SCORES
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  CHECK_COI_FAMILY:
-    response:
-      type: process
-      lambda: check-coi
-      lambdaInput:
-        checkType: GIVEN_NAMES_AND_DOB
+        checkType: GIVEN_OR_FAMILY_NAME_AND_DOB
     events:
       coi-check-passed:
         targetState: EVALUATE_GPG45_SCORES
@@ -571,6 +328,7 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+
   STORE_IDENTITY_BEFORE_SUCCESS:
     response:
       type: process
