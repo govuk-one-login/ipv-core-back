@@ -9,7 +9,8 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			libs.jacksonDataformatYaml,
 			project(":libs:audit-service"),
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:evcs-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
@@ -21,6 +22,7 @@ dependencies {
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
