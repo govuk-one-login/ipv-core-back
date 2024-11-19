@@ -818,7 +818,7 @@ states:
     nestedJourney: APP_DOC_CHECK
     exitEvents:
       next:
-        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+        targetState: POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE
       incomplete:
         targetState: NON_UK_NO_APP_PAGE
       incomplete-invalid-dl:
@@ -831,9 +831,9 @@ states:
       type: page
       pageId: live-in-uk
     events:
-      next:
+      uk:
         targetState: IDENTITY_START_PAGE
-      end:
+      international:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
 
@@ -847,3 +847,12 @@ states:
         targetEntryEvent: next
       end:
         targetState: RETURN_TO_RP
+
+  POST_APP_DOC_CHECK_INTERNATIONAL_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-dcmaw-success
+    events:
+      next:
+        targetState: ADDRESS_AND_FRAUD_J1
+        targetEntryEvent: internationalUser

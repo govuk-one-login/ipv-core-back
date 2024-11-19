@@ -82,7 +82,7 @@ states:
         checkFeatureFlag:
           internationalAddressEnabled:
             targetState: ADDRESS_AND_FRAUD_UPDATE_ADDRESS
-            targetEntryEvent: askInternationalAddress
+            targetEntryEvent: internationalUser
 
   ADDRESS_AND_FRAUD_UPDATE_ADDRESS:
     nestedJourney: ADDRESS_AND_FRAUD
