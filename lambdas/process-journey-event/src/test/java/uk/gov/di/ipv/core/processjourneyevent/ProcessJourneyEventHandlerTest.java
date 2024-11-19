@@ -111,7 +111,7 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {
-        var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_IP).build();
+        var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_SESSION_ID).build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
@@ -140,7 +140,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         when(mockIpvSessionService.getIpvSession(anyString()))
                 .thenThrow(new IpvSessionNotFoundException("Not found"));
@@ -159,7 +159,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("invalid-event")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -178,7 +178,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("INVALIDSTATE");
@@ -197,7 +197,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -240,7 +240,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -266,7 +266,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aCriId"))
@@ -297,7 +297,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(journeyUri)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -339,7 +339,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PROCESS_STATE");
@@ -367,7 +367,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -411,7 +411,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -436,7 +436,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -457,7 +457,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(journeyEvent)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -530,7 +530,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testWithAuditEvent")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -553,7 +553,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testWithAuditEventContext")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -601,7 +601,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testJourneyStep")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -629,7 +629,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventOne")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -658,21 +658,21 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventFour")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var secondTransitionInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("anotherPageState")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -730,14 +730,14 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventThree")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -781,14 +781,14 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("enterNestedJourneyAtStateOne")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE_AT_START_OF_NO_PHOTO_ID");
@@ -835,14 +835,14 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventFive")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -886,7 +886,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -917,7 +917,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -948,7 +948,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -981,7 +981,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventSix")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -1014,7 +1014,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventSix")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         ProcessJourneyEventHandler processJourneyEventHandler =
