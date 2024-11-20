@@ -269,7 +269,8 @@ public class BuildClientOauthResponseHandler
             ClientOAuthSessionItem clientOAuthSessionItem) throws URISyntaxException {
         URIBuilder uriBuilder = new URIBuilder(clientOAuthSessionItem.getRedirectUri());
         uriBuilder.addParameter("error", OAuth2Error.ACCESS_DENIED.getCode());
-        uriBuilder.addParameter("error_description", "Missing Context");
+        uriBuilder.addParameter(
+                "error_description", "No ipvSession for existing ClientOAuthSession.");
 
         if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
             uriBuilder.addParameter(STATE, clientOAuthSessionItem.getState());

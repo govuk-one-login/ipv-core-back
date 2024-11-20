@@ -217,7 +217,7 @@ class BuildClientOauthResponseHandlerTest {
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals("example.com", actualRedirectUrl.getHost());
         assertEquals("access_denied", params.get(0).getValue());
-        assertEquals("Missing Context", params.get(1).getValue());
+        assertEquals("No ipvSession for existing ClientOAuthSession.", params.get(1).getValue());
         assertEquals("test-state", params.get(2).getValue());
         verify(mockConfigService).setFeatureSet(List.of(TEST_FEATURE_SET));
     }
