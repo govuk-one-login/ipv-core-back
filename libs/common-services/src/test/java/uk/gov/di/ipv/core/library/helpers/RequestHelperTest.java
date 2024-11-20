@@ -30,7 +30,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_NAMES_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.ENCODED_DEVICE_INFORMATION_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.FEATURE_SET_HEADER;
@@ -511,10 +511,10 @@ class RequestHelperTest {
     void getCoiCheckTypeShouldReturnCoiCheckType() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("checkType", GIVEN_NAMES_AND_DOB.name()))
+                        .lambdaInput(Map.of("checkType", GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
                         .build();
 
-        assertEquals(GIVEN_NAMES_AND_DOB, RequestHelper.getCoiCheckType(request));
+        assertEquals(GIVEN_OR_FAMILY_NAME_AND_DOB, RequestHelper.getCoiCheckType(request));
     }
 
     @Test

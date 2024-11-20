@@ -79,11 +79,11 @@ Feature: Repeat fraud check failures
       Then I get a 'pyi-no-match' page response
 
     Scenario: Failed COI check
-      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      When I submit 'alice-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+      When I submit 'alice-score-2' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
       When I submit a 'returnToRp' event
       Then I get an OAuth response

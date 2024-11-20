@@ -179,40 +179,30 @@ public class UserIdentityService {
         return true;
     }
 
-    public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
+    public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
-        if (!checkNamesForCorrelation(
-                getNameProperty(
-                        getIdentityClaimsForNameCorrelation(successfulVcs),
-                        NamePart.NamePartType.GIVEN_NAME))) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
+        var areGivenNamesCorrelated =
+                checkNamesForCorrelation(
+                        getNameProperty(
+                                getIdentityClaimsForNameCorrelation(successfulVcs),
+                                NamePart.NamePartType.GIVEN_NAME));
+
+        var isFamilyNameCorrelated =
+                checkNamesForCorrelation(
+                        getFamilyNameForCoiCheck(
+                                getIdentityClaimsForNameCorrelation(successfulVcs)));
+
+        // Given names AND family name cannot both be changed
+        if (!areGivenNamesCorrelated && !isFamilyNameCorrelated) {
             return false;
         }
 
-        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
-            return false;
-        }
-        return true;
-    }
+        var isBirthDateCorrelated = checkBirthDateCorrelationInCredentials(successfulVcs);
 
-    public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody {
-        var successfulVcs = getSuccessfulVcs(vcs);
-
-        if (!checkNamesForCorrelation(
-                getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
-            return false;
-        }
-
-        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
-            return false;
-        }
-        return true;
+        return (areGivenNamesCorrelated && isBirthDateCorrelated)
+                || (isFamilyNameCorrelated && isBirthDateCorrelated);
     }
 
     private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs) {

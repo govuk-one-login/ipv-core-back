@@ -71,7 +71,7 @@ states:
           updateSupported: true
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: GIVEN_ONLY_AFTER_RFC_START
+        targetState: NAMES_ONLY_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -80,7 +80,7 @@ states:
           updateSupported: true
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: FAMILY_ONLY_AFTER_RFC_START
+        targetState: NAMES_ONLY_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -89,7 +89,7 @@ states:
           updateSupported: true
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC_START
+        targetState: NAMES_WITH_ADDRESS_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -98,7 +98,7 @@ states:
           updateSupported: true
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC_START
+        targetState: NAMES_WITH_ADDRESS_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
