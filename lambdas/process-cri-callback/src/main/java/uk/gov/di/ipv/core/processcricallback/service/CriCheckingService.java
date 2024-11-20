@@ -36,8 +36,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
-import uk.gov.di.model.DrivingPermitDetails;
-import uk.gov.di.model.PersonWithDocuments;
+import uk.gov.di.model.IdentityCheckSubject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +44,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -269,31 +271,44 @@ public class CriCheckingService {
 
     private boolean requiresAuthoritativeSourceCheck(
             List<VerifiableCredential> newVcs, List<VerifiableCredential> sessionVcs) {
-        return extractDrivingPermitIdentifier(newVcs, Cri.DCMAW, false)
+        return findSuccessfulVcFromCri(DCMAW, newVcs)
+                .map(this::getDrivingPermitIdentifier)
                 .map(
-                        identifier ->
-                                !identifier.equals(
-                                        extractDrivingPermitIdentifier(
-                                                        sessionVcs, Cri.DRIVING_LICENCE, true)
-                                                .orElse(null)))
+                        dcmawDpId ->
+                                findSuccessfulVcFromCri(DRIVING_LICENCE, sessionVcs)
+                                        .map(
+                                                dlVc ->
+                                                        !Objects.equals(
+                                                                dcmawDpId,
+                                                                getDrivingPermitIdentifier(dlVc)))
+                                        .orElse(true))
                 .orElse(false);
     }
 
-    private Optional<String> extractDrivingPermitIdentifier(
-            List<VerifiableCredential> vcs, Cri cri, boolean successfulCheck) {
+    private Optional<VerifiableCredential> findSuccessfulVcFromCri(
+            Cri cri, List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> cri.equals(vc.getCri()))
-                .filter(successfulCheck ? VcHelper::isSuccessfulVc : x -> true)
-                .map(
-                        vc ->
-                                vc.getCredential().getCredentialSubject()
-                                                instanceof PersonWithDocuments personWithDocuments
-                                        ? personWithDocuments.getDrivingPermit()
-                                        : null)
-                .filter(Objects::nonNull)
-                .filter(drivingPermitDetailsList -> !drivingPermitDetailsList.isEmpty())
-                .map(drivingPermitDetailsList -> drivingPermitDetailsList.get(0))
-                .map(DrivingPermitDetails::getPersonalNumber)
+                .filter(VcHelper::isSuccessfulVc)
                 .findFirst();
+    }
+
+    private String getDrivingPermitIdentifier(VerifiableCredential vc) {
+        if (vc.getCredential().getCredentialSubject()
+                        instanceof IdentityCheckSubject identityCheckSubject
+                && identityCheckSubject.getDrivingPermit() != null
+                && !identityCheckSubject.getDrivingPermit().isEmpty()) {
+            var permit = identityCheckSubject.getDrivingPermit().get(0);
+            return String.format(
+                    "drivingPermit/%s/%s/%s/%s",
+                    permit.getIssuingCountry(),
+                    permit.getIssuedBy(),
+                    permit.getPersonalNumber(),
+                    permit.getIssueDate());
+        }
+        LOGGER.warn(
+                LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")
+                        .with(LOG_CRI_ID.getFieldName(), vc.getCri()));
+        return null;
     }
 }
