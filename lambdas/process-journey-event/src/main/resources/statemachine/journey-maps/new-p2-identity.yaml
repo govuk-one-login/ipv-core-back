@@ -836,6 +836,8 @@ states:
       international:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
+        auditEvents:
+          - IPV_INTERNATIONAL_ADDRESS_START
 
   NON_UK_NO_APP_PAGE:
     response:

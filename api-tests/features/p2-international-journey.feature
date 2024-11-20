@@ -14,6 +14,7 @@ Feature: P2 App journey
   Scenario: Visit UK landing page - no
     When I submit a 'international' event
     Then I get a 'dcmaw' CRI response
+    And an 'IPV_INTERNATIONAL_ADDRESS_START' audit event was recorded [local only]
 
   Scenario: International address user sends a next event on exit page from DCMAW
     When I submit a 'international' event
