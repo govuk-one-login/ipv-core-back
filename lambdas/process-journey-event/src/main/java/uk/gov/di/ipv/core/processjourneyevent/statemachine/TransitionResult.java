@@ -14,7 +14,7 @@ public record TransitionResult(
         Map<String, String> auditContext,
         String targetEntryEvent) {
     public TransitionResult(State state) {
-        this(state, null, null, null);
+        this(state, new ArrayList<>(), new HashMap<>(), null);
     }
 
     public static List<AuditEventTypes> mergeAuditEvents(
