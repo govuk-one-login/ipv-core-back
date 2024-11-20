@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeS
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,8 @@ public class BasicEvent implements Event {
     private LinkedHashMap<String, Event> checkIfDisabled;
     private LinkedHashMap<String, Event> checkFeatureFlag;
     private LinkedHashMap<String, Event> checkJourneyContext;
-    private List<AuditEventTypes> auditEvents;
-    private LinkedHashMap<String, String> auditContext;
+    private List<AuditEventTypes> auditEvents = new ArrayList<>();
+    private LinkedHashMap<String, String> auditContext = new LinkedHashMap<>();
 
     public TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException {
         if (checkIfDisabled != null) {
