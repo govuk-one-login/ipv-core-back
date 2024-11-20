@@ -150,10 +150,12 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        List<VerifiableCredential> mitigationVcList =
-                new ArrayList<>(
-                        sessionCredentialsService.getCredentials(
-                                ipvSessionItem.getIpvSessionId(), userId, true));
+        List<VerifiableCredential> mitigationVcList = new ArrayList<>();
+        if (!cri.equals(TICF)) {
+            mitigationVcList.addAll(
+                    sessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), userId, true));
+        }
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
