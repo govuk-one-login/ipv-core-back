@@ -377,7 +377,6 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    updateDetailsAccountDeletion: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
   features:
