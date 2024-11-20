@@ -104,6 +104,16 @@ states:
       anotherPageState:
         targetState: ANOTHER_PAGE_STATE
 
+  PAGE_STATE_WITH_AUDIT_EVENT_ON_SUBJOURNEY:
+    response:
+      type: page
+      pageId: page-id-for-page-state-at-start-of-no-photo-id
+    events:
+      enterNestedJourneyAtStateOne:
+        targetState: NESTED_JOURNEY_INVOKE_STATE
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
+
   PAGE_STATE_WITH_BACK_EVENT:
     response:
       type: page

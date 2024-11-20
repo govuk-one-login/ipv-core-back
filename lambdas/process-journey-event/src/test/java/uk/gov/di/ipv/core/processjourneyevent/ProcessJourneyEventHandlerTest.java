@@ -59,6 +59,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -103,6 +104,7 @@ class ProcessJourneyEventHandlerTest {
     @AfterEach
     void checkAuditEventWait(TestInfo testInfo) {
         if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
+            // Assert that no audit events were logged after awaiting the events
             InOrder auditInOrder = inOrder(mockAuditService);
             auditInOrder.verify(mockAuditService).awaitAuditEvents();
             auditInOrder.verifyNoMoreInteractions();
@@ -111,7 +113,8 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {
-        var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_SESSION_ID).build();
+        var input =
+                JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_SESSION_ID).build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
@@ -540,8 +543,7 @@ class ProcessJourneyEventHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
 
-        assertEquals(
-                AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, capturedAuditEvent.getEventName());
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, capturedAuditEvent.getEventName());
         assertEquals("core", capturedAuditEvent.getComponentId());
         assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
@@ -565,7 +567,7 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(4, capturedAuditEvents.size());
 
         var firstEvent = capturedAuditEvents.get(0);
-        assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
         assertEquals("core", firstEvent.getComponentId());
         assertEquals("testuserid", firstEvent.getUser().getUserId());
         assertEquals("testjourneyid", firstEvent.getUser().getGovukSigninJourneyId());
@@ -826,6 +828,50 @@ class ProcessJourneyEventHandlerTest {
         InOrder auditInOrderTwo = inOrder(mockAuditService);
         auditInOrderTwo.verify(mockAuditService).awaitAuditEvents();
         auditInOrderTwo.verifyNoMoreInteractions();
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldRecoredAuditEventWhenEnteringNestedJourney() throws Exception {
+        // Arrange
+        var inputToEnterNestedStates =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("enterNestedJourneyAtStateOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE_WITH_AUDIT_EVENT_ON_SUBJOURNEY");
+        var ipvSession = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES);
+
+        // Act
+        var nextResponse =
+                processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
+
+        // Assert
+        assertEquals("page-id-nested-state-one", nextResponse.get("page"));
+        assertEquals(
+                new JourneyState(
+                        INITIAL_JOURNEY_SELECTION, "NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE"),
+                ipvSession.getState());
+
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+
+        var auditEvent = auditEventCaptor.getValue();
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, auditEvent.getEventName());
     }
 
     @Test

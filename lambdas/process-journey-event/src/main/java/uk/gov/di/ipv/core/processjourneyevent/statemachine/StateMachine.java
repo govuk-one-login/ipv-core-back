@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -14,6 +15,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +57,13 @@ public class StateMachine {
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {
             var entryEvent = requireNonNullElse(result.targetEntryEvent(), event);
-            return result.state().transition(entryEvent, startState, journeyContext);
+            var nestedResult = result.state().transition(entryEvent, startState, journeyContext);
+            // Add audit events and context from the outer event
+            return new TransitionResult(
+                    nestedResult.state(),
+                    mergeAuditEvents(result.auditEvents(), nestedResult.auditEvents()),
+                    mergeAuditContexts(result.auditContext(), nestedResult.auditContext()),
+                    nestedResult.targetEntryEvent());
         }
 
         return result;
@@ -95,5 +103,39 @@ public class StateMachine {
         return basicState.getResponse() instanceof PageStepResponse pageStepResponse
                         && !pageStepResponse.getPageId().equals(currentPage)
                 || basicState.getResponse() instanceof CriStepResponse;
+    }
+
+    private List<AuditEventTypes> mergeAuditEvents(
+            List<AuditEventTypes> left, List<AuditEventTypes> right) {
+        if (left == null && right == null) {
+            return null;
+        }
+        if (left == null) {
+            return right;
+        }
+        if (right == null) {
+            return left;
+        }
+        var merged = new ArrayList<AuditEventTypes>();
+        merged.addAll(left);
+        merged.addAll(right);
+        return merged;
+    }
+
+    private Map<String, String> mergeAuditContexts(
+            Map<String, String> left, Map<String, String> right) {
+        if (left == null && right == null) {
+            return null;
+        }
+        if (left == null) {
+            return right;
+        }
+        if (right == null) {
+            return left;
+        }
+        var merged = new HashMap<String, String>();
+        merged.putAll(left);
+        merged.putAll(right);
+        return merged;
     }
 }
