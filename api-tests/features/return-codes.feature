@@ -25,7 +25,9 @@ Feature: Return exit codes
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
     When I submit an 'end' event
-    Then I get a 'pyi-escape' page response
+    Then I get a 'prove-identity-no-photo-id' page response
+    When I submit a 'end' event
+    Then I get a 'no-photo-id-exit-find-another-way' page response
     When I submit a 'end' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity

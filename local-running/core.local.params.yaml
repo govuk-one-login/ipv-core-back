@@ -297,7 +297,7 @@ core:
     bav:
       id: bav
       name: Bank account verification
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
