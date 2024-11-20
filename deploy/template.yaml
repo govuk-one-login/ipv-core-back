@@ -1151,6 +1151,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
@@ -1167,6 +1168,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
