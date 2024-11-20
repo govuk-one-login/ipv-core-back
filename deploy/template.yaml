@@ -1513,7 +1513,7 @@ Resources:
       AutoPublishAlias: live
       DeploymentPreference:
         Type: !Ref StepFunctionDeploymentPreference
-        Interval: 10
+        Interval: 1
         Percentage: 10
         Alarms: !If
           - UseCanaryDeploymentAlarms
