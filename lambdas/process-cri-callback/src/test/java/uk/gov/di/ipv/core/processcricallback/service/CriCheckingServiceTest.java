@@ -52,6 +52,9 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitEmptyDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -665,20 +668,82 @@ class CriCheckingServiceTest {
         }
 
         @Test
-        void
-                checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawVcAndUnsuccessfulDrivingLicenceVc()
-                        throws Exception {
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawVcAndFailedDrivingLicenceVc()
+                throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            mockedVcHelper
-                    .when(() -> VcHelper.isSuccessfulVc(any()))
-                    .thenReturn(true)
-                    .thenReturn(false);
+            var drivingPermitVc = vcDrivingPermit();
             when(mockSessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermit()));
+                    .thenReturn(List.of(drivingPermitVc));
+
+            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(M1B_DCMAW_VC)).thenCallRealMethod();
+            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(drivingPermitVc)).thenReturn(false);
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(M1B_DCMAW_VC),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem);
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawVcAndDlVcWithMissingPermit()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            when(mockSessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                    .thenReturn(List.of(vcDrivingPermitMissingDrivingPermit()));
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(M1B_DCMAW_VC),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem);
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawVcAndDlVcEmptyDrivingPermit()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            when(mockSessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                    .thenReturn(List.of(vcDrivingPermitEmptyDrivingPermit()));
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(M1B_DCMAW_VC),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem);
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceIfDrivingPermitIdentifiersDiffer()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            when(mockSessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
+                    .thenReturn(List.of(vcDrivingPermitNonDcmaw()));
 
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
@@ -692,7 +757,7 @@ class CriCheckingServiceTest {
 
         @Test
         void
-                checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndSuccessfulDrivingLicenceVc()
+                checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndDrivingLicenceVcIfIdentifiersMatch()
                         throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
