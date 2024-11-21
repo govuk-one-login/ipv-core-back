@@ -57,7 +57,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FAMILY_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GIVEN_NAMES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
@@ -200,6 +203,11 @@ public class UserIdentityService {
         }
 
         var isBirthDateCorrelated = checkBirthDateCorrelationInCredentials(successfulVcs);
+        LOGGER.info(
+                LogHelper.buildLogMessage("Names and DOB correlated")
+                        .with(LOG_GIVEN_NAMES.getFieldName(), areGivenNamesCorrelated)
+                        .with(LOG_FAMILY_NAME.getFieldName(), isFamilyNameCorrelated)
+                        .with(LOG_BIRTH_DATE.getFieldName(), isBirthDateCorrelated));
 
         return (areGivenNamesCorrelated && isBirthDateCorrelated)
                 || (isFamilyNameCorrelated && isBirthDateCorrelated);

@@ -26,9 +26,6 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
@@ -42,10 +39,8 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.model.NamePart;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -59,12 +54,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GENERATE_IDENTITY_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
@@ -73,6 +66,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSIO
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
@@ -86,13 +80,13 @@ class CheckCoiHandlerTest {
     private static final String IPV_SESSION_ID = "ipv-session-id";
     private static final String CLIENT_SESSION_ID = "client-session-id";
     private static final String USER_ID = "user-id";
+    private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
     private static final String DEVICE_INFORMATION = "dummy-device-information";
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientSessionService;
-    @Mock private VerifiableCredentialService mockVerifiableCredentialService;
     @Mock private SessionCredentialsService mockSessionCredentialService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private EvcsService mockEvcsService;
@@ -110,9 +104,11 @@ class CheckCoiHandlerTest {
         when(mockClientSessionService.getClientOAuthSession(CLIENT_SESSION_ID))
                 .thenReturn(mockClientSessionItem);
         when(mockClientSessionItem.getUserId()).thenReturn(USER_ID);
+        when(mockClientSessionItem.getEvcsAccessToken()).thenReturn(EVCS_ACCESS_TOKEN);
 
         // The actual VCs here are irrelevant as we're mocking the user identity service
-        when(mockVerifiableCredentialService.getVcs(USER_ID)).thenReturn(List.of(M1A_ADDRESS_VC));
+        when(mockEvcsService.getVerifiableCredentials(USER_ID, EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(List.of(M1A_ADDRESS_VC));
         when(mockSessionCredentialService.getCredentials(IPV_SESSION_ID, USER_ID))
                 .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
     }
@@ -227,62 +223,6 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
                 assertTrue(restrictedAuditData.has("device_information"));
-            }
-
-            @Test
-            @MockitoSettings(strictness = LENIENT)
-            void shouldUseEvcsServiceWhenEnabled()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                            EvcsServiceException {
-
-                when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-                when(mockUserIdentityService.areVcsCorrelated(
-                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                        .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
-
-                when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
-                        .thenReturn(List.of(M1A_ADDRESS_VC));
-
-                var request =
-                        ProcessRequest.processRequestBuilder()
-                                .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
-                                .build();
-
-                checkCoiHandler.handleRequest(request, mockContext);
-
-                verify(mockEvcsService, times(1))
-                        .getVerifiableCredentials(USER_ID, null, EvcsVCState.CURRENT);
-                verify(mockVerifiableCredentialService, never()).getVcs(USER_ID);
-            }
-
-            @Test
-            void shouldUseVcStoreWhenEvcsEnabledAndReturnsEmpty()
-                    throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                            EvcsServiceException {
-
-                when(mockConfigService.enabled(EVCS_READ_ENABLED)).thenReturn(true);
-                when(mockUserIdentityService.areVcsCorrelated(
-                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
-                        .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
-                when(mockEvcsService.getVerifiableCredentials(any(), any(), any(EvcsVCState.class)))
-                        .thenReturn(new ArrayList<>());
-
-                var request =
-                        ProcessRequest.processRequestBuilder()
-                                .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
-                                .build();
-
-                checkCoiHandler.handleRequest(request, mockContext);
-
-                verify(mockEvcsService, times(1))
-                        .getVerifiableCredentials(USER_ID, null, EvcsVCState.CURRENT);
-                verify(mockVerifiableCredentialService, times(1)).getVcs(USER_ID);
             }
 
             @Test
@@ -458,7 +398,7 @@ class CheckCoiHandlerTest {
             }
 
             @Test
-            void shouldReturnFailedForFailedReverificationCheckandReverificationStatusSetToFailed()
+            void shouldReturnFailedForFailedReverificationCheckAndReverificationStatusSetToFailed()
                     throws Exception {
                 when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))

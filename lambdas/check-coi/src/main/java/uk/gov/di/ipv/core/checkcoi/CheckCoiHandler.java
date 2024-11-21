@@ -39,14 +39,12 @@ import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
@@ -67,7 +65,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
     private final EvcsService evcsService;
@@ -78,7 +75,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             AuditService auditService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             UserIdentityService userIdentityService,
             EvcsService evcsService) {
@@ -86,7 +82,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.userIdentityService = userIdentityService;
         this.evcsService = evcsService;
@@ -103,7 +98,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.evcsService = new EvcsService(configService);
@@ -140,8 +134,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     null,
                     deviceInformation);
 
-            var oldVcs = getOldIdentity(userId, clientOAuthSession.getEvcsAccessToken());
-
+            var oldVcs =
+                    evcsService.getVerifiableCredentials(
+                            userId, clientOAuthSession.getEvcsAccessToken(), CURRENT);
             var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
@@ -263,18 +258,5 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 new DeviceInformation(deviceInformation));
-    }
-
-    private List<VerifiableCredential> getOldIdentity(String userId, String evcsAccessToken)
-            throws CredentialParseException, EvcsServiceException {
-
-        List<VerifiableCredential> credentials = null;
-        if (configService.enabled(EVCS_READ_ENABLED)) {
-            credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
-        }
-        if (credentials == null || credentials.isEmpty()) {
-            credentials = verifiableCredentialService.getVcs(userId);
-        }
-        return credentials;
     }
 }
