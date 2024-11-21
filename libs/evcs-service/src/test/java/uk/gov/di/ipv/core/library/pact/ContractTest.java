@@ -249,7 +249,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact validCreateUserVcReturnsMessageIdWith200(
+    public RequestResponsePact validCreateUserVcReturnsMessageIdWith202(
             PactDslWithProvider builder) {
         return builder.given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create EVCS user VCs")
@@ -263,7 +263,7 @@ class ContractTest {
                                 ContentType.APPLICATION_JSON.toString()))
                 .body(getRequestBodyForUserVC())
                 .willRespondWith()
-                .status(200)
+                .status(202)
                 .toPact();
     }
 
@@ -291,8 +291,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "validCreateUserVcReturnsMessageIdWith200")
-    void testCreateVcRequestReturnsUsersVcWith200(MockServer mockServer) throws Exception {
+    @PactTestFor(pactMethod = "validCreateUserVcReturnsMessageIdWith202")
+    void testCreateVcRequestReturnsUsersVcWith202(MockServer mockServer) throws Exception {
         // Under Test
         EvcsClient evcsClient = new EvcsClient(mockConfigService);
         try {
