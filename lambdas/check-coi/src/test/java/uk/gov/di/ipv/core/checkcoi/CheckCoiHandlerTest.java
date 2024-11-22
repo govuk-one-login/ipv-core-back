@@ -226,6 +226,47 @@ class CheckCoiHandlerTest {
             }
 
             @Test
+            void shouldDoFullCheckIfReproveIdentityJourney() throws Exception {
+                when(mockUserIdentityService.areVcsCorrelated(
+                                List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
+                        .thenReturn(true);
+                when(mockClientSessionItem.getReproveIdentity()).thenReturn(Boolean.TRUE);
+
+                var request =
+                        ProcessRequest.processRequestBuilder()
+                                .ipvSessionId(IPV_SESSION_ID)
+                                .lambdaInput(null)
+                                .build();
+
+                var responseMap = checkCoiHandler.handleRequest(request, mockContext);
+
+                assertEquals(JOURNEY_COI_CHECK_PASSED_PATH, responseMap.get("journey"));
+                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+                var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
+                        auditEventsCaptured.get(0).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        auditEventsCaptured.get(0).getExtensions());
+                assertEquals(
+                        AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
+                        auditEventsCaptured.get(1).getEventName());
+                assertEquals(
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        auditEventsCaptured.get(1).getExtensions());
+
+                var restrictedAuditData =
+                        getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
+                assertTrue(restrictedAuditData.has("newName"));
+                assertTrue(restrictedAuditData.has("oldName"));
+                assertTrue(restrictedAuditData.has("newBirthDate"));
+                assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("device_information"));
+            }
+
+            @Test
             void
                     shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
                             throws Exception {
