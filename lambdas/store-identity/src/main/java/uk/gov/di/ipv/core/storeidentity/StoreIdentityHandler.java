@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -33,15 +32,10 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -55,7 +49,6 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final SessionCredentialsService sessionCredentialsService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final AuditService auditService;
     private final EvcsService evcsService;
 
@@ -64,14 +57,12 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             IpvSessionService ipvSessionService,
             SessionCredentialsService sessionCredentialsService,
-            VerifiableCredentialService verifiableCredentialService,
             AuditService auditService,
             EvcsService evcsService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.evcsService = evcsService;
     }
@@ -87,7 +78,6 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = AuditService.create(configService);
         this.evcsService = new EvcsService(configService);
     }
@@ -148,30 +138,17 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType)
             throws VerifiableCredentialException, EvcsServiceException {
-        String userId = clientOAuthSessionItem.getUserId();
-        List<VerifiableCredential> credentials =
+        var userId = clientOAuthSessionItem.getUserId();
+        var credentials =
                 sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
-        if (configService.enabled(EVCS_WRITE_ENABLED)) {
-            try {
-                if (identityType != IdentityType.PENDING) {
-                    evcsService.storeCompletedIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                } else {
-                    evcsService.storePendingIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                }
-                credentials.forEach(credential -> credential.setMigrated(Instant.now()));
-            } catch (EvcsServiceException e) {
-                if (configService.enabled(EVCS_READ_ENABLED)) {
-                    throw e;
-                } else {
-                    LOGGER.error(LogHelper.buildErrorMessage("Failed to store EVCS identity", e));
-                }
-            }
+        if (identityType == IdentityType.PENDING) {
+            evcsService.storePendingIdentity(
+                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+        } else {
+            evcsService.storeCompletedIdentity(
+                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
         }
-
-        verifiableCredentialService.storeIdentity(credentials, userId);
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
     }
