@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -44,10 +45,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
@@ -122,7 +125,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var checkType = RequestHelper.getCoiCheckType(request);
+            var checkType = getCheckType(clientOAuthSession, request);
+
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             sendAuditEvent(
@@ -258,5 +262,17 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 new DeviceInformation(deviceInformation));
+    }
+
+    private CoiCheckType getCheckType(
+            ClientOAuthSessionItem clientOAuthSession, ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        if (TRUE.equals(clientOAuthSession.getReproveIdentity())) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Reprove identity flag set - checking full name and DOB"));
+            return FULL_NAME_AND_DOB;
+        }
+        return RequestHelper.getCoiCheckType(request);
     }
 }
