@@ -24,8 +24,6 @@ import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
-import uk.gov.di.ipv.core.library.metadata.MigrationMetadata;
-import uk.gov.di.ipv.core.library.metadata.MigrationMetadataBatchDetails;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -36,7 +34,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -191,85 +188,6 @@ class EvcsClientTest {
         assertEquals("GET", httpRequest.method());
         assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
         assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-    }
-
-    @Test
-    void getUserVcsShouldHandleMigrationMetadata() throws Exception {
-        // Arrange
-        var evcsGetUserVCDtos =
-                List.of(
-                        new EvcsGetUserVCDto(
-                                "vc1",
-                                CURRENT,
-                                OBJECT_MAPPER.convertValue(
-                                        new MigrationMetadata(
-                                                new MigrationMetadataBatchDetails(
-                                                        "batchAMillion", "now")),
-                                        new TypeReference<>() {})),
-                        new EvcsGetUserVCDto(
-                                "vc2",
-                                CURRENT,
-                                OBJECT_MAPPER.convertValue(
-                                        new MigrationMetadata(
-                                                new MigrationMetadataBatchDetails(
-                                                        "batchAMillion", "now")),
-                                        new TypeReference<>() {})),
-                        new EvcsGetUserVCDto(
-                                "vc3",
-                                CURRENT,
-                                OBJECT_MAPPER.convertValue(
-                                        new MigrationMetadata(
-                                                new MigrationMetadataBatchDetails(
-                                                        "batchAMillion", "now")),
-                                        new TypeReference<>() {})));
-
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
-        when(mockHttpResponse.body())
-                .thenReturn(
-                        OBJECT_MAPPER.writeValueAsString(new EvcsGetUserVCsDto(evcsGetUserVCDtos)));
-        // Act
-        var userVcs =
-                evcsClient.getUserVcs(TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY);
-
-        // Assert
-        verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
-        HttpRequest httpRequest = httpRequestCaptor.getValue();
-        assertEquals("GET", httpRequest.method());
-        assertTrue(httpRequest.headers().map().containsKey(AUTHORIZATION));
-        assertTrue(httpRequest.headers().map().containsKey(X_API_KEY_HEADER));
-
-        assertEquals(
-                "batchAMillion",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(0).metadata().get("migrationV001"))
-                        .get("batchId"));
-        assertEquals(
-                "now",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(0).metadata().get("migrationV001"))
-                        .get("timestamp"));
-        assertEquals(
-                "batchAMillion",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(1).metadata().get("migrationV001"))
-                        .get("batchId"));
-        assertEquals(
-                "now",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(1).metadata().get("migrationV001"))
-                        .get("timestamp"));
-        assertEquals(
-                "batchAMillion",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(2).metadata().get("migrationV001"))
-                        .get("batchId"));
-        assertEquals(
-                "now",
-                ((LinkedHashMap<String, Object>)
-                                userVcs.vcs().get(2).metadata().get("migrationV001"))
-                        .get("timestamp"));
     }
 
     @ParameterizedTest
