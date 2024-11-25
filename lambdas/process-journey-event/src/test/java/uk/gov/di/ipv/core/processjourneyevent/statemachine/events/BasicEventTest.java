@@ -25,7 +25,7 @@ class BasicEventTest {
 
     @Test
     void resolveShouldReturnAState() throws Exception {
-        var expectedResult = new TransitionResult(new BasicState());
+        var expectedResult = new TransitionResult(new BasicState(), null, null, null);
         BasicEvent basicEvent = new BasicEvent();
         basicEvent.setTargetStateObj(expectedResult.state());
 

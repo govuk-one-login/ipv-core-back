@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNullElse;
+import static uk.gov.di.ipv.core.library.collections.Merging.mergeLists;
+import static uk.gov.di.ipv.core.library.collections.Merging.mergeMaps;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
-import static uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult.mergeAuditContexts;
-import static uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult.mergeAuditEvents;
 
 public class StateMachine {
 
@@ -61,8 +61,8 @@ public class StateMachine {
             // Add audit events and context from the outer event
             return new TransitionResult(
                     nestedResult.state(),
-                    mergeAuditEvents(result.auditEvents(), nestedResult.auditEvents()),
-                    mergeAuditContexts(result.auditContext(), nestedResult.auditContext()),
+                    mergeLists(result.auditEvents(), nestedResult.auditEvents()),
+                    mergeMaps(result.auditContext(), nestedResult.auditContext()),
                     nestedResult.targetEntryEvent());
         }
 

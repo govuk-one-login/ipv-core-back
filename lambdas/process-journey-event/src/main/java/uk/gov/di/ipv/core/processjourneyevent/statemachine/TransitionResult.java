@@ -16,38 +16,4 @@ public record TransitionResult(
     public TransitionResult(State state) {
         this(state, new ArrayList<>(), new HashMap<>(), null);
     }
-
-    public static List<AuditEventTypes> mergeAuditEvents(
-            List<AuditEventTypes> left, List<AuditEventTypes> right) {
-        if (left == null && right == null) {
-            return new ArrayList<>();
-        }
-        if (left == null) {
-            return right;
-        }
-        if (right == null) {
-            return left;
-        }
-        var merged = new ArrayList<AuditEventTypes>();
-        merged.addAll(left);
-        merged.addAll(right);
-        return merged;
-    }
-
-    public static Map<String, String> mergeAuditContexts(
-            Map<String, String> left, Map<String, String> right) {
-        if (left == null && right == null) {
-            return new HashMap<>();
-        }
-        if (left == null) {
-            return right;
-        }
-        if (right == null) {
-            return left;
-        }
-        var merged = new HashMap<String, String>();
-        merged.putAll(left);
-        merged.putAll(right);
-        return merged;
-    }
 }
