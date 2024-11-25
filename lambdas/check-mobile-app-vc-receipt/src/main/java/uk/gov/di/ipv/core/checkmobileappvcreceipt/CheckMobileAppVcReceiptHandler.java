@@ -172,9 +172,10 @@ public class CheckMobileAppVcReceiptHandler
         }
 
         var vc = verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId());
+        var isVcNull = vc == null;
         var asyncCriStatus =
                 new AsyncCriStatus(
-                        Cri.DCMAW_ASYNC, null, criResponseItem.getStatus(), vc == null, vc != null);
+                        Cri.DCMAW_ASYNC, null, criResponseItem.getStatus(), isVcNull, !isVcNull);
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }

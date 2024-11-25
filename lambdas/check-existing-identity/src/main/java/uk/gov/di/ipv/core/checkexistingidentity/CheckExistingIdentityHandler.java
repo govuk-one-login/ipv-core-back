@@ -212,11 +212,11 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> credentials,
             boolean hasEvcsIdentity,
             boolean isPendingEvcsIdentity) {
-        private boolean hasVc(Cri cri) {
+        private boolean hasVcForCriId(Cri cri) {
             return credentials.stream().anyMatch(vc -> vc.getCri().equals(cri));
         }
 
-        private Long getVcIat(Cri cri) {
+        private Long getVcIatForCriId(Cri cri) {
             var vc =
                     credentials.stream()
                             .filter(credential -> credential.getCri().equals(cri))
@@ -289,7 +289,10 @@ public class CheckExistingIdentityHandler
 
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
-                            userId, vcs::hasVc, vcs::getVcIat, vcs.isPendingEvcsIdentity());
+                            userId,
+                            vcs::hasVcForCriId,
+                            vcs::getVcIatForCriId,
+                            vcs.isPendingEvcsIdentity());
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45

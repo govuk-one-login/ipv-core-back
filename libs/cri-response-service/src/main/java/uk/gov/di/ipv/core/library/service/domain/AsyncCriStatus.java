@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PENDING_PATH;
@@ -22,6 +23,8 @@ public class AsyncCriStatus {
             new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_ABANDON =
+            new JourneyResponse(JOURNEY_ABANDON_PATH);
     private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private Cri cri;
@@ -38,7 +41,7 @@ public class AsyncCriStatus {
             }
             case CriResponseService.STATUS_ABANDON -> {
                 LOGGER.info(LogHelper.buildLogMessage(cri.getId() + " cri abandon."));
-                return getJourneyFail();
+                return getJourneyAbandon(isSameSession);
             }
             case CriResponseService.STATUS_ERROR -> {
                 LOGGER.warn(LogHelper.buildLogMessage(cri.getId() + " cri error."));
@@ -60,6 +63,21 @@ public class AsyncCriStatus {
             }
             case F2F -> {
                 return JOURNEY_PENDING;
+            }
+            default -> {
+                LOGGER.warn(LogHelper.buildLogMessage("Unexpected cri: " + cri.getId()));
+                return JOURNEY_ERROR;
+            }
+        }
+    }
+
+    private JourneyResponse getJourneyAbandon(boolean isSameSession) {
+        switch (cri) {
+            case DCMAW_ASYNC -> {
+                return isSameSession ? JOURNEY_ABANDON : JOURNEY_ERROR;
+            }
+            case F2F -> {
+                return JOURNEY_F2F_FAIL;
             }
             default -> {
                 LOGGER.warn(LogHelper.buildLogMessage("Unexpected cri: " + cri.getId()));
