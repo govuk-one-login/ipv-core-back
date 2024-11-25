@@ -19,7 +19,6 @@ public class CoreBack {
 
     public CoreBack() throws IOException, URISyntaxException {
         ConfigService.setLocal(true);
-        ConfigService.setApiTest(shouldUseApiTestConfig());
 
         var lambdaHandler = new LambdaHandler();
         var journeyEngineHandler = new JourneyEngineHandler();
@@ -53,18 +52,13 @@ public class CoreBack {
         app.start(getPort());
     }
 
-    private boolean shouldUseApiTestConfig() {
-        var useApiTestConfig = System.getenv("USE_API_TEST_CONFIG");
-        return useApiTestConfig != null && useApiTestConfig.equals("true");
-    }
-
     private int getPort() {
         var envPort = System.getenv("PORT");
         return envPort == null ? DEFAULT_PORT : Integer.parseInt(envPort);
     }
 
     private void startAsyncPoller() throws URISyntaxException {
-        var configService = new YamlConfigService(false);
+        var configService = new YamlConfigService();
         var asyncQueueUrl = configService.getParameter("local/asyncQueue/apiBaseUrl");
         var asyncQueueApiKey = configService.getSecret("local/asyncQueue/apiKey");
         var asyncQueueName = configService.getSecret("local/asyncQueue/queueName");

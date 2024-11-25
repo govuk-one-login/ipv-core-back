@@ -15,42 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class YamlConfigServiceTest {
 
     private YamlConfigService getConfigService() throws Exception {
-        return getConfigService(false);
-    }
-
-    private YamlConfigService getConfigService(boolean useApiConfig) throws Exception {
-        var params =
-                new File(YamlConfigServiceTest.class.getResource("/test-parameters.yaml").toURI());
-        var secrets =
-                new File(YamlConfigServiceTest.class.getResource("/test-secrets.yaml").toURI());
-
-        return useApiConfig
-                ? new YamlConfigService(
-                        params,
-                        secrets,
-                        new File(
-                                YamlConfigServiceTest.class
-                                        .getResource("/test-api-config.yaml")
-                                        .toURI()))
-                : new YamlConfigService(params, secrets, null);
-    }
-
-    @Test
-    void usesApiClientConfigWhenSpecified() throws Exception {
-        var configService = getConfigService(true);
-
-        var param = configService.getParameter(ConfigurationVariable.CLIENT_JWKS_URL, "orchStub");
-
-        assertEquals("client-specific-jwks-url", param);
-    }
-
-    @Test
-    void usesBaseParamsWhenSpecifyingNotToUseApiConfig() throws Exception {
-        var configService = getConfigService(false);
-
-        var param = configService.getParameter(ConfigurationVariable.CLIENT_JWKS_URL, "orchStub");
-
-        assertEquals("test-jwks-url", param);
+        return new YamlConfigService(
+                new File(YamlConfigServiceTest.class.getResource("/test-parameters.yaml").toURI()),
+                new File(YamlConfigServiceTest.class.getResource("/test-secrets.yaml").toURI()));
     }
 
     @Test

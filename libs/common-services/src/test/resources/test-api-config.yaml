@@ -1,3 +1,0 @@
-clients:
-  orchStub:
-    jwksUrl: "client-specific-jwks-url"

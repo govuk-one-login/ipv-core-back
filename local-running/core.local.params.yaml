@@ -48,6 +48,18 @@ core:
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
       jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
+    orchApiTest:
+      id: orchApiTest
+      issuer: orchApiTest
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "openid"
+    authApiTest:
+      id: orchApiTest
+      issuer: orchApiTest
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "reverification"
   cimit:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"

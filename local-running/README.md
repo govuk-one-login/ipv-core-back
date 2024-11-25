@@ -41,8 +41,6 @@ If you only need to run a core-back process, then you can run directly as a grad
 - or set up a run configuration in your IDE that executes the gradle task
 
 This might be useful if you are only running the API tests, or are running orch-stub and core-front independently.
-To run the api tests with core-back only (and outside of a container), run core-back with api-test-specific config by setting the `USE_API_TEST_CONFIG` env variable to "true":
-`USE_API_TEST_CONFIG=true ./gradlew :local-running:test`
 
 Core-back will now be running on http://localhost:4502 (for both internal and external APIs).
 
