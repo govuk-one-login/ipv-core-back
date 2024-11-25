@@ -9,8 +9,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PENDING_PATH;
 
 @AllArgsConstructor
@@ -20,10 +20,9 @@ public class AsyncCriStatus {
 
     private static final JourneyResponse JOURNEY_PENDING =
             new JourneyResponse(JOURNEY_PENDING_PATH);
-    private static final JourneyResponse JOURNEY_FAIL_NO_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
+    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private Cri cri;
     private Long iat;
@@ -35,7 +34,7 @@ public class AsyncCriStatus {
         switch (incompleteStatus) {
             case CriResponseService.STATUS_PENDING -> {
                 LOGGER.info(LogHelper.buildLogMessage(cri.getId() + " cri pending verification."));
-                return JOURNEY_PENDING;
+                return getJourneyPending();
             }
             case CriResponseService.STATUS_ABANDON -> {
                 LOGGER.info(LogHelper.buildLogMessage(cri.getId() + " cri abandon."));
@@ -54,17 +53,32 @@ public class AsyncCriStatus {
         }
     }
 
+    private JourneyResponse getJourneyPending() {
+        switch (cri) {
+            case DCMAW_ASYNC -> {
+                return JOURNEY_ERROR;
+            }
+            case F2F -> {
+                return JOURNEY_PENDING;
+            }
+            default -> {
+                LOGGER.warn(LogHelper.buildLogMessage("Unexpected cri: " + cri.getId()));
+                return JOURNEY_ERROR;
+            }
+        }
+    }
+
     private JourneyResponse getJourneyFail() {
         switch (cri) {
             case DCMAW_ASYNC -> {
-                return JOURNEY_FAIL_NO_CI;
+                return JOURNEY_ERROR;
             }
             case F2F -> {
                 return JOURNEY_F2F_FAIL;
             }
             default -> {
                 LOGGER.warn(LogHelper.buildLogMessage("Unexpected cri: " + cri.getId()));
-                return JOURNEY_FAIL_NO_CI;
+                return JOURNEY_ERROR;
             }
         }
     }

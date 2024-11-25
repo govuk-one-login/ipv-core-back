@@ -42,6 +42,11 @@ states:
       next:
         targetState: REPROVE_IDENTITY_START
 
+  DCMAW_ASYNC_COMPLETE:
+    events:
+      next:
+        targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
+
   # Parent states
 
   CRI_STATE:

@@ -88,17 +88,16 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
@@ -117,8 +116,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH);
     private static final JourneyResponse JOURNEY_IN_MIGRATION_REUSE =
             new JourneyResponse(JOURNEY_IN_MIGRATION_REUSE_PATH);
-    private static final JourneyResponse JOURNEY_PENDING =
-            new JourneyResponse(JOURNEY_PENDING_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_LOW =
             new JourneyResponse(JOURNEY_IPV_GPG45_LOW_PATH);
     private static final JourneyResponse JOURNEY_IPV_GPG45_MEDIUM =
@@ -133,10 +130,11 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
-    private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED =
-            new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_PATH);
-    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW =
+            new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
+    private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
+            new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
+    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -368,6 +366,7 @@ public class CheckExistingIdentityHandler
             if (asyncCriStatus.isComplete()) {
                 return buildAsyncCriNoMatchResponse(
                         asyncCriStatus,
+                        lowestGpg45ConfidenceRequested,
                         areGpg45VcsCorrelated,
                         auditEventUser,
                         deviceInformation,
@@ -652,6 +651,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildAsyncCriNoMatchResponse(
             AsyncCriStatus asyncCriStatus,
+            Vot lowestGpg45ConfidenceRequested,
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
@@ -664,9 +664,13 @@ public class CheckExistingIdentityHandler
                     DateUtils.toSecondsSinceEpoch(new Date()) < asyncCriStatus.getIat() + (30 * 60);
             if (isExpired) {
                 LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC expired."));
-                return JOURNEY_FAIL_WITH_NO_CI;
+                return JOURNEY_ERROR;
             }
-            return JOURNEY_DCMAW_ASYNC_VC_RECEIVED;
+            return switch (lowestGpg45ConfidenceRequested) {
+                case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
+                case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
+                default -> JOURNEY_ERROR;
+            };
         }
 
         sendAuditEvent(
