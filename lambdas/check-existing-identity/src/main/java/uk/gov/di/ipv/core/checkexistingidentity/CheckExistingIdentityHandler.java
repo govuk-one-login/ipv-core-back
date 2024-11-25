@@ -61,7 +61,6 @@ import uk.gov.di.model.ContraIndicator;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -211,11 +210,11 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> credentials,
             boolean hasEvcsIdentity,
             boolean isPendingEvcsIdentity) {
-        private boolean hasVcForCriId(Cri cri) {
+        private boolean hasVcForCri(Cri cri) {
             return credentials.stream().anyMatch(vc -> vc.getCri().equals(cri));
         }
 
-        private Long getVcIatForCriId(Cri cri) {
+        private Long getVcIatForCri(Cri cri) {
             var vc =
                     credentials.stream()
                             .filter(credential -> credential.getCri().equals(cri))
@@ -289,8 +288,8 @@ public class CheckExistingIdentityHandler
             var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
                             userId,
-                            vcs::hasVcForCriId,
-                            vcs::getVcIatForCriId,
+                            vcs::hasVcForCri,
+                            vcs::getVcIatForCri,
                             vcs.isPendingEvcsIdentity());
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
