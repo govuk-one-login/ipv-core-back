@@ -42,7 +42,7 @@ public class JourneyUris {
     public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
     public static final String JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH =
             "/journey/operational-profile-reuse";
-    public static final String JOURNEY_PENDING_PATH = "/journey/pending";
+    public static final String JOURNEY_F2F_PENDING_PATH = "/journey/pending";
     public static final String JOURNEY_REPEAT_FRAUD_CHECK_PATH = "/journey/repeat-fraud-check";
     public static final String JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH =
             "/journey/reprove-identity";

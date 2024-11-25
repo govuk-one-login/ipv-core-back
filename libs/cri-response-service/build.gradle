@@ -12,9 +12,6 @@ dependencies {
 			libs.powertoolsParameters,
 			project(":libs:common-services")
 
-	compileOnly libs.lombok
-	annotationProcessor libs.lombok
-
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(":libs:common-services").sourceSets.test.output
