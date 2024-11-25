@@ -28,6 +28,7 @@ public enum Cri {
     private final String id;
     private final boolean isOperationalCri;
     private static final Set<Cri> KBV_CRIS = Set.of(DWP_KBV, EXPERIAN_KBV, HMRC_KBV);
+    public static final Set<Cri> ASYNC_CRIS = Set.of(F2F, DCMAW_ASYNC);
 
     Cri(String id) {
         this(id, false);

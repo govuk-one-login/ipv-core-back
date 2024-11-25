@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.nimbusds.jwt.util.DateUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigratio
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -39,7 +41,6 @@ import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
@@ -51,6 +52,7 @@ import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -58,10 +60,10 @@ import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -72,6 +74,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLE
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -85,10 +88,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -128,6 +133,10 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_LOW =
             new JourneyResponse(JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH);
+    private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED =
+            new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -205,8 +214,20 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> credentials,
             boolean hasEvcsIdentity,
             boolean isPendingEvcsIdentity) {
-        private boolean isF2fIdentity() {
-            return credentials.stream().anyMatch(vc -> vc.getCri().equals(F2F));
+        private boolean hasVc(Cri cri) {
+            return credentials.stream().anyMatch(vc -> vc.getCri().equals(cri));
+        }
+
+        private Long getVcIat(Cri cri) {
+            var vc =
+                    credentials.stream()
+                            .filter(credential -> credential.getCri().equals(cri))
+                            .findFirst();
+            if (vc.isPresent()) {
+                var date = vc.get().getClaimsSet().getIssueTime();
+                return DateUtils.toSecondsSinceEpoch(date);
+            }
+            return null;
         }
     }
 
@@ -267,14 +288,10 @@ public class CheckExistingIdentityHandler
 
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var vcs = getVerifiableCredentials(userId, evcsAccessToken);
-            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
-            final boolean hasF2fVc = vcs.isF2fIdentity();
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
-            final boolean isF2FComplete =
-                    !Objects.isNull(f2fRequest)
-                            && hasF2fVc
-                            && (!configService.enabled(EVCS_READ_ENABLED)
-                                    || vcs.isPendingEvcsIdentity());
+
+            var asyncCriStatus =
+                    criResponseService.getAsyncResponseStatus(
+                            userId, vcs::hasVc, vcs::getVcIat, vcs.isPendingEvcsIdentity());
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -314,10 +331,10 @@ public class CheckExistingIdentityHandler
                     cimitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
-                return isF2FIncomplete
-                        ? buildF2FIncompleteResponse(
-                                f2fRequest) // F2F mitigation journey in progress
-                        : ciScoringCheckResponse.get(); // CI fail or mitigation journey
+                if (asyncCriStatus.isAwaitingVc()) {
+                    return asyncCriStatus.getJourneyForAwaitingVc();
+                }
+                return ciScoringCheckResponse.get();
             }
 
             // Check for credentials correlation failure
@@ -333,7 +350,7 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
-                // We are re-using an existing Vot so it might not be a GPG45 vot
+                // We are re-using an existing Vot, so it might not be a GPG45 vot
                 ipvSessionItem.setTargetVot(
                         clientOAuthSessionItem
                                 .getParsedVtr()
@@ -342,19 +359,22 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
-            // No profile matched but has a pending F2F request
-            if (isF2FIncomplete) {
-                return buildF2FIncompleteResponse(f2fRequest);
+            // No profile matched but has a pending async CRI response item
+            if (asyncCriStatus.isAwaitingVc()) {
+                return asyncCriStatus.getJourneyForAwaitingVc();
             }
 
             // No profile match
-            return isF2FComplete
-                    ? buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated,
-                            auditEventUser,
-                            deviceInformation,
-                            contraIndicators)
-                    : buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
+            if (asyncCriStatus.isComplete()) {
+                return buildAsyncCriNoMatchResponse(
+                        asyncCriStatus,
+                        areGpg45VcsCorrelated,
+                        auditEventUser,
+                        deviceInformation,
+                        contraIndicators);
+            }
+
+            return buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -595,29 +615,6 @@ public class CheckExistingIdentityHandler
         return vcs.stream().map(vc -> vc.getCri().getId()).collect(Collectors.joining(","));
     }
 
-    private JourneyResponse buildF2FIncompleteResponse(CriResponseItem faceToFaceRequest) {
-        switch (faceToFaceRequest.getStatus()) {
-            case CriResponseService.STATUS_PENDING -> {
-                LOGGER.info(LogHelper.buildLogMessage("F2F cri pending verification."));
-                return JOURNEY_PENDING;
-            }
-            case CriResponseService.STATUS_ABANDON -> {
-                LOGGER.info(LogHelper.buildLogMessage("F2F cri abandon."));
-                return JOURNEY_F2F_FAIL;
-            }
-            case CriResponseService.STATUS_ERROR -> {
-                LOGGER.warn(LogHelper.buildLogMessage("F2F cri error."));
-                return JOURNEY_F2F_FAIL;
-            }
-            default -> {
-                LOGGER.warn(
-                        LogHelper.buildLogMessage(
-                                "F2F unexpected status: " + faceToFaceRequest.getStatus()));
-                return JOURNEY_F2F_FAIL;
-            }
-        }
-    }
-
     private Optional<JourneyResponse> checkForProfileMatch(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -653,13 +650,25 @@ public class CheckExistingIdentityHandler
         return Optional.empty();
     }
 
-    private JourneyResponse buildF2FNoMatchResponse(
+    private JourneyResponse buildAsyncCriNoMatchResponse(
+            AsyncCriStatus asyncCriStatus,
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
             throws ConfigException, MitigationRouteException {
-        LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
+        LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
+
+        if (DCMAW_ASYNC.equals(asyncCriStatus.getCri())) {
+            var isExpired =
+                    DateUtils.toSecondsSinceEpoch(new Date()) < asyncCriStatus.getIat() + (30 * 60);
+            if (isExpired) {
+                LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC expired."));
+                return JOURNEY_FAIL_WITH_NO_CI;
+            }
+            return JOURNEY_DCMAW_ASYNC_VC_RECEIVED;
+        }
+
         sendAuditEvent(
                 !areGpg45VcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
