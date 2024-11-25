@@ -38,10 +38,12 @@ public abstract class ConfigService {
 
     @Getter @Setter private static boolean local = false;
 
+    @Getter @Setter private static boolean apiTest = false;
+
     @ExcludeFromGeneratedCoverageReport
     public static ConfigService create() {
         if (isLocal()) {
-            return new YamlConfigService();
+            return new YamlConfigService(isApiTest());
         }
         return new SsmConfigService();
     }
