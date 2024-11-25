@@ -23,8 +23,6 @@ dependencies {
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests'),
-			project(path: ':libs:evcs-migration'),
 			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')

@@ -33,8 +33,6 @@ core:
     coi:
       # Test COI config
       familyNameChars: 5
-  bulkMigration:
-    rolledBackBatchIds: "noneConfigured"
   clients:
     orchStub:
       id: orchStub
