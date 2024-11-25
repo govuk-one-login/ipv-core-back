@@ -2,6 +2,9 @@
 core:
   self:
     componentId: "test-component-id"
+  clients:
+    orchStub:
+      jwksUrl: "test-jwks-url"
   credentialIssuers:
     address:
       connections:
