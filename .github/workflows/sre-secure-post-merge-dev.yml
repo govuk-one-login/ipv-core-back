@@ -11,45 +11,45 @@ on:
       - '.github/workflows/secure-post-merge-notags.yml'
 
 jobs:
-#   check-if-api-tests-changed:
-#     runs-on: ubuntu-latest
-#     outputs:
-#       api-tests-changed: ${{ steps.get-changed-files.outputs.any_changed }}
-#     steps:
-#       - name: Checkout repo
-#         uses: actions/checkout@v4
-#         with:
-#           fetch-depth: 0
+  check-if-api-tests-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      api-tests-changed: ${{ steps.get-changed-files.outputs.any_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-#       - name: Get changed api-tests files
-#         id: get-changed-files
-#         uses: tj-actions/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf # v45.0.4
-#         with:
-#           files: |
-#             api-tests/**
-#             .github/workflows/secure-pipeline-api-tests-image.yml
+      - name: Get changed api-tests files
+        id: get-changed-files
+        uses: tj-actions/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf # v45.0.4
+        with:
+          files: |
+            api-tests/**
+            .github/workflows/sre-secure-pipeline-api-tests-image.yml
 
-#       - name: List changed files
-#         env:
-#           CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
-#         run: |
-#           for file in ${CHANGED_FILES}; do
-#             echo "$file was changed"
-#           done
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${CHANGED_FILES}; do
+            echo "$file was changed"
+          done
 
-#   build-test-images-if-needed:
-#     needs: check-if-api-tests-changed
-#     if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
-#     uses: govuk-one-login/ipv-core-back/.github/workflows/sre-secure-pipeline-api-tests-image.yml
-#     secrets: inherit # pragma: allowlist secret
-#     permissions:
-#       id-token: write
-#       packages: read
-#       contents: read
+  build-test-images-if-needed:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/sre-secure-pipeline-api-tests-image.yml@IPS-1185-dev-pipeline
+    secrets: inherit # pragma: allowlist secret
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
 
   deploy:
-    # needs: build-test-images-if-needed
-    # if: '!failure()'
+    needs: build-test-images-if-needed
+    if: '!failure()'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:

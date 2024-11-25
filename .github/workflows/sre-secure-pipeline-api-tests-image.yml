@@ -1,4 +1,4 @@
-name: Build api-tests image
+name: SRE dev - Build api-tests image
 
 on:
   workflow_call:
@@ -20,22 +20,22 @@ jobs:
         with:
           cosign-release: 'v1.9.0'
 
-      - name: Set up build AWS creds
+      - name: Set up dev AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.SRE_BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Login to build ECR
-        id: login-build-ecr
+      - name: Login to dev ECR
+        id: login-dev-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build, tag, push, and sign api testing image to build
+      - name: Build, tag, push, and sign api testing image to dev
         env:
-          BUILD_ECR_REG: ${{ steps.login-build-ecr.outputs.registry }}
+          BUILD_ECR_REG: ${{ steps.login-dev-ecr.outputs.registry }}
           BUILD_API_TESTS_ECR_REPO: ${{ secrets.SRE_BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
           SHA: ${{ github.sha }}
-          # BUILD_CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
+          DEV_CONTAINER_SIGN_KMS_KEY: ${{ secrets.SRE_CONTAINER_SIGN_KMS_KEY }}
         run: |
           docker build --build-arg GITHUB_PAT=${{ secrets.GITHUB_TOKEN }} \
             -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest \
@@ -45,5 +45,5 @@ jobs:
           docker push $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest
           docker push $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA
 
-# cosign sign --key awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest
-# cosign sign --key awskms:///${BUILD_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA
+          cosign sign --key awskms:///${DEV_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest
+          cosign sign --key awskms:///${DEV_CONTAINER_SIGN_KMS_KEY} $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA
