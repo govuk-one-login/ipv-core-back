@@ -4,16 +4,14 @@ import { getRandomString } from "./random-string-generator.js";
 import { JWTPayload } from "jose";
 
 const sigAlg = "ES256";
-const sigKey = await jose.importJWK(
-  JSON.parse(config.orch.signingKey) as jose.JWK,
-  sigAlg,
-);
+const orchSigningKey = JSON.parse(config.orch.signingKey) as jose.JWK;
+const sigKey = await jose.importJWK(orchSigningKey, sigAlg);
 
 export const createSignedJwt = async (
   payload?: JWTPayload,
 ): Promise<string> => {
   return await new jose.SignJWT(payload)
-    .setProtectedHeader({ alg: sigAlg })
+    .setProtectedHeader({ alg: sigAlg, kid: orchSigningKey.kid })
     .setAudience(payload?.aud || config.core.componentId)
     .setNotBefore(new Date())
     .setIssuedAt()
