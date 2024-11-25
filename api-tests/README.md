@@ -16,10 +16,11 @@
 
 ## Running the tests
 
-There are 3 presets that can be used:
+There are 4 presets that can be used:
 
 - `npm run test:build` - runs against the deployed build environment
 - `npm run test:local` - runs against an already-running local instance of core-back
+- `npm run test:local-container` - runs against a containerised instance of core-back
 - `npm run test:ci` - starts a new local instance of core-back and tests against it
 
 Additional arguments can be passed to cucumber, e.g. to include specific tests: `npm test:local -- --name 'F2F'`
