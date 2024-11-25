@@ -71,7 +71,7 @@ states:
           updateSupported: true
       given-names-only:
         targetJourney: UPDATE_NAME
-        targetState: GIVEN_ONLY_AFTER_RFC_START
+        targetState: NAMES_ONLY_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -80,7 +80,7 @@ states:
           updateSupported: true
       family-name-only:
         targetJourney: UPDATE_NAME
-        targetState: FAMILY_ONLY_AFTER_RFC_START
+        targetState: NAMES_ONLY_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -89,7 +89,7 @@ states:
           updateSupported: true
       given-names-and-address:
         targetJourney: UPDATE_NAME
-        targetState: GIVEN_WITH_ADDRESS_AFTER_RFC_START
+        targetState: NAMES_WITH_ADDRESS_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -98,7 +98,7 @@ states:
           updateSupported: true
       family-name-and-address:
         targetJourney: UPDATE_NAME
-        targetState: FAMILY_WITH_ADDRESS_AFTER_RFC_START
+        targetState: NAMES_WITH_ADDRESS_AFTER_RFC_START
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -106,10 +106,7 @@ states:
           updateFields: family-name,address
           updateSupported: true
       dob:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -117,10 +114,7 @@ states:
           updateFields: dob
           updateSupported: false
       dob-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -128,10 +122,7 @@ states:
           updateFields: dob,given-names
           updateSupported: false
       dob-family:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -139,10 +130,7 @@ states:
           updateFields: dob,family-name
           updateSupported: false
       address-dob:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -150,10 +138,7 @@ states:
           updateFields: address,dob
           updateSupported: false
       dob-family-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -161,10 +146,7 @@ states:
           updateFields: dob,family-name,given-names
           updateSupported: false
       address-dob-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -172,10 +154,7 @@ states:
           updateFields: address,dob,given-names
           updateSupported: false
       address-dob-family:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -183,10 +162,7 @@ states:
           updateFields: address,dob,family-name
           updateSupported: false
       address-dob-family-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -194,10 +170,7 @@ states:
           updateFields: address,dob,family-name,given-names
           updateSupported: false
       family-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -205,10 +178,7 @@ states:
           updateFields: family-name,given-names
           updateSupported: false
       address-family-given:
-        targetState: UPDATE_NAME_DOB
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
+        targetState: UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
           - IPV_USER_DETAILS_UPDATE_SELECTED
@@ -217,17 +187,6 @@ states:
           updateSupported: false
       next:
         targetState: FRAUD_CHECK_RFC
-
-  UPDATE_NAME_DOB:
-    response:
-      type: page
-      pageId: update-name-date-birth
-      context: repeatFraudCheck
-    events:
-      end:
-       targetState: CONFIRM_DETAILS
-       auditEvents:
-         - IPV_USER_DETAILS_UPDATE_ABORTED
 
   UPDATE_NAME_DOB_ALLOW_ACCOUNT_DELETION:
     response:

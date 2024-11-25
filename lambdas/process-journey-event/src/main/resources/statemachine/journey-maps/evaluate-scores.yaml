@@ -7,7 +7,7 @@ states:
   START:
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
+        targetState: CHECK_COI
 
   # Parent states
   CRI_TICF_STATE:
@@ -29,6 +29,22 @@ states:
         targetState: ERROR_NO_TICF
 
   # Journey states
+  CHECK_COI:
+    response:
+      type: process
+      lambda: check-coi
+      lambdaInput:
+        checkType: GIVEN_OR_FAMILY_NAME_AND_DOB
+    events:
+      coi-check-passed:
+        targetState: EVALUATE_GPG45_SCORES
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   EVALUATE_GPG45_SCORES:
     response:
       type: process

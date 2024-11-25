@@ -33,8 +33,6 @@ core:
     coi:
       # Test COI config
       familyNameChars: 5
-  bulkMigration:
-    rolledBackBatchIds: "noneConfigured"
   clients:
     orchStub:
       id: orchStub
@@ -297,7 +295,7 @@ core:
     bav:
       id: bav
       name: Bank account verification
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
@@ -377,7 +375,6 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    updateDetailsAccountDeletion: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
   features:

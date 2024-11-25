@@ -28,6 +28,8 @@ states:
         targetState: PAGE_STATE_WITH_BACK_EVENT
       eventSix:
         targetState: TICF_CRI_STATE
+      eventSeven:
+        targetState: COI_CHECK
 
   CRI_STATE:
     response:
@@ -164,4 +166,12 @@ states:
       lambda: call-ticf-cri
     events:
       next:
+        targetState: ANOTHER_PAGE_STATE
+
+  COI_CHECK:
+    response:
+      type: process
+      lambda: check-coi
+    events:
+      coi-check-passed:
         targetState: ANOTHER_PAGE_STATE

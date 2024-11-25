@@ -1,5 +1,8 @@
 import config from "../config/config.js";
-import { CimitStubDetectRequest } from "../types/cimit-stub.js";
+import {
+  CimitStubDetectRequest,
+  CimitStubUserCisRequest,
+} from "../types/cimit-stub.js";
 
 export const postDetectCi = async (
   body: CimitStubDetectRequest,
@@ -18,5 +21,26 @@ export const postDetectCi = async (
 
   if (!response.ok) {
     throw new Error(`postDetectCI request failed: ${response.statusText}`);
+  }
+};
+
+export const createUserCi = async (
+  userId: string,
+  body: CimitStubUserCisRequest[],
+): Promise<void> => {
+  const response = await fetch(
+    `${config.cimit.managementCimitUrl}/user/${userId}/cis`,
+    {
+      headers: {
+        "x-api-key": config.cimit.managementCimitApiKey,
+        "content-type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`createUserCi request failed: ${response.statusText}`);
   }
 };

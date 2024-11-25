@@ -57,7 +57,10 @@ import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FAMILY_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GIVEN_NAMES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
@@ -179,40 +182,35 @@ public class UserIdentityService {
         return true;
     }
 
-    public boolean areGivenNamesAndDobCorrelated(List<VerifiableCredential> vcs)
+    public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
 
-        if (!checkNamesForCorrelation(
-                getNameProperty(
-                        getIdentityClaimsForNameCorrelation(successfulVcs),
-                        NamePart.NamePartType.GIVEN_NAME))) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
+        var areGivenNamesCorrelated =
+                checkNamesForCorrelation(
+                        getNameProperty(
+                                getIdentityClaimsForNameCorrelation(successfulVcs),
+                                NamePart.NamePartType.GIVEN_NAME));
+
+        var isFamilyNameCorrelated =
+                checkNamesForCorrelation(
+                        getFamilyNameForCoiCheck(
+                                getIdentityClaimsForNameCorrelation(successfulVcs)));
+
+        // Given names AND family name cannot both be changed
+        if (!areGivenNamesCorrelated && !isFamilyNameCorrelated) {
             return false;
         }
 
-        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
-            return false;
-        }
-        return true;
-    }
+        var isBirthDateCorrelated = checkBirthDateCorrelationInCredentials(successfulVcs);
+        LOGGER.info(
+                LogHelper.buildLogMessage("Names and DOB correlated")
+                        .with(LOG_GIVEN_NAMES.getFieldName(), areGivenNamesCorrelated)
+                        .with(LOG_FAMILY_NAME.getFieldName(), isFamilyNameCorrelated)
+                        .with(LOG_BIRTH_DATE.getFieldName(), isBirthDateCorrelated));
 
-    public boolean areFamilyNameAndDobCorrelatedForCoiCheck(List<VerifiableCredential> vcs)
-            throws HttpResponseExceptionWithErrorBody {
-        var successfulVcs = getSuccessfulVcs(vcs);
-
-        if (!checkNamesForCorrelation(
-                getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
-            return false;
-        }
-
-        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
-            return false;
-        }
-        return true;
+        return (areGivenNamesCorrelated && isBirthDateCorrelated)
+                || (isFamilyNameCorrelated && isBirthDateCorrelated);
     }
 
     private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs) {

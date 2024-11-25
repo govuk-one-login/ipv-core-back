@@ -20,6 +20,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,16 +34,28 @@ public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> HTTP_ERROR_MESSAGES_TO_RETRY =
             List.of("GOAWAY received", "Connection reset");
-    private final HttpClient baseClient;
+    private static final Duration MAX_CLIENT_AGE = Duration.ofHours(1);
+    private HttpClient baseClient;
     private final AWSXRayRecorder recorder;
+    private Instant creationTime;
 
     private TracingHttpClient(HttpClient baseClient) {
         this.baseClient = baseClient;
         this.recorder = AWSXRay.getGlobalRecorder();
+        this.creationTime = Instant.now();
     }
 
     public static HttpClient newHttpClient() {
         return new TracingHttpClient(HttpClient.newHttpClient());
+    }
+
+    // Synchronize to prevent race conditions when multiple threads attempt to recreate client
+    private synchronized void recreateBaseClientIfNecessary() {
+        if (creationTime.plus(MAX_CLIENT_AGE).isBefore(Instant.now())) {
+            LOGGER.info("Recreating base HTTP client due to age");
+            this.baseClient = HttpClient.newHttpClient();
+            this.creationTime = Instant.now(); // Reset creation time
+        }
     }
 
     @Override
@@ -110,6 +123,9 @@ public class TracingHttpClient extends HttpClient {
     public <T> HttpResponse<T> send(
             HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
             throws IOException, InterruptedException {
+        // PYIC-7590: Recreate the HTTP client, to avoid HTTP/2 connection issues.
+        // Check for client is 1hour old, and recreate if older.
+        recreateBaseClientIfNecessary();
         try {
             return sendWithTracing(request, responseBodyHandler);
         } catch (IOException e) {
