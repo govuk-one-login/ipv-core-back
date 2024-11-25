@@ -16,6 +16,7 @@ import java.util.function.Function;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.ASYNC_CRIS;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 
 public class CriResponseService {
 
@@ -92,12 +93,16 @@ public class CriResponseService {
         }
 
         var cri = Cri.fromId(criResponseItem.getCredentialIssuer());
-        final boolean hasNoVc = !hasVc.apply(cri);
-        final boolean isComplete =
-                hasVc.apply(cri)
-                        && (!configService.enabled(EVCS_READ_ENABLED) || isPendingEvcsIdentity);
-        final Long iat = getVcIat.apply(cri);
 
-        return new AsyncCriStatus(cri, iat, criResponseItem.getStatus(), hasNoVc, isComplete);
+        var awaitingVc = !hasVc.apply(cri);
+        var isCriPrecededByOtherRequiredVcs = F2F.equals(cri);
+        var isComplete =
+                hasVc.apply(cri)
+                        && (!isCriPrecededByOtherRequiredVcs
+                                || !configService.enabled(EVCS_READ_ENABLED)
+                                || isPendingEvcsIdentity);
+
+        return new AsyncCriStatus(
+                cri, getVcIat.apply(cri), criResponseItem.getStatus(), awaitingVc, isComplete);
     }
 }

@@ -330,7 +330,7 @@ public class CheckExistingIdentityHandler
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
                 if (asyncCriStatus.isAwaitingVc()) {
-                    return asyncCriStatus.getJourneyForAwaitingVc();
+                    return asyncCriStatus.getJourneyForAwaitingVc(false);
                 }
                 return ciScoringCheckResponse.get();
             }
@@ -359,7 +359,7 @@ public class CheckExistingIdentityHandler
 
             // No profile matched but has a pending async CRI response item
             if (asyncCriStatus.isAwaitingVc()) {
-                return asyncCriStatus.getJourneyForAwaitingVc();
+                return asyncCriStatus.getJourneyForAwaitingVc(false);
             }
 
             // No profile match

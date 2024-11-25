@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.service.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -165,22 +166,17 @@ public class CheckMobileAppVcReceiptHandler
         LogHelper.attachComponentId(configService);
 
         // Retrieve and validate cri response and vc
-        var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
-        if (criResponse == null) {
+        var criResponseItem = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
+        if (criResponseItem == null) {
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
         var vc = verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId());
-        if (CriResponseService.STATUS_PENDING.equals(criResponse.getStatus()) && vc == null) {
-            return null;
-        }
-
-        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
-            return JOURNEY_ERROR;
-        }
-
-        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
-            return JOURNEY_ABANDON;
+        var asyncCriStatus =
+                new AsyncCriStatus(
+                        Cri.DCMAW_ASYNC, null, criResponseItem.getStatus(), vc == null, vc != null);
+        if (asyncCriStatus.isAwaitingVc()) {
+            return asyncCriStatus.getJourneyForAwaitingVc(true);
         }
 
         return criCheckingService.checkVcResponse(

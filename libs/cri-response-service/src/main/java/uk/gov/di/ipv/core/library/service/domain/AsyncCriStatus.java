@@ -30,11 +30,11 @@ public class AsyncCriStatus {
     private boolean awaitingVc;
     private boolean isComplete;
 
-    public JourneyResponse getJourneyForAwaitingVc() {
+    public JourneyResponse getJourneyForAwaitingVc(boolean isSameSession) {
         switch (incompleteStatus) {
             case CriResponseService.STATUS_PENDING -> {
                 LOGGER.info(LogHelper.buildLogMessage(cri.getId() + " cri pending verification."));
-                return getJourneyPending();
+                return getJourneyPending(isSameSession);
             }
             case CriResponseService.STATUS_ABANDON -> {
                 LOGGER.info(LogHelper.buildLogMessage(cri.getId() + " cri abandon."));
@@ -53,10 +53,10 @@ public class AsyncCriStatus {
         }
     }
 
-    private JourneyResponse getJourneyPending() {
+    private JourneyResponse getJourneyPending(boolean isSameSession) {
         switch (cri) {
             case DCMAW_ASYNC -> {
-                return JOURNEY_ERROR;
+                return isSameSession ? null : JOURNEY_ERROR;
             }
             case F2F -> {
                 return JOURNEY_PENDING;
