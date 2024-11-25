@@ -12,8 +12,7 @@ public enum CoreFeatureFlag implements FeatureFlag {
     P1_JOURNEYS_ENABLED("p1JourneysEnabled"),
     SQS_ASYNC("sqsAsync"),
     KID_JAR_HEADER("kidJarHeaderEnabled"),
-    DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
-    DOB_EXPERIAN_CHECK_ENABLED("dobExperianCheckEnabled");
+    DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck");
 
     private final String name;
 
