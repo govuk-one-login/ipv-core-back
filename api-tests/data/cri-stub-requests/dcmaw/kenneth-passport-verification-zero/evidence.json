@@ -1,6 +1,6 @@
 {
   "type": "IdentityCheck",
-  "validityScore": 2,
+  "validityScore": 3,
   "strengthScore": 4,
   "failedCheckDetails": [
     {
