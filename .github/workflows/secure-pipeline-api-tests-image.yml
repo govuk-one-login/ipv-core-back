@@ -32,6 +32,7 @@ jobs:
 
       - name: Build, tag, push, and sign api testing image to build
         env:
+          ENVIRONMENT: "build"
           BUILD_ECR_REG: ${{ steps.login-build-ecr.outputs.registry }}
           BUILD_API_TESTS_ECR_REPO: ${{ secrets.BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
           SHA: ${{ github.sha }}
