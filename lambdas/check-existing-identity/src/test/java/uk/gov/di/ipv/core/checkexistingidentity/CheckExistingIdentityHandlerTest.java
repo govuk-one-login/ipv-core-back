@@ -463,9 +463,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnJourneyReuseStoreResponseIfVcIsF2fAndHasPartiallyMigratedVcs()
                 throws CredentialParseException, EvcsServiceException,
                         HttpResponseExceptionWithErrorBody, VerifiableCredentialException {
-            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-            when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(false);
+            Mockito.lenient().when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
             var f2fVc1 = vcF2fM1a();
             f2fVc1.setMigrated(Instant.now());
             var f2fVc2 = vcF2fBrp();
