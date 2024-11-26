@@ -301,7 +301,7 @@ class CheckExistingIdentityHandlerTest {
 
         @ParameterizedTest
         @EnumSource(names = {"M1A", "M1B", "M2B"})
-        void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile(
+        void shouldReturnJourneyReuseResponseIfScoresSatisfyP2Gpg45Profile(
                 Gpg45Profile matchedProfile) throws Exception {
             var hmrcMigrationVC = vcHmrcMigrationPCL200();
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
