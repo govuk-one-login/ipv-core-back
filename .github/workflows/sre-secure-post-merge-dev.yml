@@ -1,6 +1,7 @@
 name: SRE dev - Secure Pipeline Test, Build, Package & Ship Core Back
 
 on:
+  workflow_call:
   push:
     branches:
       - IPS-1185-dev-pipeline

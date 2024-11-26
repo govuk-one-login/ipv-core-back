@@ -23,7 +23,7 @@ jobs:
       - name: Set up dev AWS creds
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.SRE_BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
+          role-to-assume: ${{ secrets.DEV_BUILD_API_TESTS_IMAGE_ECR_REPO_GHA_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Login to dev ECR
@@ -32,10 +32,16 @@ jobs:
 
       - name: Build, tag, push, and sign api testing image to dev
         env:
+          ENVIRONMENT: "dev"
           BUILD_ECR_REG: ${{ steps.login-dev-ecr.outputs.registry }}
-          BUILD_API_TESTS_ECR_REPO: ${{ secrets.SRE_BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
+          BUILD_API_TESTS_ECR_REPO: ${{ secrets.DEV_BUILD_API_TESTS_IMAGE_ECR_REPO_NAME }}
           SHA: ${{ github.sha }}
-          DEV_CONTAINER_SIGN_KMS_KEY: ${{ secrets.SRE_CONTAINER_SIGN_KMS_KEY }}
+          DEV_CONTAINER_SIGN_KMS_KEY: ${{ secrets.DEV_CONTAINER_SIGN_KMS_KEY }}
+          EVCS_STUB_API_KEY: ${{ secrets.DEV_API_KEY_EVCS }}
+          CIMIT_INTERNAL_API_KEY: ${{ secrets.DEV_API_KEY_CIMIT }}
+          CRI_STUB_GEN_CRED_API_KEY: ${{ secrets.DEV_CRI_STUB_GEN_CRED_API_KEY }}
+          MANAGEMENT_CIMIT_STUB_API_KEY: ${{ secrets.DEV_MANAGEMENT_CIMIT_STUB_API_KEY }}
+          MANAGEMENT_TICF_API_KEY: ${{ secrets.DEV_MANAGEMENT_TICF_API_KEY }}
         run: |
           docker build --build-arg GITHUB_PAT=${{ secrets.GITHUB_TOKEN }} \
             -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest \
