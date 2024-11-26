@@ -53,7 +53,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
@@ -76,7 +75,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                     null,
                     CriResponseService.STATUS_PENDING,
                     0,
-                    List.of(EVCS_ASYNC_WRITE_ENABLED.getName()));
+                    List.of());
 
     private static final String TEST_ASYNC_ACCESS_DENIED_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR = "invalid";
