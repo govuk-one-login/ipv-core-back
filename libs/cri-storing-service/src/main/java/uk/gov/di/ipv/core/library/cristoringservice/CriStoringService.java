@@ -140,7 +140,8 @@ public class CriStoringService {
             String deviceInformation,
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
             throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
@@ -150,12 +151,7 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
-        List<VerifiableCredential> mitigationVcList = new ArrayList<>();
-        if (!cri.equals(TICF)) {
-            mitigationVcList.addAll(
-                    sessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), userId, true));
-        }
+        List<VerifiableCredential> mitigationVcList = new ArrayList<>(sessionVcs);
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {

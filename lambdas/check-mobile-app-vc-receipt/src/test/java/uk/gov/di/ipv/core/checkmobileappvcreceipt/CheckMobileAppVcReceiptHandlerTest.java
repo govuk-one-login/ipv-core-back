@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
@@ -57,6 +58,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private CriResponseService criResponseService;
     @Mock private CriCheckingService criCheckingService;
     @Mock private VerifiableCredentialService verifiableCredentialService;
+    @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
 
     @Test
@@ -147,8 +149,11 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
         when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync")).thenReturn(vc);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), TEST_USER_ID))
+                .thenReturn(List.of());
         when(criCheckingService.checkVcResponse(
-                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem, List.of()))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act

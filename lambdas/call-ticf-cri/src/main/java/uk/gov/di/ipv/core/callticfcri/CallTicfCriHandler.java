@@ -170,7 +170,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 request.getDeviceInformation(),
                 ticfVcs,
                 clientOAuthSessionItem,
-                ipvSessionItem);
+                ipvSessionItem,
+                List.of());
 
         List<ContraIndicator> cis =
                 cimitService.getContraIndicators(
