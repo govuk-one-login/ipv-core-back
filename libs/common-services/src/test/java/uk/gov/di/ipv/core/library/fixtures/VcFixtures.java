@@ -968,6 +968,24 @@ public interface VcFixtures {
                             .build(),
                     Instant.ofEpochSecond(1705986521));
 
+    static VerifiableCredential vcDcmawAsync() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DRIVING_LICENCE,
+                TestVc.builder()
+                        .evidence(DCMAW_EVIDENCE_DATA_CHECK)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://driving-license-cri.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1705986521));
+    }
+
     static VerifiableCredential vcF2fM1a() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
