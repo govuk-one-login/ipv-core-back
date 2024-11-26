@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -169,6 +170,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         successfulCheck
                                 ? ReverificationStatus.SUCCESS
                                 : ReverificationStatus.FAILED);
+                if (!successfulCheck) {
+                    ipvSession.setFailureCode(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH);
+                    ipvSession.setFailureDescription("Failed to match identity.");
+                }
             }
 
             if (!successfulCheck) {

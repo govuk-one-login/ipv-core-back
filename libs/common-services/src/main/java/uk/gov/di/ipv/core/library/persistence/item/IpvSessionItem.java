@@ -6,6 +6,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
@@ -36,6 +37,10 @@ public class IpvSessionItem implements PersistenceItem {
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
     private List<String> stateStack = new ArrayList<>();
+
+    // These are used as part of an unsuccessful reverification response
+    private ReverificationFailureCode failureCode;
+    private String failureDescription;
 
     /*
      * journeyContext is used a way of tracking the origin of journeys

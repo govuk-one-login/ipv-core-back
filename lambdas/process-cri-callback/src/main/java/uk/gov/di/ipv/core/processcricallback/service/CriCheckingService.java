@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -252,11 +253,13 @@ public class CriCheckingService {
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
         if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+            setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
         for (var vc : newVcs) {
             if (!VcHelper.isSuccessfulVc(vc)) {
+                setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
         }
@@ -267,6 +270,11 @@ public class CriCheckingService {
         }
 
         return JOURNEY_NEXT;
+    }
+
+    private void setFailedIdentityCheckOnIpvSessionItem(IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setFailureCode(ReverificationFailureCode.IDENTITY_CHECK_FAILED);
+        ipvSessionItem.setFailureDescription("Identity check failed.");
     }
 
     private boolean requiresAuthoritativeSourceCheck(

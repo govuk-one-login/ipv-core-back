@@ -7,14 +7,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public record ReverificationResponse(
         boolean success,
         String sub,
-        @JsonProperty("error_code") String errorCode,
-        @JsonProperty("error_description") String errorDescription) {
+        @JsonProperty("failure_code") String errorCode,
+        @JsonProperty("failure_description") String errorDescription) {
     public static ReverificationResponse successResponse(String sub) {
         return new ReverificationResponse(true, sub, null, null);
     }
 
     public static ReverificationResponse failureResponse(
-            String sub, String errorCode, String errorDescription) {
-        return new ReverificationResponse(false, sub, errorCode, errorDescription);
+            String sub, ReverificationFailureCode failureCode, String failureDescription) {
+        return new ReverificationResponse(
+                false, sub, failureCode.getFailureCode(), failureDescription);
     }
 }
