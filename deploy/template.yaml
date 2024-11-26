@@ -2452,7 +2452,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
       VpcConfig:
         SubnetIds:
@@ -2495,8 +2494,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
       AutoPublishAlias: live
