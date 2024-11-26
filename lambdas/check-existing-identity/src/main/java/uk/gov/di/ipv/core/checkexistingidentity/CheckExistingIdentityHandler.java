@@ -367,6 +367,7 @@ public class CheckExistingIdentityHandler
             if (asyncCriStatus.isComplete()) {
                 return buildAsyncCriNoMatchResponse(
                         asyncCriStatus,
+                        vcs,
                         lowestGpg45ConfidenceRequested,
                         areGpg45VcsCorrelated,
                         auditEventUser,
@@ -630,21 +631,26 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildAsyncCriNoMatchResponse(
             AsyncCriStatus asyncCriStatus,
+            VerifiableCredentialBundle vcs,
             Vot lowestGpg45ConfidenceRequested,
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException {
+            throws ConfigException, MitigationRouteException, VerifiableCredentialException {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
         if (DCMAW_ASYNC.equals(asyncCriStatus.cri())) {
             var isExpired =
-                    DateUtils.toSecondsSinceEpoch(new Date()) < asyncCriStatus.iat() + (30 * 60);
+                    DateUtils.toSecondsSinceEpoch(new Date()) > asyncCriStatus.iat() + (30 * 60);
             if (isExpired) {
                 LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC expired."));
                 return JOURNEY_ERROR;
             }
+
+            sessionCredentialsService.persistCredentials(
+                    vcs.credentials, auditEventUser.getSessionId(), false);
+
             return switch (lowestGpg45ConfidenceRequested) {
                 case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
                 case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
