@@ -67,8 +67,6 @@ import static uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator.CL
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
@@ -199,7 +197,9 @@ public class InitialiseIpvSessionHandler
                             clientOAuthSessionId,
                             claimsSet,
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
-                            getEvcsAccessToken(claimsSet));
+                            validateEvcsAccessToken(
+                                    getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken),
+                                    claimsSet));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -342,10 +342,8 @@ public class InitialiseIpvSessionHandler
                     validateHmrcInheritedIdentity(userId, inheritedIdentityJwtClaim);
             sendInheritedIdentityReceivedAuditEvent(
                     inheritedIdentityVc, auditEventUser, deviceInformation);
-            if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                storeInheritedIdentity(
-                        userId, ipvSessionItem, clientOAuthSessionItem, inheritedIdentityVc);
-            }
+            storeInheritedIdentity(
+                    userId, ipvSessionItem, clientOAuthSessionItem, inheritedIdentityVc);
         } catch (VerifiableCredentialException | UnrecognisedVotException e) {
             throw new RecoverableJarValidationException(
                     INVALID_INHERITED_IDENTITY_ERROR_OBJECT.setDescription(
@@ -424,21 +422,6 @@ public class InitialiseIpvSessionHandler
         }
 
         return true;
-    }
-
-    private String getEvcsAccessToken(JWTClaimsSet claimsSet)
-            throws RecoverableJarValidationException, ParseException {
-        try {
-            return validateEvcsAccessToken(
-                    getJarUserInfo(claimsSet).map(JarUserInfo::evcsAccessToken), claimsSet);
-        } catch (RecoverableJarValidationException | ParseException e) {
-            if (configService.enabled(EVCS_WRITE_ENABLED)
-                    || configService.enabled(EVCS_READ_ENABLED)) {
-                throw e;
-            } else {
-                return null;
-            }
-        }
     }
 
     private String validateEvcsAccessToken(
