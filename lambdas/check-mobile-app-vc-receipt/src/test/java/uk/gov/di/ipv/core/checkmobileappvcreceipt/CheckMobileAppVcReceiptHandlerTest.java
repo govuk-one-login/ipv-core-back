@@ -24,9 +24,9 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -49,6 +50,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     private static final String TEST_IPV_SESSION_ID = "test_ipv_session_id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = "test_client_oauth_id";
     private static final String TEST_USER_ID = "test_user_id";
+    private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     @Mock private Context mockContext;
     @Mock private SignedJWT mockSignedJwt;
     @Mock private ConfigService configService;
@@ -56,7 +58,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CriResponseService criResponseService;
     @Mock private CriCheckingService criCheckingService;
-    @Mock private VerifiableCredentialService verifiableCredentialService;
+    @Mock private EvcsService evcsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
 
     @Test
@@ -146,7 +148,9 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(verifiableCredentialService.getVc(TEST_USER_ID, "dcmawAsync")).thenReturn(vc);
+        when(evcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(Map.of(CURRENT, List.of(vc)));
         when(criCheckingService.checkVcResponse(
                         List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
@@ -168,6 +172,16 @@ class CheckMobileAppVcReceiptHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
+        when(mockSignedJwt.getJWTClaimsSet())
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                Map.of(
+                                        "vc",
+                                        Map.of("type", List.of("IdentityAssertionCredential")))));
+        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+        when(evcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(Map.of(CURRENT, List.of(vc)));
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ABANDON);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
@@ -189,6 +203,16 @@ class CheckMobileAppVcReceiptHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
+        when(mockSignedJwt.getJWTClaimsSet())
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                Map.of(
+                                        "vc",
+                                        Map.of("type", List.of("IdentityAssertionCredential")))));
+        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+        when(evcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(Map.of(CURRENT, List.of(vc)));
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ERROR);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
@@ -203,7 +227,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     }
 
     @Test
-    void shouldReturn404WhenCriResponseStatusPendingAndVcNotFound() throws Exception {
+    void shouldReturn404WhenVcNotFound() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState();
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
@@ -213,6 +237,9 @@ class CheckMobileAppVcReceiptHandlerTest {
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
+        when(evcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(Map.of(CURRENT, List.of()));
 
         // Act
         var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
@@ -261,7 +288,10 @@ class CheckMobileAppVcReceiptHandlerTest {
     }
 
     private ClientOAuthSessionItem buildValidClientOAuthSessionItem() {
-        return ClientOAuthSessionItem.builder().userId(TEST_USER_ID).build();
+        return ClientOAuthSessionItem.builder()
+                .userId(TEST_USER_ID)
+                .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
+                .build();
     }
 
     private CriResponseItem buildValidCriResponseItem(String status) {
