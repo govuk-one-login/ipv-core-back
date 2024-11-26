@@ -172,16 +172,6 @@ class CheckMobileAppVcReceiptHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(mockSignedJwt.getJWTClaimsSet())
-                .thenReturn(
-                        JWTClaimsSet.parse(
-                                Map.of(
-                                        "vc",
-                                        Map.of("type", List.of("IdentityAssertionCredential")))));
-        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(evcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(Map.of(CURRENT, List.of(vc)));
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ABANDON);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
@@ -203,16 +193,6 @@ class CheckMobileAppVcReceiptHandlerTest {
                 .thenReturn(buildValidIpvSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
-        when(mockSignedJwt.getJWTClaimsSet())
-                .thenReturn(
-                        JWTClaimsSet.parse(
-                                Map.of(
-                                        "vc",
-                                        Map.of("type", List.of("IdentityAssertionCredential")))));
-        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(evcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(Map.of(CURRENT, List.of(vc)));
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ERROR);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);

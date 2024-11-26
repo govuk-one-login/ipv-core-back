@@ -175,6 +175,14 @@ public class CheckMobileAppVcReceiptHandler
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
+        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
+            return JOURNEY_ERROR;
+        }
+
+        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
+            return JOURNEY_ABANDON;
+        }
+
         var dcmawAsyncVc =
                 evcsService
                         .getVerifiableCredentialsByState(
@@ -185,14 +193,6 @@ public class CheckMobileAppVcReceiptHandler
                         .findFirst();
         if (dcmawAsyncVc.isEmpty()) {
             return null;
-        }
-
-        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
-            return JOURNEY_ERROR;
-        }
-
-        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
-            return JOURNEY_ABANDON;
         }
 
         return criCheckingService.checkVcResponse(
