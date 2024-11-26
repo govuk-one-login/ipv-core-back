@@ -23,7 +23,7 @@ export CORE_BACK_INTERNAL_API_KEY
 EVCS_STUB_API_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/evcs/apiKey | jq -r .SecretString)
 export EVCS_STUB_API_KEY
 
-CRI_STUB_GEN_CRED_API_KEY=$(aws secretsmanager get-secret-value --secret-id CriStubGenCredApiKey | jq -r .SecretString)
+CRI_STUB_GEN_CRED_API_KEY=$(aws secretsmanager get-secret-value --secret-id /${CORE_ENV}/CriStubGenCredApiKey | jq -r .SecretString)
 export CRI_STUB_GEN_CRED_API_KEY
 
 MANAGEMENT_TICF_API_KEY=$(aws secretsmanager get-secret-value --secret-id /build/core/credentialIssuers/ticf/connections/stub/apiKey | jq -r .SecretString)

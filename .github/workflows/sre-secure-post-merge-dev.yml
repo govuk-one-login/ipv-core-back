@@ -2,14 +2,14 @@ name: SRE dev - Secure Pipeline Test, Build, Package & Ship Core Back
 
 on:
   workflow_call:
-  # push:
-  #   branches:
-  #     - IPS-1185-dev-pipeline
-  #   paths-ignore:
-  #     - 'deploy-delete-user-data/**'
-  #     - '.github/workflows/secure-post-merge.yml'
-  #     - 'lambdas/delete-user-data/**'
-  #     - '.github/workflows/secure-post-merge-notags.yml'
+  push:
+    branches:
+      - IPS-1185-dev-pipeline
+    paths-ignore:
+      - 'deploy-delete-user-data/**'
+      - '.github/workflows/secure-post-merge.yml'
+      - 'lambdas/delete-user-data/**'
+      - '.github/workflows/secure-post-merge-notags.yml'
 
 jobs:
   check-if-api-tests-changed:
