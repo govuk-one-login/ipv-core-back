@@ -48,9 +48,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DOB_EXPERIAN_CHECK_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -68,7 +66,7 @@ public class UserIdentityService {
     private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, DRIVING_LICENCE);
 
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS);
-    private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS, BAV);
+    private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
@@ -318,15 +316,7 @@ public class UserIdentityService {
         for (var vc : vcs) {
             IdentityClaim identityClaim = getIdentityClaim(vc);
             if (isBirthDateEmpty(identityClaim.getBirthDate())) {
-                List<Cri> criTypesExcludedForDobCorrelation =
-                        new ArrayList<>(CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION);
-                if (configService.enabled(DOB_EXPERIAN_CHECK_ENABLED)) {
-                    criTypesExcludedForDobCorrelation =
-                            criTypesExcludedForDobCorrelation.stream()
-                                    .filter(cri -> !BAV.equals(cri))
-                                    .toList();
-                }
-                if (criTypesExcludedForDobCorrelation.contains(vc.getCri())) {
+                if (CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION.contains(vc.getCri())) {
                     continue;
                 }
                 addLogMessage(vc, "Birthdate property is missing from VC");
