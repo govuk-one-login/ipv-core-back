@@ -38,7 +38,7 @@ jobs:
           SHA: ${{ github.sha }}
           BUILD_CONTAINER_SIGN_KMS_KEY: ${{ secrets.CONTAINER_SIGN_KMS_KEY }}
         run: |
-          docker build --build-arg GITHUB_PAT=${{ secrets.GITHUB_TOKEN }} \
+          docker build --build-arg GITHUB_PAT=${{ secrets.GITHUB_TOKEN }} --build-arg ENVIRONMENT=${{ env.ENVIRONMENT }} \
             -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:latest \
             -t $BUILD_ECR_REG/$BUILD_API_TESTS_ECR_REPO:$SHA \
             -f api-tests/secure-pipeline/api-tests.Dockerfile .
