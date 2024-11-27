@@ -37,6 +37,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -812,6 +813,8 @@ class CheckExistingIdentityHandlerTest {
                                 true));
         Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
+                .thenReturn(OauthCriConfig.builder().ttl(1800).build());
 
         clientOAuthSessionItem.setVtr(vtr);
 
@@ -844,7 +847,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyErrorForDcmawAsyncCompleteAndVcHasNoIat()
+    void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcHasNoIat()
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException {
         // Arrange
@@ -866,7 +869,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         // Assert
-        assertEquals(JOURNEY_ERROR, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
@@ -876,7 +879,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyErrorForDcmawAsyncCompleteAndVcIsExpired()
+    void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException {
         // Arrange
@@ -894,6 +897,8 @@ class CheckExistingIdentityHandlerTest {
                                 false,
                                 true));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(configService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
+                .thenReturn(OauthCriConfig.builder().ttl(1800).build());
 
         // Act
         JourneyResponse journeyResponse =
@@ -902,7 +907,7 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         // Assert
-        assertEquals(JOURNEY_ERROR, journeyResponse);
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
