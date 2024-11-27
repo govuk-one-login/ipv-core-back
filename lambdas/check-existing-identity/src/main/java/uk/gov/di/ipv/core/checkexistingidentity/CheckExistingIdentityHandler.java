@@ -773,11 +773,11 @@ public class CheckExistingIdentityHandler
         switch (preferredNewIdentityLevel) {
             case P1 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-                return JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
+                return JOURNEY_IPV_GPG45_LOW;
             }
             case P2 -> {
                 LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
-                return JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
+                return JOURNEY_IPV_GPG45_MEDIUM;
             }
             default -> {
                 LOGGER.info(LogHelper.buildLogMessage("Invalid preferredNewIdentityLevel"));
