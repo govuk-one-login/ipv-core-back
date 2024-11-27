@@ -222,11 +222,11 @@ public class CheckExistingIdentityHandler
             if (vc.isPresent()) {
                 var date = vc.get().getClaimsSet().getIssueTime();
                 if (date == null) {
-                    return null;
+                    return 0L;
                 }
                 return DateUtils.toSecondsSinceEpoch(date);
             }
-            return null;
+            return 0L;
         }
     }
 
