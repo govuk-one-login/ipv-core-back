@@ -122,7 +122,8 @@ core:
           "componentId":"https://dcmaw-async.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmawAsync",
           "requiresApiKey": "false",
-          "jwksUrl":"https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json"
+          "jwksUrl":"https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json",
+          "ttl": "1800"
         }'
     fraud:
       id: fraud

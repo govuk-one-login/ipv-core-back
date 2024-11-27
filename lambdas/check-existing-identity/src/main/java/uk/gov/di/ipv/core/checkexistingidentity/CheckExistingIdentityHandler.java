@@ -81,6 +81,7 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -316,7 +317,7 @@ public class CheckExistingIdentityHandler
                     Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                if (lowestGpg45ConfidenceRequested == Vot.P1) {
+                if (lowestGpg45ConfidenceRequested == P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -640,20 +641,25 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException, VerifiableCredentialException {
+            throws ConfigException, MitigationRouteException, VerifiableCredentialException,
+                    HttpResponseExceptionWithErrorBody {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
         if (DCMAW_ASYNC.equals(asyncCriStatus.cri())) {
             if (asyncCriStatus.iat() == null) {
                 LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC has no iat."));
-                return JOURNEY_ERROR;
+                return getNewIdentityJourney(lowestGpg45ConfidenceRequested);
             }
 
+            var connection = configService.getActiveConnection(DCMAW_ASYNC);
+            var criConfig = configService.getOauthCriConfigForConnection(connection, DCMAW_ASYNC);
+
             var isExpired =
-                    DateUtils.toSecondsSinceEpoch(new Date()) > asyncCriStatus.iat() + (30 * 60);
+                    DateUtils.toSecondsSinceEpoch(new Date())
+                            > asyncCriStatus.iat() + criConfig.getTtl();
             if (isExpired) {
                 LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC expired."));
-                return JOURNEY_ERROR;
+                return getNewIdentityJourney(lowestGpg45ConfidenceRequested);
             }
 
             sessionCredentialsService.persistCredentials(
@@ -695,7 +701,7 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildNoMatchResponse(
             List<ContraIndicator> contraIndicators, Vot preferredNewIdentityLevel)
-            throws ConfigException, MitigationRouteException {
+            throws ConfigException, MitigationRouteException, HttpResponseExceptionWithErrorBody {
 
         var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
@@ -709,13 +715,7 @@ public class CheckExistingIdentityHandler
                                                     mitigatedCI.get())));
         }
 
-        if (preferredNewIdentityLevel == Vot.P1) {
-            LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
-            return JOURNEY_IPV_GPG45_LOW;
-        }
-
-        LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
-        return JOURNEY_IPV_GPG45_MEDIUM;
+        return getNewIdentityJourney(preferredNewIdentityLevel);
     }
 
     private JourneyResponse buildReuseResponse(
@@ -766,6 +766,25 @@ public class CheckExistingIdentityHandler
         migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
 
         return vcBundle.isPendingEvcsIdentity() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+    }
+
+    private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
+            throws HttpResponseExceptionWithErrorBody {
+        switch (preferredNewIdentityLevel) {
+            case P1 -> {
+                LOGGER.info(LogHelper.buildLogMessage("New P1 IPV journey required"));
+                return JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
+            }
+            case P2 -> {
+                LOGGER.info(LogHelper.buildLogMessage("New P2 IPV journey required"));
+                return JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
+            }
+            default -> {
+                LOGGER.info(LogHelper.buildLogMessage("Invalid preferredNewIdentityLevel"));
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_VTR_CLAIM);
+            }
+        }
     }
 
     private void migrateCredentialsToEVCS(
