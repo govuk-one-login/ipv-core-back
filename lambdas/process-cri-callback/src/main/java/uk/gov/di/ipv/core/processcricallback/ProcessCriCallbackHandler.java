@@ -122,7 +122,8 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService);
+                        sessionCredentialsService,
+                        ipvSessionService);
         criStoringService =
                 new CriStoringService(
                         configService,

@@ -40,7 +40,6 @@ public class IpvSessionItem implements PersistenceItem {
 
     // These are used as part of an unsuccessful reverification response
     private ReverificationFailureCode failureCode;
-    private String failureDescription;
 
     /*
      * journeyContext is used a way of tracking the origin of journeys

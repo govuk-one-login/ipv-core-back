@@ -16,8 +16,8 @@ public record ReverificationResponse(
     }
 
     public static ReverificationResponse failureResponse(
-            String sub, ReverificationFailureCode failureCode, String failureDescription) {
+            String sub, ReverificationFailureCode failureCode) {
         return new ReverificationResponse(
-                false, sub, failureCode.getFailureCode(), failureDescription);
+                false, sub, failureCode.getFailureCode(), failureCode.getFailureDescription());
     }
 }

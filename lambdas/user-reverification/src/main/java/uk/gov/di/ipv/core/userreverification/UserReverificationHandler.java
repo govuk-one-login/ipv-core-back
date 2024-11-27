@@ -83,12 +83,8 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                         ipvSessionItem.getFailureCode() != null
                                 ? ipvSessionItem.getFailureCode()
                                 : DEFAULT_FAILURE_CODE;
-                var failureDesc =
-                        ipvSessionItem.getFailureDescription() != null
-                                ? ipvSessionItem.getFailureDescription()
-                                : DEFAULT_FAILURE_MESSAGE;
 
-                response = ReverificationResponse.failureResponse(userId, failureCode, failureDesc);
+                response = ReverificationResponse.failureResponse(userId, failureCode);
             }
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
         } catch (ParseException e) {

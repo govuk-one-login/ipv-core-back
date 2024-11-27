@@ -172,7 +172,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                 : ReverificationStatus.FAILED);
                 if (!successfulCheck) {
                     ipvSession.setFailureCode(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH);
-                    ipvSession.setFailureDescription("Failed to match identity.");
+                    ipvSessionService.updateIpvSession(ipvSession);
                 }
             }
 

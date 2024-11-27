@@ -503,7 +503,7 @@ Then(
 );
 
 Then(
-  /^I get a(?:n)? (successful|unsuccessful) MFA reset result( with failureCode '([\w_]+)')?$/,
+  /^I get a(?:n)? (successful|unsuccessful) MFA reset result( with failure code '([\w_]+)')?$/,
   async function (
     this: World,
     expectedMfaResetResult: string,
