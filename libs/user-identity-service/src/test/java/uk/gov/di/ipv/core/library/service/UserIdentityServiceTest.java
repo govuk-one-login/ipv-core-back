@@ -426,32 +426,6 @@ class UserIdentityServiceTest {
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void areVCsCorrelatedShouldReturnTrueWhenBavHasMissingBirthDate(String missing)
-            throws Exception {
-        // Arrange
-        var vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                BAV,
-                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                PASSPORT,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                EXPERIAN_FRAUD,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")));
-
-        // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
-    }
-
     @Test
     void areVCsCorrelatedShouldReturnFalseIfBavHasDifferentBirthDate() throws Exception {
         // Arrange

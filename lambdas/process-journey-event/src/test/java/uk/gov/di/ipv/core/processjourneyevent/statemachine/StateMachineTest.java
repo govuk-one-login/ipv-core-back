@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -12,6 +13,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Journey
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,6 +79,124 @@ class StateMachineTest {
 
         var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
 
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldPreserveAuditEventsAndContextFromFirstTransitionIntoNestedJourney()
+            throws Exception {
+        // Arrange
+        var nestedResult = new TransitionResult(new BasicState());
+        State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
+        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(nestedResult);
+
+        State startingState = mock(BasicState.class);
+        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(
+                        new TransitionResult(
+                                nestedJourneyInvokeState,
+                                Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                                Map.of("testKey", "testValue"),
+                                null));
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+
+        // Assert
+        var expectedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey", "testValue"),
+                        null);
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldPreserveAuditEventsAndContextFromSecondTransitionIntoNestedJourney()
+            throws Exception {
+        // Arrange
+        var nestedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey", "testValue"),
+                        null);
+        State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
+        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(nestedResult);
+
+        State startingState = mock(BasicState.class);
+        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(new TransitionResult(nestedJourneyInvokeState));
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+
+        // Assert
+        var expectedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey", "testValue"),
+                        null);
+        assertEquals(expectedResult, actualResult);
+    }
+
+    @Test
+    void transitionShouldCombineAuditEventsAndContextFromFirstAndSecondTransitionIntoNestedJourney()
+            throws Exception {
+        // Arrange
+        var nestedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey1", "testValue1"),
+                        null);
+        State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
+        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(nestedResult);
+
+        State startingState = mock(BasicState.class);
+        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+                .thenReturn(
+                        new TransitionResult(
+                                nestedJourneyInvokeState,
+                                Arrays.asList(AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START),
+                                Map.of("testKey2", "testValue2"),
+                                null));
+
+        StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
+        when(mockStateMachineInitializer.initialize())
+                .thenReturn(Map.of("START_STATE", startingState));
+
+        StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
+
+        // Act
+        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+
+        // Assert
+        var expectedResult =
+                new TransitionResult(
+                        new BasicState(),
+                        Arrays.asList(
+                                AuditEventTypes.IPV_ACCOUNT_INTERVENTION_START,
+                                AuditEventTypes.IPV_USER_DETAILS_UPDATE_START),
+                        Map.of("testKey1", "testValue1", "testKey2", "testValue2"),
+                        null);
         assertEquals(expectedResult, actualResult);
     }
 

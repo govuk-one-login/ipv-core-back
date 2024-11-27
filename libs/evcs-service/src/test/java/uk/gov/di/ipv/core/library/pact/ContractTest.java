@@ -173,7 +173,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidApiKeyReturns401(PactDslWithProvider builder) {
+    public RequestResponsePact invalidApiKeyReturns403(PactDslWithProvider builder) {
         return builder.given("invalid-api-key is an invalid API key")
                 .given("test-acess-token is a valid access token")
                 .given("test-user-id has no PENDING_RETURN VC")
@@ -188,13 +188,13 @@ class ContractTest {
                                 "Authorization",
                                 "Bearer " + TEST_EVCS_ACCESS_TOKEN))
                 .willRespondWith()
-                .status(401)
+                .status(403)
                 .toPact();
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidApiKeyReturns401")
-    void testRetrieveVcRequestReturns401(MockServer mockServer) {
+    @PactTestFor(pactMethod = "invalidApiKeyReturns403")
+    void testRetrieveVcRequestReturns403(MockServer mockServer) {
         // Mock Data
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
@@ -211,7 +211,7 @@ class ContractTest {
     }
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
-    public RequestResponsePact invalidAuthorizationTokenReturns403(PactDslWithProvider builder) {
+    public RequestResponsePact invalidAuthorizationTokenReturns401(PactDslWithProvider builder) {
         return builder.given("test-evcs-api-key is a valid API key")
                 .given("invalid-access-token is an invalid access token")
                 .given("test-user-id has no PENDING_RETURN VC")
@@ -231,8 +231,8 @@ class ContractTest {
     }
 
     @Test
-    @PactTestFor(pactMethod = "invalidAuthorizationTokenReturns403")
-    void testRetrieveVcRequestReturns403(MockServer mockServer) {
+    @PactTestFor(pactMethod = "invalidAuthorizationTokenReturns401")
+    void testRetrieveVcRequestReturns401(MockServer mockServer) {
         // Mock Data
         lenient()
                 .when(mockConfigService.getSecret(ConfigurationVariable.EVCS_API_KEY))
@@ -307,7 +307,12 @@ class ContractTest {
         return builder.uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
-                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
                 .body(invalidRequestBodyForUserVC())
                 .willRespondWith()
                 .status(400)
@@ -320,7 +325,7 @@ class ContractTest {
                             array.object(
                                     vcObject -> {
                                         vcObject.stringType("vc", "invalid-vc-string");
-                                        vcObject.stringType("state", "CURRENT");
+                                        vcObject.stringType("state", "WRONG_STATE");
                                     });
                         })
                 .build();
