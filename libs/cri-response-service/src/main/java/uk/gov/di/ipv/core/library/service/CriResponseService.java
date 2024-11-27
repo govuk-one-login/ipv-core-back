@@ -13,7 +13,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.ASYNC_CRIS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -24,18 +23,15 @@ public class CriResponseService {
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_ABANDON = "abandon";
     public static final String ERROR_ACCESS_DENIED = "access_denied";
-    private final ConfigService configService;
     private final DataStore<CriResponseItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
     public CriResponseService(ConfigService configService) {
-        this.configService = configService;
         this.dataStore =
                 DataStore.create(CRI_RESPONSE_TABLE_NAME, CriResponseItem.class, configService);
     }
 
     public CriResponseService(DataStore<CriResponseItem> dataStore) {
-        this.configService = ConfigService.create();
         this.dataStore = dataStore;
     }
 
@@ -97,10 +93,7 @@ public class CriResponseService {
         var awaitingVc = !hasVc.apply(cri);
         var isCriPrecededByOtherRequiredVcs = F2F.equals(cri);
         var isComplete =
-                hasVc.apply(cri)
-                        && (!isCriPrecededByOtherRequiredVcs
-                                || !configService.enabled(EVCS_READ_ENABLED)
-                                || isPendingEvcsIdentity);
+                hasVc.apply(cri) && (!isCriPrecededByOtherRequiredVcs || isPendingEvcsIdentity);
 
         return new AsyncCriStatus(
                 cri, getVcIat.apply(cri), criResponseItem.getStatus(), awaitingVc, isComplete);
