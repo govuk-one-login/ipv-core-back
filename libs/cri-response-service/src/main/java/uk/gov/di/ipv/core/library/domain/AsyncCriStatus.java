@@ -1,9 +1,7 @@
-package uk.gov.di.ipv.core.library.service.domain;
+package uk.gov.di.ipv.core.library.domain;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 
@@ -16,7 +14,7 @@ public record AsyncCriStatus(
         Cri cri, Long iat, String incompleteStatus, boolean isAwaitingVc, boolean isComplete) {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final JourneyResponse JOURNEY_F2F_ENDING =
+    private static final JourneyResponse JOURNEY_F2F_PENDING =
             new JourneyResponse(JOURNEY_F2F_PENDING_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
@@ -41,7 +39,7 @@ public record AsyncCriStatus(
     private JourneyResponse getJourneyPending(boolean isSameSession) {
         return switch (cri) {
             case DCMAW_ASYNC -> isSameSession ? null : JOURNEY_ERROR;
-            case F2F -> JOURNEY_F2F_ENDING;
+            case F2F -> JOURNEY_F2F_PENDING;
             default -> logUnexpectedCri();
         };
     }

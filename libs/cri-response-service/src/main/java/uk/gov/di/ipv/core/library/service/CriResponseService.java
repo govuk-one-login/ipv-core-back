@@ -2,16 +2,17 @@ package uk.gov.di.ipv.core.library.service;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
-import uk.gov.di.ipv.core.library.service.domain.AsyncCriStatus;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToLongFunction;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.ASYNC_CRIS;
@@ -76,8 +77,8 @@ public class CriResponseService {
 
     public AsyncCriStatus getAsyncResponseStatus(
             String userId,
-            Function<Cri, Boolean> hasVc,
-            Function<Cri, Long> getVcIat,
+            Predicate<Cri> hasVc,
+            ToLongFunction<Cri> getVcIat,
             boolean isPendingEvcsIdentity) {
         final var criResponseItem =
                 dataStore.getItems(userId).stream()
@@ -90,12 +91,16 @@ public class CriResponseService {
 
         var cri = Cri.fromId(criResponseItem.getCredentialIssuer());
 
-        var awaitingVc = !hasVc.apply(cri);
+        var awaitingVc = !hasVc.test(cri);
         var isCriPrecededByOtherRequiredVcs = F2F.equals(cri);
         var isComplete =
-                hasVc.apply(cri) && (!isCriPrecededByOtherRequiredVcs || isPendingEvcsIdentity);
+                hasVc.test(cri) && (!isCriPrecededByOtherRequiredVcs || isPendingEvcsIdentity);
 
         return new AsyncCriStatus(
-                cri, getVcIat.apply(cri), criResponseItem.getStatus(), awaitingVc, isComplete);
+                cri,
+                getVcIat.applyAsLong(cri),
+                criResponseItem.getStatus(),
+                awaitingVc,
+                isComplete);
     }
 }

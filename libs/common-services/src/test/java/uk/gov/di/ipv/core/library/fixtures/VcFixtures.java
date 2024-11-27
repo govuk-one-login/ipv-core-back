@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -977,7 +978,7 @@ public interface VcFixtures {
                         .build();
         return generateVerifiableCredential(
                 "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
-                DRIVING_LICENCE,
+                DCMAW_ASYNC,
                 TestVc.builder()
                         .evidence(DCMAW_EVIDENCE_DATA_CHECK)
                         .credentialSubject(credentialSubject)

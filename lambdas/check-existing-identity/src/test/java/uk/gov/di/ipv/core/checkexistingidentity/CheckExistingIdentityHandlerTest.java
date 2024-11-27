@@ -31,6 +31,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -51,7 +52,6 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
@@ -63,7 +63,6 @@ import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.service.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -1740,26 +1739,6 @@ class CheckExistingIdentityHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
-    }
-
-    private CriResponseItem createCriResponseStoreItem(String criResponseStatus) {
-        CriResponseItem criResponseItem = new CriResponseItem();
-        criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F.getId());
-        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
-        criResponseItem.setDateCreated(Instant.now());
-        criResponseItem.setStatus(criResponseStatus);
-        return criResponseItem;
-    }
-
-    private CriResponseItem createCriErrorResponseStoreItem(Instant dateCreated) {
-        CriResponseItem criResponseItem = new CriResponseItem();
-        criResponseItem.setUserId(TEST_USER_ID);
-        criResponseItem.setCredentialIssuer(F2F.getId());
-        criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
-        criResponseItem.setDateCreated(dateCreated);
-        criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
-        return criResponseItem;
     }
 
     private static VerifiableCredential createOperationalProfileVc(Vot vot) throws Exception {
