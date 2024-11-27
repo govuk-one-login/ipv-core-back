@@ -644,6 +644,11 @@ public class CheckExistingIdentityHandler
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
         if (DCMAW_ASYNC.equals(asyncCriStatus.cri())) {
+            if (asyncCriStatus.iat() == null) {
+                LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC has no iat."));
+                return JOURNEY_ERROR;
+            }
+
             var isExpired =
                     DateUtils.toSecondsSinceEpoch(new Date()) > asyncCriStatus.iat() + (30 * 60);
             if (isExpired) {

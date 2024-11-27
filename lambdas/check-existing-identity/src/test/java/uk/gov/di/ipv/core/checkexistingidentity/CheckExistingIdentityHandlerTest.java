@@ -845,9 +845,41 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnJourneyErrorForDcmawAsyncCompleteAndVcHasNoIat()
+            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        var vcs = List.of(vcDcmawAsync());
+        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
+        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), any(), eq(false)))
+                .thenReturn(
+                        new AsyncCriStatus(
+                                DCMAW_ASYNC, null, CriResponseService.STATUS_PENDING, false, true));
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+        // Act
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        // Assert
+        assertEquals(JOURNEY_ERROR, journeyResponse);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @Test
     void shouldReturnJourneyErrorForDcmawAsyncCompleteAndVcIsExpired()
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, VerifiableCredentialException {
+                    CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
