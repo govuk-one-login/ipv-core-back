@@ -226,7 +226,7 @@ class ContractTest {
                                 "Authorization",
                                 "Bearer " + "invalid-access-token"))
                 .willRespondWith()
-                .status(403)
+                .status(401)
                 .toPact();
     }
 
@@ -251,7 +251,8 @@ class ContractTest {
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validCreateUserVcReturnsMessageIdWith202(
             PactDslWithProvider builder) {
-        return builder.given("test-evcs-api-key is a valid API key")
+        return builder.given("Brand new user")
+                .given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
@@ -304,7 +305,8 @@ class ContractTest {
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidCreateUserVcReturns400(PactDslWithProvider builder) {
-        return builder.uponReceiving("A request to create EVCS user VCs")
+        return builder.given("test-evcs-api-key is a valid API key")
+                .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("POST")
                 .headers(
@@ -345,7 +347,7 @@ class ContractTest {
 
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact createUserVcForExistingVcReturns409(PactDslWithProvider builder) {
-        return builder.given("User already has VC in EVCS")
+        return builder.given("Existing user")
                 .given("test-evcs-api-key is a valid API key")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
@@ -379,6 +381,7 @@ class ContractTest {
             PactDslWithProvider builder) {
         return builder.given("User has a valid VC")
                 .given("test-evcs-api-key is a valid API key")
+                .given("test-user-id has one PENDING_RETURN VC")
                 .uponReceiving("A request to update EVCS user VCs")
                 .path("/vcs/" + TEST_USER_ID)
                 .method("PATCH")
@@ -430,7 +433,8 @@ class ContractTest {
     @Pact(provider = "EvcsProvider", consumer = "IpvCoreBack")
     public RequestResponsePact invalidUpdateUserVcReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
-                .given("User has a valid VC")
+                .given("test-evcs-api-key is a valid API key")
+                .given("test-user-id has one CURRENT VC")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + INVALID_USER_ID)
                 .method("PATCH")
