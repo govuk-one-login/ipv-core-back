@@ -29,7 +29,9 @@ public class Gpg45ProfileEvaluator {
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
             Gpg45Scores gpg45Scores, List<Gpg45Profile> profiles) {
-        return profiles.stream().filter(profile -> profile.isSatisfiedBy(gpg45Scores)).findFirst();
+        Optional<Gpg45Profile> first =
+                profiles.stream().filter(profile -> profile.isSatisfiedBy(gpg45Scores)).findFirst();
+        return first;
     }
 
     public Gpg45Scores buildScore(List<VerifiableCredential> vcs) {
