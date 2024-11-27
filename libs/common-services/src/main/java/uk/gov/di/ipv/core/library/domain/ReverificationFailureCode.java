@@ -1,5 +1,8 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
+@ExcludeFromGeneratedCoverageReport
 public enum ReverificationFailureCode {
     NO_IDENTITY_AVAILABLE("no_identity_available"),
     IDENTITY_CHECK_INCOMPLETE("identity_check_incomplete"),
