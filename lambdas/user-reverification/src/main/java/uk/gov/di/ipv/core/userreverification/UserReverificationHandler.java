@@ -36,7 +36,6 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
 
     private static final ReverificationFailureCode DEFAULT_FAILURE_CODE =
             ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE;
-    private static final String DEFAULT_FAILURE_MESSAGE = "Unable to complete identity check.";
 
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
