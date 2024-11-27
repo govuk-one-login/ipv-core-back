@@ -221,6 +221,9 @@ public class CheckExistingIdentityHandler
                             .findFirst();
             if (vc.isPresent()) {
                 var date = vc.get().getClaimsSet().getIssueTime();
+                if (date == null) {
+                    return null;
+                }
                 return DateUtils.toSecondsSinceEpoch(date);
             }
             return null;
