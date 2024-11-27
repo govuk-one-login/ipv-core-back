@@ -13,9 +13,6 @@ const encMethod = "A256GCM";
 const encryptionKeyJwk = JSON.parse(config.core.encryptionKey) as jose.JWK;
 const encKey = await jose.importJWK(encryptionKeyJwk, encAlg);
 
-const AUTH_CLIENT = process.env.AUTH_CLIENT;
-const ORCH_CLIENT = process.env.ORCH_CLIENT;
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const generateJarPayload = async (
@@ -30,14 +27,6 @@ export const generateJarPayload = async (
       "utf8",
     ),
   ) as JarRequest;
-
-  payloadData.iss = ORCH_CLIENT || "orchStub";
-  payloadData.client_id = ORCH_CLIENT || "orchStub";
-
-  if (session.journeyType === "reverification") {
-    payloadData.iss = AUTH_CLIENT || "authStub";
-    payloadData.client_id = AUTH_CLIENT || "authStub";
-  }
 
   const payload = {
     ...payloadData,
