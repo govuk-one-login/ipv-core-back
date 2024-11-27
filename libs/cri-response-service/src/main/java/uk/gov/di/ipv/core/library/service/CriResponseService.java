@@ -11,8 +11,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.ToLongFunction;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.Cri.ASYNC_CRIS;
@@ -78,7 +78,7 @@ public class CriResponseService {
     public AsyncCriStatus getAsyncResponseStatus(
             String userId,
             Predicate<Cri> hasVc,
-            ToLongFunction<Cri> getVcIat,
+            Function<Cri, Long> getVcIat,
             boolean isPendingEvcsIdentity) {
         final var criResponseItem =
                 dataStore.getItems(userId).stream()
@@ -97,10 +97,6 @@ public class CriResponseService {
                 hasVc.test(cri) && (!isCriPrecededByOtherRequiredVcs || isPendingEvcsIdentity);
 
         return new AsyncCriStatus(
-                cri,
-                getVcIat.applyAsLong(cri),
-                criResponseItem.getStatus(),
-                awaitingVc,
-                isComplete);
+                cri, getVcIat.apply(cri), criResponseItem.getStatus(), awaitingVc, isComplete);
     }
 }

@@ -167,7 +167,7 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, (Cri cri) -> hasVc, (Cri cri) -> 123, false);
+                        USER_ID_1, (Cri cri) -> hasVc, (Cri cri) -> 123L, false);
 
         // Assert
         assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
@@ -193,7 +193,7 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, (Cri cri) -> hasVc, (Cri cri) -> 123, isPendingEvcsIdentity);
+                        USER_ID_1, (Cri cri) -> hasVc, (Cri cri) -> 123L, isPendingEvcsIdentity);
 
         // Assert
         assertEquals(F2F, asyncCriStatus.cri());
@@ -217,7 +217,7 @@ class CriResponseServiceTest {
         // Act
         var asyncCriStatus =
                 criResponseService.getAsyncResponseStatus(
-                        USER_ID_1, (Cri cri) -> true, (Cri cri) -> 123, false);
+                        USER_ID_1, (Cri cri) -> true, (Cri cri) -> 123L, false);
 
         // Assert
         assertNull(asyncCriStatus.cri());
