@@ -75,6 +75,7 @@ public class CriResponseService {
         dataStore.update(responseItem);
     }
 
+    @SuppressWarnings("java:S4276")
     public AsyncCriStatus getAsyncResponseStatus(
             String userId,
             Predicate<Cri> hasVc,
