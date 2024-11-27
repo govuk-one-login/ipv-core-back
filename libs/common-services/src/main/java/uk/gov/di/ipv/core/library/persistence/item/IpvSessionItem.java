@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.library.persistence.item;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
@@ -20,6 +23,9 @@ import java.util.List;
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class IpvSessionItem implements PersistenceItem {
     private String ipvSessionId;
     private String clientOAuthSessionId;
