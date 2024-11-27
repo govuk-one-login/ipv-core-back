@@ -10,10 +10,8 @@ import { JarRequest } from "../types/jar-request.js";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
-const encKey = await jose.importJWK(
-  JSON.parse(config.core.encryptionKey) as jose.JWK,
-  encAlg,
-);
+const encryptionKeyJwk = JSON.parse(config.core.encryptionKey) as jose.JWK;
+const encKey = await jose.importJWK(encryptionKeyJwk, encAlg);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -76,5 +74,9 @@ export const encryptJarRequest = async (payload: JarRequest): Promise<string> =>
   await new jose.CompactEncrypt(
     new TextEncoder().encode(await createSignedJwt(payload)),
   )
-    .setProtectedHeader({ alg: encAlg, enc: encMethod })
+    .setProtectedHeader({
+      alg: encAlg,
+      enc: encMethod,
+      kid: encryptionKeyJwk.kid,
+    })
     .encrypt(encKey);
