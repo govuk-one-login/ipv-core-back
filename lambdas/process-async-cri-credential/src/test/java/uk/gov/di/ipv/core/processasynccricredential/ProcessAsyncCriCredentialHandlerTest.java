@@ -18,6 +18,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsCredentialIssuerId;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -182,7 +185,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(1, auditEvents.size());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(0).getEventName());
         assertEquals(CriResponseService.STATUS_ERROR, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
@@ -203,7 +206,11 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(1, auditEvents.size());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(
+                "f2f",
+                ((AuditExtensionErrorParams) auditEvents.get(0).getExtensions())
+                        .credentialIssuerId());
         assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
@@ -275,7 +282,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(1, auditEvents.size());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
 
         verify(verifiableCredentialService, never()).persistUserCredentials(any());
         verify(evcsService, never()).storePendingVc(any());
@@ -373,8 +380,16 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
         assertEquals(2, auditEvents.size());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(
+                "f2f",
+                ((AuditExtensionsVcEvidence) auditEvents.get(0).getExtensions())
+                        .credentialIssuerId());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
+        assertEquals(
+                "f2f",
+                ((AuditExtensionsCredentialIssuerId) auditEvents.get(1).getExtensions())
+                        .credentialIssuerId());
     }
 
     private void verifyCiStorageServicePutContraIndicators() throws Exception {
