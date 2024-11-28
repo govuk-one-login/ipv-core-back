@@ -164,6 +164,28 @@ public class UserIdentityService {
         return false;
     }
 
+    public boolean areNamesAndDobCorrelatedForReverification(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
+        var successfulVcs = getSuccessfulVcs(vcs);
+
+        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
+            return false;
+        }
+
+        if (!checkNamesForCorrelation(
+                getGivenNamesForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+            return false;
+        }
+
+        if (!checkNamesForCorrelation(
+                getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+            return false;
+        }
+
+        return true;
+    }
+
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
@@ -359,15 +381,25 @@ public class UserIdentityService {
     }
 
     private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNameProperty(identityClaims, NamePart.NamePartType.FAMILY_NAME).stream()
-                .map(
-                        familyName ->
-                                StringUtils.substring(
-                                        familyName,
-                                        0,
-                                        Integer.parseInt(
-                                                configService.getParameter(
-                                                        COI_CHECK_FAMILY_NAME_CHARS))))
+        return getNamesShortenedForCoiCheck(
+                identityClaims,
+                Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
+                NamePart.NamePartType.FAMILY_NAME);
+    }
+
+    private List<String> getGivenNamesForCoiCheck(List<IdentityClaim> identityClaims) {
+        return getNamesShortenedForCoiCheck(
+                identityClaims,
+                Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
+                NamePart.NamePartType.GIVEN_NAME);
+    }
+
+    private List<String> getNamesShortenedForCoiCheck(
+            List<IdentityClaim> identityClaims,
+            Integer charCount,
+            NamePart.NamePartType namePartType) {
+        return getNameProperty(identityClaims, namePartType).stream()
+                .map(name -> StringUtils.substring(name, 0, charCount))
                 .toList();
     }
 

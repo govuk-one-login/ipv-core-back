@@ -32,7 +32,8 @@ core:
         UserTriggeredIdentityResetConfirmationF2f: "dummy-value"
     coi:
       # Test COI config
-      familyNameChars: 5
+      familyNameChars: 3
+      givenNameChars: 1
   clients:
     orchStub:
       id: orchStub
