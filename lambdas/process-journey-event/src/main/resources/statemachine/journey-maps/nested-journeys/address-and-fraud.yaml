@@ -40,3 +40,5 @@ nestedJourneyStates:
         exitEventToEmit: next
       enhanced-verification:
         exitEventToEmit: enhanced-verification
+      fail-with-no-ci:
+        exitEventToEmit: fraud-fail-with-no-ci

@@ -226,6 +226,9 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   EVALUATE_GPG45_SCORES_RFC:
     response:
