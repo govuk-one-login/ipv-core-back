@@ -38,6 +38,9 @@ nestedJourneyStates:
         exitEventToEmit: next-passport
       enhanced-verification:
         exitEventToEmit: next-passport
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
   PROVE_ANOTHER_WAY_AFTER_PASSPORT:
     response:
       type: page
@@ -73,6 +76,9 @@ nestedJourneyStates:
         exitEventToEmit: next-dl
       enhanced-verification:
         exitEventToEmit: next-dl
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
   PROVE_ANOTHER_WAY_AFTER_DL:
     response:
       type: page
@@ -143,6 +149,9 @@ nestedJourneyStates:
         exitEventToEmit: alternate-doc-next-dl
       enhanced-verification:
         exitEventToEmit: failed
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # Invalid DL mitigation routes
   MITIGATION_DL_NO_MATCH:
@@ -191,6 +200,9 @@ nestedJourneyStates:
         exitEventToEmit: alternate-doc-next-passport
       enhanced-verification:
         exitEventToEmit: failed
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
   MITIGATION_PP_PROVE_ANOTHER_WAY:
     response:
       type: page
