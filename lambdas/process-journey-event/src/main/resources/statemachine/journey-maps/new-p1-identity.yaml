@@ -364,6 +364,9 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -386,6 +389,9 @@ states:
       enhanced-verification:
         targetJourney: F2F_HAND_OFF
         targetState: START
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # No photo id journey
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -423,6 +429,9 @@ states:
       next:
         targetState: KBV_NO_PHOTO_ID
       enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
 
