@@ -45,6 +45,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -179,13 +180,9 @@ public class UserIdentityService {
             return false;
         }
 
-        if (!checkNamesForCorrelation(
+        return checkNamesForCorrelation(
                 getFamilyNameWithCharAllowanceForCoiCheck(
-                        getIdentityClaimsForNameCorrelation(successfulVcs)))) {
-            return false;
-        }
-
-        return true;
+                        getIdentityClaimsForNameCorrelation(successfulVcs)));
     }
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
@@ -394,7 +391,7 @@ public class UserIdentityService {
             List<IdentityClaim> identityClaims) {
         return getShortenedNamesForCoiCheck(
                 identityClaims,
-                Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
+                Integer.parseInt(configService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)),
                 NamePart.NamePartType.GIVEN_NAME);
     }
 

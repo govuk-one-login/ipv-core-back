@@ -1765,7 +1765,7 @@ class UserIdentityServiceTest {
                                     USER_ID_1,
                                     BAV,
                                     createCredentialWithNameAndBirthDate(
-                                            "Jim", "Jones", "1000-01-01")));
+                                            "Jamie", "Jones", "1000-01-01")));
 
             // Act & Assert
             assertTrue(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
@@ -1825,7 +1825,7 @@ class UserIdentityServiceTest {
                                     USER_ID_1,
                                     BAV,
                                     createCredentialWithNameAndBirthDate(
-                                            "James", "Jones", "1000-01-01")));
+                                            "Timbo", "Jones", "1000-01-01")));
 
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
