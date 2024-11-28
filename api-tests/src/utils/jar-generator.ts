@@ -1,4 +1,5 @@
 import * as jose from "jose";
+import { BeforeAll } from "@cucumber/cucumber";
 import config from "../config/config.js";
 import fs from "node:fs/promises";
 import * as path from "path";
@@ -7,11 +8,22 @@ import { getRandomString } from "./random-string-generator.js";
 import { createEvcsAccessToken, createSignedJwt } from "./jwt-signer.js";
 import { IpvSessionDetails } from "./ipv-session.js";
 import { JarRequest } from "../types/jar-request.js";
+import { jwks } from "../clients/core-back-external-client.js";
+import { JWK } from "jose";
 
 const encAlg = "RSA-OAEP-256";
 const encMethod = "A256GCM";
-const encryptionKeyJwk = JSON.parse(config.core.encryptionKey) as jose.JWK;
-const encKey = await jose.importJWK(encryptionKeyJwk, encAlg);
+
+let encKeyJwk: JWK;
+BeforeAll(async () => {
+  const publicKeySet = await jwks();
+  const encKey = publicKeySet.keys.find((key) => key.use === "enc");
+
+  if (!encKey) {
+    throw Error("No public encryption key found for core-back");
+  }
+  encKeyJwk = encKey;
+});
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -70,13 +82,18 @@ export const generateJarPayload = async (
   return payload;
 };
 
-export const encryptJarRequest = async (payload: JarRequest): Promise<string> =>
-  await new jose.CompactEncrypt(
+export const encryptJarRequest = async (
+  payload: JarRequest,
+): Promise<string> => {
+  const encKey = await jose.importJWK(encKeyJwk, encAlg);
+
+  return await new jose.CompactEncrypt(
     new TextEncoder().encode(await createSignedJwt(payload)),
   )
     .setProtectedHeader({
       alg: encAlg,
       enc: encMethod,
-      kid: encryptionKeyJwk.kid,
+      kid: encKeyJwk.kid,
     })
     .encrypt(encKey);
+};
