@@ -92,7 +92,6 @@ public class CheckMobileAppVcReceiptHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService,
                         ipvSessionService);
     }
 
