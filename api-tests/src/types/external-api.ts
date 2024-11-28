@@ -36,8 +36,8 @@ interface ReturnCode {
 export interface MfaResetResult {
   sub: string;
   success: boolean;
-  errorDescription?: string;
-  errorCode?: string;
+  failure_description?: string;
+  failure_code?: string;
 }
 
 export interface VcJwtPayload extends JWTClass {
