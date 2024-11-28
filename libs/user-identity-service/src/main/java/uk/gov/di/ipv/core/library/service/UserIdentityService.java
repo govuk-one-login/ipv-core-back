@@ -174,12 +174,14 @@ public class UserIdentityService {
         }
 
         if (!checkNamesForCorrelation(
-                getGivenNamesForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+                getGivenNamesWithCharAllowanceForCoiCheck(
+                        getIdentityClaimsForNameCorrelation(successfulVcs)))) {
             return false;
         }
 
         if (!checkNamesForCorrelation(
-                getFamilyNameForCoiCheck(getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+                getFamilyNameWithCharAllowanceForCoiCheck(
+                        getIdentityClaimsForNameCorrelation(successfulVcs)))) {
             return false;
         }
 
@@ -214,7 +216,7 @@ public class UserIdentityService {
 
         var isFamilyNameCorrelated =
                 checkNamesForCorrelation(
-                        getFamilyNameForCoiCheck(
+                        getFamilyNameWithCharAllowanceForCoiCheck(
                                 getIdentityClaimsForNameCorrelation(successfulVcs)));
 
         // Given names AND family name cannot both be changed
@@ -380,21 +382,23 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNamesShortenedForCoiCheck(
+    private List<String> getFamilyNameWithCharAllowanceForCoiCheck(
+            List<IdentityClaim> identityClaims) {
+        return getShortenedNamesForCoiCheck(
                 identityClaims,
                 Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
                 NamePart.NamePartType.FAMILY_NAME);
     }
 
-    private List<String> getGivenNamesForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNamesShortenedForCoiCheck(
+    private List<String> getGivenNamesWithCharAllowanceForCoiCheck(
+            List<IdentityClaim> identityClaims) {
+        return getShortenedNamesForCoiCheck(
                 identityClaims,
                 Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
                 NamePart.NamePartType.GIVEN_NAME);
     }
 
-    private List<String> getNamesShortenedForCoiCheck(
+    private List<String> getShortenedNamesForCoiCheck(
             List<IdentityClaim> identityClaims,
             Integer charCount,
             NamePart.NamePartType namePartType) {
