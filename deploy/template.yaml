@@ -229,7 +229,7 @@ Resources:
         - IsDev01
         - !If
           - UseSubEnvironment
-          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainValidationOptions:
@@ -237,7 +237,7 @@ Resources:
             - IsDev01
             - !If
               - UseSubEnvironment
-              - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+              - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
               - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
             - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
           HostedZoneId: !If
@@ -256,7 +256,7 @@ Resources:
         - IsDev01
         - !If
           - UseSubEnvironment
-          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       HostedZoneId: !If
@@ -274,7 +274,10 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If
+          - UseSubEnvironment
+          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref DevSSLCert
@@ -289,7 +292,7 @@ Resources:
         - IsDev01
         - !If
           - UseSubEnvironment
-          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
@@ -3747,7 +3750,7 @@ Outputs:
     Export:
       Name: !If
         - UseSubEnvironment
-        - !Sub "IPVCorePrivateAPIGatewayID-${SubEnvironment}"
+        - !Sub "IPVCorePrivateAPIGatewayID-${Environment}-${SubEnvironment}"
         - !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
     Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
@@ -3755,7 +3758,7 @@ Outputs:
     Export:
       Name: !If
         - UseSubEnvironment
-        - !Sub "IPVCoreExternalAPIGatewayID-${SubEnvironment}"
+        - !Sub "IPVCoreExternalAPIGatewayID-${Environment}-${SubEnvironment}"
         - !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
     Value: !Ref IPVCoreExternalAPI
   IPVCoreDynamoDBKmsKey:
@@ -3764,7 +3767,7 @@ Outputs:
     Export:
       Name: !If
         - UseSubEnvironment
-        - !Sub "CoreBackDynamoDBKmsKey-${SubEnvironment}"
+        - !Sub "CoreBackDynamoDBKmsKey-${Environment}-${SubEnvironment}"
         - !Sub "CoreBackDynamoDBKmsKey-${Environment}"
   IPVCoreLoggingKmsKey:
     Description: Core Back Logging KMS Key Export with Environment
@@ -3772,5 +3775,5 @@ Outputs:
     Export:
       Name: !If
         - UseSubEnvironment
-        - !Sub "CoreBackLoggingKmsKeyArn-${SubEnvironment}"
+        - !Sub "CoreBackLoggingKmsKeyArn-${Environment}-${SubEnvironment}"
         - !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
