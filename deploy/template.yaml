@@ -79,6 +79,12 @@ Globals:
 Parameters:
   Environment:
     Type: String
+  SubEnvironment:
+    Type: String
+    Description: >
+      When deploying to dev, optionally configure which sub-environment to deploy to
+      i.e. dev-sre. This feature is not available for route-to-live environments
+    Default: none
   VpcStackName:
     Description: >
       The name of the stack that defines the VPC in which this container will
@@ -143,6 +149,9 @@ Conditions:
   UseCanaryDeploymentAlarms: !Or
     - !Not [ !Equals [ !Ref StepFunctionDeploymentPreference, ALL_AT_ONCE ]]
     - !Not [ !Equals [ !Ref LambdaDeploymentPreference, AllAtOnce ]]
+  UseSubEnvironment: !And
+      - !Condition IsDevelopment
+      - !Not [ !Equals [ !Ref SubEnvironment, none ]]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -218,12 +227,18 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If
+          - UseSubEnvironment
+          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
             - IsDev01
-            - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+            - !If
+              - UseSubEnvironment
+              - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+              - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
             - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
           HostedZoneId: !If
             - IsDev01
@@ -239,7 +254,10 @@ Resources:
       Type: A
       Name: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If
+          - UseSubEnvironment
+          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       HostedZoneId: !If
         - IsDev01
@@ -269,7 +287,10 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !If
+          - UseSubEnvironment
+          - !Sub "api-${SubEnvironment}.01.dev.identity.account.gov.uk"
+          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
       Stage: !Ref IPVCoreExternalAPI.Stage
@@ -3724,20 +3745,32 @@ Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
     Export:
-      Name: !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
+      Name: !If
+        - UseSubEnvironment
+        - !Sub "IPVCorePrivateAPIGatewayID-${SubEnvironment}"
+        - !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
     Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
     Description: Core Back External API Gateway ID
     Export:
-      Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
+      Name: !If
+        - UseSubEnvironment
+        - !Sub "IPVCoreExternalAPIGatewayID-${SubEnvironment}"
+        - !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
     Value: !Ref IPVCoreExternalAPI
   IPVCoreDynamoDBKmsKey:
     Description: Core Back DynamoDB KMS Key Export with Environment
     Value: !Ref DynamoDBKmsKey
     Export:
-      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
+      Name: !If
+        - UseSubEnvironment
+        - !Sub "CoreBackDynamoDBKmsKey-${SubEnvironment}"
+        - !Sub "CoreBackDynamoDBKmsKey-${Environment}"
   IPVCoreLoggingKmsKey:
     Description: Core Back Logging KMS Key Export with Environment
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
-      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
+      Name: !If
+        - UseSubEnvironment
+        - !Sub "CoreBackLoggingKmsKeyArn-${SubEnvironment}"
+        - !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
