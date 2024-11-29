@@ -227,18 +227,12 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !If
-          - UseSubEnvironment
-          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
-          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
             - IsDev01
-            - !If
-              - UseSubEnvironment
-              - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
-              - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
             - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
           HostedZoneId: !If
             - IsDev01
@@ -254,10 +248,7 @@ Resources:
       Type: A
       Name: !If
         - IsDev01
-        - !If
-          - UseSubEnvironment
-          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
-          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       HostedZoneId: !If
         - IsDev01
@@ -274,10 +265,7 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !If
-          - UseSubEnvironment
-          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
-          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref DevSSLCert
@@ -290,10 +278,7 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !If
-          - UseSubEnvironment
-          - !Sub "api-${Environment}-${SubEnvironment}.01.dev.identity.account.gov.uk"
-          - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
       Stage: !Ref IPVCoreExternalAPI.Stage
