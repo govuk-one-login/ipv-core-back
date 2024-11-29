@@ -42,7 +42,7 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
@@ -58,6 +58,7 @@ public class CheckMobileAppVcReceiptHandler
     private final CriResponseService criResponseService;
     private final CriCheckingService criCheckingService;
     private final EvcsService evcsService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     public CheckMobileAppVcReceiptHandler(
             ConfigService configService,
@@ -65,13 +66,15 @@ public class CheckMobileAppVcReceiptHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             CriCheckingService criCheckingService,
-            EvcsService evcsService) {
+            EvcsService evcsService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.criCheckingService = criCheckingService;
         this.evcsService = evcsService;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -81,7 +84,7 @@ public class CheckMobileAppVcReceiptHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
 
-        var sessionCredentialsService = new SessionCredentialsService(configService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
         criCheckingService =
                 new CriCheckingService(
@@ -185,15 +188,17 @@ public class CheckMobileAppVcReceiptHandler
 
         var dcmawAsyncVc =
                 evcsService
-                        .getVerifiableCredentialsByState(
-                                userId, clientOAuthSessionItem.getEvcsAccessToken(), CURRENT)
-                        .get(CURRENT)
+                        .getVerifiableCredentials(
+                                userId, clientOAuthSessionItem.getEvcsAccessToken(), PENDING_RETURN)
                         .stream()
                         .filter(vc -> DCMAW_ASYNC.equals(vc.getCri()))
                         .findFirst();
         if (dcmawAsyncVc.isEmpty()) {
             return null;
         }
+
+        sessionCredentialsService.persistCredentials(
+                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
 
         return criCheckingService.checkVcResponse(
                 List.of(dcmawAsyncVc.get()),

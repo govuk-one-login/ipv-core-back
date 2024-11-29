@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
@@ -37,9 +38,13 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -59,6 +64,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private CriResponseService criResponseService;
     @Mock private CriCheckingService criCheckingService;
     @Mock private EvcsService evcsService;
+    @Mock private SessionCredentialsService mockSessionCredentialService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
 
     @Test
@@ -148,9 +154,9 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
-        when(evcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(Map.of(CURRENT, List.of(vc)));
+        when(evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
+                .thenReturn(List.of(vc));
         when(criCheckingService.checkVcResponse(
                         List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
@@ -162,6 +168,8 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Assert
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
+        verify(mockSessionCredentialService)
+                .persistCredentials(List.of(vc), TEST_IPV_SESSION_ID, false);
     }
 
     @Test
@@ -217,9 +225,9 @@ class CheckMobileAppVcReceiptHandlerTest {
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
-        when(evcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                .thenReturn(Map.of(CURRENT, List.of()));
+        when(evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
+                .thenReturn(List.of());
 
         // Act
         var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
@@ -227,6 +235,8 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Assert
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
+        verify(mockSessionCredentialService, never())
+                .persistCredentials(any(), any(), anyBoolean());
     }
 
     @Test
