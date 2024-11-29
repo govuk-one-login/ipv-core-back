@@ -62,13 +62,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1C;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,6 +82,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static JourneyRequest request;
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
+    private static final List<Gpg45Profile> P2_PROFILES_PLUS_M1C = List.of(M1A, M1B, M2B, M1C);
     private static final List<Gpg45Profile> P1_PROFILES = List.of(L1A);
     private static final List<ContraIndicator> CONTRAINDICATORS = List.of();
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse("/journey/met");
@@ -316,6 +320,34 @@ class EvaluateGpg45ScoresHandlerTest {
         inOrder.verify(ipvSessionItem).setVot(Vot.P2);
         inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verify(ipvSessionItem, never()).setVot(any());
+        assertEquals(Vot.P2, ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcFraudApplicableAuthoritativeSourceFailed(),
+                        vcVerificationM1a());
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
+                .thenReturn(vcs);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES_PLUS_M1C)))
+                .thenReturn(Optional.of(M1C));
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_33, 0, 0, 2));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        evaluateGpg45ScoresHandler.handleRequest(request, context);
+
+        // Assert
+        verify(gpg45ProfileEvaluator).getFirstMatchingProfile(any(), eq(P2_PROFILES_PLUS_M1C));
         assertEquals(Vot.P2, ipvSessionItem.getVot());
     }
 

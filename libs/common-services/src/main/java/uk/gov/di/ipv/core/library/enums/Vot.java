@@ -46,6 +46,10 @@ public enum Vot {
     }
 
     public static Vot fromGpg45Profile(Gpg45Profile profile) {
+        // We only allow M1C in certain circumstances, so we can't just add it to the P2 vot.
+        if (profile == Gpg45Profile.M1C) {
+            return Vot.P2;
+        }
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
                 .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))

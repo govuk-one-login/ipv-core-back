@@ -32,7 +32,7 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
 
-  Scenario: Successful P2 identity via DCMAW using passport
+  Scenario: Successful P2 international identity via DCMAW using passport
     When I submit an 'international' event
     Then I get a 'non-uk-app-intro' page response
     When I submit a 'useApp' event
@@ -45,7 +45,7 @@ Feature: P2 App journey
       | Attribute | Values               |
       | context   | "international_user" |
     Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
+    When I submit 'kenneth-score-0' details to the CRI stub
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response
