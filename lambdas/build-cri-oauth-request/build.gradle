@@ -8,12 +8,11 @@ plugins {
 dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
-			project(":libs:kms-es256-signer"),
-			project(":libs:journey-uris"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service")
+			project(":libs:user-identity-service"),
+			project(":libs:oauth-key-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
@@ -22,9 +21,12 @@ dependencies {
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
+
 	testRuntimeOnly libs.junitPlatform
 }
 

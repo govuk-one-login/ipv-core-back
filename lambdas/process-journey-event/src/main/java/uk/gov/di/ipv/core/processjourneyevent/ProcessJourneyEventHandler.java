@@ -26,6 +26,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -36,6 +38,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
@@ -64,28 +67,32 @@ import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
+import static uk.gov.di.ipv.core.library.journeys.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
 
 public class ProcessJourneyEventHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String CURRENT_PAGE = "currentPage";
+    private static final String CURRENT_PAGE = "currentPage";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
-    private static final String BUILD_CLIENT_OAUTH_RESPONSE_EVENT = "build-client-oauth-response";
     private static final StepResponse BUILD_CLIENT_OAUTH_RESPONSE =
             new ProcessStepResponse(BUILD_CLIENT_OAUTH_RESPONSE_EVENT, null);
-    public static final String BACK_EVENT = "back";
+    private static final String BACK_EVENT = "back";
     private static final String TICF_CRI_LAMBDA = "call-ticf-cri";
+    private static final String CHECK_COI_LAMBDA = "check-coi";
 
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
+    private final EvcsService evcsService;
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessJourneyEventHandler(
             AuditService auditService,
             IpvSessionService ipvSessionService,
@@ -93,7 +100,8 @@ public class ProcessJourneyEventHandler
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
-            List<String> nestedJourneyTypes)
+            List<String> nestedJourneyTypes,
+            EvcsService evcsService)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
@@ -101,6 +109,7 @@ public class ProcessJourneyEventHandler
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.stateMachines =
                 loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
+        this.evcsService = evcsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -125,6 +134,7 @@ public class ProcessJourneyEventHandler
                         List.of(IpvJourneyTypes.values()),
                         StateMachineInitializerMode.STANDARD,
                         nestedJourneyTypes);
+        this.evcsService = new EvcsService(configService);
     }
 
     @Override
@@ -136,7 +146,10 @@ public class ProcessJourneyEventHandler
         try {
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
 
-            // Handle route direct back to RP (used for recoverable timeouts)
+            // Special case
+            // Handle route direct back to RP (used for recoverable timeouts and cross browser
+            // callbacks).
+            // Users sending this event may not have a valid IPV session
             if (journeyEvent.equals(BUILD_CLIENT_OAUTH_RESPONSE_EVENT)) {
                 LOGGER.info(LogHelper.buildLogMessage("Returning end session response directly"));
                 return BUILD_CLIENT_OAUTH_RESPONSE.value();
@@ -173,7 +186,8 @@ public class ProcessJourneyEventHandler
                             ipvSessionItem,
                             auditEventUser,
                             deviceInformation,
-                            currentPage);
+                            currentPage,
+                            clientOAuthSessionItem);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -187,6 +201,13 @@ public class ProcessJourneyEventHandler
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (EvcsServiceException | CredentialParseException e) {
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -197,8 +218,9 @@ public class ProcessJourneyEventHandler
             IpvSessionItem ipvSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            String currentPage)
-            throws JourneyEngineException {
+            String currentPage,
+            ClientOAuthSessionItem clientOAuthSessionItem)
+            throws JourneyEngineException, EvcsServiceException, CredentialParseException {
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(ipvSessionItem, auditEventUser, deviceInformation);
             journeyEvent = NEXT_EVENT;
@@ -214,7 +236,8 @@ public class ProcessJourneyEventHandler
                             journeyEvent,
                             currentPage,
                             auditEventUser,
-                            deviceInformation);
+                            deviceInformation,
+                            clientOAuthSessionItem);
 
             while (newState instanceof JourneyChangeState journeyChangeState) {
                 LOGGER.info(
@@ -235,7 +258,8 @@ public class ProcessJourneyEventHandler
                                 NEXT_EVENT,
                                 null,
                                 auditEventUser,
-                                deviceInformation);
+                                deviceInformation,
+                                clientOAuthSessionItem);
             }
 
             logStateChange(currentJourneyState, journeyEvent, ipvSessionItem);
@@ -272,14 +296,17 @@ public class ProcessJourneyEventHandler
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     private State executeStateTransition(
             JourneyState initialJourneyState,
             IpvSessionItem ipvSessionItem,
             String journeyEvent,
             String currentPage,
             AuditEventUser auditEventUser,
-            String deviceInformation)
-            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException {
+            String deviceInformation,
+            ClientOAuthSessionItem clientOAuthSessionItem)
+            throws StateMachineNotFoundException, UnknownEventException, UnknownStateException,
+                    EvcsServiceException, CredentialParseException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
@@ -335,7 +362,24 @@ public class ProcessJourneyEventHandler
                     NEXT_EVENT,
                     null,
                     auditEventUser,
-                    deviceInformation);
+                    deviceInformation,
+                    clientOAuthSessionItem);
+        }
+
+        // Special case to skip COI check if the user does not already have an identity
+        if (result.state() instanceof BasicState basicState
+                && basicState.getResponse() instanceof ProcessStepResponse processResponse
+                && CHECK_COI_LAMBDA.equals(processResponse.getLambda())
+                && !hasExistingIdentity(clientOAuthSessionItem)) {
+            LOGGER.info(LogHelper.buildLogMessage("Skipping COI check - no existing identity"));
+            return executeStateTransition(
+                    new JourneyState(basicState.getJourneyType(), basicState.getName()),
+                    ipvSessionItem,
+                    "coi-check-passed",
+                    null,
+                    auditEventUser,
+                    deviceInformation,
+                    clientOAuthSessionItem);
         }
 
         if (result.state() instanceof BasicState basicState) {
@@ -348,6 +392,16 @@ public class ProcessJourneyEventHandler
         }
 
         return result.state();
+    }
+
+    private boolean hasExistingIdentity(ClientOAuthSessionItem clientOAuthSessionItem)
+            throws EvcsServiceException, CredentialParseException {
+        return !evcsService
+                .getVerifiableCredentials(
+                        clientOAuthSessionItem.getUserId(),
+                        clientOAuthSessionItem.getEvcsAccessToken(),
+                        CURRENT)
+                .isEmpty();
     }
 
     private void logStateChange(

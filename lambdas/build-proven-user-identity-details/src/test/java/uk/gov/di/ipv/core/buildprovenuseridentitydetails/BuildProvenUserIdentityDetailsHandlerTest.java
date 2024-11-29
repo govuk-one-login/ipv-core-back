@@ -27,15 +27,20 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -89,7 +94,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                         .userId(TEST_USER_ID)
                         .build();
 
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
+        Mockito.lenient()
+                .when(mockIpvSessionItem.getClientOAuthSessionId())
+                .thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         Mockito.lenient().when(mockIpvSessionItem.getVot()).thenReturn(Vot.P2);
     }
 
@@ -426,6 +433,30 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return new APIGatewayProxyRequestEvent()
                 .withHeaders(
                         Map.of(IPV_SESSION_ID_HEADER, SESSION_ID, IP_ADDRESS_HEADER, "10.10.10.1"));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+        var input = createRequestEvent();
+
+        var logCollector =
+                LogCollector.getLogCollectorFor(BuildProvenUserIdentityDetailsHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> handler.handleRequest(input, context),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private <T> T toResponseClass(

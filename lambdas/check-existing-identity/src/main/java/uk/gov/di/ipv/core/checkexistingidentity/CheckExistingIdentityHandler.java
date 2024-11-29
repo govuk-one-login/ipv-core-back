@@ -58,7 +58,6 @@ import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,7 +66,6 @@ import java.util.stream.Collectors;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -85,20 +83,20 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -240,6 +238,9 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_NOT_FOUND, ErrorResponse.IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -377,11 +378,6 @@ public class CheckExistingIdentityHandler
 
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
-        if (vcsAreFromEvcsMigrationRollbackBatch(tacticalVcs)) {
-            tacticalVcs.forEach(vc -> vc.setBatchId(null));
-            return new VerifiableCredentialBundle(tacticalVcs, false, false);
-        }
-
         if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
             var bundle = getEvcsCredentialBundle(userId, evcsAccessToken, tacticalVcs);
             if (bundle != null) {
@@ -390,23 +386,6 @@ public class CheckExistingIdentityHandler
         }
 
         return new VerifiableCredentialBundle(tacticalVcs, false, false);
-    }
-
-    private boolean vcsAreFromEvcsMigrationRollbackBatch(List<VerifiableCredential> tacticalVcs) {
-        var batchIds =
-                tacticalVcs.stream().map(VerifiableCredential::getBatchId).distinct().toList();
-        if (batchIds.size() > 1) {
-            LOGGER.warn(LogHelper.buildLogMessage("More than one batch ID found in tactical VCs"));
-            return false;
-        } else if (batchIds.isEmpty()
-                || !new HashSet<>(
-                                configService.getStringListParameter(
-                                        BULK_MIGRATION_ROLLBACK_BATCHES))
-                        .containsAll(batchIds)) {
-            return false;
-        }
-        LOGGER.info(LogHelper.buildLogMessage("Previously migrated identity in rollback batch"));
-        return true;
     }
 
     private VerifiableCredentialBundle getEvcsCredentialBundle(
@@ -597,6 +576,10 @@ public class CheckExistingIdentityHandler
             case CriResponseService.STATUS_PENDING -> {
                 LOGGER.info(LogHelper.buildLogMessage("F2F cri pending verification."));
                 return JOURNEY_PENDING;
+            }
+            case CriResponseService.STATUS_ABANDON -> {
+                LOGGER.info(LogHelper.buildLogMessage("F2F cri abandon."));
+                return JOURNEY_F2F_FAIL;
             }
             case CriResponseService.STATUS_ERROR -> {
                 LOGGER.warn(LogHelper.buildLogMessage("F2F cri error."));

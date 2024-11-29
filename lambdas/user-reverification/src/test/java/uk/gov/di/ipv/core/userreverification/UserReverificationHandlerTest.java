@@ -11,9 +11,13 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -25,13 +29,19 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -101,8 +111,9 @@ class UserReverificationHandlerTest {
     }
 
     @Test
-    void shouldReturnUnsuccsessfulReverificationResponseOnSuccessfulReverification()
-            throws Exception {
+    void
+            shouldReturnUnsuccsessfulReverificationResponseWithDefaultFailureCodeOnSuccessfulReverification()
+                    throws Exception {
         // Arrange
         ipvSessionItem.setReverificationStatus(ReverificationStatus.FAILED);
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -122,10 +133,48 @@ class UserReverificationHandlerTest {
 
         assertEquals(false, reverificationResponse.success());
         assertEquals(TEST_USER_ID, reverificationResponse.sub());
+        assertEquals(
+                ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE.getFailureCode(),
+                reverificationResponse.failureCode());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+    }
+
+    static Stream<Arguments> returnCodesTestCases() {
+        return Stream.of(
+                Arguments.of(ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE),
+                Arguments.of(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH),
+                Arguments.of(ReverificationFailureCode.NO_IDENTITY_AVAILABLE));
+    }
+
+    @ParameterizedTest
+    @MethodSource("returnCodesTestCases")
+    void shouldReturnCorrectFailureCodeFromIpvSession(ReverificationFailureCode failureCode)
+            throws Exception {
+        // Arrange
+        ipvSessionItem.setReverificationStatus(ReverificationStatus.FAILED);
+        ipvSessionItem.setFailureCode(failureCode);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                userReverificationHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        assertEquals(200, response.getStatusCode());
+
+        ReverificationResponse reverificationResponse =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(false, reverificationResponse.success());
+        assertEquals(failureCode.getFailureCode(), reverificationResponse.failureCode());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
     }
 
     @Test
@@ -251,6 +300,28 @@ class UserReverificationHandlerTest {
         verify(mockUserIdentityService, never())
                 .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSessionByAccessToken(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+
+        var logCollector = LogCollector.getLogCollectorFor(UserReverificationHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> userReverificationHandler.handleRequest(testEvent, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private static APIGatewayProxyRequestEvent getEventWithAuthAndIpHeaders() {

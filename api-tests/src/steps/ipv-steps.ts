@@ -347,6 +347,43 @@ Then(
 );
 
 Then(
+  /I have a dcmaw VC (with|without) '(passport|drivingPermit)' details/,
+  async function (
+    this: World,
+    withOrWithout: "with" | "without",
+    passportOrDrivingPermit: "passport" | "drivingPermit",
+  ): Promise<void> {
+    if (!this.identity) {
+      throw new Error("No identity found.");
+    }
+
+    if (!this.vcs) {
+      throw new Error("No credentials found.");
+    }
+
+    const dcmawVc = this.vcs[buildCredentialIssuerUrl("dcmaw")];
+    if (!dcmawVc) {
+      throw new Error("Identity does not have a dcmaw VC");
+    }
+
+    const credentialSubject = dcmawVc.vc.credentialSubject;
+    if (!credentialSubject) {
+      throw new Error("dcmaw VC does not have a credential subject");
+    }
+
+    const ispassportOrDrivingPermitInVc =
+      passportOrDrivingPermit in credentialSubject;
+
+    assert.ok(
+      withOrWithout === "with"
+        ? ispassportOrDrivingPermitInVc
+        : !ispassportOrDrivingPermitInVc,
+      `dcmaw VC does${withOrWithout === "with" ? " not" : " "}contain ${passportOrDrivingPermit}.`,
+    );
+  },
+);
+
+Then(
   "I get {string} return code(s)",
   function (this: World, expectedReturnCodes: string): void {
     if (!this.identity) {
@@ -466,8 +503,12 @@ Then(
 );
 
 Then(
-  /^I get a(?:n)? (successful|unsuccessful) MFA reset result$/,
-  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+  /^I get a(?:n)? (successful|unsuccessful) MFA reset result( with failure code '([\w_]+)')?$/,
+  async function (
+    this: World,
+    expectedMfaResetResult: string,
+    expectedFailureCode: string | undefined,
+  ): Promise<void> {
     if (!this.mfaResetResult) {
       throw new Error("No MFA reset result found.");
     }
@@ -477,6 +518,14 @@ Then(
       expectedMfaResetResult === "successful",
       "MFA reset results do not match.",
     );
+
+    if (expectedFailureCode) {
+      assert.equal(
+        this.mfaResetResult.failure_code,
+        expectedFailureCode,
+        "MFA failure codes do not match.",
+      );
+    }
   },
 );
 

@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -41,8 +42,12 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 import java.util.List;
 import java.util.Map;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -53,8 +58,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_CONFIG;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessCriCallbackHandlerTest {
@@ -116,7 +121,10 @@ class ProcessCriCallbackHandlerTest {
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -173,7 +181,10 @@ class ProcessCriCallbackHandlerTest {
         when(mockCriApiService.fetchVerifiableCredential(bearerToken, ADDRESS, criOAuthSessionItem))
                 .thenReturn(vcResponse);
         when(mockCriCheckingService.checkVcResponse(
-                        List.of(), callbackRequest, clientOAuthSessionItem, ipvSessionItem))
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -245,7 +256,10 @@ class ProcessCriCallbackHandlerTest {
                                 .signingKey(TestFixtures.TEST_EC_PUBLIC_JWK)
                                 .build());
         when(mockCriCheckingService.checkVcResponse(
-                        any(), eq(callbackRequest), eq(clientOAuthSessionItem), eq(ipvSessionItem)))
+                        any(),
+                        eq(callbackRequest.getIpAddress()),
+                        eq(clientOAuthSessionItem),
+                        eq(ipvSessionItem)))
                 .thenThrow(new ConfigException("bad config"));
 
         // Act
@@ -383,6 +397,30 @@ class ProcessCriCallbackHandlerTest {
         assertEquals("error", errorPageResponse.get("type"));
         assertEquals(401, errorPageResponse.get("statusCode"));
         assertEquals("pyi-timeout-recoverable", errorPageResponse.get("page"));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+        var callbackRequest = buildValidCallbackRequest();
+        var requestEvent = buildValidRequestEvent(callbackRequest);
+
+        var logCollector = LogCollector.getLogCollectorFor(ProcessCriCallbackHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> processCriCallbackHandler.handleRequest(requestEvent, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {

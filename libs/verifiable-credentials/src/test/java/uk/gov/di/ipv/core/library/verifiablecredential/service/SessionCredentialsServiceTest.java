@@ -326,6 +326,35 @@ class SessionCredentialsServiceTest {
         }
 
         @Test
+        void deleteSessionCredentialsForResetTypeShouldDeleteDcmawVcs() throws Exception {
+            var addressVc = generateVerifiableCredential("userId", ADDRESS, vcClaim(Map.of()));
+            var fraudVc = generateVerifiableCredential("userId", EXPERIAN_FRAUD, vcClaim(Map.of()));
+
+            var dcmawVc = generateVerifiableCredential("userId", DCMAW, vcClaim(Map.of()));
+
+            var hmrcKbvVc = generateVerifiableCredential("userId", HMRC_KBV, vcClaim(Map.of()));
+
+            var sessionFraudCredentialItem = fraudVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionAddressCredentialItem = addressVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionDcmawCredentialItem = dcmawVc.toSessionCredentialItem(SESSION_ID, true);
+            var sessionHmrcKbvCredentialItem = hmrcKbvVc.toSessionCredentialItem(SESSION_ID, true);
+
+            when(mockDataStore.getItems(SESSION_ID))
+                    .thenReturn(
+                            List.of(
+                                    sessionFraudCredentialItem,
+                                    sessionAddressCredentialItem,
+                                    sessionDcmawCredentialItem,
+                                    sessionHmrcKbvCredentialItem));
+
+            sessionCredentialService.deleteSessionCredentialsForResetType(
+                    SESSION_ID, SessionCredentialsResetType.DCMAW);
+
+            verify(mockDataStore).getItems(SESSION_ID);
+            verify(mockDataStore).delete(List.of(sessionDcmawCredentialItem));
+        }
+
+        @Test
         void deleteSessionCredentialsForCriShouldThrowIfProblemGetting() {
             when(mockDataStore.getItemsBySortKeyPrefix(SESSION_ID, CREDENTIAL_1.getCri().getId()))
                     .thenThrow(new IllegalStateException());

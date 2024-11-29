@@ -9,7 +9,6 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:audit-service"),
 			project(":libs:common-services"),
-			project(':libs:journey-uris'),
 			project(":libs:verifiable-credentials"),
 			project(':libs:evcs-service')
 
@@ -17,9 +16,11 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }

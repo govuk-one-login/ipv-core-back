@@ -426,32 +426,6 @@ class UserIdentityServiceTest {
         assertTrue(userIdentityService.areVcsCorrelated(vcs));
     }
 
-    @ParameterizedTest
-    @NullAndEmptySource
-    void areVCsCorrelatedShouldReturnTrueWhenBavHasMissingBirthDate(String missing)
-            throws Exception {
-        // Arrange
-        var vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                BAV,
-                                createCredentialWithNameAndBirthDate("Jimbo", "Jones", missing)),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                PASSPORT,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")),
-                        generateVerifiableCredential(
-                                USER_ID_1,
-                                EXPERIAN_FRAUD,
-                                createCredentialWithNameAndBirthDate(
-                                        "Jimbo", "Jones", "1000-01-01")));
-
-        // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
-    }
-
     @Test
     void areVCsCorrelatedShouldReturnFalseIfBavHasDifferentBirthDate() throws Exception {
         // Arrange
@@ -553,105 +527,99 @@ class UserIdentityServiceTest {
     }
 
     @Nested
-    class AreGivenNamesAndDobCorrelated {
-        @Test
-        void shouldReturnTrueForCorrelatedGivenNames() throws Exception {
-            // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    ADDRESS,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    DCMAW,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Bones", "1000-01-01")));
+    class AreNamesAndDobCorrelated {
+        private VerifiableCredential jimboJones2000 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate("Jimbo", "Jones", "2000-01-01"));
+        private VerifiableCredential jimboSmith2000 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate("Jimbo", "SMITH", "2000-01-01"));
+        private VerifiableCredential timmyJones2000 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate("Timmy", "Jones", "2000-01-01"));
+        private VerifiableCredential timmySmith2000 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate("Timmy", "Smith", "2000-01-01"));
+        private VerifiableCredential jimboJones2002 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate("Timmy", "Smith", "2002-02-02"));
+        private VerifiableCredential jimboJonathonJones2002 =
+                generateVerifiableCredential(
+                        USER_ID_1,
+                        PASSPORT,
+                        createCredentialWithNameAndBirthDate(
+                                "Timmy", "Jonathon", "Smith", "2002-02-02"));
 
-            // Act & Assert
-            assertTrue(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+        @BeforeEach
+        void setup() {
+            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
         }
 
         @Test
-        void shouldReturnFalseIfGivenNamesDiffer() throws Exception {
+        void shouldReturnTrueForCorrelatedGivenNamesAndDobAndDifferentFamilyNames()
+                throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Bones", "1000-01-01")));
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnTrueForCorrelatedFamilyNamesAndDobAndDifferentGivenNames()
+                throws Exception {
+            // Arrange
+            var vcs = List.of(jimboJones2000, jimboJones2000, timmyJones2000);
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
+            // Arrange
+            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboSmith2000);
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesAndDobCorrelated(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseIfGivenNamesAndFamilyNamesBothDiffer() throws Exception {
+            // Arrange
+            var vcs = List.of(jimboJones2000, jimboJones2000, timmySmith2000);
+
+            // Act & Assert
+            assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
         }
 
         @Test
         void shouldReturnFalseIfExtraGivenName() throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Dimbo", "Bones", "1000-01-01")));
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboJonathonJones2002);
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
         }
 
         @Test
         void shouldReturnFalseIfDobDiffers() throws Exception {
             // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Bones", "2000-01-01")));
+            var vcs = List.of(jimboJones2000, jimboJones2000, jimboJones2002);
 
             // Act & Assert
-            assertFalse(userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+            assertFalse(userIdentityService.areNamesAndDobCorrelated(vcs));
         }
 
         @ParameterizedTest
@@ -660,174 +628,23 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,
                                     createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            missingName, "Bones", "1000-01-01")));
+                                            missingName, "Jones", "1000-01-01")));
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
                     assertThrows(
                             HttpResponseExceptionWithErrorBody.class,
-                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
+                            () -> userIdentityService.areNamesAndDobCorrelated(vcs));
 
             // Assert
             assertEquals(500, thrownError.getResponseCode());
             assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
-        }
-
-        @ParameterizedTest
-        @NullAndEmptySource
-        void shouldThrowIfMissingDob(String missingDob) {
-            // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Bones", missingDob)));
-
-            // Act
-            HttpResponseExceptionWithErrorBody thrownError =
-                    assertThrows(
-                            HttpResponseExceptionWithErrorBody.class,
-                            () -> userIdentityService.areGivenNamesAndDobCorrelated(vcs));
-
-            // Assert
-            assertEquals(500, thrownError.getResponseCode());
-            assertEquals(
-                    ErrorResponse.FAILED_BIRTHDATE_CORRELATION, thrownError.getErrorResponse());
-        }
-    }
-
-    @Nested
-    class AreFamilyNameAndDobCorrelated {
-        @BeforeEach
-        void setup() {
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("5");
-        }
-
-        @Test
-        void shouldReturnTrueForCorrelatedFamilyNames() throws Exception {
-            // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    ADDRESS,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    DCMAW,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Jones", "1000-01-01")));
-
-            // Act & Assert
-            assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
-        }
-
-        @Test
-        void shouldReturnTrueWhenFamilyNameShorterThanCheckChars() throws Exception {
-            // Arrange
-            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("500");
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    ADDRESS,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    DCMAW,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Jones", "1000-01-01")));
-
-            // Act & Assert
-            assertTrue(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
-        }
-
-        @Test
-        void shouldReturnFalseIfFamilyNameDiffers() throws Exception {
-            // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Bones", "1000-01-01")));
-
-            // Act & Assert
-            assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
-        }
-
-        @Test
-        void shouldReturnFalseIfDobDiffers() throws Exception {
-            // Arrange
-            var vcs =
-                    List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Jones", "2000-01-01")));
-
-            // Act & Assert
-            assertFalse(userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(vcs));
         }
 
         @MockitoSettings(strictness = LENIENT)
@@ -837,16 +654,8 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,
@@ -857,9 +666,7 @@ class UserIdentityServiceTest {
             HttpResponseExceptionWithErrorBody thrownError =
                     assertThrows(
                             HttpResponseExceptionWithErrorBody.class,
-                            () ->
-                                    userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
-                                            vcs));
+                            () -> userIdentityService.areNamesAndDobCorrelated(vcs));
 
             // Assert
             assertEquals(500, thrownError.getResponseCode());
@@ -872,29 +679,19 @@ class UserIdentityServiceTest {
             // Arrange
             var vcs =
                     List.of(
+                            jimboJones2000,
+                            jimboJones2000,
                             generateVerifiableCredential(
                                     USER_ID_1,
                                     PASSPORT,
                                     createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Jimbo", "Jones", "1000-01-01")),
-                            generateVerifiableCredential(
-                                    USER_ID_1,
-                                    PASSPORT,
-                                    createCredentialWithNameAndBirthDate(
-                                            "Dimbo", "Jones", missingDob)));
+                                            "Jimbo", "Jones", missingDob)));
 
             // Act
             HttpResponseExceptionWithErrorBody thrownError =
                     assertThrows(
                             HttpResponseExceptionWithErrorBody.class,
-                            () ->
-                                    userIdentityService.areFamilyNameAndDobCorrelatedForCoiCheck(
-                                            vcs));
+                            () -> userIdentityService.areNamesAndDobCorrelated(vcs));
 
             // Assert
             assertEquals(500, thrownError.getResponseCode());

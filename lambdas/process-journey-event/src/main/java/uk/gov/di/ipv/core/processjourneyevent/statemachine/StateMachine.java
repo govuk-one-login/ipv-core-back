@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.requireNonNullElse;
+import static uk.gov.di.ipv.core.library.collections.Merging.mergeLists;
+import static uk.gov.di.ipv.core.library.collections.Merging.mergeMaps;
 import static uk.gov.di.ipv.core.library.domain.JourneyState.JOURNEY_STATE_DELIMITER;
 
 public class StateMachine {
@@ -55,7 +57,13 @@ public class StateMachine {
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {
             var entryEvent = requireNonNullElse(result.targetEntryEvent(), event);
-            return result.state().transition(entryEvent, startState, journeyContext);
+            var nestedResult = result.state().transition(entryEvent, startState, journeyContext);
+            // Add audit events and context from the outer event
+            return new TransitionResult(
+                    nestedResult.state(),
+                    mergeLists(result.auditEvents(), nestedResult.auditEvents()),
+                    mergeMaps(result.auditContext(), nestedResult.auditContext()),
+                    nestedResult.targetEntryEvent());
         }
 
         return result;

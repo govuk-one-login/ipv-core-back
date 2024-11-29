@@ -231,3 +231,24 @@ nestedJourneyStates:
     response:
       type: page
       pageId: check-mobile-app-result
+    events:
+      next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        exitEventToEmit: anotherWay
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR

@@ -10,7 +10,6 @@ dependencies {
 			libs.jacksonDatabind,
 			libs.powertoolsTracing,
 			project(":libs:common-services"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:verifiable-credentials")
 
 	compileOnly libs.lombok
@@ -22,7 +21,6 @@ dependencies {
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
-			libs.wiremock,
 			project(path: ':libs:common-services', configuration: 'tests')
 
 	testRuntimeOnly libs.junitPlatform

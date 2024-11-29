@@ -12,6 +12,6 @@ public record TransitionResult(
         Map<String, String> auditContext,
         String targetEntryEvent) {
     public TransitionResult(State state) {
-        this(state, null, null, null);
+        this(state, List.of(), Map.of(), null);
     }
 }

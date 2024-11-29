@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
@@ -18,6 +19,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.http.HTTPRequestSender;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -29,7 +31,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
-import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -37,19 +38,22 @@ import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.SignerFactory;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 
 import java.io.IOException;
 import java.time.Clock;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
@@ -68,17 +72,44 @@ public class CriApiService {
     private final SignerFactory signerFactory;
     private final SecureTokenHelper secureTokenHelper;
     private final Clock clock;
+    private final HTTPRequestSender httpRequestSender;
 
     @ExcludeFromGeneratedCoverageReport
+    public CriApiService(ConfigService configService) {
+        this(
+                configService,
+                new SignerFactory(configService),
+                SecureTokenHelper.getInstance(),
+                Clock.systemDefaultZone(),
+                new JavaHttpRequestSender(TracingHttpClient.newHttpClient()));
+    }
+
+    // Used for contract tests
     public CriApiService(
             ConfigService configService,
             SignerFactory signerFactory,
             SecureTokenHelper secureTokenHelper,
             Clock clock) {
+        this(
+                configService,
+                signerFactory,
+                secureTokenHelper,
+                clock,
+                new JavaHttpRequestSender(TracingHttpClient.newHttpClient()));
+    }
+
+    // Used for unit tests
+    public CriApiService(
+            ConfigService configService,
+            SignerFactory signerFactory,
+            SecureTokenHelper secureTokenHelper,
+            Clock clock,
+            HTTPRequestSender httpRequestSender) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.secureTokenHelper = secureTokenHelper;
         this.clock = clock;
+        this.httpRequestSender = httpRequestSender;
     }
 
     private String getApiKey(OauthCriConfig criConfig, CriOAuthSessionItem criOAuthSessionItem) {
@@ -117,7 +148,7 @@ public class CriApiService {
     private BearerAccessToken fetchAccessToken(HTTPRequest accessTokenRequest)
             throws CriApiException {
         try {
-            var httpResponse = accessTokenRequest.send();
+            var httpResponse = accessTokenRequest.send(httpRequestSender);
             var tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
@@ -144,28 +175,33 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
+    private HTTPRequest buildAccessTokenRequestWithJwtAuthenticationAndAuthorizationCode(
             String authorisationCode, CriOAuthSessionItem criOAuthSessionItem)
             throws CriApiException {
         var criConfig = configService.getOauthCriConfig(criOAuthSessionItem);
         var authorizationCode = new AuthorizationCode(authorisationCode);
 
         try {
-            var dateTime = OffsetDateTime.now(clock);
-            var clientAuthClaims =
-                    new ClientAuthClaims(
-                            criConfig.getClientId(),
-                            criConfig.getClientId(),
-                            criConfig.getComponentId(),
-                            dateTime.plusSeconds(
-                                            configService.getLongParameter(
-                                                    ConfigurationVariable.JWT_TTL_SECONDS))
-                                    .toEpochSecond(),
-                            secureTokenHelper.generate());
+            var clientAuthClaimsSet =
+                    new JWTClaimsSet.Builder()
+                            .issuer(criConfig.getClientId())
+                            .subject(criConfig.getClientId())
+                            .audience(criConfig.getComponentId())
+                            .expirationTime(
+                                    Date.from(
+                                            Instant.now(clock)
+                                                    .plusSeconds(
+                                                            configService.getLongParameter(
+                                                                    ConfigurationVariable
+                                                                            .JWT_TTL_SECONDS))))
+                            .jwtID(secureTokenHelper.generate())
+                            .build();
 
             var signedClientJwt =
-                    JwtHelper.createSignedJwtFromObject(
-                            clientAuthClaims, signerFactory.getSigner());
+                    JwtHelper.createSignedJwt(
+                            clientAuthClaimsSet,
+                            signerFactory.getSigner(),
+                            configService.enabled(KID_JAR_HEADER));
             var clientAuthentication = new PrivateKeyJWT(signedClientJwt);
             var redirectionUri = criConfig.getClientCallbackUrl();
             var authorizationGrant = new AuthorizationCodeGrant(authorizationCode, redirectionUri);
@@ -180,7 +216,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
+    private HTTPRequest buildAccessTokenRequestWithBasicAuthenticationAndClientCredentials(
             String basicAuthClientId,
             String basicAuthClientSecret,
             CriOAuthSessionItem criOAuthSessionItem) {
@@ -242,7 +278,7 @@ public class CriApiService {
     private VerifiableCredentialResponse fetchVerifiableCredential(
             Cri cri, HTTPRequest credentialRequest) throws CriApiException {
         try {
-            var response = credentialRequest.send();
+            var response = credentialRequest.send(httpRequestSender);
             if (!response.indicatesSuccess()) {
                 LOGGER.error(
                         LogHelper.buildErrorMessage(
@@ -301,7 +337,7 @@ public class CriApiService {
         }
     }
 
-    public HTTPRequest buildFetchVerifiableCredentialRequest(
+    private HTTPRequest buildFetchVerifiableCredentialRequest(
             BearerAccessToken accessToken,
             Cri cri,
             CriOAuthSessionItem criOAuthSessionItem,

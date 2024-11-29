@@ -15,8 +15,6 @@ dependencies {
 			project(":libs:cri-response-service"),
 			project(":libs:cri-storing-service"),
 			project(":libs:gpg45-evaluator"),
-			project(":libs:journey-uris"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
@@ -27,12 +25,12 @@ dependencies {
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.pactConsumerJunit,
-			libs.wiremock,
 			project(path: ':libs:common-services', configuration: 'tests'),
-			project(":libs:pact-test-helpers")
+			project(':libs:test-helpers',)
 
 	testRuntimeOnly libs.junitPlatform
 }

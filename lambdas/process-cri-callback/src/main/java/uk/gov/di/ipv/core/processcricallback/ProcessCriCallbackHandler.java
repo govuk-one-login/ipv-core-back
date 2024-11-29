@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
@@ -32,9 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
-import uk.gov.di.ipv.core.library.kmses256signer.SignerFactory;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -56,13 +55,13 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.ipv.core.processcricallback.exception.ParseCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
-import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 public class ProcessCriCallbackHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -117,12 +116,7 @@ public class ProcessCriCallbackHandler
         var sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
 
-        criApiService =
-                new CriApiService(
-                        configService,
-                        new SignerFactory(configService),
-                        SecureTokenHelper.getInstance(),
-                        Clock.systemDefaultZone());
+        criApiService = new CriApiService(configService);
         criCheckingService =
                 new CriCheckingService(
                         configService,
@@ -130,7 +124,8 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService);
+                        sessionCredentialsService,
+                        ipvSessionService);
         criStoringService =
                 new CriStoringService(
                         configService,
@@ -148,6 +143,24 @@ public class ProcessCriCallbackHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        // temporary logging to check which tracing headers are being used by dynatrace
+        if ("build".equals(configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))) {
+            var headers = input.getHeaders();
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Tracing headers")
+                            .with(
+                                    "traceparent",
+                                    Optional.ofNullable(headers.get("traceparent"))
+                                            .orElse("not set"))
+                            .with(
+                                    "tracestate",
+                                    Optional.ofNullable(headers.get("tracestate"))
+                                            .orElse("not set"))
+                            .with(
+                                    "x-dynatrace",
+                                    Optional.ofNullable(headers.get("x-dynatrace"))
+                                            .orElse("not set")));
+        }
         CriCallbackRequest callbackRequest = null;
 
         try {
@@ -223,6 +236,9 @@ public class ProcessCriCallbackHandler
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -294,7 +310,7 @@ public class ProcessCriCallbackHandler
                         ipvSessionItem);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest, clientOAuthSessionItem, ipvSessionItem);
+                vcs, callbackRequest.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(

@@ -35,7 +35,9 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 
@@ -45,8 +47,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.inOrder;
@@ -55,12 +60,15 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyEventHandlerTest {
@@ -88,17 +96,21 @@ class ProcessJourneyEventHandlerTest {
             List.of("nested-journey-definition", "doubly-nested-definition");
     private static final List<String> REAL_NESTED_JOURNEY_TYPES =
             Stream.of(NestedJourneyTypes.values()).map(NestedJourneyTypes::getJourneyName).toList();
+    private static final String TEST_USER_ID = "testuserid";
+    private static final String TEST_EVCS_ACCESS_TOKEN = "test-evcs-access-token";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
+    @Mock private EvcsService mockEvcsService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
     @AfterEach
     void checkAuditEventWait(TestInfo testInfo) {
         if (!testInfo.getTags().contains(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)) {
+            // Assert that no audit events were logged after awaiting the events
             InOrder auditInOrder = inOrder(mockAuditService);
             auditInOrder.verify(mockAuditService).awaitAuditEvents();
             auditInOrder.verifyNoMoreInteractions();
@@ -107,7 +119,8 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     void shouldReturn400OnMissingJourneyStep() throws Exception {
-        var input = JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_IP).build();
+        var input =
+                JourneyRequest.builder().ipAddress(TEST_IP).ipvSessionId(TEST_SESSION_ID).build();
 
         Map<String, Object> output =
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
@@ -136,7 +149,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         when(mockIpvSessionService.getIpvSession(anyString()))
                 .thenThrow(new IpvSessionNotFoundException("Not found"));
@@ -155,7 +168,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("invalid-event")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -174,7 +187,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("INVALIDSTATE");
@@ -193,7 +206,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -206,7 +219,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(),
                         StateMachineInitializerMode.STANDARD,
-                        REAL_NESTED_JOURNEY_TYPES);
+                        REAL_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -236,7 +250,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -249,7 +263,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -262,7 +277,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_TWO_WITH_CORRECT_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, "aCriId"))
@@ -278,7 +293,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -293,7 +309,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(journeyUri)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -306,7 +322,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -335,7 +352,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_EVENT_ONE_WITH_TEST_CURRENT_PAGE)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PROCESS_STATE");
@@ -348,7 +365,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -363,7 +381,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -397,7 +415,7 @@ class ProcessJourneyEventHandlerTest {
                 SESSION_TIMEOUT,
                 ((AuditExtensionSubjourneyType) capturedAuditEvent.getExtensions()).journeyType());
         assertEquals("core", capturedAuditEvent.getComponentId());
-        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
@@ -407,7 +425,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -432,7 +450,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("START");
@@ -453,7 +471,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey(journeyEvent)
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -516,7 +534,7 @@ class ProcessJourneyEventHandlerTest {
                 IpvJourneyTypes.TECHNICAL_ERROR,
                 ((AuditExtensionSubjourneyType) capturedAuditEvent.getExtensions()).journeyType());
         assertEquals("core", capturedAuditEvent.getComponentId());
-        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
@@ -526,7 +544,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testWithAuditEvent")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -536,10 +554,9 @@ class ProcessJourneyEventHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         AuditEvent capturedAuditEvent = auditEventCaptor.getValue();
 
-        assertEquals(
-                AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, capturedAuditEvent.getEventName());
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, capturedAuditEvent.getEventName());
         assertEquals("core", capturedAuditEvent.getComponentId());
-        assertEquals("testuserid", capturedAuditEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, capturedAuditEvent.getUser().getUserId());
         assertEquals("testjourneyid", capturedAuditEvent.getUser().getGovukSigninJourneyId());
     }
 
@@ -549,7 +566,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testWithAuditEventContext")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
         mockIpvSessionItemAndTimeout("CRI_STATE");
 
@@ -561,15 +578,15 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(4, capturedAuditEvents.size());
 
         var firstEvent = capturedAuditEvents.get(0);
-        assertEquals(AuditEventTypes.IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, firstEvent.getEventName());
         assertEquals("core", firstEvent.getComponentId());
-        assertEquals("testuserid", firstEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, firstEvent.getUser().getUserId());
         assertEquals("testjourneyid", firstEvent.getUser().getGovukSigninJourneyId());
 
         var secondEvent = capturedAuditEvents.get(1);
         assertEquals(AuditEventTypes.IPV_MITIGATION_START, secondEvent.getEventName());
         assertEquals("core", secondEvent.getComponentId());
-        assertEquals("testuserid", secondEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, secondEvent.getUser().getUserId());
         assertEquals("testjourneyid", secondEvent.getUser().getGovukSigninJourneyId());
         assertEquals(
                 new AuditExtensionMitigationType("test-mitigation"), secondEvent.getExtensions());
@@ -577,7 +594,7 @@ class ProcessJourneyEventHandlerTest {
         var thirdEvent = capturedAuditEvents.get(2);
         assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_SELECTED, thirdEvent.getEventName());
         assertEquals("core", thirdEvent.getComponentId());
-        assertEquals("testuserid", thirdEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, thirdEvent.getUser().getUserId());
         assertEquals("testjourneyid", thirdEvent.getUser().getGovukSigninJourneyId());
         assertEquals(
                 new AuditExtensionUserDetailsUpdateSelected(List.of("address"), true),
@@ -586,7 +603,7 @@ class ProcessJourneyEventHandlerTest {
         var fourthEvent = capturedAuditEvents.get(3);
         assertEquals(AuditEventTypes.IPV_USER_DETAILS_UPDATE_END, fourthEvent.getEventName());
         assertEquals("core", fourthEvent.getComponentId());
-        assertEquals("testuserid", fourthEvent.getUser().getUserId());
+        assertEquals(TEST_USER_ID, fourthEvent.getUser().getUserId());
         assertEquals("testjourneyid", fourthEvent.getUser().getGovukSigninJourneyId());
         assertEquals(new AuditExtensionSuccessful(false), fourthEvent.getExtensions());
     }
@@ -597,7 +614,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("testJourneyStep")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("CRI_STATE");
@@ -610,7 +627,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -625,7 +643,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventOne")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -638,7 +656,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -654,21 +673,21 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventFour")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var secondTransitionInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("anotherPageState")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -682,7 +701,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
 
@@ -726,14 +746,14 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventThree")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -747,7 +767,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -777,14 +798,14 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("enterNestedJourneyAtStateOne")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE_AT_START_OF_NO_PHOTO_ID");
@@ -798,7 +819,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
@@ -826,19 +848,64 @@ class ProcessJourneyEventHandlerTest {
 
     @Test
     @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldRecoredAuditEventWhenEnteringNestedJourney() throws Exception {
+        // Arrange
+        var inputToEnterNestedStates =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("enterNestedJourneyAtStateOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE_WITH_AUDIT_EVENT_ON_SUBJOURNEY");
+        var ipvSession = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
+
+        // Act
+        var nextResponse =
+                processJourneyEventHandler.handleRequest(inputToEnterNestedStates, mockContext);
+
+        // Assert
+        assertEquals("page-id-nested-state-one", nextResponse.get("page"));
+        assertEquals(
+                new JourneyState(
+                        INITIAL_JOURNEY_SELECTION, "NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE"),
+                ipvSession.getState());
+
+        InOrder auditInOrderOne = inOrder(mockAuditService);
+        auditInOrderOne.verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        auditInOrderOne.verify(mockAuditService).awaitAuditEvents();
+        auditInOrderOne.verifyNoMoreInteractions();
+
+        var auditEvent = auditEventCaptor.getValue();
+        assertEquals(IPV_NO_PHOTO_ID_JOURNEY_START, auditEvent.getEventName());
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
     void shouldUseBackEventDefinedOnStateIfExists() throws Exception {
         var inputToNextPageState =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventFive")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         var backInput =
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -852,7 +919,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var nextResponse =
                 processJourneyEventHandler.handleRequest(inputToNextPageState, mockContext);
@@ -882,7 +950,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -898,7 +966,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -913,7 +982,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -929,7 +998,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -944,7 +1014,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("back")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
@@ -960,7 +1030,8 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -977,7 +1048,7 @@ class ProcessJourneyEventHandlerTest {
                 JourneyRequest.builder()
                         .ipAddress(TEST_IP)
                         .journey("eventSix")
-                        .ipvSessionId(TEST_IP)
+                        .ipvSessionId(TEST_SESSION_ID)
                         .build();
 
         when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -993,12 +1064,86 @@ class ProcessJourneyEventHandlerTest {
                         mockClientOAuthSessionService,
                         List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
                         StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES);
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(expectedJourney, output.get("journey"));
         assertEquals(expectedPage, output.get("page"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
+    void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
+            boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventSeven")
+                        .ipvSessionId(TEST_IP)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+
+        when(mockEvcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
+                .thenReturn(hasVcsInEvcs ? List.of(M1A_EXPERIAN_FRAUD_VC) : List.of());
+
+        var processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(expectedJourney, output.get("journey"));
+        assertEquals(expectedPage, output.get("page"));
+    }
+
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(mockIpvSessionService.getIpvSession(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventSix")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION, TECHNICAL_ERROR),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
+
+        var logCollector = LogCollector.getLogCollectorFor(ProcessJourneyEventHandler.class);
+
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> processJourneyEventHandler.handleRequest(input, mockContext),
+                        "Expected handleRequest() to throw, but it didn't");
+
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private void mockIpvSessionItemAndTimeout(String userState) throws Exception {
@@ -1022,7 +1167,8 @@ class ProcessJourneyEventHandlerTest {
                 .state("teststate")
                 .redirectUri("https://example.com/redirect")
                 .govukSigninJourneyId("testjourneyid")
-                .userId("testuserid")
+                .userId(TEST_USER_ID)
+                .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
                 .build();
     }
 
@@ -1046,7 +1192,8 @@ class ProcessJourneyEventHandlerTest {
                 mockClientOAuthSessionService,
                 journeyTypes,
                 stateMachineInitializerMode,
-                nestedJourneyTypes);
+                nestedJourneyTypes,
+                mockEvcsService);
     }
 
     private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {

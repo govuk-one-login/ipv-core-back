@@ -5,7 +5,7 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -13,13 +13,16 @@ import com.nimbusds.oauth2.sdk.ResponseType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URLEncoder;
@@ -27,7 +30,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
@@ -40,68 +42,53 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 class TokenRequestValidatorTest {
 
-    private TokenRequestValidator validator;
+    private static final String CLIENT_ID = "di-ipv-orchestrator-stub";
+    private static final String AUDIENCE =
+            "https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token";
+    private static final String TEST_JTI = "test-jti";
+
     @Mock private ConfigService mockConfigService;
     @Mock private ClientAuthJwtIdService mockClientAuthJwtIdService;
-
-    private final String clientId = "di-ipv-orchestrator-stub";
-    private final String audience =
-            "https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token";
-    private final String jti = "test-jti";
+    @Mock private OAuthKeyService mockOAuthKeyService;
+    @InjectMocks private TokenRequestValidator validator;
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(audience);
-        validator = new TokenRequestValidator(mockConfigService, mockClientAuthJwtIdService);
+        when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn(AUDIENCE);
     }
 
     @Test
-    void shouldNotThrowForValidJwtSignedWithRS256()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
+    void shouldNotThrowForValidJwt() throws Exception {
         when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
+        when(mockOAuthKeyService.getClientSigningKey(any(), any()))
+                .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
 
         var validQueryParams =
-                getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
-        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(validQueryParams)));
-    }
+                getValidQueryParams(generateClientAssertion(getValidClaimsSetValues()));
 
-    @Test
-    void shouldNotThrowForValidJwtSignedWithES256()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.TEST_EC_PUBLIC_JWK);
-        when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
-
-        var validQueryParams =
-                getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
         assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(validQueryParams)));
     }
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
+        when(mockOAuthKeyService.getClientSigningKey(any(), any()))
+                .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
 
         var invalidSignatureQueryParams =
                 new HashMap<>(
-                        getValidQueryParams(
-                                generateClientAssertionWithRS256(getValidClaimsSetValues())));
+                        getValidQueryParams(generateClientAssertion(getValidClaimsSetValues())));
         invalidSignatureQueryParams.put(
                 "client_assertion",
                 invalidSignatureQueryParams.get("client_assertion") + "BREAKING_THE_SIGNATURE");
@@ -123,7 +110,7 @@ class TokenRequestValidatorTest {
                 JWTClaimNames.ISSUER, "NOT_THE_SAME_AS_SUBJECT");
         var differentIssuerAndSubjectQueryParams =
                 getValidQueryParams(
-                        generateClientAssertionWithRS256(differentIssuerAndSubjectClaimsSetValues));
+                        generateClientAssertion(differentIssuerAndSubjectClaimsSetValues));
 
         ClientAuthenticationException exception =
                 assertThrows(
@@ -140,13 +127,12 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldThrowIfWrongAudience()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void shouldThrowIfWrongAudience() throws Exception {
         var wrongAudienceClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         wrongAudienceClaimsSetValues.put(
                 JWTClaimNames.AUDIENCE, "NOT_THE_AUDIENCE_YOU_ARE_LOOKING_FOR");
         var wrongAudienceQueryParams =
-                getValidQueryParams(generateClientAssertionWithRS256(wrongAudienceClaimsSetValues));
+                getValidQueryParams(generateClientAssertion(wrongAudienceClaimsSetValues));
 
         ClientAuthenticationException exception =
                 assertThrows(
@@ -163,14 +149,13 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldThrowIfClaimsSetHasExpired()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+    void shouldThrowIfClaimsSetHasExpired() throws Exception {
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
                 new Date(new Date().getTime() - 61000).getTime() / 1000);
         var expiredQueryParams =
-                getValidQueryParams(generateClientAssertionWithRS256(expiredClaimsSetValues));
+                getValidQueryParams(generateClientAssertion(expiredClaimsSetValues));
 
         ClientAuthenticationException exception =
                 assertThrows(
@@ -181,18 +166,16 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture()
-            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
+    void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture() throws Exception {
+        when(mockOAuthKeyService.getClientSigningKey(any(), any()))
+                .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
         when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
                 new Date(new Date().getTime() + 9999999).getTime() / 1000);
         var expiredQueryParams =
-                getValidQueryParams(generateClientAssertionWithRS256(expiredClaimsSetValues));
+                getValidQueryParams(generateClientAssertion(expiredClaimsSetValues));
 
         ClientAuthenticationException exception =
                 assertThrows(
@@ -206,6 +189,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
+    @MockitoSettings(strictness = LENIENT)
     void shouldThrowIfMissingClientAssertionParam() {
         var queryParamsWithNoClientAssertion = new HashMap<>(getValidQueryParams("to be dropped"));
         queryParamsWithNoClientAssertion.remove("client_assertion");
@@ -220,6 +204,7 @@ class TokenRequestValidatorTest {
     }
 
     @Test
+    @MockitoSettings(strictness = LENIENT)
     void shouldThrowIfMissingClientAssertionTypeParam() {
         var queryParamsWithNoClientAssertionType =
                 new HashMap<>(getValidQueryParams("to be dropped"));
@@ -236,12 +221,11 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfJwtIdIsMissingOrEmpty() throws Exception {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
+        when(mockOAuthKeyService.getClientSigningKey(any(), any()))
+                .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
         when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
-        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+        String clientAssertion = generateClientAssertion(claimsSetValues);
 
         ClientAuthenticationException exception =
                 assertThrows(
@@ -262,16 +246,15 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
-        when(mockConfigService.getParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
+        when(mockOAuthKeyService.getClientSigningKey(any(), any()))
+                .thenReturn(ECKey.parse(TEST_EC_PUBLIC_JWK));
         when(mockConfigService.getLongParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn(2400L);
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
-        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+        String clientAssertion = generateClientAssertion(claimsSetValues);
 
         ClientAuthJwtIdItem clientAuthJwtIdItem =
-                new ClientAuthJwtIdItem(jti, Instant.now().toString());
-        when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(jti))
+                new ClientAuthJwtIdItem(TEST_JTI, Instant.now().toString());
+        when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(TEST_JTI))
                 .thenReturn(clientAuthJwtIdItem);
 
         ClientAuthenticationException exception =
@@ -287,16 +270,6 @@ class TokenRequestValidatorTest {
                         .contains(
                                 "InvalidClientException: The client auth JWT id (jti) has already been used."));
         verify(mockClientAuthJwtIdService, Mockito.times(0)).persistClientAuthJwtId(anyString());
-    }
-
-    private RSAPrivateKey getRsaPrivateKey()
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (RSAPrivateKey)
-                KeyFactory.getInstance("RSA")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        java.util.Base64.getDecoder()
-                                                .decode(TestFixtures.RSA_PRIVATE_KEY)));
     }
 
     private ECPrivateKey getEcPrivateKey()
@@ -337,25 +310,25 @@ class TokenRequestValidatorTest {
     private Map<String, Object> getValidClaimsSetValues() {
         return Map.of(
                 JWTClaimNames.ISSUER,
-                clientId,
+                CLIENT_ID,
                 JWTClaimNames.SUBJECT,
-                clientId,
+                CLIENT_ID,
                 JWTClaimNames.AUDIENCE,
-                audience,
+                AUDIENCE,
                 JWTClaimNames.EXPIRATION_TIME,
                 fifteenMinutesFromNow(),
                 JWTClaimNames.JWT_ID,
-                jti);
+                TEST_JTI);
     }
 
     private Map<String, Object> getClaimsSetValuesMissingJwtId() {
         return Map.of(
                 JWTClaimNames.ISSUER,
-                clientId,
+                CLIENT_ID,
                 JWTClaimNames.SUBJECT,
-                clientId,
+                CLIENT_ID,
                 JWTClaimNames.AUDIENCE,
-                audience,
+                AUDIENCE,
                 JWTClaimNames.EXPIRATION_TIME,
                 fifteenMinutesFromNow());
     }
@@ -364,20 +337,7 @@ class TokenRequestValidatorTest {
         return OffsetDateTime.now().plusSeconds(15 * 60).toEpochSecond();
     }
 
-    private String generateClientAssertionWithRS256(Map<String, Object> claimsSetValues)
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        RSASSASigner signer = new RSASSASigner(getRsaPrivateKey());
-
-        SignedJWT signedJWT =
-                new SignedJWT(
-                        new JWSHeader.Builder(JWSAlgorithm.RS256).type(JOSEObjectType.JWT).build(),
-                        generateClaimsSet(claimsSetValues));
-        signedJWT.sign(signer);
-
-        return signedJWT.serialize();
-    }
-
-    private String generateClientAssertionWithES256(Map<String, Object> claimsSetValues)
+    private String generateClientAssertion(Map<String, Object> claimsSetValues)
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         ECDSASigner signer = new ECDSASigner(getEcPrivateKey());
 

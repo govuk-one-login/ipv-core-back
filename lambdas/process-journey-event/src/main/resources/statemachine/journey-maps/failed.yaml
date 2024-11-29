@@ -21,25 +21,18 @@ states:
   FAILED_CONFIRM_DETAILS:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID
+        checkJourneyContext:
+          rfc:
+            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
-            checkJourneyContext:
-              rfc:
-                targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_INVALID_ID
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
 
   FAILED_CONFIRM_DETAILS_INVALID_ID:
     events:
@@ -53,25 +46,18 @@ states:
   FAILED_UPDATE_DETAILS:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS
+        targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkFeatureFlag:
-          updateDetailsAccountDeletion:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
+        checkJourneyContext:
+          rfc:
+            targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
-            checkJourneyContext:
-              rfc:
-                targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
 
   FAILED_BAV:
     events:
@@ -124,25 +110,6 @@ states:
         targetState: RETURN_TO_RP
       fail-with-ci:
         targetState: RETURN_TO_RP
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-      enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
-      fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -260,14 +227,6 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
-
-  COULD_NOT_CONFIRM_DETAILS_PAGE:
-    response:
-      type: page
-      pageId: sorry-could-not-confirm-details
-    events:
-      end:
-        targetState: RETURN_TO_RP
 
   COULD_NOT_CONFIRM_DETAILS_PAGE_WITH_DELETION_VALID_ID:
     response:

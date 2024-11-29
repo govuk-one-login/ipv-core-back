@@ -27,7 +27,6 @@ const config = {
     internalApiUrl: getMandatoryConfig("CORE_BACK_INTERNAL_API_URL"),
     internalApiKey: getOptionalConfig("CORE_BACK_INTERNAL_API_KEY"),
     externalApiUrl: getMandatoryConfig("CORE_BACK_EXTERNAL_API_URL"),
-    encryptionKey: getMandatoryConfig("CORE_BACK_PUBLIC_ENCRYPTION_KEY"),
     criClientId: getMandatoryConfig("CORE_BACK_CRI_CLIENT_ID"),
   },
   orch: {

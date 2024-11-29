@@ -121,7 +121,7 @@ class SsmConfigServiceTest {
 
         private final String oauthCriJsonConfig =
                 String.format(
-                        "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\"}",
+                        "{\"tokenUrl\":\"https://testTokenUrl\",\"credentialUrl\":\"https://testCredentialUrl\",\"authorizeUrl\":\"https://testAuthoriseUrl\",\"clientId\":\"ipv-core-test\",\"signingKey\":%s,\"encryptionKey\":%s,\"componentId\":\"https://testComponentId\",\"clientCallbackUrl\":\"https://testClientCallBackUrl\",\"requiresApiKey\":\"true\",\"jwksUrl\":\"https://testWellKnownUrl\"}",
                         EC_PRIVATE_KEY_JWK_DOUBLE_ENCODED,
                         RSA_ENCRYPTION_PUBLIC_JWK_DOUBLE_ENCODED);
 
@@ -137,6 +137,7 @@ class SsmConfigServiceTest {
                         .clientCallbackUrl(URI.create("https://testClientCallBackUrl"))
                         .requiresApiKey(true)
                         .requiresAdditionalEvidence(false)
+                        .jwksUrl(URI.create("https://testWellKnownUrl"))
                         .build();
 
         @Test

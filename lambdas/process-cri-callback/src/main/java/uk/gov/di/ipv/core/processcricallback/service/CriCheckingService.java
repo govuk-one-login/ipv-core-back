@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -23,7 +24,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
+import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -31,12 +32,13 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
-import uk.gov.di.model.PersonWithDocuments;
+import uk.gov.di.model.IdentityCheckSubject;
 
 import java.util.Arrays;
 import java.util.List;
@@ -44,13 +46,16 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class CriCheckingService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -83,6 +88,7 @@ public class CriCheckingService {
     private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
@@ -91,13 +97,15 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            IpvSessionService ipvSessionService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     public JourneyResponse handleCallbackError(
@@ -221,19 +229,20 @@ public class CriCheckingService {
 
     public JourneyResponse checkVcResponse(
             List<VerifiableCredential> newVcs,
-            CriCallbackRequest callbackRequest,
+            String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
                     VerifiableCredentialException {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+        var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
+        if (!isReverification) {
             var cis =
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            callbackRequest.getIpAddress());
+                            ipAddress);
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.
@@ -245,43 +254,79 @@ public class CriCheckingService {
             }
         }
 
-        var sessionCredentials =
+        var sessionVcs =
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
-        if (!userIdentityService.areVcsCorrelated(sessionCredentials)) {
+
+        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+            if (isReverification) {
+                setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
+            }
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
         for (var vc : newVcs) {
             if (!VcHelper.isSuccessfulVc(vc)) {
+                if (isReverification) {
+                    setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
+                }
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
         }
 
         if (configService.enabled(DL_AUTH_SOURCE_CHECK)
-                && getDcmawDlVc(newVcs).isPresent()
-                && getSuccessfulDlVc(sessionCredentials).isEmpty()) {
+                && requiresAuthoritativeSourceCheck(newVcs, sessionVcs)) {
             return JOURNEY_DL_AUTH_SOURCE_CHECK;
         }
 
         return JOURNEY_NEXT;
     }
 
-    private Optional<VerifiableCredential> getDcmawDlVc(List<VerifiableCredential> vcs) {
+    private void setFailedIdentityCheckOnIpvSessionItem(IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setFailureCode(ReverificationFailureCode.IDENTITY_CHECK_FAILED);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+    }
+
+    private boolean requiresAuthoritativeSourceCheck(
+            List<VerifiableCredential> newVcs, List<VerifiableCredential> sessionVcs) {
+        return findSuccessfulVcFromCri(DCMAW, newVcs)
+                .map(this::getDrivingPermitIdentifier)
+                .map(
+                        dcmawDpId ->
+                                findSuccessfulVcFromCri(DRIVING_LICENCE, sessionVcs)
+                                        .map(
+                                                dlVc ->
+                                                        !Objects.equals(
+                                                                dcmawDpId,
+                                                                getDrivingPermitIdentifier(dlVc)))
+                                        .orElse(true))
+                .orElse(false);
+    }
+
+    private Optional<VerifiableCredential> findSuccessfulVcFromCri(
+            Cri cri, List<VerifiableCredential> vcs) {
         return vcs.stream()
-                .filter(vc -> Cri.DCMAW.equals(vc.getCri()))
-                .filter(
-                        vc ->
-                                vc.getCredential().getCredentialSubject()
-                                                instanceof PersonWithDocuments personWithDocuments
-                                        && personWithDocuments.getDrivingPermit() != null)
+                .filter(vc -> cri.equals(vc.getCri()))
+                .filter(VcHelper::isSuccessfulVc)
                 .findFirst();
     }
 
-    private Optional<VerifiableCredential> getSuccessfulDlVc(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(vc -> Cri.DRIVING_LICENCE.equals(vc.getCri()))
-                .filter(VcHelper::isSuccessfulVc)
-                .findFirst();
+    private String getDrivingPermitIdentifier(VerifiableCredential vc) {
+        if (vc.getCredential().getCredentialSubject()
+                        instanceof IdentityCheckSubject identityCheckSubject
+                && identityCheckSubject.getDrivingPermit() != null
+                && !identityCheckSubject.getDrivingPermit().isEmpty()) {
+            var permit = identityCheckSubject.getDrivingPermit().get(0);
+            return String.format(
+                    "drivingPermit/%s/%s/%s/%s",
+                    permit.getIssuingCountry(),
+                    permit.getIssuedBy(),
+                    permit.getPersonalNumber(),
+                    permit.getIssueDate());
+        }
+        LOGGER.warn(
+                LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")
+                        .with(LOG_CRI_ID.getFieldName(), vc.getCri()));
+        return null;
     }
 }

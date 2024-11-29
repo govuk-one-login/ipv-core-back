@@ -160,13 +160,13 @@ Feature: P2 F2F journey
       When I submit a 'end' event
       Then I get an OAuth response
 
-  Scenario: F2F PYI escpae route
+  Scenario: F2F PYI escape route
     Given I start a new 'medium-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
       When I submit an 'end' event
-      Then I get a 'pyi-escape' page response
+      Then I get a 'prove-identity-no-photo-id' page response
 
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification

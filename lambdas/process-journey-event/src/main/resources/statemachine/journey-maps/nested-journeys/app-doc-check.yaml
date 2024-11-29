@@ -36,26 +36,36 @@ nestedJourneyStates:
       next:
         exitEventToEmit: next
       access-denied:
-        targetState: RESET_SESSION_INCOMPLETE_DL
+        targetState: REMOVE_DCMAW_FROM_SESSION
       alternate-doc-invalid-dl:
         targetState: RESET_SESSION_INVALID_DL
 
-  RESET_SESSION_INCOMPLETE_DL:
+  REMOVE_DCMAW_FROM_SESSION:
     response:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: DCMAW
     events:
       next:
-        exitEventToEmit: incomplete-invalid-dl
+        targetState: DL_DETAILS_INCORRECT_PAGE
 
   RESET_SESSION_INVALID_DL:
     response:
       type: process
       lambda: reset-session-identity
       lambdaInput:
-        resetType: ALL
+        resetType: DCMAW
     events:
       next:
         exitEventToEmit: alternate-doc-invalid-dl
+
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct
+    events:
+      next:
+        targetState: CRI_DCMAW
+      end:
+        exitEventToEmit: incomplete-invalid-dl

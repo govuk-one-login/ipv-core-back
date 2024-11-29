@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -49,7 +48,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
-import uk.gov.di.ipv.core.library.journeyuris.JourneyUris;
+import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -63,6 +62,7 @@ import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.model.ContraIndicator;
@@ -76,9 +76,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -89,8 +92,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.quality.Strictness.LENIENT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BULK_MIGRATION_ROLLBACK_BATCHES;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
@@ -120,20 +121,20 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_OPERATIONAL_PROFILE_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
@@ -735,7 +736,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
@@ -885,7 +887,8 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -906,7 +909,8 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnPendingResponseIfFaceToFaceVerificationIsPendingAndBreachingCi()
             throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -946,10 +950,32 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnFailResponseIfFaceToFaceVerificationIsAbandon() throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_ABANDON);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_F2F_FAIL, journeyResponse);
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -976,7 +1002,8 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnFailResponseForFaceToFaceIfVCsDoNotCorrelate() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1284,7 +1311,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1317,7 +1345,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1353,7 +1382,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(List.of(vcF2fM1a()));
-        CriResponseItem criResponseItem = createCriResponseStoreItem();
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(CriResponseService.STATUS_PENDING);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
@@ -1504,152 +1534,26 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(P2, ipvSessionItem.getTargetVot());
     }
 
-    @MockitoSettings(strictness = LENIENT)
-    @Nested
-    class BulkMigrationRollback {
-        @BeforeEach
-        public void reuseSetup() throws Exception {
-            when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID))
-                    .thenReturn(ipvSessionItem);
-            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                    .thenReturn(clientOAuthSessionItem);
-            when(configService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            when(gpg45ProfileEvaluator.getFirstMatchingProfile(
-                            any(), eq(P2.getSupportedGpg45Profiles())))
-                    .thenReturn(Optional.of(Gpg45Profile.M1A));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        }
+    @Test
+    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(anyString()))
+                .thenThrow(new RuntimeException("Test error"));
 
-        @Test
-        void handlerShouldRemigrateExistingIdentity() throws Exception {
-            var verifiableCredential = vcDrivingPermit();
+        var logCollector = LogCollector.getLogCollectorFor(CheckExistingIdentityHandler.class);
 
-            verifiableCredential.setBatchId("batch1");
-            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
-                    .thenReturn(List.of("batch1"));
-            when(mockVerifiableCredentialService.getVcs(any()))
-                    .thenReturn(List.of(verifiableCredential));
+        // Act
+        var thrown =
+                assertThrows(
+                        Exception.class,
+                        () -> checkExistingIdentityHandler.handleRequest(event, context),
+                        "Expected handleRequest() to throw, but it didn't");
 
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-
-            verifiableCredential.setBatchId(null);
-            verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(TEST_USER_ID, List.of(verifiableCredential));
-            verify(mockSessionCredentialService)
-                    .persistCredentials(
-                            List.of(verifiableCredential), ipvSessionItem.getIpvSessionId(), false);
-
-            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void handlerShouldNotRemigrateExistingIdentityIfBatchIdNotConfigured() throws Exception {
-            var tacticalVc = vcDrivingPermit();
-            var evcsVc = vcDrivingPermit();
-
-            tacticalVc.setBatchId("batch1");
-            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
-                    .thenReturn(List.of("batch0"));
-
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(tacticalVc));
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
-                    .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(evcsVc)));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-
-            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
-            verify(mockSessionCredentialService)
-                    .persistCredentials(
-                            List.of(tacticalVc), ipvSessionItem.getIpvSessionId(), false);
-
-            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void handlerShouldNotRemigrateExistingIdentityIfInconsistentBatchIds() throws Exception {
-            var tacticalVc1 = vcDrivingPermit();
-            var tacticalVc2 = vcDrivingPermit();
-            var tacticalVc3 = vcDrivingPermit();
-            var evcsVc = vcDrivingPermit();
-
-            tacticalVc1.setBatchId("batch1");
-            tacticalVc2.setBatchId("batch1");
-            tacticalVc3.setBatchId("batch2");
-
-            when(configService.getStringListParameter(BULK_MIGRATION_ROLLBACK_BATCHES))
-                    .thenReturn(List.of("batch0"));
-
-            when(mockVerifiableCredentialService.getVcs(any()))
-                    .thenReturn(List.of(tacticalVc1, tacticalVc2, tacticalVc3));
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            any(), any(), any(EvcsVCState.class), any(EvcsVCState.class)))
-                    .thenReturn(Map.of(EvcsVCState.CURRENT, List.of(evcsVc)));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-
-            verify(mockEvcsMigrationService, never()).migrateExistingIdentity(any(), any());
-            verify(mockSessionCredentialService)
-                    .persistCredentials(
-                            List.of(tacticalVc1, tacticalVc2, tacticalVc3),
-                            ipvSessionItem.getIpvSessionId(),
-                            false);
-
-            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
-        }
-
-        @Test
-        void handlerShouldMigrateIdentityIfNoBatchIds() throws Exception {
-            var tacticalVc = vcDrivingPermit();
-
-            when(mockVerifiableCredentialService.getVcs(any())).thenReturn(List.of(tacticalVc));
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-
-            verify(mockEvcsMigrationService)
-                    .migrateExistingIdentity(TEST_USER_ID, List.of(tacticalVc));
-            verify(mockSessionCredentialService)
-                    .persistCredentials(
-                            List.of(tacticalVc), ipvSessionItem.getIpvSessionId(), false);
-
-            InOrder inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
-        }
+        // Assert
+        assertEquals("Test error", thrown.getMessage());
+        var logMessage = logCollector.getLogMessages().get(0);
+        assertThat(logMessage, containsString("Unhandled lambda exception"));
+        assertThat(logMessage, containsString("Test error"));
     }
 
     private static Stream<Arguments> votAndVtrCombinationsThatShouldStartIpvJourney() {
@@ -1666,13 +1570,13 @@ class CheckExistingIdentityHandlerTest {
         return OBJECT_MAPPER.convertValue(handlerOutput, responseClass);
     }
 
-    private CriResponseItem createCriResponseStoreItem() {
+    private CriResponseItem createCriResponseStoreItem(String criResponseStatus) {
         CriResponseItem criResponseItem = new CriResponseItem();
         criResponseItem.setUserId(TEST_USER_ID);
         criResponseItem.setCredentialIssuer(F2F.getId());
         criResponseItem.setIssuerResponse(PASSPORT_NON_DCMAW_SUCCESSFUL_VC.getVcString());
         criResponseItem.setDateCreated(Instant.now());
-        criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
+        criResponseItem.setStatus(criResponseStatus);
         return criResponseItem;
     }
 

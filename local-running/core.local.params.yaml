@@ -15,6 +15,7 @@ core:
     criResponseTtl: 3600
     sessionCredentialTtl: 3600
     authCodeExpirySeconds: 3600
+    oauthKeyCacheDurationMins: 5
     # Test CI scoring values
     ciScoringThreshold: 10
     ciScoringThresholdByVot:
@@ -32,18 +33,30 @@ core:
     coi:
       # Test COI config
       familyNameChars: 5
-  bulkMigration:
-    rolledBackBatchIds: "noneConfigured"
   clients:
-    orchestrator:
-      id: orchestrator
-      issuer: orchestrator
+    orchStub:
+      id: orchStub
+      issuer: orchStub
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "openid"
-    stubAuth:
-      id: stubAuth
-      issuer: stubAuth
+      jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
+    authStub:
+      id: authStub
+      issuer: authStub
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "reverification"
+      jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
+    orchApiTest:
+      id: orchApiTest
+      issuer: orchApiTest
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "openid"
+    authApiTest:
+      id: authApiTest
+      issuer: authApiTest
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
@@ -82,7 +95,8 @@ core:
           "componentId":"https://address-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/address",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://address-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dcmaw:
       id: dcmaw
@@ -102,7 +116,8 @@ core:
           "componentId":"https://dcmaw-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmaw",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://dcmaw-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dcmawAsync:
       id: dcmawAsync
@@ -118,7 +133,8 @@ core:
           "clientId": "dummyClientId",
           "componentId":"https://dcmaw-async.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dcmawAsync",
-          "requiresApiKey": "false"
+          "requiresApiKey": "false",
+          "jwksUrl":"https://dcmaw-async.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     fraud:
       id: fraud
@@ -138,7 +154,8 @@ core:
           "componentId":"https://fraud-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/fraud",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://fraud-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     kbv:
       id: kbv
@@ -158,7 +175,8 @@ core:
           "componentId":"https://experian-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/kbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://experian-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     ukPassport:
       id: ukPassport
@@ -178,7 +196,8 @@ core:
           "componentId":"https://passport-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/ukPassport",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://passport-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     drivingLicence:
       id: drivingLicence
@@ -198,7 +217,8 @@ core:
           "componentId":"https://driving-license-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/drivingLicence",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://driving-license-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     claimedIdentity:
       id: claimedIdentity
@@ -218,7 +238,8 @@ core:
           "componentId":"https://claimed-identity-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/claimedIdentity",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://claimed-identity-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     f2f:
       id: f2f
@@ -238,7 +259,8 @@ core:
           "componentId":"https://f2f-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/f2f",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://f2f-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     hmrcKbv:
       id: hmrcKbv
@@ -258,7 +280,8 @@ core:
           "componentId":"https://hmrc-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/hmrcKbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://hmrc-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     nino:
       id: nino
@@ -278,12 +301,13 @@ core:
           "componentId":"https://nino-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/nino",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://nino-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     bav:
       id: bav
       name: Bank account verification
-      enabled: "false"
+      enabled: "true"
       unavailable: false # temporarily unavailable
       allowedSharedAttributes: "name,birthDate,address"
       activeConnection: "stub"
@@ -298,7 +322,8 @@ core:
           "componentId":"https://bav-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/bav",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"true"
+          "requiresAdditionalEvidence":"true",
+          "jwksUrl":"https://bav-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     dwpKbv:
       id: dwpKbv
@@ -318,7 +343,8 @@ core:
           "componentId":"https://dwp-kbv-cri.stubs.account.gov.uk",
           "clientCallbackUrl":"http://localhost:4501/credential-issuer/callback/dwpKbv",
           "requiresApiKey":"false",
-          "requiresAdditionalEvidence":"false"
+          "requiresAdditionalEvidence":"false",
+          "jwksUrl":"https://dwp-kbv-cri.stubs.account.gov.uk/.well-known/jwks.json"
         }'
     ticf:
       id: ticf
@@ -351,6 +377,7 @@ core:
     deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: false
+    internationalAddressEnabled: false
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
     evcsWriteEnabled: true
@@ -360,10 +387,12 @@ core:
     parseVcClasses: true
     p1JourneysEnabled: false
     sqsAsync: true
-    updateDetailsAccountDeletion: false
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
   features:
+    internationalAddress:
+      featureFlags:
+        internationalAddressEnabled: true
     drivingLicenceAuthCheck:
       featureFlags:
         drivingLicenceAuthCheck: true
@@ -386,9 +415,6 @@ core:
     evcsRead:
       featureFlags:
         evcsReadEnabled: true
-    updateDetailsAccountDeletion:
-      featureFlags:
-        updateDetailsAccountDeletion: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true

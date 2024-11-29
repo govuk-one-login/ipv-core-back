@@ -9,7 +9,6 @@ dependencies {
 	implementation libs.awsLambdaJavaCore,
 			libs.awsLambdaJavaEvents,
 			project(":libs:common-services"),
-			project(":libs:journey-uris"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:cri-response-service"),
 			project(':libs:evcs-service')
@@ -18,9 +17,11 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.junitJupiter,
+	testImplementation libs.hamcrest,
+			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(":libs:common-services").sourceSets.test.output
+			project(":libs:common-services").sourceSets.test.output,
+			project(path: ':libs:test-helpers')
 
 	testRuntimeOnly libs.junitPlatform
 }

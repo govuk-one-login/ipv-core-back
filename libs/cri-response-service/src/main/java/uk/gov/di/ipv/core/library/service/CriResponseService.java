@@ -15,7 +15,6 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE
 
 public class CriResponseService {
 
-    public static final String STATUS_RECEIVED = "received";
     public static final String STATUS_PENDING = "pending";
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_ABANDON = "abandon";

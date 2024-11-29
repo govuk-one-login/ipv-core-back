@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -39,22 +41,22 @@ import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -67,7 +69,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
     private final EvcsService evcsService;
@@ -78,7 +79,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             AuditService auditService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             UserIdentityService userIdentityService,
             EvcsService evcsService) {
@@ -86,7 +86,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.userIdentityService = userIdentityService;
         this.evcsService = evcsService;
@@ -103,7 +102,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         this.auditService = AuditService.create(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.evcsService = new EvcsService(configService);
@@ -128,7 +126,8 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var checkType = RequestHelper.getCoiCheckType(request);
+            var checkType = getCheckType(clientOAuthSession, request);
+
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             sendAuditEvent(
@@ -140,16 +139,15 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     null,
                     deviceInformation);
 
-            var oldVcs = getOldIdentity(userId, clientOAuthSession.getEvcsAccessToken());
-
+            var oldVcs =
+                    evcsService.getVerifiableCredentials(
+                            userId, clientOAuthSession.getEvcsAccessToken(), CURRENT);
             var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
                     switch (checkType) {
-                        case GIVEN_NAMES_AND_DOB -> userIdentityService
-                                .areGivenNamesAndDobCorrelated(combinedCredentials);
-                        case FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areFamilyNameAndDobCorrelatedForCoiCheck(combinedCredentials);
+                        case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
+                                .areNamesAndDobCorrelated(combinedCredentials);
                         case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
                                 combinedCredentials);
                     };
@@ -172,6 +170,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         successfulCheck
                                 ? ReverificationStatus.SUCCESS
                                 : ReverificationStatus.FAILED);
+                if (!successfulCheck) {
+                    ipvSession.setFailureCode(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH);
+                    ipvSessionService.updateIpvSession(ipvSession);
+                }
             }
 
             if (!successfulCheck) {
@@ -213,6 +215,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (Exception e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
+            throw e;
         } finally {
             auditService.awaitAuditEvents();
         }
@@ -264,16 +269,15 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                 new DeviceInformation(deviceInformation));
     }
 
-    private List<VerifiableCredential> getOldIdentity(String userId, String evcsAccessToken)
-            throws CredentialParseException, EvcsServiceException {
-
-        List<VerifiableCredential> credentials = null;
-        if (configService.enabled(EVCS_READ_ENABLED)) {
-            credentials = evcsService.getVerifiableCredentials(userId, evcsAccessToken, CURRENT);
+    private CoiCheckType getCheckType(
+            ClientOAuthSessionItem clientOAuthSession, ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        if (TRUE.equals(clientOAuthSession.getReproveIdentity())) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Reprove identity flag set - checking full name and DOB"));
+            return FULL_NAME_AND_DOB;
         }
-        if (credentials == null || credentials.isEmpty()) {
-            credentials = verifiableCredentialService.getVcs(userId);
-        }
-        return credentials;
+        return RequestHelper.getCoiCheckType(request);
     }
 }

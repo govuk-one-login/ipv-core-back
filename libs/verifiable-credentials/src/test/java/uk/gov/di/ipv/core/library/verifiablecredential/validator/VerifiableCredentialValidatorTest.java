@@ -5,8 +5,6 @@ import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.message.Message;
@@ -21,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.FixedTimeJWTClaimsVerifier;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
 import java.text.ParseException;
 import java.time.Clock;
@@ -371,11 +370,7 @@ class VerifiableCredentialValidatorTest {
 
     @Test
     void validateDoesNotLogUserIdWhenFailingValidation() {
-        var testAppender = new TestAppender();
-        var verifiableCredentialValidatorLogger =
-                (org.apache.logging.log4j.core.Logger)
-                        LogManager.getLogger(VerifiableCredentialValidator.class);
-        verifiableCredentialValidatorLogger.get().addAppender(testAppender, Level.ERROR, null);
+        var logCollector = LogCollector.getLogCollectorFor(VerifiableCredentialValidator.class);
 
         assertThrows(
                 VerifiableCredentialException.class,
@@ -390,7 +385,7 @@ class VerifiableCredentialValidatorTest {
 
         assertEquals(
                 "description=\"JWT sub claim does not match expected\"",
-                testAppender.getLogMessages().get(0).getFormattedMessage());
+                logCollector.getLogMessages().get(0));
     }
 
     private static class TestAppender extends AbstractAppender {

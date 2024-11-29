@@ -1,0 +1,68 @@
+package uk.gov.di.ipv.core.library.testhelpers.pact;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@ExtendWith(MockitoExtension.class)
+class PactJwtBuilderTest {
+
+    private static final String JWT_HEADER =
+            """
+            {
+              "alg": "ES256",
+              "typ": "JWT"
+            }
+            """;
+
+    private static final String JWT_HEADER_BASE64 = "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9";
+
+    private static final String JWT_BODY =
+            """
+            {
+              "sub": "1234567890",
+              "name": "John Doe"
+            }
+            """;
+
+    private static final String JWT_BODY_BASE64 =
+            "eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0"; // pragma: allowlist secret
+
+    @Test
+    void buildJwtPutsPartsTogetherCorrectly() {
+        // Arrange
+        var underTest = new PactJwtBuilder(JWT_HEADER, JWT_BODY, "signature");
+
+        // Act
+        var result = underTest.buildJwt();
+
+        // Assert
+        assertEquals((JWT_HEADER_BASE64 + "." + JWT_BODY_BASE64 + ".signature"), result);
+    }
+
+    @Test
+    void fromPathFetchesTestFixtures() throws IOException {
+        // Act
+        var pactJwtBuilder = PactJwtBuilder.fromPath("/dvlaVc");
+
+        // Assert
+        var result = pactJwtBuilder.buildJwt();
+        assertEquals((JWT_HEADER_BASE64 + "." + JWT_BODY_BASE64 + ".signature"), result);
+    }
+
+    @Test
+    void buildRegexMatcherIgnoringSignaturePutsPartsTogetherCorrectly() {
+        // Arrange
+        var underTest = new PactJwtBuilder(JWT_HEADER, JWT_BODY, "signature");
+
+        // Act
+        var result = underTest.buildRegexMatcherIgnoringSignature();
+
+        // Assert
+        assertEquals("^" + JWT_HEADER_BASE64 + "\\." + JWT_BODY_BASE64 + "\\..*", result);
+    }
+}

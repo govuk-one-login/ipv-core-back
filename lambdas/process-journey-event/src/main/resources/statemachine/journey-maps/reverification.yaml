@@ -99,6 +99,8 @@ states:
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
+      next:
+        targetState: POST_DCMAW_SUCCESS_PAGE
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -155,7 +157,7 @@ states:
         targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
+        targetState: FAILED
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

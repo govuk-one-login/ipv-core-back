@@ -9,7 +9,6 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:cimit-service"),
-			project(":libs:journey-uris"),
 			project(":libs:cri-response-service"),
 			project(":libs:audit-service"),
 			project(":libs:gpg45-evaluator"),
@@ -21,10 +20,13 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
-	testImplementation libs.jacksonDatabind,
+	testImplementation libs.hamcrest,
+			libs.jacksonDatabind,
 			libs.junitJupiter,
 			libs.mockitoJunit,
-			project(path: ':libs:common-services', configuration: 'tests')
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
+
 
 	testRuntimeOnly(libs.junitPlatform)
 }

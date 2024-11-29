@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.crypto.RSAEncrypter;
@@ -28,6 +26,8 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.signing.CoreSigner;
+import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
@@ -37,7 +37,6 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -56,9 +55,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.SIGNING_KEY_ID;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_JWT;
@@ -82,11 +80,6 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
     private static final String TEST_EMAIL_ADDRESS = "test@hotmail.com";
-    private static final String UNHASHED_KID = "testKeyId";
-    // spotless:off
-    private static final String HASHED_KID =
-            "faa7198cb31902b8a430502a9a91b095775354899e60f9f0365953004bd127fa"; // pragma: allowlist secret
-    // spotless:on
     private static final String OAUTH_STATE = SecureTokenHelper.getInstance().generate();
 
     private final SharedClaims sharedClaims =
@@ -98,21 +91,17 @@ class AuthorizationRequestHelperTest {
                     Set.of(new SocialSecurityRecordDetails()),
                     Set.of(new DrivingPermitDetails()));
 
-    private ECDSASigner signer;
-
-    @Mock JWSSigner jwsSigner;
-
+    @Mock CoreSigner jwsSigner;
     @Mock OauthCriConfig oauthCriConfig;
-
     @Mock ConfigService configService;
-
+    private LocalECDSASigner signer;
     private RSAEncrypter rsaEncrypter;
 
     @BeforeEach
     void setUp()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
                     ParseException {
-        signer = new ECDSASigner(getPrivateKey());
+        signer = new LocalECDSASigner(getPrivateKey());
         rsaEncrypter = new RSAEncrypter((RSAPublicKey) getEncryptionPublicKey());
     }
 
@@ -122,7 +111,6 @@ class AuthorizationRequestHelperTest {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
         when(configService.enabled(KID_JAR_HEADER)).thenReturn(true);
-        when(configService.getParameter(SIGNING_KEY_ID)).thenReturn(UNHASHED_KID);
         when(oauthCriConfig.getComponentId()).thenReturn(AUDIENCE);
         when(oauthCriConfig.getClientCallbackUrl()).thenReturn(URI.create(TEST_REDIRECT_URI));
 
@@ -138,7 +126,7 @@ class AuthorizationRequestHelperTest {
                         null,
                         null);
 
-        assertEquals(HASHED_KID, result.getHeader().getKeyID());
+        assertEquals("test-fixtures-ec-key", result.getHeader().getKeyID());
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(
@@ -307,7 +295,7 @@ class AuthorizationRequestHelperTest {
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(
-                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT));
+                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT), null);
 
         assertEquals(JWEObject.State.ENCRYPTED, result.getState());
 
@@ -332,7 +320,9 @@ class AuthorizationRequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 AuthorizationRequestHelper.createJweObject(
-                                        mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
+                                        mock(RSAEncrypter.class),
+                                        SignedJWT.parse(SIGNED_JWT),
+                                        null));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to encrypt JWT", exception.getErrorReason());
     }
@@ -354,12 +344,8 @@ class AuthorizationRequestHelperTest {
                                 Base64.getDecoder().decode(RSA_ENCRYPTION_PRIVATE_KEY)));
     }
 
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (ECPrivateKey)
-                KeyFactory.getInstance("EC")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    private ECKey getPrivateKey() throws ParseException {
+        return ECKey.parse(EC_PRIVATE_KEY_JWK);
     }
 
     private PublicKey getEncryptionPublicKey()

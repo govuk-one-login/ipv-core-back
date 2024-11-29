@@ -474,7 +474,11 @@ public interface VcFixtures {
 
     VerifiableCredential VC_ADDRESS =
             generateAddressVc(
-                    TestVc.TestCredentialSubject.builder().address(List.of(ADDRESS_1)).build());
+                    TestVc.TestCredentialSubject.builder()
+                            .address(List.of(ADDRESS_1))
+                            .name(null)
+                            .birthDate(null)
+                            .build());
 
     static VerifiableCredential vcAddressEmpty() {
         return generateAddressVc(TestVc.TestCredentialSubject.builder().build());
@@ -503,6 +507,7 @@ public interface VcFixtures {
             generateAddressVc(
                     TestVc.TestCredentialSubject.builder()
                             .name(null)
+                            .birthDate(null)
                             .address(List.of(ADDRESS_3))
                             .build());
 

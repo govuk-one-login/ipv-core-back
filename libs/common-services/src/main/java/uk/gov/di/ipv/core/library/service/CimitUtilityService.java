@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 public class CimitUtilityService {
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
