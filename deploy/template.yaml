@@ -3773,7 +3773,4 @@ Outputs:
     Description: Core Back Logging KMS Key Export with Environment
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
-      Name: !If
-        - UseSubEnvironment
-        - !Sub "CoreBackLoggingKmsKeyArn-${Environment}-${SubEnvironment}"
-        - !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
+      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}${SubEnvironment}"
