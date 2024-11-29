@@ -149,7 +149,12 @@ class CheckReverificationIdentityHandlerTest {
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
             assertEquals("/journey/found", response.get("journey"));
+
             verify(ipvSession, never()).setFailureCode(any());
+            var inorder = inOrder(ipvSession, mockIpvSessionService);
+            inorder.verify(ipvSession).setTargetVot(P2);
+            inorder.verify(mockIpvSessionService).updateIpvSession(ipvSession);
+            inorder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -171,7 +176,12 @@ class CheckReverificationIdentityHandlerTest {
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
             assertEquals("/journey/found", response.get("journey"));
+
             verify(ipvSession, never()).setFailureCode(any());
+            var inorder = inOrder(ipvSession, mockIpvSessionService);
+            inorder.verify(ipvSession).setTargetVot(P1);
+            inorder.verify(mockIpvSessionService).updateIpvSession(ipvSession);
+            inorder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -192,6 +202,7 @@ class CheckReverificationIdentityHandlerTest {
 
             assertEquals("/journey/found", response.get("journey"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -212,6 +223,7 @@ class CheckReverificationIdentityHandlerTest {
 
             assertEquals("/journey/found", response.get("journey"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -228,6 +240,8 @@ class CheckReverificationIdentityHandlerTest {
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
             assertEquals("/journey/not-found", response.get("journey"));
+
+            verify(ipvSession, never()).setTargetVot(any());
 
             var inorder = inOrder(ipvSession, mockIpvSessionService);
             inorder.verify(ipvSession).setFailureCode(NO_IDENTITY_AVAILABLE);
@@ -249,6 +263,7 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals(SC_NOT_FOUND, response.get("statusCode"));
             assertEquals(IPV_SESSION_NOT_FOUND.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -263,6 +278,7 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals(SC_SERVER_ERROR, response.get("statusCode"));
             assertEquals(CLIENT_OAUTH_SESSION_NOT_FOUND.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -283,6 +299,7 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals(
                     RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -302,6 +319,7 @@ class CheckReverificationIdentityHandlerTest {
                     FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                     response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -323,6 +341,7 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals(SC_SERVER_ERROR, response.get("statusCode"));
             assertEquals(FAILED_NAME_CORRELATION.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -345,6 +364,7 @@ class CheckReverificationIdentityHandlerTest {
             assertEquals(SC_SERVER_ERROR, response.get("statusCode"));
             assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
 
         @Test
@@ -368,6 +388,7 @@ class CheckReverificationIdentityHandlerTest {
             assertTrue(logMessage.contains("Unhandled lambda exception"));
             assertTrue(logMessage.contains("😓"));
             verify(ipvSession, never()).setFailureCode(any());
+            verify(ipvSession, never()).setTargetVot(any());
         }
     }
 }
