@@ -132,6 +132,8 @@ public class CallDcmawAsyncCriHandler
             criStoringService.recordCriResponse(
                     request, DCMAW_ASYNC, oauthState, clientOAuthSessionItem, featureSets);
 
+            dcmawAsyncCriService.sendAuditEventForAppHandoff(request, clientOAuthSessionItem);
+
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
