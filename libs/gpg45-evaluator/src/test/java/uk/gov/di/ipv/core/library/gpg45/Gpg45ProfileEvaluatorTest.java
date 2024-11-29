@@ -24,6 +24,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL2
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1C;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
@@ -70,6 +71,14 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(
                 Optional.empty(),
                 evaluator.getFirstMatchingProfile(lowScores, List.of(M1B, M1A, Gpg45Profile.V1D)));
+    }
+
+    @Test
+    void getFirstMatchingProfileShouldReturnFirstMatchingProfileIfMultipleMatch() {
+        Gpg45Scores highScores = new Gpg45Scores(Gpg45Scores.EV_44, 3, 2, 3);
+        assertEquals(
+                Optional.of(M1B),
+                evaluator.getFirstMatchingProfile(highScores, List.of(M1B, M1A, M1C)));
     }
 
     @Test

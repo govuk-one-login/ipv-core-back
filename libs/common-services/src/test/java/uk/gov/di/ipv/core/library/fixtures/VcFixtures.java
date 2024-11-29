@@ -122,6 +122,22 @@ public interface VcFixtures {
                             .identityFraudScore(1)
                             .build());
 
+    List<TestVc.TestEvidence> FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS =
+            List.of(
+                    TestVc.TestEvidence.builder()
+                            .checkDetails(null)
+                            .failedCheckDetails(
+                                    List.of(
+                                            List.of(
+                                                    Map.of(
+                                                            "checkMethod", "data",
+                                                            "fraudCheck",
+                                                                    "applicable_authoritative_source"))))
+                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
+                            .txn("some-uuid")
+                            .identityFraudScore(1)
+                            .build());
+
     List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -557,6 +573,22 @@ public interface VcFixtures {
                     "https://review-f.integration.account.gov.uk",
                     Instant.ofEpochSecond(1658829758));
 
+    VerifiableCredential M1C_EXPERIAN_FRAUD_VC =
+            generateVerifiableCredential(
+                    TEST_SUBJECT,
+                    Cri.EXPERIAN_FRAUD,
+                    TestVc.builder()
+                            .evidence(
+                                    FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS)
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .address(List.of(ADDRESS_3))
+                                            .birthDate(List.of(createBirthDate("1959-08-23")))
+                                            .build())
+                            .build(),
+                    "https://review-f.integration.account.gov.uk",
+                    Instant.now().minusSeconds(10));
+
     static VerifiableCredential vcExperianFraudFailed() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
@@ -666,6 +698,24 @@ public interface VcFixtures {
                         .build(),
                 TEST_ISSUER_STAGING,
                 Instant.ofEpochSecond(1704290386));
+    }
+
+    static VerifiableCredential vcFraudApplicableAuthoritativeSourceFailed() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .address(List.of(ADDRESS_3))
+                        .birthDate(List.of(createBirthDate("1959-08-23")))
+                        .build();
+        return generateVerifiableCredential(
+                TEST_SUBJECT,
+                EXPERIAN_FRAUD,
+                TestVc.builder()
+                        .evidence(
+                                FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://review-f.integration.account.gov.uk",
+                Instant.ofEpochSecond(1658829758));
     }
 
     static VerifiableCredential vcDrivingPermit() {
