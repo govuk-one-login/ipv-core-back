@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.checkreverificationidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -26,9 +26,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotAndProfile;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
+import java.text.ParseException;
 import java.util.List;
+import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
@@ -41,7 +45,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.CLIENT_OAUTH_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_NAME_CORRELATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
@@ -49,8 +52,12 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_SU
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE;
 import static uk.gov.di.ipv.core.library.domain.ReverificationFailureCode.NO_IDENTITY_AVAILABLE;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
+import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
+import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.l1AEvidenceVc;
@@ -58,6 +65,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScor
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 @ExtendWith(MockitoExtension.class)
 class CheckReverificationIdentityHandlerTest {
@@ -75,7 +84,6 @@ class CheckReverificationIdentityHandlerTest {
     private IpvSessionItem ipvSession;
     private ClientOAuthSessionItem clientSession;
 
-    @Mock private VerifiableCredential mockVc;
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -83,6 +91,7 @@ class CheckReverificationIdentityHandlerTest {
     @Mock private EvcsService mockEvcsService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Spy private Gpg45ProfileEvaluator mockGpg45Evaluator;
+    @Mock private VotMatcher mockVotMatcher;
     @InjectMocks private CheckReverificationIdentityHandler checkReverificationIdentityHandler;
 
     @BeforeAll
@@ -128,6 +137,14 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(p2Vcs);
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(M1B_DCMAW_VC, VC_ADDRESS, m1BFraudVc),
+                            new Gpg45Scores(3, 2, 1, 2, 2),
+                            true,
+                            List.of(pcl250vc),
+                            List.of()))
+                    .thenReturn(Optional.of(new VotAndProfile(P2, M1A)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -142,6 +159,14 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(p1Vcs);
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            p1Vcs,
+                            new Gpg45Scores(2, 2, 0, 2, 2),
+                            true,
+                            List.of(),
+                            List.of()))
+                    .thenReturn(Optional.of(new VotAndProfile(P1, L1A)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -154,6 +179,14 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(pcl250vc));
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(),
+                            Gpg45Scores.builder().build(),
+                            false,
+                            List.of(pcl250vc),
+                            List.of()))
+                    .thenReturn(Optional.of(new VotAndProfile(PCL250, null)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -166,6 +199,14 @@ class CheckReverificationIdentityHandlerTest {
             when(mockEvcsService.getVerifiableCredentials(
                             TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
                     .thenReturn(List.of(pcl200vc));
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(),
+                            Gpg45Scores.builder().build(),
+                            false,
+                            List.of(pcl200vc),
+                            List.of()))
+                    .thenReturn(Optional.of(new VotAndProfile(PCL200, null)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -174,28 +215,15 @@ class CheckReverificationIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyNotFoundWhenNoVcs() throws Exception {
-            when(mockEvcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                    .thenReturn(List.of());
-
-            var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
-
-            assertEquals("/journey/not-found", response.get("journey"));
-
-            var inorder = inOrder(ipvSession, mockIpvSessionService);
-            inorder.verify(ipvSession).setFailureCode(NO_IDENTITY_AVAILABLE);
-            inorder.verify(mockIpvSessionService).updateIpvSession(ipvSession);
-            inorder.verifyNoMoreInteractions();
-        }
-
-        @Test
-        void shouldReturnJourneyNotFoundIfVcsDontCorrelate() throws Exception {
-            var p2Vcs = List.of(M1B_DCMAW_VC, VC_ADDRESS, m1BFraudVc);
-            when(mockUserIdentityService.areVcsCorrelated(p2Vcs)).thenReturn(false);
-            when(mockEvcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                    .thenReturn(p2Vcs);
+        void shouldReturnJourneyNotFoundWhenNoVotMatched() throws Exception {
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(),
+                            Gpg45Scores.builder().build(),
+                            false,
+                            List.of(),
+                            List.of()))
+                    .thenReturn(Optional.empty());
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -298,16 +326,18 @@ class CheckReverificationIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyErrorIfFailureToParseVotFromOperationalVc() throws Exception {
+        void shouldReturnJourneyErrorIfErrorMatchingVot() throws Exception {
             when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSession);
             when(mockClientSessionService.getClientOAuthSession(TEST_CLIENT_SESSION_ID))
                     .thenReturn(clientSession);
-            when(mockEvcsService.getVerifiableCredentials(
-                            TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, CURRENT))
-                    .thenReturn(List.of(mockVc));
-            when(mockVc.getCri()).thenReturn(HMRC_MIGRATION);
-            when(mockVc.getClaimsSet())
-                    .thenReturn(new JWTClaimsSet.Builder().claim(VOT_CLAIM_NAME, 101).build());
+            when(mockVotMatcher.matchFirstVot(
+                            SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                            List.of(),
+                            Gpg45Scores.builder().build(),
+                            false,
+                            List.of(),
+                            List.of()))
+                    .thenThrow(new ParseException("😬", 0));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 

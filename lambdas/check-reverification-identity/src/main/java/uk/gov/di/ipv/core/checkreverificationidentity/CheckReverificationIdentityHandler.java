@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -24,6 +23,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
@@ -38,11 +38,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FO
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.ReverificationFailureCode.NO_IDENTITY_AVAILABLE;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FOUND;
@@ -61,6 +58,7 @@ public class CheckReverificationIdentityHandler
     private final EvcsService evcsService;
     private final UserIdentityService userIdentityService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    private final VotMatcher votMatcher;
 
     public CheckReverificationIdentityHandler(
             ConfigService configService,
@@ -68,13 +66,15 @@ public class CheckReverificationIdentityHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             EvcsService evcsService,
             UserIdentityService userIdentityService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
+            VotMatcher votMatcher) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientSessionService = clientOAuthSessionDetailsService;
         this.evcsService = evcsService;
         this.userIdentityService = userIdentityService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        this.votMatcher = votMatcher;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -90,6 +90,7 @@ public class CheckReverificationIdentityHandler
         this.evcsService = new EvcsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
+        this.votMatcher = new VotMatcher(userIdentityService, gpg45ProfileEvaluator);
     }
 
     @Tracing
@@ -159,39 +160,20 @@ public class CheckReverificationIdentityHandler
         var gpg45VcsCorrelated = userIdentityService.areVcsCorrelated(gpg45Vcs);
         var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
 
-        for (var vot : SUPPORTED_VOTS_BY_DESCENDING_STRENGTH) {
-            if (GPG45.equals(vot.getProfileType()) && gpg45VcsCorrelated) {
-                var matchedProfile =
-                        gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, vot.getSupportedGpg45Profiles());
-                if (matchedProfile.isPresent()) {
-                    LOGGER.info(
-                            LogHelper.buildLogMessage("Identity for reverification found")
-                                    .with(LOG_VOT.getFieldName(), vot)
-                                    .with(LOG_PROFILE.getFieldName(), matchedProfile.get()));
-                    return true;
-                }
-            }
-            if (OPERATIONAL_HMRC.equals(vot.getProfileType())
-                    && vcsContainOperationalVot(operationalVcs, vot)) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage("Identity for reverification found")
-                                .with(LOG_VOT.getFieldName(), vot));
-                return true;
-            }
-        }
-        LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));
-        return false;
-    }
+        var matchedVot =
+                votMatcher.matchFirstVot(
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
+                        gpg45Vcs,
+                        gpg45Scores,
+                        gpg45VcsCorrelated,
+                        operationalVcs,
+                        List.of());
 
-    private boolean vcsContainOperationalVot(List<VerifiableCredential> vcs, Vot vot)
-            throws ParseException {
-        for (var vc : vcs) {
-            var credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-            if (vot.name().equals(credentialVot)) {
-                return true;
-            }
+        if (matchedVot.isEmpty()) {
+            LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));
+            return false;
         }
-        return false;
+
+        return true;
     }
 }
