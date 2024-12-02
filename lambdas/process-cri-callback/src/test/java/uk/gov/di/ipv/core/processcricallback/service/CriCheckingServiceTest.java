@@ -474,7 +474,7 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
         // Act
@@ -502,7 +502,7 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
                 .thenReturn(Optional.empty());
-        when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
         // Act
@@ -548,7 +548,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
         clientOAuthSessionItem.setScope(ScopeConstants.REVERIFICATION);
-        when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
@@ -598,7 +598,7 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
         JourneyResponse result =
@@ -624,7 +624,7 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
 
         // Act
@@ -646,7 +646,7 @@ class CriCheckingServiceTest {
         @BeforeEach
         void setup() throws Exception {
             when(mockConfigService.enabled(DL_AUTH_SOURCE_CHECK)).thenReturn(true);
-            when(mockUserIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
         }
 

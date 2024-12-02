@@ -258,7 +258,7 @@ public class CriCheckingService {
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
 
-        if (!userIdentityService.areGpg45VcsCorrelated(sessionVcs)) {
+        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
             if (isReverification) {
                 setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
             }

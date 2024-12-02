@@ -299,8 +299,8 @@ public class CheckExistingIdentityHandler
 
             // No breaching CIs
 
-            var areGpg45VcsCorrelated =
-                    userIdentityService.areGpg45VcsCorrelated(credentialBundle.credentials);
+            var areVcsCorrelated =
+                    userIdentityService.areVcsCorrelated(credentialBundle.credentials);
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
@@ -308,7 +308,7 @@ public class CheckExistingIdentityHandler
                             auditEventUser,
                             deviceInformation,
                             credentialBundle,
-                            areGpg45VcsCorrelated,
+                            areVcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
                 // We are re-using an existing Vot, so it might not be a GPG45 vot
@@ -334,10 +334,7 @@ public class CheckExistingIdentityHandler
                     // (Should have matched a profile)
 
                     return buildF2fFailedResponse(
-                            areGpg45VcsCorrelated,
-                            auditEventUser,
-                            deviceInformation,
-                            contraIndicators);
+                            areVcsCorrelated, auditEventUser, deviceInformation, contraIndicators);
                 }
                 if (asyncCri.cri() == DCMAW_ASYNC) {
 
@@ -411,7 +408,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             VerifiableCredentialBundle credentialBundle,
-            boolean areGpg45VcsCorrelated,
+            boolean areVcsCorrelated,
             List<ContraIndicator> contraIndicators)
             throws ParseException, VerifiableCredentialException {
         // Check for attained vot from requested vots
@@ -423,7 +420,7 @@ public class CheckExistingIdentityHandler
                         credentialBundle.credentials,
                         auditEventUser,
                         deviceInformation,
-                        areGpg45VcsCorrelated,
+                        areVcsCorrelated,
                         contraIndicators);
 
         // vot achieved for vtr
@@ -441,14 +438,14 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildF2fFailedResponse(
-            boolean areGpg45VcsCorrelated,
+            boolean areVcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
             throws ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
-                !areGpg45VcsCorrelated
+                !areVcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
                         : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                 auditEventUser,
@@ -604,14 +601,14 @@ public class CheckExistingIdentityHandler
             List<VerifiableCredential> vcs,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            boolean areGpg45VcsCorrelated,
+            boolean areVcsCorrelated,
             List<ContraIndicator> contraIndicators)
             throws ParseException {
 
         for (Vot requestedVot : requestedVotsByStrength) {
             boolean requestedVotAttained = false;
             if (requestedVot.getProfileType().equals(GPG45)) {
-                if (areGpg45VcsCorrelated) {
+                if (areVcsCorrelated) {
                     requestedVotAttained =
                             achievedWithGpg45Profile(
                                     requestedVot,

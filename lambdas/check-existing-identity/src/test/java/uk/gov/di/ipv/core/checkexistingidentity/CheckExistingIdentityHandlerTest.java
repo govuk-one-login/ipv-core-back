@@ -323,7 +323,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Optional.of(matchedProfile));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(emptyAsyncCriStatus);
-            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, hmrcMigrationVC)));
@@ -365,7 +365,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
-            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             var journeyResponse =
                     toResponseClass(
@@ -394,7 +394,7 @@ class CheckExistingIdentityHandlerTest {
             checkExistingIdentityHandler.handleRequest(event, context);
 
             verify(userIdentityService)
-                    .areGpg45VcsCorrelated(List.of(inheritedIdentityVc, gpg45Vc, f2fVc));
+                    .areVcsCorrelated(List.of(inheritedIdentityVc, gpg45Vc, f2fVc));
         }
 
         @Test // User returning after migration
@@ -534,7 +534,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1B));
-            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
             clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), Vot.PCL200.name(), P2.name()));
 
@@ -570,7 +570,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(P1.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.L1A));
-            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
             when(cimitService.getContraIndicators(
                             TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
@@ -609,7 +609,7 @@ class CheckExistingIdentityHandlerTest {
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
-            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             doThrow(
                             new VerifiableCredentialException(
                                     HTTPResponse.SC_SERVER_ERROR,
@@ -644,7 +644,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), Vot.PCL200.name(), P2.name()));
 
@@ -685,7 +685,7 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(PENDING_RETURN, vcs));
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         clientOAuthSessionItem.setVtr(vtr);
 
@@ -730,7 +730,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsync())));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         // Act
         JourneyResponse journeyResponse =
@@ -756,7 +756,7 @@ class CheckExistingIdentityHandlerTest {
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of(CURRENT, List.of(vcF2fM1a())));
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
 
@@ -814,7 +814,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(CURRENT, VCS_FROM_STORE));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                         any(), eq(P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.empty());
@@ -840,7 +840,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
@@ -982,7 +982,7 @@ class CheckExistingIdentityHandlerTest {
                         new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         var journeyResponse =
                 toResponseClass(
@@ -1012,7 +1012,7 @@ class CheckExistingIdentityHandlerTest {
                         new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         var journeyResponse =
                 toResponseClass(
@@ -1170,7 +1170,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         var journeyResponse =
                 toResponseClass(
@@ -1210,7 +1210,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(true);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
         var journeyResponse =
                 toResponseClass(
@@ -1451,7 +1451,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
@@ -1486,7 +1486,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
