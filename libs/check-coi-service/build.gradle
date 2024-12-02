@@ -1,0 +1,59 @@
+plugins {
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+dependencies {
+	implementation platform(libs.awsSdkBom),
+			libs.jacksonDatabind,
+			libs.powertoolsLogging,
+			libs.powertoolsParameters,
+			libs.powertoolsTracing,
+			project(":libs:audit-service"),
+			project(":libs:common-services"),
+			project(":libs:evcs-service"),
+			project(":libs:user-identity-service"),
+			project(":libs:verifiable-credentials")
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
+	testImplementation libs.junitJupiter,
+			libs.mockitoJunit,
+			project(path: ':libs:common-services', configuration: 'tests'),
+			project(path: ':libs:test-helpers')
+
+	testRuntimeOnly libs.junitPlatform
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}
