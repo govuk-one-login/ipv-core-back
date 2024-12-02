@@ -140,7 +140,9 @@ public class CriStoringService {
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+            throws CiPutException,
+                    CiPostMitigationsException,
+                    VerifiableCredentialException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();

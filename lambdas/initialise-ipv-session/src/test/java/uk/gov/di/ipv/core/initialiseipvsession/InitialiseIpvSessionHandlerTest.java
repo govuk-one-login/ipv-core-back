@@ -442,8 +442,12 @@ class InitialiseIpvSessionHandlerTest {
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
     void shouldReturn400IfMissingVtr(List<String> vtrList)
-            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException, ParseException, JarValidationException {
+            throws JsonProcessingException,
+                    InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
+                    ParseException,
+                    JarValidationException {
         // Arrange
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(true);
         var missingVtrClaimsBuilder = getValidClaimsBuilder();
@@ -468,8 +472,12 @@ class InitialiseIpvSessionHandlerTest {
     @ParameterizedTest
     @MethodSource("getVtrTestValues")
     void shouldIpvSessionIdIfMissingVtrAndReverificationJourney(List<String> vtrList)
-            throws JsonProcessingException, InvalidKeySpecException, NoSuchAlgorithmException,
-                    JOSEException, ParseException, JarValidationException {
+            throws JsonProcessingException,
+                    InvalidKeySpecException,
+                    NoSuchAlgorithmException,
+                    JOSEException,
+                    ParseException,
+                    JarValidationException {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);

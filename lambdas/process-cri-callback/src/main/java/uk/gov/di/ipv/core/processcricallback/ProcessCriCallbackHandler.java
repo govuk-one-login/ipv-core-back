@@ -260,10 +260,17 @@ public class ProcessCriCallbackHandler
     }
 
     private JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
-            throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
-                    CiRetrievalException, CriApiException, VerifiableCredentialException,
-                    CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException, IpvSessionNotFoundException {
+            throws JsonProcessingException,
+                    HttpResponseExceptionWithErrorBody,
+                    ConfigException,
+                    CiRetrievalException,
+                    CriApiException,
+                    VerifiableCredentialException,
+                    CiPostMitigationsException,
+                    CiPutException,
+                    InvalidCriCallbackRequestException,
+                    UnrecognisedVotException,
+                    IpvSessionNotFoundException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -319,8 +326,11 @@ public class ProcessCriCallbackHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws VerifiableCredentialException, JsonProcessingException,
-                    InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
+            throws VerifiableCredentialException,
+                    JsonProcessingException,
+                    InvalidCriCallbackRequestException,
+                    CiPutException,
+                    CiPostMitigationsException,
                     UnrecognisedVotException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);

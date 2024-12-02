@@ -191,8 +191,7 @@ public class CheckExistingIdentityHandler
     }
 
     private record VerifiableCredentialBundle(
-            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {
-    }
+            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {}
 
     @Override
     @Tracing
@@ -250,11 +249,13 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
-            var vcs = getVerifiableCredentials(userId, evcsAccessToken);
+            var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
             var asyncCri =
                     criResponseService.getAsyncResponseStatus(
-                            userId, vcs.credentials, vcs.isReturningWithNewAsyncVcs);
+                            userId,
+                            credentialBundle.credentials,
+                            credentialBundle.isReturningWithNewAsyncVcs);
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -302,7 +303,8 @@ public class CheckExistingIdentityHandler
 
             // No breaching CIs
 
-            var areGpg45VcsCorrelated = userIdentityService.areGpg45VcsCorrelated(credentialBundle.credentials);
+            var areGpg45VcsCorrelated =
+                    userIdentityService.areGpg45VcsCorrelated(credentialBundle.credentials);
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
@@ -346,7 +348,7 @@ public class CheckExistingIdentityHandler
                     // Can complete a profile from here
 
                     sessionCredentialsService.persistCredentials(
-                            vcs.credentials, auditEventUser.getSessionId(), false);
+                            credentialBundle.credentials, auditEventUser.getSessionId(), false);
 
                     return switch (lowestGpg45ConfidenceRequested) {
                         case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
@@ -447,7 +449,9 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException, VerifiableCredentialException,
+            throws ConfigException,
+                    MitigationRouteException,
+                    VerifiableCredentialException,
                     HttpResponseExceptionWithErrorBody {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
@@ -548,7 +552,9 @@ public class CheckExistingIdentityHandler
                 auditEventUser.getSessionId(),
                 false);
 
-        return vcBundle.isReturningWithNewAsyncVcs() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+        return credentialBundle.isReturningWithNewAsyncVcs()
+                ? JOURNEY_REUSE_WITH_STORE
+                : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
@@ -568,7 +574,6 @@ public class CheckExistingIdentityHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_VTR_CLAIM);
             }
         }
-    }
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {

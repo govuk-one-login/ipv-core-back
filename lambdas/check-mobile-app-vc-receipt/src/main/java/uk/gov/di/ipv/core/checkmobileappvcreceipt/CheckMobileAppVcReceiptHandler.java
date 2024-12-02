@@ -44,8 +44,6 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
@@ -149,9 +147,13 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    InvalidCriResponseException, CredentialParseException,
-                    VerifiableCredentialException, ConfigException, CiRetrievalException,
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    InvalidCriResponseException,
+                    CredentialParseException,
+                    VerifiableCredentialException,
+                    ConfigException,
+                    CiRetrievalException,
                     EvcsServiceException {
         // Validate callback sessions
         validateSessionId(request);
@@ -177,14 +179,6 @@ public class CheckMobileAppVcReceiptHandler
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
-        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
-            return JOURNEY_ERROR;
-        }
-
-        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
-            return JOURNEY_ABANDON;
-        }
-
         var dcmawAsyncVc =
                 evcsService
                         .getVerifiableCredentials(
@@ -193,23 +187,16 @@ public class CheckMobileAppVcReceiptHandler
                         .filter(vc -> DCMAW_ASYNC.equals(vc.getCri()))
                         .findFirst();
 
-        if (dcmawAsyncVc.isEmpty()) {
-            return null;
-        }
-
-        sessionCredentialsService.persistCredentials(
-                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
-
         var asyncCriStatus =
                 new AsyncCriStatus(
-                        DCMAW_ASYNC,
-                        criResponseItem.getStatus(),
-                        false,
-                        isReturningWithNewAsyncVcs);
+                        DCMAW_ASYNC, criResponseItem.getStatus(), dcmawAsyncVc.isEmpty(), true);
 
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }
+
+        sessionCredentialsService.persistCredentials(
+                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
 
         return criCheckingService.checkVcResponse(
                 List.of(dcmawAsyncVc.get()),

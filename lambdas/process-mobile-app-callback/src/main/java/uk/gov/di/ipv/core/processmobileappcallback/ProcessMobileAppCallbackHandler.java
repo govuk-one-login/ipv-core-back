@@ -145,8 +145,10 @@ public class ProcessMobileAppCallbackHandler
     }
 
     private void validateCallback(MobileAppCallbackRequest callbackRequest)
-            throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
-                    ClientOauthSessionNotFoundException, InvalidCriResponseException {
+            throws InvalidMobileAppCallbackRequestException,
+                    IpvSessionNotFoundException,
+                    ClientOauthSessionNotFoundException,
+                    InvalidCriResponseException {
         // Validate callback sessions
         validateSessionId(callbackRequest);
 

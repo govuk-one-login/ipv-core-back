@@ -26,12 +26,12 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -68,7 +67,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.Mitigation;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -324,7 +322,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Optional.of(matchedProfile));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                     .thenReturn(null);
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, hmrcMigrationVC)));
@@ -671,14 +669,15 @@ class CheckExistingIdentityHandlerTest {
     @MethodSource("lowAndMediumConfidenceVtrs")
     void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
             List<String> vtr, JourneyResponse expectedJourney, Vot expectedIdentity)
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, VerifiableCredentialException {
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    VerifiableCredentialException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         var vcs = List.of(vcDcmawAsync());
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
                         new AsyncCriStatus(
@@ -720,14 +719,13 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcHasNoIat()
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
                     CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        var vcs = List.of(vcDcmawAsync());
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
                         new AsyncCriStatus(
@@ -752,14 +750,13 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
                     CredentialParseException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        var vcs = List.of(vcDcmawAsync());
-        when(mockVerifiableCredentialService.getVcs(TEST_USER_ID)).thenReturn(vcs);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(null);
         when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);

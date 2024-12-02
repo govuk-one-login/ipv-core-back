@@ -232,7 +232,9 @@ public class CriCheckingService {
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
+            throws CiRetrievalException,
+                    ConfigException,
+                    HttpResponseExceptionWithErrorBody,
                     VerifiableCredentialException {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();

@@ -147,9 +147,14 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     }
 
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
-            throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
-                    CiPostMitigationsException, CiPutException, ConfigException,
-                    UnrecognisedVotException, ClientOauthSessionNotFoundException {
+            throws TicfCriServiceException,
+                    CiRetrievalException,
+                    VerifiableCredentialException,
+                    CiPostMitigationsException,
+                    CiPutException,
+                    ConfigException,
+                    UnrecognisedVotException,
+                    ClientOauthSessionNotFoundException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
