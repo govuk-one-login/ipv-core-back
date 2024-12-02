@@ -80,9 +80,7 @@ public class CriResponseService {
     }
 
     public AsyncCriStatus getAsyncResponseStatus(
-            String userId,
-            List<VerifiableCredential> credentials,
-            boolean isReturningWithNewAsyncVcs) {
+            String userId, List<VerifiableCredential> credentials, boolean isPendingReturn) {
         // F2F CRI response item blocks other async CRI routes, except for
         // enhanced-verification-f2f-fail, which enforces the user stays on the same mitigation
         // route, so it is fine here as we check F2F first.
@@ -91,8 +89,7 @@ public class CriResponseService {
             var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
             var hasVc = f2fVc.isPresent();
 
-            return new AsyncCriStatus(
-                    F2F, f2fCriResponseItem.getStatus(), !hasVc, isReturningWithNewAsyncVcs);
+            return new AsyncCriStatus(F2F, f2fCriResponseItem.getStatus(), !hasVc, isPendingReturn);
         }
 
         // DCMAW async VC existence determines success or abandonment
@@ -108,7 +105,7 @@ public class CriResponseService {
                 var now = DateUtils.toSecondsSinceEpoch(new Date());
                 var expiry = DateUtils.toSecondsSinceEpoch(issuedAt) + criConfig.getTtl();
                 if (now < expiry) {
-                    return new AsyncCriStatus(DCMAW_ASYNC, null, false, isReturningWithNewAsyncVcs);
+                    return new AsyncCriStatus(DCMAW_ASYNC, null, false, isPendingReturn);
                 }
             }
         }

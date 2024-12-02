@@ -11,10 +11,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 
 public record AsyncCriStatus(
-        Cri cri,
-        String incompleteStatus,
-        boolean isAwaitingVc,
-        boolean isReturningWithNewAsyncVcs) {
+        Cri cri, String incompleteStatus, boolean isAwaitingVc, boolean isPendingReturn) {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final JourneyResponse JOURNEY_F2F_PENDING =

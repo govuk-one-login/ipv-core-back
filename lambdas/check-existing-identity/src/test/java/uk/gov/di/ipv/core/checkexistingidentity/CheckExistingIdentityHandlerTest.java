@@ -322,7 +322,7 @@ class CheckExistingIdentityHandlerTest {
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(matchedProfile));
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(null);
+                    .thenReturn(emptyAsyncCriStatus);
             when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -361,7 +361,7 @@ class CheckExistingIdentityHandlerTest {
                             Map.of(PENDING_RETURN, new ArrayList<>(List.of(gpg45Vc, vcF2fM1a()))));
 
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                    .thenReturn(null);
+                    .thenReturn(emptyAsyncCriStatus);
             when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                             any(), eq(P2.getSupportedGpg45Profiles())))
                     .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -454,7 +454,7 @@ class CheckExistingIdentityHandlerTest {
         @Test // User returning after migration
         void shouldReturnJourneyOpProfileReuseResponseIfOpProfileAndPendingF2F() throws Exception {
             when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(null);
+                    .thenReturn(emptyAsyncCriStatus);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                     .thenReturn(Map.of(CURRENT, List.of(pcl250Vc)));
@@ -727,7 +727,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of());
+                .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsync())));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
         when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
@@ -1163,7 +1163,7 @@ class CheckExistingIdentityHandlerTest {
             throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(null);
+                .thenReturn(emptyAsyncCriStatus);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(
                         any(), eq(P2.getSupportedGpg45Profiles())))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));

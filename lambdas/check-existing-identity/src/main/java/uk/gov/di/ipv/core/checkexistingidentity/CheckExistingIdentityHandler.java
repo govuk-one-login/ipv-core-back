@@ -190,7 +190,7 @@ public class CheckExistingIdentityHandler
     }
 
     private record VerifiableCredentialBundle(
-            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {}
+            List<VerifiableCredential> credentials, boolean isPendingReturn) {}
 
     @Override
     @Tracing
@@ -252,9 +252,7 @@ public class CheckExistingIdentityHandler
 
             var asyncCri =
                     criResponseService.getAsyncResponseStatus(
-                            userId,
-                            credentialBundle.credentials,
-                            credentialBundle.isReturningWithNewAsyncVcs);
+                            userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -293,7 +291,6 @@ public class CheckExistingIdentityHandler
                     cimitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
-                // Might be mitigating with an async CRI (?)
                 if (asyncCri.isAwaitingVc()) {
                     return asyncCri.getJourneyForAwaitingVc(false);
                 }
@@ -331,7 +328,7 @@ public class CheckExistingIdentityHandler
 
             // No awaited async vc
 
-            if (asyncCri.isReturningWithNewAsyncVcs()) {
+            if (asyncCri.isPendingReturn()) {
                 if (asyncCri.cri() == F2F) {
 
                     // (Should have matched a profile)
@@ -344,7 +341,7 @@ public class CheckExistingIdentityHandler
                 }
                 if (asyncCri.cri() == DCMAW_ASYNC) {
 
-                    // Can complete a profile from here
+                    // Can attempt to complete a profile from here
 
                     sessionCredentialsService.persistCredentials(
                             credentialBundle.credentials, auditEventUser.getSessionId(), false);
@@ -385,7 +382,7 @@ public class CheckExistingIdentityHandler
                 evcsService.getVerifiableCredentialsByState(
                         userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-        var isReturningWithNewAsyncVcs = !isNullOrEmpty(vcs.get(PENDING_RETURN));
+        var isPendingReturn = !isNullOrEmpty(vcs.get(PENDING_RETURN));
 
         // + inherited VCs
         var evcsIdentityVcs =
@@ -394,7 +391,7 @@ public class CheckExistingIdentityHandler
                                 .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                                 .toList());
 
-        if (isReturningWithNewAsyncVcs) {
+        if (isPendingReturn) {
             // + vcs put off forming a profile by an async CRI
             evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
         } else {
@@ -405,7 +402,7 @@ public class CheckExistingIdentityHandler
                             .toList());
         }
 
-        return new VerifiableCredentialBundle(evcsIdentityVcs, isReturningWithNewAsyncVcs);
+        return new VerifiableCredentialBundle(evcsIdentityVcs, isPendingReturn);
     }
 
     private Optional<JourneyResponse> checkForProfileMatch(
@@ -449,8 +446,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
             throws ConfigException, MitigationRouteException {
-        LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
-
+        LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
@@ -458,8 +454,8 @@ public class CheckExistingIdentityHandler
                 auditEventUser,
                 deviceInformation);
 
-        // If someone's ever picked up a CI, they can only try mitigation routes, even once
-        // mitigated.
+        // If someone's ever picked up a CI, they can only try mitigation routes, even if it has
+        // been mitigated.
         var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
             var mitigationJourney =
@@ -478,7 +474,6 @@ public class CheckExistingIdentityHandler
             }
             return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
         }
-
         return JOURNEY_F2F_FAIL;
     }
 
@@ -548,9 +543,7 @@ public class CheckExistingIdentityHandler
                 auditEventUser.getSessionId(),
                 false);
 
-        return credentialBundle.isReturningWithNewAsyncVcs()
-                ? JOURNEY_REUSE_WITH_STORE
-                : JOURNEY_REUSE;
+        return credentialBundle.isPendingReturn() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
