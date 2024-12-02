@@ -123,7 +123,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
-    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -449,8 +448,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException, VerifiableCredentialException,
-                    HttpResponseExceptionWithErrorBody {
+            throws ConfigException, MitigationRouteException {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
         sendAuditEvent(
