@@ -438,7 +438,12 @@ class ContractTest {
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + INVALID_USER_ID)
                 .method("PATCH")
-                .headers(Map.of(CONTENT_TYPE, ContentType.APPLICATION_JSON.toString()))
+                .headers(
+                        Map.of(
+                                "x-api-key",
+                                EVCS_API_KEY,
+                                CONTENT_TYPE,
+                                ContentType.APPLICATION_JSON.toString()))
                 .body(getRequestBodyUpdateVC())
                 .willRespondWith()
                 .status(400)
