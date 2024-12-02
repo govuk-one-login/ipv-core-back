@@ -71,7 +71,6 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -274,7 +273,7 @@ public class CheckExistingIdentityHandler
             var reproveIdentity = Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
-                if (lowestGpg45ConfidenceRequested == P1) {
+                if (lowestGpg45ConfidenceRequested == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -297,7 +296,7 @@ public class CheckExistingIdentityHandler
                 return ciScoringCheckResponse.get();
             }
 
-            // No breaching CIs
+            // No breaching CIs.
 
             var areGpg45VcsCorrelated =
                     userIdentityService.areVcsCorrelated(credentialBundle.credentials);
@@ -320,18 +319,18 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
-            // No profile matched
+            // No profile matched.
 
             if (asyncCri.isAwaitingVc()) {
                 return asyncCri.getJourneyForAwaitingVc(false);
             }
 
-            // No awaited async vc
+            // No awaited async vc.
 
             if (asyncCri.isPendingReturn()) {
                 if (asyncCri.cri() == F2F) {
 
-                    // (Should have matched a profile)
+                    // Returned with F2F async VC. Should have matched a profile.
 
                     return buildF2FNoMatchResponse(
                             areGpg45VcsCorrelated,
@@ -341,7 +340,7 @@ public class CheckExistingIdentityHandler
                 }
                 if (asyncCri.cri() == DCMAW_ASYNC) {
 
-                    // Can attempt to complete a profile from here
+                    // Can attempt to complete a profile from here.
 
                     sessionCredentialsService.persistCredentials(
                             credentialBundle.credentials, auditEventUser.getSessionId(), false);
@@ -392,10 +391,10 @@ public class CheckExistingIdentityHandler
                                 .toList());
 
         if (isPendingReturn) {
-            // + vcs put off forming a profile by an async CRI
+            // + vcs deferred from making an identity by an async CRI
             evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
         } else {
-            // + remaining vcs
+            // + all (remaining) vcs
             evcsIdentityVcs.addAll(
                     vcs.getOrDefault(CURRENT, List.of()).stream()
                             .filter(vc -> !HMRC_MIGRATION.equals(vc.getCri()))

@@ -79,6 +79,6 @@ public record AsyncCriStatus(
 
     private RuntimeException getUnsupportedCriResponseLogicException() {
         return new RuntimeException(
-                "Unsupported CRI response situation. No DCMAW async VC implicitly assumed to be abandoned.");
+                "Unsupported CRI response situation. When the DCMAW async VC does not exist, it is implicitly assumed to caused by user abandoned.");
     }
 }
