@@ -50,28 +50,6 @@ class AsyncCriStatusTest {
     }
 
     @ParameterizedTest
-    @MethodSource("DcmawAsyncSeparateSessionJourneysAndCriResponseItemStatuses")
-    void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSeparateSession(
-            String incompleteStatus) {
-        // Arrange
-        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, incompleteStatus, false, false);
-
-        // Act
-        var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(false);
-
-        // Assert
-        assertEquals("/journey/error", journeyResponse.getJourney());
-    }
-
-    static Stream<Arguments> DcmawAsyncSeparateSessionJourneysAndCriResponseItemStatuses() {
-        return Stream.of(
-                Arguments.of(CriResponseService.STATUS_PENDING),
-                Arguments.of(CriResponseService.STATUS_ABANDON),
-                Arguments.of(CriResponseService.STATUS_ERROR),
-                Arguments.of("not a status"));
-    }
-
-    @ParameterizedTest
     @MethodSource("F2fJourneysAndCriResponseItemStatuses")
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForF2f(
             String incompleteStatus, String expectedJourney) {

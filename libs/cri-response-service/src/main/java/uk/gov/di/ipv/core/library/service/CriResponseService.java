@@ -35,9 +35,9 @@ public class CriResponseService {
         this.configService = configService;
     }
 
-    public CriResponseService(DataStore<CriResponseItem> dataStore) {
+    public CriResponseService(DataStore<CriResponseItem> dataStore, ConfigService configService) {
         this.dataStore = dataStore;
-        this.configService = ConfigService.create();
+        this.configService = configService;
     }
 
     public Optional<CriResponseItem> getCriResponseItemWithState(String userId, String state) {
@@ -84,9 +84,8 @@ public class CriResponseService {
             List<VerifiableCredential> credentials,
             boolean isReturningWithNewAsyncVcs) {
         // F2F CRI response item blocks other async CRI routes, except for
-        // enhanced-verification-f2f-fail, which
-        // enforces the user stays on the same mitigation route, so it is fine here as we check F2F
-        // first.
+        // enhanced-verification-f2f-fail, which enforces the user stays on the same mitigation
+        // route, so it is fine here as we check F2F first.
         var f2fCriResponseItem = getCriResponseItem(userId, F2F);
         if (f2fCriResponseItem != null) {
             var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
@@ -106,13 +105,14 @@ public class CriResponseService {
                 var criConfig =
                         configService.getOauthCriConfigForConnection(connection, DCMAW_ASYNC);
 
-                if (DateUtils.toSecondsSinceEpoch(new Date())
-                        < DateUtils.toSecondsSinceEpoch(issuedAt) + criConfig.getTtl()) {
+                var now = DateUtils.toSecondsSinceEpoch(new Date());
+                var expiry = DateUtils.toSecondsSinceEpoch(issuedAt) + criConfig.getTtl();
+                if (now < expiry) {
                     return new AsyncCriStatus(DCMAW_ASYNC, null, false, isReturningWithNewAsyncVcs);
                 }
             }
         }
 
-        return null;
+        return new AsyncCriStatus(null, null, false, false);
     }
 }

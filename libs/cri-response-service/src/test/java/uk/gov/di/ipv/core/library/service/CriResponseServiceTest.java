@@ -9,10 +9,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -22,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,10 +36,12 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsync;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 
 @ExtendWith(MockitoExtension.class)
 class CriResponseServiceTest {
     @Mock private DataStore<CriResponseItem> mockDataStore;
+    @Mock private ConfigService mockConfigService;
 
     private CriResponseService criResponseService;
 
@@ -52,7 +57,7 @@ class CriResponseServiceTest {
 
     @BeforeEach
     void setUp() {
-        criResponseService = new CriResponseService(mockDataStore);
+        criResponseService = new CriResponseService(mockDataStore, mockConfigService);
     }
 
     @Test
@@ -151,13 +156,59 @@ class CriResponseServiceTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void getAsyncResponseStatusShouldGetStatus(boolean hasVc) {
+    void getF2FAsyncResponseStatusShouldGetStatus(boolean hasVc) {
         // Arrange
-        var criResponseItem1 = createCriResponseStoreItem(vcDcmawAsync(), Instant.now());
-        var criResponseItem2 = createCriResponseStoreItem(vcAddressTwo(), Instant.now());
-        criResponseItem2.setOauthState(TEST_OAUTH_STATE);
-        when(mockDataStore.getItems(USER_ID_1))
-                .thenReturn(List.of(criResponseItem1, criResponseItem2));
+        var criResponseItem = createCriResponseStoreItem(vcF2fIdCard(), Instant.now());
+        when(mockDataStore.getItem(USER_ID_1, F2F.getId())).thenReturn(criResponseItem);
+        var vcs =
+                hasVc
+                        ? List.of(vcF2fIdCard(), vcAddressTwo())
+                        : new ArrayList<VerifiableCredential>();
+
+        // Act
+        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+
+        // Assert
+        assertEquals(F2F, asyncCriStatus.cri());
+        assertEquals(CriResponseService.STATUS_PENDING, asyncCriStatus.incompleteStatus());
+        assertEquals(!hasVc, asyncCriStatus.isAwaitingVc());
+    }
+
+    @Test
+    void getDcmawAsyncResponseStatusShouldReturnEmptyWhenNoVc() {
+        // Arrange
+        var vcs = new ArrayList<VerifiableCredential>();
+
+        // Act
+        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+
+        // Assert
+        assertNull(asyncCriStatus.cri());
+        assertNull(asyncCriStatus.incompleteStatus());
+        assertFalse(asyncCriStatus.isAwaitingVc());
+    }
+
+    @Test
+    void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
+        // Arrange
+        when(mockConfigService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
+                .thenReturn(OauthCriConfig.builder().ttl(1000000000).build());
+        var vcs = List.of(vcDcmawAsync(), vcAddressTwo());
+
+        // Act
+        var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, vcs, false);
+
+        // Assert
+        assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
+        assertNull(asyncCriStatus.incompleteStatus());
+        assertFalse(asyncCriStatus.isAwaitingVc());
+    }
+
+    @Test
+    void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
+        // Arrange
+        when(mockConfigService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
+                .thenReturn(OauthCriConfig.builder().ttl(-1).build());
 
         // Act
         var asyncCriStatus =
@@ -165,16 +216,13 @@ class CriResponseServiceTest {
                         USER_ID_1, List.of(vcDcmawAsync(), vcAddressTwo()), false);
 
         // Assert
-        assertEquals(DCMAW_ASYNC, asyncCriStatus.cri());
-        assertEquals(criResponseItem1.getStatus(), asyncCriStatus.incompleteStatus());
-        assertEquals(!hasVc, asyncCriStatus.isAwaitingVc());
+        assertNull(asyncCriStatus.cri());
+        assertNull(asyncCriStatus.incompleteStatus());
+        assertFalse(asyncCriStatus.isAwaitingVc());
     }
 
     @Test
     void getAsyncResponseStatusShouldReturnEmptyStatusIfNoCriResponseFound() {
-        // Arrange
-        when(mockDataStore.getItems(USER_ID_1)).thenReturn(List.of());
-
         // Act
         var asyncCriStatus = criResponseService.getAsyncResponseStatus(USER_ID_1, List.of(), false);
 

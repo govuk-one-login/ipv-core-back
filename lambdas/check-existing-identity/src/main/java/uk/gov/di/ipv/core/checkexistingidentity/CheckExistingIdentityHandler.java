@@ -397,11 +397,11 @@ public class CheckExistingIdentityHandler
 
         if (isReturningWithNewAsyncVcs) {
             // + vcs put off forming a profile by an async CRI
-            evcsIdentityVcs.addAll(vcs.get(PENDING_RETURN));
+            evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
         } else {
             // + remaining vcs
             evcsIdentityVcs.addAll(
-                    vcs.get(CURRENT).stream()
+                    vcs.getOrDefault(CURRENT, List.of()).stream()
                             .filter(vc -> !HMRC_MIGRATION.equals(vc.getCri()))
                             .toList());
         }
