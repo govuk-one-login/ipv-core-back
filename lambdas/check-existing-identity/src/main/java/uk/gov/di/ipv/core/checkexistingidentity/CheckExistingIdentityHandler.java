@@ -449,9 +449,7 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             List<ContraIndicator> contraIndicators)
-            throws ConfigException,
-                    MitigationRouteException,
-                    VerifiableCredentialException,
+            throws ConfigException, MitigationRouteException, VerifiableCredentialException,
                     HttpResponseExceptionWithErrorBody {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 

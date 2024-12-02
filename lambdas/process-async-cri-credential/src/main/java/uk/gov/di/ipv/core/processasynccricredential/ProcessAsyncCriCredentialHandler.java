@@ -177,14 +177,9 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
-            throws ParseException,
-                    CiPutException,
-                    AsyncVerifiableCredentialException,
-                    CiPostMitigationsException,
-                    VerifiableCredentialException,
-                    UnrecognisedVotException,
-                    CredentialParseException,
-                    EvcsServiceException,
+            throws ParseException, CiPutException, AsyncVerifiableCredentialException,
+                    CiPostMitigationsException, VerifiableCredentialException,
+                    UnrecognisedVotException, CredentialParseException, EvcsServiceException,
                     HttpResponseExceptionWithErrorBody {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();

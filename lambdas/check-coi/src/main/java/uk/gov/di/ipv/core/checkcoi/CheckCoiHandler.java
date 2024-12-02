@@ -146,10 +146,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
                     switch (checkType) {
-                        case GIVEN_OR_FAMILY_NAME_AND_DOB ->
-                                userIdentityService.areNamesAndDobCorrelated(combinedCredentials);
-                        case FULL_NAME_AND_DOB ->
-                                userIdentityService.areGpg45VcsCorrelated(combinedCredentials);
+                        case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
+                                .areNamesAndDobCorrelated(combinedCredentials);
+                        case FULL_NAME_AND_DOB -> userIdentityService.areGpg45VcsCorrelated(
+                                combinedCredentials);
                     };
 
             var scopeClaims = clientOAuthSession.getScopeClaims();
