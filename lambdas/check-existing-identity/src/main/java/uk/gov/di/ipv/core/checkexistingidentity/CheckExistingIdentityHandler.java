@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigration;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -23,7 +22,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -46,7 +44,6 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.service.EvcsMigrationService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -60,12 +57,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -140,10 +134,8 @@ public class CheckExistingIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
-    private final EvcsMigrationService evcsMigrationService;
 
     @SuppressWarnings({
         "unused",
@@ -161,8 +153,7 @@ public class CheckExistingIdentityHandler
             CimitUtilityService cimitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
-            EvcsService evcsService,
-            EvcsMigrationService evcsMigrationService) {
+            EvcsService evcsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -172,10 +163,8 @@ public class CheckExistingIdentityHandler
         this.criResponseService = criResponseService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
-        this.evcsMigrationService = evcsMigrationService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -196,15 +185,14 @@ public class CheckExistingIdentityHandler
         this.criResponseService = new CriResponseService(configService);
         this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
-        this.evcsMigrationService = new EvcsMigrationService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
     private record VerifiableCredentialBundle(
-            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {}
+            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {
+    }
 
     @Override
     @Tracing
@@ -258,7 +246,7 @@ public class CheckExistingIdentityHandler
             var userId = clientOAuthSessionItem.getUserId();
             var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            AuditEventUser auditEventUser =
+            var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
@@ -285,8 +273,7 @@ public class CheckExistingIdentityHandler
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            Optional<Boolean> reproveIdentity =
-                    Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
+            var reproveIdentity = Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
 
             if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == P1) {
@@ -315,14 +302,14 @@ public class CheckExistingIdentityHandler
 
             // No breaching CIs
 
-            var areGpg45VcsCorrelated = userIdentityService.areGpg45VcsCorrelated(vcs.credentials);
+            var areGpg45VcsCorrelated = userIdentityService.areGpg45VcsCorrelated(credentialBundle.credentials);
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             auditEventUser,
                             deviceInformation,
-                            vcs,
+                            credentialBundle,
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
@@ -391,149 +378,33 @@ public class CheckExistingIdentityHandler
         }
     }
 
-    private VerifiableCredentialBundle getVerifiableCredentials(
-            String userId, String evcsAccessToken)
+    private VerifiableCredentialBundle getCredentialBundle(String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
-
-        var tacticalVcs = verifiableCredentialService.getVcs(userId);
-
-        if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
-            var bundle = getEvcsCredentialBundle(userId, evcsAccessToken);
-            if (bundle != null) {
-                return bundle;
-            }
-        }
-
-        return new VerifiableCredentialBundle(tacticalVcs, false);
-    }
-
-    private VerifiableCredentialBundle getEvcsCredentialBundle(
-            String userId, String evcsAccessToken)
-            throws CredentialParseException, EvcsServiceException {
-        var evcsVcs =
+        var vcs =
                 evcsService.getVerifiableCredentialsByState(
                         userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-        var isReturningWithNewAsyncVcs = !isNullOrEmpty(evcsVcs.get(PENDING_RETURN));
+        var isReturningWithNewAsyncVcs = !isNullOrEmpty(vcs.get(PENDING_RETURN));
 
         // + inherited VCs
         var evcsIdentityVcs =
                 new ArrayList<>(
-                        evcsVcs.getOrDefault(CURRENT, List.of()).stream()
+                        vcs.getOrDefault(CURRENT, List.of()).stream()
                                 .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                                 .toList());
 
         if (isReturningWithNewAsyncVcs) {
             // + vcs put off forming a profile by an async CRI
-            evcsIdentityVcs.addAll(evcsVcs.get(PENDING_RETURN));
+            evcsIdentityVcs.addAll(vcs.get(PENDING_RETURN));
         } else {
             // + remaining vcs
             evcsIdentityVcs.addAll(
-                    evcsVcs.get(CURRENT).stream()
+                    vcs.get(CURRENT).stream()
                             .filter(vc -> !HMRC_MIGRATION.equals(vc.getCri()))
                             .toList());
         }
 
-        if (!isNullOrEmpty(evcsIdentityVcs)) {
-            return new VerifiableCredentialBundle(evcsIdentityVcs, isReturningWithNewAsyncVcs);
-        }
-        return null;
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private void logIdentityMismatches(
-            List<VerifiableCredential> tacticalVcs,
-            Map<EvcsVCState, List<VerifiableCredential>> evcsVcs,
-            boolean hasPartiallyMigratedVcs) {
-
-        if (hasPartiallyMigratedVcs) {
-            LOGGER.info(LogHelper.buildLogMessage("found partially migrated vcs"));
-            return;
-        }
-        var migratedTacticalVcStrings =
-                tacticalVcs.stream()
-                        .filter(vc -> vc.getMigrated() != null)
-                        .map(VerifiableCredential::getVcString)
-                        .collect(Collectors.toSet());
-
-        // if we have pending vcs just check those
-        var evcsToCheck =
-                Optional.ofNullable(evcsVcs.get(PENDING_RETURN))
-                        .or(() -> Optional.ofNullable(evcsVcs.get(CURRENT)))
-                        .orElse(List.of());
-
-        var allTacticalVcStrings =
-                tacticalVcs.stream()
-                        .map(VerifiableCredential::getVcString)
-                        .collect(Collectors.toSet());
-
-        var evcsVcStrings =
-                evcsToCheck.stream()
-                        .map(VerifiableCredential::getVcString)
-                        .collect(Collectors.toSet());
-
-        var hasUnmigratedVcs = allTacticalVcStrings.size() > migratedTacticalVcStrings.size();
-
-        // check if we have unmigrated credentials alongside migrated ones
-        if (hasUnmigratedVcs && !migratedTacticalVcStrings.isEmpty()) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                                    "Unmigrated tactical credentials found alongside migrated credentials")
-                            .with(
-                                    "migratedCris",
-                                    getCriListString(
-                                            tacticalVcs.stream()
-                                                    .filter(vc -> vc.getMigrated() != null)
-                                                    .toList()))
-                            .with(
-                                    "unmigratedCris",
-                                    getCriListString(
-                                            tacticalVcs.stream()
-                                                    .filter(vc -> vc.getMigrated() == null)
-                                                    .toList())));
-        }
-
-        // check all the tactical vcs are in the selected evcs vcs
-        if (!hasUnmigratedVcs && !evcsVcStrings.containsAll(migratedTacticalVcStrings)) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                                    "Failed to find corresponding evcs credential for migrated tactical credential")
-                            .with(
-                                    "migratedCris",
-                                    getCriListString(
-                                            tacticalVcs.stream()
-                                                    .filter(
-                                                            vc ->
-                                                                    evcsVcStrings.contains(
-                                                                            vc.getVcString()))
-                                                    .toList()))
-                            .with(
-                                    "unmigratedCris",
-                                    getCriListString(
-                                            tacticalVcs.stream()
-                                                    .filter(
-                                                            vc ->
-                                                                    !evcsVcStrings.contains(
-                                                                            vc.getVcString()))
-                                                    .toList())));
-        }
-
-        // check all the evcs vcs are in the tactical store
-        if (!hasUnmigratedVcs && !migratedTacticalVcStrings.containsAll(evcsVcStrings)) {
-            LOGGER.warn(
-                    LogHelper.buildLogMessage(
-                                    "Failed to find corresponding tactical credential for evcs credential")
-                            .with("pendingEvcsCris", getCriListString(evcsVcs.get(PENDING_RETURN)))
-                            .with("currentEvcsCris", getCriListString(evcsVcs.get(CURRENT)))
-                            .with("tacticalCris", getCriListString(tacticalVcs)));
-        }
-    }
-
-    private static String getCriListString(List<VerifiableCredential> vcs) {
-        if (vcs == null) {
-            return "<none>";
-        }
-        return vcs.stream().map(vc -> vc.getCri().getId()).collect(Collectors.joining(","));
+        return new VerifiableCredentialBundle(evcsIdentityVcs, isReturningWithNewAsyncVcs);
     }
 
     private Optional<JourneyResponse> checkForProfileMatch(
@@ -541,17 +412,17 @@ public class CheckExistingIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser,
             String deviceInformation,
-            VerifiableCredentialBundle vcBundle,
+            VerifiableCredentialBundle credentialBundle,
             boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators)
-            throws ParseException, VerifiableCredentialException, EvcsServiceException {
+            throws ParseException, VerifiableCredentialException {
         // Check for attained vot from requested vots
         var strongestAttainedVotFromVtr =
                 getStrongestAttainedVotForVtr(
                         clientOAuthSessionItem
                                 .getParsedVtr()
                                 .getRequestedVotsByStrengthDescending(),
-                        vcBundle.credentials,
+                        credentialBundle.credentials,
                         auditEventUser,
                         deviceInformation,
                         areGpg45VcsCorrelated,
@@ -563,7 +434,7 @@ public class CheckExistingIdentityHandler
                     buildReuseResponse(
                             strongestAttainedVotFromVtr.get(),
                             ipvSessionItem,
-                            vcBundle,
+                            credentialBundle,
                             auditEventUser,
                             deviceInformation));
         }
@@ -633,19 +504,20 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildReuseResponse(
             Vot attainedVot,
             IpvSessionItem ipvSessionItem,
-            VerifiableCredentialBundle vcBundle,
+            VerifiableCredentialBundle credentialBundle,
             AuditEventUser auditEventUser,
             String deviceInformation)
-            throws VerifiableCredentialException, EvcsServiceException {
+            throws VerifiableCredentialException {
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && allFraudVcsAreExpired(vcBundle.credentials)) {
+                && allFraudVcsAreExpired(credentialBundle.credentials)) {
             LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
             sessionCredentialsService.persistCredentials(
-                    allVcsExceptFraud(vcBundle.credentials), auditEventUser.getSessionId(), false);
+                    allVcsExceptFraud(credentialBundle.credentials),
+                    auditEventUser.getSessionId(),
+                    false);
 
-            migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
             return JOURNEY_REPEAT_FRAUD_CHECK;
         }
 
@@ -660,7 +532,8 @@ public class CheckExistingIdentityHandler
             boolean isCurrentlyMigrating = ipvSessionItem.isInheritedIdentityReceivedThisSession();
 
             sessionCredentialsService.persistCredentials(
-                    VcHelper.filterVCBasedOnProfileType(vcBundle.credentials, OPERATIONAL_HMRC),
+                    VcHelper.filterVCBasedOnProfileType(
+                            credentialBundle.credentials, OPERATIONAL_HMRC),
                     auditEventUser.getSessionId(),
                     isCurrentlyMigrating);
 
@@ -671,11 +544,9 @@ public class CheckExistingIdentityHandler
 
         sessionCredentialsService.persistCredentials(
                 VcHelper.filterVCBasedOnProfileType(
-                        vcBundle.credentials, attainedVot.getProfileType()),
+                        credentialBundle.credentials, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
-
-        migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
 
         return vcBundle.isReturningWithNewAsyncVcs() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
@@ -698,28 +569,6 @@ public class CheckExistingIdentityHandler
             }
         }
     }
-
-    private void migrateCredentialsToEVCS(
-            AuditEventUser auditEventUser,
-            String deviceInformation,
-            VerifiableCredentialBundle vcBundle)
-            throws EvcsServiceException, VerifiableCredentialException {
-        if (configService.enabled(EVCS_WRITE_ENABLED) && isNullOrEmpty(vcBundle.credentials())) {
-            try {
-                evcsMigrationService.migrateExistingIdentity(
-                        auditEventUser.getUserId(), vcBundle.credentials());
-                sendVCsMigratedAuditEvent(
-                        auditEventUser, vcBundle.credentials(), deviceInformation);
-            } catch (EvcsServiceException e) {
-                if (configService.enabled(EVCS_READ_ENABLED)) {
-                    throw e;
-                } else {
-                    LOGGER.error(
-                            LogHelper.buildErrorMessage(
-                                    "Failed to store EVCS migrated identity", e));
-                }
-            }
-        }
     }
 
     private List<VerifiableCredential> allVcsExceptFraud(List<VerifiableCredential> vcs) {
@@ -742,24 +591,6 @@ public class CheckExistingIdentityHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
-    }
-
-    private void sendVCsMigratedAuditEvent(
-            AuditEventUser auditEventUser,
-            List<VerifiableCredential> credentials,
-            String deviceInformation) {
-        auditService.sendAuditEvent(
-                AuditEvent.createWithDeviceInformation(
-                        AuditEventTypes.IPV_VCS_MIGRATED,
-                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        auditEventUser,
-                        new AuditExtensionsEvcsMigration(
-                                extractSignaturesFromCredentials(credentials)),
-                        new AuditRestrictedDeviceInformation(deviceInformation)));
-    }
-
-    private List<String> extractSignaturesFromCredentials(List<VerifiableCredential> credentials) {
-        return credentials.stream().map(vc -> vc.getVcString().split("\\.")[2]).toList();
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {

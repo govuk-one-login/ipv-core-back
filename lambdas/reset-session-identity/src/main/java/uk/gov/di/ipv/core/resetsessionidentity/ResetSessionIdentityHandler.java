@@ -26,13 +26,10 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.Map;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -56,7 +53,6 @@ public class ResetSessionIdentityHandler
     private final SessionCredentialsService sessionCredentialsService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final EvcsService evcsService;
 
     public ResetSessionIdentityHandler(
@@ -65,14 +61,12 @@ public class ResetSessionIdentityHandler
             SessionCredentialsService sessionCredentialsService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            VerifiableCredentialService verifiableCredentialService,
             EvcsService evcsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.evcsService = evcsService;
     }
 
@@ -88,7 +82,6 @@ public class ResetSessionIdentityHandler
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.evcsService = new EvcsService(configService);
     }
 
@@ -119,13 +112,10 @@ public class ResetSessionIdentityHandler
 
             if (sessionCredentialsResetType == REINSTATE) {
                 var existingIdentityVcs =
-                        configService.enabled(EVCS_READ_ENABLED)
-                                ? evcsService.getVerifiableCredentials(
-                                        clientOAuthSessionItem.getUserId(),
-                                        clientOAuthSessionItem.getEvcsAccessToken(),
-                                        CURRENT)
-                                : verifiableCredentialService.getVcs(
-                                        clientOAuthSessionItem.getUserId());
+                        evcsService.getVerifiableCredentials(
+                                clientOAuthSessionItem.getUserId(),
+                                clientOAuthSessionItem.getEvcsAccessToken(),
+                                CURRENT);
                 sessionCredentialsService.persistCredentials(
                         existingIdentityVcs, ipvSessionId, false);
                 LOGGER.info(
@@ -171,26 +161,10 @@ public class ResetSessionIdentityHandler
     }
 
     private void doResetForPendingF2f(ClientOAuthSessionItem clientOAuthSessionItem)
-            throws VerifiableCredentialException, EvcsServiceException {
-        String userId = clientOAuthSessionItem.getUserId();
-        criResponseService.deleteCriResponseItem(userId, F2F);
-        verifiableCredentialService.deleteVCs(userId);
-        updateEvcsPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
-        LOGGER.info(LogHelper.buildLogMessage("Reset done for F2F pending identity."));
-    }
-
-    private void updateEvcsPendingIdentity(String userId, String evcsAccessToken)
             throws EvcsServiceException {
-        try {
-            if (configService.enabled(EVCS_WRITE_ENABLED)) {
-                evcsService.abandonPendingIdentity(userId, evcsAccessToken);
-            }
-        } catch (EvcsServiceException e) {
-            if (configService.enabled(EVCS_READ_ENABLED)) {
-                throw e;
-            } else {
-                LOGGER.error(LogHelper.buildErrorMessage("Failed to update EVCS identity", e));
-            }
-        }
+        var userId = clientOAuthSessionItem.getUserId();
+        criResponseService.deleteCriResponseItem(userId, F2F);
+        evcsService.abandonPendingIdentity(userId, clientOAuthSessionItem.getEvcsAccessToken());
+        LOGGER.info(LogHelper.buildLogMessage("Reset done for F2F pending identity."));
     }
 }

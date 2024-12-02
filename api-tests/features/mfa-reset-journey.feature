@@ -29,7 +29,7 @@ Feature: MFA reset journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get an unsuccessful MFA reset result
+    Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
 
     # New journey with same user id
     When I start a new 'medium-confidence' journey
@@ -42,7 +42,7 @@ Feature: MFA reset journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get an unsuccessful MFA reset result
+    Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
   Scenario: Failed MFA reset journey - no photo id
     When I submit an 'end' event
@@ -50,7 +50,7 @@ Feature: MFA reset journey
     When I submit an 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get an unsuccessful MFA reset result
+    Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
   Scenario: Failed MFA reset journey - failed verification score
     When I submit an 'appTriage' event
@@ -60,7 +60,7 @@ Feature: MFA reset journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get an unsuccessful MFA reset result
+    Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
 
   Scenario: Failed MFA reset journey - non-matching identity
     When I submit an 'appTriage' event
@@ -72,4 +72,4 @@ Feature: MFA reset journey
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
-    Then I get an unsuccessful MFA reset result
+    Then I get an unsuccessful MFA reset result with failure code 'identity_did_not_match'

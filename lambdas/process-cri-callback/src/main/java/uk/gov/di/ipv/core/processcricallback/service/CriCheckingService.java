@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -86,6 +88,7 @@ public class CriCheckingService {
     private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
@@ -94,13 +97,15 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            IpvSessionService ipvSessionService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     public JourneyResponse handleCallbackError(
@@ -231,7 +236,8 @@ public class CriCheckingService {
                     VerifiableCredentialException {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
-        if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+        var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
+        if (!isReverification) {
             var cis =
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
@@ -251,12 +257,19 @@ public class CriCheckingService {
         var sessionVcs =
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
+
         if (!userIdentityService.areGpg45VcsCorrelated(sessionVcs)) {
+            if (isReverification) {
+                setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
+            }
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
         for (var vc : newVcs) {
             if (!VcHelper.isSuccessfulVc(vc)) {
+                if (isReverification) {
+                    setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
+                }
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
         }
@@ -267,6 +280,11 @@ public class CriCheckingService {
         }
 
         return JOURNEY_NEXT;
+    }
+
+    private void setFailedIdentityCheckOnIpvSessionItem(IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setFailureCode(ReverificationFailureCode.IDENTITY_CHECK_FAILED);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
     private boolean requiresAuthoritativeSourceCheck(

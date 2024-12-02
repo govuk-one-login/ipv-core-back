@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
@@ -84,6 +86,7 @@ class CriCheckingServiceTest {
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private MockedStatic<VcHelper> mockedVcHelper;
+    @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @Test
@@ -559,6 +562,7 @@ class CriCheckingServiceTest {
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
         verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
     }
 
     @Test

@@ -34,23 +34,18 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_ASYNC_WRITE_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
@@ -62,7 +57,6 @@ public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final AuditService auditService;
     private final CimitService cimitService;
@@ -71,7 +65,6 @@ public class ProcessAsyncCriCredentialHandler
 
     public ProcessAsyncCriCredentialHandler(
             ConfigService configService,
-            VerifiableCredentialService verifiableCredentialService,
             VerifiableCredentialValidator verifiableCredentialValidator,
             AuditService auditService,
             CimitService cimitService,
@@ -79,7 +72,6 @@ public class ProcessAsyncCriCredentialHandler
             EvcsService evcsService) {
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.cimitService = cimitService;
         this.criResponseService = criResponseService;
@@ -91,7 +83,6 @@ public class ProcessAsyncCriCredentialHandler
     public ProcessAsyncCriCredentialHandler() {
         this.configService = ConfigService.create();
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = AuditService.create(configService);
         this.cimitService = new CimitService(configService);
         this.criResponseService = new CriResponseService(configService);
@@ -105,10 +96,10 @@ public class ProcessAsyncCriCredentialHandler
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
         try {
             LogHelper.attachComponentId(configService);
-            List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
+            var failedRecords = new ArrayList<SQSBatchResponse.BatchItemFailure>();
 
-            for (SQSMessage message : event.getRecords()) {
-                failedRecords.addAll(processOrReturnItemFailure(message));
+            for (var sqsMessage : event.getRecords()) {
+                failedRecords.addAll(processOrReturnItemFailure(sqsMessage));
             }
 
             return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
@@ -122,8 +113,7 @@ public class ProcessAsyncCriCredentialHandler
 
     private List<SQSBatchResponse.BatchItemFailure> processOrReturnItemFailure(SQSMessage message) {
         try {
-            final BaseAsyncCriResponse asyncCriResponse =
-                    getAsyncResponseMessage(message.getBody());
+            final var asyncCriResponse = getAsyncResponseMessage(message.getBody());
             if (isSuccessAsyncCriResponse(asyncCriResponse)) {
                 processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
             } else {
@@ -193,9 +183,8 @@ public class ProcessAsyncCriCredentialHandler
                     HttpResponseExceptionWithErrorBody {
         var userId = successAsyncCriResponse.getUserId();
         var state = successAsyncCriResponse.getOauthState();
-        Optional<CriResponseItem> criResponseItem =
-                criResponseService.getCriResponseItemWithState(userId, state);
 
+        var criResponseItem = criResponseService.getCriResponseItemWithState(userId, state);
         if (criResponseItem.isEmpty()) {
             LOGGER.error(
                     LogHelper.buildLogMessage("No response item found given user id and state"));
@@ -217,29 +206,12 @@ public class ProcessAsyncCriCredentialHandler
                         oauthCriConfig.getComponentId());
 
         for (var vc : vcs) {
-            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
-
-            AuditEventUser auditEventUser = new AuditEventUser(userId, null, null, null);
-            sendIpvVcReceivedAuditEvent(auditEventUser, vc, cri, isSuccessful);
+            var auditEventUser = new AuditEventUser(userId, null, null, null);
+            sendIpvVcReceivedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
 
             submitVcToCiStorage(vc);
             postMitigatingVc(vc);
-
-            if (configService.enabled(EVCS_ASYNC_WRITE_ENABLED)) {
-                try {
-                    evcsService.storePendingVc(vc);
-                    vc.setMigrated(Instant.now());
-                } catch (EvcsServiceException e) {
-                    if (configService.enabled(EVCS_READ_ENABLED)) {
-                        throw e;
-                    } else {
-                        LOGGER.error(
-                                LogHelper.buildErrorMessage("Failed to store EVCS async VC", e));
-                    }
-                }
-            }
-            verifiableCredentialService.persistUserCredentials(vc);
-
+            evcsService.storePendingVc(vc);
             sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri);
         }
     }

@@ -100,7 +100,6 @@ export const getMfaResetResult = async (
 
   const body = await response.json();
   await validateResponseSchema(body, "reverificationResponse");
-
   return body;
 };
 

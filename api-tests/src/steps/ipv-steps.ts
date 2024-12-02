@@ -503,8 +503,12 @@ Then(
 );
 
 Then(
-  /^I get a(?:n)? (successful|unsuccessful) MFA reset result$/,
-  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+  /^I get a(?:n)? (successful|unsuccessful) MFA reset result( with failure code '([\w_]+)')?$/,
+  async function (
+    this: World,
+    expectedMfaResetResult: string,
+    expectedFailureCode: string | undefined,
+  ): Promise<void> {
     if (!this.mfaResetResult) {
       throw new Error("No MFA reset result found.");
     }
@@ -514,6 +518,14 @@ Then(
       expectedMfaResetResult === "successful",
       "MFA reset results do not match.",
     );
+
+    if (expectedFailureCode) {
+      assert.equal(
+        this.mfaResetResult.failure_code,
+        expectedFailureCode,
+        "MFA failure codes do not match.",
+      );
+    }
   },
 );
 

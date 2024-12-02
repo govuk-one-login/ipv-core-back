@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -33,14 +34,17 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
+import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
@@ -51,22 +55,25 @@ public class CheckMobileAppVcReceiptHandler
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final CriCheckingService criCheckingService;
+    private final EvcsService evcsService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     public CheckMobileAppVcReceiptHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
-            VerifiableCredentialService verifiableCredentialService,
-            CriCheckingService criCheckingService) {
+            CriCheckingService criCheckingService,
+            EvcsService evcsService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.criCheckingService = criCheckingService;
+        this.evcsService = evcsService;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -75,11 +82,9 @@ public class CheckMobileAppVcReceiptHandler
         ipvSessionService = new IpvSessionService(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
-        verifiableCredentialService = new VerifiableCredentialService(configService);
 
-        var sessionCredentialsService = new SessionCredentialsService(configService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
-
         criCheckingService =
                 new CriCheckingService(
                         configService,
@@ -87,7 +92,9 @@ public class CheckMobileAppVcReceiptHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService);
+                        sessionCredentialsService,
+                        ipvSessionService);
+        evcsService = new EvcsService(configService);
     }
 
     @Override
@@ -119,6 +126,8 @@ public class CheckMobileAppVcReceiptHandler
                     e,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } catch (EvcsServiceException e) {
+            return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
         } catch (ConfigException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
@@ -142,7 +151,8 @@ public class CheckMobileAppVcReceiptHandler
     private JourneyResponse getJourneyResponse(CheckMobileAppVcReceiptRequest request)
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     InvalidCriResponseException, CredentialParseException,
-                    VerifiableCredentialException, ConfigException, CiRetrievalException {
+                    VerifiableCredentialException, ConfigException, CiRetrievalException,
+                    EvcsServiceException {
         // Validate callback sessions
         validateSessionId(request);
 
@@ -167,21 +177,45 @@ public class CheckMobileAppVcReceiptHandler
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
-        // !!! Get from PENDING_RETURN and load into session credentials
+        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
+            return JOURNEY_ERROR;
+        }
 
-        var vc = verifiableCredentialService.getVc(userId, DCMAW_ASYNC.getId());
+        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
+            return JOURNEY_ABANDON;
+        }
+
+        var dcmawAsyncVc =
+                evcsService
+                        .getVerifiableCredentials(
+                                userId, clientOAuthSessionItem.getEvcsAccessToken(), PENDING_RETURN)
+                        .stream()
+                        .filter(vc -> DCMAW_ASYNC.equals(vc.getCri()))
+                        .findFirst();
+
+        if (dcmawAsyncVc.isEmpty()) {
+            return null;
+        }
+
+        sessionCredentialsService.persistCredentials(
+                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
+
         var asyncCriStatus =
                 new AsyncCriStatus(
                         DCMAW_ASYNC,
                         criResponseItem.getStatus(),
-                        vc == null,
+                        false,
                         isReturningWithNewAsyncVcs);
+
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }
 
         return criCheckingService.checkVcResponse(
-                List.of(vc), request.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
+                List.of(dcmawAsyncVc.get()),
+                request.getIpAddress(),
+                clientOAuthSessionItem,
+                ipvSessionItem);
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)
