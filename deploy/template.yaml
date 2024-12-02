@@ -82,9 +82,8 @@ Parameters:
   SubEnvironment:
     Type: String
     Description: >
-      When deploying to dev, optionally configure which sub-environment to deploy to
-      i.e. dev-sre. This feature is not available for route-to-live environments
-    Default: none
+      When deploying to dev, optionally configure which sub-environment to deploy to e.g. dev-sre. This feature is not available for route-to-live environments
+    Default: "none"
   VpcStackName:
     Description: >
       The name of the stack that defines the VPC in which this container will
@@ -3758,4 +3757,4 @@ Outputs:
     Description: Core Back Logging KMS Key Export with Environment
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
-      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}${SubEnvironment}"
+      Name: !Sub "CoreBackLoggingKmsKeyArn-${SubEnvironment}-${Environment}"
