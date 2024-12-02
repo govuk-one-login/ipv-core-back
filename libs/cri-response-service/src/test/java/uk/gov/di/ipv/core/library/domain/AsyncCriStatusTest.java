@@ -21,7 +21,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSameSession(
             String incompleteStatus, String expectedJourney) {
         // Arrange
-        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, null, incompleteStatus, false, false);
+        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, incompleteStatus, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(true);
@@ -40,8 +40,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSameSession() {
         // Arrange
         var asyncCriStatus =
-                new AsyncCriStatus(
-                        DCMAW_ASYNC, null, CriResponseService.STATUS_PENDING, false, false);
+                new AsyncCriStatus(DCMAW_ASYNC, CriResponseService.STATUS_PENDING, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(true);
@@ -55,7 +54,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSeparateSession(
             String incompleteStatus) {
         // Arrange
-        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, null, incompleteStatus, false, false);
+        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, incompleteStatus, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(false);
@@ -77,7 +76,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForF2f(
             String incompleteStatus, String expectedJourney) {
         // Arrange
-        var asyncCriStatus = new AsyncCriStatus(F2F, null, incompleteStatus, false, false);
+        var asyncCriStatus = new AsyncCriStatus(F2F, incompleteStatus, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(false);

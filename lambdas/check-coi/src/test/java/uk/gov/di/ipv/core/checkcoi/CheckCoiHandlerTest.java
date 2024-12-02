@@ -185,7 +185,7 @@ class CheckCoiHandlerTest {
 
             @Test
             void shouldReturnPassedForSuccessfulFullNameAndDobCheck() throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
+                when(mockUserIdentityService.areGpg45VcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockClientSessionItem.getScopeClaims())
@@ -227,7 +227,7 @@ class CheckCoiHandlerTest {
 
             @Test
             void shouldDoFullCheckIfReproveIdentityJourney() throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
+                when(mockUserIdentityService.areGpg45VcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockClientSessionItem.getReproveIdentity()).thenReturn(Boolean.TRUE);
@@ -270,7 +270,7 @@ class CheckCoiHandlerTest {
             void
                     shouldReturnPassedForSuccessfulReverificationCheckAndSetReverificationStatusToSuccess()
                             throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
+                when(mockUserIdentityService.areGpg45VcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockClientSessionItem.getScopeClaims())
@@ -314,7 +314,7 @@ class CheckCoiHandlerTest {
             @Test
             void shouldSendOnlyDeviceInformationInRestrictedDataIfNoIdentityClaimsFound()
                     throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
+                when(mockUserIdentityService.areGpg45VcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockClientSessionItem.getScopeClaims())
@@ -441,7 +441,7 @@ class CheckCoiHandlerTest {
             @Test
             void shouldReturnFailedForFailedReverificationCheckAndReverificationStatusSetToFailed()
                     throws Exception {
-                when(mockUserIdentityService.areVcsCorrelated(
+                when(mockUserIdentityService.areGpg45VcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
                 when(mockClientSessionItem.getScopeClaims())
@@ -548,7 +548,7 @@ class CheckCoiHandlerTest {
         @Test
         void shouldReturnErrorIfAreVcsCorrelatedCheckThrowsHttpResponseException()
                 throws Exception {
-            when(mockUserIdentityService.areVcsCorrelated(
+            when(mockUserIdentityService.areGpg45VcsCorrelated(
                             List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                     .thenThrow(
                             new HttpResponseExceptionWithErrorBody(

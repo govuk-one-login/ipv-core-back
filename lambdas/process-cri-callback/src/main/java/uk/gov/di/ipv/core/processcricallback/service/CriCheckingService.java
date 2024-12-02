@@ -251,7 +251,7 @@ public class CriCheckingService {
         var sessionVcs =
                 sessionCredentialsService.getCredentials(
                         ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
-        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+        if (!userIdentityService.areGpg45VcsCorrelated(sessionVcs)) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 

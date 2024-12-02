@@ -11,7 +11,10 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_P
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 
 public record AsyncCriStatus(
-        Cri cri, Long iat, String incompleteStatus, boolean isAwaitingVc, boolean isComplete) {
+        Cri cri,
+        String incompleteStatus,
+        boolean isAwaitingVc,
+        boolean isReturningWithNewAsyncVcs) {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final JourneyResponse JOURNEY_F2F_PENDING =
@@ -38,7 +41,13 @@ public record AsyncCriStatus(
 
     private JourneyResponse getJourneyPending(boolean isSameSession) {
         return switch (cri) {
-            case DCMAW_ASYNC -> isSameSession ? null : JOURNEY_ERROR;
+            case DCMAW_ASYNC -> {
+                if (isSameSession) {
+                    yield null;
+                } else {
+                    throw getUnsupportedCriResponseLogicException();
+                }
+            }
             case F2F -> JOURNEY_F2F_PENDING;
             default -> logUnexpectedCri();
         };
@@ -46,7 +55,13 @@ public record AsyncCriStatus(
 
     private JourneyResponse getJourneyAbandon(boolean isSameSession) {
         return switch (cri) {
-            case DCMAW_ASYNC -> isSameSession ? JOURNEY_ABANDON : JOURNEY_ERROR;
+            case DCMAW_ASYNC -> {
+                if (isSameSession) {
+                    yield JOURNEY_ABANDON;
+                } else {
+                    throw getUnsupportedCriResponseLogicException();
+                }
+            }
             case F2F -> JOURNEY_F2F_FAIL;
             default -> logUnexpectedCri();
         };
@@ -63,5 +78,10 @@ public record AsyncCriStatus(
     private JourneyResponse logUnexpectedCri() {
         LOGGER.warn(LogHelper.buildLogMessage("Unexpected cri: " + cri.getId()));
         return JOURNEY_ERROR;
+    }
+
+    private RuntimeException getUnsupportedCriResponseLogicException() {
+        return new RuntimeException(
+                "Unsupported CRI response situation. No DCMAW async VC implicitly assumed to be abandoned.");
     }
 }

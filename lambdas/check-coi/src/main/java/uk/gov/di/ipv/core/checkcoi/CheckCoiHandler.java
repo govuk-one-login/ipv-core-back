@@ -147,7 +147,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     switch (checkType) {
                         case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
                                 .areNamesAndDobCorrelated(combinedCredentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                        case FULL_NAME_AND_DOB -> userIdentityService.areGpg45VcsCorrelated(
                                 combinedCredentials);
                     };
 

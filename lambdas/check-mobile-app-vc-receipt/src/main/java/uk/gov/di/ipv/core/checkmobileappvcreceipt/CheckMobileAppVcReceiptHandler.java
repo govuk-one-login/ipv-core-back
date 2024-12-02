@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAp
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -42,6 +41,7 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
@@ -162,16 +162,20 @@ public class CheckMobileAppVcReceiptHandler
         LogHelper.attachComponentId(configService);
 
         // Retrieve and validate cri response and vc
-        var criResponseItem = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
+        var criResponseItem = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);
         if (criResponseItem == null) {
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
 
-        var vc = verifiableCredentialService.getVc(userId, Cri.DCMAW_ASYNC.getId());
-        var isVcNull = vc == null;
+        // !!! Get from PENDING_RETURN and load into session credentials
+
+        var vc = verifiableCredentialService.getVc(userId, DCMAW_ASYNC.getId());
         var asyncCriStatus =
                 new AsyncCriStatus(
-                        Cri.DCMAW_ASYNC, null, criResponseItem.getStatus(), isVcNull, !isVcNull);
+                        DCMAW_ASYNC,
+                        criResponseItem.getStatus(),
+                        vc == null,
+                        isReturningWithNewAsyncVcs);
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
         }

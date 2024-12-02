@@ -164,9 +164,9 @@ public class UserIdentityService {
         return false;
     }
 
-    public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
+    public boolean areGpg45VcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
-        var successfulVcs = getSuccessfulVcs(vcs);
+        var successfulVcs = getSuccessfulGpg45Vcs(vcs);
 
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
             LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
@@ -182,7 +182,7 @@ public class UserIdentityService {
 
     public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
-        var successfulVcs = getSuccessfulVcs(vcs);
+        var successfulVcs = getSuccessfulGpg45Vcs(vcs);
 
         var areGivenNamesCorrelated =
                 checkNamesForCorrelation(
@@ -211,7 +211,7 @@ public class UserIdentityService {
                 || (isFamilyNameCorrelated && isBirthDateCorrelated);
     }
 
-    private List<VerifiableCredential> getSuccessfulVcs(List<VerifiableCredential> vcs) {
+    private List<VerifiableCredential> getSuccessfulGpg45Vcs(List<VerifiableCredential> vcs) {
         var successfulVcs = new ArrayList<VerifiableCredential>();
         for (var vc : VcHelper.filterVCBasedOnProfileType(vcs, ProfileType.GPG45)) {
             if (VcHelper.isSuccessfulVc(vc)) {

@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jwt.util.DateUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,8 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsEvcsMigratio
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -60,7 +57,6 @@ import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -208,28 +204,7 @@ public class CheckExistingIdentityHandler
     }
 
     private record VerifiableCredentialBundle(
-            List<VerifiableCredential> credentials,
-            boolean hasEvcsIdentity,
-            boolean isPendingEvcsIdentity) {
-        private boolean hasVcForCri(Cri cri) {
-            return credentials.stream().anyMatch(vc -> vc.getCri().equals(cri));
-        }
-
-        private Long getVcIatForCri(Cri cri) {
-            var vc =
-                    credentials.stream()
-                            .filter(credential -> credential.getCri().equals(cri))
-                            .findFirst();
-            if (vc.isPresent()) {
-                var date = vc.get().getClaimsSet().getIssueTime();
-                if (date == null) {
-                    return null;
-                }
-                return DateUtils.toSecondsSinceEpoch(date);
-            }
-            return null;
-        }
-    }
+            List<VerifiableCredential> credentials, boolean isReturningWithNewAsyncVcs) {}
 
     @Override
     @Tracing
@@ -289,12 +264,9 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var vcs = getVerifiableCredentials(userId, evcsAccessToken);
 
-            var asyncCriStatus =
+            var asyncCri =
                     criResponseService.getAsyncResponseStatus(
-                            userId,
-                            vcs::hasVcForCri,
-                            vcs::getVcIatForCri,
-                            vcs.isPendingEvcsIdentity());
+                            userId, vcs.credentials, vcs.isReturningWithNewAsyncVcs);
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -334,15 +306,16 @@ public class CheckExistingIdentityHandler
                     cimitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
-                if (asyncCriStatus.isAwaitingVc()) {
-                    return asyncCriStatus.getJourneyForAwaitingVc(false);
+                // Might be mitigating with an async CRI (?)
+                if (asyncCri.isAwaitingVc()) {
+                    return asyncCri.getJourneyForAwaitingVc(false);
                 }
                 return ciScoringCheckResponse.get();
             }
 
-            // Check for credentials correlation failure
-            var areGpg45VcsCorrelated = userIdentityService.areVcsCorrelated(vcs.credentials);
+            // No breaching CIs
 
+            var areGpg45VcsCorrelated = userIdentityService.areGpg45VcsCorrelated(vcs.credentials);
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
@@ -362,22 +335,41 @@ public class CheckExistingIdentityHandler
                 return profileMatchResponse.get();
             }
 
-            // No profile matched but has a pending async CRI response item
-            if (asyncCriStatus.isAwaitingVc()) {
-                return asyncCriStatus.getJourneyForAwaitingVc(false);
+            // No profile matched
+
+            if (asyncCri.isAwaitingVc()) {
+                return asyncCri.getJourneyForAwaitingVc(false);
             }
 
-            // No profile match
-            if (asyncCriStatus.isComplete()) {
-                return buildAsyncCriNoMatchResponse(
-                        asyncCriStatus,
-                        vcs,
-                        lowestGpg45ConfidenceRequested,
-                        areGpg45VcsCorrelated,
-                        auditEventUser,
-                        deviceInformation,
-                        contraIndicators);
+            // No awaited async vc
+
+            if (asyncCri.isReturningWithNewAsyncVcs()) {
+                if (asyncCri.cri() == F2F) {
+
+                    // (Should have matched a profile)
+
+                    return buildF2fFailedResponse(
+                            areGpg45VcsCorrelated,
+                            auditEventUser,
+                            deviceInformation,
+                            contraIndicators);
+                }
+                if (asyncCri.cri() == DCMAW_ASYNC) {
+
+                    // Can complete a profile from here
+
+                    sessionCredentialsService.persistCredentials(
+                            vcs.credentials, auditEventUser.getSessionId(), false);
+
+                    return switch (lowestGpg45ConfidenceRequested) {
+                        case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
+                        case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
+                        default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
+                    };
+                }
             }
+
+            // No relevant async CRI
 
             return buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
         } catch (HttpResponseExceptionWithErrorBody
@@ -406,100 +398,46 @@ public class CheckExistingIdentityHandler
         var tacticalVcs = verifiableCredentialService.getVcs(userId);
 
         if (configService.enabled(EVCS_WRITE_ENABLED) || configService.enabled(EVCS_READ_ENABLED)) {
-            var bundle = getEvcsCredentialBundle(userId, evcsAccessToken, tacticalVcs);
+            var bundle = getEvcsCredentialBundle(userId, evcsAccessToken);
             if (bundle != null) {
                 return bundle;
             }
         }
 
-        return new VerifiableCredentialBundle(tacticalVcs, false, false);
+        return new VerifiableCredentialBundle(tacticalVcs, false);
     }
 
     private VerifiableCredentialBundle getEvcsCredentialBundle(
-            String userId, String evcsAccessToken, List<VerifiableCredential> tacticalVcs)
+            String userId, String evcsAccessToken)
             throws CredentialParseException, EvcsServiceException {
-        try {
-            var evcsVcs =
-                    evcsService.getVerifiableCredentialsByState(
-                            userId, evcsAccessToken, CURRENT, PENDING_RETURN);
+        var evcsVcs =
+                evcsService.getVerifiableCredentialsByState(
+                        userId, evcsAccessToken, CURRENT, PENDING_RETURN);
 
-            // Use pending return vcs to determine identity if available
-            var evcsIdentityVcs = evcsVcs.get(PENDING_RETURN);
-            var isPendingEvcs = true;
-            if (isNullOrEmpty(evcsIdentityVcs)) {
-                evcsIdentityVcs = evcsVcs.get(CURRENT);
-                isPendingEvcs = false;
-            } else {
-                // Ensure we keep any inherited ID VCs in the bundle
-                evcsIdentityVcs.addAll(
+        var isReturningWithNewAsyncVcs = !isNullOrEmpty(evcsVcs.get(PENDING_RETURN));
+
+        // + inherited VCs
+        var evcsIdentityVcs =
+                new ArrayList<>(
                         evcsVcs.getOrDefault(CURRENT, List.of()).stream()
                                 .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                                 .toList());
-            }
 
-            // Check for partially migrated pending identity
-            var hasPartiallyMigratedVcs =
-                    hasPartiallyMigratedVcs(tacticalVcs, evcsIdentityVcs, isPendingEvcs);
-            logIdentityMismatches(tacticalVcs, evcsVcs, hasPartiallyMigratedVcs);
+        if (isReturningWithNewAsyncVcs) {
+            // + vcs put off forming a profile by an async CRI
+            evcsIdentityVcs.addAll(evcsVcs.get(PENDING_RETURN));
+        } else {
+            // + remaining vcs
+            evcsIdentityVcs.addAll(
+                    evcsVcs.get(CURRENT).stream()
+                            .filter(vc -> !HMRC_MIGRATION.equals(vc.getCri()))
+                            .toList());
+        }
 
-            if (!isNullOrEmpty(evcsIdentityVcs)) {
-                if (hasPartiallyMigratedVcs) {
-                    // use tactical vcs but with evcs flags so that the store-identity lambda is
-                    // called next and updates the evcs pending one
-                    return new VerifiableCredentialBundle(tacticalVcs, true, true);
-                } else {
-                    return new VerifiableCredentialBundle(
-                            configService.enabled(EVCS_READ_ENABLED)
-                                    ? evcsIdentityVcs
-                                    : tacticalVcs,
-                            true,
-                            isPendingEvcs);
-                }
-            }
-        } catch (EvcsServiceException e) {
-            if (configService.enabled(EVCS_READ_ENABLED)) {
-                throw e;
-            } else {
-                LOGGER.error(LogHelper.buildErrorMessage("Failed to read EVCS VCs", e));
-            }
+        if (!isNullOrEmpty(evcsIdentityVcs)) {
+            return new VerifiableCredentialBundle(evcsIdentityVcs, isReturningWithNewAsyncVcs);
         }
         return null;
-    }
-
-    private boolean hasPartiallyMigratedVcs(
-            List<VerifiableCredential> tacticalVcs,
-            List<VerifiableCredential> evcsVcs,
-            boolean isPending) {
-
-        if (!isPending) {
-            return false;
-        }
-
-        // EVCS contains only a pending F2F VC
-        if (evcsVcs.size() == 1 && F2F.equals(evcsVcs.get(0).getCri())) {
-            return true;
-        }
-
-        // Tactical contains the same as pending EVCS, with one extra F2F VC
-        if (tacticalVcs.size() == evcsVcs.size() + 1) {
-
-            var extraF2fVcs =
-                    tacticalVcs.stream()
-                            .filter(
-                                    credential ->
-                                            F2F.equals(credential.getCri())
-                                                    && evcsVcs.stream()
-                                                            .noneMatch(
-                                                                    evcsVC ->
-                                                                            evcsVC.getVcString()
-                                                                                    .equals(
-                                                                                            credential
-                                                                                                    .getVcString())))
-                            .toList();
-
-            return extraF2fVcs.size() == 1;
-        }
-        return false;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -633,10 +571,7 @@ public class CheckExistingIdentityHandler
         return Optional.empty();
     }
 
-    private JourneyResponse buildAsyncCriNoMatchResponse(
-            AsyncCriStatus asyncCriStatus,
-            VerifiableCredentialBundle vcs,
-            Vot lowestGpg45ConfidenceRequested,
+    private JourneyResponse buildF2fFailedResponse(
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
             String deviceInformation,
@@ -645,39 +580,15 @@ public class CheckExistingIdentityHandler
                     HttpResponseExceptionWithErrorBody {
         LOGGER.info(LogHelper.buildLogMessage("Async CRI return - failed to match a profile."));
 
-        if (DCMAW_ASYNC.equals(asyncCriStatus.cri())) {
-            if (asyncCriStatus.iat() == null) {
-                LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC has no iat."));
-                return getNewIdentityJourney(lowestGpg45ConfidenceRequested);
-            }
-
-            var connection = configService.getActiveConnection(DCMAW_ASYNC);
-            var criConfig = configService.getOauthCriConfigForConnection(connection, DCMAW_ASYNC);
-
-            var isExpired =
-                    DateUtils.toSecondsSinceEpoch(new Date())
-                            > asyncCriStatus.iat() + criConfig.getTtl();
-            if (isExpired) {
-                LOGGER.info(LogHelper.buildLogMessage("DCMAW async VC expired."));
-                return getNewIdentityJourney(lowestGpg45ConfidenceRequested);
-            }
-
-            sessionCredentialsService.persistCredentials(
-                    vcs.credentials, auditEventUser.getSessionId(), false);
-
-            return switch (lowestGpg45ConfidenceRequested) {
-                case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
-                case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
-                default -> JOURNEY_ERROR;
-            };
-        }
-
         sendAuditEvent(
                 !areGpg45VcsCorrelated
                         ? AuditEventTypes.IPV_F2F_CORRELATION_FAIL
                         : AuditEventTypes.IPV_F2F_PROFILE_NOT_MET_FAIL,
                 auditEventUser,
                 deviceInformation);
+
+        // If someone's ever picked up a CI, they can only try mitigation routes, even once
+        // mitigated.
         var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
         if (mitigatedCI.isPresent()) {
             var mitigationJourney =
@@ -696,6 +607,7 @@ public class CheckExistingIdentityHandler
             }
             return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
         }
+
         return JOURNEY_F2F_FAIL;
     }
 
@@ -765,7 +677,7 @@ public class CheckExistingIdentityHandler
 
         migrateCredentialsToEVCS(auditEventUser, deviceInformation, vcBundle);
 
-        return vcBundle.isPendingEvcsIdentity() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
+        return vcBundle.isReturningWithNewAsyncVcs() ? JOURNEY_REUSE_WITH_STORE : JOURNEY_REUSE;
     }
 
     private JourneyResponse getNewIdentityJourney(Vot preferredNewIdentityLevel)
@@ -792,7 +704,7 @@ public class CheckExistingIdentityHandler
             String deviceInformation,
             VerifiableCredentialBundle vcBundle)
             throws EvcsServiceException, VerifiableCredentialException {
-        if (configService.enabled(EVCS_WRITE_ENABLED) && !vcBundle.hasEvcsIdentity()) {
+        if (configService.enabled(EVCS_WRITE_ENABLED) && isNullOrEmpty(vcBundle.credentials())) {
             try {
                 evcsMigrationService.migrateExistingIdentity(
                         auditEventUser.getUserId(), vcBundle.credentials());
@@ -852,6 +764,12 @@ public class CheckExistingIdentityHandler
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
         LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+        return new JourneyErrorResponse(
+                JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
+    }
+
+    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse) {
+        LOGGER.error(LogHelper.buildErrorMessage(errorResponse));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
     }

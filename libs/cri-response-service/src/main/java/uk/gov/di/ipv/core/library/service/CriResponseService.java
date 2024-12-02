@@ -1,21 +1,22 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.jwt.util.DateUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
-import static uk.gov.di.ipv.core.library.domain.Cri.ASYNC_CRIS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 
 public class CriResponseService {
@@ -24,16 +25,19 @@ public class CriResponseService {
     public static final String STATUS_ERROR = "error";
     public static final String STATUS_ABANDON = "abandon";
     public static final String ERROR_ACCESS_DENIED = "access_denied";
+    private final ConfigService configService;
     private final DataStore<CriResponseItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
     public CriResponseService(ConfigService configService) {
         this.dataStore =
                 DataStore.create(CRI_RESPONSE_TABLE_NAME, CriResponseItem.class, configService);
+        this.configService = configService;
     }
 
     public CriResponseService(DataStore<CriResponseItem> dataStore) {
         this.dataStore = dataStore;
+        this.configService = ConfigService.create();
     }
 
     public Optional<CriResponseItem> getCriResponseItemWithState(String userId, String state) {
@@ -75,29 +79,40 @@ public class CriResponseService {
         dataStore.update(responseItem);
     }
 
-    @SuppressWarnings("java:S4276")
     public AsyncCriStatus getAsyncResponseStatus(
             String userId,
-            Predicate<Cri> hasVc,
-            Function<Cri, Long> getVcIat,
-            boolean isPendingEvcsIdentity) {
-        final var criResponseItem =
-                dataStore.getItems(userId).stream()
-                        .filter(item -> ASYNC_CRIS.contains(Cri.fromId(item.getCredentialIssuer())))
-                        .findFirst()
-                        .orElse(null);
-        if (Objects.isNull(criResponseItem)) {
-            return new AsyncCriStatus(null, null, null, false, false);
+            List<VerifiableCredential> credentials,
+            boolean isReturningWithNewAsyncVcs) {
+        // F2F CRI response item blocks other async CRI routes, except for
+        // enhanced-verification-f2f-fail, which
+        // enforces the user stays on the same mitigation route, so it is fine here as we check F2F
+        // first.
+        var f2fCriResponseItem = getCriResponseItem(userId, F2F);
+        if (f2fCriResponseItem != null) {
+            var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
+            var hasVc = f2fVc.isPresent();
+
+            return new AsyncCriStatus(
+                    F2F, f2fCriResponseItem.getStatus(), !hasVc, isReturningWithNewAsyncVcs);
         }
 
-        var cri = Cri.fromId(criResponseItem.getCredentialIssuer());
+        // DCMAW async VC existence determines success or abandonment
+        var dcmawAsyncVc =
+                credentials.stream().filter(vc -> vc.getCri().equals(DCMAW_ASYNC)).findFirst();
+        if (dcmawAsyncVc.isPresent()) {
+            var issuedAt = dcmawAsyncVc.get().getClaimsSet().getIssueTime();
+            if (issuedAt != null) {
+                var connection = configService.getActiveConnection(DCMAW_ASYNC);
+                var criConfig =
+                        configService.getOauthCriConfigForConnection(connection, DCMAW_ASYNC);
 
-        var awaitingVc = !hasVc.test(cri);
-        var isCriPrecededByOtherRequiredVcs = F2F.equals(cri);
-        var isComplete =
-                hasVc.test(cri) && (!isCriPrecededByOtherRequiredVcs || isPendingEvcsIdentity);
+                if (DateUtils.toSecondsSinceEpoch(new Date())
+                        < DateUtils.toSecondsSinceEpoch(issuedAt) + criConfig.getTtl()) {
+                    return new AsyncCriStatus(DCMAW_ASYNC, null, false, isReturningWithNewAsyncVcs);
+                }
+            }
+        }
 
-        return new AsyncCriStatus(
-                cri, getVcIat.apply(cri), criResponseItem.getStatus(), awaitingVc, isComplete);
+        return null;
     }
 }

@@ -147,7 +147,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -174,7 +174,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -201,7 +201,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -222,7 +222,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -283,7 +283,7 @@ class EvaluateGpg45ScoresHandlerTest {
                                 M1A_ADDRESS_VC,
                                 M1A_EXPERIAN_FRAUD_VC,
                                 vcVerificationM1a()));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.buildScore(any()))
@@ -324,7 +324,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(false);
 
         JourneyResponse response =
                 toResponseClass(
@@ -334,7 +334,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(userIdentityService, times(1)).areVcsCorrelated(any());
+        verify(userIdentityService, times(1)).areGpg45VcsCorrelated(any());
 
         verify(ipvSessionService, never()).updateIpvSession(any());
 
@@ -347,7 +347,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(true);
 
@@ -372,7 +372,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
 
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
@@ -402,7 +402,7 @@ class EvaluateGpg45ScoresHandlerTest {
         clientOAuthSessionItem.setVtr(List.of("P1"));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =
@@ -431,7 +431,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =
@@ -452,7 +452,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.of(M1A));
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =
@@ -477,7 +477,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(cimitService.getContraIndicators(any(), any(), any())).thenReturn(CONTRAINDICATORS);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1)).thenReturn(true);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =
@@ -504,7 +504,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1))
                 .thenReturn(false);
-        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.areGpg45VcsCorrelated(any())).thenReturn(true);
         when(userIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
 
         JourneyResponse response =

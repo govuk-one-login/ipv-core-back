@@ -142,7 +142,7 @@ public class EvaluateGpg45ScoresHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            if (!userIdentityService.areVcsCorrelated(vcs)) {
+            if (!userIdentityService.areGpg45VcsCorrelated(vcs)) {
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 

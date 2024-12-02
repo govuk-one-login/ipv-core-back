@@ -163,7 +163,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -188,7 +188,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -209,7 +209,7 @@ class UserIdentityServiceTest {
                                         ""))); // BAV cri doesn't provide birthdate
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @ParameterizedTest
@@ -233,7 +233,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.areVcsCorrelated(vcs));
+                        () -> userIdentityService.areGpg45VcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
@@ -260,7 +260,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.areVcsCorrelated(vcs));
+                        () -> userIdentityService.areGpg45VcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
@@ -285,7 +285,7 @@ class UserIdentityServiceTest {
                                         missing, missing, "1000-01-01")));
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @ParameterizedTest
@@ -313,7 +313,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.areVcsCorrelated(vcs));
+                        () -> userIdentityService.areGpg45VcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(ErrorResponse.FAILED_NAME_CORRELATION, thrownError.getErrorResponse());
@@ -341,7 +341,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -366,7 +366,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "2000-01-01")));
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @ParameterizedTest
@@ -394,7 +394,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.areVcsCorrelated(vcs));
+                        () -> userIdentityService.areGpg45VcsCorrelated(vcs));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(ErrorResponse.FAILED_BIRTHDATE_CORRELATION, thrownError.getErrorResponse());
@@ -423,7 +423,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -448,7 +448,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "2000-01-01")));
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -473,7 +473,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "1000-01-01")));
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -498,7 +498,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", "2000-01-01", false)));
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
@@ -523,7 +523,7 @@ class UserIdentityServiceTest {
                                         "Jimbo", "Jones", List.of("1000-01-01", "2000-01-01"))));
 
         // Act & Assert
-        assertFalse(userIdentityService.areVcsCorrelated(vcs));
+        assertFalse(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Nested
@@ -1653,7 +1653,7 @@ class UserIdentityServiceTest {
                         vcHmrcMigrationPCL200());
 
         // Act & Assert
-        assertTrue(userIdentityService.areVcsCorrelated(vcs));
+        assertTrue(userIdentityService.areGpg45VcsCorrelated(vcs));
     }
 
     @Test
