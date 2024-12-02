@@ -64,7 +64,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CRED
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
@@ -194,7 +194,10 @@ class CheckCoiHandlerTest {
                 var request =
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .lambdaInput(
+                                        Map.of(
+                                                "checkType",
+                                                FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -207,13 +210,15 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
 
                 var restrictedAuditData =
@@ -248,13 +253,15 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
 
                 var restrictedAuditData =
@@ -279,7 +286,10 @@ class CheckCoiHandlerTest {
                 var request =
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .lambdaInput(
+                                        Map.of(
+                                                "checkType",
+                                                FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -294,13 +304,15 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
                 var restrictedAuditData =
                         getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
@@ -324,7 +336,10 @@ class CheckCoiHandlerTest {
                 var request =
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .lambdaInput(
+                                        Map.of(
+                                                "checkType",
+                                                FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -337,13 +352,15 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
+                        new AuditExtensionCoiCheck(
+                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
 
                 var restrictedAuditData =
@@ -450,7 +467,10 @@ class CheckCoiHandlerTest {
                 var request =
                         ProcessRequest.processRequestBuilder()
                                 .ipvSessionId(IPV_SESSION_ID)
-                                .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                                .lambdaInput(
+                                        Map.of(
+                                                "checkType",
+                                                FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                                 .build();
 
                 var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -464,13 +484,13 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, null),
+                        new AuditExtensionCoiCheck(FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, false),
+                        new AuditExtensionCoiCheck(FULL_NAME_WITH_ALLOWANCE_AND_DOB, false),
                         auditEventsCaptured.get(1).getExtensions());
                 var restrictedAuditData =
                         getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
@@ -557,7 +577,8 @@ class CheckCoiHandlerTest {
             var request =
                     ProcessRequest.processRequestBuilder()
                             .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                            .lambdaInput(
+                                    Map.of("checkType", FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                             .build();
 
             var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -571,7 +592,7 @@ class CheckCoiHandlerTest {
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                     auditEventsCaptured.get(0).getEventName());
             assertEquals(
-                    new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
+                    new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
         }
 
@@ -585,7 +606,8 @@ class CheckCoiHandlerTest {
             var request =
                     ProcessRequest.processRequestBuilder()
                             .ipvSessionId(IPV_SESSION_ID)
-                            .lambdaInput(Map.of("checkType", FULL_NAME_AND_DOB.name()))
+                            .lambdaInput(
+                                    Map.of("checkType", FULL_NAME_WITH_ALLOWANCE_AND_DOB.name()))
                             .build();
 
             var responseMap = checkCoiHandler.handleRequest(request, mockContext);
@@ -599,7 +621,7 @@ class CheckCoiHandlerTest {
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                     auditEventsCaptured.get(0).getEventName());
             assertEquals(
-                    new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, null),
+                    new AuditExtensionCoiCheck(FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
                     auditEventsCaptured.get(0).getExtensions());
         }
 
