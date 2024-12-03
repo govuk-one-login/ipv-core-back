@@ -391,19 +391,19 @@ class ContractTest {
                                 EVCS_API_KEY,
                                 CONTENT_TYPE,
                                 ContentType.APPLICATION_JSON.toString()))
-                .body(getRequestBodyUpdateVC())
+                .body(getRequestBodyUpdateVC("CURRENT"))
                 .willRespondWith()
                 .status(204)
                 .toPact();
     }
 
-    private DslPart getRequestBodyUpdateVC() {
+    private DslPart getRequestBodyUpdateVC(String state) {
         return newJsonArray(
                         array -> {
                             array.object(
                                     vcObject -> {
                                         vcObject.stringType("signature", VC_SIGNATURE);
-                                        vcObject.stringType("state", "CURRENT");
+                                        vcObject.stringType("state", state);
                                         vcObject.object(
                                                 "metadata",
                                                 metadata -> {
@@ -434,7 +434,6 @@ class ContractTest {
     public RequestResponsePact invalidUpdateUserVcReturns400(PactDslWithProvider builder) {
         return builder.given("EVCS client exist")
                 .given("test-evcs-api-key is a valid API key")
-                .given("test-user-id has one CURRENT VC")
                 .uponReceiving("A request to create EVCS user VCs")
                 .path("/vcs/" + INVALID_USER_ID)
                 .method("PATCH")
@@ -444,7 +443,7 @@ class ContractTest {
                                 EVCS_API_KEY,
                                 CONTENT_TYPE,
                                 ContentType.APPLICATION_JSON.toString()))
-                .body(getRequestBodyUpdateVC())
+                .body(getRequestBodyUpdateVC("INVALID_STATE"))
                 .willRespondWith()
                 .status(400)
                 .toPact();
