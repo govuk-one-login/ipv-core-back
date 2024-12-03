@@ -11,9 +11,11 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
+import uk.gov.di.ipv.core.library.enums.ProcessIdentityType;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityType;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
@@ -26,6 +28,7 @@ import java.util.stream.Stream;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 
 public class RequestHelper {
@@ -185,6 +188,17 @@ public class RequestHelper {
             return CoiCheckType.valueOf(checkType);
         } catch (IllegalArgumentException e) {
             throw new UnknownCoiCheckTypeException(checkType);
+        }
+    }
+
+    public static ProcessIdentityType getProcessIdentityType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityType {
+        String checkType =
+                extractValueFromLambdaInput(request, "processType", MISSING_PROCESS_IDENTITY_TYPE);
+        try {
+            return ProcessIdentityType.valueOf(checkType);
+        } catch (IllegalArgumentException e) {
+            throw new UnknownProcessIdentityType(checkType);
         }
     }
 
