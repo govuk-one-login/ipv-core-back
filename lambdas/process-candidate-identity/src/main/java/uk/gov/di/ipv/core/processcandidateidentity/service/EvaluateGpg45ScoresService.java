@@ -18,14 +18,10 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
@@ -35,33 +31,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PR
 
 public class EvaluateGpg45ScoresService {
     private static final Logger LOGGER = LogManager.getLogger();
+
     private final UserIdentityService userIdentityService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final ConfigService configService;
     private final AuditService auditService;
     private final CimitUtilityService cimitUtilityService;
-
-    @SuppressWarnings({
-        "unused",
-        "java:S107"
-    }) // Used by tests through injection, methods should not have too many parameters
-    public EvaluateGpg45ScoresService(
-            UserIdentityService userIdentityService,
-            IpvSessionService ipvSessionService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            ConfigService configService,
-            AuditService auditService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            SessionCredentialsService sessionCredentialsService,
-            CimitService cimitService,
-            CimitUtilityService cimitUtilityService) {
-        this.userIdentityService = userIdentityService;
-        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        this.configService = configService;
-        this.auditService = auditService;
-        this.cimitUtilityService = cimitUtilityService;
-        VcHelper.setConfigService(this.configService);
-    }
 
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
