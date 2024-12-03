@@ -14,7 +14,8 @@ dependencies {
 			project(":libs:verifiable-credentials"),
 			project(":libs:user-identity-service"),
 			project(":libs:cimit-service"),
-			project(":libs:cri-storing-service")
+			project(":libs:cri-storing-service"),
+			project(":libs:evcs-service")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
