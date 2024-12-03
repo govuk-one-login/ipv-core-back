@@ -85,7 +85,7 @@ public class StoreIdentityService {
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
     }
 
-    private void sendIdentityStoredEvent(
+    public void sendIdentityStoredEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,
