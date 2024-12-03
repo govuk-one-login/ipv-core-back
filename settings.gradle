@@ -23,6 +23,7 @@ include "lambdas",
 		"lambdas:initialise-ipv-session",
 		"lambdas:issue-client-access-token",
 		"lambdas:process-async-cri-credential",
+		"lambdas:process-candidate-identity",
 		"lambdas:process-cri-callback",
 		"lambdas:process-journey-event",
 		"lambdas:reset-session-identity",
@@ -59,3 +60,5 @@ dependencyResolutionManagement {
 		}
 	}
 }
+include 'lambdas:process-candidate-identity'
+findProject(':lambdas:process-candidate-identity')?.name = 'process-candidate-identity'
