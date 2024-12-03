@@ -826,7 +826,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
@@ -1242,7 +1241,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
       VpcConfig:
         SubnetIds:
@@ -1261,8 +1259,8 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBReadPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
@@ -1270,6 +1268,8 @@ Resources:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
@@ -1738,7 +1738,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -1920,7 +1919,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1956,8 +1954,6 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
@@ -2013,7 +2009,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
@@ -2040,8 +2035,6 @@ Resources:
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBWritePolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - DynamoDBWritePolicy:
@@ -2372,7 +2365,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -2411,8 +2403,6 @@ Resources:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBReadPolicy:
@@ -2457,7 +2447,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
       VpcConfig:
         SubnetIds:
@@ -2500,8 +2489,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
       AutoPublishAlias: live
