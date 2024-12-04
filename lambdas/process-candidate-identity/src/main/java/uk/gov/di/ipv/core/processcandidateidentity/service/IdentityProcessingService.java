@@ -4,6 +4,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -69,6 +70,31 @@ public class IdentityProcessingService {
     private final StoreIdentityService storeIdentityService;
     private final CheckCoiService checkCoiService;
 
+    @ExcludeFromGeneratedCoverageReport
+    public IdentityProcessingService(
+            TicfCriService ticfCriService,
+            AuditService auditService,
+            CimitService cimitService,
+            CimitUtilityService cimitUtilityService,
+            EvaluateGpg45ScoresService evaluateGpg45ScoresService,
+            UserIdentityService userIdentityService,
+            StoreIdentityService storeIdentityService,
+            CheckCoiService checkCoiService,
+            SessionCredentialsService sessionCredentialsService,
+            CriStoringService criStoringService) {
+        this.ticfCriService = ticfCriService;
+        this.auditService = auditService;
+        this.cimitUtilityService = cimitUtilityService;
+        this.cimitService = cimitService;
+        this.evaluateGpg45ScoresService = evaluateGpg45ScoresService;
+        this.sessionCredentialsService = sessionCredentialsService;
+        this.userIdentityService = userIdentityService;
+        this.storeIdentityService = storeIdentityService;
+        this.checkCoiService = checkCoiService;
+        this.criStoringService = criStoringService;
+    }
+
+    @ExcludeFromGeneratedCoverageReport
     public IdentityProcessingService(ConfigService configService) {
         this.ticfCriService = new TicfCriService(configService);
         this.auditService = AuditService.create(configService);
@@ -186,6 +212,7 @@ public class IdentityProcessingService {
 
             ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
             logLambdaResponse("A GPG45 profile has been met", JOURNEY_NEXT);
+
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));

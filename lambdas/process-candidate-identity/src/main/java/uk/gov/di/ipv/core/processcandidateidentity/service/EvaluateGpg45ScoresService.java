@@ -38,6 +38,21 @@ public class EvaluateGpg45ScoresService {
     private final AuditService auditService;
     private final CimitUtilityService cimitUtilityService;
 
+    @ExcludeFromGeneratedCoverageReport
+    public EvaluateGpg45ScoresService(
+            ConfigService configService,
+            UserIdentityService userIdentityService,
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
+            AuditService auditService,
+            CimitUtilityService cimitUtilityService) {
+        this.configService = configService;
+        this.userIdentityService = userIdentityService;
+        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        this.auditService = auditService;
+        this.cimitUtilityService = cimitUtilityService;
+        VcHelper.setConfigService(this.configService);
+    }
+
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresService() {
