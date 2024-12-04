@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -27,10 +28,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.IdentityProcessingService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
@@ -82,28 +86,38 @@ public class ProcessCandidateIdentityHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            switch (processIdentityType) {
-                case ALL:
-                    var checkType = RequestHelper.getCoiCheckType(request);
-                    var identityType = RequestHelper.getIdentityType(request);
-                    return processIdentityAll(
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
-                                    checkType,
-                                    identityType,
-                                    deviceInformation,
-                                    ipAddress)
-                            .toObjectMap();
-            }
-
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            UNEXPECTED_PROCESS_IDENTITY_TYPE)
-                    .toObjectMap();
+            return switch (processIdentityType) {
+                case ALL -> processIdentityAll(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                request,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+                case COI -> processIdentityCoi(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                request,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+                case STORE_IDENTITY -> processIdentityStoreIdentity(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                request,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+                case TICF_ONLY -> processIdentityTicfOnly(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+            };
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
@@ -142,11 +156,13 @@ public class ProcessCandidateIdentityHandler
     private JourneyResponse processIdentityAll(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            CoiCheckType coiCheckType,
-            IdentityType identityType,
+            ProcessRequest request,
             String deviceInformation,
             String ipAddress)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        var coiCheckType = getCoiCheckTypeFromRequest(request);
+        var identityType = getIdentityTypeFromRequest(request);
+
         return identityProcessingService.performIdentityProcessingOperations(
                 List.of(
                         () ->
@@ -176,5 +192,97 @@ public class ProcessCandidateIdentityHandler
                                         identityType,
                                         deviceInformation,
                                         ipAddress)));
+    }
+
+    private JourneyResponse processIdentityCoi(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            ProcessRequest request,
+            String deviceInformation,
+            String ipAddress)
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        var coiCheckType = getCoiCheckTypeFromRequest(request);
+
+        List<Supplier<JourneyResponse>> operations =
+                new ArrayList<>(
+                        List.of(
+                                () ->
+                                        identityProcessingService.getJourneyResponseFromCoiCheck(
+                                                ipvSessionItem,
+                                                clientOAuthSessionItem,
+                                                coiCheckType,
+                                                deviceInformation,
+                                                ipAddress)));
+
+        if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
+            operations.add(
+                    () ->
+                            identityProcessingService.getJourneyResponseFromTicfCall(
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    deviceInformation,
+                                    ipAddress));
+        }
+
+        return identityProcessingService.performIdentityProcessingOperations(operations);
+    }
+
+    private JourneyResponse processIdentityStoreIdentity(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            ProcessRequest request,
+            String deviceInformation,
+            String ipAddress)
+            throws HttpResponseExceptionWithErrorBody {
+        var identityType = getIdentityTypeFromRequest(request);
+
+        List<Supplier<JourneyResponse>> operations =
+                new ArrayList<>(
+                        List.of(
+                                () ->
+                                        identityProcessingService
+                                                .getJourneyResponseFromStoringIdentity(
+                                                        ipvSessionItem,
+                                                        clientOAuthSessionItem,
+                                                        identityType,
+                                                        deviceInformation,
+                                                        ipAddress)));
+
+        if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
+            operations.add(
+                    () ->
+                            identityProcessingService.getJourneyResponseFromTicfCall(
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    deviceInformation,
+                                    ipAddress));
+        }
+
+        return identityProcessingService.performIdentityProcessingOperations(operations);
+    }
+
+    private JourneyResponse processIdentityTicfOnly(
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String deviceInformation,
+            String ipAddress) {
+        return identityProcessingService.performIdentityProcessingOperations(
+                List.of(
+                        () ->
+                                identityProcessingService.getJourneyResponseFromTicfCall(
+                                        ipvSessionItem,
+                                        clientOAuthSessionItem,
+                                        deviceInformation,
+                                        ipAddress)));
+    }
+
+    private CoiCheckType getCoiCheckTypeFromRequest(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
+        return RequestHelper.getCoiCheckType(request);
+    }
+
+    private IdentityType getIdentityTypeFromRequest(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        return RequestHelper.getIdentityType(request);
     }
 }
