@@ -52,9 +52,9 @@ public class CheckCoiService {
     private final EvcsService evcsService;
 
     @ExcludeFromGeneratedCoverageReport
-    public CheckCoiService(ConfigService configService) {
+    public CheckCoiService(ConfigService configService, AuditService auditService) {
         this.configService = configService;
-        this.auditService = AuditService.create(configService);
+        this.auditService = auditService;
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);

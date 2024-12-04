@@ -44,11 +44,11 @@ public class StoreIdentityService {
     private final EvcsService evcsService;
 
     @ExcludeFromGeneratedCoverageReport
-    public StoreIdentityService(ConfigService configService) {
+    public StoreIdentityService(ConfigService configService, AuditService auditService) {
         this.configService = configService;
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
-        this.auditService = AuditService.create(configService);
+        this.auditService = auditService;
         this.evcsService = new EvcsService(configService);
     }
 
