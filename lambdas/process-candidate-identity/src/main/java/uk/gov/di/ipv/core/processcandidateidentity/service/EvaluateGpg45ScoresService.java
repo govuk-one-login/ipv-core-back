@@ -53,18 +53,12 @@ public class EvaluateGpg45ScoresService {
         VcHelper.setConfigService(this.configService);
     }
 
-    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
-    public EvaluateGpg45ScoresService() {
-        this(ConfigService.create());
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    public EvaluateGpg45ScoresService(ConfigService configService) {
+    public EvaluateGpg45ScoresService(ConfigService configService, AuditService auditService) {
         this.configService = configService;
         this.userIdentityService = new UserIdentityService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.auditService = AuditService.create(configService);
+        this.auditService = auditService;
         this.cimitUtilityService = new CimitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }

@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -49,19 +48,30 @@ public class ProcessCandidateIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final IpvSessionService ipvSessionService;
     private final IdentityProcessingService identityProcessingService;
-    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
         this(ConfigService.create());
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler(ConfigService configService) {
         this.configService = configService;
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.identityProcessingService = new IdentityProcessingService(configService);
-        this.auditService = AuditService.create(configService);
+    }
+
+    @ExcludeFromGeneratedCoverageReport
+    public ProcessCandidateIdentityHandler(
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            IpvSessionService ipvSessionService,
+            IdentityProcessingService identityProcessingService) {
+        this.configService = configService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        this.ipvSessionService = ipvSessionService;
+        this.identityProcessingService = identityProcessingService;
     }
 
     @Override
@@ -125,7 +135,7 @@ public class ProcessCandidateIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unknown process identity type", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatus.SC_BAD_REQUEST,
                             UNEXPECTED_PROCESS_IDENTITY_TYPE)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
@@ -149,7 +159,6 @@ public class ProcessCandidateIdentityHandler
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
-            auditService.awaitAuditEvents();
         }
     }
 
@@ -163,7 +172,7 @@ public class ProcessCandidateIdentityHandler
         var coiCheckType = getCoiCheckTypeFromRequest(request);
         var identityType = getIdentityTypeFromRequest(request);
 
-        return identityProcessingService.performIdentityProcessingOperations(
+        return IdentityProcessingService.performIdentityProcessingOperations(
                 List.of(
                         () ->
                                 identityProcessingService.getJourneyResponseFromCoiCheck(
@@ -224,7 +233,7 @@ public class ProcessCandidateIdentityHandler
                                     ipAddress));
         }
 
-        return identityProcessingService.performIdentityProcessingOperations(operations);
+        return IdentityProcessingService.performIdentityProcessingOperations(operations);
     }
 
     private JourneyResponse processIdentityStoreIdentity(
@@ -258,7 +267,7 @@ public class ProcessCandidateIdentityHandler
                                     ipAddress));
         }
 
-        return identityProcessingService.performIdentityProcessingOperations(operations);
+        return IdentityProcessingService.performIdentityProcessingOperations(operations);
     }
 
     private JourneyResponse processIdentityTicfOnly(
@@ -266,7 +275,7 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             String ipAddress) {
-        return identityProcessingService.performIdentityProcessingOperations(
+        return IdentityProcessingService.performIdentityProcessingOperations(
                 List.of(
                         () ->
                                 identityProcessingService.getJourneyResponseFromTicfCall(

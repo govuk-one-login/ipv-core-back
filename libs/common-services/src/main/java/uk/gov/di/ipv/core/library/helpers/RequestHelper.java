@@ -194,7 +194,8 @@ public class RequestHelper {
     public static ProcessIdentityType getProcessIdentityType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityType {
         String checkType =
-                extractValueFromLambdaInput(request, "processType", MISSING_PROCESS_IDENTITY_TYPE);
+                extractValueFromLambdaInput(
+                        request, "processIdentityType", MISSING_PROCESS_IDENTITY_TYPE);
         try {
             return ProcessIdentityType.valueOf(checkType);
         } catch (IllegalArgumentException e) {
