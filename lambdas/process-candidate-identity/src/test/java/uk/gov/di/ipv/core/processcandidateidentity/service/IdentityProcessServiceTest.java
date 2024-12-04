@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -40,6 +41,7 @@ import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriServiceExcep
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
@@ -77,7 +79,6 @@ public class IdentityProcessServiceTest {
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final JourneyResponse JOURNEY_COI_CHECK_FAILED =
             new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH);
-    private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
@@ -652,5 +653,35 @@ public class IdentityProcessServiceTest {
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse()),
                     res);
         }
+    }
+
+    private static Stream<Arguments> performIdentityProcessingOperationsTestCases() {
+        Supplier<JourneyResponse> nextJourneySupplier = () -> JOURNEY_NEXT;
+        Supplier<JourneyResponse> failedWithCiJourneySupplier = () -> JOURNEY_FAIL_WITH_CI;
+        return Stream.of(
+                Arguments.of(
+                        List.of(nextJourneySupplier, nextJourneySupplier, nextJourneySupplier),
+                        JOURNEY_NEXT),
+                Arguments.of(
+                        List.of(
+                                nextJourneySupplier,
+                                nextJourneySupplier,
+                                failedWithCiJourneySupplier),
+                        JOURNEY_FAIL_WITH_CI),
+                Arguments.of(
+                        List.of(
+                                nextJourneySupplier,
+                                failedWithCiJourneySupplier,
+                                nextJourneySupplier),
+                        JOURNEY_FAIL_WITH_CI));
+    }
+
+    @ParameterizedTest
+    @MethodSource("performIdentityProcessingOperationsTestCases")
+    void shouldReturnCorrectJourneyResponseFromOperations(
+            List<Supplier<JourneyResponse>> operations, JourneyResponse expectedJourneyResponse) {
+        assertEquals(
+                expectedJourneyResponse,
+                IdentityProcessingService.performIdentityProcessingOperations(operations));
     }
 }
