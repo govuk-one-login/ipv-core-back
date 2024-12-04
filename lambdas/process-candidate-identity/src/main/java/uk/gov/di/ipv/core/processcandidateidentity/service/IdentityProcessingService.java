@@ -96,15 +96,16 @@ public class IdentityProcessingService {
 
     @ExcludeFromGeneratedCoverageReport
     public IdentityProcessingService(ConfigService configService) {
-        this.ticfCriService = new TicfCriService(configService);
         this.auditService = AuditService.create(configService);
+        this.ticfCriService = new TicfCriService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
         this.cimitService = new CimitService(configService);
-        this.evaluateGpg45ScoresService = new EvaluateGpg45ScoresService(configService);
+        this.evaluateGpg45ScoresService =
+                new EvaluateGpg45ScoresService(configService, auditService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
-        this.storeIdentityService = new StoreIdentityService(configService);
-        this.checkCoiService = new CheckCoiService(configService);
+        this.storeIdentityService = new StoreIdentityService(configService, auditService);
+        this.checkCoiService = new CheckCoiService(configService, auditService);
         this.criStoringService =
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
@@ -164,6 +165,8 @@ public class IdentityProcessingService {
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -224,6 +227,8 @@ public class IdentityProcessingService {
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_GET_STORED_CIS);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -246,6 +251,8 @@ public class IdentityProcessingService {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -276,10 +283,12 @@ public class IdentityProcessingService {
                     JOURNEY_ERROR_PATH,
                     SC_INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
-    public JourneyResponse performIdentityProcessingOperations(
+    public static JourneyResponse performIdentityProcessingOperations(
             List<Supplier<JourneyResponse>> operations) {
         for (int i = 0; i < operations.size(); i++) {
             var journeyResponse = operations.get(i).get();
