@@ -55,7 +55,9 @@ public class StoreIdentityService {
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IdentityType identityType)
+            IdentityType identityType,
+            String deviceInformation,
+            String ipAddress)
             throws VerifiableCredentialException, EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
         List<VerifiableCredential> credentials =
@@ -83,9 +85,12 @@ public class StoreIdentityService {
         verifiableCredentialService.storeIdentity(credentials, userId);
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
+
+        sendIdentityStoredEvent(
+                ipvSessionItem, clientOAuthSessionItem, identityType, ipAddress, deviceInformation);
     }
 
-    public void sendIdentityStoredEvent(
+    private void sendIdentityStoredEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,

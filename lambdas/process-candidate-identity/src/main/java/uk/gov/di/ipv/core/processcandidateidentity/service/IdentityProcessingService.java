@@ -208,13 +208,11 @@ public class IdentityProcessingService {
             String ipAddress) {
         try {
             storeIdentityService.storeIdentity(
-                    ipvSessionItem, clientOAuthSessionItem, identityType);
-            storeIdentityService.sendIdentityStoredEvent(
                     ipvSessionItem,
                     clientOAuthSessionItem,
                     identityType,
-                    ipAddress,
-                    deviceInformation);
+                    deviceInformation,
+                    ipAddress);
 
             return JOURNEY_NEXT;
         } catch (VerifiableCredentialException | EvcsServiceException e) {
