@@ -60,5 +60,3 @@ dependencyResolutionManagement {
 		}
 	}
 }
-include 'lambdas:process-candidate-identity'
-findProject(':lambdas:process-candidate-identity')?.name = 'process-candidate-identity'

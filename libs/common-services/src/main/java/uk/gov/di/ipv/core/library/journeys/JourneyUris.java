@@ -66,4 +66,6 @@ public class JourneyUris {
             "/journey/dcmaw-async-vc-received-low";
     public static final String JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH =
             "/journey/dcmaw-async-vc-received-medium";
+    public static final String JOURNEY_PROCESS_CANDIDATE_IDENTITY =
+            "/journey/process-candidate-identity";
 }
