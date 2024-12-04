@@ -50,8 +50,6 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
@@ -274,7 +272,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Reprove identity flag set - checking full name and DOB"));
-            return FULL_NAME_AND_DOB;
+            return CoiCheckType.FULL_NAME_AND_DOB;
         }
         return RequestHelper.getCoiCheckType(request);
     }
