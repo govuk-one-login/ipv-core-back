@@ -112,7 +112,8 @@ public enum ErrorResponse {
     INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE(1098, "Invalid process mobile app journey type"),
     FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY(
             1099, "Failed to parse mobile app callback request body"),
-    CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found");
+    CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found"),
+    INVALID_VTR_CLAIM(1101, "Invalid VTR claim");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

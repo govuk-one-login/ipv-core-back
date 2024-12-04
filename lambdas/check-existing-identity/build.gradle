@@ -20,6 +20,9 @@ dependencies {
 			libs.powertoolsTracing,
 			libs.aspectj
 
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
 	testImplementation libs.hamcrest,
 			libs.jacksonDatabind,
 			libs.junitJupiter,

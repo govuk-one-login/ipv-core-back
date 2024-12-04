@@ -23,6 +23,7 @@ import java.util.Map;
 
 import static com.nimbusds.jose.jwk.KeyType.EC;
 import static com.nimbusds.jose.jwk.KeyType.RSA;
+import static com.nimbusds.jwt.JWTClaimNames.ISSUED_AT;
 import static com.nimbusds.jwt.JWTClaimNames.ISSUER;
 import static com.nimbusds.jwt.JWTClaimNames.JWT_ID;
 import static com.nimbusds.jwt.JWTClaimNames.NOT_BEFORE;
@@ -97,6 +98,7 @@ public class VerifiableCredentialGenerator {
                             .claim(SUBJECT, userId)
                             .claim(ISSUER, issuer)
                             .claim(NOT_BEFORE, nbf.getEpochSecond())
+                            .claim(ISSUED_AT, nbf.getEpochSecond())
                             .claim(VC_CLAIM, OBJECT_MAPPER.convertValue(vcClaim, Map.class))
                             .build();
             return signTestVc(userId, cri, claimsSet, signingKeyType);

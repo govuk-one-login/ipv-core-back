@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service.exception;
+package uk.gov.di.ipv.core.library.exception;
 
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;

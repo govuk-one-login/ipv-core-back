@@ -41,6 +41,12 @@ states:
       pending:
         targetJourney: F2F_PENDING
         targetState: PENDING
+      dcmaw-async-vc-received-low:
+        targetJourney: NEW_P1_IDENTITY
+        targetState: DCMAW_ASYNC_COMPLETE
+      dcmaw-async-vc-received-medium:
+        targetJourney: NEW_P2_IDENTITY
+        targetState: DCMAW_ASYNC_COMPLETE
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
