@@ -232,7 +232,7 @@ class CheckCoiHandlerTest {
 
             @Test
             void shouldDoFullCheckIfReproveIdentityJourney() throws Exception {
-                when(mockUserIdentityService.areNamesAndDobCorrelatedForReverification(
+                when(mockUserIdentityService.areVcsCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
                 when(mockClientSessionItem.getReproveIdentity()).thenReturn(Boolean.TRUE);
@@ -253,15 +253,13 @@ class CheckCoiHandlerTest {
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                         auditEventsCaptured.get(0).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(
-                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, null),
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, null),
                         auditEventsCaptured.get(0).getExtensions());
                 assertEquals(
                         AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                         auditEventsCaptured.get(1).getEventName());
                 assertEquals(
-                        new AuditExtensionCoiCheck(
-                                CoiCheckType.FULL_NAME_WITH_ALLOWANCE_AND_DOB, true),
+                        new AuditExtensionCoiCheck(CoiCheckType.FULL_NAME_AND_DOB, true),
                         auditEventsCaptured.get(1).getExtensions());
 
                 var restrictedAuditData =
