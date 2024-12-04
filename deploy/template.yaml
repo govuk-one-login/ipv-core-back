@@ -79,6 +79,12 @@ Globals:
 Parameters:
   Environment:
     Type: String
+  SubEnvironment:
+    Type: String
+    Description: >
+      When deploying to dev, optionally configure which sub-environment to deploy to
+      i.e. dev-sre. This feature is not available for route-to-live environments
+    Default: ""
   VpcStackName:
     Description: >
       The name of the stack that defines the VPC in which this container will
@@ -218,12 +224,12 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
             - IsDev01
-            - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
             - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
           HostedZoneId: !If
             - IsDev01
@@ -239,7 +245,7 @@ Resources:
       Type: A
       Name: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       HostedZoneId: !If
         - IsDev01
@@ -256,7 +262,7 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref DevSSLCert
@@ -269,7 +275,7 @@ Resources:
     Properties:
       DomainName: !If
         - IsDev01
-        - !Sub "api-${Environment}.01.dev.identity.account.gov.uk"
+        - !Sub "api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
         - !Sub "api-${Environment}.02.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
       Stage: !Ref IPVCoreExternalAPI.Stage
@@ -317,7 +323,7 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
-      Name: !Sub IPV Core Private API Gateway ${Environment}
+      Name: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
       MethodSettings:
         - LoggingLevel: INFO
           ResourcePath: '/*'
@@ -344,7 +350,7 @@ Resources:
               Principal: '*'
               Resource:
                 - 'execute-api:/*'
-      StageName: !Sub ${Environment}
+      StageName: !Sub ${Environment}${SubEnvironment}
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
@@ -385,7 +391,7 @@ Resources:
     Condition: IsTestApiEnv
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
-      Name: !Sub IPV Core Private Testing API Gateway ${Environment}
+      Name: !Sub IPV Core Private Testing API Gateway ${Environment}${SubEnvironment}
       Description: A parallel to the private internal API but opened up for testing
       MethodSettings:
         - LoggingLevel: INFO
@@ -414,7 +420,7 @@ Resources:
               Principal: '*'
               Resource:
                 - 'execute-api:/*'
-      StageName: !Sub ${Environment}
+      StageName: !Sub ${Environment}${SubEnvironment}
       TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
@@ -441,7 +447,7 @@ Resources:
         - "{{resolve:secretsmanager:CoreBackInternalTestingApiKey:SecretString}}${env}" # pragma: allowlist secret
         - env: !If
             - IsDevelopment
-            - !Sub "-${Environment}"
+            - !Sub "-${Environment}${SubEnvironment}"
             - ""
 
   IPVCoreInternalTestingApiUsagePlan:
@@ -470,17 +476,17 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}${SubEnvironment}.account.gov.uk"
       DomainValidationOptions:
         - DomainName: !If
           - IsDevelopment
           - !If
             - IsDev01
-            - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "internal-test-api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
             - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+          - !Sub "internal-test-api.identity.${Environment}${SubEnvironment}.account.gov.uk"
           HostedZoneId: !If
             - IsDevelopment
             - !If
@@ -500,9 +506,9 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}${SubEnvironment}.account.gov.uk"
       DomainNameConfigurations:
         - CertificateArn: !Ref IPVCoreInternalTestingApiSSLCert
           EndpointType: REGIONAL
@@ -516,9 +522,9 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
+        - !Sub "internal-test-api.identity.${Environment}${SubEnvironment}.account.gov.uk"
       ApiId: !Ref IPVCoreInternalTestingApi
       Stage: !Ref IPVCoreInternalTestingApi.Stage
     DependsOn:
@@ -534,7 +540,7 @@ Resources:
         - IsDevelopment
         - !If
           - IsDev01
-          - !Sub "internal-test-api-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "internal-test-api-${Environment}${SubEnvironment}.01.dev.identity.account.gov.uk"
           - !Sub "internal-test-api-${Environment}.02.dev.identity.account.gov.uk"
         - !Sub "internal-test-api.identity.${Environment}.account.gov.uk"
       HostedZoneId: !If
@@ -553,7 +559,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
-      LogGroupName: !Sub /aws/apigateway/internal-testing-api-access-logs-${Environment}
+      LogGroupName: !Sub /aws/apigateway/internal-testing-api-access-logs-${Environment}${SubEnvironment}
       RetentionInDays: 30
 
   IPVCoreExternalAPI:
@@ -562,13 +568,13 @@ Resources:
       - ExternalApiGatewayJwksS3Role
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
-      Name: !Sub IPV Core External API Gateway ${Environment}
+      Name: !Sub IPV Core External API Gateway ${Environment}${SubEnvironment}
       MethodSettings:
         - LoggingLevel: INFO
           ResourcePath: '/*'
           HttpMethod: '*'
           MetricsEnabled: true
-      StageName: !Sub ${Environment}
+      StageName: !Sub ${Environment}${SubEnvironment}
       TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
@@ -650,7 +656,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "issue-client-access-token-${Environment}"
+      FunctionName: !Sub "issue-client-access-token-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
@@ -663,8 +669,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}${SubEnvironment}
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -699,7 +705,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ClientAuthJwtIdsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -714,7 +720,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}${SubEnvironment}"
 
   IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -732,7 +738,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-client-oauth-response-${Environment}"
+      FunctionName: !Sub "build-client-oauth-response-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
@@ -740,8 +746,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -774,7 +780,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -792,7 +798,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}${SubEnvironment}"
 
   BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -810,7 +816,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "initialise-ipv-session-${Environment}"
+      FunctionName: !Sub "initialise-ipv-session-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
@@ -823,8 +829,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -860,9 +866,9 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -903,7 +909,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}${SubEnvironment}"
 
   InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -921,7 +927,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-cri-oauth-request-${Environment}"
+      FunctionName: !Sub "build-cri-oauth-request-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
@@ -929,8 +935,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}${SubEnvironment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -971,7 +977,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -995,7 +1001,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}${SubEnvironment}"
 
   BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1013,7 +1019,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-cri-callback-${Environment}"
+      FunctionName: !Sub "process-cri-callback-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -1028,8 +1034,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}${SubEnvironment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1063,15 +1069,15 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/*/connections/*/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/credentialIssuers/*/connections/*/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
@@ -1120,7 +1126,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/process-cri-callback-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-cri-callback-${Environment}${SubEnvironment}"
 
   ProcessCriCallbackLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1138,7 +1144,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-mobile-app-callback-${Environment}"
+      FunctionName: !Sub "process-mobile-app-callback-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -1148,8 +1154,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1173,7 +1179,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
@@ -1209,7 +1215,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/process-mobile-app-callback-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-mobile-app-callback-${Environment}${SubEnvironment}"
 
   ProcessMobileAppCallbackLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1227,7 +1233,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}"
+      FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -1237,8 +1243,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1265,11 +1271,11 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
@@ -1305,7 +1311,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-mobile-app-vc-receipt-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/check-mobile-app-vc-receipt-${Environment}${SubEnvironment}"
 
   CheckMobileAppVcReceiptLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1324,7 +1330,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-user-identity-${Environment}"
+      FunctionName: !Sub "build-user-identity-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
@@ -1337,8 +1343,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -1374,13 +1380,13 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
@@ -1403,7 +1409,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}${SubEnvironment}"
 
   BuildUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1421,7 +1427,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "user-reverification-${Environment}"
+      FunctionName: !Sub "user-reverification-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.userreverification.UserReverificationHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/user-reverification
@@ -1429,8 +1435,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -1465,9 +1471,9 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
       Events:
         IPVCoreExternalAPIReverification:
           Type: Api
@@ -1483,7 +1489,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/user-reverification-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/user-reverification-${Environment}${SubEnvironment}"
 
   UserReverificationFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1627,7 +1633,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
+      LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}${SubEnvironment}"
 
   JourneyEngineStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1645,7 +1651,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-journey-event-${Environment}"
+      FunctionName: !Sub "process-journey-event-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
@@ -1653,8 +1659,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub process-journey-event-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-journey-event-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1697,9 +1703,9 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
       AutoPublishAlias: live
@@ -1709,7 +1715,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}${SubEnvironment}"
 
   IPVProcessJourneyEventFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1727,7 +1733,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
+      FunctionName: !Sub "evaluate-gpg45-scores-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
@@ -1735,8 +1741,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1780,13 +1786,13 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
       AutoPublishAlias: live
 
   EvaluateGpg45ScoresFunctionLogGroup:
@@ -1794,7 +1800,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}${SubEnvironment}"
 
   EvaluateGpg45ScoresFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1812,7 +1818,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-proven-user-identity-details-${Environment}"
+      FunctionName: !Sub "build-proven-user-identity-details-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
@@ -1825,8 +1831,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-proven-user-identity-details-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-proven-user-identity-details-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -1866,7 +1872,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1890,7 +1896,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/build-proven-user-identity-details-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-proven-user-identity-details-${Environment}${SubEnvironment}"
 
   BuildProvenUserIdentityDetailsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1909,7 +1915,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-existing-identity-${Environment}"
+      FunctionName: !Sub "check-existing-identity-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
@@ -1917,8 +1923,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -1965,13 +1971,13 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
       AutoPublishAlias: live
@@ -1981,7 +1987,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-existing-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/check-existing-identity-${Environment}${SubEnvironment}"
 
   CheckExistingIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -1999,7 +2005,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-async-cri-credential-${Environment}"
+      FunctionName: !Sub "process-async-cri-credential-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
@@ -2015,8 +2021,8 @@ Resources:
         Variables:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}${SubEnvironment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -2047,15 +2053,15 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - Statement:
             - Sid: kmsSigningKeyPermission
               Effect: Allow
@@ -2081,7 +2087,7 @@ Resources:
                 - !Join
                   - ''
                   - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-                    - !Sub "_${Environment}"
+                    - !Sub "_${Environment}${SubEnvironment}"
                 - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
             - Sid: asyncCriResponseQueueKmsKeyPermission
               Effect: Allow
@@ -2098,7 +2104,7 @@ Resources:
               - !Join
                 - ''
                 - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
-                  - !Sub "_${Environment}"
+                  - !Sub "_${Environment}${SubEnvironment}"
               - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
             BatchSize: 1
             FunctionResponseTypes:
@@ -2110,7 +2116,7 @@ Resources:
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/process-async-cri-credential-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-async-cri-credential-${Environment}${SubEnvironment}"
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -2128,7 +2134,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-gpg45-score-${Environment}"
+      FunctionName: !Sub "check-gpg45-score-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/check-gpg45-score
@@ -2136,8 +2142,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2158,7 +2164,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - Statement:
           - Sid: EnforceStayinSpecificVpc
             Effect: Allow
@@ -2177,7 +2183,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CheckGpg45ScoreFunctionLogGroupSubscriptionFilter:
@@ -2196,7 +2202,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "call-ticf-cri-${Environment}"
+      FunctionName: !Sub "call-ticf-cri-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -2206,8 +2212,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub call-ticf-cri-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub call-ticf-cri-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2229,13 +2235,13 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/ticf/connections/*/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/credentialIssuers/ticf/connections/*/apiKey-*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/cimitApi/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -2263,7 +2269,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/call-ticf-cri-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/call-ticf-cri-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CallTicfCriFunctionLogGroupSubscriptionFilter:
@@ -2282,7 +2288,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "call-dcmaw-async-cri-${Environment}"
+      FunctionName: !Sub "call-dcmaw-async-cri-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler::handleRequest
       Runtime: java17
       PackageType: Zip
@@ -2292,8 +2298,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub call-dcmaw-async-cri-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub call-dcmaw-async-cri-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -2323,9 +2329,9 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/dcmawAsync/connections/*/oAuthClientSecret-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/credentialIssuers/dcmawAsync/connections/*/oAuthClientSecret-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -2342,7 +2348,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/call-dcmaw-async-cri-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/call-dcmaw-async-cri-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CallDcmawAsyncCriFunctionLogGroupSubscriptionFilter:
@@ -2361,7 +2367,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "store-identity-${Environment}"
+      FunctionName: !Sub "store-identity-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/store-identity
@@ -2369,8 +2375,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}${SubEnvironment}
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -2406,9 +2412,9 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - DynamoDBCrudPolicy:
@@ -2425,7 +2431,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/store-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/store-identity-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   StoreIdentityFunctionLogGroupSubscriptionFilter:
@@ -2444,7 +2450,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "reset-session-identity-${Environment}"
+      FunctionName: !Sub "reset-session-identity-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/reset-session-identity
@@ -2452,8 +2458,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2489,11 +2495,11 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionCredentialsTable
         - DynamoDBCrudPolicy:
@@ -2510,7 +2516,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/reset-session-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/reset-session-identity-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   ResetSessionIdentityFunctionLogGroupSubscriptionFilter:
@@ -2529,7 +2535,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "check-coi-${Environment}"
+      FunctionName: !Sub "check-coi-${Environment}${SubEnvironment}"
       Handler: uk.gov.di.ipv.core.checkcoi.CheckCoiHandler::handleRequest
       PackageType: Zip
       CodeUri: ../lambdas/check-coi
@@ -2537,8 +2543,8 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub check-coi-${Environment}
+          ENVIRONMENT: !Sub "${Environment}${SubEnvironment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-coi-${Environment}${SubEnvironment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2573,7 +2579,7 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+            ParameterName: !Sub ${Environment}${SubEnvironment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - DynamoDBReadPolicy:
@@ -2585,14 +2591,14 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
         - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}${SubEnvironment}/core/evcs/apiKey-*
       AutoPublishAlias: live
 
   CheckCoiFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/check-coi-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/check-coi-${Environment}${SubEnvironment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   CheckCoiFunctionLogGroupSubscriptionFilter:
@@ -2607,7 +2613,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "user-issued-credentials-v2-${Environment}"
+      TableName: !Sub "user-issued-credentials-v2-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2637,7 +2643,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table
-      TableName: !Sub "session-credentials-${Environment}"
+      TableName: !Sub "session-credentials-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2665,7 +2671,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "cri-response-${Environment}"
+      TableName: !Sub "cri-response-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2698,7 +2704,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "sessions-${Environment}"
+      TableName: !Sub "sessions-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2747,7 +2753,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "client-oauth-sessions-v2-${Environment}"
+      TableName: !Sub "client-oauth-sessions-v2-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2771,7 +2777,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
     Properties:
-      TableName: !Sub "client-auth-jwt-ids-${Environment}"
+      TableName: !Sub "client-auth-jwt-ids-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2795,7 +2801,7 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "cri-oauth-sessions-${Environment}"
+      TableName: !Sub "cri-oauth-sessions-${Environment}${SubEnvironment}"
       BillingMode: "PAY_PER_REQUEST"
       DeletionProtectionEnabled: !If
         - IsProduction
@@ -2923,7 +2929,7 @@ Resources:
                       MetricName: 5XXError
                       Dimensions:
                           - Name: ApiName
-                            Value: !Sub IPV Core Private API Gateway ${Environment}
+                            Value: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
                   Period: 300
                   Stat: Sum
 
@@ -2956,7 +2962,7 @@ Resources:
               MetricName: 5XXError
               Dimensions:
                 - Name: ApiName
-                  Value: !Sub IPV Core External API Gateway ${Environment}
+                  Value: !Sub IPV Core External API Gateway ${Environment}${SubEnvironment}
             Period: 300
             Stat: Sum
 
@@ -3067,7 +3073,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "issue-client-access-token-${Environment}:live"
+          Value: !Sub "issue-client-access-token-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref IssueClientAccessTokenFunction
         - Name: ExecutedVersion
@@ -3094,7 +3100,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core External API Gateway ${Environment}
+          Value: !Sub IPV Core External API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3121,7 +3127,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "initialise-ipv-session-${Environment}:live"
+          Value: !Sub "initialise-ipv-session-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref InitialiseIpvSessionFunction
         - Name: ExecutedVersion
@@ -3148,7 +3154,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core Private API Gateway ${Environment}
+          Value: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3175,7 +3181,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "process-cri-callback-${Environment}:live"
+          Value: !Sub "process-cri-callback-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref ProcessCriCallbackFunction
         - Name: ExecutedVersion
@@ -3202,7 +3208,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core Private API Gateway ${Environment}
+          Value: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3229,7 +3235,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "build-user-identity-${Environment}:live"
+          Value: !Sub "build-user-identity-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref BuildUserIdentityFunction
         - Name: ExecutedVersion
@@ -3256,7 +3262,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core External API Gateway ${Environment}
+          Value: !Sub IPV Core External API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: GET
         - Name: Stage
@@ -3283,7 +3289,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "process-async-cri-credential-${Environment}:live"
+          Value: !Sub "process-async-cri-credential-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref ProcessAsyncCriCredentialFunction
         - Name: ExecutedVersion
@@ -3309,7 +3315,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "build-proven-user-identity-details-${Environment}:live"
+          Value: !Sub "build-proven-user-identity-details-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref BuildProvenUserIdentityDetailsFunction
         - Name: ExecutedVersion
@@ -3336,7 +3342,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core Private API Gateway ${Environment}
+          Value: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3419,7 +3425,7 @@ Resources:
       MetricName: 5XXError
       Dimensions:
         - Name: ApiName
-          Value: !Sub IPV Core Private API Gateway ${Environment}
+          Value: !Sub IPV Core Private API Gateway ${Environment}${SubEnvironment}
         - Name: Method
           Value: POST
         - Name: Stage
@@ -3446,7 +3452,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "process-journey-event-${Environment}:live"
+          Value: !Sub "process-journey-event-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref IPVProcessJourneyEventFunction
         - Name: ExecutedVersion
@@ -3472,7 +3478,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "check-existing-identity-${Environment}:live"
+          Value: !Sub "check-existing-identity-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref CheckExistingIdentityFunction
         - Name: ExecutedVersion
@@ -3498,7 +3504,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "build-cri-oauth-request-${Environment}:live"
+          Value: !Sub "build-cri-oauth-request-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref BuildCriOauthRequestFunction
         - Name: ExecutedVersion
@@ -3524,7 +3530,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "build-client-oauth-response-${Environment}:live"
+          Value: !Sub "build-client-oauth-response-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref BuildClientOauthResponseFunction
         - Name: ExecutedVersion
@@ -3550,7 +3556,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "check-gpg45-score-${Environment}:live"
+          Value: !Sub "check-gpg45-score-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref CheckGpg45ScoreFunction
         - Name: ExecutedVersion
@@ -3576,7 +3582,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "evaluate-gpg45-scores-${Environment}:live"
+          Value: !Sub "evaluate-gpg45-scores-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref EvaluateGpg45ScoresFunction
         - Name: ExecutedVersion
@@ -3602,7 +3608,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "call-ticf-cri-${Environment}:live"
+          Value: !Sub "call-ticf-cri-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref CallTicfCriFunction
         - Name: ExecutedVersion
@@ -3628,7 +3634,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "call-dcmaw-async-cri-${Environment}:live"
+          Value: !Sub "call-dcmaw-async-cri-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref CallDcmawAsyncCriFunction
         - Name: ExecutedVersion
@@ -3654,7 +3660,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "store-identity-${Environment}:live"
+          Value: !Sub "store-identity-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref StoreIdentityFunction
         - Name: ExecutedVersion
@@ -3680,7 +3686,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "reset-session-identity-${Environment}:live"
+          Value: !Sub "reset-session-identity-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref ResetSessionIdentityFunction
         - Name: ExecutedVersion
@@ -3706,7 +3712,7 @@ Resources:
       MetricName: Errors
       Dimensions:
         - Name: Resource
-          Value: !Sub "check-coi-${Environment}:live"
+          Value: !Sub "check-coi-${Environment}${SubEnvironment}:live"
         - Name: FunctionName
           Value: !Ref CheckCoiFunction
         - Name: ExecutedVersion
@@ -3724,20 +3730,20 @@ Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
     Export:
-      Name: !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
+      Name: !Sub "IPVCorePrivateAPIGatewayID-${Environment}${SubEnvironment}"
     Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
     Description: Core Back External API Gateway ID
     Export:
-      Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
+      Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}${SubEnvironment}"
     Value: !Ref IPVCoreExternalAPI
   IPVCoreDynamoDBKmsKey:
     Description: Core Back DynamoDB KMS Key Export with Environment
     Value: !Ref DynamoDBKmsKey
     Export:
-      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
+      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}${SubEnvironment}"
   IPVCoreLoggingKmsKey:
     Description: Core Back Logging KMS Key Export with Environment
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
-      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
+      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}${SubEnvironment}"
