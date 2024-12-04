@@ -52,6 +52,20 @@ public class StoreIdentityService {
         this.evcsService = new EvcsService(configService);
     }
 
+    @ExcludeFromGeneratedCoverageReport
+    public StoreIdentityService(
+            ConfigService configService,
+            SessionCredentialsService sessionCredentialsService,
+            VerifiableCredentialService verifiableCredentialService,
+            AuditService auditService,
+            EvcsService evcsService) {
+        this.configService = configService;
+        this.sessionCredentialsService = sessionCredentialsService;
+        this.verifiableCredentialService = verifiableCredentialService;
+        this.auditService = auditService;
+        this.evcsService = evcsService;
+    }
+
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
