@@ -249,7 +249,7 @@ public class CheckExistingIdentityHandler
             var evcsAccessToken = clientOAuthSessionItem.getEvcsAccessToken();
             var credentialBundle = getCredentialBundle(userId, evcsAccessToken);
 
-            var asyncCri =
+            var asyncCriStatus =
                     criResponseService.getAsyncResponseStatus(
                             userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
 
@@ -290,8 +290,8 @@ public class CheckExistingIdentityHandler
                     cimitUtilityService.getMitigationJourneyIfBreaching(
                             contraIndicators, lowestGpg45ConfidenceRequested);
             if (ciScoringCheckResponse.isPresent()) {
-                if (asyncCri.isAwaitingVc()) {
-                    return asyncCri.getJourneyForAwaitingVc(false);
+                if (asyncCriStatus.isAwaitingVc()) {
+                    return asyncCriStatus.getJourneyForAwaitingVc(false);
                 }
                 return ciScoringCheckResponse.get();
             }
@@ -321,14 +321,14 @@ public class CheckExistingIdentityHandler
 
             // No profile matched.
 
-            if (asyncCri.isAwaitingVc()) {
-                return asyncCri.getJourneyForAwaitingVc(false);
+            if (asyncCriStatus.isAwaitingVc()) {
+                return asyncCriStatus.getJourneyForAwaitingVc(false);
             }
 
             // No awaited async vc.
 
-            if (asyncCri.isPendingReturn()) {
-                if (asyncCri.cri() == F2F) {
+            if (asyncCriStatus.isPendingReturn()) {
+                if (asyncCriStatus.cri() == F2F) {
 
                     // Returned with F2F async VC. Should have matched a profile.
 
@@ -338,7 +338,7 @@ public class CheckExistingIdentityHandler
                             deviceInformation,
                             contraIndicators);
                 }
-                if (asyncCri.cri() == DCMAW_ASYNC) {
+                if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
                     // Can attempt to complete a profile from here.
 
@@ -383,22 +383,17 @@ public class CheckExistingIdentityHandler
 
         var isPendingReturn = !isNullOrEmpty(vcs.get(PENDING_RETURN));
 
-        // + inherited VCs
-        var evcsIdentityVcs =
-                new ArrayList<>(
-                        vcs.getOrDefault(CURRENT, List.of()).stream()
-                                .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
-                                .toList());
-
+        var evcsIdentityVcs = new ArrayList<VerifiableCredential>();
         if (isPendingReturn) {
-            // + vcs deferred from making an identity by an async CRI
-            evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
-        } else {
-            // + all (remaining) vcs
+            // + inherited VCs & pending VCs
             evcsIdentityVcs.addAll(
                     vcs.getOrDefault(CURRENT, List.of()).stream()
-                            .filter(vc -> !HMRC_MIGRATION.equals(vc.getCri()))
+                            .filter(vc -> HMRC_MIGRATION.equals(vc.getCri()))
                             .toList());
+            evcsIdentityVcs.addAll(vcs.getOrDefault(PENDING_RETURN, List.of()));
+        } else {
+            // + all vcs
+            evcsIdentityVcs.addAll(vcs.getOrDefault(CURRENT, List.of()));
         }
 
         return new VerifiableCredentialBundle(evcsIdentityVcs, isPendingReturn);

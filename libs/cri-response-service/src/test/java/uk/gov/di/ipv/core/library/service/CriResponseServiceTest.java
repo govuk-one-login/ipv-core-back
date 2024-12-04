@@ -9,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
@@ -24,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
@@ -191,8 +190,8 @@ class CriResponseServiceTest {
     @Test
     void getDcmawAsyncResponseStatusShouldGetCorrectStatusForExistingDcmawAsyncVc() {
         // Arrange
-        when(mockConfigService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
-                .thenReturn(OauthCriConfig.builder().ttl(1000000000).build());
+        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL))
+                .thenReturn("1000000000");
         var vcs = List.of(vcDcmawAsync(), vcAddressTwo());
 
         // Act
@@ -207,8 +206,7 @@ class CriResponseServiceTest {
     @Test
     void getAsyncResponseStatusShouldReturnEmptyWhenDcmawAsyncVcExpired() {
         // Arrange
-        when(mockConfigService.getOauthCriConfigForConnection(any(), eq(DCMAW_ASYNC)))
-                .thenReturn(OauthCriConfig.builder().ttl(-1).build());
+        when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL)).thenReturn("-1");
 
         // Act
         var asyncCriStatus =
