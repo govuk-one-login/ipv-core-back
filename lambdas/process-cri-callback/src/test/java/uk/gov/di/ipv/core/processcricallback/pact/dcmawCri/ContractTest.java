@@ -1470,7 +1470,8 @@ class ContractTest {
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")
-                .given("Returned VC is from BRC DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful")
+                .given(
+                        "Returned VC is from BRC DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful")
                 .uponReceiving("Valid credential request for valid BRC VC")
                 .path("/userinfo/v2")
                 .method("POST")
@@ -2718,7 +2719,8 @@ class ContractTest {
             "DA8wlJZtGn80_9QAllvQ6qPU2xftkWtx-BhmFFjc0-VLCsmaTB3ZF4RV3J6Mw4i9RxARTtePtv2kGhrryH850A"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From BRP DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRC version!)
+    // From BRP DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRC
+    // version!)
     private static final String VALID_BRP_VC_BODY =
             """
             {
@@ -2887,7 +2889,8 @@ class ContractTest {
             "LWfukxi6ZCVz52LIVnNdUFg8Wcv1A5DqcRAQ4R5w3p3U3GNox-Kn6IcGgygt_nJFg4X4lgCqV2q-wSBdWDOGTg"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds
-    // From BRC DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRP version!)
+    // From BRC DCMAW-5176-AC1-valid-doc-chip-clone-detection-successful (there is also a BRP
+    // version!)
     private static final String VALID_BRC_VC_BODY =
             """
             {
