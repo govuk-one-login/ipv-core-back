@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
+import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
@@ -57,6 +58,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_CONFIG;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -79,6 +81,7 @@ class ProcessCriCallbackHandlerTest {
     @Mock private CriStoringService mockCriStoringService;
     @Mock private CriCheckingService mockCriCheckingService;
     @Mock private AuditService mockAuditService;
+    @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private ProcessCriCallbackHandler processCriCallbackHandler;
 
     @AfterEach
@@ -106,6 +109,7 @@ class ProcessCriCallbackHandlerTest {
                         .credentialStatus(VerifiableCredentialStatus.CREATED)
                         .build();
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
+        var sessionVcs = List.of(M1A_ADDRESS_VC);
 
         when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(
@@ -120,11 +124,15 @@ class ProcessCriCallbackHandlerTest {
                 .thenReturn(vcResponse);
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(vcs);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true))
+                .thenReturn(sessionVcs);
         when(mockCriCheckingService.checkVcResponse(
                         any(),
                         eq(callbackRequest.getIpAddress()),
                         eq(clientOAuthSessionItem),
-                        eq(ipvSessionItem)))
+                        eq(ipvSessionItem),
+                        eq(sessionVcs)))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
         when(mockConfigService.getOauthCriConfig(any()))
                 .thenReturn(
@@ -149,7 +157,8 @@ class ProcessCriCallbackHandlerTest {
                         callbackRequest.getDeviceInformation(),
                         vcs,
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
     }
 
     @Test
@@ -184,7 +193,8 @@ class ProcessCriCallbackHandlerTest {
                         List.of(),
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem))
+                        ipvSessionItem,
+                        List.of()))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -259,7 +269,8 @@ class ProcessCriCallbackHandlerTest {
                         any(),
                         eq(callbackRequest.getIpAddress()),
                         eq(clientOAuthSessionItem),
-                        eq(ipvSessionItem)))
+                        eq(ipvSessionItem),
+                        any()))
                 .thenThrow(new ConfigException("bad config"));
 
         // Act

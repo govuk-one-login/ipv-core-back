@@ -117,7 +117,8 @@ class CallTicfCriHandlerTest {
                         "device-information",
                         List.of(mockVerifiableCredential),
                         clientOAuthSessionItem,
-                        mockIpvSessionItem);
+                        mockIpvSessionItem,
+                        List.of());
 
         verify(mockCimitService)
                 .getContraIndicators(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
@@ -139,7 +140,8 @@ class CallTicfCriHandlerTest {
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 
-        verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any(), any());
+        verify(mockCriStoringService, never())
+                .storeVcs(any(), any(), any(), any(), any(), any(), any());
         verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
 
         InOrder inOrder = inOrder(mockIpvSessionService);
@@ -239,7 +241,9 @@ class CallTicfCriHandlerTest {
                 .thenReturn(new ClientOAuthSessionItem());
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
-        doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any(), any());
+        doThrow(e)
+                .when(mockCriStoringService)
+                .storeVcs(any(), any(), any(), any(), any(), any(), any());
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
 

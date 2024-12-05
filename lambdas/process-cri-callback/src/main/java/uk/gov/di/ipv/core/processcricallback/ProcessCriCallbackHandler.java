@@ -80,6 +80,7 @@ public class ProcessCriCallbackHandler
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final AuditService auditService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessCriCallbackHandler(
@@ -91,7 +92,8 @@ public class ProcessCriCallbackHandler
             CriApiService criApiService,
             CriStoringService criStoringService,
             CriCheckingService criCheckingService,
-            AuditService auditService) {
+            AuditService auditService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.criApiService = criApiService;
         this.criStoringService = criStoringService;
@@ -101,6 +103,7 @@ public class ProcessCriCallbackHandler
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.auditService = auditService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -113,7 +116,7 @@ public class ProcessCriCallbackHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         auditService = AuditService.create(configService);
 
-        var sessionCredentialsService = new SessionCredentialsService(configService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
 
         criApiService = new CriApiService(configService);
@@ -124,7 +127,6 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService,
                         ipvSessionService);
         criStoringService =
                 new CriStoringService(
@@ -301,16 +303,25 @@ public class ProcessCriCallbackHandler
         var vcResponse =
                 criApiService.fetchVerifiableCredential(
                         accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
+        var sessionVcs =
+                sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true);
+
         var vcs =
                 validateAndStoreResponse(
                         callbackRequest,
                         vcResponse,
                         clientOAuthSessionItem,
                         criOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
+                vcs,
+                callbackRequest.getIpAddress(),
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(
@@ -318,7 +329,8 @@ public class ProcessCriCallbackHandler
             VerifiableCredentialResponse vcResponse,
             ClientOAuthSessionItem clientOAuthSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
             throws VerifiableCredentialException, JsonProcessingException,
                     InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
                     UnrecognisedVotException {
@@ -350,7 +362,8 @@ public class ProcessCriCallbackHandler
                     callbackRequest.getDeviceInformation(),
                     vcs,
                     clientOAuthSessionItem,
-                    ipvSessionItem);
+                    ipvSessionItem,
+                    sessionVcs);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 

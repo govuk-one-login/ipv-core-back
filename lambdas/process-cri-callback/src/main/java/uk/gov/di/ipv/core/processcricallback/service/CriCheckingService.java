@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.model.IdentityCheckSubject;
 
@@ -87,7 +86,6 @@ public class CriCheckingService {
     private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
-    private final SessionCredentialsService sessionCredentialsService;
     private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -97,14 +95,12 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
-            SessionCredentialsService sessionCredentialsService,
             IpvSessionService ipvSessionService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
-        this.sessionCredentialsService = sessionCredentialsService;
         this.ipvSessionService = ipvSessionService;
     }
 
@@ -231,9 +227,9 @@ public class CriCheckingService {
             List<VerifiableCredential> newVcs,
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
-            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    VerifiableCredentialException {
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
+            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
@@ -253,10 +249,6 @@ public class CriCheckingService {
                 return journeyResponse.get();
             }
         }
-
-        var sessionVcs =
-                sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
 
         if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
             if (isReverification) {

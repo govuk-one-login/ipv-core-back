@@ -56,6 +56,7 @@ public class CheckMobileAppVcReceiptHandler
     private final CriResponseService criResponseService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final CriCheckingService criCheckingService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     public CheckMobileAppVcReceiptHandler(
             ConfigService configService,
@@ -63,13 +64,15 @@ public class CheckMobileAppVcReceiptHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             VerifiableCredentialService verifiableCredentialService,
-            CriCheckingService criCheckingService) {
+            CriCheckingService criCheckingService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.verifiableCredentialService = verifiableCredentialService;
         this.criCheckingService = criCheckingService;
+        this.sessionCredentialsService = sessionCredentialsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -79,9 +82,8 @@ public class CheckMobileAppVcReceiptHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
         verifiableCredentialService = new VerifiableCredentialService(configService);
-
-        var sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
 
         criCheckingService =
                 new CriCheckingService(
@@ -90,7 +92,6 @@ public class CheckMobileAppVcReceiptHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService,
                         ipvSessionService);
     }
 
@@ -184,8 +185,14 @@ public class CheckMobileAppVcReceiptHandler
             return JOURNEY_ABANDON;
         }
 
+        var sessionVcs =
+                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
         return criCheckingService.checkVcResponse(
-                List.of(vc), request.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
+                List.of(vc),
+                request.getIpAddress(),
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs);
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)
