@@ -15,6 +15,7 @@ dependencies {
 			libs.awsSdkKms,
 			libs.commonsCodec,
 			libs.commonsCollections,
+			libs.openTelemetryJavaHttpClient,
 			libs.jacksonDatabind,
 			libs.jacksonDataformatYaml,
 			libs.powertoolsLogging,

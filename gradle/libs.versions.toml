@@ -35,6 +35,7 @@ mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mo
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.20"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
 openTelemetryAwsSdkAutoConfigure = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure:2.10.0-alpha"
+openTelemetryJavaHttpClient = "io.opentelemetry.instrumentation:opentelemetry-java-http-client:2.10.0-alpha"
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
 powertoolsLogging = { module = "software.amazon.lambda:powertools-logging", version.ref = "powertools" }
