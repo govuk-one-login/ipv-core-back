@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -45,7 +44,6 @@ import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -137,7 +135,6 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
-    private final CriOAuthSessionService criOAuthSessionService;
 
     @SuppressWarnings({
         "unused",
@@ -155,7 +152,6 @@ public class CheckExistingIdentityHandler
             CimitUtilityService cimitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
-            CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -167,7 +163,6 @@ public class CheckExistingIdentityHandler
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.criOAuthSessionService = criOAuthSessionService;
         this.evcsService = evcsService;
         VcHelper.setConfigService(this.configService);
     }
@@ -190,7 +185,6 @@ public class CheckExistingIdentityHandler
         this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.evcsService = new EvcsService(configService);
         VcHelper.setConfigService(this.configService);
     }
@@ -487,8 +481,7 @@ public class CheckExistingIdentityHandler
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser)
-            throws ClientOauthSessionNotFoundException, IpvSessionNotFoundException,
-                    VerifiableCredentialException {
+            throws IpvSessionNotFoundException, VerifiableCredentialException {
         var criResponseItem =
                 criResponseService.getCriResponseItem(
                         clientOAuthSessionItem.getUserId(), DCMAW_ASYNC);
