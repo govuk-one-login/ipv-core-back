@@ -23,14 +23,12 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.service.VotAndProfile;
 import uk.gov.di.ipv.core.library.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
@@ -120,16 +118,10 @@ public class CheckReverificationIdentityHandler
                             clientOAuthSession.getEvcsAccessToken(),
                             CURRENT);
 
-            var reverificationIdentityVot = getReverificationIdentityVot(vcs);
-            if (reverificationIdentityVot.isEmpty()) {
+            if (!hasReverificationIdentity(vcs)) {
                 ipvSession.setFailureCode(NO_IDENTITY_AVAILABLE);
                 ipvSessionService.updateIpvSession(ipvSession);
                 return NOT_FOUND_RESPONSE;
-            }
-
-            if (GPG45.equals(reverificationIdentityVot.get().vot().getProfileType())) {
-                ipvSession.setTargetVot(reverificationIdentityVot.get().vot());
-                ipvSessionService.updateIpvSession(ipvSession);
             }
 
             return FOUND_RESPONSE;
@@ -161,7 +153,7 @@ public class CheckReverificationIdentityHandler
         }
     }
 
-    private Optional<VotAndProfile> getReverificationIdentityVot(List<VerifiableCredential> vcs)
+    private boolean hasReverificationIdentity(List<VerifiableCredential> vcs)
             throws ParseException, HttpResponseExceptionWithErrorBody {
         var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcs, GPG45);
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
@@ -181,6 +173,6 @@ public class CheckReverificationIdentityHandler
             LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));
         }
 
-        return matchedVot;
+        return matchedVot.isPresent();
     }
 }

@@ -49,8 +49,7 @@ public class VotMatcher {
                 if (matchedGpg45Profile.isPresent()) {
                     return Optional.of(new VotAndProfile(vot, matchedGpg45Profile.get()));
                 }
-            }
-            if (hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
+            } else if (hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
                 return Optional.of(new VotAndProfile(vot, null));
             }
         }
