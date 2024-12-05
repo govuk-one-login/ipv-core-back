@@ -1,0 +1,50 @@
+plugins {
+	id "java-library"
+	id "idea"
+	id "jacoco"
+	alias libs.plugins.postCompileWeaving
+}
+
+dependencies {
+	implementation libs.openTelemetrySdk,
+			//	libs.oneagentSdk,
+			project(":libs:common-services")
+	//			platform(libs.openTelemetryBom),
+	//			libs.openTelemetryTrace,
+
+	aspect libs.aspectj,
+			libs.powertoolsLogging
+
+	testImplementation platform('org.junit:junit-bom:5.9.1')
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

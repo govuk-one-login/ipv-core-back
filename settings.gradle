@@ -35,13 +35,14 @@ include "lambdas",
 		"libs:cri-api-service",
 		"libs:cri-response-service",
 		"libs:cri-storing-service",
+		"libs:dynatrace-support",
 		"libs:email-service",
 		"libs:evcs-service",
 		"libs:gpg45-evaluator",
+		"libs:oauth-key-service",
 		"libs:test-helpers",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
-		"libs:oauth-key-service",
 		"local-running"
 
 dependencyResolutionManagement {
