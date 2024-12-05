@@ -2,48 +2,26 @@ package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEObject;
-import com.nimbusds.jose.crypto.ECDSAVerifier;
-import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
-import uk.gov.di.ipv.core.library.auditing.AuditEvent;
-import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -54,9 +32,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.signing.LocalECDSASigner;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
-import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -67,46 +43,18 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_SHARED_ATTRIBUTES;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
-import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
-import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
-import static uk.gov.di.ipv.core.library.enums.Vot.P1;
-import static uk.gov.di.ipv.core.library.enums.Vot.P2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
 class BuildCriOauthRequestHandlerTest {
@@ -283,849 +231,888 @@ class BuildCriOauthRequestHandlerTest {
         auditInOrder.verifyNoMoreInteractions();
     }
 
-    @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
-        // Arrange
-        var input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId("aSessionId")
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey("nope")
-                        .build();
-
-        // Act
-        var response = handleRequest(input, context);
-
-        // Assert
-        assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
-            throws JsonProcessingException {
-        // Arrange
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId("aSessionId")
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, "bad"))
-                        .build();
-
-        // Act
-        var response = handleRequest(input, context);
-
-        // Assert
-        assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-    }
-
-    @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
-            throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        List<VerifiableCredential> vcs =
-                List.of(
-                        generateVerifiableCredential(
-                                TEST_USER_ID,
-                                ADDRESS,
-                                vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                IPV_ISSUER),
-                        generateVerifiableCredential(
-                                TEST_USER_ID,
-                                ADDRESS,
-                                vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                IPV_ISSUER));
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID)).thenReturn(vcs);
-        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        assertEquals(PASSPORT.getId(), response.getCri().getId());
-
-        Optional<NameValuePair> client_id =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("client_id"))
-                        .findFirst();
-        assertTrue(client_id.isPresent());
-        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
-
-        Optional<NameValuePair> response_type =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("response_type"))
-                        .findFirst();
-        assertFalse(response_type.isPresent());
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void
-            shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
-                    throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false, false);
-
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-
-        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
-
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        assertEquals(PASSPORT.getId(), response.getCri().getId());
-
-        Optional<NameValuePair> client_id =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("client_id"))
-                        .findFirst();
-        assertTrue(client_id.isPresent());
-        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
-
-        Optional<NameValuePair> response_type =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("response_type"))
-                        .findFirst();
-        assertFalse(response_type.isPresent());
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void
-            shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
-                    throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(any(), any()))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        assertEquals(PASSPORT.getId(), response.getCri().getId());
-
-        Optional<NameValuePair> client_id =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("client_id"))
-                        .findFirst();
-        assertTrue(client_id.isPresent());
-        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
-
-        Optional<NameValuePair> response_type =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("response_type"))
-                        .findFirst();
-        assertFalse(response_type.isPresent());
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void
-            shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
-                    throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
-                .thenReturn(oauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, PASSPORT.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        assertEquals(PASSPORT.getId(), response.getCri().getId());
-
-        Optional<NameValuePair> client_id =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("client_id"))
-                        .findFirst();
-        assertTrue(client_id.isPresent());
-        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
-
-        Optional<NameValuePair> response_type =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("response_type"))
-                        .findFirst();
-        assertFalse(response_type.isPresent());
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
-            throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
-                .thenReturn(dcmawOauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        assertEquals(DCMAW.getId(), response.getCri().getId());
-
-        Optional<NameValuePair> client_id =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("client_id"))
-                        .findFirst();
-        assertTrue(client_id.isPresent());
-        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
-
-        Optional<NameValuePair> response_type =
-                queryParams.stream()
-                        .filter(param -> param.getName().equals("response_type"))
-                        .findFirst();
-        assertTrue(response_type.isPresent());
-        assertEquals("code", response_type.get().getValue());
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
-        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1))
-                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
-            throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
-                .thenReturn(dcmawOauthCriConfig);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DWP_KBV.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, DWP_KBV.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> lng =
-                queryParams.stream().filter(param -> param.getName().equals("lng")).findFirst();
-        assertTrue(lng.isPresent());
-        assertEquals(TEST_LANGUAGE, lng.get().getValue());
-    }
-
-    @Test
-    void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
-        // Arrange
-        CriJourneyRequest input = CriJourneyRequest.builder().journey(PASSPORT.getId()).build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        JourneyErrorResponse response =
-                OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.getMessage());
-    }
-
-    private void assertSharedClaimsJWTIsValid(String request) throws ParseException, JOSEException {
-        SignedJWT signedJWT = SignedJWT.parse(request);
-
-        SharedClaims sharedClaims =
-                OBJECT_MAPPER.convertValue(
-                        signedJWT.getJWTClaimsSet().getClaim("shared_claims"), SharedClaims.class);
-
-        assertEquals(TEST_SHARED_CLAIMS, sharedClaims);
-
-        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
-        assertTrue(signedJWT.verify(verifier));
-    }
-
-    @Test
-    void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        ipvSessionItem.setTargetVot(Vot.P1);
-        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
-                .thenReturn(f2FOauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
-                .thenReturn("name,birthDate,address,emailAddress");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
-                                        IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
-                                        ADDRESS_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        clientOAuthSessionItem.setVtr(List.of("P1"));
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
-        assertEquals(2, evidenceRequested.get("strengthScore").asInt());
-        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-    }
-
-    @Test
-    void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(hmrcKbvOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        ipvSessionItem.setTargetVot(P2);
-        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
-                .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
-                .thenReturn("name,birthDate,address,emailAddress");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
-        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
-        assertEquals(2, evidenceRequested.get("verificationScore").asInt());
-    }
-
-    @Test
-    void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        ipvSessionItem.setTargetVot(P1);
-        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
-                .thenReturn(hmrcKbvOauthCriConfig);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, HMRC_KBV.getId()))
-                .thenReturn("name,birthDate,address,emailAddress");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
-        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        TEST_USER_ID,
-                                        ADDRESS,
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
-                                        IPV_ISSUER)));
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
-        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
-        assertEquals(1, evidenceRequested.get("verificationScore").asInt());
-    }
-
-    @ParameterizedTest
-    @MethodSource("journeyUriParameters")
-    void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
-            String journeyUri, Map<String, Object> expectedClaims) throws Exception {
-        // Arrange
-        when(mockOauthKeyService.getEncryptionKey(claimedIdentityOauthCriConfig))
-                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
-        when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
-        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
-                .thenReturn(claimedIdentityOauthCriConfig);
-        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getParameter(
-                        CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, CLAIMED_IDENTITY.getId()))
-                .thenReturn(null);
-        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(5000L);
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockSignerFactory.getSigner())
-                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
-
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, journeyUri))
-                        .build();
-
-        // Act
-        var responseJson = handleRequest(input, context);
-
-        // Assert
-        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent(), "Expected request parameter to be present");
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
-
-        for (var entry : expectedClaims.entrySet()) {
-            String expectedClaim = OBJECT_MAPPER.writeValueAsString(entry.getValue());
-            String actualClaim =
-                    OBJECT_MAPPER.writeValueAsString(claimsSet.getClaim(entry.getKey()));
-            assertEquals(
-                    expectedClaim,
-                    actualClaim,
-                    () ->
-                            String.format(
-                                    "Expected claim for key=%s to be %s, but found %s",
-                                    entry.getKey(), expectedClaim, actualClaim));
-        }
-    }
-
-    @Test
-    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
-        // Arrange
-        when(mockIpvSessionService.getIpvSession(SESSION_ID))
-                .thenThrow(new RuntimeException("Test error"));
-        CriJourneyRequest input =
-                CriJourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .language(TEST_LANGUAGE)
-                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
-                        .build();
-
-        var logCollector = LogCollector.getLogCollectorFor(BuildCriOauthRequestHandler.class);
-
-        // Act
-        var thrown =
-                assertThrows(
-                        Exception.class,
-                        () -> handleRequest(input, context),
-                        "Expected handleRequest() to throw, but it didn't");
-
-        // Assert
-        assertEquals("Test error", thrown.getMessage());
-        var logMessage = logCollector.getLogMessages().get(0);
-        assertThat(logMessage, containsString("Unhandled lambda exception"));
-        assertThat(logMessage, containsString("Test error"));
-    }
+    //    @Test
+    //    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws
+    // JsonProcessingException {
+    //        // Arrange
+    //        var input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId("aSessionId")
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey("nope")
+    //                        .build();
+    //
+    //        // Act
+    //        var response = handleRequest(input, context);
+    //
+    //        // Assert
+    //        assertErrorResponse(
+    //                HttpStatus.SC_BAD_REQUEST, response,
+    // ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+    //    }
+    //
+    //    @Test
+    //    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
+    //            throws JsonProcessingException {
+    //        // Arrange
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId("aSessionId")
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, "bad"))
+    //                        .build();
+    //
+    //        // Act
+    //        var response = handleRequest(input, context);
+    //
+    //        // Assert
+    //        assertErrorResponse(
+    //                HttpStatus.SC_BAD_REQUEST, response,
+    // ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+    //    }
+    //
+    //    @Test
+    //    void
+    // shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
+    //            throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
+    //                .thenReturn(oauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // PASSPORT.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        List<VerifiableCredential> vcs =
+    //                List.of(
+    //                        generateVerifiableCredential(
+    //                                TEST_USER_ID,
+    //                                ADDRESS,
+    //                                vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                IPV_ISSUER),
+    //                        generateVerifiableCredential(
+    //                                TEST_USER_ID,
+    //                                ADDRESS,
+    //                                vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                IPV_ISSUER));
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID,
+    // TEST_USER_ID)).thenReturn(vcs);
+    //        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        assertEquals(PASSPORT.getId(), response.getCri().getId());
+    //
+    //        Optional<NameValuePair> client_id =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("client_id"))
+    //                        .findFirst();
+    //        assertTrue(client_id.isPresent());
+    //        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+    //
+    //        Optional<NameValuePair> response_type =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("response_type"))
+    //                        .findFirst();
+    //        assertFalse(response_type.isPresent());
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+    //
+    //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+    // ArgumentCaptor.forClass(AuditEvent.class);
+    //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+    //        assertEquals(
+    //                AuditEventTypes.IPV_REDIRECT_TO_CRI,
+    // auditEventCaptor.getValue().getEventName());
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //        verify(mockCriOAuthSessionService, times(1))
+    //                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
+    //        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    //    }
+    //
+    //    @Test
+    //    void
+    //
+    // shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
+    //                    throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
+    //                .thenReturn(oauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // PASSPORT.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false, false);
+    //
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER)));
+    //
+    //        when(VcHelper.filterVCBasedOnProfileType(any(), any())).thenCallRealMethod();
+    //
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        assertEquals(PASSPORT.getId(), response.getCri().getId());
+    //
+    //        Optional<NameValuePair> client_id =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("client_id"))
+    //                        .findFirst();
+    //        assertTrue(client_id.isPresent());
+    //        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+    //
+    //        Optional<NameValuePair> response_type =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("response_type"))
+    //                        .findFirst();
+    //        assertFalse(response_type.isPresent());
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+    //
+    //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+    // ArgumentCaptor.forClass(AuditEvent.class);
+    //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+    //        assertEquals(
+    //                AuditEventTypes.IPV_REDIRECT_TO_CRI,
+    // auditEventCaptor.getValue().getEventName());
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //        verify(mockCriOAuthSessionService, times(1))
+    //                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
+    //        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    //    }
+    //
+    //    @Test
+    //    void
+    //
+    // shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
+    //                    throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
+    //                .thenReturn(oauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // PASSPORT.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(any(), any()))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        assertEquals(PASSPORT.getId(), response.getCri().getId());
+    //
+    //        Optional<NameValuePair> client_id =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("client_id"))
+    //                        .findFirst();
+    //        assertTrue(client_id.isPresent());
+    //        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+    //
+    //        Optional<NameValuePair> response_type =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("response_type"))
+    //                        .findFirst();
+    //        assertFalse(response_type.isPresent());
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+    //
+    //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+    // ArgumentCaptor.forClass(AuditEvent.class);
+    //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+    //        assertEquals(
+    //                AuditEventTypes.IPV_REDIRECT_TO_CRI,
+    // auditEventCaptor.getValue().getEventName());
+    //        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //        verify(mockCriOAuthSessionService, times(1))
+    //                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
+    //        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    //    }
+    //
+    //    @Test
+    //    void
+    //
+    // shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
+    //                    throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(oauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(PASSPORT)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, PASSPORT))
+    //                .thenReturn(oauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // PASSPORT.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, PASSPORT.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        assertEquals(PASSPORT.getId(), response.getCri().getId());
+    //
+    //        Optional<NameValuePair> client_id =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("client_id"))
+    //                        .findFirst();
+    //        assertTrue(client_id.isPresent());
+    //        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+    //
+    //        Optional<NameValuePair> response_type =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("response_type"))
+    //                        .findFirst();
+    //        assertFalse(response_type.isPresent());
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+    //
+    //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+    // ArgumentCaptor.forClass(AuditEvent.class);
+    //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+    //        assertEquals(
+    //                AuditEventTypes.IPV_REDIRECT_TO_CRI,
+    // auditEventCaptor.getValue().getEventName());
+    //        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //        verify(mockCriOAuthSessionService, times(1))
+    //                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
+    //        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    //    }
+    //
+    //    @Test
+    //    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
+    //            throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(DCMAW)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DCMAW))
+    //                .thenReturn(dcmawOauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DCMAW.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, DCMAW.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        assertEquals(DCMAW.getId(), response.getCri().getId());
+    //
+    //        Optional<NameValuePair> client_id =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("client_id"))
+    //                        .findFirst();
+    //        assertTrue(client_id.isPresent());
+    //        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+    //
+    //        Optional<NameValuePair> response_type =
+    //                queryParams.stream()
+    //                        .filter(param -> param.getName().equals("response_type"))
+    //                        .findFirst();
+    //        assertTrue(response_type.isPresent());
+    //        assertEquals("code", response_type.get().getValue());
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+    //
+    //        ArgumentCaptor<AuditEvent> auditEventCaptor =
+    // ArgumentCaptor.forClass(AuditEvent.class);
+    //        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+    //        assertEquals(
+    //                AuditEventTypes.IPV_REDIRECT_TO_CRI,
+    // auditEventCaptor.getValue().getEventName());
+    //        verify(mockSessionCredentialService).getCredentials(SESSION_ID, TEST_USER_ID);
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //        verify(mockCriOAuthSessionService, times(1))
+    //                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
+    //        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    //    }
+    //
+    //    @Test
+    //    void
+    // shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithLanguageParamForDwpKbv()
+    //            throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(DWP_KBV)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, DWP_KBV))
+    //                .thenReturn(dcmawOauthCriConfig);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, DWP_KBV.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, DWP_KBV.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        Optional<NameValuePair> lng =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("lng")).findFirst();
+    //        assertTrue(lng.isPresent());
+    //        assertEquals(TEST_LANGUAGE, lng.get().getValue());
+    //    }
+    //
+    //    @Test
+    //    void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
+    //        // Arrange
+    //        CriJourneyRequest input =
+    // CriJourneyRequest.builder().journey(PASSPORT.getId()).build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        JourneyErrorResponse response =
+    //                OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
+    //        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    //        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
+    //        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+    // response.getMessage());
+    //    }
+    //
+    //    private void assertSharedClaimsJWTIsValid(String request) throws ParseException,
+    // JOSEException {
+    //        SignedJWT signedJWT = SignedJWT.parse(request);
+    //
+    //        SharedClaims sharedClaims =
+    //                OBJECT_MAPPER.convertValue(
+    //                        signedJWT.getJWTClaimsSet().getClaim("shared_claims"),
+    // SharedClaims.class);
+    //
+    //        assertEquals(TEST_SHARED_CLAIMS, sharedClaims);
+    //
+    //        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(TEST_EC_PUBLIC_JWK));
+    //        assertTrue(signedJWT.verify(verifier));
+    //    }
+    //
+    //    @Test
+    //    void shouldSetEvidenceRequestForF2FWithMinStrengthScoreForP1() throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        ipvSessionItem.setTargetVot(Vot.P1);
+    //        when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
+    //                .thenReturn(f2FOauthCriConfig);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, F2F.getId()))
+    //                .thenReturn("name,birthDate,address,emailAddress");
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_2),
+    //                                        IPV_ISSUER),
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_3),
+    //                                        ADDRESS_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        clientOAuthSessionItem.setVtr(List.of("P1"));
+    //        when(mockGpg45ProfileEvaluator.buildScore(any()))
+    //                .thenReturn(new Gpg45Scores(1, 1, 3, 3, 3));
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, F2F.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //
+    //        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+    //
+    //        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+    //        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+    //
+    //        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+    //        assertEquals(2, evidenceRequested.get("strengthScore").asInt());
+    //        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    //    }
+    //
+    //    @Test
+    //    void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(hmrcKbvOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        ipvSessionItem.setTargetVot(P2);
+    //        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
+    //                .thenReturn(hmrcKbvOauthCriConfig);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // HMRC_KBV.getId()))
+    //                .thenReturn("name,birthDate,address,emailAddress");
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //
+    //        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+    //        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+    //
+    //        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+    //        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
+    //        assertEquals(2, evidenceRequested.get("verificationScore").asInt());
+    //    }
+    //
+    //    @Test
+    //    void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        ipvSessionItem.setTargetVot(P1);
+    //        when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
+    //                .thenReturn(hmrcKbvOauthCriConfig);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(900L);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(configService.getParameter(CREDENTIAL_ISSUER_SHARED_ATTRIBUTES,
+    // HMRC_KBV.getId()))
+    //                .thenReturn("name,birthDate,address,emailAddress");
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        mockVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true, true);
+    //        when(mockSessionCredentialService.getCredentials(SESSION_ID, TEST_USER_ID))
+    //                .thenReturn(
+    //                        List.of(
+    //                                generateVerifiableCredential(
+    //                                        TEST_USER_ID,
+    //                                        ADDRESS,
+    //                                        vcClaim(CREDENTIAL_ATTRIBUTES_1),
+    //                                        IPV_ISSUER)));
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //
+    //        assertTrue(request.isPresent());
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //
+    //        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+    //        JsonNode claimsSet = OBJECT_MAPPER.readTree(signedJWT.getJWTClaimsSet().toString());
+    //
+    //        JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
+    //        assertEquals("gpg45", evidenceRequested.get("scoringPolicy").asText());
+    //        assertEquals(1, evidenceRequested.get("verificationScore").asInt());
+    //    }
+    //
+    //    @ParameterizedTest
+    //    @MethodSource("journeyUriParameters")
+    //    void shouldIncludeGivenParametersIntoCriResponseIfInJourneyUri(
+    //            String journeyUri, Map<String, Object> expectedClaims) throws Exception {
+    //        // Arrange
+    //        when(mockOauthKeyService.getEncryptionKey(claimedIdentityOauthCriConfig))
+    //                .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+    //        when(configService.getActiveConnection(CLAIMED_IDENTITY)).thenReturn(MAIN_CONNECTION);
+    //        when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, CLAIMED_IDENTITY))
+    //                .thenReturn(claimedIdentityOauthCriConfig);
+    //        when(configService.getParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+    //        when(configService.getParameter(
+    //                        CREDENTIAL_ISSUER_SHARED_ATTRIBUTES, CLAIMED_IDENTITY.getId()))
+    //                .thenReturn(null);
+    //        when(configService.getLongParameter(JWT_TTL_SECONDS)).thenReturn(5000L);
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+    //        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+    //                .thenReturn(clientOAuthSessionItem);
+    //        when(mockSignerFactory.getSigner())
+    //                .thenReturn(new LocalECDSASigner(getSigningPrivateKey()));
+    //
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, journeyUri))
+    //                        .build();
+    //
+    //        // Act
+    //        var responseJson = handleRequest(input, context);
+    //
+    //        // Assert
+    //        CriResponse response = OBJECT_MAPPER.readValue(responseJson, CriResponse.class);
+    //
+    //        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+    //        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+    //
+    //        Optional<NameValuePair> request =
+    //                queryParams.stream().filter(param ->
+    // param.getName().equals("request")).findFirst();
+    //
+    //        assertTrue(request.isPresent(), "Expected request parameter to be present");
+    //        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+    //        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+    //
+    //        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+    //        JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+    //
+    //        for (var entry : expectedClaims.entrySet()) {
+    //            String expectedClaim = OBJECT_MAPPER.writeValueAsString(entry.getValue());
+    //            String actualClaim =
+    //                    OBJECT_MAPPER.writeValueAsString(claimsSet.getClaim(entry.getKey()));
+    //            assertEquals(
+    //                    expectedClaim,
+    //                    actualClaim,
+    //                    () ->
+    //                            String.format(
+    //                                    "Expected claim for key=%s to be %s, but found %s",
+    //                                    entry.getKey(), expectedClaim, actualClaim));
+    //        }
+    //    }
+    //
+    //    @Test
+    //    void shouldLogRuntimeExceptionsAndRethrow() throws Exception {
+    //        // Arrange
+    //        when(mockIpvSessionService.getIpvSession(SESSION_ID))
+    //                .thenThrow(new RuntimeException("Test error"));
+    //        CriJourneyRequest input =
+    //                CriJourneyRequest.builder()
+    //                        .ipvSessionId(SESSION_ID)
+    //                        .ipAddress(TEST_IP_ADDRESS)
+    //                        .language(TEST_LANGUAGE)
+    //                        .journey(String.format(JOURNEY_BASE_URL, HMRC_KBV.getId()))
+    //                        .build();
+    //
+    //        var logCollector = LogCollector.getLogCollectorFor(BuildCriOauthRequestHandler.class);
+    //
+    //        // Act
+    //        var thrown =
+    //                assertThrows(
+    //                        Exception.class,
+    //                        () -> handleRequest(input, context),
+    //                        "Expected handleRequest() to throw, but it didn't");
+    //
+    //        // Assert
+    //        assertEquals("Test error", thrown.getMessage());
+    //        var logMessage = logCollector.getLogMessages().get(0);
+    //        assertThat(logMessage, containsString("Unhandled lambda exception"));
+    //        assertThat(logMessage, containsString("Test error"));
+    //    }
 
     private static Stream<Arguments> journeyUriParameters() {
         return Stream.of(
@@ -1169,9 +1156,10 @@ class BuildCriOauthRequestHandlerTest {
         return OBJECT_MAPPER.writeValueAsString(response);
     }
 
-    private String handleRequest(CriJourneyRequest event, Context context)
-            throws JsonProcessingException {
-        final var response = buildCriOauthRequestHandler.handleRequest(event, context);
-        return getJsonResponse(OBJECT_MAPPER.convertValue(response, new TypeReference<>() {}));
-    }
+    //    private String handleRequest(CriJourneyRequest event, Context context)
+    //            throws JsonProcessingException {
+    //        final var response = buildCriOauthRequestHandler.handleRequest(event, context);
+    //        return getJsonResponse(OBJECT_MAPPER.convertValue(response, new TypeReference<>()
+    // {}));
+    //    }
 }

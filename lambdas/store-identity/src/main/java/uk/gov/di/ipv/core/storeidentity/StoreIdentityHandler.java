@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.storeidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -25,6 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -39,6 +44,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
@@ -47,8 +53,10 @@ import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IDENTITY_STORED_PATH;
 
-public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class StoreIdentityHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_IDENTITY_STORED =
             new JourneyResponse(JOURNEY_IDENTITY_STORED_PATH).toObjectMap();
     private final ConfigService configService;
@@ -95,21 +103,25 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest input, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
-        configService.setFeatureSet(RequestHelper.getFeatureSet(input));
 
         try {
+            var processRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(processRequest));
+
             var ipvSessionItem =
-                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(input));
+                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(processRequest));
             var clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
-            var identityType = RequestHelper.getIdentityType(input);
-            var ipAddress = RequestHelper.getIpAddress(input);
+            var identityType = RequestHelper.getIdentityType(processRequest);
+            var ipAddress = RequestHelper.getIpAddress(processRequest);
 
             storeIdentity(ipvSessionItem, clientOAuthSessionItem, identityType);
             sendIdentityStoredEvent(
@@ -117,7 +129,7 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                     clientOAuthSessionItem,
                     identityType,
                     ipAddress,
-                    input.getDeviceInformation());
+                    processRequest.getDeviceInformation());
 
             return JOURNEY_IDENTITY_STORED;
 
@@ -135,6 +147,11 @@ public class StoreIdentityHandler implements RequestHandler<ProcessRequest, Map<
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
+
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

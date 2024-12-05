@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,6 +41,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -66,6 +70,7 @@ import java.util.stream.Collectors;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
@@ -100,8 +105,9 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
@@ -211,14 +217,17 @@ public class CheckExistingIdentityHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = getIpvSessionId(event);
-            String ipAddress = getIpAddress(event);
-            String deviceInformation = event.getDeviceInformation();
-            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), JourneyRequest.class);
+            String ipvSessionId = getIpvSessionId(journeyRequest);
+            String ipAddress = getIpAddress(journeyRequest);
+            String deviceInformation = journeyRequest.getDeviceInformation();
+            configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSessionWithRetry(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -238,6 +247,10 @@ public class CheckExistingIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_NOT_FOUND, ErrorResponse.IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey event", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

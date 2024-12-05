@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.checkcoi;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -15,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -32,6 +36,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -58,8 +63,10 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_PASSED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
-public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class CheckCoiHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JourneyResponse JOURNEY_COI_CHECK_PASSED =
             new JourneyResponse(JOURNEY_COI_CHECK_PASSED_PATH);
     private static final JourneyResponse JOURNEY_COI_CHECK_FAILED =
@@ -110,14 +117,18 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
-        configService.setFeatureSet(RequestHelper.getFeatureSet(request));
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
-            var ipAddress = request.getIpAddress();
-            var deviceInformation = request.getDeviceInformation();
-            var ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var processRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(processRequest));
+
+            var ipAddress = processRequest.getIpAddress();
+            var deviceInformation = processRequest.getDeviceInformation();
+            var ipvSessionId = RequestHelper.getIpvSessionId(processRequest);
             var ipvSession = ipvSessionService.getIpvSession(ipvSessionId);
             var clientOAuthSession =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -126,7 +137,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var checkType = getCheckType(clientOAuthSession, request);
+            var checkType = getCheckType(clientOAuthSession, processRequest);
 
             var auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -215,6 +226,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +33,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -59,12 +63,13 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UNMET_PATH
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final JourneyResponse JOURNEY_MET = new JourneyResponse(JOURNEY_MET_PATH);
     private static final JourneyResponse JOURNEY_UNMET = new JourneyResponse(JOURNEY_UNMET_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
@@ -124,13 +129,16 @@ public class EvaluateGpg45ScoresHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String ipAddress = RequestHelper.getIpAddress(event);
-            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), JourneyRequest.class);
+            String ipvSessionId = RequestHelper.getIpvSessionId(journeyRequest);
+            String ipAddress = RequestHelper.getIpAddress(journeyRequest);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -162,7 +170,7 @@ public class EvaluateGpg45ScoresHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             ipAddress,
-                            event.getDeviceInformation(),
+                            journeyRequest.getDeviceInformation(),
                             contraIndicators);
 
             if (matchingGpg45Profile.isEmpty()) {
@@ -190,6 +198,10 @@ public class EvaluateGpg45ScoresHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

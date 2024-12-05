@@ -2,9 +2,11 @@ package uk.gov.di.ipv.core.processjourneyevent;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.util.StringUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -64,6 +66,8 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
@@ -74,8 +78,9 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STA
 import static uk.gov.di.ipv.core.library.journeys.Events.BUILD_CLIENT_OAUTH_RESPONSE_EVENT;
 
 public class ProcessJourneyEventHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String CURRENT_PAGE = "currentPage";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final String NEXT_EVENT = "next";
@@ -140,10 +145,13 @@ public class ProcessJourneyEventHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), JourneyRequest.class);
             String journeyEvent = RequestHelper.getJourneyEvent(journeyRequest);
 
             // Special case
@@ -197,14 +205,17 @@ public class ProcessJourneyEventHandler
                     e.getResponseCode(), e.getErrorResponse());
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (EvcsServiceException | CredentialParseException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey event", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

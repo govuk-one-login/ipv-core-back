@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +17,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -26,6 +30,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
@@ -39,14 +44,16 @@ import uk.gov.di.model.ContraIndicator;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
-public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class CallTicfCriHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
 
@@ -105,16 +112,19 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(TICF);
 
         IpvSessionItem ipvSessionItem = null;
         try {
+            var processRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
             ipvSessionItem =
-                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(request));
+                    ipvSessionService.getIpvSession(RequestHelper.getIpvSessionId(processRequest));
 
-            return callTicfCri(ipvSessionItem, request);
+            return callTicfCri(ipvSessionItem, processRequest);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error calling TICF CRI", e));
@@ -135,6 +145,10 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ERROR_PROCESSING_TICF_CRI_RESPONSE)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

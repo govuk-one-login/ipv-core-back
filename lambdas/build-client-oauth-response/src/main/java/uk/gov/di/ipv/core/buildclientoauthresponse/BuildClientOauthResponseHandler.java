@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -31,6 +34,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -44,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator.CLIENT_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator.IPV_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
@@ -56,8 +61,9 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAl
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler
-        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String STATE = "state";
 
     private final IpvSessionService sessionService;
@@ -96,15 +102,18 @@ public class BuildClientOauthResponseHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
 
         LogHelper.attachComponentId(configService);
 
         try {
-            var ipvSessionId = getIpvSessionIdAllowMissing(input);
-            var ipAddress = getIpAddress(input);
-            var clientSessionId = getClientOAuthSessionIdAllowMissing(input);
-            var featureSet = getFeatureSet(input);
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), JourneyRequest.class);
+            var ipvSessionId = getIpvSessionIdAllowMissing(journeyRequest);
+            var ipAddress = getIpAddress(journeyRequest);
+            var clientSessionId = getClientOAuthSessionIdAllowMissing(journeyRequest);
+            var featureSet = getFeatureSet(journeyRequest);
             configService.setFeatureSet(featureSet);
 
             IpvSessionItem ipvSessionItem;
@@ -178,7 +187,8 @@ public class BuildClientOauthResponseHandler
                             AuditEventTypes.IPV_JOURNEY_END,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+                            new AuditRestrictedDeviceInformation(
+                                    journeyRequest.getDeviceInformation())));
 
             var isReproveIdentity = clientOAuthSessionItem.getReproveIdentity();
             if (Boolean.TRUE.equals(isReproveIdentity)) {
@@ -223,6 +233,10 @@ public class BuildClientOauthResponseHandler
         } catch (IpvSessionNotFoundException e) {
             return buildJourneyErrorResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

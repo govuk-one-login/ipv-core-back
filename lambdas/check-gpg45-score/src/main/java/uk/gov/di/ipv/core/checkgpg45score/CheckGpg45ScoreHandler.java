@@ -2,6 +2,9 @@ package uk.gov.di.ipv.core.checkgpg45score;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -22,6 +25,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.exception.UnknownScoreTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -41,8 +45,10 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_MET_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_UNMET_PATH;
 
-public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
+public class CheckGpg45ScoreHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final String FRAUD = "fraud";
     private static final String ACTIVITY = "activity";
     private static final String VERIFICATION = "verification";
@@ -85,14 +91,18 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest event, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String scoreType = RequestHelper.getScoreType(event);
-            Integer scoreThreshold = RequestHelper.getScoreThreshold(event);
-            configService.setFeatureSet(RequestHelper.getFeatureSet(event));
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
+
+            String ipvSessionId = RequestHelper.getIpvSessionId(journeyRequest);
+            String scoreType = RequestHelper.getScoreType(journeyRequest);
+            Integer scoreThreshold = RequestHelper.getScoreThreshold(journeyRequest);
+            configService.setFeatureSet(RequestHelper.getFeatureSet(journeyRequest));
 
             int scoreToCompare = getScore(ipvSessionId, scoreType);
             if (scoreToCompare >= scoreThreshold) {
@@ -127,6 +137,10 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create journey request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

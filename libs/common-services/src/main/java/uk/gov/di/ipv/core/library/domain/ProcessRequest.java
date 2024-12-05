@@ -21,14 +21,20 @@ public class ProcessRequest extends JourneyRequest {
             String clientOAuthSessionId,
             String journey,
             String featureSet,
-            Map<String, Object> lambdaInput) {
+            Map<String, Object> lambdaInput,
+            String traceParent,
+            String traceState,
+            String dynatrace) {
         super(
                 ipvSessionId,
                 ipAddress,
                 deviceInformation,
                 clientOAuthSessionId,
                 journey,
-                featureSet);
+                featureSet,
+                traceParent,
+                traceState,
+                dynatrace);
         this.lambdaInput = lambdaInput;
     }
 }

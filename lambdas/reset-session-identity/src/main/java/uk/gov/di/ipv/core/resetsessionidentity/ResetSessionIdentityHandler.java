@@ -2,11 +2,15 @@ package uk.gov.di.ipv.core.resetsessionidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -18,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -47,8 +52,9 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class ResetSessionIdentityHandler
-        implements RequestHandler<ProcessRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private final ConfigService configService;
@@ -95,12 +101,16 @@ public class ResetSessionIdentityHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest input, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
-        configService.setFeatureSet(RequestHelper.getFeatureSet(input));
+        configService.setFeatureSet(RequestHelper.getFeatureSet(proxyRequest));
 
         try {
-            String ipvSessionId = getIpvSessionId(input);
+            var journeyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
+
+            String ipvSessionId = getIpvSessionId(journeyRequest);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -112,7 +122,8 @@ public class ResetSessionIdentityHandler
             ipvSessionItem.setVot(P0);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            var sessionCredentialsResetType = RequestHelper.getSessionCredentialsResetType(input);
+            var sessionCredentialsResetType =
+                    RequestHelper.getSessionCredentialsResetType(journeyRequest);
             sessionCredentialsService.deleteSessionCredentialsForResetType(
                     ipvSessionId, sessionCredentialsResetType);
             LOGGER.info(LogHelper.buildLogMessage("Session credentials deleted"));
@@ -164,6 +175,11 @@ public class ResetSessionIdentityHandler
                             SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
+        } catch (JsonProcessingException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to create process request", e));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JSON_MESSAGE);
+
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

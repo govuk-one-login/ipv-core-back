@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.calldcmawasynccri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -43,8 +45,9 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallDcmawAsyncCriHandler
-        implements RequestHandler<ProcessRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
 
@@ -94,18 +97,22 @@ public class CallDcmawAsyncCriHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(DCMAW_ASYNC);
-        List<String> featureSets = RequestHelper.getFeatureSet(request);
-        configService.setFeatureSet(featureSets);
 
         IpvSessionItem ipvSessionItem = null;
         try {
-            final String ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var processRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), ProcessRequest.class);
+            List<String> featureSets = RequestHelper.getFeatureSet(processRequest);
+            configService.setFeatureSet(featureSets);
+
+            final String ipvSessionId = RequestHelper.getIpvSessionId(processRequest);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             final MobileAppJourneyType mobileAppJourneyType =
-                    RequestHelper.getMobileAppJourneyType(request);
+                    RequestHelper.getMobileAppJourneyType(processRequest);
 
             final String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -130,7 +137,7 @@ public class CallDcmawAsyncCriHandler
 
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.recordCriResponse(
-                    request, DCMAW_ASYNC, oauthState, clientOAuthSessionItem, featureSets);
+                    processRequest, DCMAW_ASYNC, oauthState, clientOAuthSessionItem, featureSets);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

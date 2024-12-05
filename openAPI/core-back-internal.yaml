@@ -114,7 +114,10 @@ paths:
               \"featureSet\":\"$util.escapeJavaScript($input.params('feature-set'))\",
               \"ipvSessionId\":\"$util.escapeJavaScript($input.params('ipv-session-id'))\",
               \"clientOAuthSessionId\":\"$util.escapeJavaScript($input.params('client-session-id'))\",
-              \"language\":\"$util.escapeJavaScript($input.params('language'))\"
+              \"language\":\"$util.escapeJavaScript($input.params('language'))\",
+              \"traceParent\":\"$util.escapeJavaScript($input.params('traceparent'))\",
+              \"traceState\":\"$util.escapeJavaScript($input.params('tracestate'))\",
+              \"dynatrace\":\"$util.escapeJavaScript($input.params('x-dynatrace'))\"
               }",
               "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}:live"
               }

@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 @NoArgsConstructor
 @Data
 @SuperBuilder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class JourneyRequest {
     private String ipvSessionId;
     private String ipAddress;
@@ -22,6 +24,9 @@ public class JourneyRequest {
     private String clientOAuthSessionId;
     private String journey;
     private String featureSet;
+    private String traceParent;
+    private String traceState;
+    private String dynatrace;
 
     public URI getJourneyUri() throws HttpResponseExceptionWithErrorBody {
         if (journey == null) {

@@ -2,7 +2,9 @@ package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
@@ -83,8 +85,9 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getLanguage;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
-        implements RequestHandler<CriJourneyRequest, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
@@ -146,15 +149,19 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(
+            APIGatewayProxyRequestEvent proxyRequest, Context context) {
         LogHelper.attachComponentId(configService);
         try {
-            String ipvSessionId = getIpvSessionId(input);
-            String ipAddress = getIpAddress(input);
-            String language = getLanguage(input);
-            configService.setFeatureSet(getFeatureSet(input));
+            var criJourneyRequest =
+                    OBJECT_MAPPER.readValue(proxyRequest.getBody(), CriJourneyRequest.class);
 
-            var cri = getCriFromJourney(input.getJourneyUri().getPath());
+            String ipvSessionId = getIpvSessionId(criJourneyRequest);
+            String ipAddress = getIpAddress(criJourneyRequest);
+            String language = getLanguage(criJourneyRequest);
+            configService.setFeatureSet(getFeatureSet(criJourneyRequest));
+
+            var cri = getCriFromJourney(criJourneyRequest.getJourneyUri().getPath());
             if (cri == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
@@ -164,9 +171,10 @@ public class BuildCriOauthRequestHandler
             }
             LogHelper.attachCriIdToLogs(cri);
 
-            String criContext = getJourneyParameter(input, CONTEXT);
+            String criContext = getJourneyParameter(criJourneyRequest, CONTEXT);
             EvidenceRequest criEvidenceRequest =
-                    EvidenceRequest.fromBase64(getJourneyParameter(input, EVIDENCE_REQUESTED));
+                    EvidenceRequest.fromBase64(
+                            getJourneyParameter(criJourneyRequest, EVIDENCE_REQUESTED));
             String connection = configService.getActiveConnection(cri);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, cri);
@@ -210,7 +218,8 @@ public class BuildCriOauthRequestHandler
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+                            new AuditRestrictedDeviceInformation(
+                                    criJourneyRequest.getDeviceInformation())));
 
             var message =
                     new StringMapMessage()
