@@ -31,6 +31,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -52,12 +53,14 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -144,6 +147,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY = "journey/check-existing-identity";
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
+    public static final String TEST_CRI_OAUTH_SESSION_ID = "test-cri-oauth-session-id";
+    public static final String TEST_PREVIOUS_IPV_SESSION_ID = "previous-ipv-session-id";
     private static final Vot TEST_VOT = P2;
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
@@ -186,6 +191,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
+    @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private ConfigService configService;
@@ -676,6 +682,13 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
+                .thenReturn(
+                        CriResponseItem.builder().oauthState(TEST_CRI_OAUTH_SESSION_ID).build());
+        var previousIpvSession = new IpvSessionItem();
+        previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
+        when(ipvSessionService.getIpvSessionByCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID))
+                .thenReturn(previousIpvSession);
         var vcs = List.of(vcDcmawAsync());
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
@@ -697,11 +710,17 @@ class CheckExistingIdentityHandlerTest {
 
         // Assert
         assertEquals(expectedJourney, journeyResponse);
-
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-
         verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, false);
-
+        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                auditEventArgumentCaptor.getValue().getEventName());
+        assertEquals(
+                TEST_PREVIOUS_IPV_SESSION_ID,
+                ((AuditExtensionPreviousIpvSessionId)
+                                auditEventArgumentCaptor.getValue().getExtensions())
+                        .getPreviousIpvSessionId());
         verify(ipvSessionItem, never()).setVot(any());
         assertNull(ipvSessionItem.getVot());
         assertEquals(expectedIdentity, ipvSessionItem.getTargetVot());
