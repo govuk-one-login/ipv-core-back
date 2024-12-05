@@ -225,7 +225,9 @@ states:
       drivingLicence:
         targetState: WEB_DL_OR_PASSPORT
       nino:
-        targetState: NINO_START_PAGE
+        targetState: CRI_CLAIMED_IDENTITY_NO_PHOTO_ID
+        auditEvents:
+          - IPV_NO_PHOTO_ID_JOURNEY_START
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
