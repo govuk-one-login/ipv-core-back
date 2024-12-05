@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSessionId;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -25,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,6 +45,7 @@ import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -134,6 +137,7 @@ public class CheckExistingIdentityHandler
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final CriOAuthSessionService criOAuthSessionService;
 
     @SuppressWarnings({
         "unused",
@@ -151,6 +155,7 @@ public class CheckExistingIdentityHandler
             CimitUtilityService cimitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
+            CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -162,6 +167,7 @@ public class CheckExistingIdentityHandler
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.criOAuthSessionService = criOAuthSessionService;
         this.evcsService = evcsService;
         VcHelper.setConfigService(this.configService);
     }
@@ -184,6 +190,7 @@ public class CheckExistingIdentityHandler
         this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.evcsService = new EvcsService(configService);
         VcHelper.setConfigService(this.configService);
     }
@@ -342,14 +349,11 @@ public class CheckExistingIdentityHandler
 
                     // Can attempt to complete a profile from here.
 
-                    sessionCredentialsService.persistCredentials(
-                            credentialBundle.credentials, auditEventUser.getSessionId(), false);
-
-                    return switch (lowestGpg45ConfidenceRequested) {
-                        case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
-                        case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
-                        default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
-                    };
+                    return buildDCMAWContinuationResponse(
+                            credentialBundle,
+                            lowestGpg45ConfidenceRequested,
+                            clientOAuthSessionItem,
+                            auditEventUser);
                 }
             }
 
@@ -372,6 +376,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
         } catch (MitigationRouteException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
+        } catch (IpvSessionNotFoundException e) {
+            return buildErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND, e);
         }
     }
 
@@ -474,6 +480,34 @@ public class CheckExistingIdentityHandler
             return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
         }
         return JOURNEY_F2F_FAIL;
+    }
+
+    private JourneyResponse buildDCMAWContinuationResponse(
+            VerifiableCredentialBundle credentialBundle,
+            Vot lowestGpg45ConfidenceRequested,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            AuditEventUser auditEventUser)
+            throws ClientOauthSessionNotFoundException, IpvSessionNotFoundException,
+                    VerifiableCredentialException {
+        var criResponseItem =
+                criResponseService.getCriResponseItem(
+                        clientOAuthSessionItem.getUserId(), DCMAW_ASYNC);
+        var previousIpvSessionItem =
+                ipvSessionService.getIpvSessionByCriOAuthSessionId(criResponseItem.getOauthState());
+
+        sendAuditEventWithPreviousIpvSessionId(
+                AuditEventTypes.IPV_APP_SESSION_RECOVERED,
+                auditEventUser,
+                previousIpvSessionItem.getIpvSessionId());
+
+        sessionCredentialsService.persistCredentials(
+                credentialBundle.credentials, auditEventUser.getSessionId(), false);
+
+        return switch (lowestGpg45ConfidenceRequested) {
+            case P1 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW;
+            case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
+            default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
+        };
     }
 
     private JourneyResponse buildNoMatchResponse(
@@ -584,6 +618,18 @@ public class CheckExistingIdentityHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         new AuditRestrictedDeviceInformation(deviceInformation)));
+    }
+
+    private void sendAuditEventWithPreviousIpvSessionId(
+            AuditEventTypes auditEventTypes,
+            AuditEventUser auditEventUser,
+            String previousIpvSessionId) {
+        auditService.sendAuditEvent(
+                AuditEvent.createWithoutDeviceInformation(
+                        auditEventTypes,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionPreviousIpvSessionId(previousIpvSessionId)));
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {

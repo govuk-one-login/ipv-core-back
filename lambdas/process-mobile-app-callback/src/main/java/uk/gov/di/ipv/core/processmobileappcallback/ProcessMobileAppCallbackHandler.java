@@ -13,6 +13,10 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -23,7 +27,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -48,18 +52,21 @@ public class ProcessMobileAppCallbackHandler
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
+    private final AuditService auditService;
 
     public ProcessMobileAppCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CriResponseService criResponseService) {
+            CriResponseService criResponseService,
+            AuditService auditService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -69,6 +76,7 @@ public class ProcessMobileAppCallbackHandler
         criOAuthSessionService = new CriOAuthSessionService(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
+        auditService = AuditService.create(configService);
     }
 
     @Override
@@ -79,15 +87,10 @@ public class ProcessMobileAppCallbackHandler
         try {
             var callbackRequest = parseCallbackRequest(input);
 
-            // Check whether we are dealing with a cross-browser callback
-            var crossBrowserResponse = handleCrossBrowserCallback(callbackRequest);
-            if (crossBrowserResponse != null) {
-                return crossBrowserResponse;
-            }
+            var response = validateCallback(callbackRequest);
 
-            validateCallback(callbackRequest);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
         } catch (InvalidMobileAppCallbackRequestException | ClientOauthSessionNotFoundException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
@@ -99,33 +102,6 @@ public class ProcessMobileAppCallbackHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
         }
-    }
-
-    private APIGatewayProxyResponseEvent handleCrossBrowserCallback(
-            MobileAppCallbackRequest callbackRequest) {
-        // If we don't have an IPV session, but we do have a valid CRI state value then we may be
-        // dealing with a cross-browser callback. In that case we need to send the user back to
-        // orchestration to login again in this browser.
-        if (!StringUtils.isBlank(callbackRequest.getIpvSessionId())) {
-            return null;
-        }
-
-        var criState = callbackRequest.getState();
-        if (StringUtils.isBlank(criState)) {
-            return null;
-        }
-
-        var criOAuthSessionItem = criOAuthSessionService.getCriOauthSessionItem(criState);
-        if (criOAuthSessionItem == null) {
-            return null;
-        }
-
-        var response =
-                new JourneyResponse(
-                        JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH,
-                        criOAuthSessionItem.getClientOAuthSessionId());
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
     }
 
     private MobileAppCallbackRequest parseCallbackRequest(APIGatewayProxyRequestEvent input)
@@ -144,57 +120,46 @@ public class ProcessMobileAppCallbackHandler
         }
     }
 
-    private void validateCallback(MobileAppCallbackRequest callbackRequest)
+    private JourneyResponse validateCallback(MobileAppCallbackRequest callbackRequest)
             throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
                     ClientOauthSessionNotFoundException, InvalidCriResponseException {
-        // Validate callback sessions
-        validateSessionId(callbackRequest);
+        // Validate CRI state
+        var criState = callbackRequest.getState();
+        if (StringUtils.isBlank(criState)) {
+            throw new InvalidMobileAppCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+        }
 
-        // Get/ set session items/ config
+        var criOAuthSessionItem = criOAuthSessionService.getCriOauthSessionItem(criState);
+        if (criOAuthSessionItem == null) {
+            throw new InvalidMobileAppCallbackRequestException(ErrorResponse.INVALID_OAUTH_STATE);
+        }
+
+        // Check IPV session
+        var ipvSessionId = callbackRequest.getIpvSessionId();
+        if (StringUtils.isBlank(ipvSessionId)) {
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithDeviceInformation(
+                            AuditEventTypes.IPV_APP_MISSING_CONTEXT,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            null,
+                            new AuditRestrictedDeviceInformation(
+                                    callbackRequest.getDeviceInformation())));
+
+            return new JourneyResponse(
+                    JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH,
+                    criOAuthSessionItem.getClientOAuthSessionId());
+        }
+
+        // Get set session items
         var ipvSessionItem = ipvSessionService.getIpvSession(callbackRequest.getIpvSessionId());
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
                         ipvSessionItem.getClientOAuthSessionId());
         var userId = clientOAuthSessionItem.getUserId();
-        configService.setFeatureSet(callbackRequest.getFeatureSet());
 
-        // Attach variables to logs
-        LogHelper.attachGovukSigninJourneyIdToLogs(
-                clientOAuthSessionItem.getGovukSigninJourneyId());
-        LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
-        LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
-        LogHelper.attachComponentId(configService);
-
-        // Validate callback request
-        validateCallbackRequest(callbackRequest);
-
-        // Retrieve and validate cri response
+        // Validate cri response item
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
-        validateCriResponse(criResponse, callbackRequest.getState());
-    }
-
-    private void validateSessionId(MobileAppCallbackRequest callbackRequest)
-            throws InvalidMobileAppCallbackRequestException {
-        var ipvSessionId = callbackRequest.getIpvSessionId();
-
-        if (StringUtils.isBlank(ipvSessionId)) {
-            throw new InvalidMobileAppCallbackRequestException(
-                    ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-    }
-
-    private void validateCallbackRequest(MobileAppCallbackRequest callbackRequest)
-            throws InvalidMobileAppCallbackRequestException {
-        var state = callbackRequest.getState();
-
-        if (StringUtils.isBlank(state)) {
-            throw new InvalidMobileAppCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
-        }
-    }
-
-    private void validateCriResponse(CriResponseItem criResponse, String state)
-            throws InvalidMobileAppCallbackRequestException, InvalidCriResponseException {
-        if (criResponse == null || !Objects.equals(criResponse.getOauthState(), state)) {
+        if (criResponse == null || !Objects.equals(criResponse.getOauthState(), criState)) {
             throw new InvalidMobileAppCallbackRequestException(
                     ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
         }
@@ -202,6 +167,10 @@ public class ProcessMobileAppCallbackHandler
         if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
             throw new InvalidCriResponseException(ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS);
         }
+
+        // does this need a STATUS_ABANDON check?
+
+        return null;
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(

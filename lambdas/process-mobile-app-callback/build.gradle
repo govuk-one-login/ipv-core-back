@@ -9,6 +9,7 @@ dependencies {
 
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
+			project(":libs:audit-service"),
 			project(":libs:cri-response-service")
 
 	aspect libs.powertoolsLogging,
