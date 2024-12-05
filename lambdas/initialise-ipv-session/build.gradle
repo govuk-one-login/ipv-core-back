@@ -17,6 +17,8 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	compileOnly	libs.lombok
 	annotationProcessor libs.lombok
 

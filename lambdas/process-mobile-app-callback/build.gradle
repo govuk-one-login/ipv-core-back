@@ -11,6 +11,8 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:cri-response-service")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj

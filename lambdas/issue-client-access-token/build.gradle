@@ -13,6 +13,8 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:oauth-key-service")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj

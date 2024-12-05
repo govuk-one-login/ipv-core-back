@@ -18,6 +18,8 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj

@@ -16,6 +16,8 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":lambdas:process-cri-callback")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj

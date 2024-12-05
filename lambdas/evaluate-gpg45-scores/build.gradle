@@ -15,6 +15,8 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:cimit-service")
 
+	runtimeOnly libs.openTelemetryAwsSdkAutoConfigure
+
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.aspectj
