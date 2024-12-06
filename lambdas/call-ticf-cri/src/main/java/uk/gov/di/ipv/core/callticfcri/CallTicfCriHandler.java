@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -34,13 +33,16 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -149,7 +151,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,
-                    UnrecognisedVotException, ClientOauthSessionNotFoundException {
+                    UnrecognisedVotException, HttpResponseExceptionWithErrorBody {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -173,26 +175,33 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ipvSessionItem,
                 List.of());
 
-        List<ContraIndicator> cis =
-                cimitService.getContraIndicators(
-                        clientOAuthSessionItem.getUserId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        request.getIpAddress());
+        if (!clientOAuthSessionItem.getScopeClaims().contains(REVERIFICATION)) {
+            var cis =
+                    cimitService.getContraIndicators(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            request.getIpAddress());
 
-        var thresholdVot = ipvSessionItem.getThresholdVot();
+            var journeyResponse =
+                    cimitUtilityService.getMitigationJourneyIfBreaching(
+                            cis,
+                            Optional.ofNullable(ipvSessionItem.getThresholdVot())
+                                    .orElseThrow(
+                                            () ->
+                                                    new HttpResponseExceptionWithErrorBody(
+                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            MISSING_TARGET_VOT)));
+            if (journeyResponse.isPresent()) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "CI score is breaching threshold - setting VOT to P0"));
+                ipvSessionItem.setVot(Vot.P0);
 
-        var journeyResponse =
-                cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
-        if (journeyResponse.isPresent()) {
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "CI score is breaching threshold - setting VOT to P0"));
-            ipvSessionItem.setVot(Vot.P0);
-
-            return journeyResponse.get().toObjectMap();
+                return journeyResponse.get().toObjectMap();
+            }
+            LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
         }
 
-        LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
         return JOURNEY_NEXT;
     }
 }

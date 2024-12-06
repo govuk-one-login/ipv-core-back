@@ -64,7 +64,6 @@ public class CheckReverificationIdentityHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             EvcsService evcsService,
             UserIdentityService userIdentityService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             VotMatcher votMatcher) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;

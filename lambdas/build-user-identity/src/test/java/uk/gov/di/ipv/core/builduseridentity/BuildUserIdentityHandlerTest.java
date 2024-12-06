@@ -350,11 +350,11 @@ class BuildUserIdentityHandlerTest {
         var response = buildUserIdentityHandler.handleRequest(testEvent, mockContext);
 
         // Assert
-        Map<String, String> responseBody =
+        Map<String, String> body =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(500, response.getStatusCode());
-        assertEquals(MISSING_TARGET_VOT.getCode(), Integer.valueOf(responseBody.get("error")));
-        assertEquals(MISSING_TARGET_VOT.getMessage(), responseBody.get("error_description"));
+        assertEquals(MISSING_TARGET_VOT.getCode(), Integer.valueOf(body.get("error")));
+        assertEquals(MISSING_TARGET_VOT.getMessage(), body.get("error_description"));
     }
 
     @Test

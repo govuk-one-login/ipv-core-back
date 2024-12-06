@@ -112,7 +112,7 @@ public class IpvSessionItem implements PersistenceItem {
     // If the user has achieved a profile we should use that, if they haven't then we should use the
     // target Vot.
     public Vot getThresholdVot() {
-        return vot == Vot.P0 ? targetVot : vot;
+        return Vot.P0 == vot ? targetVot : vot;
     }
 
     public void setJourneyContext(String journeyContext) {
