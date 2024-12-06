@@ -126,7 +126,6 @@ public class CheckExistingIdentityHandler
     private final UserIdentityService userIdentityService;
     private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
-    private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CimitService cimitService;
@@ -145,7 +144,6 @@ public class CheckExistingIdentityHandler
             ConfigService configService,
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
@@ -159,7 +157,6 @@ public class CheckExistingIdentityHandler
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
-        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
@@ -184,7 +181,6 @@ public class CheckExistingIdentityHandler
         this.configService = ConfigService.create();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
@@ -195,7 +191,8 @@ public class CheckExistingIdentityHandler
         this.evcsService = new EvcsService(configService);
         this.evcsMigrationService = new EvcsMigrationService(configService);
         this.votMatcher =
-                new VotMatcher(userIdentityService, gpg45ProfileEvaluator, cimitUtilityService);
+                new VotMatcher(
+                        userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -604,34 +601,27 @@ public class CheckExistingIdentityHandler
             List<ContraIndicator> contraIndicators)
             throws ParseException, VerifiableCredentialException, EvcsServiceException {
 
-        var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcBundle.credentials(), GPG45);
-        var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
-        var operationalVcs =
-                VcHelper.filterVCBasedOnProfileType(vcBundle.credentials(), OPERATIONAL_HMRC);
-
         // Check for attained vot from requested vots
-        var strongestAttainedVotAndProfileFromVtr =
+        var maybeVotMatchingResult =
                 votMatcher.matchFirstVot(
                         clientOAuthSessionItem
                                 .getParsedVtr()
                                 .getRequestedVotsByStrengthDescending(),
-                        gpg45Vcs,
-                        gpg45Scores,
-                        areGpg45VcsCorrelated,
-                        operationalVcs,
-                        contraIndicators);
+                        vcBundle.credentials(),
+                        contraIndicators,
+                        areGpg45VcsCorrelated);
 
-        if (strongestAttainedVotAndProfileFromVtr.isEmpty()) {
+        if (maybeVotMatchingResult.isEmpty()) {
             return Optional.empty();
         }
 
-        var attainedVotAndProfile = strongestAttainedVotAndProfileFromVtr.get();
+        var votMatchingResult = maybeVotMatchingResult.get();
 
-        if (GPG45.equals(attainedVotAndProfile.vot().getProfileType())) {
+        if (GPG45.equals(votMatchingResult.vot().getProfileType())) {
             sendProfileMatchedAuditEvent(
-                    attainedVotAndProfile.gpg45Profile(),
-                    gpg45Scores,
-                    gpg45Vcs,
+                    votMatchingResult.gpg45Profile(),
+                    votMatchingResult.gpg45Scores(),
+                    VcHelper.filterVCBasedOnProfileType(vcBundle.credentials(), GPG45),
                     auditEventUser,
                     deviceInformation);
         }
@@ -639,7 +629,7 @@ public class CheckExistingIdentityHandler
         // vot achieved for vtr
         return Optional.of(
                 buildReuseResponse(
-                        attainedVotAndProfile.vot(),
+                        votMatchingResult.vot(),
                         ipvSessionItem,
                         vcBundle,
                         auditEventUser,

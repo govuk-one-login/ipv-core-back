@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
+import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -33,24 +35,27 @@ public class VotMatcher {
         this(userIdentityService, gpg45ProfileEvaluator, null);
     }
 
-    public Optional<VotAndProfile> matchFirstVot(
+    public Optional<VotMatchingResult> matchFirstVot(
             List<Vot> vots,
-            List<VerifiableCredential> gpg45Vcs,
-            Gpg45Scores gpg45Scores,
-            boolean areGpg45VcsCorrelated,
-            List<VerifiableCredential> operationalVcs,
-            List<ContraIndicator> contraIndicators)
+            List<VerifiableCredential> vcs,
+            List<ContraIndicator> contraIndicators,
+            boolean areGpg45VcsCorrelated)
             throws ParseException {
+
+        var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcs, GPG45);
+        var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
+        var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
 
         for (Vot vot : vots) {
             if (vot.getProfileType().equals(GPG45) && areGpg45VcsCorrelated) {
                 var matchedGpg45Profile =
                         achievedWithGpg45Profile(vot, gpg45Vcs, gpg45Scores, contraIndicators);
                 if (matchedGpg45Profile.isPresent()) {
-                    return Optional.of(new VotAndProfile(vot, matchedGpg45Profile.get()));
+                    return Optional.of(
+                            new VotMatchingResult(vot, matchedGpg45Profile.get(), gpg45Scores));
                 }
             } else if (hasOperationalProfileVc(vot, operationalVcs, contraIndicators)) {
-                return Optional.of(new VotAndProfile(vot, null));
+                return Optional.of(new VotMatchingResult(vot, null, null));
             }
         }
         return Optional.empty();

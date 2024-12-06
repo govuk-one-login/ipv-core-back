@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -17,7 +16,6 @@ import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -26,8 +24,8 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.service.VotAndProfile;
 import uk.gov.di.ipv.core.library.service.VotMatcher;
+import uk.gov.di.ipv.core.library.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 
 import java.text.ParseException;
@@ -70,6 +68,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 @ExtendWith(MockitoExtension.class)
 class CheckReverificationIdentityHandlerTest {
+    private static final List<uk.gov.di.model.ContraIndicator> EMPTY_CONTRA_INDICATORS = List.of();
     private static final String TEST_IPV_SESSION_ID = "test-ipv-session-id";
     private static final String TEST_CLIENT_SESSION_ID = "test-client-session-id";
     private static final String TEST_USER_ID = "test-user-id";
@@ -90,7 +89,6 @@ class CheckReverificationIdentityHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientSessionService;
     @Mock private EvcsService mockEvcsService;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Spy private Gpg45ProfileEvaluator mockGpg45Evaluator;
     @Mock private VotMatcher mockVotMatcher;
     @InjectMocks private CheckReverificationIdentityHandler checkReverificationIdentityHandler;
 
@@ -139,12 +137,12 @@ class CheckReverificationIdentityHandlerTest {
                     .thenReturn(p2Vcs);
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(M1B_DCMAW_VC, VC_ADDRESS, m1BFraudVc),
-                            new Gpg45Scores(3, 2, 1, 2, 2),
-                            true,
-                            List.of(pcl250vc),
-                            List.of()))
-                    .thenReturn(Optional.of(new VotAndProfile(P2, M1A)));
+                            p2Vcs,
+                            EMPTY_CONTRA_INDICATORS,
+                            true))
+                    .thenReturn(
+                            Optional.of(
+                                    new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -163,11 +161,11 @@ class CheckReverificationIdentityHandlerTest {
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             p1Vcs,
-                            new Gpg45Scores(2, 2, 0, 2, 2),
-                            true,
-                            List.of(),
-                            List.of()))
-                    .thenReturn(Optional.of(new VotAndProfile(P1, L1A)));
+                            EMPTY_CONTRA_INDICATORS,
+                            true))
+                    .thenReturn(
+                            Optional.of(
+                                    new VotMatchingResult(P1, L1A, Gpg45Scores.builder().build())));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -183,12 +181,10 @@ class CheckReverificationIdentityHandlerTest {
                     .thenReturn(List.of(pcl250vc));
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(),
-                            Gpg45Scores.builder().build(),
-                            false,
                             List.of(pcl250vc),
-                            List.of()))
-                    .thenReturn(Optional.of(new VotAndProfile(PCL250, null)));
+                            EMPTY_CONTRA_INDICATORS,
+                            false))
+                    .thenReturn(Optional.of(new VotMatchingResult(PCL250, null, null)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -203,12 +199,10 @@ class CheckReverificationIdentityHandlerTest {
                     .thenReturn(List.of(pcl200vc));
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                            List.of(),
-                            Gpg45Scores.builder().build(),
-                            false,
                             List.of(pcl200vc),
-                            List.of()))
-                    .thenReturn(Optional.of(new VotAndProfile(PCL200, null)));
+                            EMPTY_CONTRA_INDICATORS,
+                            false))
+                    .thenReturn(Optional.of(new VotMatchingResult(PCL200, null, null)));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
 
@@ -221,10 +215,8 @@ class CheckReverificationIdentityHandlerTest {
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(),
-                            Gpg45Scores.builder().build(),
-                            false,
-                            List.of(),
-                            List.of()))
+                            EMPTY_CONTRA_INDICATORS,
+                            false))
                     .thenReturn(Optional.empty());
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);
@@ -335,10 +327,8 @@ class CheckReverificationIdentityHandlerTest {
             when(mockVotMatcher.matchFirstVot(
                             SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
                             List.of(),
-                            Gpg45Scores.builder().build(),
-                            false,
-                            List.of(),
-                            List.of()))
+                            EMPTY_CONTRA_INDICATORS,
+                            false))
                     .thenThrow(new ParseException("😬", 0));
 
             var response = checkReverificationIdentityHandler.handleRequest(REQUEST, mockContext);

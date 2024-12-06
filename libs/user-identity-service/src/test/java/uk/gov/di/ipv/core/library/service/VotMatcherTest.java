@@ -13,6 +13,7 @@ import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -48,8 +49,9 @@ public class VotMatcherTest {
     }
 
     @Test
-    void shouldReturnFirstMatchedGpg45VotAndProfile() throws Exception {
+    void shouldReturnFirstMatchedGpg45Vot() throws Exception {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
+        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles()))
                 .thenReturn(Optional.empty());
@@ -57,54 +59,41 @@ public class VotMatcherTest {
                         GPG_45_SCORES, P1.getSupportedGpg45Profiles()))
                 .thenReturn(Optional.of(L1A));
 
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
-                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        GPG_45_SCORES,
-                        true,
-                        List.of(),
-                        List.of());
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, List.of(), true);
 
-        assertEquals(Optional.of(new VotAndProfile(P1, L1A)), votAndProfile);
+        assertEquals(Optional.of(new VotMatchingResult(P1, L1A, GPG_45_SCORES)), votMatch);
     }
 
     @Test
     void shouldReturnFirstMatchedOperationalVot() throws Exception {
-        var operationalVcs = List.of(pcl200vc);
-
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
 
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        GPG_45_SCORES,
-                        true,
-                        operationalVcs,
-                        List.of());
+                        Stream.concat(gpg45Vcs.stream(), Stream.of(pcl200vc)).toList(),
+                        List.of(),
+                        true);
 
-        assertEquals(Optional.of(new VotAndProfile(PCL200, null)), votAndProfile);
+        assertEquals(Optional.of(new VotMatchingResult(PCL200, null, null)), votMatch);
     }
 
     @Test
     void shouldReturnEmptyOptionalIfNoVotMatched() throws Exception {
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
-                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        List.of(),
-                        GPG_45_SCORES,
-                        true,
-                        List.of(),
-                        List.of());
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, List.of(), List.of(), true);
 
-        assertEquals(Optional.empty(), votAndProfile);
+        assertEquals(Optional.empty(), votMatch);
     }
 
     @Test
     void shouldMatchWeakerGpg45VotIfStrongerVotHasBreachingCi() throws Exception {
         var contraIndicators = List.of(new ContraIndicator());
 
+        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
                         GPG_45_SCORES, P2.getSupportedGpg45Profiles()))
@@ -114,51 +103,38 @@ public class VotMatcherTest {
                 .thenReturn(Optional.of(L1A));
         when(mockCimitUtilityService.isBreachingCiThreshold(contraIndicators, P2)).thenReturn(true);
 
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
-                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        GPG_45_SCORES,
-                        true,
-                        List.of(),
-                        contraIndicators);
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, contraIndicators, true);
 
-        assertEquals(Optional.of(new VotAndProfile(P1, L1A)), votAndProfile);
+        assertEquals(Optional.of(new VotMatchingResult(P1, L1A, GPG_45_SCORES)), votMatch);
     }
 
     @Test
     void shouldMatchWeakerOperationalVotIfStrongerVotHasBreachingCi() throws Exception {
-        var operationalVcs = List.of(pcl250vc, pcl200vc);
         var contraIndicators = List.of(new ContraIndicator());
 
         when(mockCimitUtilityService.isBreachingCiThreshold(contraIndicators, PCL250))
                 .thenReturn(true);
 
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        GPG_45_SCORES,
-                        true,
-                        operationalVcs,
-                        contraIndicators);
+                        Stream.concat(gpg45Vcs.stream(), Stream.of(pcl250vc, pcl200vc)).toList(),
+                        contraIndicators,
+                        true);
 
-        assertEquals(Optional.of(new VotAndProfile(PCL200, null)), votAndProfile);
+        assertEquals(Optional.of(new VotMatchingResult(PCL200, null, null)), votMatch);
     }
 
     @Test
     void shouldNotMatchGpg45VotIfRequiresAdditionalEvidence() throws Exception {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(true);
 
-        var votAndProfile =
+        var votMatch =
                 votMatcher.matchFirstVot(
-                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        GPG_45_SCORES,
-                        true,
-                        List.of(),
-                        List.of());
+                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, gpg45Vcs, List.of(), true);
 
-        assertEquals(Optional.empty(), votAndProfile);
+        assertEquals(Optional.empty(), votMatch);
     }
 }

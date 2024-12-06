@@ -36,7 +36,6 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_IS
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
-import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 import static uk.gov.di.ipv.core.library.domain.ReverificationFailureCode.NO_IDENTITY_AVAILABLE;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
@@ -57,7 +56,6 @@ public class CheckReverificationIdentityHandler
     private final ClientOAuthSessionDetailsService clientSessionService;
     private final EvcsService evcsService;
     private final UserIdentityService userIdentityService;
-    private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final VotMatcher votMatcher;
 
     public CheckReverificationIdentityHandler(
@@ -73,7 +71,6 @@ public class CheckReverificationIdentityHandler
         this.clientSessionService = clientOAuthSessionDetailsService;
         this.evcsService = evcsService;
         this.userIdentityService = userIdentityService;
-        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.votMatcher = votMatcher;
     }
 
@@ -89,8 +86,7 @@ public class CheckReverificationIdentityHandler
         this.clientSessionService = new ClientOAuthSessionDetailsService(configService);
         this.evcsService = new EvcsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.votMatcher = new VotMatcher(userIdentityService, gpg45ProfileEvaluator);
+        this.votMatcher = new VotMatcher(userIdentityService, new Gpg45ProfileEvaluator());
     }
 
     @Tracing
@@ -155,19 +151,13 @@ public class CheckReverificationIdentityHandler
 
     private boolean hasReverificationIdentity(List<VerifiableCredential> vcs)
             throws ParseException, HttpResponseExceptionWithErrorBody {
-        var gpg45Vcs = VcHelper.filterVCBasedOnProfileType(vcs, GPG45);
-        var gpg45Scores = gpg45ProfileEvaluator.buildScore(gpg45Vcs);
-        var gpg45VcsCorrelated = userIdentityService.areVcsCorrelated(gpg45Vcs);
-        var operationalVcs = VcHelper.filterVCBasedOnProfileType(vcs, OPERATIONAL_HMRC);
-
         var matchedVot =
                 votMatcher.matchFirstVot(
                         SUPPORTED_VOTS_BY_DESCENDING_STRENGTH,
-                        gpg45Vcs,
-                        gpg45Scores,
-                        gpg45VcsCorrelated,
-                        operationalVcs,
-                        List.of());
+                        vcs,
+                        List.of(),
+                        userIdentityService.areVcsCorrelated(
+                                VcHelper.filterVCBasedOnProfileType(vcs, GPG45)));
 
         if (matchedVot.isEmpty()) {
             LOGGER.info(LogHelper.buildLogMessage("No identity for reverification found"));
