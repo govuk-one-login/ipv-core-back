@@ -9,3 +9,14 @@ allprojects {
 		}
 	}
 }
+
+subprojects {
+	afterEvaluate { subproject ->
+		if (subproject.plugins.hasPlugin('java')) {
+			dependencies {
+				runtimeOnly platform(libs.openTelemetryBom),
+						libs.openTelemetryAwsSdkAutoConfigure
+			}
+		}
+	}
+}

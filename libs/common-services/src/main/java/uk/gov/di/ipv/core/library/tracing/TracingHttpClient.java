@@ -4,6 +4,8 @@ import com.amazonaws.xray.AWSXRay;
 import com.amazonaws.xray.AWSXRayRecorder;
 import com.amazonaws.xray.entities.Namespace;
 import com.amazonaws.xray.entities.Subsegment;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -46,7 +48,10 @@ public class TracingHttpClient extends HttpClient {
     }
 
     public static HttpClient newHttpClient() {
-        return new TracingHttpClient(HttpClient.newHttpClient());
+        return new TracingHttpClient(
+                JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
+                        .build()
+                        .newHttpClient(HttpClient.newHttpClient()));
     }
 
     // Synchronize to prevent race conditions when multiple threads attempt to recreate client
