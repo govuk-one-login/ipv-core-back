@@ -80,7 +80,8 @@ class ProcessAsyncCriCredentialHandlerTest {
                     null,
                     CriResponseService.STATUS_PENDING,
                     0,
-                    List.of(EVCS_ASYNC_WRITE_ENABLED.getName()));
+                    List.of(EVCS_ASYNC_WRITE_ENABLED.getName()),
+                    false);
 
     private static final String TEST_ASYNC_ACCESS_DENIED_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR = "invalid";

@@ -109,13 +109,6 @@ public class CriStoringService {
             throws JsonProcessingException {
         var userId = clientOAuthSessionItem.getUserId();
 
-        var auditEventUser =
-                new AuditEventUser(
-                        userId,
-                        ipvSessionId,
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-
         var vcResponseDto =
                 VerifiableCredentialResponseDto.builder()
                         .userId(userId)
@@ -123,12 +116,19 @@ public class CriStoringService {
                         .build();
 
         criResponseService.persistCriResponse(
-                userId,
+                clientOAuthSessionItem,
                 cri,
                 OBJECT_MAPPER.writeValueAsString(vcResponseDto),
                 criOAuthSessionId,
                 CriResponseService.STATUS_PENDING,
                 featureSet);
+
+        var auditEventUser =
+                new AuditEventUser(
+                        userId,
+                        ipvSessionId,
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        ipAddress);
 
         sendAuditEventForProcessedVcResponse(
                 CriResourceRetrievedType.PENDING.getType(), cri, auditEventUser, deviceInformation);
