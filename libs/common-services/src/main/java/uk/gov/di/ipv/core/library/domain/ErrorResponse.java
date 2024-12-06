@@ -112,7 +112,10 @@ public enum ErrorResponse {
     INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE(1098, "Invalid process mobile app journey type"),
     FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY(
             1099, "Failed to parse mobile app callback request body"),
-    CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found");
+    CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found"),
+    MISSING_PROCESS_IDENTITY_TYPE(1101, "Process identity type missing"),
+    UNEXPECTED_PROCESS_IDENTITY_TYPE(1102, "Unexpected process identity type"),
+    ;
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
