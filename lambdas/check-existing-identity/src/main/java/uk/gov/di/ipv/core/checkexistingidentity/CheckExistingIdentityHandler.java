@@ -60,6 +60,7 @@ import java.util.Optional;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
+import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -247,11 +248,12 @@ public class CheckExistingIdentityHandler
 
             var credentialBundle =
                     getCredentialBundle(userId, clientOAuthSessionItem.getEvcsAccessToken());
-            var f2fRequest = criResponseService.getFaceToFaceRequest(userId);
+            var f2fResponseItem = criResponseService.getFaceToFaceRequest(userId);
             final boolean hasF2fVc = credentialBundle.isF2fIdentity();
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
+            final boolean hasF2fRequest = !Objects.isNull(f2fResponseItem);
+            final boolean isF2FIncomplete = hasF2fRequest && !hasF2fVc;
             final boolean isF2FComplete =
-                    !Objects.isNull(f2fRequest) && hasF2fVc && credentialBundle.isPendingIdentity();
+                    hasF2fRequest && hasF2fVc && credentialBundle.isPendingIdentity();
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -270,15 +272,16 @@ public class CheckExistingIdentityHandler
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var reproveIdentity = Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
+            var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+            // Don't start a new reprove journey if user is returning from F2F reprove journey
+            if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem)
+                    || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
-                    LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
 
-                LOGGER.info(LogHelper.buildLogMessage("Resetting P2 identity"));
+                LOGGER.info(LogHelper.buildLogMessage("Reproving P2 identity"));
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
@@ -292,7 +295,7 @@ public class CheckExistingIdentityHandler
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
-                                f2fRequest) // F2F mitigation journey in progress
+                                f2fResponseItem) // F2F mitigation journey in progress
                         : ciScoringCheckResponse.get(); // CI fail or mitigation journey
             }
 
@@ -310,19 +313,22 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
-                // We are re-using an existing Vot so it might not be a GPG45 vot
+                // We are re-using an existing Vot, so it might not be a GPG45 vot
                 ipvSessionItem.setTargetVot(
                         clientOAuthSessionItem
                                 .getParsedVtr()
                                 .getLowestStrengthRequestedVot(configService));
                 ipvSessionService.updateIpvSession(ipvSessionItem);
+                removeReproveIdentityFlag(isF2FComplete, f2fResponseItem);
                 return profileMatchResponse.get();
             }
 
             // No profile matched but has a pending F2F request
             if (isF2FIncomplete) {
-                return buildF2FIncompleteResponse(f2fRequest);
+                return buildF2FIncompleteResponse(f2fResponseItem);
             }
+
+            removeReproveIdentityFlag(isF2FComplete, f2fResponseItem);
 
             // No profile match
             return isF2FComplete
@@ -598,5 +604,21 @@ public class CheckExistingIdentityHandler
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private boolean isReprovingWithF2f(CriResponseItem f2fRequest) {
+        return f2fRequest != null && f2fRequest.isReproveIdentity();
+    }
+
+    private void removeReproveIdentityFlag(boolean isF2FComplete, CriResponseItem f2fResponseItem) {
+        if (isF2FComplete && f2fResponseItem.isReproveIdentity()) {
+            // Remove the reprove identity flag, so we won't skip reprove identity on a future
+            // journey
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "Removing reprove identity flag from F2F CRI response item"));
+            f2fResponseItem.setReproveIdentity(false);
+            criResponseService.updateCriResponseItem(f2fResponseItem);
+        }
     }
 }

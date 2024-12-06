@@ -75,7 +75,8 @@ class ProcessAsyncCriCredentialHandlerTest {
                     null,
                     CriResponseService.STATUS_PENDING,
                     0,
-                    List.of());
+                    List.of(),
+                    false);
 
     private static final String TEST_ASYNC_ACCESS_DENIED_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR = "invalid";

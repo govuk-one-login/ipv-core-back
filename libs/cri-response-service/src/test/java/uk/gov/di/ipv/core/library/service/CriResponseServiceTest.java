@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
@@ -65,7 +66,10 @@ class CriResponseServiceTest {
     void shouldPersistCriResponse() {
         var featureSet = List.of(TEST_FEATURE_SET);
         criResponseService.persistCriResponse(
-                TEST_USER_ID,
+                ClientOAuthSessionItem.builder()
+                        .userId(TEST_USER_ID)
+                        .reproveIdentity(Boolean.FALSE)
+                        .build(),
                 F2F,
                 TEST_ISSUER_RESPONSE,
                 TEST_OAUTH_STATE,

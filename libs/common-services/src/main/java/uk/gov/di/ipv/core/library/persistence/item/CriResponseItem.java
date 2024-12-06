@@ -27,6 +27,7 @@ public class CriResponseItem implements PersistenceItem {
     private String status;
     private long ttl;
     private List<String> featureSet;
+    private boolean reproveIdentity;
 
     @DynamoDbPartitionKey
     public String getUserId() {

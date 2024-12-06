@@ -59,7 +59,7 @@ class CriStoringServiceTest {
     @Mock private CimitService mockCimitService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
-    @Captor private ArgumentCaptor<String> userIdCaptor;
+    @Captor private ArgumentCaptor<ClientOAuthSessionItem> clientSessionItemCaptor;
     @Captor private ArgumentCaptor<Cri> criCaptor;
     @Captor private ArgumentCaptor<String> vcResponseCaptor;
     @Captor private ArgumentCaptor<String> criOAuthSessionIdCaptor;
@@ -107,7 +107,7 @@ class CriStoringServiceTest {
         // verify
         verify(mockCriResponseService)
                 .persistCriResponse(
-                        userIdCaptor.capture(),
+                        clientSessionItemCaptor.capture(),
                         criCaptor.capture(),
                         vcResponseCaptor.capture(),
                         criOAuthSessionIdCaptor.capture(),
@@ -121,7 +121,9 @@ class CriStoringServiceTest {
         assertEquals(F2F, criCaptor.getValue());
         assertEquals(TEST_CRI_OAUTH_SESSION_ID, criOAuthSessionIdCaptor.getValue());
 
-        assertEquals(clientOAuthSessionItem.getUserId(), userIdCaptor.getValue());
+        assertEquals(
+                clientOAuthSessionItem.getUserId(), clientSessionItemCaptor.getValue().getUserId());
+        assertEquals(Boolean.TRUE, clientSessionItemCaptor.getValue().getReproveIdentity());
         var expectedVcResponseDto =
                 VerifiableCredentialResponseDto.builder()
                         .userId(clientOAuthSessionItem.getUserId())
@@ -361,6 +363,7 @@ class CriStoringServiceTest {
         return ClientOAuthSessionItem.builder()
                 .userId(TEST_USER_ID)
                 .scope(ScopeConstants.OPENID)
+                .reproveIdentity(Boolean.TRUE)
                 .build();
     }
 }
