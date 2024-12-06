@@ -7,7 +7,7 @@ states:
   START:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_F2F
+        targetState: CHECK_COI
 
   # Parent states
   CRI_STATE:
@@ -68,6 +68,22 @@ states:
         targetState: ERROR_NO_TICF
 
   # Journey states
+  CHECK_COI:
+    response:
+      type: process
+      lambda: check-coi
+      lambdaInput:
+        checkType: GIVEN_OR_FAMILY_NAME_AND_DOB
+    events:
+      coi-check-passed:
+        targetState: CRI_TICF_BEFORE_F2F
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   CRI_TICF_BEFORE_F2F:
     response:
       type: process
