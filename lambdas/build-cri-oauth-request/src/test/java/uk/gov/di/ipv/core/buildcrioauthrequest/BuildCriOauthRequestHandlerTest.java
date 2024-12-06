@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -35,6 +36,7 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -74,6 +76,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,6 +99,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.enums.Vot.P1;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -914,6 +918,35 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode evidenceRequested = claimsSet.get(EVIDENCE_REQUESTED);
         assertEquals(2, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(names = {"F2F", "DWP_KBV", "EXPERIAN_KBV", "HMRC_KBV"})
+    void shouldReturnJourneyErrorResponseIfTargetVotIsMissing(Cri cri) throws Exception {
+        // Arrange
+        ipvSessionItem.setTargetVot(null);
+
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
+                        .journey(String.format(JOURNEY_BASE_URL, cri.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        JourneyErrorResponse response =
+                OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
+
+        assertEquals(MISSING_TARGET_VOT.getMessage(), response.getMessage());
+        assertEquals(SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test

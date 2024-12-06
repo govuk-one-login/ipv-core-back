@@ -149,7 +149,7 @@ public class Gpg45Scores {
         return Objects.hash(evidences, activity, fraud, verification);
     }
 
-    static class Builder {
+    public static class Builder {
 
         private List<Evidence> evidences = new ArrayList<>();
         private int activity;
