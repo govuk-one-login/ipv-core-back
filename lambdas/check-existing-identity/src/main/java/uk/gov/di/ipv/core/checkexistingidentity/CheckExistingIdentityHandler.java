@@ -491,8 +491,7 @@ public class CheckExistingIdentityHandler
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser)
-            throws IpvSessionNotFoundException, VerifiableCredentialException,
-                    HttpResponseExceptionWithErrorBody {
+            throws IpvSessionNotFoundException, VerifiableCredentialException {
         var criResponseItem =
                 criResponseService.getCriResponseItem(
                         clientOAuthSessionItem.getUserId(), DCMAW_ASYNC);
