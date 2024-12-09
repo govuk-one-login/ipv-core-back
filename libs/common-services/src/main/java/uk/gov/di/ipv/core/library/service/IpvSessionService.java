@@ -109,6 +109,21 @@ public class IpvSessionService {
                 });
     }
 
+    public IpvSessionItem getIpvSessionByClientOAuthSessionId(String clientOAuthSessionId)
+            throws IpvSessionNotFoundException {
+        return callRunTaskWithBackoff(
+                () -> {
+                    var item =
+                            dataStore.getItemByIndex("clientOAuthSessionId", clientOAuthSessionId);
+                    if (item == null) {
+                        throw new RetryableException(
+                                new IpvSessionNotFoundException(
+                                        "The session not found in the database for the supplied clientOAuthSessionId"));
+                    }
+                    return item;
+                });
+    }
+
     public IpvSessionItem generateIpvSession(
             String clientOAuthSessionId,
             ErrorObject errorObject,
