@@ -135,8 +135,7 @@ states:
     response:
       type: page
       pageId: page-ipv-success
-      # same page as RFC displayed so re-use this context
-      context: repeatFraudCheck
+      context: updateIdentity
     events:
       next:
         targetState: RETURN_TO_RP

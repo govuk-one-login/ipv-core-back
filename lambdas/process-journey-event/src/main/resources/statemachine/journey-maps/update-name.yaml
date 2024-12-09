@@ -357,6 +357,7 @@ states:
     response:
       type: page
       pageId: page-ipv-success
+      context: updateIdentity
     events:
       next:
         targetState: RETURN_TO_RP
