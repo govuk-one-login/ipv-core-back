@@ -19,6 +19,8 @@ public class JourneyUris {
     public static final String JOURNEY_CHECK_EXISTING_IDENTITY_PATH =
             "/journey/check-existing-identity";
     public static final String JOURNEY_CHECK_GPG45_SCORE_PATH = "/journey/check-gpg45-score";
+    public static final String JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH =
+            "/journey/check-reverification-identity";
     public static final String JOURNEY_COI_CHECK_FAILED_PATH = "/journey/coi-check-failed";
     public static final String JOURNEY_COI_CHECK_PASSED_PATH = "/journey/coi-check-passed";
     public static final String JOURNEY_DL_AUTH_SOURCE_CHECK_PATH = "/journey/dl-auth-source-check";
@@ -32,6 +34,7 @@ public class JourneyUris {
     public static final String JOURNEY_F2F_FAIL_PATH = "/journey/f2f-fail";
     public static final String JOURNEY_FAIL_WITH_CI_PATH = "/journey/fail-with-ci";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
+    public static final String JOURNEY_FOUND = "/journey/found";
     public static final String JOURNEY_IDENTITY_STORED_PATH = "/journey/identity-stored";
     public static final String JOURNEY_IN_MIGRATION_REUSE_PATH = "/journey/in-migration-reuse";
     public static final String JOURNEY_INVALID_REQUEST_PATH = "/journey/invalid-request";
