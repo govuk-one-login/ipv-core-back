@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -685,9 +686,14 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
                 .thenReturn(
                         CriResponseItem.builder().oauthState(TEST_CRI_OAUTH_SESSION_ID).build());
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_CRI_OAUTH_SESSION_ID))
+                .thenReturn(
+                        CriOAuthSessionItem.builder()
+                                .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                                .build());
         var previousIpvSession = new IpvSessionItem();
         previousIpvSession.setIpvSessionId(TEST_PREVIOUS_IPV_SESSION_ID);
-        when(ipvSessionService.getIpvSessionByCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID))
+        when(ipvSessionService.getIpvSessionByClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(previousIpvSession);
         var vcs = List.of(vcDcmawAsync());
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))

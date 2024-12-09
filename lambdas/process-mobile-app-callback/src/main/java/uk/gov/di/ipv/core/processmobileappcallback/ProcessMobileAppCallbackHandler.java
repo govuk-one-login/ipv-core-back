@@ -123,6 +123,11 @@ public class ProcessMobileAppCallbackHandler
     private JourneyResponse validateCallback(MobileAppCallbackRequest callbackRequest)
             throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
                     ClientOauthSessionNotFoundException, InvalidCriResponseException {
+        // Attach variables to logs
+        LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
+        LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
+        LogHelper.attachComponentId(configService);
+
         // Validate CRI state
         var criState = callbackRequest.getState();
         if (StringUtils.isBlank(criState)) {
@@ -157,6 +162,10 @@ public class ProcessMobileAppCallbackHandler
                         ipvSessionItem.getClientOAuthSessionId());
         var userId = clientOAuthSessionItem.getUserId();
 
+        // Attach variables to logs
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientOAuthSessionItem.getGovukSigninJourneyId());
+
         // Validate cri response item
         var criResponse = criResponseService.getCriResponseItem(userId, Cri.DCMAW_ASYNC);
         if (criResponse == null || !Objects.equals(criResponse.getOauthState(), criState)) {
@@ -167,8 +176,6 @@ public class ProcessMobileAppCallbackHandler
         if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
             throw new InvalidCriResponseException(ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS);
         }
-
-        // does this need a STATUS_ABANDON check?
 
         return null;
     }

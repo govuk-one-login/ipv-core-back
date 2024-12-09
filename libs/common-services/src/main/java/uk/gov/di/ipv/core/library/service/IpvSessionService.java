@@ -109,15 +109,16 @@ public class IpvSessionService {
                 });
     }
 
-    public IpvSessionItem getIpvSessionByCriOAuthSessionId(String criOAuthSessionId)
+    public IpvSessionItem getIpvSessionByClientOAuthSessionId(String clientOAuthSessionId)
             throws IpvSessionNotFoundException {
         return callRunTaskWithBackoff(
                 () -> {
-                    var item = dataStore.getItemByIndex("criOAuthSessionId", criOAuthSessionId);
+                    var item =
+                            dataStore.getItemByIndex("clientOAuthSessionId", clientOAuthSessionId);
                     if (item == null) {
                         throw new RetryableException(
                                 new IpvSessionNotFoundException(
-                                        "The session not found in the database for the supplied criOAuthSessionId"));
+                                        "The session not found in the database for the supplied clientOAuthSessionId"));
                     }
                     return item;
                 });

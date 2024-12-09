@@ -44,6 +44,7 @@ import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -127,6 +128,7 @@ public class CheckExistingIdentityHandler
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final CriResponseService criResponseService;
+    private final CriOAuthSessionService criOAuthSessionService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
@@ -152,6 +154,7 @@ public class CheckExistingIdentityHandler
             CimitUtilityService cimitUtilityService,
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
+            CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
@@ -164,6 +167,7 @@ public class CheckExistingIdentityHandler
         this.cimitUtilityService = cimitUtilityService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
+        this.criOAuthSessionService = criOAuthSessionService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -186,6 +190,7 @@ public class CheckExistingIdentityHandler
         this.cimitUtilityService = new CimitUtilityService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -343,11 +348,16 @@ public class CheckExistingIdentityHandler
 
                     // Can attempt to complete a profile from here.
 
-                    return buildDCMAWContinuationResponse(
-                            credentialBundle,
-                            lowestGpg45ConfidenceRequested,
-                            clientOAuthSessionItem,
-                            auditEventUser);
+                    var dcmawContinuationResponse =
+                            buildDCMAWContinuationResponse(
+                                    credentialBundle,
+                                    lowestGpg45ConfidenceRequested,
+                                    clientOAuthSessionItem,
+                                    auditEventUser);
+
+                    if (dcmawContinuationResponse != null) {
+                        return dcmawContinuationResponse;
+                    }
                 }
             }
 
@@ -481,12 +491,22 @@ public class CheckExistingIdentityHandler
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
             AuditEventUser auditEventUser)
-            throws IpvSessionNotFoundException, VerifiableCredentialException {
+            throws IpvSessionNotFoundException, VerifiableCredentialException,
+                    HttpResponseExceptionWithErrorBody {
         var criResponseItem =
                 criResponseService.getCriResponseItem(
                         clientOAuthSessionItem.getUserId(), DCMAW_ASYNC);
+        if (criResponseItem == null) {
+            return null;
+        }
+        var criOAuthSessionItem =
+                criOAuthSessionService.getCriOauthSessionItem(criResponseItem.getOauthState());
+        if (criOAuthSessionItem == null) {
+            return null;
+        }
         var previousIpvSessionItem =
-                ipvSessionService.getIpvSessionByCriOAuthSessionId(criResponseItem.getOauthState());
+                ipvSessionService.getIpvSessionByClientOAuthSessionId(
+                        criOAuthSessionItem.getClientOAuthSessionId());
 
         sendAuditEventWithPreviousIpvSessionId(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,

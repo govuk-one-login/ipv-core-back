@@ -171,17 +171,17 @@ class IpvSessionServiceTest {
     void shouldReturnSessionItemByCriOAuthSessionId() throws IpvSessionNotFoundException {
         // Arrange
         var ipvSessionId = SecureTokenHelper.getInstance().generate();
-        var criOAuthSessionId = "56789";
+        var clientOAuthSessionId = "56789";
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionId);
 
-        when(mockDataStore.getItemByIndex(eq("criOAuthSessionId"), anyString()))
+        when(mockDataStore.getItemByIndex("clientOAuthSessionId", clientOAuthSessionId))
                 .thenReturn(ipvSessionItem);
 
         // Act
         IpvSessionItem result =
-                ipvSessionService.getIpvSessionByCriOAuthSessionId(criOAuthSessionId);
+                ipvSessionService.getIpvSessionByClientOAuthSessionId(clientOAuthSessionId);
 
         // Assert
         assertEquals(result, ipvSessionItem);
