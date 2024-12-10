@@ -41,6 +41,9 @@ nestedJourneyStates:
         targetState: DAD_ANDROID_START_SESSION
       neither:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
 
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
     response:
@@ -86,6 +89,9 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -109,6 +115,9 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -191,6 +200,9 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -214,6 +226,9 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
+        checkFeatureFlag:
+          internationalAddressEnabled:
+            targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
 
@@ -224,6 +239,56 @@ nestedJourneyStates:
     events:
       anotherWay:
         exitEventToEmit: anotherWay
+      back:
+        targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
+
+  DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      back:
+        targetState: DAD_SELECT_SMARTPHONE
+
+  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      back:
+        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+
+  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      back:
+        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+
+  MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
+      back:
+        targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
+
+  MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
+    response:
+      type: page
+      pageId: non-uk-no-app-options
+    events:
+      returnToRp:
+        exitEventToEmit: returnToRp
       back:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
 

@@ -151,3 +151,18 @@ Feature: M2B Strategic App Journeys
     Then I get a 'non-uk-no-passport' page response
     When I submit a 'useApp' event
     Then I get a 'identify-device' page response
+  Scenario: Strategic app non-uk address user retries with app
+    Given I start a new 'medium-confidence' journey
+    And I activate the 'internationalAddress,strategicApp' feature sets
+    And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'international' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
+    When I submit a 'neither' event
+    Then I get a 'non-uk-no-app-options' page response
+    When I submit a 'back' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
