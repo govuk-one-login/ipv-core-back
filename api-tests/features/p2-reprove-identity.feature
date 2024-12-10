@@ -1,5 +1,32 @@
 @Build
 Feature: Reprove Identity Journey
+    Scenario: User reproves identity
+        Given the subject already has the following credentials
+            | CRI     | scenario                     |
+            | dcmaw   | kenneth-driving-permit-valid |
+            | address | kenneth-current              |
+            | fraud   | kenneth-score-2              |
+        When I start a new 'medium-confidence' journey with reprove identity
+        Then I get a 'reprove-identity-start' page response
+        When I submit a 'next' event
+        Then I get a 'page-ipv-identity-document-start' page response
+        When I submit an 'appTriage' event
+        Then I get a 'dcmaw' CRI response
+        When I submit 'kenneth-passport-valid' details to the CRI stub
+        Then I get a 'page-dcmaw-success' page response
+        When I submit a 'next' event
+        Then I get an 'address' CRI response
+        When I submit 'kenneth-current' details to the CRI stub
+        Then I get a 'fraud' CRI response
+        When I submit 'kenneth-score-2' details to the CRI stub
+        Then I get a 'page-ipv-success' page response
+        When I submit a 'next' event
+        Then I get an OAuth response
+        When I use the OAuth response to get my identity
+        Then I get a 'P2' identity
+        And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
+        And an 'IPV_ACCOUNT_INTERVENTION_START' audit event was recorded [local only]
+        And an 'IPV_ACCOUNT_INTERVENTION_END' audit event was recorded [local only]
 
     Scenario: User reproves with F2F
         Given the subject already has the following credentials
@@ -27,7 +54,7 @@ Feature: Reprove Identity Journey
         Then I get a 'page-face-to-face-handoff' page response
 
         # Return journey after popping out to the Post Office
-        When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+        When I start a new 'medium-confidence' journey with reprove identity and return to a 'page-ipv-reuse' page response
         When I submit a 'next' event
         Then I get an OAuth response
         When I use the OAuth response to get my identity
