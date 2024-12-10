@@ -130,7 +130,8 @@ public class IdentityProcessingService {
                     deviceInformation,
                     ticfVcs,
                     clientOAuthSessionItem,
-                    ipvSessionItem);
+                    ipvSessionItem,
+                    List.of());
 
             List<ContraIndicator> cis =
                     cimitService.getContraIndicators(
