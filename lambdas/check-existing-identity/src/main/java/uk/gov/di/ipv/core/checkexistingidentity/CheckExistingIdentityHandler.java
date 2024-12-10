@@ -353,7 +353,8 @@ public class CheckExistingIdentityHandler
                                     credentialBundle,
                                     lowestGpg45ConfidenceRequested,
                                     clientOAuthSessionItem,
-                                    auditEventUser);
+                                    auditEventUser,
+                                    deviceInformation);
 
                     if (dcmawContinuationResponse != null) {
                         return dcmawContinuationResponse;
@@ -485,7 +486,8 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialBundle credentialBundle,
             Vot lowestGpg45ConfidenceRequested,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            AuditEventUser auditEventUser)
+            AuditEventUser auditEventUser,
+            String deviceInformation)
             throws IpvSessionNotFoundException, VerifiableCredentialException {
         var criResponseItem =
                 criResponseService.getCriResponseItem(
@@ -505,6 +507,7 @@ public class CheckExistingIdentityHandler
         sendAuditEventWithPreviousIpvSessionId(
                 AuditEventTypes.IPV_APP_SESSION_RECOVERED,
                 auditEventUser,
+                deviceInformation,
                 previousIpvSessionItem.getIpvSessionId());
 
         sessionCredentialsService.persistCredentials(
@@ -630,13 +633,15 @@ public class CheckExistingIdentityHandler
     private void sendAuditEventWithPreviousIpvSessionId(
             AuditEventTypes auditEventTypes,
             AuditEventUser auditEventUser,
+            String deviceInformation,
             String previousIpvSessionId) {
         auditService.sendAuditEvent(
-                AuditEvent.createWithoutDeviceInformation(
+                AuditEvent.createWithDeviceInformation(
                         auditEventTypes,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionPreviousIpvSessionId(previousIpvSessionId)));
+                        new AuditExtensionPreviousIpvSessionId(previousIpvSessionId),
+                        new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {

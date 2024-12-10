@@ -101,6 +101,8 @@ public class ProcessMobileAppCallbackHandler
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 
@@ -142,6 +144,8 @@ public class ProcessMobileAppCallbackHandler
         // Check IPV session
         var ipvSessionId = callbackRequest.getIpvSessionId();
         if (StringUtils.isBlank(ipvSessionId)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Missing IPV session id - Cross-browser scenario."));
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_APP_MISSING_CONTEXT,

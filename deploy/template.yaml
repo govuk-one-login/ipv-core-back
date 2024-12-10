@@ -1153,6 +1153,7 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1171,9 +1172,18 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1922,6 +1932,7 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1952,6 +1963,8 @@ Resources:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
