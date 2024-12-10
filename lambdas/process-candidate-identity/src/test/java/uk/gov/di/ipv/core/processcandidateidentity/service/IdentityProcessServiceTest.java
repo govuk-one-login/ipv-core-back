@@ -151,7 +151,8 @@ public class IdentityProcessServiceTest {
                             DEVICE_INFORMATION,
                             List.of(mockVerifiableCredential),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of());
             verify(cimitService).getContraIndicators(USER_ID, GOVUK_SIGNIN_JOURNEYID, IP_ADDRESS);
         }
 
@@ -177,7 +178,8 @@ public class IdentityProcessServiceTest {
                             DEVICE_INFORMATION,
                             List.of(mockVerifiableCredential),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of());
             verify(cimitService).getContraIndicators(USER_ID, GOVUK_SIGNIN_JOURNEYID, IP_ADDRESS);
             verify(ipvSessionItem).setVot(Vot.P0);
         }
@@ -216,7 +218,9 @@ public class IdentityProcessServiceTest {
             // Arrange
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(List.of(mockVerifiableCredential));
-            doThrow(e).when(criStoringService).storeVcs(any(), any(), any(), any(), any(), any());
+            doThrow(e)
+                    .when(criStoringService)
+                    .storeVcs(any(), any(), any(), any(), any(), any(), any());
 
             // Act
             var res =
