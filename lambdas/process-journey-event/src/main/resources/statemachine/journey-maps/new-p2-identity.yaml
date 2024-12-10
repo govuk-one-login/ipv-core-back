@@ -184,6 +184,8 @@ states:
         targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   F2F_START_PAGE:
     response:
