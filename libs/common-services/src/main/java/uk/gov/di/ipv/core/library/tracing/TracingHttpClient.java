@@ -48,19 +48,47 @@ public class TracingHttpClient extends HttpClient {
     }
 
     public static HttpClient newHttpClient() {
-        return new TracingHttpClient(
-                JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
-                        .build()
-                        .newHttpClient(HttpClient.newHttpClient()));
+        return new TracingHttpClient(getInstrumetedHttpClient());
     }
 
-    // Synchronize to prevent race conditions when multiple threads attempt to recreate client
-    private synchronized void recreateBaseClientIfNecessary() {
-        if (creationTime.plus(MAX_CLIENT_AGE).isBefore(Instant.now())) {
-            LOGGER.info("Recreating base HTTP client due to age");
-            this.baseClient = HttpClient.newHttpClient();
-            this.creationTime = Instant.now(); // Reset creation time
+    @Override
+    public <T> HttpResponse<T> send(
+            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
+            throws IOException, InterruptedException {
+        // PYIC-7590: Recreate the HTTP client, to avoid HTTP/2 connection issues.
+        // Check for client is 1hour old, and recreate if older.
+        recreateBaseClientIfNecessary();
+        try {
+            return sendWithTracing(request, responseBodyHandler);
+        } catch (IOException e) {
+            // We see occasional HTTP/2 GOAWAY messages from AWS when connections last
+            // for a long time (>1 hour). Retry them once, to recreate the connection.
+            // In the build environment we see connection resets for idle connections in
+            // the pool. Retrying uses a different connection.
+            if (HTTP_ERROR_MESSAGES_TO_RETRY.contains(e.getMessage())) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
+                                .with("host", request.uri().getHost()));
+                return sendWithTracing(request, responseBodyHandler);
+            }
+            throw e;
         }
+    }
+
+    @Override
+    public <T> CompletableFuture<HttpResponse<T>> sendAsync(
+            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) {
+        throw new UnsupportedOperationException(
+                "TracingHttpClient does not support async requests yet");
+    }
+
+    @Override
+    public <T> CompletableFuture<HttpResponse<T>> sendAsync(
+            HttpRequest request,
+            HttpResponse.BodyHandler<T> responseBodyHandler,
+            HttpResponse.PushPromiseHandler<T> pushPromiseHandler) {
+        throw new UnsupportedOperationException(
+                "TracingHttpClient does not support async requests yet");
     }
 
     @Override
@@ -108,6 +136,15 @@ public class TracingHttpClient extends HttpClient {
         return baseClient.executor();
     }
 
+    // Synchronize to prevent race conditions when multiple threads attempt to recreate client
+    private synchronized void recreateBaseClientIfNecessary() {
+        if (creationTime.plus(MAX_CLIENT_AGE).isBefore(Instant.now())) {
+            LOGGER.info("Recreating base HTTP client due to age");
+            this.baseClient = getInstrumetedHttpClient();
+            this.creationTime = Instant.now(); // Reset creation time
+        }
+    }
+
     private <T> HttpResponse<T> sendWithTracing(
             HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
             throws IOException, InterruptedException {
@@ -124,46 +161,6 @@ public class TracingHttpClient extends HttpClient {
         }
     }
 
-    @Override
-    public <T> HttpResponse<T> send(
-            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-            throws IOException, InterruptedException {
-        // PYIC-7590: Recreate the HTTP client, to avoid HTTP/2 connection issues.
-        // Check for client is 1hour old, and recreate if older.
-        recreateBaseClientIfNecessary();
-        try {
-            return sendWithTracing(request, responseBodyHandler);
-        } catch (IOException e) {
-            // We see occasional HTTP/2 GOAWAY messages from AWS when connections last
-            // for a long time (>1 hour). Retry them once, to recreate the connection.
-            // In the build environment we see connection resets for idle connections in
-            // the pool. Retrying uses a different connection.
-            if (HTTP_ERROR_MESSAGES_TO_RETRY.contains(e.getMessage())) {
-                LOGGER.warn(
-                        LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
-                                .with("host", request.uri().getHost()));
-                return sendWithTracing(request, responseBodyHandler);
-            }
-            throw e;
-        }
-    }
-
-    @Override
-    public <T> CompletableFuture<HttpResponse<T>> sendAsync(
-            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler) {
-        throw new UnsupportedOperationException(
-                "TracingHttpClient does not support async requests yet");
-    }
-
-    @Override
-    public <T> CompletableFuture<HttpResponse<T>> sendAsync(
-            HttpRequest request,
-            HttpResponse.BodyHandler<T> responseBodyHandler,
-            HttpResponse.PushPromiseHandler<T> pushPromiseHandler) {
-        throw new UnsupportedOperationException(
-                "TracingHttpClient does not support async requests yet");
-    }
-
     // Adapted from
     // https://github.com/aws/aws-xray-sdk-java/blob/master/aws-xray-recorder-sdk-apache-http/src/main/java/com/amazonaws/xray/proxies/apache/http/TracedHttpClient.java#L103
     private static void addRequestInformation(Subsegment subsegment, HttpRequest request) {
@@ -176,5 +173,11 @@ public class TracingHttpClient extends HttpClient {
         requestInformation.put("method", request.method());
 
         subsegment.putHttp("request", requestInformation);
+    }
+
+    private static HttpClient getInstrumetedHttpClient() {
+        return JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
+                .build()
+                .newHttpClient(HttpClient.newHttpClient());
     }
 }
