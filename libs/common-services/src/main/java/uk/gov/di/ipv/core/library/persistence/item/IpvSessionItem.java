@@ -69,6 +69,11 @@ public class IpvSessionItem implements PersistenceItem {
         return accessToken;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "clientOAuthSessionId")
+    public String getClientOAuthSessionId() {
+        return clientOAuthSessionId;
+    }
+
     public List<String> getFeatureSetAsList() {
         return (featureSet != null)
                 ? Arrays.asList(featureSet.split(","))
