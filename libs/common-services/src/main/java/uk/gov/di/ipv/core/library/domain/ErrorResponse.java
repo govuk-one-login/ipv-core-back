@@ -113,7 +113,9 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY(
             1099, "Failed to parse mobile app callback request body"),
     CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found"),
-    MISSING_TARGET_VOT(1101, "Target VOT missing from session");
+    MISSING_TARGET_VOT(1101, "Target VOT missing from session"),
+    MISSING_PROCESS_IDENTITY_TYPE(1102, "Process identity type missing"),
+    UNEXPECTED_PROCESS_IDENTITY_TYPE(1103, "Unexpected process identity type");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
