@@ -1,11 +1,10 @@
-package uk.gov.di.ipv.core.library;
+package uk.gov.di.ipv.core.library.tracing;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,19 +21,6 @@ import static org.mockito.Mockito.when;
 class TracingHttpClientTest {
     @Mock private HttpClient mockHttpClient;
     @InjectMocks private TracingHttpClient tracingHttpClient;
-
-    @Test
-    void sendShouldRetryGoawayResponse() throws Exception {
-        when(mockHttpClient.send(any(), any()))
-                .thenThrow(new IOException("GOAWAY received"))
-                .thenReturn(null);
-
-        tracingHttpClient.send(
-                HttpRequest.newBuilder().uri(URI.create("https://example.com")).build(),
-                HttpResponse.BodyHandlers.ofString());
-
-        verify(mockHttpClient, times(2)).send(any(), any());
-    }
 
     @Test
     void sendShouldRetryConnectionReset() throws Exception {

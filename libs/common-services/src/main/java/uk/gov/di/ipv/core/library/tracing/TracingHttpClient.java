@@ -24,7 +24,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -34,8 +33,6 @@ import java.util.concurrent.Executor;
 @ExcludeFromGeneratedCoverageReport
 public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final List<String> HTTP_ERROR_MESSAGES_TO_RETRY =
-            List.of("GOAWAY received", "Connection reset");
     private static final Duration MAX_CLIENT_AGE = Duration.ofHours(1);
     private HttpClient baseClient;
     private final AWSXRayRecorder recorder;
@@ -48,7 +45,7 @@ public class TracingHttpClient extends HttpClient {
     }
 
     public static HttpClient newHttpClient() {
-        return new TracingHttpClient(getInstrumetedHttpClient());
+        return new TracingHttpClient(getOTelInstrumentedHttpClient());
     }
 
     @Override
@@ -61,11 +58,9 @@ public class TracingHttpClient extends HttpClient {
         try {
             return sendWithTracing(request, responseBodyHandler);
         } catch (IOException e) {
-            // We see occasional HTTP/2 GOAWAY messages from AWS when connections last
-            // for a long time (>1 hour). Retry them once, to recreate the connection.
             // In the build environment we see connection resets for idle connections in
             // the pool. Retrying uses a different connection.
-            if (HTTP_ERROR_MESSAGES_TO_RETRY.contains(e.getMessage())) {
+            if (e.getMessage().contains("Connection reset")) {
                 LOGGER.warn(
                         LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
                                 .with("host", request.uri().getHost()));
@@ -140,7 +135,7 @@ public class TracingHttpClient extends HttpClient {
     private synchronized void recreateBaseClientIfNecessary() {
         if (creationTime.plus(MAX_CLIENT_AGE).isBefore(Instant.now())) {
             LOGGER.info("Recreating base HTTP client due to age");
-            this.baseClient = getInstrumetedHttpClient();
+            this.baseClient = getOTelInstrumentedHttpClient();
             this.creationTime = Instant.now(); // Reset creation time
         }
     }
@@ -175,7 +170,7 @@ public class TracingHttpClient extends HttpClient {
         subsegment.putHttp("request", requestInformation);
     }
 
-    private static HttpClient getInstrumetedHttpClient() {
+    private static HttpClient getOTelInstrumentedHttpClient() {
         return JavaHttpClientTelemetry.builder(GlobalOpenTelemetry.get())
                 .build()
                 .newHttpClient(HttpClient.newHttpClient());
