@@ -274,7 +274,7 @@ public class CheckExistingIdentityHandler
 
             var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
             // Don't start a new reprove journey if user is returning from F2F reprove journey
-            if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem)
+            if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
@@ -319,7 +319,7 @@ public class CheckExistingIdentityHandler
                                 .getParsedVtr()
                                 .getLowestStrengthRequestedVot(configService));
                 ipvSessionService.updateIpvSession(ipvSessionItem);
-                removeReproveIdentityFlag(isF2FComplete, f2fResponseItem);
+                removeReproveIdentityFlag(f2fResponseItem);
                 return profileMatchResponse.get();
             }
 
@@ -328,7 +328,7 @@ public class CheckExistingIdentityHandler
                 return buildF2FIncompleteResponse(f2fResponseItem);
             }
 
-            removeReproveIdentityFlag(isF2FComplete, f2fResponseItem);
+            removeReproveIdentityFlag(f2fResponseItem);
 
             // No profile match
             return isF2FComplete
@@ -606,12 +606,15 @@ public class CheckExistingIdentityHandler
         auditService.sendAuditEvent(auditEvent);
     }
 
-    private boolean isReprovingWithF2f(CriResponseItem f2fRequest) {
-        return f2fRequest != null && f2fRequest.isReproveIdentity();
+    private boolean isReprovingWithF2f(
+            CriResponseItem f2fRequest, VerifiableCredentialBundle vcBundle) {
+        // does the user have a F2F response item that was created in response to an intervention,
+        // and they're returning to core with a pending identity
+        return f2fRequest != null && f2fRequest.isReproveIdentity() && vcBundle.isPendingIdentity();
     }
 
-    private void removeReproveIdentityFlag(boolean isF2FComplete, CriResponseItem f2fResponseItem) {
-        if (isF2FComplete && f2fResponseItem.isReproveIdentity()) {
+    private void removeReproveIdentityFlag(CriResponseItem f2fResponseItem) {
+        if (f2fResponseItem != null && f2fResponseItem.isReproveIdentity()) {
             // Remove the reprove identity flag, so we won't skip reprove identity on a future
             // journey
             LOGGER.info(

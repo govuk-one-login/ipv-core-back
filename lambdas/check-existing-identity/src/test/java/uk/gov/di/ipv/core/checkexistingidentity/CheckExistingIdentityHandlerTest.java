@@ -370,7 +370,6 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
             var inheritedIdentityVc = vcHmrcMigrationPCL200();
-            var f2fVc = vcF2fM1a();
 
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -1026,7 +1025,7 @@ class CheckExistingIdentityHandlerTest {
         void shouldReturnReproveP2JourneyIfReproveIdentityFlagSet() {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1060,7 +1059,7 @@ class CheckExistingIdentityHandlerTest {
                                     .status(STATUS_PENDING)
                                     .build());
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1070,7 +1069,11 @@ class CheckExistingIdentityHandlerTest {
         }
 
         @Test
-        void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() {
+        void shouldReturnReproveP2JourneyIfReproveIdentityFlagSetAndIdentityIsNotPending()
+                throws Exception {
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(CURRENT, new ArrayList<>(List.of(gpg45Vc, f2fVc))));
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
             when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
                     .thenReturn(
@@ -1079,7 +1082,29 @@ class CheckExistingIdentityHandlerTest {
                                     .status(STATUS_PENDING)
                                     .build());
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
+                    toResponseClass(
+                            checkExistingIdentityHandler.handleRequest(event, context),
+                            JourneyResponse.class);
+
+            assertEquals(JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
+            assertEquals(P2, ipvSessionItem.getTargetVot());
+        }
+
+        @Test
+        void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
+            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
+            when(mockEvcsService.getVerifiableCredentialsByState(
+                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(gpg45Vc))));
+            when(criResponseService.getFaceToFaceRequest(TEST_USER_ID))
+                    .thenReturn(
+                            CriResponseItem.builder()
+                                    .reproveIdentity(true)
+                                    .status(STATUS_PENDING)
+                                    .build());
+
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1108,7 +1133,7 @@ class CheckExistingIdentityHandlerTest {
                                     new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1139,7 +1164,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(Optional.empty());
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1159,7 +1184,7 @@ class CheckExistingIdentityHandlerTest {
                     .thenReturn(List.of());
             when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
@@ -1178,7 +1203,7 @@ class CheckExistingIdentityHandlerTest {
             when(configService.enabled(RESET_IDENTITY)).thenReturn(true);
             when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
 
-            JourneyResponse journeyResponse =
+            var journeyResponse =
                     toResponseClass(
                             checkExistingIdentityHandler.handleRequest(event, context),
                             JourneyResponse.class);
