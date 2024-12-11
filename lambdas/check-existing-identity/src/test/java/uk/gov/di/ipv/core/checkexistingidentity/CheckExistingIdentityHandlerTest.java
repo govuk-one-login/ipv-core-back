@@ -85,7 +85,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -1112,69 +1111,6 @@ class CheckExistingIdentityHandlerTest {
             assertEquals(JOURNEY_PENDING_PATH, journeyResponse.getJourney());
 
             verify(criResponseService, never()).updateCriResponseItem(any());
-        }
-
-        @Test
-        void shouldClearReproveFlagFromPendingF2FIfProfileMatched() throws Exception {
-            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            var f2fResponseItem =
-                    spy(
-                            CriResponseItem.builder()
-                                    .reproveIdentity(true)
-                                    .status(STATUS_PENDING)
-                                    .build());
-            when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(f2fResponseItem);
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc))));
-            when(mockVotMatcher.matchFirstVot(List.of(P2), List.of(f2fVc), List.of(), true))
-                    .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(P2, M1A, Gpg45Scores.builder().build())));
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE_WITH_STORE_PATH, journeyResponse.getJourney());
-
-            var inorder = inOrder(f2fResponseItem, criResponseService);
-            inorder.verify(f2fResponseItem).setReproveIdentity(false);
-            inorder.verify(criResponseService).updateCriResponseItem(f2fResponseItem);
-            inorder.verifyNoMoreInteractions();
-        }
-
-        @Test
-        void shouldClearReproveFlagFromPendingF2FIfF2FCompleteButNoProfileMatched()
-                throws Exception {
-            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            var f2fResponseItem =
-                    spy(
-                            CriResponseItem.builder()
-                                    .reproveIdentity(true)
-                                    .status(STATUS_PENDING)
-                                    .build());
-            when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(f2fResponseItem);
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(f2fVc))));
-            when(mockVotMatcher.matchFirstVot(List.of(P2), List.of(f2fVc), List.of(), true))
-                    .thenReturn(Optional.empty());
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
-
-            var inorder = inOrder(f2fResponseItem, criResponseService);
-            inorder.verify(f2fResponseItem).setReproveIdentity(false);
-            inorder.verify(criResponseService).updateCriResponseItem(f2fResponseItem);
-            inorder.verifyNoMoreInteractions();
         }
 
         @Test

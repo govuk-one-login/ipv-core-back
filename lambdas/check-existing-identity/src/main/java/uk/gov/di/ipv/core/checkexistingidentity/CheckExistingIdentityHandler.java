@@ -273,7 +273,8 @@ public class CheckExistingIdentityHandler
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
             var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
-            // Don't start a new reprove journey if user is returning from F2F reprove journey
+            // Only skip starting a new reprove identity journey if the user is returning from a F2F
+            // journey
             if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
@@ -319,7 +320,6 @@ public class CheckExistingIdentityHandler
                                 .getParsedVtr()
                                 .getLowestStrengthRequestedVot(configService));
                 ipvSessionService.updateIpvSession(ipvSessionItem);
-                removeReproveIdentityFlag(f2fResponseItem);
                 return profileMatchResponse.get();
             }
 
@@ -327,8 +327,6 @@ public class CheckExistingIdentityHandler
             if (isF2FIncomplete) {
                 return buildF2FIncompleteResponse(f2fResponseItem);
             }
-
-            removeReproveIdentityFlag(f2fResponseItem);
 
             // No profile match
             return isF2FComplete
@@ -611,17 +609,5 @@ public class CheckExistingIdentityHandler
         // does the user have a F2F response item that was created in response to an intervention,
         // and they're returning to core with a pending identity
         return f2fRequest != null && f2fRequest.isReproveIdentity() && vcBundle.isPendingIdentity();
-    }
-
-    private void removeReproveIdentityFlag(CriResponseItem f2fResponseItem) {
-        if (f2fResponseItem != null && f2fResponseItem.isReproveIdentity()) {
-            // Remove the reprove identity flag, so we won't skip reprove identity on a future
-            // journey
-            LOGGER.info(
-                    LogHelper.buildLogMessage(
-                            "Removing reprove identity flag from F2F CRI response item"));
-            f2fResponseItem.setReproveIdentity(false);
-            criResponseService.updateCriResponseItem(f2fResponseItem);
-        }
     }
 }
