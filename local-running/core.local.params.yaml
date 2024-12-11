@@ -380,9 +380,6 @@ core:
     internationalAddressEnabled: false
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
-    evcsWriteEnabled: true
-    evcsAsyncWriteEnabled: true
-    evcsReadEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
     p1JourneysEnabled: false
@@ -402,19 +399,6 @@ core:
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
-    evcsWrite:
-      featureFlags:
-        evcsWriteEnabled: true
-        evcsAsyncWriteEnabled: true
-    evcsAsyncWrite:
-      featureFlags:
-        evcsAsyncWriteEnabled: true
-    evcsNonAsyncWrite:
-      featureFlags:
-        evcsWriteEnabled: true
-    evcsRead:
-      featureFlags:
-        evcsReadEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true
