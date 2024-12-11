@@ -836,6 +836,10 @@ states:
       international:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: STRATEGIC_APP_TRIAGE
+            targetEntryEvent: appTriage
 
   NON_UK_NO_APP_PAGE:
     response:
