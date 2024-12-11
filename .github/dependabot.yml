@@ -13,7 +13,7 @@ registries:
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
-    registries: *
+    registries: "*"
     schedule:
       interval: "daily"
       time: "03:00"
@@ -57,7 +57,7 @@ updates:
           - "@typescript-eslint/*"
   - package-ecosystem: "npm"
     directory: "/api-tests"
-    registries: *
+    registries: "*"
     schedule:
       interval: "daily"
       time: "03:00"
