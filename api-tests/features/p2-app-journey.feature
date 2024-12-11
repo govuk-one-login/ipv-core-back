@@ -1,4 +1,5 @@
 @Build
+@TrafficGeneration
 Feature: P2 App journey
 
   Background:
