@@ -11,12 +11,15 @@ Feature: P2 App journey
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
 
-  Scenario: Visit UK landing page - no
-    When I submit a 'international' event
-    Then I get a 'dcmaw' CRI response
-
   Scenario: International address user sends a next event on exit page from DCMAW
     When I submit a 'international' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'computer-or-tablet' event
+    Then I get a 'pyi-triage-select-smartphone' page response
+    When I submit a 'iphone' event
+    Then I get a 'pyi-triage-desktop-download-app' page response
+    When I submit a 'next' event
+    Then I get a 'pyi-triage-desktop-download-app' page response
     Then I get a 'dcmaw' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'non-uk-no-app' page response
