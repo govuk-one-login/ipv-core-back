@@ -164,5 +164,5 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
     When I submit a 'neither' event
     Then I get a 'non-uk-no-app-options' page response
-    When I submit a 'back' event
+    When I submit a 'useApp' event
     Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'

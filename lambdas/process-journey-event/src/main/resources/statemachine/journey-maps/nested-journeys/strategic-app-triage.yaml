@@ -249,7 +249,7 @@ nestedJourneyStates:
     events:
       returnToRp:
         exitEventToEmit: returnToRp
-      back:
+      useApp:
         targetState: DAD_SELECT_SMARTPHONE
 
   DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
@@ -259,7 +259,7 @@ nestedJourneyStates:
     events:
       returnToRp:
         exitEventToEmit: returnToRp
-      back:
+      useApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
@@ -269,7 +269,7 @@ nestedJourneyStates:
     events:
       returnToRp:
         exitEventToEmit: returnToRp
-      back:
+      useApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
@@ -279,7 +279,7 @@ nestedJourneyStates:
     events:
       returnToRp:
         exitEventToEmit: returnToRp
-      back:
+      useApp:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
 
   MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
@@ -289,7 +289,7 @@ nestedJourneyStates:
     events:
       returnToRp:
         exitEventToEmit: returnToRp
-      back:
+      useApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
 
   CHECK_MOBILE_APP_RESULT:
