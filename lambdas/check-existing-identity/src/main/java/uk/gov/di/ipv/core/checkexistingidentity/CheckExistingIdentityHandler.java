@@ -60,6 +60,7 @@ import java.util.Optional;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
+import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
@@ -247,11 +248,12 @@ public class CheckExistingIdentityHandler
 
             var credentialBundle =
                     getCredentialBundle(userId, clientOAuthSessionItem.getEvcsAccessToken());
-            var f2fRequest = criResponseService.getFaceToFaceRequest(userId);
+            var f2fResponseItem = criResponseService.getFaceToFaceRequest(userId);
             final boolean hasF2fVc = credentialBundle.isF2fIdentity();
-            final boolean isF2FIncomplete = !Objects.isNull(f2fRequest) && !hasF2fVc;
+            final boolean hasF2fRequest = !Objects.isNull(f2fResponseItem);
+            final boolean isF2FIncomplete = hasF2fRequest && !hasF2fVc;
             final boolean isF2FComplete =
-                    !Objects.isNull(f2fRequest) && hasF2fVc && credentialBundle.isPendingIdentity();
+                    hasF2fRequest && hasF2fVc && credentialBundle.isPendingIdentity();
 
             // If we want to prove or mitigate CIs for an identity we want to go for the lowest
             // strength that is acceptable to the caller. We can only prove/mitigate GPG45
@@ -270,15 +272,17 @@ public class CheckExistingIdentityHandler
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var reproveIdentity = Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
+            var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+            // Only skip starting a new reprove identity journey if the user is returning from a F2F
+            // journey
+            if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem, credentialBundle)
+                    || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
-                    LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
 
-                LOGGER.info(LogHelper.buildLogMessage("Resetting P2 identity"));
+                LOGGER.info(LogHelper.buildLogMessage("Reproving P2 identity"));
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
@@ -292,7 +296,7 @@ public class CheckExistingIdentityHandler
             if (ciScoringCheckResponse.isPresent()) {
                 return isF2FIncomplete
                         ? buildF2FIncompleteResponse(
-                                f2fRequest) // F2F mitigation journey in progress
+                                f2fResponseItem) // F2F mitigation journey in progress
                         : ciScoringCheckResponse.get(); // CI fail or mitigation journey
             }
 
@@ -310,7 +314,7 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
-                // We are re-using an existing Vot so it might not be a GPG45 vot
+                // We are re-using an existing Vot, so it might not be a GPG45 vot
                 ipvSessionItem.setTargetVot(
                         clientOAuthSessionItem
                                 .getParsedVtr()
@@ -321,7 +325,7 @@ public class CheckExistingIdentityHandler
 
             // No profile matched but has a pending F2F request
             if (isF2FIncomplete) {
-                return buildF2FIncompleteResponse(f2fRequest);
+                return buildF2FIncompleteResponse(f2fResponseItem);
             }
 
             // No profile match
@@ -598,5 +602,12 @@ public class CheckExistingIdentityHandler
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private boolean isReprovingWithF2f(
+            CriResponseItem f2fRequest, VerifiableCredentialBundle vcBundle) {
+        // does the user have a F2F response item that was created in response to an intervention,
+        // and they're returning to core with a pending identity
+        return f2fRequest != null && f2fRequest.isReproveIdentity() && vcBundle.isPendingIdentity();
     }
 }

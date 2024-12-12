@@ -1959,7 +1959,7 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
+        - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable

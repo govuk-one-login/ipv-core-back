@@ -169,16 +169,17 @@ When(
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response$/,
+  /I start a new '([\w-]+)' journey( with reprove identity)? and return to a '([\w-]+)' page response$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
+    reproveIdentity: " with reprove identity" | undefined,
     expectedPage: string,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
