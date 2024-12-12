@@ -98,7 +98,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         GIVEN_OR_FAMILY_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -149,7 +150,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         FULL_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -179,7 +181,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         GIVEN_OR_FAMILY_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -208,7 +211,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         FULL_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -240,7 +244,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         GIVEN_OR_FAMILY_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertTrue(res);
@@ -291,7 +296,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         GIVEN_OR_FAMILY_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertFalse(res);
@@ -342,7 +348,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         FULL_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertFalse(res);
@@ -381,7 +388,8 @@ public class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         FULL_NAME_AND_DOB,
                         "device-information",
-                        "ip-address");
+                        "ip-address",
+                        List.of());
 
         // Assert
         assertFalse(res);
