@@ -17,8 +17,7 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
-import uk.gov.di.ipv.core.library.enums.CoiCheckType;
-import uk.gov.di.ipv.core.library.enums.IdentityType;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.ProcessIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -54,8 +53,8 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JOURNEY_GPG45_UNMET_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
-    private static final JourneyResponse JOURNEY_COI_CHECK_FAILED =
-            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH);
+    private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
+            new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH).toObjectMap();
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -159,34 +158,52 @@ public class ProcessCandidateIdentityHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
-            var coiCheckType = getCoiCheckTypeFromRequest(request);
+
+            var coiCheckType = RequestHelper.getCoiCheckType(request);
+            var identityType = RequestHelper.getIdentityType(request);
+
+            String userId = clientOAuthSessionItem.getUserId();
+            var sessionVcs =
+                    sessionCredentialsService.getCredentials(
+                            ipvSessionItem.getIpvSessionId(), userId);
+
             if (COI_CHECK_TYPES.contains(processIdentityType)) {
-                return this.getJourneyResponseFromCoiCheck(
+                var isCoiCheckSuccessful =
+                        checkCoiService.isCoiCheckSuccessful(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 coiCheckType,
                                 deviceInformation,
-                                ipAddress)
-                        .toObjectMap();
+                                ipAddress,
+                                sessionVcs);
+
+                if (!isCoiCheckSuccessful) {
+                    return JOURNEY_COI_CHECK_FAILED;
+                }
             }
 
             if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
-                return this.getJourneyResponseFromStoringIdentity(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                IdentityType.NEW,
-                                deviceInformation,
-                                ipAddress)
-                        .toObjectMap();
+                storeIdentityService.storeIdentity(
+                        ipvSessionItem,
+                        clientOAuthSessionItem,
+                        identityType,
+                        deviceInformation,
+                        ipAddress,
+                        sessionVcs);
             }
 
             if (GPG_45_TYPES.contains(processIdentityType)) {
-                return this.getJourneyResponseFromGpg45ScoreEvaluation(
+                var journey =
+                        getJourneyResponseFromGpg45ScoreEvaluation(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 deviceInformation,
-                                ipAddress)
-                        .toObjectMap();
+                                ipAddress,
+                                sessionVcs);
+
+                if (!JOURNEY_NEXT.equals(journey)) {
+                    return journey.toObjectMap();
+                }
             }
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
@@ -198,9 +215,7 @@ public class ProcessCandidateIdentityHandler
                         .toObjectMap();
             }
 
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
-                    .toObjectMap();
+            return JOURNEY_NEXT.toObjectMap();
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
@@ -228,6 +243,18 @@ public class ProcessCandidateIdentityHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
+        } catch (VerifiableCredentialException | EvcsServiceException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
+        } catch (CredentialParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -235,37 +262,6 @@ public class ProcessCandidateIdentityHandler
             if (ipvSessionItem != null) {
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
-        }
-    }
-
-    private JourneyResponse getJourneyResponseFromCoiCheck(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            CoiCheckType coiCheckType,
-            String deviceInformation,
-            String ipAddress) {
-        try {
-            return checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            coiCheckType,
-                            deviceInformation,
-                            ipAddress)
-                    ? JOURNEY_NEXT
-                    : JOURNEY_COI_CHECK_FAILED;
-        } catch (HttpResponseExceptionWithErrorBody
-                | EvcsServiceException
-                | VerifiableCredentialException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
-        } catch (CredentialParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    SC_INTERNAL_SERVER_ERROR,
-                    FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-        } finally {
             auditService.awaitAuditEvents();
         }
     }
@@ -274,62 +270,44 @@ public class ProcessCandidateIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
-            String ipAddress) {
-        String userId = clientOAuthSessionItem.getUserId();
+            String ipAddress,
+            List<VerifiableCredential> sessionVcs)
+            throws HttpResponseExceptionWithErrorBody, CiRetrievalException {
 
-        try {
-
-            var vcs =
-                    sessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), userId);
-
-            if (!userIdentityService.areVcsCorrelated(vcs)) {
-                return JOURNEY_VCS_NOT_CORRELATED;
-            }
-
-            // This is a performance optimisation as calling cimitService.getContraIndicators()
-            // takes about 0.5 seconds.
-            // If the VTR only contains one entry then it is impossible for a user to reach here
-            // with a breaching CI so we don't have to check.
-            var contraIndicators =
-                    clientOAuthSessionItem.getVtr().size() == 1
-                            ? null
-                            : cimitService.getContraIndicators(
-                                    clientOAuthSessionItem.getUserId(),
-                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                    ipAddress);
-
-            var matchingGpg45Profile =
-                    evaluateGpg45ScoresService.findMatchingGpg45Profile(
-                            vcs,
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            ipAddress,
-                            deviceInformation,
-                            contraIndicators);
-
-            if (matchingGpg45Profile.isEmpty()) {
-                logLambdaResponse("No GPG45 profiles have been met", JOURNEY_GPG45_UNMET);
-                return JOURNEY_GPG45_UNMET;
-            }
-
-            ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
-            logLambdaResponse("A GPG45 profile has been met", JOURNEY_NEXT);
-
-            return JOURNEY_NEXT;
-        } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
-        } catch (CiRetrievalException e) {
-            LOGGER.error(LogHelper.buildErrorMessage(FAILED_TO_GET_STORED_CIS.getMessage(), e));
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    FAILED_TO_GET_STORED_CIS);
-        } finally {
-            auditService.awaitAuditEvents();
+        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+            return JOURNEY_VCS_NOT_CORRELATED;
         }
+
+        // This is a performance optimisation as calling cimitService.getContraIndicators()
+        // takes about 0.5 seconds.
+        // If the VTR only contains one entry then it is impossible for a user to reach here
+        // with a breaching CI so we don't have to check.
+        var contraIndicators =
+                clientOAuthSessionItem.getVtr().size() == 1
+                        ? null
+                        : cimitService.getContraIndicators(
+                                clientOAuthSessionItem.getUserId(),
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                ipAddress);
+
+        var matchingGpg45Profile =
+                evaluateGpg45ScoresService.findMatchingGpg45Profile(
+                        sessionVcs,
+                        ipvSessionItem,
+                        clientOAuthSessionItem,
+                        ipAddress,
+                        deviceInformation,
+                        contraIndicators);
+
+        if (matchingGpg45Profile.isEmpty()) {
+            logLambdaResponse("No GPG45 profiles have been met", JOURNEY_GPG45_UNMET);
+            return JOURNEY_GPG45_UNMET;
+        }
+
+        ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
+        logLambdaResponse("A GPG45 profile has been met", JOURNEY_NEXT);
+
+        return JOURNEY_NEXT;
     }
 
     public JourneyResponse getJourneyResponseFromTicfCall(
@@ -387,43 +365,7 @@ public class ProcessCandidateIdentityHandler
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
-        } finally {
-            auditService.awaitAuditEvents();
         }
-    }
-
-    private JourneyResponse getJourneyResponseFromStoringIdentity(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            IdentityType identityType,
-            String deviceInformation,
-            String ipAddress) {
-        try {
-            storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
-                    identityType,
-                    deviceInformation,
-                    ipAddress);
-
-            return JOURNEY_NEXT;
-        } catch (VerifiableCredentialException | EvcsServiceException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
-        } finally {
-            auditService.awaitAuditEvents();
-        }
-    }
-
-    private CoiCheckType getCoiCheckTypeFromRequest(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
-        return RequestHelper.getCoiCheckType(request);
-    }
-
-    private IdentityType getIdentityTypeFromRequest(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        return RequestHelper.getIdentityType(request);
     }
 
     private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {

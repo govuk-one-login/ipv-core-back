@@ -84,7 +84,8 @@ public class CheckCoiService {
             ClientOAuthSessionItem clientOAuthSession,
             CoiCheckType checkType,
             String deviceInformation,
-            String ipAddress)
+            String ipAddress,
+            List<VerifiableCredential> sessionVcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     EvcsServiceException, VerifiableCredentialException {
 
@@ -114,7 +115,6 @@ public class CheckCoiService {
         var oldVcs =
                 evcsService.getVerifiableCredentials(
                         userId, clientOAuthSession.getEvcsAccessToken(), CURRENT);
-        var sessionVcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
         var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
         var successfulCheck =
                 switch (checkType) {
