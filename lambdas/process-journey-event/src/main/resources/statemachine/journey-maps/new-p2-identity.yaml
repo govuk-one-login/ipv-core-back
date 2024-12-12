@@ -834,27 +834,27 @@ states:
       uk:
         targetState: IDENTITY_START_PAGE
       international:
-        targetState: NON_UK_PASSPORT
-
-  NON_UK_PASSPORT:
-    response:
-      type: page
-      pageId: non-uk-no-app
-    events:
-      next:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+            targetState: NON_UK_PASSPORT
+
+  NON_UK_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-passport
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
       end:
         targetState: NON_UK_NO_PASSPORT
 
   NON_UK_NO_PASSPORT:
     response:
       type: page
-      pageId: non-uk-no-app
+      pageId: non-uk-no-passport
     events:
       returnToRp:
         targetState: RETURN_TO_RP
