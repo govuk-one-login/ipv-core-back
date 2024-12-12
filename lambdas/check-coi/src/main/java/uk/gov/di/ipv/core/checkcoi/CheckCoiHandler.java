@@ -144,11 +144,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
                     switch (checkType) {
-                        case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areNamesAndDobCorrelated(combinedCredentials);
-                        case FULL_NAME_WITH_ALLOWANCE_AND_DOB -> userIdentityService
+                        case STANDARD -> userIdentityService.areNamesAndDobCorrelated(
+                                combinedCredentials);
+                        case REVERIFICATION -> userIdentityService
                                 .areNamesAndDobCorrelatedForReverification(combinedCredentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                        case ACCOUNT_INTERVENTION -> userIdentityService.areVcsCorrelated(
                                 combinedCredentials);
                     };
 
@@ -272,7 +272,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Reprove identity flag set - checking full name and DOB"));
-            return CoiCheckType.FULL_NAME_AND_DOB;
+            return CoiCheckType.ACCOUNT_INTERVENTION;
         }
         return RequestHelper.getCoiCheckType(request);
     }
