@@ -97,14 +97,14 @@ public class ProcessCandidateIdentityHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             return switch (processIdentityType) {
-                case ALL -> processIdentityAll(
+                case ALL, NEW -> processIdentityAll(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 request,
                                 deviceInformation,
                                 ipAddress)
                         .toObjectMap();
-                case COI -> processIdentityCoi(
+                case COI, PENDING, REVERIFICATION -> processIdentityCoi(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 request,
@@ -118,7 +118,7 @@ public class ProcessCandidateIdentityHandler
                                 deviceInformation,
                                 ipAddress)
                         .toObjectMap();
-                case TICF_ONLY -> processIdentityTicfOnly(
+                case TICF_ONLY, INCOMPLETE, EXISTING -> processIdentityTicfOnly(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 deviceInformation,
