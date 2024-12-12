@@ -34,8 +34,10 @@ import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriServiceExcep
 import uk.gov.di.ipv.core.processcandidateidentity.service.*;
 import uk.gov.di.model.ContraIndicator;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -43,8 +45,6 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.*;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.*;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.*;
-import static uk.gov.di.ipv.core.processcandidateidentity.service.IdentityProcessingService.JOURNEY_COI_CHECK_FAILED;
-import static uk.gov.di.ipv.core.processcandidateidentity.service.IdentityProcessingService.JOURNEY_NEXT;
 
 public class ProcessCandidateIdentityHandler
         implements RequestHandler<ProcessRequest, Map<String, Object>> {
@@ -60,7 +60,6 @@ public class ProcessCandidateIdentityHandler
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final IpvSessionService ipvSessionService;
-    private final IdentityProcessingService identityProcessingService;
     private final SessionCredentialsService sessionCredentialsService;
     private final AuditService auditService;
     private final CimitService cimitService;
@@ -71,6 +70,18 @@ public class ProcessCandidateIdentityHandler
     private final EvaluateGpg45ScoresService evaluateGpg45ScoresService;
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
+
+    private static final Set<ProcessIdentityType> COI_CHECK_TYPES =
+            EnumSet.of(
+                    ProcessIdentityType.NEW,
+                    ProcessIdentityType.PENDING,
+                    ProcessIdentityType.REVERIFICATION);
+
+    private static final Set<ProcessIdentityType> STORE_IDENTITY_TYPES =
+            EnumSet.of(ProcessIdentityType.NEW, ProcessIdentityType.PENDING);
+
+    private static final Set<ProcessIdentityType> GPG_45_TYPES =
+            EnumSet.of(ProcessIdentityType.NEW);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -85,7 +96,6 @@ public class ProcessCandidateIdentityHandler
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.identityProcessingService = new IdentityProcessingService(configService);
         this.checkCoiService = new CheckCoiService(configService, auditService);
         this.userIdentityService = new UserIdentityService(configService);
         this.storeIdentityService = new StoreIdentityService(configService, auditService);
@@ -103,7 +113,6 @@ public class ProcessCandidateIdentityHandler
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             IpvSessionService ipvSessionService,
-            IdentityProcessingService identityProcessingService,
             CheckCoiService checkCoiService,
             SessionCredentialsService sessionCredentialsService,
             CriStoringService criStoringService,
@@ -117,7 +126,6 @@ public class ProcessCandidateIdentityHandler
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ipvSessionService = ipvSessionService;
-        this.identityProcessingService = identityProcessingService;
         this.sessionCredentialsService = sessionCredentialsService;
         this.checkCoiService = checkCoiService;
         this.cimitService = cimitService;
@@ -151,19 +159,37 @@ public class ProcessCandidateIdentityHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
-
-            if (processIdentityType.equals(ProcessIdentityType.NEW)) {
-                return processNewIdentity(
+            var coiCheckType = getCoiCheckTypeFromRequest(request);
+            if (COI_CHECK_TYPES.contains(processIdentityType)) {
+                return this.getJourneyResponseFromCoiCheck(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
-                                request,
+                                coiCheckType,
                                 deviceInformation,
                                 ipAddress)
                         .toObjectMap();
             }
 
-            if (processIdentityType.equals(ProcessIdentityType.INCOMPLETE)
-                    || processIdentityType.equals(ProcessIdentityType.EXISTING)) {
+            if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+                return this.getJourneyResponseFromStoringIdentity(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                IdentityType.NEW,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+            }
+
+            if (GPG_45_TYPES.contains(processIdentityType)) {
+                return this.getJourneyResponseFromGpg45ScoreEvaluation(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                deviceInformation,
+                                ipAddress)
+                        .toObjectMap();
+            }
+
+            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
                 return this.getJourneyResponseFromTicfCall(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
@@ -172,37 +198,9 @@ public class ProcessCandidateIdentityHandler
                         .toObjectMap();
             }
 
-            if (processIdentityType.equals(ProcessIdentityType.REVERIFICATION)) {
-                var coiCheckType = getCoiCheckTypeFromRequest(request);
-                var coiCheckResponse =
-                        this.getJourneyResponseFromCoiCheck(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                coiCheckType,
-                                deviceInformation,
-                                ipAddress);
-                if (configService.getBooleanParameter(
-                        CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
-                    return this.getJourneyResponseFromTicfCall(
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
-                                    deviceInformation,
-                                    ipAddress)
-                            .toObjectMap();
-                }
-
-                return coiCheckResponse.toObjectMap();
-            }
-
-            if (processIdentityType.equals(ProcessIdentityType.PENDING)) {
-                return processPendingIdentity(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                request,
-                                deviceInformation,
-                                ipAddress)
-                        .toObjectMap();
-            }
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
+                    .toObjectMap();
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
@@ -238,55 +236,6 @@ public class ProcessCandidateIdentityHandler
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
         }
-    }
-
-    private JourneyResponse processNewIdentity(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            ProcessRequest request,
-            String deviceInformation,
-            String ipAddress)
-            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
-        var coiCheckType = getCoiCheckTypeFromRequest(request);
-
-        this.getJourneyResponseFromCoiCheck(
-                ipvSessionItem, clientOAuthSessionItem, coiCheckType, deviceInformation, ipAddress);
-
-        this.getJourneyResponseFromGpg45ScoreEvaluation(
-                ipvSessionItem, clientOAuthSessionItem, deviceInformation, ipAddress);
-
-        this.getJourneyResponseFromTicfCall(
-                ipvSessionItem, clientOAuthSessionItem, deviceInformation, ipAddress);
-
-        return this.getJourneyResponseFromStoringIdentity(
-                ipvSessionItem,
-                clientOAuthSessionItem,
-                IdentityType.NEW,
-                deviceInformation,
-                ipAddress);
-    }
-
-    private JourneyResponse processPendingIdentity(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
-            ProcessRequest request,
-            String deviceInformation,
-            String ipAddress)
-            throws HttpResponseExceptionWithErrorBody, UnknownCoiCheckTypeException {
-        var coiCheckType = getCoiCheckTypeFromRequest(request);
-
-        this.getJourneyResponseFromCoiCheck(
-                ipvSessionItem, clientOAuthSessionItem, coiCheckType, deviceInformation, ipAddress);
-
-        this.getJourneyResponseFromTicfCall(
-                ipvSessionItem, clientOAuthSessionItem, deviceInformation, ipAddress);
-
-        return this.getJourneyResponseFromStoringIdentity(
-                ipvSessionItem,
-                clientOAuthSessionItem,
-                IdentityType.NEW,
-                deviceInformation,
-                ipAddress);
     }
 
     private JourneyResponse getJourneyResponseFromCoiCheck(
