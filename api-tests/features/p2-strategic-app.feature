@@ -135,7 +135,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
     Then I get a 'non-uk-passport' page response
-    When I submit a 'end' event
+    When I submit a 'abandon' event
     Then I get a 'non-uk-no-passport' page response
     When I submit a 'returnToRp' event
     Then I get an OAuth response
@@ -147,7 +147,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
     Then I get a 'non-uk-passport' page response
-    When I submit a 'end' event
+    When I submit a 'abandon' event
     Then I get a 'non-uk-no-passport' page response
-    When I submit a 'next' event
+    When I submit a 'useApp' event
     Then I get a 'identify-device' page response

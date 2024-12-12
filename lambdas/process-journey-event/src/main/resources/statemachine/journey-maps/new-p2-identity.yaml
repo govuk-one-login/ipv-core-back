@@ -848,7 +848,7 @@ states:
       next:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
-      end:
+      abandon:
         targetState: NON_UK_NO_PASSPORT
 
   NON_UK_NO_PASSPORT:
@@ -858,7 +858,7 @@ states:
     events:
       returnToRp:
         targetState: RETURN_TO_RP
-      next:
+      useApp:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
 
