@@ -71,11 +71,10 @@ public class StoreIdentityService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,
             String deviceInformation,
-            String ipAddress)
+            String ipAddress,
+            List<VerifiableCredential> credentials)
             throws VerifiableCredentialException, EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
-        List<VerifiableCredential> credentials =
-                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId);
 
         if (configService.enabled(EVCS_WRITE_ENABLED)) {
             try {
