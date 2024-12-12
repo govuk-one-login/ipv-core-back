@@ -159,15 +159,13 @@ public class ProcessCandidateIdentityHandler
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            var coiCheckType = RequestHelper.getCoiCheckType(request);
-            var identityType = RequestHelper.getIdentityType(request);
-
             String userId = clientOAuthSessionItem.getUserId();
             var sessionVcs =
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
 
             if (COI_CHECK_TYPES.contains(processIdentityType)) {
+                var coiCheckType = RequestHelper.getCoiCheckType(request);
                 var isCoiCheckSuccessful =
                         checkCoiService.isCoiCheckSuccessful(
                                 ipvSessionItem,
@@ -183,6 +181,7 @@ public class ProcessCandidateIdentityHandler
             }
 
             if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+                var identityType = RequestHelper.getIdentityType(request);
                 storeIdentityService.storeIdentity(
                         ipvSessionItem,
                         clientOAuthSessionItem,
@@ -254,6 +253,13 @@ public class ProcessCandidateIdentityHandler
                             JOURNEY_ERROR_PATH,
                             SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
+        } catch (CiRetrievalException e) {
+            LOGGER.error(LogHelper.buildErrorMessage(FAILED_TO_GET_STORED_CIS.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_GET_STORED_CIS)
                     .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));

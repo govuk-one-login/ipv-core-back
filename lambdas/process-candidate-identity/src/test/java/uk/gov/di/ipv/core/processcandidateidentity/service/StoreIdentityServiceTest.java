@@ -112,7 +112,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.NEW,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         ArgumentCaptor<List<VerifiableCredential>> storesVcsCaptor =
@@ -144,7 +145,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.NEW,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -183,7 +185,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.UPDATE,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -213,7 +216,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.NEW,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -241,7 +245,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.PENDING,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -277,7 +282,8 @@ public class StoreIdentityServiceTest {
                 clientOAuthSessionItem,
                 IdentityType.PENDING,
                 DEVICE_INFORMATION,
-                IP_ADDRESS);
+                IP_ADDRESS,
+                VCS);
 
         // Assert
         ArgumentCaptor<List<VerifiableCredential>> storesVcsCaptor =
