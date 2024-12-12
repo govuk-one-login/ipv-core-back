@@ -8,10 +8,10 @@ import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
-import uk.gov.di.ipv.core.library.enums.ProcessIdentityType;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
@@ -191,13 +191,13 @@ public class RequestHelper {
         }
     }
 
-    public static ProcessIdentityType getProcessIdentityType(ProcessRequest request)
+    public static CandidateIdentityType getProcessIdentityType(ProcessRequest request)
             throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityType {
         String checkType =
                 extractValueFromLambdaInput(
                         request, "processIdentityType", MISSING_PROCESS_IDENTITY_TYPE);
         try {
-            return ProcessIdentityType.valueOf(checkType);
+            return CandidateIdentityType.valueOf(checkType);
         } catch (IllegalArgumentException e) {
             throw new UnknownProcessIdentityType(checkType);
         }

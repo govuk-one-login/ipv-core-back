@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.ProcessIdentityType;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.*;
@@ -70,17 +70,17 @@ public class ProcessCandidateIdentityHandler
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
 
-    private static final Set<ProcessIdentityType> COI_CHECK_TYPES =
+    private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
             EnumSet.of(
-                    ProcessIdentityType.NEW,
-                    ProcessIdentityType.PENDING,
-                    ProcessIdentityType.REVERIFICATION);
+                    CandidateIdentityType.NEW,
+                    CandidateIdentityType.PENDING,
+                    CandidateIdentityType.REVERIFICATION);
 
-    private static final Set<ProcessIdentityType> STORE_IDENTITY_TYPES =
-            EnumSet.of(ProcessIdentityType.NEW, ProcessIdentityType.PENDING);
+    private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
+            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.PENDING);
 
-    private static final Set<ProcessIdentityType> GPG_45_TYPES =
-            EnumSet.of(ProcessIdentityType.NEW);
+    private static final Set<CandidateIdentityType> GPG_45_TYPES =
+            EnumSet.of(CandidateIdentityType.NEW);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -206,7 +206,7 @@ public class ProcessCandidateIdentityHandler
             }
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
-                return this.getJourneyResponseFromTicfCall(
+                return getJourneyResponseFromTicfCall(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
                                 deviceInformation,

@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.core.library.enums;
 
-public enum ProcessIdentityType {
+public enum CandidateIdentityType {
     EXISTING,
     NEW,
     PENDING,
