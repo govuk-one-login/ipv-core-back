@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
@@ -75,6 +76,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_IS
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI_REDIRECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
@@ -210,6 +213,9 @@ public class BuildCriOauthRequestHandler
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
+            EmbeddedMetricHelper.createMetrics(
+                    Map.of(CRI, cri.getId()), Map.of(CRI_REDIRECT, 1.0), govukSigninJourneyId);
 
             var message =
                     new StringMapMessage()

@@ -10,6 +10,7 @@ dependencies {
 			libs.diVocab
 	implementation platform(libs.awsSdkBom),
 			platform(libs.openTelemetryBom),
+			libs.awsEmbededMetrics,
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,

@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
@@ -31,6 +30,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -57,9 +57,11 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Dimension.CRI;
+import static uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper.Metric.CRI_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
@@ -145,24 +147,6 @@ public class ProcessCriCallbackHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        // temporary logging to check which tracing headers are being used by dynatrace
-        if ("build".equals(configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))) {
-            var headers = input.getHeaders();
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Tracing headers")
-                            .with(
-                                    "traceparent",
-                                    Optional.ofNullable(headers.get("traceparent"))
-                                            .orElse("not set"))
-                            .with(
-                                    "tracestate",
-                                    Optional.ofNullable(headers.get("tracestate"))
-                                            .orElse("not set"))
-                            .with(
-                                    "x-dynatrace",
-                                    Optional.ofNullable(headers.get("x-dynatrace"))
-                                            .orElse("not set")));
-        }
         CriCallbackRequest callbackRequest = null;
 
         try {
@@ -289,6 +273,11 @@ public class ProcessCriCallbackHandler
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachComponentId(configService);
+
+        EmbeddedMetricHelper.createMetrics(
+                Map.of(CRI, callbackRequest.getCredentialIssuerId()),
+                Map.of(CRI_RETURN, 1.0),
+                clientOAuthSessionItem.getGovukSigninJourneyId());
 
         // Validate callback request
         if (callbackRequest.getError() != null) {
