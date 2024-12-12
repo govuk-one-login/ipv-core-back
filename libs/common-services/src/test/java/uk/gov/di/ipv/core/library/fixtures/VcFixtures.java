@@ -128,14 +128,12 @@ public interface VcFixtures {
                             .checkDetails(null)
                             .failedCheckDetails(
                                     List.of(
-                                            List.of(
-                                                    Map.of(
-                                                            "checkMethod", "data",
-                                                            "fraudCheck",
-                                                                    "applicable_authoritative_source"))))
+                                            Map.of(
+                                                    "checkMethod", "data",
+                                                    "fraudCheck",
+                                                            "applicable_authoritative_source")))
                             .type(IDENTITY_CHECK_EVIDENCE_TYPE)
                             .txn("some-uuid")
-                            .identityFraudScore(1)
                             .build());
 
     List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
