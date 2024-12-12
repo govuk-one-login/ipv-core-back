@@ -859,7 +859,8 @@ states:
       returnToRp:
         targetState: RETURN_TO_RP
       back:
-        targetState: NON_UK_PASSPORT
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   NON_UK_NO_APP_PAGE:
     response:
