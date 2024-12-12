@@ -149,5 +149,5 @@ Feature: M2B Strategic App Journeys
     Then I get a 'non-uk-passport' page response
     When I submit a 'end' event
     Then I get a 'non-uk-no-passport' page response
-    When I submit a 'back' event
+    When I submit a 'next' event
     Then I get a 'identify-device' page response

@@ -858,7 +858,7 @@ states:
     events:
       returnToRp:
         targetState: RETURN_TO_RP
-      back:
+      next:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
 
