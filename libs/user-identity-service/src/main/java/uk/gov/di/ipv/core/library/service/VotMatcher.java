@@ -69,7 +69,7 @@ public class VotMatcher {
             List<ContraIndicator> contraIndicators) {
 
         var achievableProfiles = requestedVot.getSupportedGpg45Profiles();
-        if (requestedVot == Vot.P2 && userIdentityService.allowM1C(gpg45Vcs)) {
+        if (requestedVot == Vot.P2 && userIdentityService.isFraudCheckUnavailable(gpg45Vcs)) {
             achievableProfiles = new ArrayList<>(achievableProfiles);
             achievableProfiles.add(Gpg45Profile.M1C);
         }

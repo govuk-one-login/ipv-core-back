@@ -225,7 +225,7 @@ public class EvaluateGpg45ScoresHandler
 
             for (Vot requestedVot : gpg45Vots) {
                 var profiles = requestedVot.getSupportedGpg45Profiles();
-                if (requestedVot == Vot.P2 && userIdentityService.allowM1C(vcs)) {
+                if (requestedVot == Vot.P2 && userIdentityService.isFraudCheckUnavailable(vcs)) {
                     profiles = new ArrayList<>(profiles);
                     profiles.add(Gpg45Profile.M1C);
                 }
