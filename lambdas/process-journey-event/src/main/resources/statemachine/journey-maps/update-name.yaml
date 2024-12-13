@@ -135,6 +135,8 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
@@ -232,6 +234,8 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK

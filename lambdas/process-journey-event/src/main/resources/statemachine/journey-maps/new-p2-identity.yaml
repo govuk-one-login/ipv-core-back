@@ -184,6 +184,8 @@ states:
         targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   F2F_START_PAGE:
     response:
@@ -623,6 +625,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_01_APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
@@ -715,6 +719,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_PYI_ESCAPE:
     nestedJourney: APP_DOC_CHECK
