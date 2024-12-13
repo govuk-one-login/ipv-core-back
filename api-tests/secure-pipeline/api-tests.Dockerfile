@@ -12,8 +12,6 @@ COPY openAPI /openAPI
 WORKDIR /api-tests
 
 ARG GITHUB_PAT
-ARG ENVIRONMENT
-ENV CORE_ENV=${ENVIRONMENT}
 
 RUN cp .npmrc.template .npmrc && \
     sed -i s/GITHUB_PAT_WITH_READ:PACKAGES/${GITHUB_PAT}/ .npmrc && \
