@@ -1,26 +1,26 @@
 @Build
-Feature: Identity reuse update details
+Feature: International identity reuse update details
 
     Background:
         Given the subject already has the following credentials
-            | CRI     | scenario                     |
-            | dcmaw   | kenneth-driving-permit-valid |
-            | address | kenneth-current              |
-            | fraud   | kenneth-score-2              |
+            | CRI     | scenario               |
+            | dcmaw   | kenneth-passport-valid |
+            | address | kenneth-current        |
+            | fraud   | kenneth-score-0        |
         When I start a new 'medium-confidence' journey
-        And I activate the 'internationalAddress' feature sets
         Then I get a 'page-ipv-reuse' page response
-        When I submit a 'update-details' event
+        When I activate the 'internationalAddress' feature sets
+        And I submit a 'update-details' event
         Then I get a 'update-details' page response
 
-    Scenario: Address Change
+    Scenario: International Address Change
         When I submit a 'address-only' event
         Then I get a 'address' CRI response
         When I submit 'kenneth-changed' details with attributes to the CRI stub
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-score-2' details to the CRI stub
+        When I submit 'kenneth-score-0' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -28,12 +28,12 @@ Feature: Identity reuse update details
         Then I get a 'P2' identity
         And my address 'buildingNumber' is '28'
 
-    Scenario: Address and Family Name Change
+    Scenario: International Address and Family Name Change
         When I submit a 'family-name-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
         Then I get a 'dcmaw' CRI response
-        When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+        When I submit 'kenneth-changed-family-name-passport-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
         When I submit a 'next' event
         Then I get a 'address' CRI response
@@ -41,7 +41,7 @@ Feature: Identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+        When I submit 'kenneth-changed-family-name-and-address-score-0' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -50,12 +50,12 @@ Feature: Identity reuse update details
         And my identity 'FamilyName' is 'Smith'
         And my address 'addressLocality' is 'Bristol'
 
-    Scenario: Address and Given Name Change
+    Scenario: International Address and Given Name Change
         When I submit a 'given-names-and-address' event
         Then I get a 'page-update-name' page response
         When I submit a 'update-name' event
         Then I get a 'dcmaw' CRI response
-        When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+        When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
         When I submit a 'next' event
         Then I get a 'address' CRI response
@@ -63,7 +63,7 @@ Feature: Identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-given-name-score-2' details to the CRI stub
+        When I submit 'kenneth-changed-given-name-and-address-score-0' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response

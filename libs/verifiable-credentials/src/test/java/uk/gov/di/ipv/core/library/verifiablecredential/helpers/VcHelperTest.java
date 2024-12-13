@@ -34,7 +34,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
@@ -244,6 +244,6 @@ class VcHelperTest {
         return Stream.of(
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
                 Arguments.of("Failed passport VC", vcPassportM1aFailed()),
-                Arguments.of("Failed fraud check", vcExperianFraudFailed()));
+                Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
     }
 }

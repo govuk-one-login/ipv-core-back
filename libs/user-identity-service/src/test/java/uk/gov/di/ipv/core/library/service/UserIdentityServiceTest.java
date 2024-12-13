@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.helpers.vocab.BirthDateGenerator;
 import uk.gov.di.model.ContraIndicator;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -118,6 +120,77 @@ class UserIdentityServiceTest {
         assertEquals(passportVc.getVcString(), credentials.getVcs().get(0));
         assertEquals(fraudVc.getVcString(), credentials.getVcs().get(1));
         assertEquals("test-sub", credentials.getSub());
+    }
+
+    @Test
+    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcFraudApplicableAuthoritativeSourceFailed(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = userIdentityService.allowM1C(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForOtherFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcExperianFraudEvidenceFailed(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = userIdentityService.allowM1C(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForSuccessfulFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcExperianFraudScoreOne(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = userIdentityService.allowM1C(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForMissingFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcVerificationM1a());
+
+        // Act
+        var result = userIdentityService.allowM1C(vcs);
+
+        // Assert
+        assertFalse(result);
     }
 
     @Test
