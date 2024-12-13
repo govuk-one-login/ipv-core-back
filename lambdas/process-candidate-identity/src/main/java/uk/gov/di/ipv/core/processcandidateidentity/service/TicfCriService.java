@@ -32,6 +32,7 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
+@SuppressWarnings("java:S107") // Should allow duplicate code for now
 public class TicfCriService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -52,6 +53,7 @@ public class TicfCriService {
     }
 
     // Used by contract tests
+    @ExcludeFromGeneratedCoverageReport
     public TicfCriService(
             ConfigService configService,
             VerifiableCredentialValidator jwtValidator,
