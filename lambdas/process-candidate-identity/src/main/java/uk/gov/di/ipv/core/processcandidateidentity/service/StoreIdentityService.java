@@ -23,13 +23,10 @@ import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IDENTITY_STORED_PATH;
 
@@ -76,26 +73,13 @@ public class StoreIdentityService {
             throws VerifiableCredentialException, EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
 
-        if (configService.enabled(EVCS_WRITE_ENABLED)) {
-            try {
-                if (identityType != IdentityType.PENDING) {
-                    evcsService.storeCompletedIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                } else {
-                    evcsService.storePendingIdentity(
-                            userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
-                }
-                credentials.forEach(credential -> credential.setMigrated(Instant.now()));
-            } catch (EvcsServiceException e) {
-                if (configService.enabled(EVCS_READ_ENABLED)) {
-                    throw e;
-                } else {
-                    LOGGER.error(LogHelper.buildErrorMessage("Failed to store EVCS identity", e));
-                }
-            }
+        if (identityType == IdentityType.PENDING) {
+            evcsService.storePendingIdentity(
+                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
+        } else {
+            evcsService.storeCompletedIdentity(
+                    userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
         }
-
-        verifiableCredentialService.storeIdentity(credentials, userId);
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
