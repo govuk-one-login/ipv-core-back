@@ -325,7 +325,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() throws Exception {
+    void shouldAddM1cToProfilesWhenAllowed() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -354,7 +354,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldNotAllowM1cForNonFailedFraudCheck() throws Exception {
+    void shouldNotAddM1cToProfilesWhenNotAllowed() throws Exception {
         // Arrange
         var vcs =
                 List.of(
