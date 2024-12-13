@@ -10,7 +10,7 @@ get_current_status() {
 generate_traffic() {
   while true; do
     echo "Running @TrafficGeneration tests"
-    npm run test:build -- --profile trafficGeneration --tags '@TrafficGeneration'
+    npm run test:build -- --profile trafficGeneration --tags '@TrafficGeneration' || true
   done
 }
 
