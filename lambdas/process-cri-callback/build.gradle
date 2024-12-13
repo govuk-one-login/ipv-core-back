@@ -19,6 +19,7 @@ dependencies {
 			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
+			libs.powertoolsMetrics,
 			libs.powertoolsTracing,
 			libs.aspectj
 

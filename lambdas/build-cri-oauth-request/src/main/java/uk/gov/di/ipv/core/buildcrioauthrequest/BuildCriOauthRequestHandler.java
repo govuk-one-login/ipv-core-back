@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
@@ -148,6 +150,7 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
@@ -210,6 +213,8 @@ public class BuildCriOauthRequestHandler
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
+            EmbeddedMetricHelper.criRedirect(cri.getId(), govukSigninJourneyId);
 
             var message =
                     new StringMapMessage()

@@ -14,6 +14,7 @@ Globals:
     Runtime: java17
     Environment:
       Variables:
+        ENVIRONMENT: !Sub "${Environment}"
         AWS_LAMBDA_EXEC_WRAPPER: !If
           - IsDevelopment
           - !Ref AWS::NoValue
@@ -51,6 +52,7 @@ Globals:
         DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: "true"
         OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_USE_PROPAGATOR_FOR_MESSAGING: true
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+        POWERTOOLS_METRICS_NAMESPACE: !Sub CoreBackEmbeddedMetrics-${Environment}
         POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
         POWERTOOLS_TRACER_CAPTURE_ERROR: false
         CONFIG_SERVICE_CACHE_DURATION_MINUTES: !If
@@ -664,7 +666,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -741,7 +742,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -824,7 +824,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -929,7 +928,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -1028,7 +1026,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -1148,7 +1145,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -1237,7 +1233,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1338,7 +1333,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1430,7 +1424,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1658,7 +1651,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-journey-event-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -1740,7 +1732,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1829,7 +1820,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-proven-user-identity-details-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1921,7 +1911,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2015,7 +2004,6 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
@@ -2134,7 +2122,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2204,7 +2191,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub call-ticf-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2290,7 +2276,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub call-dcmaw-async-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2367,7 +2352,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -2447,7 +2431,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2529,7 +2512,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-coi-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2611,7 +2593,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-reverification-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable

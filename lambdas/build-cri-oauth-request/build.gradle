@@ -15,6 +15,7 @@ dependencies {
 			project(":libs:oauth-key-service")
 
 	aspect libs.powertoolsLogging,
+			libs.powertoolsMetrics,
 			libs.powertoolsTracing,
 			libs.aspectj
 
