@@ -325,7 +325,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() throws Exception {
+    void shouldAddM1cToProfilesWhenAllowed() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -337,6 +337,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenReturn(vcs);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.allowM1C(vcs)).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES_PLUS_M1C)))
                 .thenReturn(Optional.of(M1C));
         when(gpg45ProfileEvaluator.buildScore(any()))
@@ -353,7 +354,7 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldNotAllowM1cForNonFailedFraudCheck() throws Exception {
+    void shouldNotAddM1cToProfilesWhenNotAllowed() throws Exception {
         // Arrange
         var vcs =
                 List.of(
@@ -365,6 +366,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenReturn(vcs);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(userIdentityService.allowM1C(vcs)).thenReturn(false);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.buildScore(any()))
