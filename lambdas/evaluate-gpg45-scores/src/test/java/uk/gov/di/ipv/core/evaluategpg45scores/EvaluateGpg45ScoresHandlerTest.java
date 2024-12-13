@@ -66,6 +66,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcVerificationM1a;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
@@ -349,6 +350,33 @@ class EvaluateGpg45ScoresHandlerTest {
         // Assert
         verify(gpg45ProfileEvaluator).getFirstMatchingProfile(any(), eq(P2_PROFILES_PLUS_M1C));
         assertEquals(Vot.P2, ipvSessionItem.getVot());
+    }
+
+    @Test
+    void shouldNotAllowM1cForNonFailedFraudCheck() throws Exception {
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcExperianFraudScoreOne(),
+                        vcVerificationM1a());
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
+                .thenReturn(vcs);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_33, 0, 0, 2));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        evaluateGpg45ScoresHandler.handleRequest(request, context);
+
+        // Assert
+        verify(gpg45ProfileEvaluator).getFirstMatchingProfile(any(), eq(P2_PROFILES));
     }
 
     @Test

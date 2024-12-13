@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,10 +67,17 @@ public class VotMatcher {
             List<VerifiableCredential> gpg45Vcs,
             Gpg45Scores gpg45Scores,
             List<ContraIndicator> contraIndicators) {
+
+        var achievableProfiles = requestedVot.getSupportedGpg45Profiles();
+        if (requestedVot == Vot.P2 && userIdentityService.allowM1C(gpg45Vcs)) {
+            achievableProfiles = new ArrayList<>(achievableProfiles);
+            achievableProfiles.add(Gpg45Profile.M1C);
+        }
+
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(gpg45Vcs)
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, requestedVot.getSupportedGpg45Profiles())
+                                gpg45Scores, achievableProfiles)
                         : Optional.empty();
 
         if (matchedGpg45Profile.isEmpty() || isBreaching(contraIndicators, requestedVot)) {

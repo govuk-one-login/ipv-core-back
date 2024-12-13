@@ -571,23 +571,7 @@ public interface VcFixtures {
                     "https://review-f.integration.account.gov.uk",
                     Instant.ofEpochSecond(1658829758));
 
-    VerifiableCredential M1C_EXPERIAN_FRAUD_VC =
-            generateVerifiableCredential(
-                    TEST_SUBJECT,
-                    Cri.EXPERIAN_FRAUD,
-                    TestVc.builder()
-                            .evidence(
-                                    FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS)
-                            .credentialSubject(
-                                    TestVc.TestCredentialSubject.builder()
-                                            .address(List.of(ADDRESS_3))
-                                            .birthDate(List.of(createBirthDate("1959-08-23")))
-                                            .build())
-                            .build(),
-                    "https://review-f.integration.account.gov.uk",
-                    Instant.now().minusSeconds(10));
-
-    static VerifiableCredential vcExperianFraudFailed() {
+    static VerifiableCredential vcExperianFraudEvidenceFailed() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))

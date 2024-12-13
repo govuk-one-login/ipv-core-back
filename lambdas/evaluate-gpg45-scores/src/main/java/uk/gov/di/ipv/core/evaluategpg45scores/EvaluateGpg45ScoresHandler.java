@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileM
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -30,7 +29,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.helpers.CollectionHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
@@ -45,11 +43,8 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
-import uk.gov.di.model.IdentityCheckCredential;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -232,7 +227,7 @@ public class EvaluateGpg45ScoresHandler
 
             for (Vot requestedVot : gpg45Vots) {
                 var profiles = requestedVot.getSupportedGpg45Profiles();
-                if (requestedVot == Vot.P2 && allowM1C(vcs)) {
+                if (requestedVot == Vot.P2 && userIdentityService.allowM1C(vcs)) {
                     profiles = new ArrayList<>(profiles);
                     profiles.add(Gpg45Profile.M1C);
                 }
@@ -266,36 +261,6 @@ public class EvaluateGpg45ScoresHandler
             }
         }
         return Optional.empty();
-    }
-
-    private boolean allowM1C(List<VerifiableCredential> vcs) {
-        var fraudVcList = vcs.stream().filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD).toList();
-
-        if (fraudVcList.isEmpty()) {
-            return false;
-        }
-        if (fraudVcList.size() > 1) {
-            throw new InvalidParameterException("VCs contain more than one fraud VC");
-        }
-        var fraudVc = fraudVcList.get(0);
-
-        var evidence =
-                ((IdentityCheckCredential) fraudVc.getCredential())
-                        .getEvidence().stream().collect(CollectionHelper.toSingleton());
-        var fraudScore = evidence.getIdentityFraudScore();
-        var failedCheckDetails = evidence.getFailedCheckDetails();
-        if (failedCheckDetails == null) {
-            return false;
-        }
-
-        return fraudScore == null
-                && failedCheckDetails.stream()
-                        .anyMatch(
-                                fcd ->
-                                        fcd.getFraudCheck()
-                                                .equals(
-                                                        CheckDetails.FraudCheckType
-                                                                .APPLICABLE_AUTHORITATIVE_SOURCE));
     }
 
     private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {
