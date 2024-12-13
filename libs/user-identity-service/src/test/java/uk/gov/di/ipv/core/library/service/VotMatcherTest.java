@@ -146,7 +146,7 @@ public class VotMatcherTest {
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
-        when(mockUseridentityService.allowM1C(gpg45Vcs)).thenReturn(true);
+        when(mockUseridentityService.isFraudCheckUnavailable(gpg45Vcs)).thenReturn(true);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
                 .thenReturn(Optional.of(Gpg45Profile.M1C));
