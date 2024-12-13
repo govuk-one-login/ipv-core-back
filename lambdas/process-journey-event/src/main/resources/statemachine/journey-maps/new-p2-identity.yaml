@@ -840,8 +840,7 @@ states:
       uk:
         targetState: IDENTITY_START_PAGE
       international:
-        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
-        targetEntryEvent: next
+        targetState: NON_UK_APP_INTRO_PAGE
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: NON_UK_PASSPORT
@@ -867,6 +866,17 @@ states:
       useApp:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
+
+  NON_UK_APP_INTRO_PAGE:
+    response:
+      type: page
+      pageId: non-uk-app-intro
+    events:
+      useApp:
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   NON_UK_NO_APP_PAGE:
     response:
