@@ -39,8 +39,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
@@ -68,8 +68,6 @@ public class CheckCoiServiceTest {
         when(mockEvcsService.getVerifiableCredentials(
                         USER_ID, EVCS_ACCESS_TOKEN, EvcsVCState.CURRENT))
                 .thenReturn(List.of(M1A_ADDRESS_VC));
-        when(mockSessionCredentialsService.getCredentials(IPV_SESSION_ID, USER_ID))
-                .thenReturn(List.of(M1A_EXPERIAN_FRAUD_VC));
         when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
                 .thenReturn("some-component-id");
 
@@ -96,7 +94,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        GIVEN_OR_FAMILY_NAME_AND_DOB,
+                        STANDARD,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -111,13 +109,13 @@ public class CheckCoiServiceTest {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                 auditEventsCaptured.get(0).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, null),
+                new AuditExtensionCoiCheck(STANDARD, null),
                 auditEventsCaptured.get(0).getExtensions());
         assertEquals(
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 auditEventsCaptured.get(1).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, true),
+                new AuditExtensionCoiCheck(STANDARD, true),
                 auditEventsCaptured.get(1).getExtensions());
 
         var restrictedAuditData = getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
@@ -148,7 +146,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        FULL_NAME_AND_DOB,
+                        ACCOUNT_INTERVENTION,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -179,10 +177,10 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        GIVEN_OR_FAMILY_NAME_AND_DOB,
+                        STANDARD,
                         "device-information",
                         "ip-address",
-                        List.of());
+                        List.of(M1A_EXPERIAN_FRAUD_VC));
 
         // Assert
         assertTrue(res);
@@ -209,7 +207,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        FULL_NAME_AND_DOB,
+                        ACCOUNT_INTERVENTION,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -242,7 +240,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        GIVEN_OR_FAMILY_NAME_AND_DOB,
+                        STANDARD,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -257,13 +255,13 @@ public class CheckCoiServiceTest {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                 auditEventsCaptured.get(0).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, null),
+                new AuditExtensionCoiCheck(STANDARD, null),
                 auditEventsCaptured.get(0).getExtensions());
         assertEquals(
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 auditEventsCaptured.get(1).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, true),
+                new AuditExtensionCoiCheck(STANDARD, true),
                 auditEventsCaptured.get(1).getExtensions());
 
         var restrictedAuditData = getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
@@ -294,7 +292,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        GIVEN_OR_FAMILY_NAME_AND_DOB,
+                        STANDARD,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -309,13 +307,13 @@ public class CheckCoiServiceTest {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                 auditEventsCaptured.get(0).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, null),
+                new AuditExtensionCoiCheck(STANDARD, null),
                 auditEventsCaptured.get(0).getExtensions());
         assertEquals(
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 auditEventsCaptured.get(1).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(GIVEN_OR_FAMILY_NAME_AND_DOB, false),
+                new AuditExtensionCoiCheck(STANDARD, false),
                 auditEventsCaptured.get(1).getExtensions());
 
         var restrictedAuditData = getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
@@ -346,7 +344,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        FULL_NAME_AND_DOB,
+                        ACCOUNT_INTERVENTION,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -361,7 +359,7 @@ public class CheckCoiServiceTest {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 auditEventsCaptured.get(1).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, false),
+                new AuditExtensionCoiCheck(ACCOUNT_INTERVENTION, false),
                 auditEventsCaptured.get(1).getExtensions());
     }
 
@@ -386,7 +384,7 @@ public class CheckCoiServiceTest {
                 checkCoiService.isCoiCheckSuccessful(
                         ipvSessionItem,
                         clientOAuthSessionItem,
-                        FULL_NAME_AND_DOB,
+                        ACCOUNT_INTERVENTION,
                         "device-information",
                         "ip-address",
                         List.of());
@@ -401,7 +399,7 @@ public class CheckCoiServiceTest {
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                 auditEventsCaptured.get(1).getEventName());
         assertEquals(
-                new AuditExtensionCoiCheck(FULL_NAME_AND_DOB, false),
+                new AuditExtensionCoiCheck(ACCOUNT_INTERVENTION, false),
                 auditEventsCaptured.get(1).getExtensions());
     }
 

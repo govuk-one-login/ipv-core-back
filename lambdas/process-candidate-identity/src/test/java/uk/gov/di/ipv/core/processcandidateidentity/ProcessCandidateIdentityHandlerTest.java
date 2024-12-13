@@ -47,7 +47,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.GIVEN_OR_FAMILY_NAME_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -119,7 +119,7 @@ public class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            GIVEN_OR_FAMILY_NAME_AND_DOB,
+                            STANDARD,
                             DEVICE_INFORMATION,
                             IP_ADDRESS,
                             List.of()))
@@ -150,7 +150,7 @@ public class ProcessCandidateIdentityHandlerTest {
                                             "processIdentityType",
                                             CandidateIdentityType.NEW.name(),
                                             "checkType",
-                                            GIVEN_OR_FAMILY_NAME_AND_DOB.name(),
+                                            STANDARD.name(),
                                             "identityType",
                                             IdentityType.NEW.name()))
                             .build();
@@ -235,14 +235,14 @@ public class ProcessCandidateIdentityHandlerTest {
                                             "processIdentityType",
                                             CandidateIdentityType.NEW.name(),
                                             "checkType",
-                                            GIVEN_OR_FAMILY_NAME_AND_DOB.name(),
+                                            STANDARD.name(),
                                             "identityType",
                                             "invalid-identity-type"))
                             .build();
             when(checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            GIVEN_OR_FAMILY_NAME_AND_DOB,
+                            STANDARD,
                             DEVICE_INFORMATION,
                             IP_ADDRESS,
                             List.of()))
@@ -267,12 +267,12 @@ public class ProcessCandidateIdentityHandlerTest {
                                             "processIdentityType",
                                             CandidateIdentityType.NEW.name(),
                                             "checkType",
-                                            GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
+                                            STANDARD.name()))
                             .build();
             when(checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            GIVEN_OR_FAMILY_NAME_AND_DOB,
+                            STANDARD,
                             DEVICE_INFORMATION,
                             IP_ADDRESS,
                             List.of()))
@@ -294,7 +294,7 @@ public class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            GIVEN_OR_FAMILY_NAME_AND_DOB,
+                            STANDARD,
                             DEVICE_INFORMATION,
                             IP_ADDRESS,
                             List.of()))
@@ -316,7 +316,7 @@ public class ProcessCandidateIdentityHandlerTest {
                                             "processIdentityType",
                                             CandidateIdentityType.PENDING.name(),
                                             "checkType",
-                                            GIVEN_OR_FAMILY_NAME_AND_DOB.name(),
+                                            STANDARD.name(),
                                             "identityType",
                                             IdentityType.NEW.name()))
                             .build();
@@ -357,7 +357,7 @@ public class ProcessCandidateIdentityHandlerTest {
             when(checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
-                            GIVEN_OR_FAMILY_NAME_AND_DOB,
+                            STANDARD,
                             DEVICE_INFORMATION,
                             IP_ADDRESS,
                             List.of()))
@@ -379,7 +379,7 @@ public class ProcessCandidateIdentityHandlerTest {
                                             "processIdentityType",
                                             CandidateIdentityType.REVERIFICATION.name(),
                                             "checkType",
-                                            GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
+                                            STANDARD.name()))
                             .build();
 
             // Act
@@ -513,10 +513,7 @@ public class ProcessCandidateIdentityHandlerTest {
     @Test
     void shouldReturnJourneyErrorIfIdentityTypeIsNotProvided() {
         // Arrange
-        var request =
-                requestBuilder
-                        .lambdaInput(Map.of("checkType", GIVEN_OR_FAMILY_NAME_AND_DOB.name()))
-                        .build();
+        var request = requestBuilder.lambdaInput(Map.of("checkType", STANDARD.name())).build();
 
         // Act
         var response = processCandidateIdentityHandler.handleRequest(request, context);
@@ -579,7 +576,7 @@ public class ProcessCandidateIdentityHandlerTest {
                                         "processIdentityType",
                                         CandidateIdentityType.NEW.name(),
                                         "checkType",
-                                        GIVEN_OR_FAMILY_NAME_AND_DOB.name(),
+                                        STANDARD.name(),
                                         "identityType",
                                         IdentityType.NEW.name()))
                         .build();

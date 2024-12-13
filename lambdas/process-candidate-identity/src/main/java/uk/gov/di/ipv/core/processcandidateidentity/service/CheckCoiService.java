@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 
@@ -98,7 +98,7 @@ public class CheckCoiService {
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Reprove identity flag set - checking full name and DOB"));
-            checkType = FULL_NAME_AND_DOB;
+            checkType = ACCOUNT_INTERVENTION;
         }
 
         var auditEventUser =
@@ -118,9 +118,11 @@ public class CheckCoiService {
         var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
         var successfulCheck =
                 switch (checkType) {
-                    case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
-                            .areNamesAndDobCorrelated(combinedCredentials);
-                    case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                    case STANDARD -> userIdentityService.areNamesAndDobCorrelated(
+                            combinedCredentials);
+                    case REVERIFICATION -> userIdentityService
+                            .areNamesAndDobCorrelatedForReverification(combinedCredentials);
+                    case ACCOUNT_INTERVENTION -> userIdentityService.areVcsCorrelated(
                             combinedCredentials);
                 };
 
