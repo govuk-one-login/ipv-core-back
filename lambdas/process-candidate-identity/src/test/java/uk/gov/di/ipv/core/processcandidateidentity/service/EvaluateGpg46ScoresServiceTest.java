@@ -40,7 +40,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
 @ExtendWith(MockitoExtension.class)
-public class EvaluateGpg46ScoresServiceTest {
+class EvaluateGpg46ScoresServiceTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";

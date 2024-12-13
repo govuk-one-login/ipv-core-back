@@ -8,57 +8,39 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.util.List;
-import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_IDENTITY_STORED;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IDENTITY_STORED_PATH;
 
 public class StoreIdentityService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_IDENTITY_STORED =
-            new JourneyResponse(JOURNEY_IDENTITY_STORED_PATH).toObjectMap();
     private final ConfigService configService;
-    private final SessionCredentialsService sessionCredentialsService;
-    private final VerifiableCredentialService verifiableCredentialService;
     private final AuditService auditService;
     private final EvcsService evcsService;
 
     @ExcludeFromGeneratedCoverageReport
     public StoreIdentityService(ConfigService configService, AuditService auditService) {
         this.configService = configService;
-        this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = auditService;
         this.evcsService = new EvcsService(configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public StoreIdentityService(
-            ConfigService configService,
-            SessionCredentialsService sessionCredentialsService,
-            VerifiableCredentialService verifiableCredentialService,
-            AuditService auditService,
-            EvcsService evcsService) {
+            ConfigService configService, AuditService auditService, EvcsService evcsService) {
         this.configService = configService;
-        this.sessionCredentialsService = sessionCredentialsService;
-        this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.evcsService = evcsService;
     }
@@ -70,7 +52,7 @@ public class StoreIdentityService {
             String deviceInformation,
             String ipAddress,
             List<VerifiableCredential> credentials)
-            throws VerifiableCredentialException, EvcsServiceException {
+            throws EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
 
         if (identityType == IdentityType.PENDING) {
