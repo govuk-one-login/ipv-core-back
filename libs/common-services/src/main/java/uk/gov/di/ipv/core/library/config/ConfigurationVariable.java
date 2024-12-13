@@ -17,6 +17,7 @@ public enum ConfigurationVariable {
     CLIENT_VALID_SCOPES("clients/%s/validScopes"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     COI_CHECK_FAMILY_NAME_CHARS("self/coi/familyNameChars"),
+    COI_CHECK_GIVEN_NAME_CHARS("self/coi/givenNameChars"),
     COMPONENT_ID("self/componentId"),
     CORE_VTM_CLAIM("self/coreVtmClaim"),
     CREDENTIAL_ISSUER_ACTIVE_CONNECTION("credentialIssuers/%s/activeConnection"),

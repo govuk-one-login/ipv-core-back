@@ -847,8 +847,29 @@ states:
         targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+            targetState: NON_UK_PASSPORT
+
+  NON_UK_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-passport
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      abandon:
+        targetState: NON_UK_NO_PASSPORT
+
+  NON_UK_NO_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-no-passport
+    events:
+      returnToRp:
+        targetState: RETURN_TO_RP
+      useApp:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
 
   NON_UK_NO_APP_PAGE:
     response:

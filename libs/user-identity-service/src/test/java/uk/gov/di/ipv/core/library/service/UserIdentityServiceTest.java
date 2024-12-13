@@ -52,6 +52,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -1765,6 +1766,143 @@ class UserIdentityServiceTest {
         var vcs = List.of(vcHmrcMigrationPCL250NoEvidence());
         Optional<IdentityClaim> result = userIdentityService.findIdentityClaim(vcs);
         assertFalse(result.isEmpty());
+    }
+
+    @Nested
+    class AreNamesAndDobCorrelatedForReverification {
+        @BeforeEach
+        void setup() {
+            when(mockConfigService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)).thenReturn("1");
+            when(mockConfigService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)).thenReturn("3");
+        }
+
+        @Test
+        void shouldReturnTrueWhenAllNamesAndDobMatchExactly() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    ADDRESS,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            vcHmrcMigrationPCL200());
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldReturnTrueWhenFamilyNamesAreDifferentButMatchWithinCharAllowance()
+                throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jonathon", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jonas", "1000-01-01")));
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldReturnTrueWhenGivenNamesAreDifferentButMatchWithinCharAllowance()
+                throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jamie", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertTrue(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseWhenDobDoNotMatch() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "2000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseWhenFamilyNamesDoNotMatchWithinAllowance() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jared", "1000-01-01")));
+
+            // Act & Assert
+            assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldReturnFalseWhenGivenNamesDoNotMatchWithinAllowance() throws Exception {
+            // Arrange
+            var vcs =
+                    List.of(
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    PASSPORT,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Jimbo", "Jones", "1000-01-01")),
+                            generateVerifiableCredential(
+                                    USER_ID_1,
+                                    BAV,
+                                    createCredentialWithNameAndBirthDate(
+                                            "Timbo", "Jones", "1000-01-01")));
+
+            // Act & Assert
+            assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
     }
 
     private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {

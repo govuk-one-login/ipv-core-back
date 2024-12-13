@@ -165,7 +165,7 @@ states:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: FULL_NAME_AND_DOB
+        checkType: REVERIFICATION
     events:
       coi-check-passed:
         targetState: CRI_TICF

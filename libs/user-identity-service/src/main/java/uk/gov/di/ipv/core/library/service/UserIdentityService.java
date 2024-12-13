@@ -48,6 +48,7 @@ import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static java.util.Objects.requireNonNullElse;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_FAMILY_NAME_CHARS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
@@ -197,6 +198,26 @@ public class UserIdentityService {
         return false;
     }
 
+    public boolean areNamesAndDobCorrelatedForReverification(List<VerifiableCredential> vcs)
+            throws HttpResponseExceptionWithErrorBody {
+        var successfulVcs = getSuccessfulVcs(vcs);
+
+        if (!checkBirthDateCorrelationInCredentials(successfulVcs)) {
+            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_BIRTHDATE_CORRELATION));
+            return false;
+        }
+
+        if (!checkNamesForCorrelation(
+                getGivenNamesWithCharAllowanceForCoiCheck(
+                        getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+            return false;
+        }
+
+        return checkNamesForCorrelation(
+                getFamilyNameWithCharAllowanceForCoiCheck(
+                        getIdentityClaimsForNameCorrelation(successfulVcs)));
+    }
+
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
@@ -225,7 +246,7 @@ public class UserIdentityService {
 
         var isFamilyNameCorrelated =
                 checkNamesForCorrelation(
-                        getFamilyNameForCoiCheck(
+                        getFamilyNameWithCharAllowanceForCoiCheck(
                                 getIdentityClaimsForNameCorrelation(successfulVcs)));
 
         // Given names AND family name cannot both be changed
@@ -391,16 +412,28 @@ public class UserIdentityService {
                 .toList();
     }
 
-    private List<String> getFamilyNameForCoiCheck(List<IdentityClaim> identityClaims) {
-        return getNameProperty(identityClaims, NamePart.NamePartType.FAMILY_NAME).stream()
-                .map(
-                        familyName ->
-                                StringUtils.substring(
-                                        familyName,
-                                        0,
-                                        Integer.parseInt(
-                                                configService.getParameter(
-                                                        COI_CHECK_FAMILY_NAME_CHARS))))
+    private List<String> getFamilyNameWithCharAllowanceForCoiCheck(
+            List<IdentityClaim> identityClaims) {
+        return getShortenedNamesForCoiCheck(
+                identityClaims,
+                Integer.parseInt(configService.getParameter(COI_CHECK_FAMILY_NAME_CHARS)),
+                NamePart.NamePartType.FAMILY_NAME);
+    }
+
+    private List<String> getGivenNamesWithCharAllowanceForCoiCheck(
+            List<IdentityClaim> identityClaims) {
+        return getShortenedNamesForCoiCheck(
+                identityClaims,
+                Integer.parseInt(configService.getParameter(COI_CHECK_GIVEN_NAME_CHARS)),
+                NamePart.NamePartType.GIVEN_NAME);
+    }
+
+    private List<String> getShortenedNamesForCoiCheck(
+            List<IdentityClaim> identityClaims,
+            Integer charCount,
+            NamePart.NamePartType namePartType) {
+        return getNameProperty(identityClaims, namePartType).stream()
+                .map(name -> StringUtils.substring(name, 0, charCount))
                 .toList();
     }
 
