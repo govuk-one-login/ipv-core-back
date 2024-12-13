@@ -54,7 +54,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 @ExtendWith(MockitoExtension.class)
-public class ProcessCandidateIdentityHandlerTest {
+class ProcessCandidateIdentityHandlerTest {
     private static ProcessRequest.ProcessRequestBuilder requestBuilder;
 
     private static final String SESSION_ID = "session-id";
@@ -86,7 +86,7 @@ public class ProcessCandidateIdentityHandlerTest {
     @InjectMocks ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         requestBuilder =
                 ProcessRequest.processRequestBuilder()
                         .ipvSessionId(SESSION_ID)
@@ -204,7 +204,7 @@ public class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyErrorIfCoiCheckTypeIsInvalid() throws Exception {
+        void shouldReturnJourneyErrorIfCoiCheckTypeIsInvalid() {
             // Arrange
             var request =
                     requestBuilder
@@ -481,7 +481,6 @@ public class ProcessCandidateIdentityHandlerTest {
         @Test
         void shouldNotCallTicfIfDisabled() throws Exception {
             // Arrange
-            var ticfVcs = List.of(vcTicf());
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(false);
 

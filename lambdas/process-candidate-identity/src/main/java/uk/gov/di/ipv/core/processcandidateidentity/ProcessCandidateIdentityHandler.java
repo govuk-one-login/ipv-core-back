@@ -107,6 +107,7 @@ public class ProcessCandidateIdentityHandler
                         configService, auditService, null, sessionCredentialsService, cimitService);
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler(
             ConfigService configService,
@@ -164,57 +165,14 @@ public class ProcessCandidateIdentityHandler
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
 
-            if (COI_CHECK_TYPES.contains(processIdentityType)) {
-                var coiCheckType = RequestHelper.getCoiCheckType(request);
-                var isCoiCheckSuccessful =
-                        checkCoiService.isCoiCheckSuccessful(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                coiCheckType,
-                                deviceInformation,
-                                ipAddress,
-                                sessionVcs);
-
-                if (!isCoiCheckSuccessful) {
-                    return JOURNEY_COI_CHECK_FAILED;
-                }
-            }
-
-            if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
-                var identityType = RequestHelper.getIdentityType(request);
-                storeIdentityService.storeIdentity(
-                        ipvSessionItem,
-                        clientOAuthSessionItem,
-                        identityType,
-                        deviceInformation,
-                        ipAddress,
-                        sessionVcs);
-            }
-
-            if (GPG_45_TYPES.contains(processIdentityType)) {
-                var journey =
-                        getJourneyResponseFromGpg45ScoreEvaluation(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                deviceInformation,
-                                ipAddress,
-                                sessionVcs);
-
-                if (!JOURNEY_NEXT.equals(journey)) {
-                    return journey.toObjectMap();
-                }
-            }
-
-            if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
-                return getJourneyResponseFromTicfCall(
-                                ipvSessionItem,
-                                clientOAuthSessionItem,
-                                deviceInformation,
-                                ipAddress)
-                        .toObjectMap();
-            }
-
-            return JOURNEY_NEXT.toObjectMap();
+            return processCandidateThroughJourney(
+                    request,
+                    processIdentityType,
+                    ipvSessionItem,
+                    clientOAuthSessionItem,
+                    deviceInformation,
+                    ipAddress,
+                    sessionVcs);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
@@ -270,6 +228,66 @@ public class ProcessCandidateIdentityHandler
             }
             auditService.awaitAuditEvents();
         }
+    }
+
+    private Map<String, Object> processCandidateThroughJourney(
+            ProcessRequest request,
+            CandidateIdentityType processIdentityType,
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            String deviceInformation,
+            String ipAddress,
+            List<VerifiableCredential> sessionVcs)
+            throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
+                    UnknownCoiCheckTypeException, CredentialParseException {
+        if (COI_CHECK_TYPES.contains(processIdentityType)) {
+            var coiCheckType = RequestHelper.getCoiCheckType(request);
+            var isCoiCheckSuccessful =
+                    checkCoiService.isCoiCheckSuccessful(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            coiCheckType,
+                            deviceInformation,
+                            ipAddress,
+                            sessionVcs);
+
+            if (!isCoiCheckSuccessful) {
+                return JOURNEY_COI_CHECK_FAILED;
+            }
+        }
+
+        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+            var identityType = RequestHelper.getIdentityType(request);
+            storeIdentityService.storeIdentity(
+                    ipvSessionItem,
+                    clientOAuthSessionItem,
+                    identityType,
+                    deviceInformation,
+                    ipAddress,
+                    sessionVcs);
+        }
+
+        if (GPG_45_TYPES.contains(processIdentityType)) {
+            var journey =
+                    getJourneyResponseFromGpg45ScoreEvaluation(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            deviceInformation,
+                            ipAddress,
+                            sessionVcs);
+
+            if (!JOURNEY_NEXT.equals(journey)) {
+                return journey.toObjectMap();
+            }
+        }
+
+        if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
+            return getJourneyResponseFromTicfCall(
+                            ipvSessionItem, clientOAuthSessionItem, deviceInformation, ipAddress)
+                    .toObjectMap();
+        }
+
+        return JOURNEY_NEXT.toObjectMap();
     }
 
     private JourneyResponse getJourneyResponseFromGpg45ScoreEvaluation(

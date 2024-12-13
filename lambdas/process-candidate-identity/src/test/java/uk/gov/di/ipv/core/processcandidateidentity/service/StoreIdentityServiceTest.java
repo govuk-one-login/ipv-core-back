@@ -47,7 +47,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 
 @ExtendWith(MockitoExtension.class)
-public class StoreIdentityServiceTest {
+class StoreIdentityServiceTest {
     private static final String CLIENT_SESSION_ID = "client-session-id";
     private static final String COMPONENT_ID = "https://component-id.example";
     private static final String GOVUK_JOURNEY_ID = "govuk-journey-id";

@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -31,7 +30,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -47,7 +45,6 @@ public class CheckCoiService {
     private final ConfigService configService;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
-    private final SessionCredentialsService sessionCredentialsService;
     private final UserIdentityService userIdentityService;
     private final EvcsService evcsService;
 
@@ -56,7 +53,6 @@ public class CheckCoiService {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = new IpvSessionService(configService);
-        this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.evcsService = new EvcsService(configService);
     }
@@ -66,13 +62,11 @@ public class CheckCoiService {
             ConfigService configService,
             AuditService auditService,
             IpvSessionService ipvSessionService,
-            SessionCredentialsService sessionCredentialsService,
             UserIdentityService userIdentityService,
             EvcsService evcsService) {
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
-        this.sessionCredentialsService = sessionCredentialsService;
         this.userIdentityService = userIdentityService;
         this.evcsService = evcsService;
     }
@@ -87,7 +81,7 @@ public class CheckCoiService {
             String ipAddress,
             List<VerifiableCredential> sessionVcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
-                    EvcsServiceException, VerifiableCredentialException {
+                    EvcsServiceException {
 
         var ipvSessionId = ipvSessionItem.getIpvSessionId();
         var userId = clientOAuthSession.getUserId();

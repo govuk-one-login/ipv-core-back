@@ -47,7 +47,7 @@ import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGen
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
 @ExtendWith(MockitoExtension.class)
-public class CheckCoiServiceTest {
+class CheckCoiServiceTest {
     private static final String EVCS_ACCESS_TOKEN = "evcs-access-token";
     private static final String USER_ID = "user-id";
     private static final String IPV_SESSION_ID = "ipv-session-id";
