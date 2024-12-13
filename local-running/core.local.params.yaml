@@ -33,6 +33,7 @@ core:
     coi:
       # Test COI config
       familyNameChars: 5
+      givenNameChars: 3
   clients:
     orchStub:
       id: orchStub
