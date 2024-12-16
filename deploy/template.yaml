@@ -108,6 +108,7 @@ Parameters:
       - Linear10PercentEvery1Minute
       - Linear10PercentEvery2Minutes
       - Linear10PercentEvery3Minutes
+      - LambdaCanary50Percent5Minutes
   StepFunctionDeploymentPreference:
     Description: "Specifies the configuration to enable gradual StepFunction deployment."
     Type: String
