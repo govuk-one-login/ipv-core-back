@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.1.0",
-    "@govuk-one-login/data-vocab": "^1.7.2",
+    "@govuk-one-login/data-vocab": "^1.9.0",
     "@types/eslint__js": "^8.42.3",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
