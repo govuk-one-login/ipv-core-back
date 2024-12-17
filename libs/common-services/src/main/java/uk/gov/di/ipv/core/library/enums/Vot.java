@@ -14,7 +14,10 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 public enum Vot {
     P0(List.of(), null, GPG45),
     P1(List.of(Gpg45Profile.L1A), null, GPG45),
-    P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), null, GPG45),
+    P2(
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C),
+            null,
+            GPG45),
     PCL250(null, List.of(OperationalProfile.PCL250), OPERATIONAL_HMRC),
     PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200), OPERATIONAL_HMRC);
     public static final List<Vot> SUPPORTED_VOTS_BY_DESCENDING_STRENGTH =
@@ -33,7 +36,13 @@ public enum Vot {
         this.profileType = profileType;
     }
 
-    public List<Gpg45Profile> getSupportedGpg45Profiles() {
+    public List<Gpg45Profile> getSupportedGpg45Profiles(boolean isFraudCheckUnavailable) {
+        // If the fraud check may be available, we require a fraud score
+        if (!isFraudCheckUnavailable) {
+            return supportedGpg45Profiles.stream()
+                    .filter(profile -> profile.getScores().getFraud() > 0)
+                    .toList();
+        }
         return supportedGpg45Profiles;
     }
 
@@ -46,13 +55,9 @@ public enum Vot {
     }
 
     public static Vot fromGpg45Profile(Gpg45Profile profile) {
-        // We only allow M1C in certain circumstances, so we can't just add it to the P2 vot.
-        if (profile == Gpg45Profile.M1C) {
-            return Vot.P2;
-        }
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
-                .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
+                .filter(vot -> vot.getSupportedGpg45Profiles(true).contains(profile))
                 .collect(CollectionHelper.toSingleton());
     }
 }

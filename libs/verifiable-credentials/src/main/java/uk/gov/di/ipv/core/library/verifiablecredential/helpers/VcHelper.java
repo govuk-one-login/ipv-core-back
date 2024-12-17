@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.gpg45.validators.Gpg45IdentityCheckValidator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.model.BirthDate;
+import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
 import uk.gov.di.model.IdentityCheckCredential;
@@ -191,5 +192,21 @@ public class VcHelper {
                 Integer.parseInt(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS));
         var now = Instant.now();
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
+    }
+
+    public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            return identityCheckCredential.getEvidence().stream()
+                    .flatMap(
+                            (evidence) ->
+                                    evidence.getFailedCheckDetails() == null
+                                            ? Stream.empty()
+                                            : evidence.getFailedCheckDetails().stream())
+                    .anyMatch(
+                            (failedCheck) ->
+                                    CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE
+                                            .equals(failedCheck.getFraudCheck()));
+        }
+        return false;
     }
 }

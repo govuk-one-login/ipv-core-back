@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -45,7 +46,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -222,15 +222,12 @@ public class EvaluateGpg45ScoresHandler
 
             var gpg45Vots =
                     requestedVotsByStrength.stream()
-                            .filter(vot -> vot.getSupportedGpg45Profiles() != null)
+                            .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                             .toList();
 
             for (Vot requestedVot : gpg45Vots) {
-                var profiles = requestedVot.getSupportedGpg45Profiles();
-                if (requestedVot == Vot.P2 && userIdentityService.isFraudCheckUnavailable(vcs)) {
-                    profiles = new ArrayList<>(profiles);
-                    profiles.add(Gpg45Profile.M1C);
-                }
+                var isFraudCheckUnavailable = userIdentityService.isFraudCheckUnavailable(vcs);
+                var profiles = requestedVot.getSupportedGpg45Profiles(isFraudCheckUnavailable);
 
                 var matchedProfile =
                         gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, profiles);

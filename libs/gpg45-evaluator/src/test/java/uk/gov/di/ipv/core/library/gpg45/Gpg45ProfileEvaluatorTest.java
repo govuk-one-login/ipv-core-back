@@ -54,7 +54,8 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores m1aScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2);
         assertEquals(
                 Optional.of(M1A),
-                evaluator.getFirstMatchingProfile(m1aScores, Vot.P2.getSupportedGpg45Profiles()));
+                evaluator.getFirstMatchingProfile(
+                        m1aScores, Vot.P2.getSupportedGpg45Profiles(true)));
     }
 
     @Test
@@ -62,7 +63,8 @@ class Gpg45ProfileEvaluatorTest {
         Gpg45Scores l1aScores = new Gpg45Scores(Gpg45Scores.EV_22, 0, 1, 1);
         assertEquals(
                 Optional.of(L1A),
-                evaluator.getFirstMatchingProfile(l1aScores, Vot.P1.getSupportedGpg45Profiles()));
+                evaluator.getFirstMatchingProfile(
+                        l1aScores, Vot.P1.getSupportedGpg45Profiles(true)));
     }
 
     @Test

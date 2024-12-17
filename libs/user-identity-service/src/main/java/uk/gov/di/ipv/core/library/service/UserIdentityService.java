@@ -17,12 +17,10 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.helpers.CollectionHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
-import uk.gov.di.model.CheckDetails;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.IdentityCheck;
@@ -35,7 +33,6 @@ import uk.gov.di.model.PersonWithIdentity;
 import uk.gov.di.model.PostalAddress;
 import uk.gov.di.model.SocialSecurityRecordDetails;
 
-import java.security.InvalidParameterException;
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -113,33 +110,9 @@ public class UserIdentityService {
     }
 
     public boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
-        var fraudVcList = vcs.stream().filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD).toList();
-
-        if (fraudVcList.isEmpty()) {
-            return false;
-        }
-        if (fraudVcList.size() > 1) {
-            throw new InvalidParameterException("VCs contain more than one fraud VC");
-        }
-        var fraudVc = fraudVcList.get(0);
-
-        var evidence =
-                ((IdentityCheckCredential) fraudVc.getCredential())
-                        .getEvidence().stream().collect(CollectionHelper.toSingleton());
-        var fraudScore = evidence.getIdentityFraudScore();
-        var failedCheckDetails = evidence.getFailedCheckDetails();
-        if (failedCheckDetails == null) {
-            return false;
-        }
-
-        return fraudScore == null
-                && failedCheckDetails.stream()
-                        .anyMatch(
-                                fcd ->
-                                        fcd.getFraudCheck()
-                                                .equals(
-                                                        CheckDetails.FraudCheckType
-                                                                .APPLICABLE_AUTHORITATIVE_SOURCE));
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
+                .anyMatch(VcHelper::hasUnavailableFraudCheck);
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VerifiableCredential> vcs)
