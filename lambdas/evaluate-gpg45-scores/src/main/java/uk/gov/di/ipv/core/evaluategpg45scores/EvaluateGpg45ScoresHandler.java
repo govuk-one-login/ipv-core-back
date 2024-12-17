@@ -225,9 +225,10 @@ public class EvaluateGpg45ScoresHandler
                             .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                             .toList();
 
+            var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
+
             for (Vot requestedVot : gpg45Vots) {
-                var isFraudCheckUnavailable = VcHelper.isFraudCheckUnavailable(vcs);
-                var profiles = requestedVot.getSupportedGpg45Profiles(isFraudCheckUnavailable);
+                var profiles = requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired);
 
                 var matchedProfile =
                         gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, profiles);

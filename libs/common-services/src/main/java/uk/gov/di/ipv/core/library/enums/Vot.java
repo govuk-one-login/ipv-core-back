@@ -36,9 +36,8 @@ public enum Vot {
         this.profileType = profileType;
     }
 
-    public List<Gpg45Profile> getSupportedGpg45Profiles(boolean isFraudCheckUnavailable) {
-        // If the fraud check may be available, we require a fraud score
-        if (!isFraudCheckUnavailable) {
+    public List<Gpg45Profile> getSupportedGpg45Profiles(boolean isFraudScoreRequired) {
+        if (isFraudScoreRequired) {
             return supportedGpg45Profiles.stream()
                     .filter(profile -> profile.getScores().getFraud() > 0)
                     .toList();
@@ -57,7 +56,7 @@ public enum Vot {
     public static Vot fromGpg45Profile(Gpg45Profile profile) {
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
-                .filter(vot -> vot.getSupportedGpg45Profiles(true).contains(profile))
+                .filter(vot -> vot.getSupportedGpg45Profiles(false).contains(profile))
                 .collect(CollectionHelper.toSingleton());
     }
 }

@@ -56,10 +56,10 @@ public class VotMatcherTest {
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(false)))
+                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.empty());
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                        GPG_45_SCORES, P1.getSupportedGpg45Profiles(false)))
+                        GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(L1A));
 
         var votMatch =
@@ -99,10 +99,10 @@ public class VotMatcherTest {
         when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(false)))
+                        GPG_45_SCORES, P2.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(M1A));
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(
-                        GPG_45_SCORES, P1.getSupportedGpg45Profiles(false)))
+                        GPG_45_SCORES, P1.getSupportedGpg45Profiles(true)))
                 .thenReturn(Optional.of(L1A));
         when(mockCimitUtilityService.isBreachingCiThreshold(contraIndicators, P2)).thenReturn(true);
 

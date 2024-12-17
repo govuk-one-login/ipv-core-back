@@ -374,10 +374,10 @@ public class BuildCriOauthRequestHandler
     private EvidenceRequest getEvidenceRequestForF2F(
             List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-        var isFraudCheckUnavailable = VcHelper.isFraudCheckUnavailable(vcs);
+        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
         var requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        requestedVot.getSupportedGpg45Profiles(isFraudCheckUnavailable));
+                        requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired));
 
         var minViableStrengthOpt =
                 requiredEvidences.stream()
