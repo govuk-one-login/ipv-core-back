@@ -398,8 +398,8 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fraud-fail-with-no-ci:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetJourney: EVALUATE_SCORES
+        targetState: START
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
