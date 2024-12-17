@@ -11,6 +11,13 @@ Feature: P2 App journey
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
 
+  Scenario: International address user starting journey sends an audit event
+    When I submit a 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'useApp' event
+    Then I get a 'dcmaw' CRI response
+    And an 'IPV_INTERNATIONAL_ADDRESS_START' audit event was recorded [local only]
+
   Scenario: International address user sends a next event on exit page from DCMAW
     When I submit a 'international' event
     Then I get a 'non-uk-app-intro' page response
