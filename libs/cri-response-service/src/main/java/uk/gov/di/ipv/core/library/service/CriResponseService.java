@@ -4,6 +4,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
@@ -43,7 +44,7 @@ public class CriResponseService {
     }
 
     public void persistCriResponse(
-            String userId,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             Cri credentialIssuer,
             String issuerResponse,
             String oauthState,
@@ -51,13 +52,15 @@ public class CriResponseService {
             List<String> featureSet) {
         CriResponseItem criResponseItem =
                 CriResponseItem.builder()
-                        .userId(userId)
+                        .userId(clientOAuthSessionItem.getUserId())
                         .credentialIssuer(credentialIssuer.getId())
                         .issuerResponse(issuerResponse)
                         .oauthState(oauthState)
                         .dateCreated(Instant.now())
                         .status(status)
                         .featureSet(featureSet)
+                        .reproveIdentity(
+                                Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity()))
                         .build();
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }

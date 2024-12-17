@@ -165,6 +165,7 @@ class BuildUserIdentityHandlerTest {
         ipvSession.setIpvSessionId(IPV_SESSION_ID);
         ipvSession.setClientOAuthSessionId("dummyClientOAuthSessionId");
         ipvSession.setVot(Vot.P2);
+        ipvSession.setTargetVot(Vot.P2);
         ipvSession.setAccessTokenMetadata(new AccessTokenMetadata());
 
         var oAuthSession = new ClientOAuthSessionItem();

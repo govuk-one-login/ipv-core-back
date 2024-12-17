@@ -7,6 +7,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.calldcmawasynccri.exception.DcmawAsyncCriHttpResponseException;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
@@ -94,6 +95,7 @@ public class CallDcmawAsyncCriHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(DCMAW_ASYNC);
@@ -131,6 +133,8 @@ public class CallDcmawAsyncCriHandler
             validatePendingVcResponse(vcResponse, clientOAuthSessionItem);
             criStoringService.recordCriResponse(
                     request, DCMAW_ASYNC, oauthState, clientOAuthSessionItem, featureSets);
+
+            dcmawAsyncCriService.sendAuditEventForAppHandoff(request, clientOAuthSessionItem);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

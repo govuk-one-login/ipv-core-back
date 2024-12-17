@@ -11,7 +11,11 @@ dependencies {
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),
-			project(":libs:verifiable-credentials")
+			project(":libs:verifiable-credentials"),
+			project(":libs:gpg45-evaluator")
+
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,

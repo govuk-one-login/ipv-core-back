@@ -169,16 +169,17 @@ When(
 
 // Variant of the journey start that retries, e.g. to wait for an async F2F request
 When(
-  /I start a new '([\w-]+)' journey and return to a '([\w-]+)' page response$/,
+  /I start a new '([\w-]+)' journey( with reprove identity)? and return to a '([\w-]+)' page response$/,
   { timeout: MAX_ATTEMPTS * RETRY_DELAY_MILLIS + 5000 },
   async function (
     this: World,
     journeyType: string,
+    reproveIdentity: " with reprove identity" | undefined,
     expectedPage: string,
   ): Promise<void> {
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
-      await startNewJourney(this, journeyType, false, undefined);
+      await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
 
       if (!this.lastJourneyEngineResponse) {
         throw new Error("No last journey engine response found.");
@@ -503,8 +504,12 @@ Then(
 );
 
 Then(
-  /^I get a(?:n)? (successful|unsuccessful) MFA reset result$/,
-  async function (this: World, expectedMfaResetResult: string): Promise<void> {
+  /^I get a(?:n)? (successful|unsuccessful) MFA reset result( with failure code '([\w_]+)')?$/,
+  async function (
+    this: World,
+    expectedMfaResetResult: string,
+    expectedFailureCode: string | undefined,
+  ): Promise<void> {
     if (!this.mfaResetResult) {
       throw new Error("No MFA reset result found.");
     }
@@ -514,6 +519,14 @@ Then(
       expectedMfaResetResult === "successful",
       "MFA reset results do not match.",
     );
+
+    if (expectedFailureCode) {
+      assert.equal(
+        this.mfaResetResult.failure_code,
+        expectedFailureCode,
+        "MFA failure codes do not match.",
+      );
+    }
   },
 );
 

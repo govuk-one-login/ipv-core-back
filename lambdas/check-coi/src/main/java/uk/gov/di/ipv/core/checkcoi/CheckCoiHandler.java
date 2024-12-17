@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -19,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -50,7 +52,6 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
-import static uk.gov.di.ipv.core.library.enums.CoiCheckType.FULL_NAME_AND_DOB;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
@@ -109,6 +110,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         LogHelper.attachComponentId(configService);
@@ -145,9 +147,11 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
                     switch (checkType) {
-                        case GIVEN_OR_FAMILY_NAME_AND_DOB -> userIdentityService
-                                .areNamesAndDobCorrelated(combinedCredentials);
-                        case FULL_NAME_AND_DOB -> userIdentityService.areVcsCorrelated(
+                        case STANDARD -> userIdentityService.areNamesAndDobCorrelated(
+                                combinedCredentials);
+                        case REVERIFICATION -> userIdentityService
+                                .areNamesAndDobCorrelatedForReverification(combinedCredentials);
+                        case ACCOUNT_INTERVENTION -> userIdentityService.areVcsCorrelated(
                                 combinedCredentials);
                     };
 
@@ -169,6 +173,10 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                         successfulCheck
                                 ? ReverificationStatus.SUCCESS
                                 : ReverificationStatus.FAILED);
+                if (!successfulCheck) {
+                    ipvSession.setFailureCode(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH);
+                    ipvSessionService.updateIpvSession(ipvSession);
+                }
             }
 
             if (!successfulCheck) {
@@ -271,7 +279,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LOGGER.info(
                     LogHelper.buildLogMessage(
                             "Reprove identity flag set - checking full name and DOB"));
-            return FULL_NAME_AND_DOB;
+            return CoiCheckType.ACCOUNT_INTERVENTION;
         }
         return RequestHelper.getCoiCheckType(request);
     }

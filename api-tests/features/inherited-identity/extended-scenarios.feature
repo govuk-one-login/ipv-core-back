@@ -174,7 +174,7 @@ Feature: Inherited identity extended scenarios
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-score-2' details to the CRI stub
-    Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
     When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity

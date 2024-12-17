@@ -16,3 +16,8 @@ export const codepipeline = {
   ...base,
   retry: 1,
 };
+
+export const trafficGeneration = {
+  ...base,
+  parallel: 3,
+};

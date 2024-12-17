@@ -3,12 +3,14 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
+	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
 	api libs.nimbusdsOauth2OidcSdk,
 			libs.diVocab
 	implementation platform(libs.awsSdkBom),
+			platform(libs.openTelemetryBom),
 			libs.awsLambdaJavaEvents,
 			libs.awsSdkDynamodb,
 			libs.awsSdkDynamodbEnhanced,
@@ -17,12 +19,16 @@ dependencies {
 			libs.commonsCollections,
 			libs.jacksonDatabind,
 			libs.jacksonDataformatYaml,
+			libs.openTelemetryJavaHttpClient,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
 			libs.powertoolsTracing
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
+
+	aspect libs.powertoolsMetrics,
+			libs.aspectj
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,

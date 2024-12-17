@@ -135,6 +135,8 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   POST_APP_DOC_CHECK_NAMES_ONLY:
     response:
@@ -232,6 +234,8 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_NAMES_WITH_ADDRESS:
     nestedJourney: APP_DOC_CHECK
@@ -288,7 +292,7 @@ states:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: GIVEN_OR_FAMILY_NAME_AND_DOB
+        checkType: STANDARD
     events:
       coi-check-passed:
         targetState: EVALUATE_GPG45_SCORES
@@ -357,6 +361,7 @@ states:
     response:
       type: page
       pageId: page-ipv-success
+      context: updateIdentity
     events:
       next:
         targetState: RETURN_TO_RP

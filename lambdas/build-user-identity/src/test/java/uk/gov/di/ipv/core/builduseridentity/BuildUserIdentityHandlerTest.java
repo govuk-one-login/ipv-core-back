@@ -90,6 +90,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
@@ -334,6 +335,26 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+    }
+
+    @Test
+    void shouldReturnJourneyErrorResponseIfTargetVotIsNull() throws Exception {
+        // Arrange
+        ipvSessionItem.setTargetVot(null);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        // Act
+        var response = buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+
+        // Assert
+        Map<String, String> body =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(500, response.getStatusCode());
+        assertEquals(MISSING_TARGET_VOT.getCode(), Integer.valueOf(body.get("error")));
+        assertEquals(MISSING_TARGET_VOT.getMessage(), body.get("error_description"));
     }
 
     @Test

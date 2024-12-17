@@ -324,9 +324,10 @@ components:
           type: boolean
         sub:
           type: string
-        error_code:
+        failure_code:
           type: string
-        error_description:
+          enum: ["no_identity_available", "identity_check_incomplete", "identity_check_failed", "identity_did_not_match"]
+        failure_description:
           type: string
       required:
         - success

@@ -5,15 +5,11 @@ public enum CoreFeatureFlag implements FeatureFlag {
     RESET_IDENTITY("resetIdentity"),
     INHERITED_IDENTITY("inheritedIdentity"),
     REPEAT_FRAUD_CHECK("repeatFraudCheckEnabled"),
-    EVCS_WRITE_ENABLED("evcsWriteEnabled"),
-    EVCS_ASYNC_WRITE_ENABLED("evcsAsyncWriteEnabled"),
-    EVCS_READ_ENABLED("evcsReadEnabled"),
     MFA_RESET("mfaResetEnabled"),
     P1_JOURNEYS_ENABLED("p1JourneysEnabled"),
     SQS_ASYNC("sqsAsync"),
     KID_JAR_HEADER("kidJarHeaderEnabled"),
-    DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck"),
-    DOB_EXPERIAN_CHECK_ENABLED("dobExperianCheckEnabled");
+    DL_AUTH_SOURCE_CHECK("drivingLicenceAuthCheck");
 
     private final String name;
 

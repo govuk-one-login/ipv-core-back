@@ -9,9 +9,11 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.builduseridentity.UserIdentityRequestHandler;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
@@ -32,6 +34,9 @@ import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 public class UserReverificationHandler extends UserIdentityRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final ReverificationFailureCode DEFAULT_FAILURE_CODE =
+            ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE;
 
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
@@ -55,6 +60,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
@@ -73,11 +79,13 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                             .equals(ReverificationStatus.SUCCESS)) {
                 response = ReverificationResponse.successResponse(userId);
             } else {
-                response =
-                        ReverificationResponse.failureResponse(
-                                userId,
-                                ipvSessionItem.getErrorCode(),
-                                ipvSessionItem.getErrorDescription());
+
+                var failureCode =
+                        ipvSessionItem.getFailureCode() != null
+                                ? ipvSessionItem.getFailureCode()
+                                : DEFAULT_FAILURE_CODE;
+
+                response = ReverificationResponse.failureResponse(userId, failureCode);
             }
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
         } catch (ParseException e) {

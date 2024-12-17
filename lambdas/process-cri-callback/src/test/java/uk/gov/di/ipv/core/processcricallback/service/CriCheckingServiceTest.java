@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -28,6 +29,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
@@ -44,16 +46,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitEmptyDrivingPermit;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
@@ -84,6 +87,7 @@ class CriCheckingServiceTest {
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private MockedStatic<VcHelper> mockedVcHelper;
+    @Mock private IpvSessionService mockIpvSessionService;
     @InjectMocks private CriCheckingService criCheckingService;
 
     @Test
@@ -465,6 +469,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(M1A_ADDRESS_VC);
+        var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCimitService.getContraIndicators(any(), any(), any()))
@@ -480,11 +485,11 @@ class CriCheckingServiceTest {
                         vcs,
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -492,6 +497,7 @@ class CriCheckingServiceTest {
         // Arrange
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(M1A_ADDRESS_VC);
+        var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
         ipvSessionItem.setTargetVot(Vot.P1);
@@ -508,11 +514,33 @@ class CriCheckingServiceTest {
                         vcs,
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
+    }
+
+    @Test
+    void checkVcResponseShouldThrowIfTargetVotIsNull() {
+        // Arrange
+        var ipvSessionItem = buildValidIpvSessionItem();
+        ipvSessionItem.setTargetVot(null);
+
+        // Act
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                criCheckingService.checkVcResponse(
+                                        List.of(),
+                                        "1.1.1.1",
+                                        buildValidClientOAuthSessionItem(),
+                                        ipvSessionItem,
+                                        List.of(M1B_DCMAW_VC)));
+
+        // Assert
+        assertEquals(MISSING_TARGET_VOT, exception.getErrorResponse());
     }
 
     @Test
@@ -532,7 +560,8 @@ class CriCheckingServiceTest {
                         List.of(),
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        List.of());
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
@@ -553,12 +582,14 @@ class CriCheckingServiceTest {
                         List.of(),
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        List.of());
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
         verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
         verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
     }
 
     @Test
@@ -578,7 +609,8 @@ class CriCheckingServiceTest {
                         List.of(),
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        List.of());
 
         // Assert
         assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
@@ -602,11 +634,11 @@ class CriCheckingServiceTest {
                         List.of(),
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        List.of());
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
-        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     @Test
@@ -614,6 +646,7 @@ class CriCheckingServiceTest {
         // Arrange for VCs not successful
         var callbackRequest = buildValidCallbackRequest();
         var vcs = List.of(M1A_ADDRESS_VC);
+        var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
         when(mockCimitService.getContraIndicators(any(), any(), any()))
@@ -629,11 +662,11 @@ class CriCheckingServiceTest {
                         vcs,
                         callbackRequest.getIpAddress(),
                         clientOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
-        verify(mockSessionCredentialsService).getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID);
     }
 
     @Nested
@@ -653,16 +686,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of());
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of());
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -675,9 +705,6 @@ class CriCheckingServiceTest {
             var ipvSessionItem = buildValidIpvSessionItem();
 
             var drivingPermitVc = vcDrivingPermit();
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(drivingPermitVc));
 
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(M1B_DCMAW_VC)).thenCallRealMethod();
             mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(drivingPermitVc)).thenReturn(false);
@@ -687,7 +714,8 @@ class CriCheckingServiceTest {
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of(M1B_DCMAW_VC));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -699,16 +727,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermitMissingDrivingPermit()));
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of(M1B_DCMAW_VC));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -720,16 +745,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermitEmptyDrivingPermit()));
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of(vcDrivingPermitEmptyDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -741,16 +763,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermitNonDcmaw()));
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of(vcDrivingPermitNonDcmaw()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -763,16 +782,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermit()));
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(M1B_DCMAW_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of(vcDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         }
@@ -783,16 +799,13 @@ class CriCheckingServiceTest {
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
 
-            when(mockSessionCredentialsService.getCredentials(
-                            ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId()))
-                    .thenReturn(List.of(vcDrivingPermit()));
-
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(DCMAW_PASSPORT_VC),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
-                            ipvSessionItem);
+                            ipvSessionItem,
+                            List.of());
 
             assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
         }

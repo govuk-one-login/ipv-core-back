@@ -33,6 +33,7 @@ core:
     coi:
       # Test COI config
       familyNameChars: 5
+      givenNameChars: 3
   clients:
     orchStub:
       id: orchStub
@@ -40,14 +41,26 @@ core:
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "openid"
-      jwksUrl: "http://localhost:4500/.well-known/jwks.json"
+      jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
     authStub:
       id: authStub
       issuer: authStub
       publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
       validRedirectUrls: "http://localhost:4500/callback"
       validScopes: "reverification"
-      jwksUrl: "http://localhost:4500/.well-known/jwks.json"
+      jwksUrl: "http://host.docker.internal:4500/.well-known/jwks.json"
+    orchApiTest:
+      id: orchApiTest
+      issuer: orchApiTest
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "openid"
+    authApiTest:
+      id: authApiTest
+      issuer: authApiTest
+      publicKeyMaterialForCoreToVerify: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
+      validRedirectUrls: "http://localhost:4500/callback"
+      validScopes: "reverification"
   cimit:
     componentId: "https://cimit.stubs.account.gov.uk"
     signingKey: "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"E9ZzuOoqcVU4pVB9rpmTzezjyOPRlOmPGJHKi8RSlIM\",\"y\":\"KlTMZthHZUkYz5AleTQ8jff0TJiS3q2OB9L5Fw4xA04\"}"
@@ -368,9 +381,6 @@ core:
     internationalAddressEnabled: false
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
-    evcsWriteEnabled: true
-    evcsAsyncWriteEnabled: true
-    evcsReadEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
     p1JourneysEnabled: false
@@ -390,19 +400,6 @@ core:
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
-    evcsWrite:
-      featureFlags:
-        evcsWriteEnabled: true
-        evcsAsyncWriteEnabled: true
-    evcsAsyncWrite:
-      featureFlags:
-        evcsAsyncWriteEnabled: true
-    evcsNonAsyncWrite:
-      featureFlags:
-        evcsWriteEnabled: true
-    evcsRead:
-      featureFlags:
-        evcsReadEnabled: true
     clearUsersIdentity:
       featureFlags:
         resetIdentity: true

@@ -34,9 +34,13 @@ mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.20"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
+openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.10.0-alpha"
+openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
+openTelemetryJavaHttpClient = { module = "io.opentelemetry.instrumentation:opentelemetry-java-http-client" }
 pactConsumerJunit = { module = "au.com.dius.pact.consumer:junit5", version.ref = "pact" }
 pactProviderJunit = { module = "au.com.dius.pact.provider:junit5", version.ref = "pact" }
 powertoolsLogging = { module = "software.amazon.lambda:powertools-logging", version.ref = "powertools" }
+powertoolsMetrics = { module = "software.amazon.lambda:powertools-metrics", version.ref = "powertools" }
 powertoolsParameters = { module = "software.amazon.lambda:powertools-parameters", version.ref = "powertools" }
 powertoolsTracing = { module = "software.amazon.lambda:powertools-tracing", version.ref = "powertools" }
 systemStubs = "uk.org.webcompere:system-stubs-jupiter:2.1.3"

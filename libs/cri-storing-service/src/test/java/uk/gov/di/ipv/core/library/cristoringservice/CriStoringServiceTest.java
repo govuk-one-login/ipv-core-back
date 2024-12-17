@@ -41,6 +41,7 @@ import static org.mockito.Mockito.verify;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
@@ -58,7 +59,7 @@ class CriStoringServiceTest {
     @Mock private CimitService mockCimitService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @InjectMocks private CriStoringService criStoringService;
-    @Captor private ArgumentCaptor<String> userIdCaptor;
+    @Captor private ArgumentCaptor<ClientOAuthSessionItem> clientSessionItemCaptor;
     @Captor private ArgumentCaptor<Cri> criCaptor;
     @Captor private ArgumentCaptor<String> vcResponseCaptor;
     @Captor private ArgumentCaptor<String> criOAuthSessionIdCaptor;
@@ -106,7 +107,7 @@ class CriStoringServiceTest {
         // verify
         verify(mockCriResponseService)
                 .persistCriResponse(
-                        userIdCaptor.capture(),
+                        clientSessionItemCaptor.capture(),
                         criCaptor.capture(),
                         vcResponseCaptor.capture(),
                         criOAuthSessionIdCaptor.capture(),
@@ -120,7 +121,9 @@ class CriStoringServiceTest {
         assertEquals(F2F, criCaptor.getValue());
         assertEquals(TEST_CRI_OAUTH_SESSION_ID, criOAuthSessionIdCaptor.getValue());
 
-        assertEquals(clientOAuthSessionItem.getUserId(), userIdCaptor.getValue());
+        assertEquals(
+                clientOAuthSessionItem.getUserId(), clientSessionItemCaptor.getValue().getUserId());
+        assertEquals(Boolean.TRUE, clientSessionItemCaptor.getValue().getReproveIdentity());
         var expectedVcResponseDto =
                 VerifiableCredentialResponseDto.builder()
                         .userId(clientOAuthSessionItem.getUserId())
@@ -140,6 +143,7 @@ class CriStoringServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var sessionVcs = List.of(M1A_ADDRESS_VC);
 
         // Act
         criStoringService.storeVcs(
@@ -148,7 +152,8 @@ class CriStoringServiceTest {
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
-                mockIpvSessionItem);
+                mockIpvSessionItem,
+                sessionVcs);
 
         // Assert
         verify(mockCimitService)
@@ -163,7 +168,7 @@ class CriStoringServiceTest {
                         vcListCaptor.capture(),
                         eq(clientOAuthSessionItem.getGovukSigninJourneyId()),
                         eq(callbackRequest.getIpAddress()));
-        assertEquals(List.of(vc), vcListCaptor.getValue());
+        assertEquals(List.of(M1A_ADDRESS_VC, vc), vcListCaptor.getValue());
 
         assertEquals(vc, vcCaptor.getValue());
 
@@ -195,7 +200,8 @@ class CriStoringServiceTest {
                 callbackRequest.getDeviceInformation(),
                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                 clientOAuthSessionItem,
-                mockIpvSessionItem);
+                mockIpvSessionItem,
+                List.of());
 
         // Assert
         verify(mockCimitService, never()).submitVC(any(), any(), any());
@@ -217,7 +223,8 @@ class CriStoringServiceTest {
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
-                mockIpvSessionItem);
+                mockIpvSessionItem,
+                List.of());
 
         // Assert
         verify(mockSessionCredentialsService)
@@ -241,7 +248,8 @@ class CriStoringServiceTest {
                 callbackRequest.getDeviceInformation(),
                 List.of(vc),
                 clientOAuthSessionItem,
-                mockIpvSessionItem);
+                mockIpvSessionItem,
+                List.of());
 
         // Assert
         verify(mockCimitService)
@@ -286,7 +294,8 @@ class CriStoringServiceTest {
                 callbackRequest.getDeviceInformation(),
                 List.of(),
                 clientOAuthSessionItem,
-                mockIpvSessionItem);
+                mockIpvSessionItem,
+                List.of());
 
         // Assert
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -313,7 +322,8 @@ class CriStoringServiceTest {
                                 callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
-                                mockIpvSessionItem));
+                                mockIpvSessionItem,
+                                List.of()));
     }
 
     @Test
@@ -336,7 +346,8 @@ class CriStoringServiceTest {
                                 callbackRequest.getDeviceInformation(),
                                 List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
                                 clientOAuthSessionItem,
-                                mockIpvSessionItem));
+                                mockIpvSessionItem,
+                                List.of()));
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
@@ -352,6 +363,7 @@ class CriStoringServiceTest {
         return ClientOAuthSessionItem.builder()
                 .userId(TEST_USER_ID)
                 .scope(ScopeConstants.OPENID)
+                .reproveIdentity(Boolean.TRUE)
                 .build();
     }
 }

@@ -163,8 +163,39 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
     Then I get a 'page-ipv-success' page response
 
+  Scenario: Auth source check is required if doc identifiers do not match
+    Given I activate the 'drivingLicenceAuthCheck' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-dva-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'pyi-suggest-other-options' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'page-ipv-success' page response
+
   Scenario: Reverification journeys with a driving licence require an auth source check
-    Give I activate the 'drivingLicenceAuthCheck' feature set
+    Given I activate the 'drivingLicenceAuthCheck' feature set
     And the subject already has the following credentials
       | CRI     | scenario                     |
       | dcmaw   | kenneth-driving-permit-valid |

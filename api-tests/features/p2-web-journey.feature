@@ -1,4 +1,5 @@
 @Build
+@TrafficGeneration
 Feature: P2 Web document journey
   Background: Start P2 journey and ineligible for the app
     Given I start a new 'medium-confidence' journey

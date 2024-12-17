@@ -420,31 +420,6 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturnSessionEndJourneyIfStateIsSessionTimeout() throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey(JOURNEY_NEXT)
-                        .ipvSessionId(TEST_SESSION_ID)
-                        .build();
-
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
-        ipvSessionItem.pushState(new JourneyState(SESSION_TIMEOUT, TIMEOUT_UNRECOVERABLE_STATE));
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
-
-        Map<String, Object> output =
-                getProcessJourneyStepHandler().handleRequest(input, mockContext);
-
-        assertEquals(JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE, output.get("journey"));
-    }
-
-    @Test
     void shouldClearOauthSessionIfItExists() throws Exception {
         var input =
                 JourneyRequest.builder()
