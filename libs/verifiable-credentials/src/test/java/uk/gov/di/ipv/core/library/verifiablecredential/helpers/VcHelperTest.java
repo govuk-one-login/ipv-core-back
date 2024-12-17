@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
@@ -37,6 +38,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
@@ -245,5 +247,72 @@ class VcHelperTest {
                 Arguments.of("VC missing evidence", vcPassportM1aMissingEvidence()),
                 Arguments.of("Failed passport VC", vcPassportM1aFailed()),
                 Arguments.of("Failed fraud check", vcExperianFraudEvidenceFailed()));
+    }
+
+    @Test
+    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcFraudApplicableAuthoritativeSourceFailed(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = VcHelper.isFraudCheckUnavailable(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForOtherFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcExperianFraudEvidenceFailed(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = VcHelper.isFraudCheckUnavailable(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForSuccessfulFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcExperianFraudScoreOne(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = VcHelper.isFraudCheckUnavailable(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void shouldNotAllowM1cForMissingFraudCheck() {
+
+        // Arrange
+        var vcs = List.of(DCMAW_PASSPORT_VC, M1A_ADDRESS_VC, vcVerificationM1a());
+
+        // Act
+        var result = VcHelper.isFraudCheckUnavailable(vcs);
+
+        // Assert
+        assertFalse(result);
     }
 }

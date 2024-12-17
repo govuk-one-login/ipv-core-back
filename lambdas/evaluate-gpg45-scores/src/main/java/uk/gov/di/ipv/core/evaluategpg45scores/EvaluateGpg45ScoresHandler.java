@@ -226,7 +226,7 @@ public class EvaluateGpg45ScoresHandler
                             .toList();
 
             for (Vot requestedVot : gpg45Vots) {
-                var isFraudCheckUnavailable = userIdentityService.isFraudCheckUnavailable(vcs);
+                var isFraudCheckUnavailable = VcHelper.isFraudCheckUnavailable(vcs);
                 var profiles = requestedVot.getSupportedGpg45Profiles(isFraudCheckUnavailable);
 
                 var matchedProfile =

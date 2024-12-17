@@ -109,12 +109,6 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
-    public boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
-        return vcs.stream()
-                .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(VcHelper::hasNoApplicableFraudCheck);
-    }
-
     public Optional<IdentityClaim> findIdentityClaim(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         return findIdentityClaim(vcs, true);
@@ -261,7 +255,7 @@ public class UserIdentityService {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
             var returnCodes = new ArrayList<>(getSuccessReturnCode(contraIndicators));
-            if (isFraudCheckUnavailable(vcs)) {
+            if (VcHelper.isFraudCheckUnavailable(vcs)) {
                 returnCodes.add(
                         new ReturnCode(
                                 configService.getParameter(RETURN_CODES_FRAUD_CHECK_UNAVAILABLE)));

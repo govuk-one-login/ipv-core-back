@@ -194,7 +194,13 @@ public class VcHelper {
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }
 
-    public static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
+    public static boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
+        return vcs.stream()
+                .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
+                .anyMatch(VcHelper::hasNoApplicableFraudCheck);
+    }
+
+    private static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             return identityCheckCredential.getEvidence().stream()
                     .flatMap(

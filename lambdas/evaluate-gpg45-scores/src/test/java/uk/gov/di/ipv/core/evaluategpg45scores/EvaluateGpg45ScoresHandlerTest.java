@@ -337,7 +337,6 @@ class EvaluateGpg45ScoresHandlerTest {
         when(sessionCredentialsService.getCredentials(TEST_SESSION_ID, TEST_USER_ID))
                 .thenReturn(vcs);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-        when(userIdentityService.isFraudCheckUnavailable(vcs)).thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES_PLUS_M1C)))
                 .thenReturn(Optional.of(M1C));
         when(gpg45ProfileEvaluator.buildScore(any()))
