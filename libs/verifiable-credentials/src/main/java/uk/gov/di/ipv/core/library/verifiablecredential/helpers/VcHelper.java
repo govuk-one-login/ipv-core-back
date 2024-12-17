@@ -194,7 +194,7 @@ public class VcHelper {
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }
 
-    public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
+    public static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             return identityCheckCredential.getEvidence().stream()
                     .flatMap(

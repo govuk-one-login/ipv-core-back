@@ -112,7 +112,7 @@ public class UserIdentityService {
     public boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(VcHelper::hasUnavailableFraudCheck);
+                .anyMatch(VcHelper::hasNoApplicableFraudCheck);
     }
 
     public Optional<IdentityClaim> findIdentityClaim(List<VerifiableCredential> vcs)
