@@ -6,7 +6,7 @@ Feature: International identity reuse update details
             | CRI     | scenario               |
             | dcmaw   | kenneth-passport-valid |
             | address | kenneth-current        |
-            | fraud   | kenneth-score-0        |
+            | fraud   | kenneth-no-applicable   |
         When I start a new 'medium-confidence' journey
         Then I get a 'page-ipv-reuse' page response
         When I activate the 'internationalAddress' feature sets
@@ -20,7 +20,7 @@ Feature: International identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-score-0' details to the CRI stub
+        When I submit 'kenneth-no-applicable' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -41,7 +41,7 @@ Feature: International identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-family-name-and-address-score-0' details to the CRI stub
+        When I submit 'kenneth-changed-family-name-and-address-no-applicable' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
@@ -63,7 +63,7 @@ Feature: International identity reuse update details
             | Attribute | Values               |
             | context   | "international_user" |
         Then I get a 'fraud' CRI response
-        When I submit 'kenneth-changed-given-name-and-address-score-0' details to the CRI stub
+        When I submit 'kenneth-changed-given-name-and-address-no-applicable' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
         When I submit a 'next' event
         Then I get an OAuth response
