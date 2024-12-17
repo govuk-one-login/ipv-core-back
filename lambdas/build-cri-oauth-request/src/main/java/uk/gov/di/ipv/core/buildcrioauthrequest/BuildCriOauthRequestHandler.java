@@ -214,7 +214,7 @@ public class BuildCriOauthRequestHandler
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
-            EmbeddedMetricHelper.criRedirect(cri.getId(), govukSigninJourneyId);
+            EmbeddedMetricHelper.criRedirect(cri.getId());
 
             var message =
                     new StringMapMessage()

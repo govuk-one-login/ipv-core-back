@@ -266,15 +266,14 @@ public class ProcessCriCallbackHandler
         configService.setFeatureSet(callbackRequest.getFeatureSet());
 
         // Attach variables to logs
-        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-        LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientOAuthSessionItem.getGovukSigninJourneyId());
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachComponentId(configService);
 
-        EmbeddedMetricHelper.criReturn(
-                callbackRequest.getCredentialIssuerId(), govukSigninJourneyId);
+        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());
 
         // Validate callback request
         if (callbackRequest.getError() != null) {
