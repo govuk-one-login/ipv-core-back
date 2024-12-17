@@ -6,6 +6,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.callticfcri.service.TicfCriService;
@@ -107,6 +108,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
         LogHelper.attachCriIdToLogs(TICF);

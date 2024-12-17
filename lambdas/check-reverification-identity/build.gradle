@@ -13,10 +13,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			project(path: ":libs:test-helpers"),

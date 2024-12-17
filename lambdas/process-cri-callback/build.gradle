@@ -18,10 +18,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
