@@ -204,12 +204,12 @@ public class VcHelper {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             return identityCheckCredential.getEvidence().stream()
                     .flatMap(
-                            (evidence) ->
+                            evidence ->
                                     evidence.getFailedCheckDetails() == null
                                             ? Stream.empty()
                                             : evidence.getFailedCheckDetails().stream())
                     .anyMatch(
-                            (failedCheck) ->
+                            failedCheck ->
                                     CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE
                                             .equals(failedCheck.getFraudCheck()));
         }
