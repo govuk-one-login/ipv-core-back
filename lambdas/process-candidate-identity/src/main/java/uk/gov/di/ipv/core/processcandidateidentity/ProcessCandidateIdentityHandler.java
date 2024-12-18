@@ -45,6 +45,7 @@ import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.IdentityCheckCredential;
 
+import java.text.ParseException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -248,6 +249,13 @@ public class ProcessCandidateIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_GET_STORED_CIS)
                     .toObjectMap();
+        } catch (ParseException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to get VOT from operational VC", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -293,7 +301,7 @@ public class ProcessCandidateIdentityHandler
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                    UnknownCoiCheckTypeException, CredentialParseException {
+                    UnknownCoiCheckTypeException, CredentialParseException, ParseException {
         if (COI_CHECK_TYPES.contains(processIdentityType)
                 && !isUpdateAddressJourney(processIdentityType, sessionVcs)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
@@ -362,7 +370,7 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, CiRetrievalException {
+            throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException {
 
         if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
             return JOURNEY_VCS_NOT_CORRELATED;
