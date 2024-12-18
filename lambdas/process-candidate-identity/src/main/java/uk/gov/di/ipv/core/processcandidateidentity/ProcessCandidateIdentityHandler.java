@@ -5,10 +5,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
+import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.*;
@@ -27,10 +28,19 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriServiceException;
-import uk.gov.di.ipv.core.processcandidateidentity.service.*;
+import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
+import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
+import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
+import uk.gov.di.ipv.core.processcandidateidentity.service.TicfCriService;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.EnumSet;
@@ -41,9 +51,18 @@ import java.util.Set;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.*;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.*;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.*;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class ProcessCandidateIdentityHandler
         implements RequestHandler<ProcessRequest, Map<String, Object>> {
@@ -71,10 +90,7 @@ public class ProcessCandidateIdentityHandler
     private final CimitUtilityService cimitUtilityService;
 
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
-            EnumSet.of(
-                    CandidateIdentityType.NEW,
-                    CandidateIdentityType.PENDING,
-                    CandidateIdentityType.REVERIFICATION);
+            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.PENDING, REVERIFICATION);
 
     private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
             EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.PENDING);
@@ -165,6 +181,9 @@ public class ProcessCandidateIdentityHandler
                     sessionCredentialsService.getCredentials(
                             ipvSessionItem.getIpvSessionId(), userId);
 
+            var auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
             return processCandidateThroughJourney(
                     request,
                     processIdentityType,
@@ -172,14 +191,15 @@ public class ProcessCandidateIdentityHandler
                     clientOAuthSessionItem,
                     deviceInformation,
                     ipAddress,
-                    sessionVcs);
+                    sessionVcs,
+                    auditEventUser);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to process identity", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (UnknownProcessIdentityType e) {
+        } catch (UnknownProcessIdentityTypeException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unknown process identity type", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
@@ -230,6 +250,19 @@ public class ProcessCandidateIdentityHandler
         }
     }
 
+    private CoiCheckType getCoiCheckType(
+            CandidateIdentityType identityType, ClientOAuthSessionItem clientOAuthSessionItem) {
+        if (REVERIFICATION.equals(identityType)) {
+            return CoiCheckType.REVERIFICATION;
+        }
+
+        if (clientOAuthSessionItem.getReproveIdentity()) {
+            return CoiCheckType.ACCOUNT_INTERVENTION;
+        }
+
+        return CoiCheckType.STANDARD;
+    }
+
     private Map<String, Object> processCandidateThroughJourney(
             ProcessRequest request,
             CandidateIdentityType processIdentityType,
@@ -237,19 +270,20 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             String ipAddress,
-            List<VerifiableCredential> sessionVcs)
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
                     UnknownCoiCheckTypeException, CredentialParseException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
-            var coiCheckType = RequestHelper.getCoiCheckType(request);
+            var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             coiCheckType,
                             deviceInformation,
-                            ipAddress,
-                            sessionVcs);
+                            sessionVcs,
+                            auditEventUser);
 
             if (!isCoiCheckSuccessful) {
                 return JOURNEY_COI_CHECK_FAILED;
@@ -263,8 +297,8 @@ public class ProcessCandidateIdentityHandler
                     clientOAuthSessionItem,
                     identityType,
                     deviceInformation,
-                    ipAddress,
-                    sessionVcs);
+                    sessionVcs,
+                    auditEventUser);
         }
 
         if (GPG_45_TYPES.contains(processIdentityType)) {
@@ -274,17 +308,26 @@ public class ProcessCandidateIdentityHandler
                             clientOAuthSessionItem,
                             deviceInformation,
                             ipAddress,
-                            sessionVcs);
+                            sessionVcs,
+                            auditEventUser);
 
-            if (!JOURNEY_NEXT.equals(journey)) {
+            if (journey != null) {
                 return journey.toObjectMap();
             }
         }
 
         if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
-            return getJourneyResponseFromTicfCall(
-                            ipvSessionItem, clientOAuthSessionItem, deviceInformation, ipAddress)
-                    .toObjectMap();
+            var journey =
+                    getJourneyResponseFromTicfCall(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            deviceInformation,
+                            ipAddress,
+                            auditEventUser);
+
+            if (journey != null) {
+                return journey.toObjectMap();
+            }
         }
 
         return JOURNEY_NEXT.toObjectMap();
@@ -295,7 +338,8 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             String ipAddress,
-            List<VerifiableCredential> sessionVcs)
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser)
             throws HttpResponseExceptionWithErrorBody, CiRetrievalException {
 
         if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
@@ -317,34 +361,34 @@ public class ProcessCandidateIdentityHandler
         var matchingGpg45Profile =
                 evaluateGpg45ScoresService.findMatchingGpg45Profile(
                         sessionVcs,
-                        ipvSessionItem,
                         clientOAuthSessionItem,
-                        ipAddress,
                         deviceInformation,
-                        contraIndicators);
+                        contraIndicators,
+                        auditEventUser);
 
         if (matchingGpg45Profile.isEmpty()) {
-            logLambdaResponse("No GPG45 profiles have been met", JOURNEY_GPG45_UNMET);
+            LOGGER.info(LogHelper.buildLogMessage("No GPG45 profiles have been met"));
             return JOURNEY_GPG45_UNMET;
         }
 
         ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
-        logLambdaResponse("A GPG45 profile has been met", JOURNEY_NEXT);
+        LOGGER.info(LogHelper.buildLogMessage("A GPG45 profile has been met"));
 
-        return JOURNEY_NEXT;
+        return null;
     }
 
     public JourneyResponse getJourneyResponseFromTicfCall(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
-            String ipAddress) {
+            String ipAddress,
+            AuditEventUser auditEventUser) {
         try {
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
             if (ticfVcs.isEmpty()) {
                 LOGGER.warn(LogHelper.buildLogMessage("No TICF VC to process - returning next"));
-                return JOURNEY_NEXT;
+                return null;
             }
 
             criStoringService.storeVcs(
@@ -354,7 +398,8 @@ public class ProcessCandidateIdentityHandler
                     ticfVcs,
                     clientOAuthSessionItem,
                     ipvSessionItem,
-                    List.of());
+                    List.of(),
+                    auditEventUser);
 
             List<ContraIndicator> cis =
                     cimitService.getContraIndicators(
@@ -376,7 +421,8 @@ public class ProcessCandidateIdentityHandler
             }
 
             LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
-            return JOURNEY_NEXT;
+
+            return null;
         } catch (TicfCriServiceException
                 | VerifiableCredentialException
                 | CiPostMitigationsException
@@ -390,13 +436,5 @@ public class ProcessCandidateIdentityHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
         }
-    }
-
-    private void logLambdaResponse(String lambdaResult, JourneyResponse journeyResponse) {
-        var message =
-                new StringMapMessage()
-                        .with(LOG_LAMBDA_RESULT.getFieldName(), lambdaResult)
-                        .with(LOG_JOURNEY_RESPONSE.getFieldName(), journeyResponse);
-        LOGGER.info(message);
     }
 }

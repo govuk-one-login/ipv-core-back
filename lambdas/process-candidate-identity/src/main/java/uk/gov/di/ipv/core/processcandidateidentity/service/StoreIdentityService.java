@@ -50,8 +50,8 @@ public class StoreIdentityService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,
             String deviceInformation,
-            String ipAddress,
-            List<VerifiableCredential> credentials)
+            List<VerifiableCredential> credentials,
+            AuditEventUser auditEventUser)
             throws EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
 
@@ -65,26 +65,20 @@ public class StoreIdentityService {
 
         LOGGER.info(LogHelper.buildLogMessage("Identity successfully stored"));
 
-        sendIdentityStoredEvent(
-                ipvSessionItem, clientOAuthSessionItem, identityType, ipAddress, deviceInformation);
+        sendIdentityStoredEvent(ipvSessionItem, identityType, deviceInformation, auditEventUser);
     }
 
     private void sendIdentityStoredEvent(
             IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             IdentityType identityType,
-            String ipAddress,
-            String deviceInformation) {
+            String deviceInformation,
+            AuditEventUser auditEventUser) {
         Vot vot = ipvSessionItem.getVot();
         auditService.sendAuditEvent(
                 AuditEvent.createWithDeviceInformation(
                         IPV_IDENTITY_STORED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                        new AuditEventUser(
-                                clientOAuthSessionItem.getUserId(),
-                                ipvSessionItem.getIpvSessionId(),
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress),
+                        auditEventUser,
                         new AuditExtensionIdentityType(identityType, vot.equals(P0) ? null : vot),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
