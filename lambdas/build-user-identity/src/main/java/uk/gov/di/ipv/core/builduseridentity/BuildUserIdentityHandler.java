@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -45,10 +46,13 @@ import uk.gov.di.model.ContraIndicator;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -95,6 +99,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
@@ -120,7 +125,12 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
-            var targetVot = ipvSessionItem.getTargetVot();
+            var targetVot =
+                    Optional.ofNullable(ipvSessionItem.getTargetVot())
+                            .orElseThrow(
+                                    () ->
+                                            new HttpResponseExceptionWithErrorBody(
+                                                    SC_INTERNAL_SERVER_ERROR, MISSING_TARGET_VOT));
             var achievedVot = ipvSessionItem.getVot();
             var thresholdVot = ipvSessionItem.getThresholdVot();
             var userIdentity =

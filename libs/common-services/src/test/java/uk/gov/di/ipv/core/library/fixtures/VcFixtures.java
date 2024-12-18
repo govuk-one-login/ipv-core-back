@@ -1141,6 +1141,13 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1652953080));
     }
 
+    static VerifiableCredential l1AEvidenceVc() {
+        var evidence = TestVc.TestEvidence.builder().strengthScore(2).validityScore(2).build();
+
+        return generateVerifiableCredential(
+                TEST_SUBJECT, NINO, TestVc.builder().evidence(List.of(evidence)).build());
+    }
+
     static VerifiableCredential vcHmrcMigrationPCL200() throws Exception {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()

@@ -1,9 +1,21 @@
 # See also: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+registries:
+  github-npm:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    username: ${{ secrets.DEPENDABOT_GITHUB_USERNAME }}
+    password: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
+  github-maven:
+    type: maven-repository
+    url: https://maven.pkg.github.com
+    username: ${{ secrets.DEPENDABOT_GITHUB_USERNAME }}
+    password: ${{ secrets.DEPENDABOT_GITHUB_TOKEN }}
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
+    registries: "*"
     schedule:
       interval: "daily"
       time: "03:00"
@@ -47,6 +59,7 @@ updates:
           - "@typescript-eslint/*"
   - package-ecosystem: "npm"
     directory: "/api-tests"
+    registries: "*"
     schedule:
       interval: "daily"
       time: "03:00"

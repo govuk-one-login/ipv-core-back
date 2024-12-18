@@ -113,7 +113,8 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_MOBILE_APP_CALLBACK_REQUEST_BODY(
             1099, "Failed to parse mobile app callback request body"),
     CRI_RESPONSE_ITEM_NOT_FOUND(1100, "CRI response item cannot be found"),
-    INVALID_VTR_CLAIM(1101, "Invalid VTR claim");
+    MISSING_TARGET_VOT(1101, "Target VOT missing from session"),
+    INVALID_VTR_CLAIM(1103, "Invalid VTR claim");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

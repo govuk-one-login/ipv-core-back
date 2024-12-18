@@ -30,12 +30,6 @@ repos:
 
   - repo: local
     hooks:
-      - id: spotlessCheck
-        name: Run spotless check
-        entry: ./gradlew spotlessCheck
-        language: system
-        pass_filenames: false
-        files: \.(java|gradle)
       - id: run-npm-lint
         name: Lint API tests
         entry: bash -c 'cd api-tests && npm run lint'

@@ -13,7 +13,7 @@ states:
         targetState: ERROR_NO_TICF
         checkFeatureFlag:
           mfaResetEnabled:
-            targetState: IDENTITY_START_PAGE
+            targetState: CHECK_REVERIFICATION_IDENTITY
             checkIfDisabled:
               dcmaw:
                 targetJourney: TECHNICAL_ERROR
@@ -78,6 +78,20 @@ states:
         targetState: ERROR_NO_TICF
 
   # Journey states
+
+  CHECK_REVERIFICATION_IDENTITY:
+    response:
+      type: process
+      lambda: check-reverification-identity
+    events:
+      found:
+        targetState: IDENTITY_START_PAGE
+      not-found:
+        targetState: CRI_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   IDENTITY_START_PAGE:
     response:
       type: page
@@ -107,6 +121,8 @@ states:
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   CRI_DCMAW:
     response:
@@ -151,7 +167,7 @@ states:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: FULL_NAME_AND_DOB
+        checkType: REVERIFICATION
     events:
       coi-check-passed:
         targetState: CRI_TICF

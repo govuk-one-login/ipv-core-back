@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.callticfcri.service.TicfCriService;
@@ -22,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -51,17 +51,22 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.enums.Vot.P0;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CallTicfCriHandlerTest {
     private static final String TEST_USER_ID = "a-user-id";
-    private static final ClientOAuthSessionItem clientOAuthSessionItem =
+    private static final ClientOAuthSessionItem CLIENT_OAUTH_SESSION_ITEM =
             ClientOAuthSessionItem.builder()
                     .userId(TEST_USER_ID)
                     .govukSigninJourneyId("a-govuk-journey-id")
+                    .scope(OPENID)
                     .build();
-    private static final ProcessRequest input =
+    private static final ProcessRequest INPUT =
             ProcessRequest.processRequestBuilder()
                     .ipvSessionId("a-session-id")
                     .ipAddress("an-ip-address")
@@ -74,6 +79,7 @@ class CallTicfCriHandlerTest {
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
+    @Spy private IpvSessionItem ipvSessionItem;
     @Mock private Context mockContext;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -82,14 +88,14 @@ class CallTicfCriHandlerTest {
     @Mock private CimitService mockCimitService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private CriStoringService mockCriStoringService;
-    @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private VerifiableCredential mockVerifiableCredential;
     @Mock private AuditService mockAuditService;
     @InjectMocks private CallTicfCriHandler callTicfCriHandler;
 
     @BeforeEach
     public void setUp() {
-        mockIpvSessionItem.setIpvSessionId("a-session-id");
+        ipvSessionItem.setIpvSessionId("a-session-id");
+        ipvSessionItem.setVot(P2);
     }
 
     @AfterEach
@@ -102,13 +108,13 @@ class CallTicfCriHandlerTest {
     @Test
     void handleRequestShouldCallTicfCriAndReturnJourneyNextIfNoBreachingCiReceived()
             throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
+        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         verify(mockCriStoringService)
                 .storeVcs(
@@ -116,14 +122,15 @@ class CallTicfCriHandlerTest {
                         "an-ip-address",
                         "device-information",
                         List.of(mockVerifiableCredential),
-                        clientOAuthSessionItem,
-                        mockIpvSessionItem);
+                        CLIENT_OAUTH_SESSION_ITEM,
+                        ipvSessionItem,
+                        List.of());
 
         verify(mockCimitService)
                 .getContraIndicators(TEST_USER_ID, "a-govuk-journey-id", "an-ip-address");
 
         InOrder inOrder = inOrder(mockIpvSessionService);
-        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
@@ -131,19 +138,20 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldReturnJourneyNextIfEmptyListReceived() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
+        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of());
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
-        verify(mockCriStoringService, never()).storeVcs(any(), any(), any(), any(), any(), any());
+        verify(mockCriStoringService, never())
+                .storeVcs(any(), any(), any(), any(), any(), any(), any());
         verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
 
         InOrder inOrder = inOrder(mockIpvSessionService);
-        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
         assertEquals("/journey/next", lambdaResult.get("journey"));
@@ -151,19 +159,19 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldReturnFailWithCiIfBreachingCiReceived() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
+        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
-        InOrder inOrder = inOrder(mockIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(mockIpvSessionItem).setVot(Vot.P0);
-        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
         assertEquals("/journey/fail-with-ci", lambdaResult.get("journey"));
@@ -171,22 +179,48 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldReturnEnhancedVerificationIfBreachingCiReceived() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockTicfCriService.getTicfVc(clientOAuthSessionItem, mockIpvSessionItem))
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
+        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
-        InOrder inOrder = inOrder(mockIpvSessionItem, mockIpvSessionService);
-        inOrder.verify(mockIpvSessionItem).setVot(Vot.P0);
-        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+        inOrder.verify(ipvSessionItem).setVot(P0);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
         assertEquals(JOURNEY_ENHANCED_VERIFICATION, lambdaResult.get("journey"));
+    }
+
+    @Test
+    void handleRequestShouldSkipCiCheckIfReverificationJourney() throws Exception {
+        var reverificationClientSessionItem =
+                ClientOAuthSessionItem.builder().scope(REVERIFICATION).build();
+
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(reverificationClientSessionItem);
+        when(mockTicfCriService.getTicfVc(reverificationClientSessionItem, ipvSessionItem))
+                .thenReturn(List.of(mockVerifiableCredential));
+
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
+
+        assertEquals("/journey/next", lambdaResult.get("journey"));
+        verify(mockCriStoringService)
+                .storeVcs(
+                        TICF,
+                        "an-ip-address",
+                        "device-information",
+                        List.of(mockVerifiableCredential),
+                        reverificationClientSessionItem,
+                        ipvSessionItem,
+                        List.of());
+        verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
     }
 
     @Test
@@ -204,14 +238,32 @@ class CallTicfCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorResponseIfTicfCriServiceThrows() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+    void handleRequestShouldReturnJourneyErrorResponseIfMissingTargetVot() throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(new ClientOAuthSessionItem());
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
+        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
+                .thenReturn(List.of(mockVerifiableCredential));
+        ipvSessionItem.setTargetVot(null);
+        ipvSessionItem.setVot(P0);
+
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
+
+        assertEquals("/journey/error", lambdaResult.get("journey"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(ErrorResponse.MISSING_TARGET_VOT.getCode(), lambdaResult.get("code"));
+        assertEquals(ErrorResponse.MISSING_TARGET_VOT.getMessage(), lambdaResult.get("message"));
+    }
+
+    @Test
+    void handleRequestShouldReturnJourneyErrorResponseIfTicfCriServiceThrows() throws Exception {
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenThrow(new TicfCriServiceException("Oh dear"));
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
@@ -234,14 +286,16 @@ class CallTicfCriHandlerTest {
     @MethodSource("ciStoringExceptions")
     void handleRequestShouldReturnJourneyErrorResponseIfCiStoringServiceThrows(Exception e)
             throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(new ClientOAuthSessionItem());
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
-        doThrow(e).when(mockCriStoringService).storeVcs(any(), any(), any(), any(), any(), any());
+        doThrow(e)
+                .when(mockCriStoringService)
+                .storeVcs(any(), any(), any(), any(), any(), any(), any());
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
@@ -255,18 +309,18 @@ class CallTicfCriHandlerTest {
 
     @Test
     void handleRequestShouldReturnJourneyErrorResponseIfCimitServiceThrows() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(new ClientOAuthSessionItem());
+                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
         when(mockCimitService.getContraIndicators(any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Oh dear"));
 
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(input, mockContext);
+        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         InOrder inOrder = inOrder(mockIpvSessionService);
-        inOrder.verify(mockIpvSessionService).updateIpvSession(mockIpvSessionItem);
+        inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
@@ -291,7 +345,7 @@ class CallTicfCriHandlerTest {
         var thrown =
                 assertThrows(
                         Exception.class,
-                        () -> callTicfCriHandler.handleRequest(input, mockContext),
+                        () -> callTicfCriHandler.handleRequest(INPUT, mockContext),
                         "Expected handleRequest() to throw, but it didn't");
 
         // Assert

@@ -77,6 +77,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/call-dcmaw-async-cri",
           "Next": "CallDcmawAsyncCriLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/check-reverification-identity",
+          "Next": "CheckReverificationIdentityLambda"
         }
       ],
       "Default": "Success"
@@ -268,6 +273,22 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput"
+      },
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
+    },
+    "CheckReverificationIdentityLambda": {
+      "Type": "Task",
+      "Resource": "${CheckReverificationIdentityFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
       },
       "Next": "ProcessNextJourney",
       "Retry": [{

@@ -7,16 +7,14 @@ Feature: P2 App journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
 
-  Scenario: Visit UK landing page - yes
+  Scenario: User resides in the UK and navigates to the start page
     When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
 
-  Scenario: Visit UK landing page - no
-    When I submit a 'international' event
-    Then I get a 'dcmaw' CRI response
-
   Scenario: International address user sends a next event on exit page from DCMAW
     When I submit a 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'useApp' event
     Then I get a 'dcmaw' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'non-uk-no-app' page response
@@ -25,6 +23,8 @@ Feature: P2 App journey
 
   Scenario: International address user sends an end event on exit page from DCMAW
     When I submit a 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'useApp' event
     Then I get a 'dcmaw' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'non-uk-no-app' page response
@@ -34,6 +34,8 @@ Feature: P2 App journey
 
   Scenario: Successful P2 identity via DCMAW using passport
     When I submit an 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'useApp' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-valid' details to the CRI stub
     Then I get a 'page-dcmaw-success' page response
@@ -50,3 +52,11 @@ Feature: P2 App journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
     And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
+
+  Scenario: User looks for alternative methods to prove identity without using the app
+    When I submit an 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'returnToRp' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity

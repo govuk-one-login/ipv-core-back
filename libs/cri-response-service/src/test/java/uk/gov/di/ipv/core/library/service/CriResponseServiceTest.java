@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
@@ -27,8 +28,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ASYNC_VC_PENDING_RETURN_TTL;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_READ_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -39,6 +38,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fIdCard;
 
 @ExtendWith(MockitoExtension.class)
 class CriResponseServiceTest {
+    private static final String TEST_FEATURE_SET = "test-feature-set";
     @Mock private DataStore<CriResponseItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
 
@@ -75,10 +75,12 @@ class CriResponseServiceTest {
 
     @Test
     void shouldPersistCriResponse() {
-        List<String> featureSet =
-                List.of(EVCS_WRITE_ENABLED.getName(), EVCS_READ_ENABLED.getName());
+        var featureSet = List.of(TEST_FEATURE_SET);
         criResponseService.persistCriResponse(
-                TEST_USER_ID,
+                ClientOAuthSessionItem.builder()
+                        .userId(TEST_USER_ID)
+                        .reproveIdentity(Boolean.FALSE)
+                        .build(),
                 F2F,
                 TEST_ISSUER_RESPONSE,
                 TEST_OAUTH_STATE,

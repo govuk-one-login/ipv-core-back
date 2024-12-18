@@ -14,6 +14,7 @@ Globals:
     Runtime: java17
     Environment:
       Variables:
+        ENVIRONMENT: !Sub "${Environment}"
         AWS_LAMBDA_EXEC_WRAPPER: !If
           - IsDevelopment
           - !Ref AWS::NoValue
@@ -49,7 +50,9 @@ Globals:
             - '{{resolve:secretsmanager:${SecretArn}:SecretString:DT_TENANT}}' # pragma: allowlist secret
             - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
         DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: "true"
+        OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_USE_PROPAGATOR_FOR_MESSAGING: true
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+        POWERTOOLS_METRICS_NAMESPACE: !Sub CoreBackEmbeddedMetrics-${Environment}
         POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
         POWERTOOLS_TRACER_CAPTURE_ERROR: false
         CONFIG_SERVICE_CACHE_DURATION_MINUTES: !If
@@ -107,6 +110,7 @@ Parameters:
       - Linear10PercentEvery1Minute
       - Linear10PercentEvery2Minutes
       - Linear10PercentEvery3Minutes
+      - LambdaCanary50Percent5Minutes
   StepFunctionDeploymentPreference:
     Description: "Specifies the configuration to enable gradual StepFunction deployment."
     Type: String
@@ -663,7 +667,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -740,7 +743,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -823,7 +825,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -928,7 +929,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -1027,7 +1027,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-cri-callback-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -1147,7 +1146,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-mobile-app-callback-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -1236,7 +1234,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-mobile-app-vc-receipt-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
@@ -1337,7 +1334,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1429,7 +1425,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1510,6 +1505,7 @@ Resources:
         StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Version
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
         CheckCoiFunctionArn: !Ref CheckCoiFunction.Version
+        CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
       AutoPublishAlias: live
       DeploymentPreference:
         Type: !Ref StepFunctionDeploymentPreference
@@ -1530,6 +1526,7 @@ Resources:
             - !Ref StoreIdentityFunctionErrorCanaryAlarm
             - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
             - !Ref CheckCoiFunctionErrorCanaryAlarm
+            - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
           - !Ref AWS::NoValue
         StateMachineVersionArn: !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction}:live"
       Events:
@@ -1575,6 +1572,8 @@ Resources:
             FunctionName: !Ref ResetSessionIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckCoiFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckReverificationIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1653,7 +1652,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-journey-event-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
@@ -1735,7 +1733,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1824,7 +1821,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-proven-user-identity-details-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1916,7 +1912,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -1954,7 +1949,7 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
+        - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
@@ -2010,7 +2005,6 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
@@ -2129,7 +2123,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2199,7 +2192,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub call-ticf-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2285,7 +2277,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub call-dcmaw-async-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2362,7 +2353,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
@@ -2442,7 +2432,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub reset-session-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
@@ -2524,7 +2513,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub check-coi-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -2589,6 +2577,72 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckCoiFunctionLogGroup
+
+  CheckReverificationIdentityFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - CheckReverificationIdentityFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "check-reverification-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentityHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/check-reverification-identity
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub check-reverification-identity-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+      AutoPublishAlias: live
+
+  CheckReverificationIdentityFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/check-reverification-identity-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  CheckReverificationIdentityFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CheckReverificationIdentityFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
@@ -3698,6 +3752,32 @@ Resources:
           Value: !Ref CheckCoiFunction
         - Name: ExecutedVersion
           Value: !GetAtt CheckCoiFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  CheckReverificationIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the CheckReverificationIdentityFunction"
+      AlarmName: !Sub ${AWS::StackName}-CheckReverificationIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "check-reverification-identity-${Environment}:live"
+        - Name: FunctionName
+          Value: !Ref CheckReverificationIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt CheckReverificationIdentityFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count
