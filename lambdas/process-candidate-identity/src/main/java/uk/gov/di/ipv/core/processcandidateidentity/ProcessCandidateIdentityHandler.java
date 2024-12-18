@@ -243,9 +243,6 @@ public class ProcessCandidateIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
         } finally {
-            if (ipvSessionItem != null) {
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-            }
             auditService.awaitAuditEvents();
         }
     }
@@ -328,6 +325,7 @@ public class ProcessCandidateIdentityHandler
             if (journey != null) {
                 return journey.toObjectMap();
             }
+            ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
         return JOURNEY_NEXT.toObjectMap();
@@ -372,6 +370,7 @@ public class ProcessCandidateIdentityHandler
         }
 
         ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
+        ipvSessionService.updateIpvSession(ipvSessionItem);
         LOGGER.info(LogHelper.buildLogMessage("A GPG45 profile has been met"));
 
         return null;
@@ -416,6 +415,7 @@ public class ProcessCandidateIdentityHandler
                         LogHelper.buildLogMessage(
                                 "CI score is breaching threshold - setting VOT to P0"));
                 ipvSessionItem.setVot(Vot.P0);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 return journeyResponse.get();
             }
