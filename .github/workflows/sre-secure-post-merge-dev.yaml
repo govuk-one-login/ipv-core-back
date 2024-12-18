@@ -1,0 +1,113 @@
+name: SRE dev - Secure Pipeline Test, Build, Package & Ship Core Back
+
+on:
+  workflow_call:
+  push:
+    branches:
+      - IPS-1291-canary-alarm-dimensions-modified-TEST
+    paths-ignore:
+      - 'deploy-delete-user-data/**'
+      - '.github/workflows/secure-post-merge.yml'
+      - 'lambdas/delete-user-data/**'
+      - '.github/workflows/secure-post-merge-notags.yml'
+
+jobs:
+  check-if-api-tests-changed:
+    runs-on: ubuntu-latest
+    outputs:
+      api-tests-changed: ${{ steps.get-changed-files.outputs.any_changed }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed api-tests files
+        id: get-changed-files
+        uses: tj-actions/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf # v45.0.4
+        with:
+          files: |
+            api-tests/**
+            .github/workflows/sre-secure-pipeline-api-tests-image.yml
+
+      - name: List changed files
+        env:
+          CHANGED_FILES: ${{ steps.get-changed-files.outputs.all_changed_files }}
+        run: |
+          for file in ${CHANGED_FILES}; do
+            echo "$file was changed"
+          done
+
+  build-test-images-if-needed:
+    needs: check-if-api-tests-changed
+    if: ${{ needs.check-if-api-tests-changed.outputs.api-tests-changed == 'true' }}
+    uses: govuk-one-login/ipv-core-back/.github/workflows/sre-secure-pipeline-api-tests-image.yml@IPS-1185-dev-pipeline
+    secrets: inherit # pragma: allowlist secret
+    permissions:
+      id-token: write
+      packages: read
+      contents: read
+
+  deploy:
+    needs: build-test-images-if-needed
+    if: '!failure()'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      AWS_REGION: eu-west-2
+      ENVIRONMENT: build
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          cache: gradle
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.2.1
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v2
+
+      - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
+        run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
+
+      - name: Set up AWS creds For Pipeline
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.SRE_GH_ACTIONS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: SAM validate
+        working-directory: ./deploy
+        run: sam validate --region ${{ env.AWS_REGION }}
+
+      - name: SAM build and test
+        working-directory: ./deploy
+        run: sam build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy SAM app
+        uses: govuk-one-login/devplatform-upload-action@v3.9
+        with:
+            artifact-bucket-name: ${{ secrets.SRE_ARTIFACT_BUCKET_NAME }}
+            signing-profile-name: "${{ secrets.SRE_SIGNING_PROFILE_NAME }}"
+            working-directory: ./deploy
+            template-file: .aws-sam/build/template.yaml
