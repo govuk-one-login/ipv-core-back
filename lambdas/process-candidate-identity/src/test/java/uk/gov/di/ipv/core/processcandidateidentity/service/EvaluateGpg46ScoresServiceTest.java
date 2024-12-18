@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -38,19 +37,16 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.auditing.AuditEventTypes.IPV_GPG45_PROFILE_MATCHED;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
-import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
-import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M2B;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluateGpg46ScoresServiceTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
-    private static final List<Gpg45Profile> P2_PROFILES = List.of(M1A, M1B, M2B);
     private static final List<ContraIndicator> CONTRAINDICATORS = List.of();
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
-    private AuditEventUser TEST_AUDIT_EVENT_USER;
+    private AuditEventUser testAuditEventUser;
 
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -65,7 +61,7 @@ class EvaluateGpg46ScoresServiceTest {
 
     @BeforeEach
     void setUpEach() {
-        TEST_AUDIT_EVENT_USER =
+        testAuditEventUser =
                 new AuditEventUser(TEST_USER_ID, TEST_SESSION_ID, TEST_JOURNEY_ID, "ip-address");
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
@@ -102,7 +98,7 @@ class EvaluateGpg46ScoresServiceTest {
                         clientOAuthSessionItem,
                         "device-information",
                         null,
-                        TEST_AUDIT_EVENT_USER);
+                        testAuditEventUser);
 
         // Assert
         assertTrue(res.isPresent());
@@ -132,7 +128,7 @@ class EvaluateGpg46ScoresServiceTest {
                         clientOAuthSessionItem,
                         "device-information",
                         CONTRAINDICATORS,
-                        TEST_AUDIT_EVENT_USER);
+                        testAuditEventUser);
 
         // Assert
         assertTrue(res.isEmpty());
@@ -155,7 +151,7 @@ class EvaluateGpg46ScoresServiceTest {
                         clientOAuthSessionItem,
                         "device-information",
                         CONTRAINDICATORS,
-                        TEST_AUDIT_EVENT_USER);
+                        testAuditEventUser);
 
         // Assert
         assertTrue(res.isEmpty());
@@ -176,7 +172,7 @@ class EvaluateGpg46ScoresServiceTest {
                         clientOAuthSessionItem,
                         "device-information",
                         CONTRAINDICATORS,
-                        TEST_AUDIT_EVENT_USER);
+                        testAuditEventUser);
 
         // Assert
         assertTrue(res.isEmpty());
