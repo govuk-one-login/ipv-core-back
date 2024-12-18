@@ -141,6 +141,34 @@ public class CriStoringService {
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
+            throws VerifiableCredentialException, CiPostMitigationsException, CiPutException,
+                    UnrecognisedVotException {
+        var userId = clientOAuthSessionItem.getUserId();
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+
+        var auditEventUser =
+                new AuditEventUser(
+                        userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
+
+        storeVcs(
+                cri,
+                ipAddress,
+                deviceInformation,
+                vcs,
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs,
+                auditEventUser);
+    }
+
+    public void storeVcs(
+            Cri cri,
+            String ipAddress,
+            String deviceInformation,
+            List<VerifiableCredential> vcs,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,

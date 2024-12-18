@@ -19,6 +19,7 @@ dependencies {
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,
+			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
@@ -35,6 +36,12 @@ test {
 	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
+}
+
+task pactConsumerTests (type: Test) {
+	useJUnitPlatform()
+	include 'uk/gov/di/ipv/core/library/ticfcriservice/pact/**'
+	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
 }
 
 jacocoTestReport {
