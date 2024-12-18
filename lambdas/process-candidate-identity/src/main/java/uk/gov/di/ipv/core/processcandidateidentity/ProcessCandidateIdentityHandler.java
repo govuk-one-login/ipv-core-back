@@ -320,11 +320,10 @@ public class ProcessCandidateIdentityHandler
         }
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
-            var identityType = RequestHelper.getIdentityType(request);
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    identityType,
+                    processIdentityType,
                     deviceInformation,
                     sessionVcs,
                     auditEventUser);

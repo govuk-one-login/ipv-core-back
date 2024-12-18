@@ -9,12 +9,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
-import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -37,16 +37,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_IDENTITY_TYPE_PARAMETER;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -96,7 +95,8 @@ class ProcessCandidateIdentityHandlerTest {
         clientOAuthSessionItemBuilder =
                 ClientOAuthSessionItem.builder()
                         .userId(USER_ID)
-                        .govukSigninJourneyId(SIGNIN_JOURNEY_ID);
+                        .govukSigninJourneyId(SIGNIN_JOURNEY_ID)
+                        .reproveIdentity(false);
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setVot(Vot.P2);
@@ -117,20 +117,19 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            STANDARD,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of()))
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
                     .thenReturn(true);
             when(evaluateGpg45ScoresService.findMatchingGpg45Profile(
-                            List.of(),
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            IP_ADDRESS,
-                            DEVICE_INFORMATION,
-                            null))
+                            eq(List.of()),
+                            eq(clientOAuthSessionItem),
+                            eq(DEVICE_INFORMATION),
+                            eq(null),
+                            any(AuditEventUser.class)))
                     .thenReturn(Optional.of(M1A));
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -146,13 +145,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of(
-                                            "processIdentityType",
-                                            CandidateIdentityType.NEW.name(),
-                                            "checkType",
-                                            STANDARD.name(),
-                                            "identityType",
-                                            IdentityType.NEW.name()))
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -163,128 +156,22 @@ class ProcessCandidateIdentityHandlerTest {
 
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            IdentityType.NEW,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of());
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(CandidateIdentityType.NEW),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
             verify(criStoringService, times(1))
                     .storeVcs(
-                            Cri.TICF,
-                            IP_ADDRESS,
-                            DEVICE_INFORMATION,
-                            ticfVcs,
-                            clientOAuthSessionItem,
-                            ipvSessionItem,
-                            List.of());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-        }
-
-        @Test
-        void shouldReturnJourneyErrorIfCoiCheckTypeIsNotProvided() {
-            // Arrange
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            "processIdentityType",
-                                            CandidateIdentityType.NEW.name(),
-                                            "identityType",
-                                            IdentityType.NEW.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
-            assertEquals(400, response.get("statusCode"));
-            assertEquals(MISSING_CHECK_TYPE.getMessage(), response.get("message"));
-        }
-
-        @Test
-        void shouldReturnJourneyErrorIfCoiCheckTypeIsInvalid() {
-            // Arrange
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            "processIdentityType",
-                                            CandidateIdentityType.NEW.name(),
-                                            "checkType",
-                                            "invalid-check-coi-type"))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
-            assertEquals(500, response.get("statusCode"));
-            assertEquals(UNKNOWN_CHECK_TYPE.getMessage(), response.get("message"));
-        }
-
-        @Test
-        void shouldReturnJourneyErrorIfIdentityTypeIsInvalid() throws Exception {
-            // Arrange
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            "processIdentityType",
-                                            CandidateIdentityType.NEW.name(),
-                                            "checkType",
-                                            STANDARD.name(),
-                                            "identityType",
-                                            "invalid-identity-type"))
-                            .build();
-            when(checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            STANDARD,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of()))
-                    .thenReturn(true);
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
-            assertEquals(400, response.get("statusCode"));
-            assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get("message"));
-        }
-
-        @Test
-        void shouldReturnJourneyErrorIfIdentityTypeIsMissing() throws Exception {
-            // Arrange
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(
-                                            "processIdentityType",
-                                            CandidateIdentityType.NEW.name(),
-                                            "checkType",
-                                            STANDARD.name()))
-                            .build();
-            when(checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            STANDARD,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of()))
-                    .thenReturn(true);
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
-            assertEquals(400, response.get("statusCode"));
-            assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get("message"));
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
         }
 
         @Test
@@ -292,12 +179,12 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            STANDARD,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of()))
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -314,11 +201,7 @@ class ProcessCandidateIdentityHandlerTest {
                             .lambdaInput(
                                     Map.of(
                                             "processIdentityType",
-                                            CandidateIdentityType.PENDING.name(),
-                                            "checkType",
-                                            STANDARD.name(),
-                                            "identityType",
-                                            IdentityType.NEW.name()))
+                                            CandidateIdentityType.PENDING.name()))
                             .build();
 
             // Act
@@ -328,25 +211,25 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any(), any());
+                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            IdentityType.NEW,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of());
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(CandidateIdentityType.PENDING),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
             verify(criStoringService, times(1))
                     .storeVcs(
-                            Cri.TICF,
-                            IP_ADDRESS,
-                            DEVICE_INFORMATION,
-                            ticfVcs,
-                            clientOAuthSessionItem,
-                            ipvSessionItem,
-                            List.of());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
         }
 
         @Test
@@ -355,12 +238,12 @@ class ProcessCandidateIdentityHandlerTest {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
-                            ipvSessionItem,
-                            clientOAuthSessionItem,
-                            STANDARD,
-                            DEVICE_INFORMATION,
-                            IP_ADDRESS,
-                            List.of()))
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(REVERIFICATION),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
                     .thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -377,9 +260,7 @@ class ProcessCandidateIdentityHandlerTest {
                             .lambdaInput(
                                     Map.of(
                                             "processIdentityType",
-                                            CandidateIdentityType.REVERIFICATION.name(),
-                                            "checkType",
-                                            STANDARD.name()))
+                                            CandidateIdentityType.REVERIFICATION.name()))
                             .build();
 
             // Act
@@ -389,19 +270,19 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any(), any());
+                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
                     .storeVcs(
-                            Cri.TICF,
-                            IP_ADDRESS,
-                            DEVICE_INFORMATION,
-                            ticfVcs,
-                            clientOAuthSessionItem,
-                            ipvSessionItem,
-                            List.of());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
         }
 
         @Test
@@ -433,12 +314,11 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any(), any());
+                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @Test
@@ -470,12 +350,11 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any(), any());
+                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @Test
@@ -499,20 +378,19 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any(), any());
+                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
             verify(ticfCriService, times(0)).getTicfVc(any(), any());
-            verify(ipvSessionService).updateIpvSession(ipvSessionItem);
         }
     }
 
     @Test
     void shouldReturnJourneyErrorIfIdentityTypeIsNotProvided() {
         // Arrange
-        var request = requestBuilder.lambdaInput(Map.of("checkType", STANDARD.name())).build();
+        var request = requestBuilder.lambdaInput(Map.of()).build();
 
         // Act
         var response = processCandidateIdentityHandler.handleRequest(request, context);
@@ -571,13 +449,7 @@ class ProcessCandidateIdentityHandlerTest {
         var request =
                 requestBuilder
                         .lambdaInput(
-                                Map.of(
-                                        "processIdentityType",
-                                        CandidateIdentityType.NEW.name(),
-                                        "checkType",
-                                        STANDARD.name(),
-                                        "identityType",
-                                        IdentityType.NEW.name()))
+                                Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
                         .build();
 
         // Act

@@ -13,10 +13,10 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.IdentityType;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -62,6 +62,7 @@ class StoreIdentityServiceTest {
                     M1A_ADDRESS_VC);
     @Spy private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
+    private AuditEventUser TEST_AUDIT_EVENT_USER;
 
     @Mock ConfigService configService;
     @Mock SessionCredentialsService sessionCredentialsService;
@@ -73,6 +74,8 @@ class StoreIdentityServiceTest {
 
     @BeforeEach
     void setUpEach() {
+        TEST_AUDIT_EVENT_USER =
+                new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS);
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
@@ -109,10 +112,10 @@ class StoreIdentityServiceTest {
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    IdentityType.NEW,
+                    CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
-                    IP_ADDRESS,
-                    VCS);
+                    VCS,
+                    TEST_AUDIT_EVENT_USER);
 
             // Assert
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
@@ -137,24 +140,24 @@ class StoreIdentityServiceTest {
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    IdentityType.NEW,
+                    CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
-                    IP_ADDRESS,
-                    VCS);
+                    VCS,
+                    TEST_AUDIT_EVENT_USER);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
-                    IdentityType.NEW,
-                    ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
+                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertEquals(
+                    CandidateIdentityType.NEW,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(
-                    new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
-                    auditEvent.getUser());
+            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
         }
 
@@ -165,24 +168,24 @@ class StoreIdentityServiceTest {
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    IdentityType.UPDATE,
+                    CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
-                    IP_ADDRESS,
-                    VCS);
+                    VCS,
+                    TEST_AUDIT_EVENT_USER);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
-                    IdentityType.UPDATE,
-                    ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
+                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertEquals(
+                    CandidateIdentityType.UPDATE,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(
-                    new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
-                    auditEvent.getUser());
+            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
         }
 
@@ -196,24 +199,23 @@ class StoreIdentityServiceTest {
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    IdentityType.NEW,
+                    CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
-                    IP_ADDRESS,
-                    VCS);
+                    VCS,
+                    TEST_AUDIT_EVENT_USER);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
 
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertNull(((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
+            assertNull(((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
-                    IdentityType.NEW,
-                    ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
+                    CandidateIdentityType.NEW,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(
-                    new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
-                    auditEvent.getUser());
+            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
         }
 
         @Test
@@ -222,23 +224,23 @@ class StoreIdentityServiceTest {
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
-                    IdentityType.PENDING,
+                    CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
-                    IP_ADDRESS,
-                    VCS);
+                    VCS,
+                    TEST_AUDIT_EVENT_USER);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
             var auditEvent = auditEventCaptor.getValue();
             assertEquals(IPV_IDENTITY_STORED, auditEvent.getEventName());
-            assertEquals(P2, ((AuditExtensionIdentityType) auditEvent.getExtensions()).vot());
             assertEquals(
-                    IdentityType.PENDING,
-                    ((AuditExtensionIdentityType) auditEvent.getExtensions()).identityType());
+                    P2, ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions()).vot());
+            assertEquals(
+                    CandidateIdentityType.PENDING,
+                    ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
+                            .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(
-                    new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS),
-                    auditEvent.getUser());
+            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
 
             verify(evcsService, times(1))
                     .storePendingIdentity(
@@ -262,9 +264,9 @@ class StoreIdentityServiceTest {
                         storeIdentityService.storeIdentity(
                                 ipvSessionItem,
                                 clientOAuthSessionItem,
-                                IdentityType.PENDING,
+                                CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
-                                IP_ADDRESS,
-                                VCS));
+                                VCS,
+                                TEST_AUDIT_EVENT_USER));
     }
 }

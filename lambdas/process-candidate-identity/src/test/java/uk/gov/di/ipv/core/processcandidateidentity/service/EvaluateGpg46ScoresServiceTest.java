@@ -10,8 +10,8 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -21,6 +21,8 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
+import uk.gov.di.ipv.core.library.service.VotMatchingResult;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,12 +50,13 @@ class EvaluateGpg46ScoresServiceTest {
     private static final List<ContraIndicator> CONTRAINDICATORS = List.of();
     private static final String TEST_CLIENT_OAUTH_SESSION_ID =
             SecureTokenHelper.getInstance().generate();
+    private AuditEventUser TEST_AUDIT_EVENT_USER;
 
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
     @Mock private AuditService mockAuditService;
     @Mock private CimitUtilityService mockCimitUtilityService;
+    @Mock private VotMatcher mockVotMatcher;
     @InjectMocks EvaluateGpg45ScoresService evaluateGpg45ScoresService;
     @Captor private ArgumentCaptor<AuditEvent> auditEventCaptor;
 
@@ -62,6 +65,8 @@ class EvaluateGpg46ScoresServiceTest {
 
     @BeforeEach
     void setUpEach() {
+        TEST_AUDIT_EVENT_USER =
+                new AuditEventUser(TEST_USER_ID, TEST_SESSION_ID, TEST_JOURNEY_ID, "ip-address");
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setTargetVot(Vot.P2);
@@ -85,20 +90,19 @@ class EvaluateGpg46ScoresServiceTest {
         // Arrange
         var mockGpg45Scores = new Gpg45Scores(1, 1, 1, 1, 1);
         when(mockUserIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(mockGpg45ProfileEvaluator.buildScore(any())).thenReturn(mockGpg45Scores);
-        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
-                .thenReturn(Optional.of(M1A));
+        when(mockVotMatcher.matchFirstVot(any(), any(), any(), anyBoolean()))
+                .thenReturn(Optional.of(new VotMatchingResult(Vot.P2, M1A, mockGpg45Scores)));
+
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
 
         // Act
         var res =
                 evaluateGpg45ScoresService.findMatchingGpg45Profile(
                         vcs,
-                        ipvSessionItem,
                         clientOAuthSessionItem,
-                        "ip-address",
-                        "devide-information",
-                        null);
+                        "device-information",
+                        null,
+                        TEST_AUDIT_EVENT_USER);
 
         // Assert
         assertTrue(res.isPresent());
@@ -113,11 +117,10 @@ class EvaluateGpg46ScoresServiceTest {
     @Test
     void findMatchingGpg45ProfileShouldReturnNoProfilesIfBreachingCi() throws Exception {
         // Arrange
+        var mockGpg45Scores = new Gpg45Scores(1, 1, 1, 1, 1);
+        when(mockVotMatcher.matchFirstVot(any(), any(), any(), anyBoolean()))
+                .thenReturn(Optional.of(new VotMatchingResult(Vot.P2, M1A, mockGpg45Scores)));
         when(mockUserIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(1, 1, 1, 1, 1));
-        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
-                .thenReturn(Optional.of(M1A));
         when(mockCimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2))
                 .thenReturn(true);
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
@@ -126,11 +129,10 @@ class EvaluateGpg46ScoresServiceTest {
         var res =
                 evaluateGpg45ScoresService.findMatchingGpg45Profile(
                         vcs,
-                        ipvSessionItem,
                         clientOAuthSessionItem,
-                        "ip-address",
-                        "devide-information",
-                        CONTRAINDICATORS);
+                        "device-information",
+                        CONTRAINDICATORS,
+                        TEST_AUDIT_EVENT_USER);
 
         // Assert
         assertTrue(res.isEmpty());
@@ -140,24 +142,20 @@ class EvaluateGpg46ScoresServiceTest {
     @Test
     void findMatchingGpg45ProfileShouldReturnEmptyIfNoMatchingProfileFound() throws Exception {
         // Arrange
-        when(mockUserIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
-        when(mockGpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(1, 1, 1, 1, 1));
-        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))
+        when(mockVotMatcher.matchFirstVot(any(), any(), any(), anyBoolean()))
                 .thenReturn(Optional.empty());
-        when(mockCimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2))
-                .thenReturn(true);
+        when(mockUserIdentityService.checkRequiresAdditionalEvidence(any())).thenReturn(false);
+
         var vcs = List.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC);
 
         // Act
         var res =
                 evaluateGpg45ScoresService.findMatchingGpg45Profile(
                         vcs,
-                        ipvSessionItem,
                         clientOAuthSessionItem,
-                        "ip-address",
-                        "devide-information",
-                        CONTRAINDICATORS);
+                        "device-information",
+                        CONTRAINDICATORS,
+                        TEST_AUDIT_EVENT_USER);
 
         // Assert
         assertTrue(res.isEmpty());
@@ -175,11 +173,10 @@ class EvaluateGpg46ScoresServiceTest {
         var res =
                 evaluateGpg45ScoresService.findMatchingGpg45Profile(
                         vcs,
-                        ipvSessionItem,
                         clientOAuthSessionItem,
-                        "ip-address",
-                        "devide-information",
-                        CONTRAINDICATORS);
+                        "device-information",
+                        CONTRAINDICATORS,
+                        TEST_AUDIT_EVENT_USER);
 
         // Assert
         assertTrue(res.isEmpty());
