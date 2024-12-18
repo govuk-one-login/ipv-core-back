@@ -62,7 +62,7 @@ class StoreIdentityServiceTest {
                     M1A_ADDRESS_VC);
     @Spy private static IpvSessionItem ipvSessionItem;
     private static ClientOAuthSessionItem clientOAuthSessionItem;
-    private AuditEventUser TEST_AUDIT_EVENT_USER;
+    private AuditEventUser testAuditEventUser;
 
     @Mock ConfigService configService;
     @Mock SessionCredentialsService sessionCredentialsService;
@@ -74,8 +74,7 @@ class StoreIdentityServiceTest {
 
     @BeforeEach
     void setUpEach() {
-        TEST_AUDIT_EVENT_USER =
-                new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS);
+        testAuditEventUser = new AuditEventUser(USER_ID, SESSION_ID, GOVUK_JOURNEY_ID, IP_ADDRESS);
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(CLIENT_SESSION_ID);
         ipvSessionItem.setVot(P2);
@@ -115,7 +114,7 @@ class StoreIdentityServiceTest {
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    TEST_AUDIT_EVENT_USER);
+                    testAuditEventUser);
 
             // Assert
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
@@ -143,7 +142,7 @@ class StoreIdentityServiceTest {
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    TEST_AUDIT_EVENT_USER);
+                    testAuditEventUser);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -157,7 +156,7 @@ class StoreIdentityServiceTest {
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
+            assertEquals(testAuditEventUser, auditEvent.getUser());
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
         }
 
@@ -171,7 +170,7 @@ class StoreIdentityServiceTest {
                     CandidateIdentityType.UPDATE,
                     DEVICE_INFORMATION,
                     VCS,
-                    TEST_AUDIT_EVENT_USER);
+                    testAuditEventUser);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -185,7 +184,7 @@ class StoreIdentityServiceTest {
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
+            assertEquals(testAuditEventUser, auditEvent.getUser());
             verify(evcsService, times(1)).storeCompletedIdentity(anyString(), any(), any());
         }
 
@@ -202,7 +201,7 @@ class StoreIdentityServiceTest {
                     CandidateIdentityType.NEW,
                     DEVICE_INFORMATION,
                     VCS,
-                    TEST_AUDIT_EVENT_USER);
+                    testAuditEventUser);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -215,7 +214,7 @@ class StoreIdentityServiceTest {
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
+            assertEquals(testAuditEventUser, auditEvent.getUser());
         }
 
         @Test
@@ -227,7 +226,7 @@ class StoreIdentityServiceTest {
                     CandidateIdentityType.PENDING,
                     DEVICE_INFORMATION,
                     VCS,
-                    TEST_AUDIT_EVENT_USER);
+                    testAuditEventUser);
 
             // Assert
             verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -240,7 +239,7 @@ class StoreIdentityServiceTest {
                     ((AuditExtensionCandidateIdentityType) auditEvent.getExtensions())
                             .identityType());
             assertEquals(COMPONENT_ID, auditEvent.getComponentId());
-            assertEquals(TEST_AUDIT_EVENT_USER, auditEvent.getUser());
+            assertEquals(testAuditEventUser, auditEvent.getUser());
 
             verify(evcsService, times(1))
                     .storePendingIdentity(
@@ -267,6 +266,6 @@ class StoreIdentityServiceTest {
                                 CandidateIdentityType.PENDING,
                                 DEVICE_INFORMATION,
                                 VCS,
-                                TEST_AUDIT_EVENT_USER));
+                                testAuditEventUser));
     }
 }

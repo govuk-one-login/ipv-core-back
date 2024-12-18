@@ -162,6 +162,7 @@ public class CriStoringService {
                 auditEventUser);
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public void storeVcs(
             Cri cri,
             String ipAddress,

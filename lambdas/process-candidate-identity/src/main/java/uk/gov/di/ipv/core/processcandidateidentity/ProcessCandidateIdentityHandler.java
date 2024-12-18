@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.Boolean.TRUE;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -59,9 +60,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STOR
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
@@ -195,7 +194,6 @@ public class ProcessCandidateIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             return processCandidateThroughJourney(
-                    request,
                     processIdentityType,
                     ipvSessionItem,
                     clientOAuthSessionItem,
@@ -222,13 +220,6 @@ public class ProcessCandidateIdentityHandler
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             IPV_SESSION_NOT_FOUND)
-                    .toObjectMap();
-        } catch (UnknownCoiCheckTypeException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Unknown COI check type received", e)
-                            .with(LOG_CHECK_TYPE.getFieldName(), e.getCheckType()));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
         } catch (VerifiableCredentialException | EvcsServiceException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to store identity", e));
@@ -270,7 +261,7 @@ public class ProcessCandidateIdentityHandler
             return CoiCheckType.REVERIFICATION;
         }
 
-        if (clientOAuthSessionItem.getReproveIdentity()) {
+        if (TRUE.equals(clientOAuthSessionItem.getReproveIdentity())) {
             return CoiCheckType.ACCOUNT_INTERVENTION;
         }
 
@@ -292,7 +283,6 @@ public class ProcessCandidateIdentityHandler
     }
 
     private Map<String, Object> processCandidateThroughJourney(
-            ProcessRequest request,
             CandidateIdentityType processIdentityType,
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -301,7 +291,7 @@ public class ProcessCandidateIdentityHandler
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                    UnknownCoiCheckTypeException, CredentialParseException, ParseException {
+                    CredentialParseException, ParseException {
         if (COI_CHECK_TYPES.contains(processIdentityType)
                 && !isUpdateAddressJourney(processIdentityType, sessionVcs)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
