@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCoiCheck;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -53,6 +54,7 @@ class CheckCoiServiceTest {
     private static final String IPV_SESSION_ID = "ipv-session-id";
     private static final String OPENID_SCOPE = "openid";
     private static final String REVERIFICATION_SCOPE = "reverification";
+    private AuditEventUser TEST_AUDIT_EVENT;
 
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
@@ -65,6 +67,8 @@ class CheckCoiServiceTest {
 
     @BeforeEach
     void setup() throws Exception {
+        TEST_AUDIT_EVENT =
+                new AuditEventUser(USER_ID, IPV_SESSION_ID, "govuk-signin_journeyid", "ip-address");
         when(mockEvcsService.getVerifiableCredentials(
                         USER_ID, EVCS_ACCESS_TOKEN, EvcsVCState.CURRENT))
                 .thenReturn(List.of(M1A_ADDRESS_VC));
@@ -96,8 +100,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         STANDARD,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertTrue(res);
@@ -148,8 +152,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertTrue(res);
@@ -179,8 +183,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         STANDARD,
                         "device-information",
-                        "ip-address",
-                        List.of(M1A_EXPERIAN_FRAUD_VC));
+                        List.of(M1A_EXPERIAN_FRAUD_VC),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertTrue(res);
@@ -209,8 +213,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertTrue(res);
@@ -242,8 +246,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         STANDARD,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertTrue(res);
@@ -294,8 +298,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         STANDARD,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertFalse(res);
@@ -346,8 +350,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertFalse(res);
@@ -386,8 +390,8 @@ class CheckCoiServiceTest {
                         clientOAuthSessionItem,
                         ACCOUNT_INTERVENTION,
                         "device-information",
-                        "ip-address",
-                        List.of());
+                        List.of(),
+                        TEST_AUDIT_EVENT);
 
         // Assert
         assertFalse(res);

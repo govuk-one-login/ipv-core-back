@@ -5,11 +5,11 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCandidateIdentityType;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.IdentityType;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -48,14 +48,14 @@ public class StoreIdentityService {
     public void storeIdentity(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IdentityType identityType,
+            CandidateIdentityType identityType,
             String deviceInformation,
             List<VerifiableCredential> credentials,
             AuditEventUser auditEventUser)
             throws EvcsServiceException {
         String userId = clientOAuthSessionItem.getUserId();
 
-        if (identityType == IdentityType.PENDING) {
+        if (identityType == CandidateIdentityType.PENDING) {
             evcsService.storePendingIdentity(
                     userId, credentials, clientOAuthSessionItem.getEvcsAccessToken());
         } else {
@@ -70,7 +70,7 @@ public class StoreIdentityService {
 
     private void sendIdentityStoredEvent(
             IpvSessionItem ipvSessionItem,
-            IdentityType identityType,
+            CandidateIdentityType identityType,
             String deviceInformation,
             AuditEventUser auditEventUser) {
         Vot vot = ipvSessionItem.getVot();
@@ -79,7 +79,8 @@ public class StoreIdentityService {
                         IPV_IDENTITY_STORED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        new AuditExtensionIdentityType(identityType, vot.equals(P0) ? null : vot),
+                        new AuditExtensionCandidateIdentityType(
+                                identityType, vot.equals(P0) ? null : vot),
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 }
