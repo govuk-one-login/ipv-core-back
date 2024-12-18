@@ -14,7 +14,10 @@ import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
 public enum Vot {
     P0(List.of(), null, GPG45),
     P1(List.of(Gpg45Profile.L1A), null, GPG45),
-    P2(List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B), null, GPG45),
+    P2(
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C),
+            null,
+            GPG45),
     PCL250(null, List.of(OperationalProfile.PCL250), OPERATIONAL_HMRC),
     PCL200(null, List.of(OperationalProfile.PCL250, OperationalProfile.PCL200), OPERATIONAL_HMRC);
     public static final List<Vot> SUPPORTED_VOTS_BY_DESCENDING_STRENGTH =
@@ -33,7 +36,12 @@ public enum Vot {
         this.profileType = profileType;
     }
 
-    public List<Gpg45Profile> getSupportedGpg45Profiles() {
+    public List<Gpg45Profile> getSupportedGpg45Profiles(boolean isFraudScoreRequired) {
+        if (isFraudScoreRequired) {
+            return supportedGpg45Profiles.stream()
+                    .filter(profile -> profile.getScores().getFraud() > 0)
+                    .toList();
+        }
         return supportedGpg45Profiles;
     }
 
@@ -48,7 +56,7 @@ public enum Vot {
     public static Vot fromGpg45Profile(Gpg45Profile profile) {
         return SUPPORTED_VOTS_BY_DESCENDING_STRENGTH.stream()
                 .filter(vot -> GPG45.equals(vot.profileType))
-                .filter(vot -> vot.getSupportedGpg45Profiles().contains(profile))
+                .filter(vot -> vot.getSupportedGpg45Profiles(false).contains(profile))
                 .collect(CollectionHelper.toSingleton());
     }
 }
