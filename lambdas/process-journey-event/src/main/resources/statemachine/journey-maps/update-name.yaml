@@ -158,6 +158,8 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      fail-with-no-ci:
+        targetState: CHECK_COI_NAMES
 
   NAMES_ONLY_AFTER_RFC:
     response:

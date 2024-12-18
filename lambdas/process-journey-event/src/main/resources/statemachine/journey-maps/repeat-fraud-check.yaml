@@ -220,17 +220,6 @@ states:
       fail-with-no-ci:
         targetState: EVALUATE_GPG45_SCORES_RFC
 
-  ADDRESS_AND_FRAUD_RFC:
-    nestedJourney: ADDRESS_AND_FRAUD
-    exitEvents:
-      next:
-        targetState: EVALUATE_GPG45_SCORES_RFC
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      fraud-fail-with-no-ci:
-        targetState: EVALUATE_GPG45_SCORES_RFC
-
   EVALUATE_GPG45_SCORES_RFC:
     response:
       type: process
