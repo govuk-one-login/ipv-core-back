@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -20,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -124,6 +126,7 @@ public class EvaluateGpg45ScoresHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentId(configService);
 
@@ -219,11 +222,13 @@ public class EvaluateGpg45ScoresHandler
 
             var gpg45Vots =
                     requestedVotsByStrength.stream()
-                            .filter(vot -> vot.getSupportedGpg45Profiles() != null)
+                            .filter(vot -> vot.getProfileType() == ProfileType.GPG45)
                             .toList();
 
+            var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
+
             for (Vot requestedVot : gpg45Vots) {
-                var profiles = requestedVot.getSupportedGpg45Profiles();
+                var profiles = requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired);
 
                 var matchedProfile =
                         gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, profiles);

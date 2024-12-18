@@ -9,7 +9,7 @@
       "checkMethod": "bvr"
     }
   ],
-  "validityScore": 2,
-  "strengthScore": 3,
+  "validityScore": 3,
+  "strengthScore": 4,
   "type": "IdentityCheck"
 }

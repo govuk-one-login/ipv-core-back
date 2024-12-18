@@ -26,6 +26,7 @@ core:
     returnCodes:
       alwaysRequired: always-required
       nonCiBreachingP0: non-ci-breaching
+      fraudCheckUnavailable: fraud-check-unavailable
     govUkNotify:
       emailTemplates:
         UserTriggeredIdentityResetConfirmation: "dummy-value"

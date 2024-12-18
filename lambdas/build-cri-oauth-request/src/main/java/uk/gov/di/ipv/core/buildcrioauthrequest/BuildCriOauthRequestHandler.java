@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
@@ -37,7 +38,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
@@ -59,7 +60,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -148,6 +148,7 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
@@ -210,6 +211,8 @@ public class BuildCriOauthRequestHandler
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
+            EmbeddedMetricHelper.criRedirect(cri.getId());
 
             var message =
                     new StringMapMessage()
@@ -371,11 +374,12 @@ public class BuildCriOauthRequestHandler
     private EvidenceRequest getEvidenceRequestForF2F(
             List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-        List<Gpg45Scores> requiredEvidences =
+        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
+        var requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        requestedVot.getSupportedGpg45Profiles());
+                        requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired));
 
-        OptionalInt minViableStrengthOpt =
+        var minViableStrengthOpt =
                 requiredEvidences.stream()
                         .filter(
                                 requiredScores ->

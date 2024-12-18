@@ -12,10 +12,6 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:evcs-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 

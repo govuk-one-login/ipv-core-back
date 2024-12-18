@@ -121,6 +121,8 @@ states:
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   CRI_DCMAW:
     response:

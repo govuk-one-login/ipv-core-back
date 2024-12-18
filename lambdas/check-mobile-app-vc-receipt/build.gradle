@@ -17,10 +17,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":lambdas:process-cri-callback")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 

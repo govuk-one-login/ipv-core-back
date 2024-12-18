@@ -66,10 +66,14 @@ public class VotMatcher {
             List<VerifiableCredential> gpg45Vcs,
             Gpg45Scores gpg45Scores,
             List<ContraIndicator> contraIndicators) {
+
+        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(gpg45Vcs);
+        var achievableProfiles = requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired);
+
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(gpg45Vcs)
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, requestedVot.getSupportedGpg45Profiles())
+                                gpg45Scores, achievableProfiles)
                         : Optional.empty();
 
         if (matchedGpg45Profile.isEmpty() || isBreaching(contraIndicators, requestedVot)) {

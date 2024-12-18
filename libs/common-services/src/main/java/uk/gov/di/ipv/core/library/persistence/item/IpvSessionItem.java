@@ -42,7 +42,7 @@ public class IpvSessionItem implements PersistenceItem {
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
-    private List<String> stateStack = new ArrayList<>();
+    @Builder.Default private List<String> stateStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
     private ReverificationFailureCode failureCode;

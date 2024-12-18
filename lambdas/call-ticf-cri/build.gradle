@@ -15,10 +15,6 @@ dependencies {
 			project(":libs:verifiable-credentials"),
 			project(":libs:ticf-cri-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,

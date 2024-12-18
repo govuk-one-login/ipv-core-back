@@ -184,6 +184,8 @@ states:
         targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   F2F_START_PAGE:
     response:
@@ -395,6 +397,9 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
+      fraud-fail-with-no-ci:
+        targetJourney: EVALUATE_SCORES
+        targetState: START
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -417,6 +422,9 @@ states:
       enhanced-verification:
         targetJourney: F2F_HAND_OFF
         targetState: START
+      fraud-fail-with-no-ci:
+        targetJourney: FAILED
+        targetState: FAILED
 
   # No photo id journey (M2B)
   CRI_CLAIMED_IDENTITY_NO_PHOTO_ID:
@@ -468,6 +476,9 @@ states:
       next:
         targetState: KBV_NO_PHOTO_ID
       enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED
+      fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
 
@@ -623,6 +634,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_01_APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
@@ -715,6 +728,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_PYI_ESCAPE:
     nestedJourney: APP_DOC_CHECK
@@ -834,12 +849,43 @@ states:
       uk:
         targetState: IDENTITY_START_PAGE
       international:
-        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
-        targetEntryEvent: next
+        targetState: NON_UK_APP_INTRO_PAGE
         checkFeatureFlag:
           strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE
-            targetEntryEvent: appTriage
+            targetState: NON_UK_PASSPORT
+
+  NON_UK_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-passport
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      abandon:
+        targetState: NON_UK_NO_PASSPORT
+
+  NON_UK_NO_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-no-passport
+    events:
+      returnToRp:
+        targetState: RETURN_TO_RP
+      useApp:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+
+  NON_UK_APP_INTRO_PAGE:
+    response:
+      type: page
+      pageId: non-uk-app-intro
+    events:
+      useApp:
+        targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   NON_UK_NO_APP_PAGE:
     response:

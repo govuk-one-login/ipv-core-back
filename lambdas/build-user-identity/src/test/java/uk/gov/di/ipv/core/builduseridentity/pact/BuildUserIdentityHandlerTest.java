@@ -190,7 +190,7 @@ class BuildUserIdentityHandlerTest {
         context.verifyInteraction();
     }
 
-    private final String VC_HEADER =
+    private static final String VC_HEADER =
             """
             {
               "alg": "ES256",
@@ -198,7 +198,7 @@ class BuildUserIdentityHandlerTest {
             }
             """;
 
-    private final String CIMIT_VC_NO_CIS_BODY =
+    private static final String CIMIT_VC_NO_CIS_BODY =
             """
             {
               "sub": "urn:fdc:example.gov.uk:2022:1234",
@@ -219,7 +219,7 @@ class BuildUserIdentityHandlerTest {
             }
             """;
 
-    private final String CIMIT_VC_NO_CIS_SIGNATURE =
+    private static final String CIMIT_VC_NO_CIS_SIGNATURE =
             "q9bLcKWe9K13QJoJL-f8Lz4UdhUGfzQgXPtsmu5TK5W2mP4mr7oXJjqKBAUPypnZdWza1zdKZiQpAmmVy1BW3A"; // pragma: allowlist secret
 
     // 2099-01-01 00:00:00 is 4070908800 in epoch seconds

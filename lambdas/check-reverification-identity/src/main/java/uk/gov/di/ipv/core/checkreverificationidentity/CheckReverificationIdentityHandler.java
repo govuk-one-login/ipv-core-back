@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -88,9 +89,10 @@ public class CheckReverificationIdentityHandler
         this.votMatcher = new VotMatcher(userIdentityService, new Gpg45ProfileEvaluator());
     }
 
+    @Override
     @Tracing
     @Logging(clearState = true)
-    @Override
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest request, Context context) {
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));

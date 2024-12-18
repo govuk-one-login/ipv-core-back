@@ -11,10 +11,6 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:audit-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
 			libs.hamcrest,

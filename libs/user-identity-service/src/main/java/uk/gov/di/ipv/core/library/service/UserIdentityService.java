@@ -48,6 +48,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_FRAUD_CHECK_UNAVAILABLE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -253,9 +254,15 @@ public class UserIdentityService {
         if (Vot.P0.equals(achievedVot)) {
             userIdentityBuilder.returnCode(getFailReturnCode(contraIndicators, targetVot));
         } else {
+            var returnCodes = new ArrayList<>(getSuccessReturnCode(contraIndicators));
+            if (VcHelper.isFraudCheckUnavailable(vcs)) {
+                returnCodes.add(
+                        new ReturnCode(
+                                configService.getParameter(RETURN_CODES_FRAUD_CHECK_UNAVAILABLE)));
+            }
             var successfulVcs = vcs.stream().filter(VcHelper::isSuccessfulVc).toList();
             addUserIdentityClaims(profileType, successfulVcs, userIdentityBuilder);
-            userIdentityBuilder.returnCode(getSuccessReturnCode(contraIndicators));
+            userIdentityBuilder.returnCode(returnCodes);
         }
     }
 

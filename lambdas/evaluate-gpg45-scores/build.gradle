@@ -15,10 +15,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:cimit-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,

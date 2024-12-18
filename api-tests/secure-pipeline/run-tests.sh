@@ -10,7 +10,7 @@ get_current_status() {
 generate_traffic() {
   while true; do
     echo "Running @TrafficGeneration tests"
-    npm run test:build -- --profile trafficGeneration --tags '@TrafficGeneration'
+    npm run test:build -- --profile trafficGeneration --tags '@TrafficGeneration' || true
   done
 }
 
@@ -56,7 +56,7 @@ if [[ "${DEV_PLATFORM_STAGE}" == "TRAFFIC_TEST" ]]; then
     deploy_status=$(get_current_status "${core_back_pipeline_name}")
   done
 
-  echo "Deploy status: '${deploy_status}' - Stopping tests execution"
+  echo -e "\n\nDeploy status: '${deploy_status}' - Stopping tests execution"
   exit 0
 
 else

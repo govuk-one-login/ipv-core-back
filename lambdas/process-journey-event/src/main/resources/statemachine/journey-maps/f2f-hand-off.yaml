@@ -73,7 +73,7 @@ states:
       type: process
       lambda: check-coi
       lambdaInput:
-        checkType: GIVEN_OR_FAMILY_NAME_AND_DOB
+        checkType: STANDARD
     events:
       coi-check-passed:
         targetState: CRI_TICF_BEFORE_F2F

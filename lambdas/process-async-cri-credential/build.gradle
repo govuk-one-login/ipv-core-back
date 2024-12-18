@@ -17,10 +17,6 @@ dependencies {
 	compileOnly	libs.lombok
 	annotationProcessor libs.lombok
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,
