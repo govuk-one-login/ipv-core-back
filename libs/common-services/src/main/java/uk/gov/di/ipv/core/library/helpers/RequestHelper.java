@@ -15,7 +15,7 @@ import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
-import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityType;
+import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
@@ -192,14 +192,14 @@ public class RequestHelper {
     }
 
     public static CandidateIdentityType getProcessIdentityType(ProcessRequest request)
-            throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityType {
+            throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityTypeException {
         String checkType =
                 extractValueFromLambdaInput(
                         request, "processIdentityType", MISSING_PROCESS_IDENTITY_TYPE);
         try {
             return CandidateIdentityType.valueOf(checkType);
         } catch (IllegalArgumentException e) {
-            throw new UnknownProcessIdentityType(checkType);
+            throw new UnknownProcessIdentityTypeException(checkType);
         }
     }
 

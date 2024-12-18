@@ -78,15 +78,12 @@ public class CheckCoiService {
             ClientOAuthSessionItem clientOAuthSession,
             CoiCheckType checkType,
             String deviceInformation,
-            String ipAddress,
-            List<VerifiableCredential> sessionVcs)
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException,
                     EvcsServiceException {
 
-        var ipvSessionId = ipvSessionItem.getIpvSessionId();
         var userId = clientOAuthSession.getUserId();
-        var govukSigninJourneyId = clientOAuthSession.getGovukSigninJourneyId();
-        LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
         if (TRUE.equals(clientOAuthSession.getReproveIdentity())) {
             LOGGER.info(
@@ -95,8 +92,6 @@ public class CheckCoiService {
             checkType = ACCOUNT_INTERVENTION;
         }
 
-        var auditEventUser =
-                new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
         sendAuditEvent(
                 AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_START,
                 checkType,

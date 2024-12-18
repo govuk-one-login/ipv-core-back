@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -65,11 +64,10 @@ public class EvaluateGpg45ScoresService {
 
     public Optional<Gpg45Profile> findMatchingGpg45Profile(
             List<VerifiableCredential> vcs,
-            IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            String ipAddress,
             String deviceInformation,
-            List<ContraIndicator> contraIndicators) {
+            List<ContraIndicator> contraIndicators,
+            AuditEventUser auditEventUser) {
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
@@ -100,13 +98,11 @@ public class EvaluateGpg45ScoresService {
                                             matchedProfile.get().getLabel()));
                     auditService.sendAuditEvent(
                             buildProfileMatchedAuditEvent(
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
                                     matchedProfile.get(),
                                     gpg45Scores,
                                     vcs,
-                                    ipAddress,
-                                    deviceInformation));
+                                    deviceInformation,
+                                    auditEventUser));
 
                     return matchedProfile;
                 }
@@ -116,19 +112,11 @@ public class EvaluateGpg45ScoresService {
     }
 
     private AuditEvent buildProfileMatchedAuditEvent(
-            IpvSessionItem ipvSessionItem,
-            ClientOAuthSessionItem clientOAuthSessionItem,
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<VerifiableCredential> credentials,
-            String ipAddress,
-            String deviceInformation) {
-        AuditEventUser auditEventUser =
-                new AuditEventUser(
-                        clientOAuthSessionItem.getUserId(),
-                        ipvSessionItem.getIpvSessionId(),
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
+            String deviceInformation,
+            AuditEventUser auditEventUser) {
         return AuditEvent.createWithDeviceInformation(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                 configService.getParameter(ConfigurationVariable.COMPONENT_ID),
