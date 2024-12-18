@@ -166,11 +166,11 @@ public class VotMatcherTest {
     @Test
     void shouldNotMatchM1cIfFraudCheckAvailable() throws Exception {
         // Arrange
+        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         var expectedProfiles = List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(gpg45Vcs)).thenReturn(false);
-        when(mockGpg45ProfileEvaluator.buildScore(gpg45Vcs)).thenReturn(GPG_45_SCORES);
         when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
-                .thenReturn(Optional.of(Gpg45Profile.M1C));
+                .thenReturn(Optional.of(Gpg45Profile.M2B));
 
         // Act
         var votMatch =
@@ -180,6 +180,6 @@ public class VotMatcherTest {
         // Assert
         verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
         assertEquals(
-                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M1C, GPG_45_SCORES)), votMatch);
+                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M2B, GPG_45_SCORES)), votMatch);
     }
 }

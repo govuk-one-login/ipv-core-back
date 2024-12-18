@@ -250,7 +250,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldAllowM1cForApplicableAuthoritativeSourceFailedFraudCheck() {
+    void isFraudCheckUnavailableShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
 
         // Arrange
         var vcs =
@@ -268,7 +268,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldNotAllowM1cForOtherFailedFraudCheck() {
+    void isFraudCheckUnavailableShouldReturnFalseForOtherFailedFraudCheck() {
 
         // Arrange
         var vcs =
@@ -286,7 +286,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldNotAllowM1cForSuccessfulFraudCheck() {
+    void isFraudCheckUnavailableShouldReturnFalseForSuccessfulFraudCheck() {
 
         // Arrange
         var vcs =
@@ -304,7 +304,7 @@ class VcHelperTest {
     }
 
     @Test
-    void shouldNotAllowM1cForMissingFraudCheck() {
+    void isFraudCheckUnavailableShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
         var vcs = List.of(DCMAW_PASSPORT_VC, M1A_ADDRESS_VC, vcVerificationM1a());
