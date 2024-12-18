@@ -19,6 +19,7 @@ const NESTED_JOURNEY_TYPE_SEARCH_PARAM = "nestedJourneyType";
 const JOURNEY_TYPE_SEARCH_PARAM = "journeyType";
 
 mermaid.initialize({
+  maxTextSize: 100000,
   startOnLoad: false,
   // Required to enable links and callbacks
   // This is (relatively) safe, as we only run on our own generated mermaid charts
