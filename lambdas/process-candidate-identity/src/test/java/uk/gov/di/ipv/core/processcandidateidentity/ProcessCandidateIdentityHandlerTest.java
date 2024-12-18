@@ -21,11 +21,11 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
+import uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
-import uk.gov.di.ipv.core.processcandidateidentity.service.TicfCriService;
 
 import java.util.List;
 import java.util.Map;

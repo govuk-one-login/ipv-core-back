@@ -35,12 +35,12 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService;
+import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
-import uk.gov.di.ipv.core.processcandidateidentity.service.TicfCriService;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.EnumSet;

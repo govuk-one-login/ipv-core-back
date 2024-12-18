@@ -10,13 +10,7 @@ dependencies {
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:audit-service"),
-			project(":libs:gpg45-evaluator"),
-			project(":libs:verifiable-credentials"),
-			project(":libs:user-identity-service"),
-			project(":libs:cimit-service"),
-			project(":libs:cri-storing-service"),
-			project(":libs:evcs-service"),
-			project(":libs:ticf-cri-service")
+			project(":libs:verifiable-credentials")
 
 	aspect libs.powertoolsLogging,
 			libs.powertoolsTracing,

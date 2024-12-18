@@ -42,7 +42,8 @@ dependencies {
 			project(":libs:gpg45-evaluator"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:oauth-key-service")
+			project(":libs:oauth-key-service"),
+			project(":libs:ticf-cri-service")
 }
 
 java {
