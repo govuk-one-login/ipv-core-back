@@ -68,6 +68,7 @@ services:
       CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:postMitigations-production
       CI_STORAGE_PUT_LAMBDA_ARN: arn:aws:lambda:eu-west-2:388905755587:function:putContraIndicators-production
       ENVIRONMENT: local
+      AWS_EMF_ENVIRONMENT: Local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
     ports:
       - "4502:4502"
