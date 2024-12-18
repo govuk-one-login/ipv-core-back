@@ -128,13 +128,14 @@ public class CheckCoiService {
                 deviceInformation);
 
         if (isReverification) {
-            setIpvSessionReverificationStatus(
-                    ipvSessionItem,
+            ipvSessionItem.setReverificationStatus(
                     successfulCheck ? ReverificationStatus.SUCCESS : ReverificationStatus.FAILED);
+
             if (!successfulCheck) {
                 ipvSessionItem.setFailureCode(ReverificationFailureCode.IDENTITY_DID_NOT_MATCH);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
             }
+
+            ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
         if (!successfulCheck) {
@@ -149,12 +150,6 @@ public class CheckCoiService {
                         .with(LOG_CHECK_TYPE.getFieldName(), checkType));
 
         return true;
-    }
-
-    private void setIpvSessionReverificationStatus(
-            IpvSessionItem ipvSessionItem, ReverificationStatus status) {
-        ipvSessionItem.setReverificationStatus(status);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
     private void sendAuditEvent(
