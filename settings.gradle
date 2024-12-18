@@ -44,6 +44,7 @@ include "lambdas",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
 		"libs:oauth-key-service",
+		"libs:ticf-cri-service",
 		"local-running"
 
 dependencyResolutionManagement {
@@ -59,3 +60,5 @@ dependencyResolutionManagement {
 		}
 	}
 }
+include 'libs:ticf-cri-service'
+findProject(':libs:ticf-cri-service')?.name = 'ticf-cri-service'

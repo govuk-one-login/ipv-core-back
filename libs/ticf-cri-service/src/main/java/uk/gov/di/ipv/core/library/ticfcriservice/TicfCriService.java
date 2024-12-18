@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processcandidateidentity.service;
+package uk.gov.di.ipv.core.library.ticfcriservice;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,12 +14,12 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.ticfcriservice.dto.TicfCriDto;
+import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriHttpResponseException;
+import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.ipv.core.processcandidateidentity.dto.TicfCriDto;
-import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriHttpResponseException;
-import uk.gov.di.ipv.core.processcandidateidentity.exception.TicfCriServiceException;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
