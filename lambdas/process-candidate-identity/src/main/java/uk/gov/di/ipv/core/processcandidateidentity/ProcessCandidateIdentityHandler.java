@@ -41,7 +41,9 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
+import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.IdentityCheckCredential;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -90,13 +92,20 @@ public class ProcessCandidateIdentityHandler
     private final CimitUtilityService cimitUtilityService;
 
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
-            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.PENDING, REVERIFICATION);
+            EnumSet.of(
+                    CandidateIdentityType.NEW,
+                    CandidateIdentityType.PENDING,
+                    REVERIFICATION,
+                    CandidateIdentityType.UPDATE);
 
     private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
-            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.PENDING);
+            EnumSet.of(
+                    CandidateIdentityType.NEW,
+                    CandidateIdentityType.PENDING,
+                    CandidateIdentityType.UPDATE);
 
     private static final Set<CandidateIdentityType> GPG_45_TYPES =
-            EnumSet.of(CandidateIdentityType.NEW);
+            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.UPDATE);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -260,6 +269,20 @@ public class ProcessCandidateIdentityHandler
         return CoiCheckType.STANDARD;
     }
 
+    private boolean isUpdateAddressJourney(
+            CandidateIdentityType identityType, List<VerifiableCredential> sessionVcs) {
+        if (!CandidateIdentityType.UPDATE.equals(identityType)) {
+            return false;
+        }
+
+        // Check if the session VCs do not contain an IdentityCheckCredential and contains an
+        // AddressCredential
+        return sessionVcs.stream()
+                        .noneMatch(vc -> vc.getCredential() instanceof IdentityCheckCredential)
+                && sessionVcs.stream()
+                        .anyMatch(vc -> vc.getCredential() instanceof AddressCredential);
+    }
+
     private Map<String, Object> processCandidateThroughJourney(
             ProcessRequest request,
             CandidateIdentityType processIdentityType,
@@ -271,7 +294,8 @@ public class ProcessCandidateIdentityHandler
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
                     UnknownCoiCheckTypeException, CredentialParseException {
-        if (COI_CHECK_TYPES.contains(processIdentityType)) {
+        if (COI_CHECK_TYPES.contains(processIdentityType)
+                && !isUpdateAddressJourney(processIdentityType, sessionVcs)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(

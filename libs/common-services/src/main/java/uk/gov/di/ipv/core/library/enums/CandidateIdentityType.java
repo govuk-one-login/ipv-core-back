@@ -5,5 +5,6 @@ public enum CandidateIdentityType {
     NEW,
     PENDING,
     REVERIFICATION,
-    INCOMPLETE
+    INCOMPLETE,
+    UPDATE
 }
