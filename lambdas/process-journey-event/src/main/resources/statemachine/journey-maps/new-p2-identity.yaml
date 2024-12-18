@@ -846,6 +846,7 @@ states:
             targetState: NON_UK_PASSPORT
 
   NON_UK_PASSPORT:
+    journeyContext: internationalAddress
     response:
       type: page
       pageId: non-uk-passport
