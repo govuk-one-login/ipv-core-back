@@ -12,12 +12,12 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:cri-storing-service"),
 			project(":libs:user-identity-service"),
-			project(":libs:verifiable-credentials")
+			project(":libs:verifiable-credentials"),
+			project(":libs:ticf-cri-service")
 
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,
-			libs.pactConsumerJunit,
 			project(path: ':libs:common-services', configuration: 'tests'),
 			project(path: ':libs:test-helpers')
 
@@ -35,12 +35,6 @@ test {
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
 	exclude 'uk/gov/di/ipv/core/callticfcri/pact/**'
-}
-
-task pactConsumerTests (type: Test) {
-	useJUnitPlatform()
-	include 'uk/gov/di/ipv/core/callticfcri/pact/**'
-	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
 }
 
 jacocoTestReport {

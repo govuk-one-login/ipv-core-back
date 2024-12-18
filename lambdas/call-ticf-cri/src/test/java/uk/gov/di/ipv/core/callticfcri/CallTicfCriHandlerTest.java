@@ -13,8 +13,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
-import uk.gov.di.ipv.core.callticfcri.service.TicfCriService;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -33,6 +31,8 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
+import uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService;
+import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
 
 import java.util.List;
 import java.util.Map;
