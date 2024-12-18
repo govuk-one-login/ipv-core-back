@@ -592,7 +592,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getProcessIdentityTypeThrowsIfMissingProcessIdentityType() throws Exception {
+    void getProcessIdentityTypeThrowsIfMissingProcessIdentityType() {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
                         .lambdaInput(Map.of("anotherTypeField", "something-else"))
