@@ -43,7 +43,8 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials"),
 			project(":libs:oauth-key-service"),
-			project(":libs:ticf-cri-service")
+			project(":libs:ticf-cri-service"),
+            project(":libs:feature-flags-service")
 }
 
 java {
