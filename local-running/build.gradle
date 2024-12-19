@@ -44,10 +44,6 @@ dependencies {
 			project(":libs:oauth-key-service")
 }
 
-run.doFirst {
-	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
-}
-
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17
@@ -58,6 +54,11 @@ application {
 	applicationDefaultJvmArgs = [
 		"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002"
 	]
+}
+
+tasks.named('run', JavaExec) {
+	environment 'AWS_EMF_ENVIRONMENT', 'Local'
+	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
 }
 
 sonar {
