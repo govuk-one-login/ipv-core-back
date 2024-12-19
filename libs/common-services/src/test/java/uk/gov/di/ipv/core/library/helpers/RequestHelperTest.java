@@ -9,9 +9,11 @@ import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.Cri.CLAIMED_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
@@ -575,5 +578,44 @@ class RequestHelperTest {
                         UnknownResetTypeException.class,
                         () -> RequestHelper.getSessionCredentialsResetType(request));
         assertEquals("nooo", thrown.getResetType());
+    }
+
+    @Test
+    void getProcessIdentityTypeShouldReturnCandidateIdentityIfValid() throws Exception {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(
+                                Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                        .build();
+
+        assertEquals(CandidateIdentityType.NEW, RequestHelper.getProcessIdentityType(request));
+    }
+
+    @Test
+    void getProcessIdentityTypeThrowsIfMissingProcessIdentityType() {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("anotherTypeField", "something-else"))
+                        .build();
+
+        var thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getProcessIdentityType(request));
+        assertEquals(MISSING_PROCESS_IDENTITY_TYPE, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getProcessIdentityTypeShouldThrowIfUnknownResetType() {
+        ProcessRequest request =
+                ProcessRequest.processRequestBuilder()
+                        .lambdaInput(Map.of("processIdentityType", "some-nonsense"))
+                        .build();
+
+        var thrown =
+                assertThrows(
+                        UnknownProcessIdentityTypeException.class,
+                        () -> RequestHelper.getProcessIdentityType(request));
+        assertEquals("some-nonsense", thrown.getProcessIdentityType());
     }
 }
