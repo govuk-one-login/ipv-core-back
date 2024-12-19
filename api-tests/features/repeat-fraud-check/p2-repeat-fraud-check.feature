@@ -1,7 +1,7 @@
 @Build
 Feature: Repeat fraud check journeys
 
-  Rule:
+  Rule: Match M1B
 
     Background:
       Given the subject already has the following credentials
@@ -147,8 +147,8 @@ Feature: Repeat fraud check journeys
         | dcmaw   | kenneth-passport-valid |
         | address | kenneth-current        |
       And the subject already has the following expired credentials
-        | CRI   | scenario        |
-        | fraud | kenneth-score-2 |
+        | CRI   | scenario              |
+        | fraud | kenneth-no-applicable |
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
@@ -193,7 +193,6 @@ Feature: Repeat fraud check journeys
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
 
-    @MikeTest
     Scenario: Fraud 6 Months Expiry + Address and Given Name Update
       # Repeat fraud check with update address and family name
       When I submit a 'given-names-and-address' event
