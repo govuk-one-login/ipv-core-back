@@ -29,6 +29,7 @@ import {
   callbackFromStrategicApp,
   pollAsyncDcmaw,
 } from "../clients/core-back-internal-client.js";
+import config from "../config/config.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
@@ -449,16 +450,13 @@ When(
     documentType: string,
     evidenceType: string,
   ): Promise<void> {
-    // TODO: Don't we want a similar layout for the async dcmaw and f2f queue requests?
-
     const body = {
       user_id: this.userId,
       test_user: testUser,
       document_type: documentType,
       evidence_type: evidenceType,
+      queue_name: config.asyncQueue.name,
     };
-
-    // TODO: how can it do this in local?
 
     const response = await fetch(
       `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
