@@ -13,6 +13,22 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When I submit 'kennethD' 'ukChippedPassport' 'success' details to the async DCMAW CRI stub
+    And I callback from the app
+    Then I get an 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    And I submit the returned journey event
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
 
   Scenario: MAM journey detected iphone
     Given I activate the 'strategicApp' feature set

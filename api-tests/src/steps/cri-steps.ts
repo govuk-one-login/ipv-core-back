@@ -25,6 +25,10 @@ import {
 } from "../types/cri-stub.js";
 import { getRandomString } from "../utils/random-string-generator.js";
 import assert from "assert";
+import {
+  callbackFromStrategicApp,
+  pollAsyncDcmaw,
+} from "../clients/core-back-internal-client.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
@@ -434,6 +438,101 @@ When(
     for (const credential of credentials) {
       await cimitStubClient.postDetectCi({ signed_jwt: credential });
     }
+  },
+);
+
+When(
+  /^I submit '([\w-]+)' '([\w-]+)' '([\w-]+)' details to the async DCMAW CRI stub$/,
+  async function (
+    this: World,
+    testUser: string,
+    documentType: string,
+    evidenceType: string,
+  ): Promise<void> {
+    // TODO: Don't we want a similar layout for the async dcmaw and f2f queue requests?
+
+    const body = {
+      user_id: this.userId,
+      test_user: testUser,
+      document_type: documentType,
+      evidence_type: evidenceType,
+    };
+
+    // TODO: how can it do this in local?
+
+    const response = await fetch(
+      `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+        redirect: "manual",
+      },
+    );
+
+    if (response.status !== 200) {
+      throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
+    }
+
+    const responsePayload = await response.json();
+    if (
+      !responsePayload.oauthState ||
+      typeof responsePayload.oauthState !== "string"
+    ) {
+      throw new Error(
+        `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
+      );
+    }
+    this.oauthState = responsePayload.oauthState;
+  },
+);
+
+When(
+  /^I callback from the app( in a separate session)?$/,
+  async function (
+    this: World,
+    separateSession: " in a separate session" | undefined,
+  ): Promise<void> {
+    if (!this.oauthState) {
+      throw new Error("Oauth state required for app callback");
+    }
+
+    await callbackFromStrategicApp(
+      this.oauthState,
+      separateSession ? undefined : this.ipvSessionId,
+      this.featureSet,
+    );
+  },
+);
+
+When(
+  "I poll for async DCMAW credential receipt",
+  async function (this: World): Promise<void> {
+    let numberOfAttempts = 0;
+    while (numberOfAttempts < 10 && !this.strategicAppPollResult) {
+      this.strategicAppPollResult = await pollAsyncDcmaw(
+        this.ipvSessionId,
+        this.featureSet,
+      );
+      numberOfAttempts++;
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  },
+);
+
+When(
+  "I submit the returned journey event",
+  async function (this: World): Promise<void> {
+    if (!this.strategicAppPollResult?.journey) {
+      throw new Error("Poll result must have a journey event.");
+    }
+
+    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+      this.strategicAppPollResult.journey,
+      this.ipvSessionId,
+      this.featureSet,
+      this.clientOAuthSessionId,
+    );
   },
 );
 
