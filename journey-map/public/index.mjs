@@ -365,13 +365,39 @@ const setupMermaidClickHandlers = () => {
       );
     }
 
+    //     if (def.pageId) {
+    //       nodeDesc.append(
+    //         createLink(
+    //           "Click here to view the page in build",
+    //           getPageUrl(def.pageId, def.context),
+    //         ),
+    //       );
+    //     }
+
     if (def.pageId) {
+      const pagePreviewContainer = document.getElementById(
+        "page-preview-container",
+      );
+      const pagePreview = document.getElementById("page-preview");
+      pagePreview.src = getPageUrl(def.pageId, def.context);
+      pagePreviewContainer.style.display = "block";
+
       nodeDesc.append(
         createLink(
           "Click here to view the page in build",
           getPageUrl(def.pageId, def.context),
         ),
       );
+
+      nodeTitle.onmouseover = () => {
+        pagePreviewContainer.style.display = "block";
+        pagePreviewContainer.style.top = `${nodeTitle.getBoundingClientRect().bottom + window.scrollY}px`;
+        pagePreviewContainer.style.left = `${nodeTitle.getBoundingClientRect().left}px`;
+      };
+
+      nodeTitle.onmouseout = () => {
+        pagePreviewContainer.style.display = "none";
+      };
     }
 
     if (def.type === "journeyTransition") {
