@@ -467,7 +467,7 @@ When(
       },
     );
 
-    if (response.status !== 200) {
+    if (response.status !== 201) {
       throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
     }
 
@@ -494,7 +494,7 @@ When(
       throw new Error("Oauth state required for app callback");
     }
 
-    await callbackFromStrategicApp(
+    this.lastJourneyEngineResponse = await callbackFromStrategicApp(
       this.oauthState,
       separateSession ? undefined : this.ipvSessionId,
       this.featureSet,
@@ -514,6 +514,10 @@ When(
       numberOfAttempts++;
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (!this.strategicAppPollResult) {
+      throw new Error("Polling unsuccessful.");
     }
   },
 );

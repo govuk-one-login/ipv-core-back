@@ -74,7 +74,7 @@ export const callbackFromStrategicApp = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
 ): Promise<JourneyEngineResponse> => {
-  const url = `${config.core.internalApiUrl}/app/callback/${oauthState}`;
+  const url = `${config.core.internalApiUrl}/app/callback`;
   const response = await fetch(url, {
     method: POST,
     headers: {
@@ -82,6 +82,7 @@ export const callbackFromStrategicApp = async (
       ...(featureSet ? { "feature-set": featureSet } : {}),
       ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
     },
+    body: JSON.stringify({ state: oauthState }),
   });
 
   if (!response.ok) {
@@ -89,12 +90,16 @@ export const callbackFromStrategicApp = async (
       `callbackFromStrategicApp request failed: ${response.statusText}`,
     );
   }
+
+  const body = await response.json();
+
+  return await sendJourneyEvent(body?.journey, ipvSessionId, featureSet);
 };
 
 export const pollAsyncDcmaw = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
-): Promise<JourneyResponse> => {
+): Promise<JourneyResponse | undefined> => {
   const url = `${config.core.internalApiUrl}/app/check-vc-receipt`;
   const response = await fetch(url, {
     method: POST,
