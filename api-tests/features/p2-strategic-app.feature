@@ -30,6 +30,67 @@ Feature: M2B Strategic App Journeys
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
+  Scenario: MAM journey pending credential
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    And I callback from the app
+    Then I get an 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a 404
+
+  Scenario: MAM journey cross-browser scenario
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When I submit 'kennethD' 'ukChippedPassport' 'success' details to the async DCMAW CRI stub
+    And I callback from the app in a separate session
+    Then I get an OAuth response
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+  Scenario: MAM journey credential fails
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    When I submit 'kennethD' 'ukChippedPassport' 'fail' details to the async DCMAW CRI stub
+    And I callback from the app
+    Then I get an 'pyi-technical' page response
+
   Scenario: MAM journey detected iphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey

@@ -1,4 +1,4 @@
-import { DataTable, When } from "@cucumber/cucumber";
+import { DataTable, Then, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
@@ -515,10 +515,6 @@ When(
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-
-    if (!this.strategicAppPollResult) {
-      throw new Error("Polling unsuccessful.");
-    }
   },
 );
 
@@ -537,6 +533,12 @@ When(
     );
   },
 );
+
+Then("the poll returns a 404", async function (this: World): Promise<void> {
+  if (this.strategicAppPollResult?.journey) {
+    throw new Error("Poll should have not returned a journey.");
+  }
+});
 
 const assertNoUnexpectedJarProperties = (
   jarPayload: CriStubResponseJarPayload,
