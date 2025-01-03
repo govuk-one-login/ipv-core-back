@@ -93,7 +93,12 @@ public class CriResponseService {
             var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
             var hasVc = f2fVc.isPresent();
 
-            return new AsyncCriStatus(F2F, f2fCriResponseItem.getStatus(), !hasVc, isPendingReturn);
+            return new AsyncCriStatus(
+                    F2F,
+                    f2fCriResponseItem.getStatus(),
+                    !hasVc,
+                    isPendingReturn,
+                    f2fCriResponseItem.isReproveIdentity());
         }
 
         // DCMAW async VC existence determines success or abandonment
@@ -109,11 +114,16 @@ public class CriResponseService {
                                         configService.getParameter(
                                                 DCMAW_ASYNC_VC_PENDING_RETURN_TTL));
                 if (now < expiry) {
-                    return new AsyncCriStatus(DCMAW_ASYNC, null, false, isPendingReturn);
+                    return new AsyncCriStatus(
+                            DCMAW_ASYNC,
+                            null,
+                            false,
+                            isPendingReturn,
+                            getCriResponseItem(userId, DCMAW_ASYNC).isReproveIdentity());
                 }
             }
         }
 
-        return new AsyncCriStatus(null, null, false, false);
+        return new AsyncCriStatus(null, null, false, false, false);
     }
 }

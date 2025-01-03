@@ -194,6 +194,8 @@ class CriResponseServiceTest {
         // Arrange
         when(mockConfigService.getParameter(DCMAW_ASYNC_VC_PENDING_RETURN_TTL))
                 .thenReturn("1000000000");
+        when(criResponseService.getCriResponseItem(USER_ID_1, DCMAW_ASYNC))
+                .thenReturn(new CriResponseItem());
         var vcs = List.of(vcDcmawAsync(), vcAddressTwo());
 
         // Act

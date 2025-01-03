@@ -6,6 +6,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkexistingidentity.exceptions.MitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -16,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileM
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -52,6 +54,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -272,7 +275,7 @@ public class CheckExistingIdentityHandler
             var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
             // journey
-            if (reproveIdentity && !isReprovingWithF2f(f2fResponseItem, credentialBundle)
+            if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
@@ -417,10 +420,8 @@ public class CheckExistingIdentityHandler
                                 .getParsedVtr()
                                 .getRequestedVotsByStrengthDescending(),
                         credentialBundle.credentials,
-                        auditEventUser,
-                        deviceInformation,
-                        areGpg45VcsCorrelated,
-                        contraIndicators);
+                        contraIndicators,
+                        areGpg45VcsCorrelated);
 
         if (maybeVotMatchingResult.isEmpty()) {
             return Optional.empty();
@@ -625,9 +626,11 @@ public class CheckExistingIdentityHandler
     }
 
     private boolean isReprovingWithF2f(
-            CriResponseItem f2fRequest, VerifiableCredentialBundle vcBundle) {
+            AsyncCriStatus f2fStatus, VerifiableCredentialBundle vcBundle) {
         // does the user have a F2F response item that was created in response to an intervention,
         // and they're returning to core with a pending identity
-        return f2fRequest != null && f2fRequest.isReproveIdentity() && vcBundle.isPendingIdentity();
+        return f2fStatus.cri() == F2F
+                && f2fStatus.isReproveIdentity()
+                && vcBundle.isPendingReturn();
     }
 }

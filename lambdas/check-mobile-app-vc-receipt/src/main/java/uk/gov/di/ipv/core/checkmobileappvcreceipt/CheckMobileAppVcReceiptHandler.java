@@ -184,25 +184,14 @@ public class CheckMobileAppVcReceiptHandler
 
         var asyncCriStatus =
                 new AsyncCriStatus(
-                        DCMAW_ASYNC, criResponseItem.getStatus(), dcmawAsyncVc.isEmpty(), true);
+                        DCMAW_ASYNC,
+                        criResponseItem.getStatus(),
+                        dcmawAsyncVc.isEmpty(),
+                        true,
+                        false);
 
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
-        }
-
-        sessionCredentialsService.persistCredentials(
-                List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
-
-        var dcmawAsyncVc =
-                evcsService
-                        .getVerifiableCredentials(
-                                userId, clientOAuthSessionItem.getEvcsAccessToken(), PENDING_RETURN)
-                        .stream()
-                        .filter(vc -> DCMAW_ASYNC.equals(vc.getCri()))
-                        .findFirst();
-
-        if (dcmawAsyncVc.isEmpty()) {
-            return null;
         }
 
         sessionCredentialsService.persistCredentials(

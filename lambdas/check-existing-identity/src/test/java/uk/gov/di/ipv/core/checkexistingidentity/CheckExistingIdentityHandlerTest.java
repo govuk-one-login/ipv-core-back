@@ -189,7 +189,7 @@ class CheckExistingIdentityHandlerTest {
     private static VerifiableCredential pcl200Vc;
     private static VerifiableCredential pcl250Vc;
     private static AsyncCriStatus emptyAsyncCriStatus =
-            new AsyncCriStatus(null, null, false, false);
+            new AsyncCriStatus(null, null, false, false, false);
 
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
@@ -369,9 +369,8 @@ class CheckExistingIdentityHandlerTest {
             var vcs = List.of(gpg45Vc, vcF2fM1a());
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(vcs)));
-
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(emptyAsyncCriStatus);
             when(mockVotMatcher.matchFirstVot(List.of(P2), vcs, List.of(), true))
                     .thenReturn(
@@ -390,22 +389,17 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldIncludeCurrentInheritedIdentityInVcBundleWhenPendingReturn() throws Exception {
             var inheritedIdentityVc = vcHmrcMigrationPCL200();
-
+            var vcs = List.of(gpg45Vc, f2fVc);
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(
-                            Map.of(
-                                    PENDING_RETURN,
-                                    new ArrayList<>(List.of(gpg45Vc, f2fVc)),
-                                    CURRENT,
-                                    List.of(inheritedIdentityVc)));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs, CURRENT, List.of(inheritedIdentityVc)));
+            var combinedVcs = List.of(inheritedIdentityVc, gpg45Vc, f2fVc);
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, combinedVcs, true))
                     .thenReturn(emptyAsyncCriStatus);
 
             checkExistingIdentityHandler.handleRequest(event, context);
 
-            verify(userIdentityService)
-                    .areVcsCorrelated(List.of(gpg45Vc, f2fVc, inheritedIdentityVc));
+            verify(userIdentityService).areVcsCorrelated(combinedVcs);
         }
 
         @Test // User returning after migration
@@ -604,7 +598,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         clientOAuthSessionItem.setVtr(List.of(Vot.PCL250.name(), PCL200.name(), P2.name()));
@@ -641,7 +636,11 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
                         new AsyncCriStatus(
-                                DCMAW_ASYNC, CriResponseService.STATUS_PENDING, false, true));
+                                DCMAW_ASYNC,
+                                CriResponseService.STATUS_PENDING,
+                                false,
+                                true,
+                                false));
         Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
         when(mockEvcsService.getVerifiableCredentialsByState(
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
@@ -848,7 +847,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, true, false));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, true, false, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -870,7 +870,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, true, false));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, true, false, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
@@ -892,7 +893,9 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnFailResponseIfFaceToFaceVerificationIsError() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(new AsyncCriStatus(F2F, CriResponseService.STATUS_ERROR, true, false));
+                .thenReturn(
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_ERROR, true, false, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -913,7 +916,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_ABANDON, true, false));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_ABANDON, true, false, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -937,7 +941,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -967,7 +972,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(false);
@@ -1151,6 +1157,10 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnReproveP2JourneyIfReproveIdentityFlagSet() {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                    .thenReturn(
+                            new AsyncCriStatus(
+                                    F2F, CriResponseService.STATUS_PENDING, false, false, true));
 
             var journeyResponse =
                     toResponseClass(
@@ -1181,10 +1191,10 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnReproveP2JourneyIfReproveIdentityFlagSetAndPendingF2FDoesNotHaveFlag() {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
                     .thenReturn(
                             new AsyncCriStatus(
-                                    F2F, CriResponseService.STATUS_PENDING, false, true));
+                                    F2F, CriResponseService.STATUS_PENDING, false, false, true));
 
             var journeyResponse =
                     toResponseClass(
@@ -1198,14 +1208,15 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldReturnReproveP2JourneyIfReproveIdentityFlagSetAndIdentityIsNotPending()
                 throws Exception {
+            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
+            var vcs = new ArrayList<>(List.of(gpg45Vc, f2fVc));
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(CURRENT, new ArrayList<>(List.of(gpg45Vc, f2fVc))));
-            clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(Map.of(CURRENT, vcs));
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, false))
                     .thenReturn(
                             new AsyncCriStatus(
-                                    F2F, CriResponseService.STATUS_PENDING, false, true));
+                                    F2F, CriResponseService.STATUS_PENDING, false, true, true));
 
             var journeyResponse =
                     toResponseClass(
@@ -1219,13 +1230,14 @@ class CheckExistingIdentityHandlerTest {
         @Test
         void shouldNotReturnReproveJourneyIfUserHasPendingF2FWithReproveFlag() throws Exception {
             clientOAuthSessionItem.setReproveIdentity(Boolean.TRUE);
+            var vcs = new ArrayList<>(List.of(gpg45Vc));
             when(mockEvcsService.getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(gpg45Vc))));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                    .thenReturn(Map.of(PENDING_RETURN, vcs));
+            when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, vcs, true))
                     .thenReturn(
                             new AsyncCriStatus(
-                                    F2F, CriResponseService.STATUS_PENDING, false, true));
+                                    F2F, CriResponseService.STATUS_PENDING, true, true, true));
 
             var journeyResponse =
                     toResponseClass(
@@ -1321,7 +1333,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
@@ -1356,7 +1369,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
@@ -1394,7 +1408,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
                 .thenReturn(
-                        new AsyncCriStatus(F2F, CriResponseService.STATUS_PENDING, false, true));
+                        new AsyncCriStatus(
+                                F2F, CriResponseService.STATUS_PENDING, false, true, false));
         when(cimitService.getContraIndicators(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(testContraIndicators);
         when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
