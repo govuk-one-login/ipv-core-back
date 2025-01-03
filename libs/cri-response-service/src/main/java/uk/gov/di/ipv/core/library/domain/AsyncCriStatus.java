@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.domain;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.CriResponseService;
 
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -16,6 +15,10 @@ public record AsyncCriStatus(
         boolean isAwaitingVc,
         boolean isPendingReturn,
         boolean isReproveIdentity) {
+    public static final String STATUS_PENDING = "pending";
+    public static final String STATUS_ERROR = "error";
+    public static final String STATUS_ABANDON = "abandon";
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final JourneyResponse JOURNEY_F2F_PENDING =
@@ -30,9 +33,9 @@ public record AsyncCriStatus(
         LOGGER.info(
                 LogHelper.buildLogMessage(cri.getId() + " processing status: " + incompleteStatus));
         return switch (incompleteStatus) {
-            case CriResponseService.STATUS_PENDING -> getJourneyPending(isSameSession);
-            case CriResponseService.STATUS_ABANDON -> getJourneyAbandon(isSameSession);
-            case CriResponseService.STATUS_ERROR -> getJourneyError();
+            case STATUS_PENDING -> getJourneyPending(isSameSession);
+            case STATUS_ABANDON -> getJourneyAbandon(isSameSession);
+            case STATUS_ERROR -> getJourneyError();
             default -> {
                 LOGGER.warn(LogHelper.buildLogMessage("Unexpected status: " + incompleteStatus));
                 yield JOURNEY_ERROR;
