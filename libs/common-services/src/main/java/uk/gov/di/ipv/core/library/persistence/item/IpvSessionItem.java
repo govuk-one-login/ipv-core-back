@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.library.persistence.item;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
@@ -20,6 +23,9 @@ import java.util.List;
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class IpvSessionItem implements PersistenceItem {
     private String ipvSessionId;
     private String clientOAuthSessionId;
@@ -36,7 +42,7 @@ public class IpvSessionItem implements PersistenceItem {
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
-    private List<String> stateStack = new ArrayList<>();
+    @Builder.Default private List<String> stateStack = new ArrayList<>();
 
     // These are used as part of an unsuccessful reverification response
     private ReverificationFailureCode failureCode;
@@ -111,7 +117,7 @@ public class IpvSessionItem implements PersistenceItem {
     // If the user has achieved a profile we should use that, if they haven't then we should use the
     // target Vot.
     public Vot getThresholdVot() {
-        return vot == Vot.P0 ? targetVot : vot;
+        return Vot.P0 == vot ? targetVot : vot;
     }
 
     public void setJourneyContext(String journeyContext) {

@@ -109,7 +109,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.quality.Strictness.LENIENT;
 import static uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsIpvJourneyStart.REPROVE_IDENTITY_KEY;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVCS_WRITE_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUCT_EVCS_URI;
@@ -153,7 +152,7 @@ class InitialiseIpvSessionHandlerTest {
     private static final String INVALID_INHERITED_IDENTITY = "invalid_inherited_identity";
     private static final String INVALID_EVCS_ACCESS_TOKEN = "invalid_evcs_access_token";
     private static final APIGatewayProxyRequestEvent validEvent = new APIGatewayProxyRequestEvent();
-    public static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
+    private static final String TEST_EVCS_ACCESS_TOKEN = "TEST_EVCS_ACCESS_TOKEN";
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
     private static @Spy IpvSessionItem ipvSessionItem;
@@ -162,6 +161,7 @@ class InitialiseIpvSessionHandlerTest {
     private static VerifiableCredential PCL200_MIGRATION_VC;
     private static VerifiableCredential pcl200MigrationWithEvidenceVc;
 
+    @Captor private ArgumentCaptor<String> stringArgumentCaptor;
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
@@ -222,7 +222,6 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
-        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
@@ -248,14 +247,13 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
-        assertNull(evcsAccessTokenCaptor.getValue());
+                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
     }
 
     @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
-        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
         // Arrange
         when(mockConfigService.enabled(any(FeatureFlag.class))).thenReturn(false);
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
@@ -291,19 +289,24 @@ class InitialiseIpvSessionHandlerTest {
         assertNull(extensions.getSuccess());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
-        assertNull(evcsAccessTokenCaptor.getValue());
+                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
     }
 
     @Test
-    void shouldRecoverIfEvcsEnabledButMissingEvcsAccesToken() throws Exception {
+    void shouldRecoverIfMissingEvcsAccessToken() throws Exception {
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
+        var evcsAccessTokenClaims =
+                Map.of(
+                        USER_INFO,
+                        Map.of(
+                                INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                Map.of(VALUES, List.of(PCL200_MIGRATION_VC.getVcString()))));
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(signedJWT.getJWTClaimsSet());
+                .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
 
         // Act
         APIGatewayProxyResponseEvent response =
@@ -335,16 +338,6 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest_andSaveEvcsAccessToken()
             throws JsonProcessingException, JarValidationException, ParseException {
-        ArgumentCaptor<String> evcsAccessTokenCaptor = ArgumentCaptor.forClass(String.class);
-
-        var evcsAccessTokenClaims =
-                Map.of(
-                        USER_INFO,
-                        Map.of(
-                                INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                Map.of(VALUES, List.of(PCL200_MIGRATION_VC.getVcString())),
-                                EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN))));
         // Arrange
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
@@ -352,7 +345,7 @@ class InitialiseIpvSessionHandlerTest {
                         any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
-                .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
+                .thenReturn(signedJWT.getJWTClaimsSet());
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         // Act
@@ -371,8 +364,8 @@ class InitialiseIpvSessionHandlerTest {
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
 
         verify(mockClientOAuthSessionDetailsService)
-                .generateClientSessionDetails(any(), any(), any(), evcsAccessTokenCaptor.capture());
-        assertEquals(TEST_EVCS_ACCESS_TOKEN, evcsAccessTokenCaptor.getValue());
+                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
     }
 
     @ParameterizedTest
@@ -385,7 +378,6 @@ class InitialiseIpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
                 .thenReturn(ipvSessionItem);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
-        when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(getValidClaimsBuilder().claim(CLAIMS, evcsAccessTokenClaims).build());
 
@@ -680,272 +672,259 @@ class InitialiseIpvSessionHandlerTest {
                     .thenReturn(clientOAuthSessionItem);
         }
 
-        @Nested
-        @DisplayName("evcs turned on")
-        class EvcsTurnedOn {
-            @BeforeEach
-            void setUp() {
-                when(mockConfigService.enabled(EVCS_WRITE_ENABLED)).thenReturn(true);
-            }
+        @Test
+        void shouldStoreInheritedIdentityWhenNoExistingIdentity() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of());
 
-            @Test
-            void shouldStoreInheritedIdentityWhenNoExistingIdentity() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of());
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService)
+                    .storeInheritedIdentity(TEST_USER_ID, PCL200_MIGRATION_VC, List.of());
 
-                // Assert
-                verify(mockEvcsService)
-                        .storeInheritedIdentity(TEST_USER_ID, PCL200_MIGRATION_VC, List.of());
+            InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+            inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
+            inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        }
 
-                InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-                inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
-                inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-            }
+        @Test
+        void shouldStoreInheritedIdentityWhenVotEqualToExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL200_MIGRATION_VC));
 
-            @Test
-            void shouldStoreInheritedIdentityWhenVotEqualToExisting() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL200_MIGRATION_VC));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService)
+                    .storeInheritedIdentity(
+                            TEST_USER_ID, PCL200_MIGRATION_VC, List.of(PCL200_MIGRATION_VC));
 
-                // Assert
-                verify(mockEvcsService)
-                        .storeInheritedIdentity(
-                                TEST_USER_ID, PCL200_MIGRATION_VC, List.of(PCL200_MIGRATION_VC));
+            InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+            inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
+            inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        }
 
-                InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-                inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
-                inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-            }
+        @Test
+        void shouldStoreInheritedIdentityWhenVotEqualToMultipleExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
-            @Test
-            void shouldStoreInheritedIdentityWhenVotEqualToMultipleExisting() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService)
+                    .storeInheritedIdentity(
+                            TEST_USER_ID,
+                            PCL200_MIGRATION_VC,
+                            List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
-                // Assert
-                verify(mockEvcsService)
-                        .storeInheritedIdentity(
-                                TEST_USER_ID,
-                                PCL200_MIGRATION_VC,
-                                List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
+            InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+            inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
+            inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        }
 
-                InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-                inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
-                inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-            }
+        @Test
+        void shouldStoreInheritedIdentityWhenVotStrongerThanExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL200_MIGRATION_VC));
 
-            @Test
-            void shouldStoreInheritedIdentityWhenVotStrongerThanExisting() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL200_MIGRATION_VC));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService)
+                    .storeInheritedIdentity(
+                            TEST_USER_ID, PCL250_MIGRATION_VC, List.of(PCL200_MIGRATION_VC));
 
-                // Assert
-                verify(mockEvcsService)
-                        .storeInheritedIdentity(
-                                TEST_USER_ID, PCL250_MIGRATION_VC, List.of(PCL200_MIGRATION_VC));
+            InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+            inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
+            inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        }
 
-                InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-                inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
-                inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-            }
+        @Test
+        void shouldStoreInheritedIdentityWhenVotStrongerThanMultipleExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
-            @Test
-            void shouldStoreInheritedIdentityWhenVotStrongerThanMultipleExisting()
-                    throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL250_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService)
+                    .storeInheritedIdentity(
+                            TEST_USER_ID,
+                            PCL250_MIGRATION_VC,
+                            List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
 
-                // Assert
-                verify(mockEvcsService)
-                        .storeInheritedIdentity(
-                                TEST_USER_ID,
-                                PCL250_MIGRATION_VC,
-                                List.of(PCL200_MIGRATION_VC, pcl200MigrationWithEvidenceVc));
+            InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
+            inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
+            inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
+        }
 
-                InOrder inOrder = inOrder(ipvSessionItem, mockIpvSessionService);
-                inOrder.verify(ipvSessionItem).setInheritedIdentityReceivedThisSession(true);
-                inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
-            }
+        @Test
+        void shouldNotStoreInheritedIdentityWhenVotWeakerThanExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL250_MIGRATION_VC));
 
-            @Test
-            void shouldNotStoreInheritedIdentityWhenVotWeakerThanExisting() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL250_MIGRATION_VC));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService, never()).storeInheritedIdentity(any(), any(), any());
+        }
 
-                // Assert
-                verify(mockEvcsService, never()).storeInheritedIdentity(any(), any(), any());
-            }
+        @Test
+        void shouldNotStoreInheritedIdentityWhenVotWeakerThanAnyExisting() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of(PCL200_MIGRATION_VC, PCL250_MIGRATION_VC));
 
-            @Test
-            void shouldNotStoreInheritedIdentityWhenVotWeakerThanAnyExisting() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of(PCL200_MIGRATION_VC, PCL250_MIGRATION_VC));
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            verify(mockEvcsService, never()).storeInheritedIdentity(any(), any(), any());
+        }
 
-                // Assert
-                verify(mockEvcsService, never()).storeInheritedIdentity(any(), any(), any());
-            }
+        @Test
+        void shouldSendAuditEventForIpvInheritedIdentityVcReceived() throws Exception {
+            // Arrange
+            setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
+                    .thenReturn(List.of());
 
-            @Test
-            void shouldSendAuditEventForIpvInheritedIdentityVcReceived() throws Exception {
-                // Arrange
-                setupMocksForReceivedInheritedId(PCL200_MIGRATION_VC);
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockEvcsService.getVerifiableCredentials(eq(TEST_USER_ID), any(), eq(CURRENT)))
-                        .thenReturn(List.of());
+            // Act
+            initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+            verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
 
-                // Assert
-                ArgumentCaptor<AuditEvent> auditEventCaptor =
-                        ArgumentCaptor.forClass(AuditEvent.class);
-                verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+            var inheritedIdentityAuditEvent = auditEventCaptor.getAllValues().get(0);
+            assertEquals(
+                    AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
+                    inheritedIdentityAuditEvent.getEventName());
 
-                var inheritedIdentityAuditEvent = auditEventCaptor.getAllValues().get(0);
-                assertEquals(
-                        AuditEventTypes.IPV_INHERITED_IDENTITY_VC_RECEIVED,
-                        inheritedIdentityAuditEvent.getEventName());
+            var extension = inheritedIdentityAuditEvent.getExtensions();
+            var expectedExtension =
+                    new AuditExtensionsVcEvidence(
+                            "https://orch.stubs.account.gov.uk/migration/v1",
+                            List.of(),
+                            null,
+                            Vot.PCL200,
+                            Boolean.TRUE,
+                            Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now())
+                                    .getYears());
+            assertEquals(expectedExtension, extension);
 
-                var extension = inheritedIdentityAuditEvent.getExtensions();
-                var expectedExtension =
-                        new AuditExtensionsVcEvidence(
-                                "https://orch.stubs.account.gov.uk/migration/v1",
-                                List.of(),
-                                null,
-                                Vot.PCL200,
-                                Boolean.TRUE,
-                                Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now())
-                                        .getYears());
-                assertEquals(expectedExtension, extension);
+            var restricted =
+                    (AuditRestrictedInheritedIdentity) inheritedIdentityAuditEvent.getRestricted();
+            var expectedName =
+                    List.of(
+                            createName(
+                                    List.of(
+                                            createNamePart(
+                                                    "KENNETH", NamePart.NamePartType.GIVEN_NAME),
+                                            createNamePart(
+                                                    "DECERQUEIRA",
+                                                    NamePart.NamePartType.FAMILY_NAME))));
 
-                var restricted =
-                        (AuditRestrictedInheritedIdentity)
-                                inheritedIdentityAuditEvent.getRestricted();
-                var expectedName =
-                        List.of(
-                                createName(
-                                        List.of(
-                                                createNamePart(
-                                                        "KENNETH",
-                                                        NamePart.NamePartType.GIVEN_NAME),
-                                                createNamePart(
-                                                        "DECERQUEIRA",
-                                                        NamePart.NamePartType.FAMILY_NAME))));
+            var expectedBirthDate = List.of(createBirthDate("1965-07-08"));
+            var expectedSocialSecurityRecord =
+                    List.of(
+                            createSocialSecurityRecordDetails(
+                                    "AB123456C")); // pragma: allowlist secret
+            assertEquals(expectedName, restricted.name());
+            assertEquals(expectedBirthDate, restricted.birthDate());
+            assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
 
-                var expectedBirthDate = List.of(createBirthDate("1965-07-08"));
-                var expectedSocialSecurityRecord =
-                        List.of(
-                                createSocialSecurityRecordDetails(
-                                        "AB123456C")); // pragma: allowlist secret
-                assertEquals(expectedName, restricted.name());
-                assertEquals(expectedBirthDate, restricted.birthDate());
-                assertEquals(expectedSocialSecurityRecord, restricted.socialSecurityRecord());
+            assertEquals(
+                    AuditEventTypes.IPV_JOURNEY_START,
+                    auditEventCaptor.getAllValues().get(1).getEventName());
+        }
 
-                assertEquals(
-                        AuditEventTypes.IPV_JOURNEY_START,
-                        auditEventCaptor.getAllValues().get(1).getEventName());
-            }
+        @Test
+        void shouldRecoverIfInheritedIdentityJwtFailsToPersist() throws Exception {
+            // Arrange
+            when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
+            when(mockJarValidator.validateRequestJwt(any(), any()))
+                    .thenReturn(
+                            getValidClaimsBuilder()
+                                    .claim(
+                                            CLAIMS,
+                                            Map.of(
+                                                    USER_INFO,
+                                                    Map.of(
+                                                            INHERITED_IDENTITY_JWT_CLAIM_NAME,
+                                                            Map.of(
+                                                                    VALUES,
+                                                                    List.of(
+                                                                            PCL200_MIGRATION_VC
+                                                                                    .getVcString())),
+                                                            EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                                                            Map.of(
+                                                                    VALUES,
+                                                                    List.of(
+                                                                            TEST_EVCS_ACCESS_TOKEN)))))
+                                    .build());
+            when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
+            when(mockVerifiableCredentialValidator.parseAndValidate(
+                            TEST_USER_ID,
+                            HMRC_MIGRATION,
+                            PCL200_MIGRATION_VC.getVcString(),
+                            TEST_SIGNING_KEY,
+                            TEST_COMPONENT_ID,
+                            true))
+                    .thenReturn(PCL200_MIGRATION_VC);
+            when(mockEvcsService.getVerifiableCredentials(any(), any(), any()))
+                    .thenReturn(List.of());
 
-            @Test
-            void shouldRecoverIfInheritedIdentityJwtFailsToPersist() throws Exception {
-                // Arrange
-                when(mockUserIdentityService.getVot(any())).thenCallRealMethod();
-                when(mockJarValidator.validateRequestJwt(any(), any()))
-                        .thenReturn(
-                                getValidClaimsBuilder()
-                                        .claim(
-                                                CLAIMS,
-                                                Map.of(
-                                                        USER_INFO,
-                                                        Map.of(
-                                                                INHERITED_IDENTITY_JWT_CLAIM_NAME,
-                                                                Map.of(
-                                                                        VALUES,
-                                                                        List.of(
-                                                                                PCL200_MIGRATION_VC
-                                                                                        .getVcString())),
-                                                                EVCS_ACCESS_TOKEN_CLAIM_NAME,
-                                                                Map.of(
-                                                                        VALUES,
-                                                                        List.of(
-                                                                                TEST_EVCS_ACCESS_TOKEN)))))
-                                        .build());
-                when(mockConfigService.getCriConfig(HMRC_MIGRATION)).thenReturn(TEST_CRI_CONFIG);
-                when(mockVerifiableCredentialValidator.parseAndValidate(
-                                TEST_USER_ID,
-                                HMRC_MIGRATION,
-                                PCL200_MIGRATION_VC.getVcString(),
-                                TEST_SIGNING_KEY,
-                                TEST_COMPONENT_ID,
-                                true))
-                        .thenReturn(PCL200_MIGRATION_VC);
-                when(mockEvcsService.getVerifiableCredentials(any(), any(), any()))
-                        .thenReturn(List.of());
+            doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_CONSTRUCT_EVCS_URI))
+                    .when(mockEvcsService)
+                    .storeInheritedIdentity(any(), any(), any());
 
-                doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_TO_CONSTRUCT_EVCS_URI))
-                        .when(mockEvcsService)
-                        .storeInheritedIdentity(any(), any(), any());
+            // Act
+            APIGatewayProxyResponseEvent response =
+                    initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
 
-                // Act
-                APIGatewayProxyResponseEvent response =
-                        initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+            // Assert
+            Map<String, Object> responseBody =
+                    OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-                // Assert
-                Map<String, Object> responseBody =
-                        OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-                assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-                assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-                verify(mockClientOAuthSessionDetailsService)
-                        .generateErrorClientSessionDetails(
-                                any(String.class),
-                                eq("https://example.com"),
-                                eq("test-client"),
-                                eq("test-state"),
-                                eq(null));
-            }
+            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+            verify(mockClientOAuthSessionDetailsService)
+                    .generateErrorClientSessionDetails(
+                            any(String.class),
+                            eq("https://example.com"),
+                            eq("test-client"),
+                            eq("test-state"),
+                            eq(null));
         }
 
         @Test
@@ -1510,6 +1489,8 @@ class InitialiseIpvSessionHandlerTest {
                                         INHERITED_IDENTITY_JWT_CLAIM_NAME,
                                         Map.of(VALUES, List.of()),
                                         PASSPORT_CLAIM_NAME,
-                                        new Essential(true))));
+                                        new Essential(true),
+                                        EVCS_ACCESS_TOKEN_CLAIM_NAME,
+                                        Map.of(VALUES, List.of(TEST_EVCS_ACCESS_TOKEN)))));
     }
 }

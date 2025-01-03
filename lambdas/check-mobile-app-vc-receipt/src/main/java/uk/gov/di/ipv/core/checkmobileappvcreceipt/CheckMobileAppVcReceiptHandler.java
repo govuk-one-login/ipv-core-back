@@ -9,6 +9,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.dto.CheckMobileAppVcReceiptRequest;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAppVcReceiptRequestException;
@@ -54,8 +55,8 @@ public class CheckMobileAppVcReceiptHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CriResponseService criResponseService;
     private final CriCheckingService criCheckingService;
-    private final EvcsService evcsService;
     private final SessionCredentialsService sessionCredentialsService;
+    private final EvcsService evcsService;
 
     public CheckMobileAppVcReceiptHandler(
             ConfigService configService,
@@ -63,15 +64,15 @@ public class CheckMobileAppVcReceiptHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
             CriCheckingService criCheckingService,
-            EvcsService evcsService,
-            SessionCredentialsService sessionCredentialsService) {
+            SessionCredentialsService sessionCredentialsService,
+            EvcsService evcsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
         this.criCheckingService = criCheckingService;
-        this.evcsService = evcsService;
         this.sessionCredentialsService = sessionCredentialsService;
+        this.evcsService = evcsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -80,24 +81,22 @@ public class CheckMobileAppVcReceiptHandler
         ipvSessionService = new IpvSessionService(configService);
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         criResponseService = new CriResponseService(configService);
-
-        sessionCredentialsService = new SessionCredentialsService(configService);
-        var cimitService = new CimitService(configService);
         criCheckingService =
                 new CriCheckingService(
                         configService,
                         AuditService.create(configService),
                         new UserIdentityService(configService),
-                        cimitService,
+                        new CimitService(configService),
                         new CimitUtilityService(configService),
-                        sessionCredentialsService,
                         ipvSessionService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
         evcsService = new EvcsService(configService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
@@ -185,7 +184,11 @@ public class CheckMobileAppVcReceiptHandler
 
         var asyncCriStatus =
                 new AsyncCriStatus(
-                        DCMAW_ASYNC, criResponseItem.getStatus(), dcmawAsyncVc.isEmpty(), true);
+                        DCMAW_ASYNC,
+                        criResponseItem.getStatus(),
+                        dcmawAsyncVc.isEmpty(),
+                        true,
+                        false);
 
         if (asyncCriStatus.isAwaitingVc()) {
             return asyncCriStatus.getJourneyForAwaitingVc(true);
@@ -198,7 +201,8 @@ public class CheckMobileAppVcReceiptHandler
                 List.of(dcmawAsyncVc.get()),
                 request.getIpAddress(),
                 clientOAuthSessionItem,
-                ipvSessionItem);
+                ipvSessionItem,
+                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId));
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)

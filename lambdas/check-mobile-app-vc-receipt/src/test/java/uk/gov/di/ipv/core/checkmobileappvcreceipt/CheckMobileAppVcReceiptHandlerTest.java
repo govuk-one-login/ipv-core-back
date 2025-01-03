@@ -64,7 +64,7 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private CriResponseService criResponseService;
     @Mock private CriCheckingService criCheckingService;
     @Mock private EvcsService evcsService;
-    @Mock private SessionCredentialsService mockSessionCredentialService;
+    @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
 
     @Test
@@ -154,11 +154,14 @@ class CheckMobileAppVcReceiptHandlerTest {
                                         "vc",
                                         Map.of("type", List.of("IdentityAssertionCredential")))));
         var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), TEST_USER_ID))
+                .thenReturn(List.of());
         when(evcsService.getVerifiableCredentials(
                         TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
                 .thenReturn(List.of(vc));
         when(criCheckingService.checkVcResponse(
-                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem))
+                        List.of(vc), null, clientOAuthSessionItem, ipvSessionItem, List.of()))
                 .thenReturn(new JourneyResponse(JOURNEY_NEXT_PATH));
 
         // Act
@@ -168,7 +171,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Assert
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
-        verify(mockSessionCredentialService)
+        verify(sessionCredentialsService)
                 .persistCredentials(List.of(vc), TEST_IPV_SESSION_ID, false);
     }
 
@@ -235,8 +238,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Assert
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
-        verify(mockSessionCredentialService, never())
-                .persistCredentials(any(), any(), anyBoolean());
+        verify(sessionCredentialsService, never()).persistCredentials(any(), any(), anyBoolean());
     }
 
     @Test

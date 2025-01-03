@@ -14,10 +14,6 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:oauth-key-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 

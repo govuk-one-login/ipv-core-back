@@ -189,6 +189,8 @@ states:
         targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   F2F_START_PAGE:
     response:
@@ -628,6 +630,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   MITIGATION_01_APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
@@ -720,6 +724,8 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   APP_DOC_CHECK_PYI_ESCAPE:
     nestedJourney: APP_DOC_CHECK
@@ -839,8 +845,43 @@ states:
       uk:
         targetState: IDENTITY_START_PAGE
       international:
+        targetState: NON_UK_APP_INTRO_PAGE
+        checkFeatureFlag:
+          strategicAppEnabled:
+            targetState: NON_UK_PASSPORT
+
+  NON_UK_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-passport
+    events:
+      next:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      abandon:
+        targetState: NON_UK_NO_PASSPORT
+
+  NON_UK_NO_PASSPORT:
+    response:
+      type: page
+      pageId: non-uk-no-passport
+    events:
+      returnToRp:
+        targetState: RETURN_TO_RP
+      useApp:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+
+  NON_UK_APP_INTRO_PAGE:
+    response:
+      type: page
+      pageId: non-uk-app-intro
+    events:
+      useApp:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   NON_UK_NO_APP_PAGE:
     response:

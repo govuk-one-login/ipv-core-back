@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialR
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
@@ -108,13 +109,6 @@ public class CriStoringService {
             throws JsonProcessingException {
         var userId = clientOAuthSessionItem.getUserId();
 
-        var auditEventUser =
-                new AuditEventUser(
-                        userId,
-                        ipvSessionId,
-                        clientOAuthSessionItem.getGovukSigninJourneyId(),
-                        ipAddress);
-
         var vcResponseDto =
                 VerifiableCredentialResponseDto.builder()
                         .userId(userId)
@@ -122,12 +116,19 @@ public class CriStoringService {
                         .build();
 
         criResponseService.persistCriResponse(
-                userId,
+                clientOAuthSessionItem,
                 cri,
                 OBJECT_MAPPER.writeValueAsString(vcResponseDto),
                 criOAuthSessionId,
                 CriResponseService.STATUS_PENDING,
                 featureSet);
+
+        var auditEventUser =
+                new AuditEventUser(
+                        userId,
+                        ipvSessionId,
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
+                        ipAddress);
 
         sendAuditEventForProcessedVcResponse(
                 CriResourceRetrievedType.PENDING.getType(), cri, auditEventUser, deviceInformation);
@@ -139,7 +140,8 @@ public class CriStoringService {
             String deviceInformation,
             List<VerifiableCredential> vcs,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
             throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
@@ -149,6 +151,9 @@ public class CriStoringService {
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
 
+        List<VerifiableCredential> mitigationVcList = new ArrayList<>(sessionVcs);
+
+        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
@@ -158,10 +163,11 @@ public class CriStoringService {
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
-            var scopeClaims = clientOAuthSessionItem.getScopeClaims();
             if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+                mitigationVcList.add(vc);
                 cimitService.submitVC(vc, govukSigninJourneyId, ipAddress);
-                cimitService.submitMitigatingVcList(List.of(vc), govukSigninJourneyId, ipAddress);
+                cimitService.submitMitigatingVcList(
+                        mitigationVcList, govukSigninJourneyId, ipAddress);
             }
 
             if (cri.equals(TICF)) {

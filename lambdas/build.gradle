@@ -9,3 +9,17 @@ allprojects {
 		}
 	}
 }
+
+subprojects {
+	afterEvaluate { subproject ->
+		dependencies {
+			runtimeOnly platform(libs.openTelemetryBom),
+					libs.openTelemetryAwsSdkAutoConfigure
+
+			aspect libs.powertoolsLogging,
+					libs.powertoolsMetrics,
+					libs.powertoolsTracing,
+					libs.aspectj
+		}
+	}
+}

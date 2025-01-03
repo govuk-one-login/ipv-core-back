@@ -11,12 +11,12 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -57,7 +58,6 @@ import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -80,6 +80,7 @@ public class ProcessCriCallbackHandler
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final AuditService auditService;
+    private final SessionCredentialsService sessionCredentialsService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessCriCallbackHandler(
@@ -91,7 +92,8 @@ public class ProcessCriCallbackHandler
             CriApiService criApiService,
             CriStoringService criStoringService,
             CriCheckingService criCheckingService,
-            AuditService auditService) {
+            AuditService auditService,
+            SessionCredentialsService sessionCredentialsService) {
         this.configService = configService;
         this.criApiService = criApiService;
         this.criStoringService = criStoringService;
@@ -101,6 +103,7 @@ public class ProcessCriCallbackHandler
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.auditService = auditService;
+        this.sessionCredentialsService = sessionCredentialsService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -113,7 +116,7 @@ public class ProcessCriCallbackHandler
         clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         auditService = AuditService.create(configService);
 
-        var sessionCredentialsService = new SessionCredentialsService(configService);
+        sessionCredentialsService = new SessionCredentialsService(configService);
         var cimitService = new CimitService(configService);
 
         criApiService = new CriApiService(configService);
@@ -124,7 +127,6 @@ public class ProcessCriCallbackHandler
                         new UserIdentityService(configService),
                         cimitService,
                         new CimitUtilityService(configService),
-                        sessionCredentialsService,
                         ipvSessionService);
         criStoringService =
                 new CriStoringService(
@@ -141,26 +143,9 @@ public class ProcessCriCallbackHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        // temporary logging to check which tracing headers are being used by dynatrace
-        if ("build".equals(configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))) {
-            var headers = input.getHeaders();
-            LOGGER.info(
-                    LogHelper.buildLogMessage("Tracing headers")
-                            .with(
-                                    "traceparent",
-                                    Optional.ofNullable(headers.get("traceparent"))
-                                            .orElse("not set"))
-                            .with(
-                                    "tracestate",
-                                    Optional.ofNullable(headers.get("tracestate"))
-                                            .orElse("not set"))
-                            .with(
-                                    "x-dynatrace",
-                                    Optional.ofNullable(headers.get("x-dynatrace"))
-                                            .orElse("not set")));
-        }
         CriCallbackRequest callbackRequest = null;
 
         try {
@@ -288,6 +273,8 @@ public class ProcessCriCallbackHandler
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachComponentId(configService);
 
+        EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());
+
         // Validate callback request
         if (callbackRequest.getError() != null) {
             criCheckingService.validateOAuthForError(
@@ -301,16 +288,25 @@ public class ProcessCriCallbackHandler
         var vcResponse =
                 criApiService.fetchVerifiableCredential(
                         accessToken, callbackRequest.getCredentialIssuer(), criOAuthSessionItem);
+        var sessionVcs =
+                sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId(), true);
+
         var vcs =
                 validateAndStoreResponse(
                         callbackRequest,
                         vcResponse,
                         clientOAuthSessionItem,
                         criOAuthSessionItem,
-                        ipvSessionItem);
+                        ipvSessionItem,
+                        sessionVcs);
 
         return criCheckingService.checkVcResponse(
-                vcs, callbackRequest.getIpAddress(), clientOAuthSessionItem, ipvSessionItem);
+                vcs,
+                callbackRequest.getIpAddress(),
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs);
     }
 
     private List<VerifiableCredential> validateAndStoreResponse(
@@ -318,7 +314,8 @@ public class ProcessCriCallbackHandler
             VerifiableCredentialResponse vcResponse,
             ClientOAuthSessionItem clientOAuthSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
             throws VerifiableCredentialException, JsonProcessingException,
                     InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
                     UnrecognisedVotException {
@@ -350,7 +347,8 @@ public class ProcessCriCallbackHandler
                     callbackRequest.getDeviceInformation(),
                     vcs,
                     clientOAuthSessionItem,
-                    ipvSessionItem);
+                    ipvSessionItem,
+                    sessionVcs);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 

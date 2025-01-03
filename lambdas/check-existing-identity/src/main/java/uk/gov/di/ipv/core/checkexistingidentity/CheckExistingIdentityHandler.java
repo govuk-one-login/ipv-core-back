@@ -5,8 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkexistingidentity.exceptions.MitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -18,12 +18,12 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionPreviousIpvSe
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.enums.OperationalProfile;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -62,6 +63,7 @@ import java.util.Optional;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
+import static java.lang.Boolean.TRUE;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -70,12 +72,8 @@ import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.GPG45;
 import static uk.gov.di.ipv.core.library.domain.ProfileType.OPERATIONAL_HMRC;
-import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GPG45_PROFILE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
@@ -93,6 +91,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_ID
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
+import static uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper.filterVCBasedOnProfileType;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -130,13 +129,13 @@ public class CheckExistingIdentityHandler
     private final CriResponseService criResponseService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final IpvSessionService ipvSessionService;
-    private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
     private final SessionCredentialsService sessionCredentialsService;
     private final EvcsService evcsService;
+    private final VotMatcher votMatcher;
 
     @SuppressWarnings({
         "unused",
@@ -146,7 +145,6 @@ public class CheckExistingIdentityHandler
             ConfigService configService,
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService,
@@ -155,11 +153,11 @@ public class CheckExistingIdentityHandler
             VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
-            EvcsService evcsService) {
+            EvcsService evcsService,
+            VotMatcher votMatcher) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
-        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
@@ -168,6 +166,7 @@ public class CheckExistingIdentityHandler
         this.sessionCredentialsService = sessionCredentialsService;
         this.evcsService = evcsService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.votMatcher = votMatcher;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -182,7 +181,6 @@ public class CheckExistingIdentityHandler
         this.configService = ConfigService.create();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
@@ -191,6 +189,9 @@ public class CheckExistingIdentityHandler
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.evcsService = new EvcsService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.votMatcher =
+                new VotMatcher(
+                        userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -200,6 +201,7 @@ public class CheckExistingIdentityHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentId(configService);
 
@@ -276,15 +278,17 @@ public class CheckExistingIdentityHandler
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
 
-            var reproveIdentity = Optional.ofNullable(clientOAuthSessionItem.getReproveIdentity());
-
-            if (reproveIdentity.orElse(false) || configService.enabled(RESET_IDENTITY)) {
+            var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
+            // Only skip starting a new reprove identity journey if the user is returning from a F2F
+            // journey
+            if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
+                    || configService.enabled(RESET_IDENTITY)) {
                 if (lowestGpg45ConfidenceRequested == Vot.P1) {
-                    LOGGER.info(LogHelper.buildLogMessage("Resetting P1 identity"));
+                    LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
 
-                LOGGER.info(LogHelper.buildLogMessage("Resetting P2 identity"));
+                LOGGER.info(LogHelper.buildLogMessage("Reproving P2 identity"));
                 return JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM;
             }
 
@@ -306,6 +310,7 @@ public class CheckExistingIdentityHandler
 
             var areGpg45VcsCorrelated =
                     userIdentityService.areVcsCorrelated(credentialBundle.credentials);
+
             var profileMatchResponse =
                     checkForProfileMatch(
                             ipvSessionItem,
@@ -416,33 +421,42 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser,
             String deviceInformation,
             VerifiableCredentialBundle credentialBundle,
-            boolean areVcsCorrelated,
+            boolean areGpg45VcsCorrelated,
             List<ContraIndicator> contraIndicators)
             throws ParseException, VerifiableCredentialException {
         // Check for attained vot from requested vots
-        var strongestAttainedVotFromVtr =
-                getStrongestAttainedVotForVtr(
+        var maybeVotMatchingResult =
+                votMatcher.matchFirstVot(
                         clientOAuthSessionItem
                                 .getParsedVtr()
                                 .getRequestedVotsByStrengthDescending(),
                         credentialBundle.credentials,
-                        auditEventUser,
-                        deviceInformation,
-                        areVcsCorrelated,
-                        contraIndicators);
+                        contraIndicators,
+                        areGpg45VcsCorrelated);
 
-        // vot achieved for vtr
-        if (strongestAttainedVotFromVtr.isPresent()) {
-            return Optional.of(
-                    buildReuseResponse(
-                            strongestAttainedVotFromVtr.get(),
-                            ipvSessionItem,
-                            credentialBundle,
-                            auditEventUser,
-                            deviceInformation));
+        if (maybeVotMatchingResult.isEmpty()) {
+            return Optional.empty();
         }
 
-        return Optional.empty();
+        var votMatchingResult = maybeVotMatchingResult.get();
+
+        if (GPG45.equals(votMatchingResult.vot().getProfileType())) {
+            sendProfileMatchedAuditEvent(
+                    votMatchingResult.gpg45Profile(),
+                    votMatchingResult.gpg45Scores(),
+                    VcHelper.filterVCBasedOnProfileType(credentialBundle.credentials(), GPG45),
+                    auditEventUser,
+                    deviceInformation);
+        }
+
+        // vot achieved for vtr
+        return Optional.of(
+                buildReuseResponse(
+                        votMatchingResult.vot(),
+                        ipvSessionItem,
+                        credentialBundle,
+                        auditEventUser,
+                        deviceInformation));
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
@@ -570,8 +584,7 @@ public class CheckExistingIdentityHandler
             boolean isCurrentlyMigrating = ipvSessionItem.isInheritedIdentityReceivedThisSession();
 
             sessionCredentialsService.persistCredentials(
-                    VcHelper.filterVCBasedOnProfileType(
-                            credentialBundle.credentials, OPERATIONAL_HMRC),
+                    filterVCBasedOnProfileType(credentialBundle.credentials, OPERATIONAL_HMRC),
                     auditEventUser.getSessionId(),
                     isCurrentlyMigrating);
 
@@ -581,7 +594,7 @@ public class CheckExistingIdentityHandler
         }
 
         sessionCredentialsService.persistCredentials(
-                VcHelper.filterVCBasedOnProfileType(
+                filterVCBasedOnProfileType(
                         credentialBundle.credentials, attainedVot.getProfileType()),
                 auditEventUser.getSessionId(),
                 false);
@@ -656,110 +669,6 @@ public class CheckExistingIdentityHandler
                 JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse);
     }
 
-    private Optional<Vot> getStrongestAttainedVotForVtr(
-            List<Vot> requestedVotsByStrength,
-            List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation,
-            boolean areGpg45VcsCorrelated,
-            List<ContraIndicator> contraIndicators)
-            throws ParseException {
-
-        for (Vot requestedVot : requestedVotsByStrength) {
-            boolean requestedVotAttained = false;
-            if (requestedVot.getProfileType().equals(GPG45)) {
-                if (areGpg45VcsCorrelated) {
-                    requestedVotAttained =
-                            achievedWithGpg45Profile(
-                                    requestedVot,
-                                    VcHelper.filterVCBasedOnProfileType(vcs, GPG45),
-                                    auditEventUser,
-                                    deviceInformation,
-                                    contraIndicators);
-                }
-            } else {
-                requestedVotAttained = hasOperationalProfileVc(requestedVot, vcs, contraIndicators);
-            }
-
-            if (requestedVotAttained) {
-                return Optional.of(requestedVot);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private boolean achievedWithGpg45Profile(
-            Vot requestedVot,
-            List<VerifiableCredential> vcs,
-            AuditEventUser auditEventUser,
-            String deviceInformation,
-            List<ContraIndicator> contraIndicators)
-            throws ParseException {
-        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-        Optional<Gpg45Profile> matchedGpg45Profile =
-                !userIdentityService.checkRequiresAdditionalEvidence(vcs)
-                        ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, requestedVot.getSupportedGpg45Profiles())
-                        : Optional.empty();
-
-        var isBreaching =
-                cimitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
-
-        // Successful match
-        if (matchedGpg45Profile.isPresent() && !isBreaching) {
-            var gpg45Credentials = new ArrayList<VerifiableCredential>();
-            for (var vc : vcs) {
-                if (!VcHelper.isOperationalProfileVc(vc)) {
-                    gpg45Credentials.add(vc);
-                }
-            }
-            LOGGER.info(
-                    LogHelper.buildLogMessage("GPG45 profile has been met.")
-                            .with(
-                                    LOG_GPG45_PROFILE.getFieldName(),
-                                    matchedGpg45Profile.get().getLabel()));
-            sendProfileMatchedAuditEvent(
-                    matchedGpg45Profile.get(),
-                    gpg45Scores,
-                    gpg45Credentials,
-                    auditEventUser,
-                    deviceInformation);
-
-            return true;
-        }
-        return false;
-    }
-
-    private boolean hasOperationalProfileVc(
-            Vot requestedVot,
-            List<VerifiableCredential> vcs,
-            List<ContraIndicator> contraIndicators)
-            throws ParseException {
-        for (var vc : vcs) {
-            String credentialVot = vc.getClaimsSet().getStringClaim(VOT_CLAIM_NAME);
-            Optional<String> matchedOperationalProfile =
-                    requestedVot.getSupportedOperationalProfiles().stream()
-                            .map(OperationalProfile::name)
-                            .filter(profileName -> profileName.equals(credentialVot))
-                            .findFirst();
-
-            var isBreaching =
-                    cimitUtilityService.isBreachingCiThreshold(contraIndicators, requestedVot);
-
-            // Successful match
-            if (matchedOperationalProfile.isPresent() && !isBreaching) {
-                LOGGER.info(
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Operational profile matched")
-                                .with(LOG_VOT.getFieldName(), requestedVot));
-                return true;
-            }
-        }
-        return false;
-    }
-
     private void sendProfileMatchedAuditEvent(
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
@@ -777,5 +686,14 @@ public class CheckExistingIdentityHandler
                                 VcHelper.extractTxnIdsFromCredentials(vcs)),
                         new AuditRestrictedDeviceInformation(deviceInformation));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private boolean isReprovingWithF2f(
+            AsyncCriStatus f2fStatus, VerifiableCredentialBundle vcBundle) {
+        // does the user have a F2F response item that was created in response to an intervention,
+        // and they're returning to core with a pending identity
+        return f2fStatus.cri() == F2F
+                && f2fStatus.isReproveIdentity()
+                && vcBundle.isPendingReturn();
     }
 }

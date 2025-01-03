@@ -13,10 +13,6 @@ dependencies {
 			project(":libs:cri-response-service"),
 			project(':libs:evcs-service')
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
 			libs.mockitoJunit,

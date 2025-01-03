@@ -5,7 +5,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.service.CriResponseService;
 
 import java.util.stream.Stream;
 
@@ -21,7 +20,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSameSession(
             String incompleteStatus, String expectedJourney) {
         // Arrange
-        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, incompleteStatus, false, false);
+        var asyncCriStatus = new AsyncCriStatus(DCMAW_ASYNC, incompleteStatus, false, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(true);
@@ -32,15 +31,15 @@ class AsyncCriStatusTest {
 
     static Stream<Arguments> DcmawAsyncSameSessionJourneysAndCriResponseItemStatuses() {
         return Stream.of(
-                Arguments.of(CriResponseService.STATUS_ABANDON, "/journey/abandon"),
-                Arguments.of(CriResponseService.STATUS_ERROR, "/journey/error"),
+                Arguments.of(AsyncCriStatus.STATUS_ABANDON, "/journey/abandon"),
+                Arguments.of(AsyncCriStatus.STATUS_ERROR, "/journey/error"),
                 Arguments.of("not a status", "/journey/error"));
     }
 
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForDcmawAsyncSameSession() {
         // Arrange
         var asyncCriStatus =
-                new AsyncCriStatus(DCMAW_ASYNC, CriResponseService.STATUS_PENDING, false, false);
+                new AsyncCriStatus(DCMAW_ASYNC, AsyncCriStatus.STATUS_PENDING, false, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(true);
@@ -54,7 +53,7 @@ class AsyncCriStatusTest {
     void getJourneyForAwaitingVcShouldReturnCorrectJourneyForF2f(
             String incompleteStatus, String expectedJourney) {
         // Arrange
-        var asyncCriStatus = new AsyncCriStatus(F2F, incompleteStatus, false, false);
+        var asyncCriStatus = new AsyncCriStatus(F2F, incompleteStatus, false, false, false);
 
         // Act
         var journeyResponse = asyncCriStatus.getJourneyForAwaitingVc(false);
@@ -65,9 +64,9 @@ class AsyncCriStatusTest {
 
     static Stream<Arguments> F2fJourneysAndCriResponseItemStatuses() {
         return Stream.of(
-                Arguments.of(CriResponseService.STATUS_PENDING, "/journey/pending"),
-                Arguments.of(CriResponseService.STATUS_ABANDON, "/journey/f2f-fail"),
-                Arguments.of(CriResponseService.STATUS_ERROR, "/journey/f2f-fail"),
+                Arguments.of(AsyncCriStatus.STATUS_PENDING, "/journey/pending"),
+                Arguments.of(AsyncCriStatus.STATUS_ABANDON, "/journey/f2f-fail"),
+                Arguments.of(AsyncCriStatus.STATUS_ERROR, "/journey/f2f-fail"),
                 Arguments.of("not a status", "/journey/error"));
     }
 }

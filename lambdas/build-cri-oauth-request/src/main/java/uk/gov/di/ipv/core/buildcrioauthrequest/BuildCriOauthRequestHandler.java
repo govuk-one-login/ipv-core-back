@@ -14,6 +14,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
@@ -38,6 +39,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.OAuthKeyService;
@@ -58,6 +60,7 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -72,6 +75,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_CONSTRUC
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_EVIDENCE_REQUESTED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.EvidenceRequest.SCORING_POLICY_GPG45;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
@@ -146,6 +150,7 @@ public class BuildCriOauthRequestHandler
     @Override
     @Tracing
     @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
@@ -180,8 +185,6 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            Vot targetVot = ipvSessionItem.getTargetVot();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.getInstance().generate();
@@ -194,8 +197,7 @@ public class BuildCriOauthRequestHandler
                             govukSigninJourneyId,
                             cri,
                             criContext,
-                            criEvidenceRequest,
-                            targetVot);
+                            criEvidenceRequest);
 
             CriResponse criResponse = getCriResponse(criConfig, jweObject, cri, language);
 
@@ -211,6 +213,8 @@ public class BuildCriOauthRequestHandler
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
+            EmbeddedMetricHelper.criRedirect(cri.getId());
 
             var message =
                     new StringMapMessage()
@@ -314,8 +318,7 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId,
             Cri cri,
             String context,
-            EvidenceRequest evidenceRequest,
-            Vot requestedVot)
+            EvidenceRequest evidenceRequest)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException,
                     VerifiableCredentialException {
 
@@ -327,9 +330,24 @@ public class BuildCriOauthRequestHandler
                         ipvSessionItem.getEmailAddress(), vcs, getAllowedSharedClaimAttrs(cri));
 
         if (cri.equals(F2F)) {
-            evidenceRequest = getEvidenceRequestForF2F(vcs, requestedVot);
+            evidenceRequest =
+                    getEvidenceRequestForF2F(
+                            vcs,
+                            Optional.ofNullable(ipvSessionItem.getTargetVot())
+                                    .orElseThrow(
+                                            () ->
+                                                    new HttpResponseExceptionWithErrorBody(
+                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            MISSING_TARGET_VOT)));
         } else if (cri.isKbvCri()) {
-            evidenceRequest = getEvidenceRequestForKbvCri(ipvSessionItem.getTargetVot());
+            evidenceRequest =
+                    getEvidenceRequestForKbvCri(
+                            Optional.ofNullable(ipvSessionItem.getTargetVot())
+                                    .orElseThrow(
+                                            () ->
+                                                    new HttpResponseExceptionWithErrorBody(
+                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            MISSING_TARGET_VOT)));
         }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(

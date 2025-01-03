@@ -12,10 +12,6 @@ dependencies {
 			project(":libs:audit-service"),
 			project(":libs:cri-response-service")
 
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
-
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 

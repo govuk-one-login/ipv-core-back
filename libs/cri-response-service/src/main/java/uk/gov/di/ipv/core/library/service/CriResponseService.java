@@ -7,6 +7,7 @@ import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
@@ -53,7 +54,7 @@ public class CriResponseService {
     }
 
     public void persistCriResponse(
-            String userId,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             Cri credentialIssuer,
             String issuerResponse,
             String oauthState,
@@ -61,13 +62,15 @@ public class CriResponseService {
             List<String> featureSet) {
         CriResponseItem criResponseItem =
                 CriResponseItem.builder()
-                        .userId(userId)
+                        .userId(clientOAuthSessionItem.getUserId())
                         .credentialIssuer(credentialIssuer.getId())
                         .issuerResponse(issuerResponse)
                         .oauthState(oauthState)
                         .dateCreated(Instant.now())
                         .status(status)
                         .featureSet(featureSet)
+                        .reproveIdentity(
+                                Boolean.TRUE.equals(clientOAuthSessionItem.getReproveIdentity()))
                         .build();
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
@@ -90,7 +93,12 @@ public class CriResponseService {
             var f2fVc = credentials.stream().filter(vc -> vc.getCri().equals(F2F)).findFirst();
             var hasVc = f2fVc.isPresent();
 
-            return new AsyncCriStatus(F2F, f2fCriResponseItem.getStatus(), !hasVc, isPendingReturn);
+            return new AsyncCriStatus(
+                    F2F,
+                    f2fCriResponseItem.getStatus(),
+                    !hasVc,
+                    isPendingReturn,
+                    f2fCriResponseItem.isReproveIdentity());
         }
 
         // DCMAW async VC existence determines success or abandonment
@@ -106,11 +114,16 @@ public class CriResponseService {
                                         configService.getParameter(
                                                 DCMAW_ASYNC_VC_PENDING_RETURN_TTL));
                 if (now < expiry) {
-                    return new AsyncCriStatus(DCMAW_ASYNC, null, false, isPendingReturn);
+                    return new AsyncCriStatus(
+                            DCMAW_ASYNC,
+                            null,
+                            false,
+                            isPendingReturn,
+                            getCriResponseItem(userId, DCMAW_ASYNC).isReproveIdentity());
                 }
             }
         }
 
-        return new AsyncCriStatus(null, null, false, false);
+        return new AsyncCriStatus(null, null, false, false, false);
     }
 }

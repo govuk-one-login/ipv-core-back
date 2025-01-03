@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.model.IdentityCheckSubject;
 
@@ -45,10 +44,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
@@ -87,7 +88,6 @@ public class CriCheckingService {
     private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
-    private final SessionCredentialsService sessionCredentialsService;
     private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
@@ -97,14 +97,12 @@ public class CriCheckingService {
             UserIdentityService userIdentityService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
-            SessionCredentialsService sessionCredentialsService,
             IpvSessionService ipvSessionService) {
         this.configService = configService;
         this.auditService = auditService;
         this.userIdentityService = userIdentityService;
         this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
-        this.sessionCredentialsService = sessionCredentialsService;
         this.ipvSessionService = ipvSessionService;
     }
 
@@ -231,9 +229,9 @@ public class CriCheckingService {
             List<VerifiableCredential> newVcs,
             String ipAddress,
             ClientOAuthSessionItem clientOAuthSessionItem,
-            IpvSessionItem ipvSessionItem)
-            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    VerifiableCredentialException {
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs)
+            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
@@ -246,17 +244,19 @@ public class CriCheckingService {
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.
-            var targetVot = ipvSessionItem.getTargetVot();
             var journeyResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(cis, targetVot);
+                    cimitUtilityService.getMitigationJourneyIfBreaching(
+                            cis,
+                            Optional.ofNullable(ipvSessionItem.getTargetVot())
+                                    .orElseThrow(
+                                            () ->
+                                                    new HttpResponseExceptionWithErrorBody(
+                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
                 return journeyResponse.get();
             }
         }
-
-        var sessionVcs =
-                sessionCredentialsService.getCredentials(
-                        ipvSessionItem.getIpvSessionId(), clientOAuthSessionItem.getUserId());
 
         if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
             if (isReverification) {

@@ -140,17 +140,10 @@ public class IpvSessionService {
         ipvSessionItem.setVot(Vot.P0);
 
         if (errorObject == null) {
-            if (isReverification) {
-                ipvSessionItem.pushState(new JourneyState(REVERIFICATION, START_STATE));
-                // PYIC-7076
-                // Currently reverifcation journeys don't check the user's existing profile so we
-                // have to hard code this to P2 here. Eventually this can be set in the first step
-                // of the reverification journey.
-                ipvSessionItem.setTargetVot(Vot.P2);
-            } else {
-                ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, START_STATE));
-                // For non-reverification journeys targetVot is set in CheckExistingIdentity
-            }
+            ipvSessionItem.pushState(
+                    new JourneyState(
+                            isReverification ? REVERIFICATION : INITIAL_JOURNEY_SELECTION,
+                            START_STATE));
         } else {
             ipvSessionItem.pushState(new JourneyState(TECHNICAL_ERROR, ERROR_STATE));
             ipvSessionItem.setErrorCode(errorObject.getCode());
