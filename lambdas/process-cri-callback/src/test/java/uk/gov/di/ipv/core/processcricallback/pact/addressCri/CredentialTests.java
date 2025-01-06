@@ -262,7 +262,9 @@ class CredentialTests {
                 .status(200)
                 .body(
                         new PactJwtIgnoreSignatureBodyBuilder(
-                                VALID_VC_HEADER, VALID_VC_INTERNATIONAL_ADDRESS_BODY, VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE))
+                                VALID_VC_HEADER,
+                                VALID_VC_INTERNATIONAL_ADDRESS_BODY,
+                                VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE))
                 .toPact();
     }
 
@@ -320,9 +322,9 @@ class CredentialTests {
                                 JsonNode addressNode = credentialSubject.get("address").get(0);
 
                                 // Just check the bits specific to international addresses
-                                assertEquals("North Kivu", addressNode.get("addressRegion").asText());
                                 assertEquals(
-                                        "CD", addressNode.get("addressCountry").asText());
+                                        "North Kivu", addressNode.get("addressRegion").asText());
+                                assertEquals("CD", addressNode.get("addressCountry").asText());
 
                             } catch (VerifiableCredentialException | JsonProcessingException e) {
                                 throw new RuntimeException(e);
