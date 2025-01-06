@@ -224,3 +224,23 @@ form fieldset p {
 .journeyCtxList {
   padding: 4px 24px 0;
 }
+#page-preview-container {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  z-index: 1;
+  background-color: #f3f2f1;
+  height: fit-content;
+  max-width: 30%;
+  overflow: hidden;
+}
+#page-preview-container.hidden {
+  display: none;
+}
+#close-page-preview-container {
+  display: flex;
+  justify-content: space-between;
+}
+#close-page-preview {
+  height: 2rem;
+}

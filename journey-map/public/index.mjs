@@ -44,12 +44,19 @@ const stateSearch = document.getElementById("state-search");
 const journeyDesc = document.getElementById("journeyDesc");
 const journeyName = document.getElementById("journeyName");
 const journeyContextsList = document.getElementById("journeyContextsList");
+const pagePreviewContainer = document.getElementById("page-preview-container");
+const closePagePreviewButton = document.getElementById("close-page-preview");
+const selectedPagePreviewTitle = document.getElementById("page-preview-title");
+const pagePreviewIFrame = document.getElementById("page-preview");
+const diagramContainer = document.getElementById("diagram");
 
 let svgPanZoomInstance = null;
 let journeyMaps = {};
 let nestedJourneys = {};
 
 let selectedState = null;
+
+let clickPosition = {};
 
 const upperToKebab = (str) => str.toLowerCase().replaceAll("_", "-");
 
@@ -70,7 +77,7 @@ const loadJourneyMaps = async (journeyTypes, subFolder) => {
 };
 
 const getPageUrl = (id, context) => {
-  const baseUrl = `https://identity.build.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
+  const baseUrl = `https://dev-theab.02.dev.identity.account.gov.uk/dev/template/${encodeURIComponent(id)}/en`;
   return context
     ? `${baseUrl}?context=${encodeURIComponent(context)}`
     : baseUrl;
@@ -329,6 +336,7 @@ const setupMermaidClickHandlers = () => {
     // Clicking a node twice opens the link
     if (selectedState === state) {
       if (def.pageId) {
+        displayPagePreview(def.pageId, def.context);
         window.open(getPageUrl(def.pageId, def.context), "_blank");
         return;
       }
@@ -366,6 +374,7 @@ const setupMermaidClickHandlers = () => {
     }
 
     if (def.pageId) {
+      displayPagePreview(def.pageId, def.context);
       nodeDesc.append(
         createLink(
           "Click here to view the page in build",
@@ -387,6 +396,15 @@ const setupMermaidClickHandlers = () => {
       );
     }
   };
+};
+
+const displayPagePreview = (pageName, context) => {
+  // Could open the container at specific place like below (will need some offsetting) but
+  // it would also need to be draggable which might be overcomplicated?
+  pagePreviewContainer.style.transform = `translate(${clickPosition.x}px, ${clickPosition.y}px)`;
+  pagePreviewContainer.classList.remove("hidden");
+  selectedPagePreviewTitle.innerText = pageName;
+  pagePreviewIFrame.setAttribute("src", getPageUrl(pageName, context));
 };
 
 const setupHeaderToggleClickHandlers = () => {
@@ -433,6 +451,10 @@ const setupSearchHandler = () => {
   });
 };
 
+const getClickPosition = (e) => {
+  clickPosition = { x: e.clientX, y: e.clientY };
+};
+
 const initialize = async () => {
   setupHeader();
   journeyMaps = await loadJourneyMaps(JOURNEY_TYPES);
@@ -459,6 +481,11 @@ const initialize = async () => {
     e.preventDefault();
     await switchJourney(DEFAULT_JOURNEY_TYPE);
   };
+  closePagePreviewButton.onclick = (e) => {
+    e.preventDefault();
+    pagePreviewContainer.classList.add("hidden");
+  };
+  diagramContainer.addEventListener("click", getClickPosition);
   await updateView();
 };
 
