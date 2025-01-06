@@ -239,6 +239,98 @@ class CredentialTests {
     }
 
     @Pact(provider = "AddressCriVcProvider", consumer = "IpvCoreBack")
+    public RequestResponsePact validRequestReturnsIssuedInternationalAddressCredential(
+            PactDslWithProvider builder) {
+        return builder.given("dummyApiKey is a valid api key")
+                .given("dummyAccessToken is a valid access token")
+                .given("test-subject is a valid subject")
+                .given("dummyAddressComponentId is a valid issuer")
+                .given("addressCountry is CD")
+                .given("addressRegion is North Kivu")
+                .given("buildingName is Immeuble Commercial Plaza")
+                .given("buildingNumber is 4")
+                .given("subBuildingName is 3")
+                .given("streetName is Boulevard Kanyamuhanga")
+                .given("postalCode is 243")
+                .given("addressLocality is Goma")
+                .given("validFrom is 2020-01-01")
+                .uponReceiving("Valid credential request for international address")
+                .path("/credential/issue")
+                .method("POST")
+                .headers("x-api-key", PRIVATE_API_KEY, "Authorization", "Bearer dummyAccessToken")
+                .willRespondWith()
+                .status(200)
+                .body(
+                        new PactJwtIgnoreSignatureBodyBuilder(
+                                VALID_VC_HEADER, VALID_VC_INTERNATIONAL_ADDRESS_BODY, VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE))
+                .toPact();
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "validRequestReturnsIssuedInternationalAddressCredential")
+    void fetchVerifiableCredential_whenCalledAgainstAddressCri_retrievesAnInternationalAddressVc(
+            MockServer mockServer)
+            throws URISyntaxException, CriApiException, JsonProcessingException {
+        // Arrange
+        var credentialIssuerConfig = getMockCredentialIssuerConfig(mockServer);
+
+        when(mockConfigService.getOauthCriConfig(any())).thenReturn(credentialIssuerConfig);
+        when(mockConfigService.getSecret(any(), any(String[].class))).thenReturn(PRIVATE_API_KEY);
+
+        var verifiableCredentialJwtValidator =
+                new VerifiableCredentialValidator(
+                        mockConfigService,
+                        ((exactMatchClaims, requiredClaims) ->
+                                new FixedTimeJWTClaimsVerifier<>(
+                                        exactMatchClaims,
+                                        requiredClaims,
+                                        Date.from(CURRENT_TIME.instant()))));
+
+        // We need to generate a fixed request, so we set the secure token and expiry to constant
+        // values.
+        var underTest =
+                new CriApiService(
+                        mockConfigService, mockSignerFactory, mockSecureTokenHelper, CURRENT_TIME);
+
+        // Act
+        var verifiableCredentialResponse =
+                underTest.fetchVerifiableCredential(
+                        new BearerAccessToken("dummyAccessToken"), ADDRESS, CRI_OAUTH_SESSION_ITEM);
+
+        verifiableCredentialResponse
+                .getVerifiableCredentials()
+                .forEach(
+                        credential -> {
+                            try {
+                                var vc =
+                                        verifiableCredentialJwtValidator.parseAndValidate(
+                                                TEST_USER,
+                                                ADDRESS,
+                                                credential,
+                                                EC_PRIVATE_KEY_JWK,
+                                                TEST_ISSUER,
+                                                false);
+
+                                JsonNode credentialSubject =
+                                        OBJECT_MAPPER
+                                                .readTree(vc.getClaimsSet().toString())
+                                                .get("vc")
+                                                .get("credentialSubject");
+
+                                JsonNode addressNode = credentialSubject.get("address").get(0);
+
+                                // Just check the bits specific to international addresses
+                                assertEquals("North Kivu", addressNode.get("addressRegion").asText());
+                                assertEquals(
+                                        "CD", addressNode.get("addressCountry").asText());
+
+                            } catch (VerifiableCredentialException | JsonProcessingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+    }
+
+    @Pact(provider = "AddressCriVcProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestForChangedAddressReturnsIssuedAddressCredential(
             PactDslWithProvider builder) {
         return builder.given("dummyApiKey is a valid api key")
@@ -560,4 +652,45 @@ class CredentialTests {
     // change each time we run the tests.
     private static final String VALID_VC_CHANGED_ADDRESS_SIGNATURE =
             "2GkXxAwDnFVYbQMhsh3w-F4ffSlMVavviDIddMge_CjnQbWERBkhu-CCy6F9kGE1B8ZFrAlFAqDJQaT5PkbPbw"; // pragma: allowlist secret
+
+    private static final String VALID_VC_INTERNATIONAL_ADDRESS_BODY =
+            """
+            {
+              "iss": "dummyAddressComponentId",
+              "sub": "test-subject",
+              "nbf": 4070908800,
+              "exp": 4070909400,
+              "vc": {
+                "type": [
+                  "VerifiableCredential",
+                  "AddressCredential"
+                ],
+                "@context": [
+                  "https://www.w3.org/2018/credentials/v1",
+                  "https://vocab.account.gov.uk/contexts/identity-v1.jsonld"
+                ],
+                "credentialSubject": {
+                  "address": [
+                    {
+                      "addressCountry": "CD",
+                      "buildingName": "Immeuble Commercial Plaza",
+                      "streetName": "Boulevard Kanyamuhanga",
+                      "postalCode": "243",
+                      "buildingNumber": "4",
+                      "addressLocality": "Goma",
+                      "validFrom": "2020-01-01",
+                      "subBuildingName": "3",
+                      "addressRegion": "North Kivu"
+                    }
+                  ]
+                }
+              },
+              "jti": "dummyJti"
+            }
+            """;
+    // If we generate the signature in code it will be different each time, so we need to generate a
+    // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
+    // change each time we run the tests.
+    private static final String VALID_VC_INTERNATIONAL_ADDRESS_SIGNATURE =
+            "cr_bBHq1GD0dyl2L4ryF3fVD9-yLbS78wcRqFZaPB_FGAV9ANGjJHoRSGXoDNn0cib9tVeQDFYgeIZkm3iz46Q"; // pragma: allowlist secret
 }
