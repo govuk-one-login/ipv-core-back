@@ -38,7 +38,6 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.helpers.EmbeddedMetricHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -61,7 +60,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -376,11 +374,12 @@ public class BuildCriOauthRequestHandler
     private EvidenceRequest getEvidenceRequestForF2F(
             List<VerifiableCredential> vcs, Vot requestedVot) {
         var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
-        List<Gpg45Scores> requiredEvidences =
+        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(vcs);
+        var requiredEvidences =
                 gpg45Scores.calculateGpg45ScoresRequiredToMeetAProfile(
-                        requestedVot.getSupportedGpg45Profiles());
+                        requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired));
 
-        OptionalInt minViableStrengthOpt =
+        var minViableStrengthOpt =
                 requiredEvidences.stream()
                         .filter(
                                 requiredScores ->

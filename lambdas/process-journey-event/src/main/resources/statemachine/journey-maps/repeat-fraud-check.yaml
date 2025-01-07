@@ -217,15 +217,8 @@ states:
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-
-  ADDRESS_AND_FRAUD_RFC:
-    nestedJourney: ADDRESS_AND_FRAUD
-    exitEvents:
-      next:
+      fail-with-no-ci:
         targetState: EVALUATE_GPG45_SCORES_RFC
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
 
   EVALUATE_GPG45_SCORES_RFC:
     response:

@@ -18,7 +18,7 @@ awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
-diVocab = "uk.gov.di.model:di-data-model-jackson:v1.7.1"
+diVocab = "uk.gov.di.model:di-data-model-jackson:v1.9.0"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
