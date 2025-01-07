@@ -42,7 +42,8 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    And I callback from the app
+    And I do not submit VC to the async DCMAW CRI stub
+    When I callback from the app
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a 404

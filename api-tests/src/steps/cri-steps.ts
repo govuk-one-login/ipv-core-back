@@ -442,6 +442,32 @@ When(
   },
 );
 
+const postToEnqueue = async (body: object) => {
+  const response = await fetch(
+    `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      redirect: "manual",
+    },
+  );
+
+  if (response.status !== 201) {
+    throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
+  }
+
+  const responsePayload = await response.json();
+  if (
+    !responsePayload.oauthState ||
+    typeof responsePayload.oauthState !== "string"
+  ) {
+    throw new Error(
+      `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
+    );
+  }
+  this.oauthState = responsePayload.oauthState;
+};
+
 When(
   /^I submit '([\w-]+)' '([\w-]+)' '([\w-]+)' details to the async DCMAW CRI stub$/,
   async function (
@@ -450,37 +476,22 @@ When(
     documentType: string,
     evidenceType: string,
   ): Promise<void> {
-    const body = {
+    await postToEnqueue({
       user_id: this.userId,
       test_user: testUser,
       document_type: documentType,
       evidence_type: evidenceType,
       queue_name: config.asyncQueue.name,
-    };
+    });
+  },
+);
 
-    const response = await fetch(
-      `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
-      {
-        method: "POST",
-        body: JSON.stringify(body),
-        redirect: "manual",
-      },
-    );
-
-    if (response.status !== 201) {
-      throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
-    }
-
-    const responsePayload = await response.json();
-    if (
-      !responsePayload.oauthState ||
-      typeof responsePayload.oauthState !== "string"
-    ) {
-      throw new Error(
-        `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
-      );
-    }
-    this.oauthState = responsePayload.oauthState;
+When(
+  "I do not submit VC to the async DCMAW CRI stub",
+  async function (this: World): Promise<void> {
+    await postToEnqueue({
+      user_id: this.userId,
+    });
   },
 );
 
