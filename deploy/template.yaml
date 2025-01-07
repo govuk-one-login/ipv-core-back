@@ -1814,6 +1814,7 @@ Resources:
       CodeUri: ../lambdas/build-proven-user-identity-details
       Tracing: Active
       DeploymentPreference:
+        Type: Canary10Percent15Minutes
         Alarms: !If
           - UseCanaryDeploymentAlarms
           - [!Ref BuildProvenUserIdentityDetailsFunctionErrorCanaryAlarm,!Ref BuildProvenUserIdentityDetailsFunction5xxErrorCanaryAlarm]
