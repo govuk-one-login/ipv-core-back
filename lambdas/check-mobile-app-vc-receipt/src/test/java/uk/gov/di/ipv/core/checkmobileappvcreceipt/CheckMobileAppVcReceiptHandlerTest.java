@@ -63,8 +63,8 @@ class CheckMobileAppVcReceiptHandlerTest {
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CriResponseService criResponseService;
     @Mock private CriCheckingService criCheckingService;
-    @Mock private SessionCredentialsService sessionCredentialsService;
     @Mock private EvcsService evcsService;
+    @Mock private SessionCredentialsService sessionCredentialsService;
     @InjectMocks private CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler;
 
     @Test

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
@@ -999,6 +1000,24 @@ public interface VcFixtures {
                                             .build())
                             .build(),
                     Instant.ofEpochSecond(1705986521));
+
+    static VerifiableCredential vcDcmawAsync() {
+        TestVc.TestCredentialSubject credentialSubject =
+                TestVc.TestCredentialSubject.builder()
+                        .name(List.of((ALICE_PARKER_NAME)))
+                        .birthDate(List.of(createBirthDate("1970-01-01")))
+                        .drivingPermit(List.of(DRIVING_PERMIT_DVLA))
+                        .build();
+        return generateVerifiableCredential(
+                "urn:uuid:e4999e16-b95e-4abe-8615-e0ef763353cc",
+                DCMAW_ASYNC,
+                TestVc.builder()
+                        .evidence(DCMAW_EVIDENCE_DATA_CHECK)
+                        .credentialSubject(credentialSubject)
+                        .build(),
+                "https://driving-license-cri.stubs.account.gov.uk",
+                Instant.ofEpochSecond(1705986521));
+    }
 
     static VerifiableCredential vcF2fM1a() {
         TestVc.TestCredentialSubject credentialSubject =

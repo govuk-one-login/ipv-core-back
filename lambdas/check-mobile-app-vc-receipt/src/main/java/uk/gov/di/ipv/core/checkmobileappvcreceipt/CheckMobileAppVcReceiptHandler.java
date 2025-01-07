@@ -15,10 +15,12 @@ import uk.gov.di.ipv.core.checkmobileappvcreceipt.dto.CheckMobileAppVcReceiptReq
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAppVcReceiptRequestException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -36,7 +38,6 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.service.exception.InvalidCriResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
@@ -44,15 +45,11 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_ABANDON =
-            new JourneyResponse(JOURNEY_ABANDON_PATH);
-    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -172,17 +169,9 @@ public class CheckMobileAppVcReceiptHandler
         LogHelper.attachComponentId(configService);
 
         // Retrieve and validate cri response and vc
-        var criResponse = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);
-        if (criResponse == null) {
+        var criResponseItem = criResponseService.getCriResponseItem(userId, DCMAW_ASYNC);
+        if (criResponseItem == null) {
             throw new InvalidCriResponseException(ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND);
-        }
-
-        if (CriResponseService.STATUS_ERROR.equals(criResponse.getStatus())) {
-            return JOURNEY_ERROR;
-        }
-
-        if (CriResponseService.STATUS_ABANDON.equals(criResponse.getStatus())) {
-            return JOURNEY_ABANDON;
         }
 
         var dcmawAsyncVc =
@@ -193,8 +182,16 @@ public class CheckMobileAppVcReceiptHandler
                         .filter(vc -> DCMAW_ASYNC.equals(vc.getCri()))
                         .findFirst();
 
-        if (dcmawAsyncVc.isEmpty()) {
-            return null;
+        var asyncCriStatus =
+                new AsyncCriStatus(
+                        DCMAW_ASYNC,
+                        criResponseItem.getStatus(),
+                        dcmawAsyncVc.isEmpty(),
+                        true,
+                        false);
+
+        if (asyncCriStatus.isAwaitingVc()) {
+            return asyncCriStatus.getJourneyForAwaitingVc(true);
         }
 
         sessionCredentialsService.persistCredentials(
