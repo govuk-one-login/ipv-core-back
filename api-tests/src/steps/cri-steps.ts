@@ -465,7 +465,7 @@ const postToEnqueue = async (body: object) => {
       `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
     );
   }
-  this.oauthState = responsePayload.oauthState;
+  return responsePayload.oauthState;
 };
 
 When(
@@ -476,7 +476,7 @@ When(
     documentType: string,
     evidenceType: string,
   ): Promise<void> {
-    await postToEnqueue({
+    this.oauthState = await postToEnqueue({
       user_id: this.userId,
       test_user: testUser,
       document_type: documentType,
@@ -489,7 +489,7 @@ When(
 When(
   "I do not submit VC to the async DCMAW CRI stub",
   async function (this: World): Promise<void> {
-    await postToEnqueue({
+    this.oauthState = await postToEnqueue({
       user_id: this.userId,
     });
   },
