@@ -197,19 +197,12 @@ public class CheckMobileAppVcReceiptHandler
         sessionCredentialsService.persistCredentials(
                 List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
 
-        System.out.printf("dcmawAsyncVc %s", dcmawAsyncVc.get().getVcString());
-
-        var a =
-                criCheckingService.checkVcResponse(
-                        List.of(dcmawAsyncVc.get()),
-                        request.getIpAddress(),
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        sessionCredentialsService.getCredentials(
-                                ipvSessionItem.getIpvSessionId(), userId));
-
-        System.out.printf("dcmawAsyncVc a %s", a.getJourney());
-        return a;
+        return criCheckingService.checkVcResponse(
+                List.of(dcmawAsyncVc.get()),
+                request.getIpAddress(),
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId));
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)
