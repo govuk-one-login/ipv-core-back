@@ -21,12 +21,12 @@
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
     "jose": "5.9.2",
-    "jsonschema": "1.4.1",
+    "jsonschema": "1.5.0",
     "prettier": "3.4.1",
     "start-server-and-test": "2.0.4",
     "ts-node": "10.9.2",
     "typescript": "5.7.2",
     "typescript-eslint": "8.18.0",
-    "yaml": "2.6.0"
+    "yaml": "2.7.0"
   }
 }

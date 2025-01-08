@@ -16,6 +16,9 @@ dependencies {
 			project(":libs:user-identity-service"),
 			project(":libs:evcs-service")
 
+	compileOnly libs.lombok
+	annotationProcessor libs.lombok
+
 	testImplementation libs.hamcrest,
 			libs.jacksonDatabind,
 			libs.junitJupiter,

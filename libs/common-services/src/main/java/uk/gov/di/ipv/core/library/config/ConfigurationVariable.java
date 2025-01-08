@@ -49,7 +49,8 @@ public enum ConfigurationVariable {
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),
-    SIGNING_KEY_JWK("self/signingKey");
+    SIGNING_KEY_JWK("self/signingKey"),
+    DCMAW_ASYNC_VC_PENDING_RETURN_TTL("self/dcmawAsyncVcPendingReturnTtl");
 
     private final String path;
 
