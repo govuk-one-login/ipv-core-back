@@ -61,8 +61,7 @@ Feature: M2B Strategic App Journeys
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     When I submit 'kennethD' 'ukChippedPassport' 'success' details to the async DCMAW CRI stub
-    And I callback from the app in a separate session
-    Then I get an OAuth response
+    Then I callback from the app in a separate session
     When I start a new 'medium-confidence' journey
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
@@ -90,6 +89,9 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     When I submit 'kennethD' 'ukChippedPassport' 'fail' details to the async DCMAW CRI stub
     And I callback from the app
+    Then I get an 'check-mobile-app-result' page response
+    When I poll for async DCMAW credential receipt
+    And I submit the returned journey event
     Then I get an 'pyi-technical' page response
 
   Scenario: MAM journey detected iphone
