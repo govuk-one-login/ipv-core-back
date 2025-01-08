@@ -4,7 +4,7 @@ on:
   workflow_call:
   push:
     branches:
-      - IPS-1311-BuildProvenUserIdentityDetailsFunction-unique-canary-strategy
+      - IPS-1311-BuildProvenUserIdentityDetailsFunction-unique-canary-strategy-TEST
     paths-ignore:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge.yml'
