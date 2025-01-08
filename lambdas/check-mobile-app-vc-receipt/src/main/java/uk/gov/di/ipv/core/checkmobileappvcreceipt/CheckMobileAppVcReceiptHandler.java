@@ -110,7 +110,7 @@ public class CheckMobileAppVcReceiptHandler
             }
 
             // Frontend will continue polling
-            return ApiGatewayResponseGenerator.proxyResponse(HttpStatus.SC_NOT_FOUND);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_NOT_FOUND, null);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
@@ -197,12 +197,19 @@ public class CheckMobileAppVcReceiptHandler
         sessionCredentialsService.persistCredentials(
                 List.of(dcmawAsyncVc.get()), ipvSessionItem.getIpvSessionId(), false);
 
-        return criCheckingService.checkVcResponse(
-                List.of(dcmawAsyncVc.get()),
-                request.getIpAddress(),
-                clientOAuthSessionItem,
-                ipvSessionItem,
-                sessionCredentialsService.getCredentials(ipvSessionItem.getIpvSessionId(), userId));
+        System.out.printf("dcmawAsyncVc %s", dcmawAsyncVc.get().getVcString());
+
+        var a =
+                criCheckingService.checkVcResponse(
+                        List.of(dcmawAsyncVc.get()),
+                        request.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        sessionCredentialsService.getCredentials(
+                                ipvSessionItem.getIpvSessionId(), userId));
+
+        System.out.printf("dcmawAsyncVc a %s", a.getJourney());
+        return a;
     }
 
     private void validateSessionId(CheckMobileAppVcReceiptRequest request)

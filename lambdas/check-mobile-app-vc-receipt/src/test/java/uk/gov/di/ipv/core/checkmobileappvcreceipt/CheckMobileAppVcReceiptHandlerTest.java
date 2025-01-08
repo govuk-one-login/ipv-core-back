@@ -36,7 +36,6 @@ import java.util.Map;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -237,7 +236,6 @@ class CheckMobileAppVcReceiptHandlerTest {
 
         // Assert
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
         verify(sessionCredentialsService, never()).persistCredentials(any(), any(), anyBoolean());
     }
 

@@ -118,9 +118,7 @@ export const pollAsyncDcmaw = async (
     return;
   }
 
-  throw new Error(
-    `callbackFromStrategicApp request failed: ${response.statusText}`,
-  );
+  throw new Error(`pollAsyncDcmaw request failed: ${response.statusText}`);
 };
 
 export const processCriCallback = async (

@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.javalin.http.Context;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
+import uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
 import uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler;
@@ -23,6 +24,8 @@ public class LambdaHandler {
     private final ProcessCriCallbackHandler criCallbackHandler = new ProcessCriCallbackHandler();
     private final ProcessMobileAppCallbackHandler appCallbackHandler =
             new ProcessMobileAppCallbackHandler();
+    private final CheckMobileAppVcReceiptHandler checkMobileAppVcReceiptHandler =
+            new CheckMobileAppVcReceiptHandler();
     private final IssueClientAccessTokenHandler tokenHandler = new IssueClientAccessTokenHandler();
     private final BuildUserIdentityHandler userIdentityHandler = new BuildUserIdentityHandler();
     private final UserReverificationHandler userReverificationHandler =
@@ -60,6 +63,10 @@ public class LambdaHandler {
 
     public void appCallback(Context ctx) {
         handleApiGatewayProxyRoute(ctx, this.appCallbackHandler);
+    }
+
+    public void checkMobileAppVcReceipt(Context ctx) {
+        handleApiGatewayProxyRoute(ctx, this.checkMobileAppVcReceiptHandler);
     }
 
     public void getToken(Context ctx) {
