@@ -57,9 +57,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
-import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.ContraIndicator;
-import uk.gov.di.model.IdentityCheckCredential;
 
 import java.text.ParseException;
 import java.util.EnumSet;
@@ -283,20 +281,6 @@ public class ProcessCandidateIdentityHandler
         return CoiCheckType.STANDARD;
     }
 
-    private boolean isUpdateAddressJourney(
-            CandidateIdentityType identityType, List<VerifiableCredential> sessionVcs) {
-        if (!UPDATE.equals(identityType)) {
-            return false;
-        }
-
-        // Check if the session VCs do not contain an IdentityCheckCredential and contains an
-        // AddressCredential
-        return sessionVcs.stream()
-                        .noneMatch(vc -> vc.getCredential() instanceof IdentityCheckCredential)
-                && sessionVcs.stream()
-                        .anyMatch(vc -> vc.getCredential() instanceof AddressCredential);
-    }
-
     private Map<String, Object> processCandidateThroughJourney(
             CandidateIdentityType processIdentityType,
             IpvSessionItem ipvSessionItem,
@@ -307,8 +291,7 @@ public class ProcessCandidateIdentityHandler
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
                     CredentialParseException, ParseException {
-        if (COI_CHECK_TYPES.contains(processIdentityType)
-                && !isUpdateAddressJourney(processIdentityType, sessionVcs)) {
+        if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(
@@ -322,16 +305,6 @@ public class ProcessCandidateIdentityHandler
             if (!isCoiCheckSuccessful) {
                 return JOURNEY_COI_CHECK_FAILED;
             }
-        }
-
-        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
-            storeIdentityService.storeIdentity(
-                    ipvSessionItem,
-                    clientOAuthSessionItem,
-                    processIdentityType,
-                    deviceInformation,
-                    sessionVcs,
-                    auditEventUser);
         }
 
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
@@ -362,6 +335,16 @@ public class ProcessCandidateIdentityHandler
                 return journey.toObjectMap();
             }
             ipvSessionService.updateIpvSession(ipvSessionItem);
+        }
+
+        if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+            storeIdentityService.storeIdentity(
+                    ipvSessionItem,
+                    clientOAuthSessionItem,
+                    processIdentityType,
+                    deviceInformation,
+                    sessionVcs,
+                    auditEventUser);
         }
 
         return JOURNEY_NEXT.toObjectMap();
@@ -446,7 +429,7 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     auditEventUser);
 
-            List<ContraIndicator> cis =
+            var cis =
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),

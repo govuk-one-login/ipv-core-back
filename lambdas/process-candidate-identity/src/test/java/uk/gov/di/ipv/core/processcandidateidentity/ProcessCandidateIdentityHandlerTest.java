@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
+import uk.gov.di.model.ContraIndicator;
 
 import java.util.List;
 import java.util.Map;
@@ -53,13 +54,19 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessCandidateIdentityHandlerTest {
@@ -358,6 +365,65 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
+        void shouldHandleCandidateIdentityTypeUpdateAndReturnJourneyNext() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(List.of());
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            List.of(), ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.empty());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            "processIdentityType",
+                                            CandidateIdentityType.UPDATE.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(CandidateIdentityType.UPDATE),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+            verify(criStoringService, times(1))
+                    .storeVcs(
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+        }
+
+        @Test
         void shouldNotCallTicfIfDisabled() throws Exception {
             // Arrange
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
@@ -383,6 +449,198 @@ class ProcessCandidateIdentityHandlerTest {
             verify(checkCoiService, times(0))
                     .isCoiCheckSuccessful(any(), any(), any(), any(), any(), any());
             verify(ticfCriService, times(0)).getTicfVc(any(), any());
+        }
+
+        @Test
+        void shouldHandleCoiFailure() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(false);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_COI_CHECK_FAILED_PATH, response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldHandleCorrelationFailure() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(false);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldHandleNoProfileMatch() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.empty());
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_GPG45_UNMET_PATH, response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldHandleTicfBreachingContraindicator() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicfWithCi());
+            var ticfCis = List.of(new ContraIndicator());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(ticfCis);
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            ticfCis, ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldHandleReproveIdentityAndReturnJourneyNext() throws Exception {
+            // Arrange
+            var reproveIdentityClientOAuthSessionItem =
+                    clientOAuthSessionItemBuilder.reproveIdentity(true).vtr(List.of("P2")).build();
+            when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                    .thenReturn(reproveIdentityClientOAuthSessionItem);
+
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(reproveIdentityClientOAuthSessionItem),
+                            eq(ACCOUNT_INTERVENTION),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(reproveIdentityClientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(List.of());
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            List.of(), ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.empty());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(ipvSessionItem),
+                            eq(reproveIdentityClientOAuthSessionItem),
+                            eq(CandidateIdentityType.NEW),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+            verify(criStoringService, times(1))
+                    .storeVcs(
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(reproveIdentityClientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
         }
     }
 
