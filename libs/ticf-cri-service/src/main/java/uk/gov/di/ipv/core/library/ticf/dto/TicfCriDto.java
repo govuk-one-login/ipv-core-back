@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ticfcriservice.dto;
+package uk.gov.di.ipv.core.library.ticf.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.di.ipv.core.library.enums.Vot;

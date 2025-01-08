@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ticfcriservice;
+package uk.gov.di.ipv.core.library.ticf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
@@ -20,8 +20,8 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.ticfcriservice.dto.TicfCriDto;
-import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.ticf.dto.TicfCriDto;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
@@ -51,8 +51,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CRED
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
-import static uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService.TRUSTMARK;
-import static uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService.X_API_KEY_HEADER;
+import static uk.gov.di.ipv.core.library.ticf.TicfCriService.TRUSTMARK;
+import static uk.gov.di.ipv.core.library.ticf.TicfCriService.X_API_KEY_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class TicfCriServiceTest {

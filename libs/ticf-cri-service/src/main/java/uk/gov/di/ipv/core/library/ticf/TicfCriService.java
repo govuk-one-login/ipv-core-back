@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ticfcriservice;
+package uk.gov.di.ipv.core.library.ticf;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,9 +14,9 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.ticfcriservice.dto.TicfCriDto;
-import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriHttpResponseException;
-import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.ticf.dto.TicfCriDto;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriHttpResponseException;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;

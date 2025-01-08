@@ -31,8 +31,8 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService;
-import uk.gov.di.ipv.core.library.ticfcriservice.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.ticf.TicfCriService;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
 import java.util.List;

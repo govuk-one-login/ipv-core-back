@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ticfcriservice.exception;
+package uk.gov.di.ipv.core.library.ticf.exception;
 
 public class TicfCriServiceException extends Exception {
     public TicfCriServiceException(String message) {

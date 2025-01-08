@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.ticfcriservice.pact.ticfCri;
+package uk.gov.di.ipv.core.library.ticf.pact.ticfCri;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
-import uk.gov.di.ipv.core.library.ticfcriservice.TicfCriService;
+import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
