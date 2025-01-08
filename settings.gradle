@@ -60,5 +60,3 @@ dependencyResolutionManagement {
 		}
 	}
 }
-include 'libs:ticf-cri-service'
-findProject(':libs:ticf-cri-service')?.name = 'ticf-cri-service'

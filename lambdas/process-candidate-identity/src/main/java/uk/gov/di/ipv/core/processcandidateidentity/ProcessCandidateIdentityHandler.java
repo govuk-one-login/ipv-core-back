@@ -6,6 +6,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
@@ -22,7 +23,13 @@ import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exceptions.*;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
@@ -165,7 +172,8 @@ public class ProcessCandidateIdentityHandler
 
     @Override
     @Tracing
-    @Logging
+    @Logging(clearState = true)
+    @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
         LogHelper.attachComponentId(configService);
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
