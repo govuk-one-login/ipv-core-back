@@ -15,16 +15,22 @@ import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
-import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
+import uk.gov.di.ipv.core.library.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
-import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
 
 import java.util.List;
@@ -36,6 +42,8 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -47,6 +55,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_ID
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -75,7 +84,7 @@ class ProcessCandidateIdentityHandlerTest {
     @Mock private AuditService auditService;
     @Mock private SessionCredentialsService sessionCredentialsService;
     @Mock private CheckCoiService checkCoiService;
-    @Mock private EvaluateGpg45ScoresService evaluateGpg45ScoresService;
+    @Mock private VotMatcher votMatcher;
     @Mock private StoreIdentityService storeIdentityService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private TicfCriService ticfCriService;
@@ -99,7 +108,7 @@ class ProcessCandidateIdentityHandlerTest {
                         .reproveIdentity(false);
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
-        ipvSessionItem.setVot(Vot.P2);
+        ipvSessionItem.setVot(P2);
     }
 
     @Nested
@@ -124,13 +133,8 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(List.of()),
                             any(AuditEventUser.class)))
                     .thenReturn(true);
-            when(evaluateGpg45ScoresService.findMatchingGpg45Profile(
-                            eq(List.of()),
-                            eq(clientOAuthSessionItem),
-                            eq(DEVICE_INFORMATION),
-                            eq(null),
-                            any(AuditEventUser.class)))
-                    .thenReturn(Optional.of(M1A));
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
             when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
                     .thenReturn(true);
@@ -210,8 +214,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
                     .storeIdentity(
                             eq(ipvSessionItem),
@@ -269,8 +272,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(criStoringService, times(1))
@@ -313,8 +315,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
@@ -349,8 +350,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
@@ -377,8 +377,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(evaluateGpg45ScoresService, times(0))
-                    .findMatchingGpg45Profile(any(), any(), any(), any(), any());
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))

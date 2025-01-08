@@ -9,15 +9,21 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
@@ -30,6 +36,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
@@ -42,11 +49,13 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.VotMatcher;
+import uk.gov.di.ipv.core.library.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.ticf.TicfCriService;
 import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
+import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
-import uk.gov.di.ipv.core.processcandidateidentity.service.EvaluateGpg45ScoresService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.ContraIndicator;
@@ -67,7 +76,10 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STOR
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
+import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
+import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
@@ -94,25 +106,21 @@ public class ProcessCandidateIdentityHandler
     private final CriStoringService criStoringService;
     private final UserIdentityService userIdentityService;
     private final StoreIdentityService storeIdentityService;
-    private final EvaluateGpg45ScoresService evaluateGpg45ScoresService;
+    private final VotMatcher votMatcher;
     private final TicfCriService ticfCriService;
     private final CimitUtilityService cimitUtilityService;
 
+    // Candidate identities that should be subject to a COI check
     private static final Set<CandidateIdentityType> COI_CHECK_TYPES =
-            EnumSet.of(
-                    CandidateIdentityType.NEW,
-                    CandidateIdentityType.PENDING,
-                    REVERIFICATION,
-                    CandidateIdentityType.UPDATE);
+            EnumSet.of(NEW, PENDING, REVERIFICATION, UPDATE);
 
+    // Candidate identities that should store the given identity (if successful)
     private static final Set<CandidateIdentityType> STORE_IDENTITY_TYPES =
-            EnumSet.of(
-                    CandidateIdentityType.NEW,
-                    CandidateIdentityType.PENDING,
-                    CandidateIdentityType.UPDATE);
+            EnumSet.of(NEW, PENDING, UPDATE);
 
-    private static final Set<CandidateIdentityType> GPG_45_TYPES =
-            EnumSet.of(CandidateIdentityType.NEW, CandidateIdentityType.UPDATE);
+    // Candidate identities that should match a profile
+    private static final Set<CandidateIdentityType> PROFILE_MATCHING_TYPES =
+            EnumSet.of(NEW, UPDATE);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {
@@ -132,8 +140,7 @@ public class ProcessCandidateIdentityHandler
         this.storeIdentityService = new StoreIdentityService(configService, auditService);
         this.ticfCriService = new TicfCriService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
-        this.evaluateGpg45ScoresService =
-                new EvaluateGpg45ScoresService(configService, auditService);
+        this.votMatcher = new VotMatcher(userIdentityService, new Gpg45ProfileEvaluator());
         this.criStoringService =
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
@@ -152,7 +159,7 @@ public class ProcessCandidateIdentityHandler
             CimitService cimitService,
             UserIdentityService userIdentityService,
             StoreIdentityService storeIdentityService,
-            EvaluateGpg45ScoresService evaluateGpg45ScoresService,
+            VotMatcher votMatcher,
             CimitUtilityService cimitUtilityService,
             TicfCriService ticfCriService) {
         this.configService = configService;
@@ -164,7 +171,7 @@ public class ProcessCandidateIdentityHandler
         this.userIdentityService = userIdentityService;
         this.auditService = auditService;
         this.criStoringService = criStoringService;
-        this.evaluateGpg45ScoresService = evaluateGpg45ScoresService;
+        this.votMatcher = votMatcher;
         this.storeIdentityService = storeIdentityService;
         this.ticfCriService = ticfCriService;
         this.cimitUtilityService = cimitUtilityService;
@@ -278,7 +285,7 @@ public class ProcessCandidateIdentityHandler
 
     private boolean isUpdateAddressJourney(
             CandidateIdentityType identityType, List<VerifiableCredential> sessionVcs) {
-        if (!CandidateIdentityType.UPDATE.equals(identityType)) {
+        if (!UPDATE.equals(identityType)) {
             return false;
         }
 
@@ -327,9 +334,9 @@ public class ProcessCandidateIdentityHandler
                     auditEventUser);
         }
 
-        if (GPG_45_TYPES.contains(processIdentityType)) {
+        if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
             var journey =
-                    getJourneyResponseFromGpg45ScoreEvaluation(
+                    getJourneyResponseForProfileMatching(
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             deviceInformation,
@@ -360,7 +367,7 @@ public class ProcessCandidateIdentityHandler
         return JOURNEY_NEXT.toObjectMap();
     }
 
-    private JourneyResponse getJourneyResponseFromGpg45ScoreEvaluation(
+    private JourneyResponse getJourneyResponseForProfileMatching(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
@@ -369,38 +376,48 @@ public class ProcessCandidateIdentityHandler
             AuditEventUser auditEventUser)
             throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException {
 
-        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+        var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
+
+        if (!areVcsCorrelated) {
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        // This is a performance optimisation as calling cimitService.getContraIndicators()
-        // takes about 0.5 seconds.
+        // This is a performance optimisation to save a call to CIMIT if it is not required
         // If the VTR only contains one entry then it is impossible for a user to reach here
         // with a breaching CI so we don't have to check.
         var contraIndicators =
                 clientOAuthSessionItem.getVtr().size() == 1
-                        ? null
+                        ? List.<ContraIndicator>of()
                         : cimitService.getContraIndicators(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress);
 
-        var matchingGpg45Profile =
-                evaluateGpg45ScoresService.findMatchingGpg45Profile(
+        var votResult =
+                votMatcher.matchFirstVot(
+                        clientOAuthSessionItem
+                                .getParsedVtr()
+                                .getRequestedVotsByStrengthDescending(),
                         sessionVcs,
-                        clientOAuthSessionItem,
-                        deviceInformation,
                         contraIndicators,
-                        auditEventUser);
+                        areVcsCorrelated);
 
-        if (matchingGpg45Profile.isEmpty()) {
+        if (votResult.isEmpty()) {
             LOGGER.info(LogHelper.buildLogMessage("No GPG45 profiles have been met"));
             return JOURNEY_GPG45_UNMET;
         }
 
-        ipvSessionItem.setVot(Vot.fromGpg45Profile(matchingGpg45Profile.get()));
+        ipvSessionItem.setVot(votResult.get().vot());
         ipvSessionService.updateIpvSession(ipvSessionItem);
-        LOGGER.info(LogHelper.buildLogMessage("A GPG45 profile has been met"));
+
+        if (votResult.get().vot().getProfileType() == ProfileType.GPG45) {
+            LOGGER.info(LogHelper.buildLogMessage("A GPG45 profile has been met"));
+            sendProfileMatchedAuditEvent(
+                    votResult.get(),
+                    VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
+                    auditEventUser,
+                    deviceInformation);
+        }
 
         return null;
     }
@@ -465,5 +482,23 @@ public class ProcessCandidateIdentityHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
         }
+    }
+
+    private void sendProfileMatchedAuditEvent(
+            VotMatchingResult votMatchingResult,
+            List<VerifiableCredential> vcs,
+            AuditEventUser auditEventUser,
+            String deviceInformation) {
+        var auditEvent =
+                AuditEvent.createWithDeviceInformation(
+                        AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        new AuditExtensionGpg45ProfileMatched(
+                                votMatchingResult.gpg45Profile(),
+                                votMatchingResult.gpg45Scores(),
+                                VcHelper.extractTxnIdsFromCredentials(vcs)),
+                        new AuditRestrictedDeviceInformation(deviceInformation));
+        auditService.sendAuditEvent(auditEvent);
     }
 }

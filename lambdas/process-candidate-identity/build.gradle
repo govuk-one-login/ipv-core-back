@@ -6,7 +6,6 @@ plugins {
 }
 
 dependencies {
-
 	implementation libs.bundles.awsLambda,
 			project(":libs:common-services"),
 			project(":libs:audit-service"),
@@ -17,10 +16,6 @@ dependencies {
 			project(":libs:cri-storing-service"),
 			project(":libs:evcs-service"),
 			project(":libs:ticf-cri-service")
-
-	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
-			libs.aspectj
 
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
