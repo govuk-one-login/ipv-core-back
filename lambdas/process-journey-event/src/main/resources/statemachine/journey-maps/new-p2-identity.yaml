@@ -868,6 +868,8 @@ states:
       next:
         targetState: STRATEGIC_APP_TRIAGE
         targetEntryEvent: appTriage
+        auditEvents:
+          - IPV_INTERNATIONAL_ADDRESS_START
       abandon:
         targetState: NON_UK_NO_PASSPORT
 
@@ -890,6 +892,8 @@ states:
       useApp:
         targetState: APP_DOC_CHECK_INTERNATIONAL_ADDRESS
         targetEntryEvent: next
+        auditEvents:
+          - IPV_INTERNATIONAL_ADDRESS_START
       returnToRp:
         targetState: RETURN_TO_RP
 
