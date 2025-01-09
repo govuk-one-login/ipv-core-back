@@ -469,7 +469,7 @@ const postToEnqueue = async (body: object) => {
 };
 
 When(
-  /^I submit '([\w-]+)' '([\w-]+)' '([\w-]+)' details to the async DCMAW CRI stub$/,
+  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC$/,
   async function (
     this: World,
     testUser: string,
@@ -487,22 +487,15 @@ When(
 );
 
 When(
-  "I do not submit VC to the async DCMAW CRI stub",
-  async function (this: World): Promise<void> {
-    this.oauthState = await postToEnqueue({
-      user_id: this.userId,
-    });
-  },
-);
-
-When(
-  /^I callback from the app( in a separate session)?$/,
+  /^I pass on the DCMAW callback( in a separate session)?$/,
   async function (
     this: World,
     separateSession: " in a separate session" | undefined,
   ): Promise<void> {
     if (!this.oauthState) {
-      throw new Error("Oauth state required for app callback");
+      this.oauthState = await postToEnqueue({
+        user_id: this.userId,
+      });
     }
 
     this.lastJourneyEngineResponse = await callbackFromStrategicApp(
@@ -545,11 +538,19 @@ When(
   },
 );
 
-Then("the poll returns a 404", async function (this: World): Promise<void> {
-  if (this.strategicAppPollResult?.journey) {
-    throw new Error("Poll should have not returned a journey.");
-  }
-});
+Then(
+  /^the poll returns a '(\d+)'$/,
+  async function (this: World, statusCode: number): Promise<void> {
+    // Assuming the poll fails whenever the status is not OK or Not Found.
+    // These cases are distinguished by whether a body was returned or not.
+    if (statusCode === 201 && !this.strategicAppPollResult?.journey) {
+      throw new Error("Poll should returned a journey.");
+    }
+    if (statusCode === 404 && this.strategicAppPollResult?.journey) {
+      throw new Error("Poll should have not returned a journey.");
+    }
+  },
+);
 
 const assertNoUnexpectedJarProperties = (
   jarPayload: CriStubResponseJarPayload,

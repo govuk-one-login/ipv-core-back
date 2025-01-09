@@ -1,4 +1,4 @@
-@Build
+@Build @InitialisesDCMAWSessionState
 Feature: M2B Strategic App Journeys
 
   Scenario: MAM journey declared iphone
@@ -13,10 +13,12 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When I submit 'kennethD' 'ukChippedPassport' 'success' details to the async DCMAW CRI stub
-    And I callback from the app
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
     And I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
@@ -42,11 +44,14 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    And I do not submit VC to the async DCMAW CRI stub
-    When I callback from the app
+    # And the user returns from the app to core-front
+    When I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
-    Then the poll returns a 404
+    Then the poll returns a '404'
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    When I poll for async DCMAW credential receipt
+    Then the poll returns a '200'
 
   Scenario: MAM journey cross-browser scenario
     Given I activate the 'strategicApp' feature set
@@ -60,9 +65,10 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When I submit 'kennethD' 'ukChippedPassport' 'success' details to the async DCMAW CRI stub
-    Then I callback from the app in a separate session
-    # To give time for VC to be processed
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    # And the user returns from the app to core-front
+    Then I pass on the DCMAW callback in a separate session
+    # Mocking the time for the user to log back in
     And I poll for async DCMAW credential receipt
     When I start a new 'medium-confidence' journey
     Then I get a 'page-dcmaw-success' page response
@@ -89,10 +95,12 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When I submit 'kennethD' 'ukChippedPassport' 'fail' details to the async DCMAW CRI stub
-    And I callback from the app
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
     And I submit the returned journey event
     Then I get an 'page-multiple-doc-check' page response
 
@@ -108,10 +116,12 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When I submit 'kennethD' 'ukChippedPassport' 'failWithCi' details to the async DCMAW CRI stub
-    And I callback from the app
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'failWithCi' VC
+    # And the user returns from the app to core-front
+    And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
+    Then the poll returns a '201'
     And I submit the returned journey event
     Then I get an 'pyi-technical' page response
 
