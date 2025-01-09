@@ -10,16 +10,17 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_REUSE
-
-  UPDATE_DETAILS_START:
-    events:
-      next:
-        targetState: UPDATE_DETAILS_PAGE
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_EXISTING_IDENTITY
 
   REUSE_WITH_STORE_IDENTITY:
     events:
       next:
         targetState: STORE_NEW_IDENTITY
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
 
   # Journey states
 
@@ -61,6 +62,60 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+
+  PROCESS_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: NEW
+    events:
+      next:
+        targetState: IDENTITY_REUSE_PAGE
+      # TODO: should the process identity lambda perform the TICF check even in the failure case?
+      # is that ever undesirable?
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  PROCESS_EXISTING_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: EXISTING
+    events:
+      next:
+        targetState: IDENTITY_REUSE_PAGE
+      # TODO: should the process identity lambda perform the TICF check even in the failure case?
+      # is that ever undesirable?
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   IDENTITY_REUSE_PAGE:
     response:

@@ -80,15 +80,15 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICAT
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UNMET_PATH;
 
 public class ProcessCandidateIdentityHandler
         implements RequestHandler<ProcessRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
-    private static final JourneyResponse JOURNEY_GPG45_UNMET =
-            new JourneyResponse(JOURNEY_GPG45_UNMET_PATH);
+    private static final JourneyResponse JOURNEY_PROFILE_UNMET =
+            new JourneyResponse(JOURNEY_PROFILE_UNMET_PATH);
     private static final JourneyResponse JOURNEY_VCS_NOT_CORRELATED =
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
@@ -138,7 +138,9 @@ public class ProcessCandidateIdentityHandler
         this.storeIdentityService = new StoreIdentityService(configService, auditService);
         this.ticfCriService = new TicfCriService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
-        this.votMatcher = new VotMatcher(userIdentityService, new Gpg45ProfileEvaluator());
+        this.votMatcher =
+                new VotMatcher(
+                        userIdentityService, new Gpg45ProfileEvaluator(), cimitUtilityService);
         this.criStoringService =
                 new CriStoringService(
                         configService, auditService, null, sessionCredentialsService, cimitService);
@@ -332,6 +334,16 @@ public class ProcessCandidateIdentityHandler
                             auditEventUser);
 
             if (journey != null) {
+                // We still store a pending identity - it might be mitigating an existing CI
+                if (PENDING.equals(processIdentityType)) {
+                    storeIdentityService.storeIdentity(
+                            ipvSessionItem,
+                            clientOAuthSessionItem,
+                            processIdentityType,
+                            deviceInformation,
+                            sessionVcs,
+                            auditEventUser);
+                }
                 return journey.toObjectMap();
             }
             ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -387,7 +399,7 @@ public class ProcessCandidateIdentityHandler
 
         if (votResult.isEmpty()) {
             LOGGER.info(LogHelper.buildLogMessage("No GPG45 profiles have been met"));
-            return JOURNEY_GPG45_UNMET;
+            return JOURNEY_PROFILE_UNMET;
         }
 
         ipvSessionItem.setVot(votResult.get().vot());

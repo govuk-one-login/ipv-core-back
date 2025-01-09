@@ -11,6 +11,9 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_ANOTHER_WAY
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   INELIGIBLE_NO_TICF:
     events:
@@ -21,6 +24,9 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY_SKIP_MESSAGE
 
   # Journey states
 
@@ -63,6 +69,68 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+
+  PROCESS_INCOMPLETE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: ANOTHER_WAY_PAGE
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetState: ANOTHER_WAY_PAGE
+      alternate-doc-invalid-dl:
+        targetState: ANOTHER_WAY_PAGE
+      alternate-doc-invalid-passport:
+        targetState: ANOTHER_WAY_PAGE
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  PROCESS_INCOMPLETE_IDENTITY_SKIP_MESSAGE:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetState: RETURN_TO_RP
+      alternate-doc-invalid-dl:
+        targetState: RETURN_TO_RP
+      alternate-doc-invalid-passport:
+        targetState: RETURN_TO_RP
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   ANOTHER_WAY_PAGE:
     response:
