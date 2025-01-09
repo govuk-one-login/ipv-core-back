@@ -283,10 +283,10 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  PYI_CRI_ESCAPE:
+  PYI_KBV_DROPOUT_PHOTO_ID:
     response:
       type: page
-      pageId: pyi-cri-escape
+      pageId: photo-id-security-questions-find-another-way
     events:
       appTriage:
         targetState: APP_DOC_CHECK_PYI_ESCAPE
@@ -301,40 +301,18 @@ states:
       f2f:
         targetJourney: F2F_HAND_OFF
         targetState: START
-
-  PYI_CRI_ESCAPE_NO_F2F:
-    response:
-      type: page
-      pageId: pyi-cri-escape-no-f2f
-    events:
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
         checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
+          f2f:
             targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
 
   # Common pages
   KBV_PHOTO_ID:
     nestedJourney: KBVS
     exitEvents:
       fail-with-no-ci:
-        targetState: PYI_CRI_ESCAPE
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
+        targetState: PYI_KBV_DROPOUT_PHOTO_ID
       end:
-        targetState: PYI_CRI_ESCAPE
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
+        targetState: PYI_KBV_DROPOUT_PHOTO_ID
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
@@ -342,18 +320,11 @@ states:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
-        targetState: MITIGATION_02_OPTIONS_WITH_F2F
+        targetState: PYI_KBV_DROPOUT_PHOTO_ID
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: enhanced-verification
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
 
   # DCMAW journey (J1)
   POST_APP_DOC_CHECK_SUCCESS_PAGE:
@@ -455,14 +426,8 @@ states:
     exitEvents:
       fail-with-no-ci:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
       end:
         targetState: PYI_KBV_DROPOUT_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: PYI_CRI_ESCAPE_NO_F2F
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
@@ -471,13 +436,6 @@ states:
             targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
         targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
-        checkIfDisabled:
-          f2f:
-            targetState: MITIGATION_02_OPTIONS
-            auditEvents:
-              - IPV_MITIGATION_START
-            auditContext:
-              mitigationType: enhanced-verification
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
@@ -658,24 +616,6 @@ states:
         targetState: INELIGIBLE
 
   # Mitigation journey (02)
-  MITIGATION_02_OPTIONS:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options-no-f2f
-    events:
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
 
   STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -741,25 +681,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  MITIGATION_02_OPTIONS_WITH_F2F:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
 
   PYI_POST_OFFICE:
     response:
