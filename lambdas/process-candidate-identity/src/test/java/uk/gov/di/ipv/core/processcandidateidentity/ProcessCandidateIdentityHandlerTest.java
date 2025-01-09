@@ -244,6 +244,64 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
+        void shouldHandleCandidateIdentityTypePendingAndReturnCimitResponse() throws Exception {
+            // Arrange
+            var cimitResponse = new JourneyResponse("dummy-response");
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(List.of());
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            List.of(), ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.of(cimitResponse));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.PENDING.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(cimitResponse.getJourney(), response.get("journey"));
+
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(CandidateIdentityType.PENDING),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+            verify(criStoringService, times(1))
+                    .storeVcs(
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+        }
+
+        @Test
         void shouldHandleCandidateIdentityTypeReverificationAndReturnJourneyNext()
                 throws Exception {
             // Arrange
