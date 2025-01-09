@@ -386,8 +386,6 @@ states:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: true
-      # TODO: should the process identity lambda perform the TICF check even in the failure case?
-      # is that ever undesirable?
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS

@@ -72,8 +72,6 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
-      # TODO: should the process identity lambda perform the TICF check even in the failure case?
-      # is that ever undesirable?
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -84,6 +82,15 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       error:
@@ -99,8 +106,6 @@ states:
     events:
       next:
         targetState: IDENTITY_REUSE_PAGE
-      # TODO: should the process identity lambda perform the TICF check even in the failure case?
-      # is that ever undesirable?
       coi-check-failed:
         targetJourney: FAILED
         targetState: FAILED
@@ -111,6 +116,15 @@ states:
         targetJourney: FAILED
         targetState: FAILED
       fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
       error:
