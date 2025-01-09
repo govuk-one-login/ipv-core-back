@@ -20,7 +20,7 @@ Feature: Inherited identity extended scenarios
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-    Then I get a 'pyi-suggest-other-options' page response
+    Then I get a 'photo-id-security-questions-find-another-way' page response
 
     # New journey with inherited identity - user still needs to mitigate the CI
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'kenneth-vot-pcl250-passport'
