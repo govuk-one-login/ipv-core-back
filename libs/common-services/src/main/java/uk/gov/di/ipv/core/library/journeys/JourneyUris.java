@@ -59,10 +59,13 @@ public class JourneyUris {
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
     public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
+    public static final String JOURNEY_GPG45_UNMET_PATH = "/journey/gpg45-unmet";
     public static final String JOURNEY_VCS_NOT_CORRELATED = "/journey/vcs-not-correlated";
     public static final String JOURNEY_ABANDON_PATH = "/journey/abandon";
     public static final String JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH =
             "/journey/dcmaw-async-vc-received-low";
     public static final String JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH =
             "/journey/dcmaw-async-vc-received-medium";
+    public static final String JOURNEY_PROCESS_CANDIDATE_IDENTITY =
+            "/journey/process-candidate-identity";
 }

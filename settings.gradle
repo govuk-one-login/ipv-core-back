@@ -23,6 +23,7 @@ include "lambdas",
 		"lambdas:initialise-ipv-session",
 		"lambdas:issue-client-access-token",
 		"lambdas:process-async-cri-credential",
+		"lambdas:process-candidate-identity",
 		"lambdas:process-cri-callback",
 		"lambdas:process-journey-event",
 		"lambdas:reset-session-identity",
@@ -43,6 +44,7 @@ include "lambdas",
 		"libs:user-identity-service",
 		"libs:verifiable-credentials",
 		"libs:oauth-key-service",
+		"libs:ticf-cri-service",
 		"local-running"
 
 dependencyResolutionManagement {

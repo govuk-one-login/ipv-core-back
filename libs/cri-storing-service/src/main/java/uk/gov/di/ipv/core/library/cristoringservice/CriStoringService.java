@@ -142,7 +142,7 @@ public class CriStoringService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+            throws VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
@@ -150,6 +150,31 @@ public class CriStoringService {
         var auditEventUser =
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
+
+        storeVcs(
+                cri,
+                ipAddress,
+                deviceInformation,
+                vcs,
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs,
+                auditEventUser);
+    }
+
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
+    public void storeVcs(
+            Cri cri,
+            String ipAddress,
+            String deviceInformation,
+            List<VerifiableCredential> vcs,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser)
+            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+                    UnrecognisedVotException {
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         List<VerifiableCredential> mitigationVcList = new ArrayList<>(sessionVcs);
 

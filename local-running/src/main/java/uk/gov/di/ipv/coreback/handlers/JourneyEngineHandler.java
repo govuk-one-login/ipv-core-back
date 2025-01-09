@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.service.YamlConfigService;
+import uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
 import uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler;
@@ -31,6 +32,7 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_EXIS
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_GPG45_SCORE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_STORE_IDENTITY_PATH;
 
@@ -58,6 +60,7 @@ public class JourneyEngineHandler {
     private final StoreIdentityHandler storeIdentityHandler;
     private final CheckCoiHandler checkCoiHandler;
     private final CheckReverificationIdentityHandler checkReverificationIdentityHandler;
+    private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
     public JourneyEngineHandler() throws IOException {
         this.configService = new YamlConfigService();
@@ -74,6 +77,7 @@ public class JourneyEngineHandler {
         this.checkCoiHandler = new CheckCoiHandler(configService);
         this.checkReverificationIdentityHandler =
                 new CheckReverificationIdentityHandler(configService);
+        this.processCandidateIdentityHandler = new ProcessCandidateIdentityHandler(configService);
     }
 
     public void journeyEngine(Context ctx) {
@@ -131,6 +135,9 @@ public class JourneyEngineHandler {
             case JOURNEY_CHECK_COI_PATH -> checkCoiHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH -> checkReverificationIdentityHandler
+                    .handleRequest(
+                            buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
+            case JOURNEY_PROCESS_CANDIDATE_IDENTITY -> processCandidateIdentityHandler
                     .handleRequest(
                             buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             default -> {

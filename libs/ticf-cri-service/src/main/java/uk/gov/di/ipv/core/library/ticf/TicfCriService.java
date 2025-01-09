@@ -1,13 +1,10 @@
-package uk.gov.di.ipv.core.callticfcri.service;
+package uk.gov.di.ipv.core.library.ticf;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.callticfcri.dto.TicfCriDto;
-import uk.gov.di.ipv.core.callticfcri.exception.TicfCriHttpResponseException;
-import uk.gov.di.ipv.core.callticfcri.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -17,6 +14,9 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.ticf.dto.TicfCriDto;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriHttpResponseException;
+import uk.gov.di.ipv.core.library.ticf.exception.TicfCriServiceException;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
@@ -32,6 +32,7 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
+@SuppressWarnings("java:S107") // Should allow duplicate code for now
 public class TicfCriService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -52,6 +53,7 @@ public class TicfCriService {
     }
 
     // Used by contract tests
+    @ExcludeFromGeneratedCoverageReport
     public TicfCriService(
             ConfigService configService,
             VerifiableCredentialValidator jwtValidator,
