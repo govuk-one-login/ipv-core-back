@@ -500,6 +500,10 @@ When(
       });
     }
 
+    if (!this.oauthState) {
+      throw new Error("Oauth state must not be undefined");
+    }
+
     this.lastJourneyEngineResponse = await callbackFromStrategicApp(
       this.oauthState,
       separateSession ? undefined : this.ipvSessionId,
