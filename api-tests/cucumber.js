@@ -7,7 +7,7 @@ const base = {
   publish: false,
   retry: 0,
   loader: ["ts-node/esm"],
-  import: ["src/steps/**/*.ts", "src/config/**/*.ts"],
+  import: ["src/steps/**/*.ts", "src/config/**/*.ts", "src/hooks.ts"],
 };
 
 export default base;

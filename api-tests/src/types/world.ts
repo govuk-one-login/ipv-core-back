@@ -1,4 +1,4 @@
-import { JourneyEngineResponse } from "./internal-api.js";
+import { JourneyEngineResponse, JourneyResponse } from "./internal-api.js";
 import { MfaResetResult, UserIdentity } from "./external-api.js";
 import { World as CucumberWorld } from "@cucumber/cucumber";
 import { VcJwtPayload } from "./external-api.js";
@@ -33,4 +33,8 @@ export interface World extends CucumberWorld {
 
   // Latest error to assert against
   error?: Error;
+
+  // Strategic app latent variables
+  oauthState?: string;
+  strategicAppPollResult?: JourneyResponse;
 }
