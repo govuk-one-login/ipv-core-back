@@ -34,6 +34,13 @@ subprojects {
 	configurations.all {
 		exclude group: 'software.amazon.awssdk', module: 'apache-client'
 	}
+
+	tasks.withType(Test) {
+		// Configures environment variables to avoid errors in AWS X-Ray and EMF loggers
+		environment "LAMBDA_TASK_ROOT", "handler"
+		environment 'AWS_EMF_ENVIRONMENT', 'Local'
+		environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
+	}
 }
 
 allprojects {
