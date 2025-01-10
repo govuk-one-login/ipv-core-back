@@ -53,6 +53,7 @@ public class VotMatcher {
                 return Optional.of(new VotMatchingResult(vot, null, null));
             }
         }
+        LOGGER.info(LogHelper.buildLogMessage("No profiles met"));
         return Optional.empty();
     }
 

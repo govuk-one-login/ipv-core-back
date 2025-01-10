@@ -2937,9 +2937,7 @@ Resources:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionCredentialsTable
@@ -2952,7 +2950,11 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
         - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/ticf/connections/*/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
       AutoPublishAlias: live
 
   ProcessCandidateIdentityFunctionLogGroup:

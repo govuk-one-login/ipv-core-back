@@ -78,6 +78,7 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -295,6 +296,9 @@ public class ProcessCandidateIdentityHandler
                     CredentialParseException, ParseException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
+            LOGGER.info(
+                    LogHelper.buildLogMessage("Performing COI check")
+                            .with(LOG_CHECK_TYPE.getFieldName(), coiCheckType.name()));
             var isCoiCheckSuccessful =
                     checkCoiService.isCoiCheckSuccessful(
                             ipvSessionItem,
@@ -310,6 +314,7 @@ public class ProcessCandidateIdentityHandler
         }
 
         if (PROFILE_MATCHING_TYPES.contains(processIdentityType)) {
+            LOGGER.info(LogHelper.buildLogMessage("Performing profile evaluation"));
             var journey =
                     getJourneyResponseForProfileMatching(
                             ipvSessionItem,
@@ -325,6 +330,7 @@ public class ProcessCandidateIdentityHandler
         }
 
         if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId())) {
+            LOGGER.info(LogHelper.buildLogMessage("Performing TICF CRI call"));
             var journey =
                     getJourneyResponseFromTicfCall(
                             ipvSessionItem,
@@ -336,6 +342,7 @@ public class ProcessCandidateIdentityHandler
             if (journey != null) {
                 // We still store a pending identity - it might be mitigating an existing CI
                 if (PENDING.equals(processIdentityType)) {
+                    LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
                     storeIdentityService.storeIdentity(
                             ipvSessionItem,
                             clientOAuthSessionItem,
@@ -350,6 +357,7 @@ public class ProcessCandidateIdentityHandler
         }
 
         if (STORE_IDENTITY_TYPES.contains(processIdentityType)) {
+            LOGGER.info(LogHelper.buildLogMessage("Storing identity"));
             storeIdentityService.storeIdentity(
                     ipvSessionItem,
                     clientOAuthSessionItem,
@@ -398,7 +406,6 @@ public class ProcessCandidateIdentityHandler
                         areVcsCorrelated);
 
         if (votResult.isEmpty()) {
-            LOGGER.info(LogHelper.buildLogMessage("No GPG45 profiles have been met"));
             return JOURNEY_PROFILE_UNMET;
         }
 
@@ -406,7 +413,6 @@ public class ProcessCandidateIdentityHandler
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         if (votResult.get().vot().getProfileType() == ProfileType.GPG45) {
-            LOGGER.info(LogHelper.buildLogMessage("A GPG45 profile has been met"));
             sendProfileMatchedAuditEvent(
                     votResult.get(),
                     VcHelper.filterVCBasedOnProfileType(sessionVcs, ProfileType.GPG45),
