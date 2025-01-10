@@ -469,12 +469,13 @@ const postToEnqueue = async (body: object) => {
 };
 
 When(
-  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC$/,
+  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
   async function (
     this: World,
     testUser: string,
     documentType: string,
     evidenceType: string,
+    hasCi: " with a CI" | undefined,
   ): Promise<void> {
     this.oauthState = await postToEnqueue({
       user_id: this.userId,
@@ -482,6 +483,7 @@ When(
       document_type: documentType,
       evidence_type: evidenceType,
       queue_name: config.asyncQueue.name,
+      ci: hasCi && ["BREACHING"],
     });
   },
 );

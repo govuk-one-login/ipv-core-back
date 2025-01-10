@@ -51,7 +51,7 @@ Feature: M2B Strategic App Journeys
     Then the poll returns a '404'
     When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     When I poll for async DCMAW credential receipt
-    Then the poll returns a '200'
+    Then the poll returns a '201'
 
   Scenario: MAM journey cross-browser scenario
     Given I activate the 'strategicApp' feature set
@@ -116,14 +116,14 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'failWithCi' VC
+    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
     And I submit the returned journey event
-    Then I get an 'pyi-technical' page response
+    Then I get an 'pyi-no-match' page response
 
   Scenario: MAM journey detected iphone
     Given I activate the 'strategicApp' feature set
