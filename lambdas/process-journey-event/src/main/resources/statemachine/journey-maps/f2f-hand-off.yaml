@@ -8,6 +8,9 @@ states:
     events:
       next:
         targetState: CHECK_COI
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_PENDING_IDENTITY
 
   # Parent states
   CRI_STATE:
@@ -95,6 +98,39 @@ states:
       enhanced-verification:
         targetState: CRI_F2F
 
+  PROCESS_PENDING_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: PENDING
+    events:
+      next:
+        targetState: CRI_F2F
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetState: CRI_F2F
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
   CRI_F2F:
     response:
       type: cri
@@ -103,8 +139,14 @@ states:
     events:
       next:
         targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
       enhanced-verification:
         targetState: STORE_IDENTITY_BEFORE_F2F_HANDOFF
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: RESET_SESSION_BEFORE_F2F_HANDOFF
       access-denied:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_NO_TICF

@@ -584,8 +584,7 @@ class RequestHelperTest {
     void getProcessIdentityTypeShouldReturnCandidateIdentityIfValid() throws Exception {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
-                        .lambdaInput(
-                                Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                        .lambdaInput(Map.of("identityType", CandidateIdentityType.NEW.name()))
                         .build();
 
         assertEquals(CandidateIdentityType.NEW, RequestHelper.getProcessIdentityType(request));
@@ -609,7 +608,7 @@ class RequestHelperTest {
     void getProcessIdentityTypeShouldThrowIfUnknownResetType() {
         ProcessRequest request =
                 ProcessRequest.processRequestBuilder()
-                        .lambdaInput(Map.of("processIdentityType", "some-nonsense"))
+                        .lambdaInput(Map.of("identityType", "some-nonsense"))
                         .build();
 
         var thrown =

@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
@@ -86,7 +87,11 @@ public class CheckReverificationIdentityHandler
         this.clientSessionService = new ClientOAuthSessionDetailsService(configService);
         this.evcsService = new EvcsService(configService);
         this.userIdentityService = new UserIdentityService(configService);
-        this.votMatcher = new VotMatcher(userIdentityService, new Gpg45ProfileEvaluator());
+        this.votMatcher =
+                new VotMatcher(
+                        userIdentityService,
+                        new Gpg45ProfileEvaluator(),
+                        new CimitUtilityService(configService));
     }
 
     @Override

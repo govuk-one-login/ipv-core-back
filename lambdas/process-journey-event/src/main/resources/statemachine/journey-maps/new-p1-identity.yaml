@@ -154,6 +154,9 @@ states:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   F2F_START_PAGE:
     response:
@@ -220,6 +223,9 @@ states:
             targetState: PYI_ESCAPE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MULTIPLE_DOC_CHECK_PAGE:
     response:
@@ -315,11 +321,6 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
 
-  RETURN_TO_RP:
-    response:
-      type: process
-      lambda: build-client-oauth-response
-
   # Common pages
   KBV_PHOTO_ID:
     nestedJourney: KBVS
@@ -337,6 +338,9 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
         targetState: MITIGATION_02_OPTIONS_WITH_F2F
         auditEvents:
@@ -366,12 +370,18 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
       fraud-fail-with-no-ci:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
 
   # F2F journey (J4)
   CRI_CLAIMED_IDENTITY_J4:
@@ -456,6 +466,9 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
         targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
         checkIfDisabled:
@@ -581,6 +594,9 @@ states:
             targetState: INELIGIBLE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MITIGATION_01_APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
@@ -615,6 +631,9 @@ states:
             targetState: INELIGIBLE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MITIGATION_01_F2F_START_PAGE:
     response:
@@ -664,6 +683,9 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -675,6 +697,9 @@ states:
             targetState: INELIGIBLE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   APP_DOC_CHECK_PYI_ESCAPE:
     nestedJourney: APP_DOC_CHECK
@@ -682,6 +707,9 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       incomplete:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
@@ -710,6 +738,9 @@ states:
             targetState: INELIGIBLE
       returnToRp:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   MITIGATION_02_OPTIONS_WITH_F2F:
     response:
@@ -755,6 +786,9 @@ states:
       next:
         targetJourney: EVALUATE_SCORES
         targetState: START
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_NEW_IDENTITY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED
@@ -772,3 +806,89 @@ states:
           mitigationType: enhanced-verification
       end:
         targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
+
+  # End of journey steps
+
+  PROCESS_NEW_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: NEW
+    events:
+      next:
+        targetState: IPV_SUCCESS_PAGE
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  IPV_SUCCESS_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-success
+    events:
+      next:
+        targetState: RETURN_TO_RP
+
+  PROCESS_INCOMPLETE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+
+  RETURN_TO_RP:
+    response:
+      type: process
+      lambda: build-client-oauth-response

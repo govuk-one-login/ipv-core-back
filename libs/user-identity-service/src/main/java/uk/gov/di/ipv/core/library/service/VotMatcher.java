@@ -30,11 +30,6 @@ public class VotMatcher {
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CimitUtilityService cimitUtilityService;
 
-    public VotMatcher(
-            UserIdentityService userIdentityService, Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
-        this(userIdentityService, gpg45ProfileEvaluator, null);
-    }
-
     public Optional<VotMatchingResult> matchFirstVot(
             List<Vot> vots,
             List<VerifiableCredential> vcs,
@@ -58,6 +53,7 @@ public class VotMatcher {
                 return Optional.of(new VotMatchingResult(vot, null, null));
             }
         }
+        LOGGER.info(LogHelper.buildLogMessage("No profiles met"));
         return Optional.empty();
     }
 

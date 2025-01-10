@@ -1603,6 +1603,7 @@ Resources:
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
         CheckCoiFunctionArn: !Ref CheckCoiFunction.Version
         CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
+        ProcessCandidateIdentityFunctionArn: !Ref ProcessCandidateIdentityFunction.Version
       AutoPublishAlias: live
       DeploymentPreference:
         Type: !Ref StepFunctionDeploymentPreference
@@ -1671,6 +1672,8 @@ Resources:
             FunctionName: !Ref CheckCoiFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckReverificationIdentityFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ProcessCandidateIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -2872,6 +2875,102 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckReverificationIdentityFunctionLogGroup
+
+  ProcessCandidateIdentityFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - ProcessCandidateIdentityFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "process-candidate-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler::handleRequest
+      PackageType: Zip
+      CodeUri: ../lambdas/process-candidate-identity
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          POWERTOOLS_SERVICE_NAME: !Sub process-candidate-identity-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          AWS_LAMBDA_EXEC_WRAPPER: !If
+            - UseDynatrace
+            - /opt/dynatrace
+            - !Ref AWS::NoValue
+      Layers:
+        - !If
+          - UseDynatrace
+          - !Sub
+            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
+            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+          - !Ref AWS::NoValue
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: {}
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/credentialIssuers/ticf/connections/*/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
+      AutoPublishAlias: live
+
+  ProcessCandidateIdentityFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub "/aws/lambda/process-candidate-identity-${Environment}"
+
+  ProcessCandidateIdentityFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsSubscriptionEnviroment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref ProcessCandidateIdentityFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

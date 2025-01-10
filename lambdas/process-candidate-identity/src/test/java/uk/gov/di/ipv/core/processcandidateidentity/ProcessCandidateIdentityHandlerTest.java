@@ -64,8 +64,8 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_GPG45_UNMET_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UNMET_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_VCS_NOT_CORRELATED;
 
 @ExtendWith(MockitoExtension.class)
@@ -77,6 +77,7 @@ class ProcessCandidateIdentityHandlerTest {
     private static final String DEVICE_INFORMATION = "device_information";
     private static final String SIGNIN_JOURNEY_ID = "journey-id";
     private static final String USER_ID = "user-id";
+    private static final String PROCESS_IDENTITY_TYPE = "identityType";
 
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
 
@@ -156,7 +157,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -211,7 +212,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.PENDING.name()))
                             .build();
 
@@ -220,6 +221,64 @@ class ProcessCandidateIdentityHandlerTest {
 
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+
+            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
+            verify(storeIdentityService, times(1))
+                    .storeIdentity(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(CandidateIdentityType.PENDING),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+            verify(criStoringService, times(1))
+                    .storeVcs(
+                            eq(Cri.TICF),
+                            eq(IP_ADDRESS),
+                            eq(DEVICE_INFORMATION),
+                            eq(ticfVcs),
+                            eq(clientOAuthSessionItem),
+                            eq(ipvSessionItem),
+                            eq(List.of()),
+                            any(AuditEventUser.class));
+        }
+
+        @Test
+        void shouldHandleCandidateIdentityTypePendingAndReturnCimitResponse() throws Exception {
+            // Arrange
+            var cimitResponse = new JourneyResponse("dummy-response");
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(List.of());
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            List.of(), ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.of(cimitResponse));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(
+                                            PROCESS_IDENTITY_TYPE,
+                                            CandidateIdentityType.PENDING.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(cimitResponse.getJourney(), response.get("journey"));
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
@@ -269,7 +328,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.REVERIFICATION.name()))
                             .build();
 
@@ -312,7 +371,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.EXISTING.name()))
                             .build();
 
@@ -347,7 +406,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.INCOMPLETE.name()))
                             .build();
 
@@ -393,7 +452,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.UPDATE.name()))
                             .build();
 
@@ -433,7 +492,7 @@ class ProcessCandidateIdentityHandlerTest {
                     requestBuilder
                             .lambdaInput(
                                     Map.of(
-                                            "processIdentityType",
+                                            PROCESS_IDENTITY_TYPE,
                                             CandidateIdentityType.INCOMPLETE.name()))
                             .build();
 
@@ -466,7 +525,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -495,7 +554,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -526,14 +585,14 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
             var response = processCandidateIdentityHandler.handleRequest(request, context);
 
             // Assert
-            assertEquals(JOURNEY_GPG45_UNMET_PATH, response.get("journey"));
+            assertEquals(JOURNEY_PROFILE_UNMET_PATH, response.get("journey"));
 
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), anyList(), any());
@@ -568,7 +627,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -614,7 +673,7 @@ class ProcessCandidateIdentityHandlerTest {
             var request =
                     requestBuilder
                             .lambdaInput(
-                                    Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                             .build();
 
             // Act
@@ -662,7 +721,7 @@ class ProcessCandidateIdentityHandlerTest {
     void shouldReturnJourneyErrorIfIdentityTypeIsInvalid() {
         // Arrange
         var request =
-                requestBuilder.lambdaInput(Map.of("processIdentityType", "invalid-type")).build();
+                requestBuilder.lambdaInput(Map.of(PROCESS_IDENTITY_TYPE, "invalid-type")).build();
 
         // Act
         var response = processCandidateIdentityHandler.handleRequest(request, context);
@@ -682,7 +741,7 @@ class ProcessCandidateIdentityHandlerTest {
                 requestBuilder
                         .lambdaInput(
                                 Map.of(
-                                        "processIdentityType",
+                                        PROCESS_IDENTITY_TYPE,
                                         CandidateIdentityType.INCOMPLETE.name()))
                         .build();
 
@@ -706,7 +765,7 @@ class ProcessCandidateIdentityHandlerTest {
         var request =
                 requestBuilder
                         .lambdaInput(
-                                Map.of("processIdentityType", CandidateIdentityType.NEW.name()))
+                                Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
                         .build();
 
         // Act
