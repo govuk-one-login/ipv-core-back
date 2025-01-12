@@ -849,6 +849,9 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          APP_CONFIG_APPLICATION: !ImportValue AppConfigApplication
+          APP_CONFIG_ENVIRONMENT: !ImportValue AppConfigEnvironment
+          APP_CONFIG_PROFILE: !ImportValue AppConfigProfile
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/dynatrace
