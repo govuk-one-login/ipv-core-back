@@ -127,6 +127,8 @@ class CheckCoiServiceTest {
         assertTrue(restrictedAuditData.has("oldName"));
         assertTrue(restrictedAuditData.has("newBirthDate"));
         assertTrue(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 
@@ -273,6 +275,8 @@ class CheckCoiServiceTest {
         assertFalse(restrictedAuditData.has("oldName"));
         assertFalse(restrictedAuditData.has("newBirthDate"));
         assertFalse(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 
@@ -325,6 +329,8 @@ class CheckCoiServiceTest {
         assertTrue(restrictedAuditData.has("oldName"));
         assertTrue(restrictedAuditData.has("newBirthDate"));
         assertTrue(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 

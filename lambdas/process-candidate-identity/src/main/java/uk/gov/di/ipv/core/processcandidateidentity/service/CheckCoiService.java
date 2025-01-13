@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.domain.UserIdentityService;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
@@ -189,6 +190,10 @@ public class CheckCoiService {
                 sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
+                oldIdentityClaim.map(UserIdentityService.generateAddressClaim(oldVcs)).orElse(null),
+                sessionIdentityClaim
+                        .map(UserIdentityService.generateAddressClaim(sessionVcs))
+                        .orElse(null),
                 new DeviceInformation(deviceInformation));
     }
 }
