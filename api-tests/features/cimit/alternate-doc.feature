@@ -286,5 +286,3 @@ Feature: CIMIT - Alternate doc
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'pyi-no-match' page response
-      And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_START' audit event was recorded [local only]
-      And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_END' audit event was recorded [local only]

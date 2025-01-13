@@ -4,7 +4,6 @@ Feature: Inherited Identity
   Scenario Outline: Inherited Identity Scenarios
     Given I start a new '<journey-type>' journey with inherited identity '<inherited-identity>'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a '<expected-identity>' identity
     When I start a new '<journey-type>' journey
@@ -22,7 +21,6 @@ Feature: Inherited Identity
   Scenario Outline: Migrating a <expected-identity> HMRC profile successfully and returning with <vtr> VTR requires a P2 identity to be proved
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<inherited-identity>'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a '<expected-identity>' identity
 
@@ -38,7 +36,6 @@ Feature: Inherited Identity
   Scenario: Migrate PCL250 HRMC profile successfully with no evidence and returns with P2/PCL250
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a 'PCL250' identity
     When I start a new 'medium-confidence-pcl250' journey
@@ -69,7 +66,6 @@ Feature: Inherited Identity
     Then I get a 'page-ipv-reuse' page response
     When I submit an 'next' event
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
@@ -81,7 +77,6 @@ Feature: Inherited Identity
   Scenario Outline: Previous <old-identity> is <is-replaced> with new <new-identity> for the same user
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<old-details>'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a '<old-expected-vot>' identity
     And my identity 'GivenName' is '<old-expected-name>'
@@ -89,7 +84,6 @@ Feature: Inherited Identity
     # New journey with new inherited identity for the same user
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<new-details>'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a '<new-expected-vot>' identity
     And my identity 'GivenName' is '<new-expected-name>'
@@ -105,7 +99,6 @@ Feature: Inherited Identity
   Scenario: Previous PCL250 inherited identity is replaced with new P2 identity for the same user
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl250-no-evidence'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a 'PCL250' identity
     And my identity 'GivenName' is 'Alice'

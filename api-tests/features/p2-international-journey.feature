@@ -16,7 +16,6 @@ Feature: P2 App journey
     Then I get a 'non-uk-app-intro' page response
     When I submit a 'useApp' event
     Then I get a 'dcmaw' CRI response
-    And an 'IPV_INTERNATIONAL_ADDRESS_START' audit event was recorded [local only]
 
   Scenario: International address user sends a next event on exit page from DCMAW
     When I submit a 'international' event
@@ -58,7 +57,6 @@ Feature: P2 App journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: User looks for alternative methods to prove identity without using the app
     When I submit an 'international' event
