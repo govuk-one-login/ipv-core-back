@@ -42,9 +42,11 @@ import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
+import uk.gov.di.model.PostalAddress;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
@@ -261,14 +263,22 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             List<VerifiableCredential> sessionVcs,
             String deviceInformation)
             throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+
         var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
         var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);
+
+        Optional<List<PostalAddress>> oldAddressClaim =
+                userIdentityService.generateAddressClaim(oldVcs);
+        Optional<List<PostalAddress>> sessionAddressClaim =
+                userIdentityService.generateAddressClaim(sessionVcs);
 
         return new AuditRestrictedCheckCoi(
                 oldIdentityClaim.map(IdentityClaim::getName).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getName).orElse(null),
                 oldIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
                 sessionIdentityClaim.map(IdentityClaim::getBirthDate).orElse(null),
+                oldAddressClaim.orElse(null),
+                sessionAddressClaim.orElse(null),
                 new DeviceInformation(deviceInformation));
     }
 

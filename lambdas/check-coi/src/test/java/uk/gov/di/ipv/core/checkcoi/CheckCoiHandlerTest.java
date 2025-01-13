@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PostalAddress;
 
 import java.util.List;
 import java.util.Map;
@@ -126,6 +127,13 @@ class CheckCoiHandlerTest {
         void setup() throws Exception {
             when(mockUserIdentityService.findIdentityClaim(any()))
                     .thenReturn(getMockIdentityClaim());
+
+            PostalAddress address = new PostalAddress();
+            address.setAddressCountry("AnyCountry");
+            address.setAddressLocality("AnyTown");
+            address.setAddressRegion("AnyRegion");
+            when(mockUserIdentityService.generateAddressClaim(any()))
+                    .thenReturn(Optional.of(List.of(address)));
         }
 
         private Optional<IdentityClaim> getMockIdentityClaim() {
@@ -141,7 +149,7 @@ class CheckCoiHandlerTest {
         @DisplayName("Successful checks")
         class SuccessfulChecks {
             @Test
-            void shouldReturnPassedForSuccessfulNamesAndDobCheck() throws Exception {
+            void shouldReturnPassedForSuccessfulNamesAndDobAndAddressCheck() throws Exception {
                 when(mockUserIdentityService.areNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
@@ -179,6 +187,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
 
@@ -221,6 +231,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
 
@@ -262,6 +274,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
 
@@ -307,6 +321,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
 
@@ -351,6 +367,8 @@ class CheckCoiHandlerTest {
                 assertFalse(restrictedAuditData.has("oldName"));
                 assertFalse(restrictedAuditData.has("newBirthDate"));
                 assertFalse(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
         }
@@ -397,6 +415,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
 
@@ -475,6 +495,8 @@ class CheckCoiHandlerTest {
                 assertTrue(restrictedAuditData.has("oldName"));
                 assertTrue(restrictedAuditData.has("newBirthDate"));
                 assertTrue(restrictedAuditData.has("oldBirthDate"));
+                assertTrue(restrictedAuditData.has("oldAddress"));
+                assertTrue(restrictedAuditData.has("newAddress"));
                 assertTrue(restrictedAuditData.has("device_information"));
             }
         }
