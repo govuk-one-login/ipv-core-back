@@ -40,9 +40,9 @@ public class DcmawAsyncCriService {
     private final CriOAuthSessionService criOAuthSessionService;
 
     @ExcludeFromGeneratedCoverageReport
-    public DcmawAsyncCriService(ConfigService configService) {
+    public DcmawAsyncCriService(ConfigService configService, AuditService auditService) {
         this.configService = configService;
-        this.auditService = AuditService.create(configService);
+        this.auditService = auditService;
         this.criApiService = new CriApiService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);

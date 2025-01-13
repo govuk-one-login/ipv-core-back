@@ -19,10 +19,8 @@ public class LocalAuditService implements AuditService {
 
     private Deque<AuditEvent> pendingAuditEvents = new ConcurrentLinkedDeque<>();
 
-    public static List<AuditEvent> getAuditEvents(String journeyId) {
-        return AUDIT_EVENTS.stream()
-                .filter(e -> e.getUser().getGovukSigninJourneyId().equals(journeyId))
-                .toList();
+    public static List<AuditEvent> getAuditEvents(String userId) {
+        return AUDIT_EVENTS.stream().filter(e -> e.getUser().getUserId().equals(userId)).toList();
     }
 
     @Override

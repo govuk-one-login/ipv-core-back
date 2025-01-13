@@ -1,0 +1,178 @@
+Feature: Audit Events
+  Scenario: New identity - via F2F journey
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'end' event
+      Then I get a 'page-ipv-identity-postoffice-start' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get a 'f2f' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the async CRI stub
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+        # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+      And audit events for 'new-identity-f2f-journey' are recorded [local only]
+
+  Scenario: Delete pending F2F
+    Given I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'page-ipv-identity-postoffice-start' page response
+    When I submit a 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'f2f' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute          | Values                                      |
+      | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+    Then I get a 'page-face-to-face-handoff' page response
+
+    Given I activate the 'pendingF2FResetEnabled' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
+    When I submit a 'next' event
+    Then I get a 'pyi-f2f-delete-details' page response
+    When I submit a 'next' event
+    Then I get a 'pyi-confirm-delete-details' page response with context 'f2f'
+    When I submit a 'next' event
+    Then I get a 'pyi-details-deleted' page response with context 'f2f'
+    And audit events for 'delete-pending-f2f-journey' are recorded [local only]
+
+  Scenario: Alternate doc mitigation
+    Given I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit an 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-needs-alternate-doc' details to the CRI stub
+    Then I get a 'pyi-driving-licence-no-match-another-way' page response
+    When I submit a 'next' event
+    Then I get a 'ukPassport' CRI response
+    And audit events for 'alternate-doc-mitigation-journey' are recorded [local only]
+
+  Scenario: Reprove identity journey
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    When I start a new 'medium-confidence' journey with reprove identity
+    Then I get a 'reprove-identity-start' page response
+    When I submit a 'next' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response
+    When I submit a 'next' event
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And audit events for 'reprove-identity-journey' are recorded [local only]
+
+  Scenario: No photo ID
+    Given I activate the 'p1Journeys' feature set
+    When I start a new 'low-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'end' event
+    Then I get a 'prove-identity-no-photo-id' page response with context 'nino'
+    When I submit an 'next' event
+    Then I get a 'claimedIdentity' CRI response
+    And audit events for 'no-photo-id-journey' are recorded [local only]
+
+  Scenario: Update name and address journey
+    Given the subject already has the following credentials
+      | CRI     | scenario                     |
+      | dcmaw   | kenneth-driving-permit-valid |
+      | address | kenneth-current              |
+      | fraud   | kenneth-score-2              |
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'update-details' event
+    Then I get a 'update-details' page response
+
+    # End update journey to ensure recording of IPV_USER_DETAILS_UPDATE_ABORTED event
+    When I submit an 'cancel' event
+    Then I get an OAuth response
+
+    # Start another journey to start and complete update journey
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-reuse' page response
+    When I submit a 'update-details' event
+    Then I get a 'update-details' page response
+    When I submit a 'family-name-and-address' event
+    Then I get a 'page-update-name' page response
+    When I submit a 'update-name' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+    Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+    When I submit a 'next' event
+    Then I get a 'address' CRI response
+    When I submit 'kenneth-changed' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
+    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+    And my identity 'FamilyName' is 'Smith'
+    And my address 'addressLocality' is 'Bristol'
+    And audit events for 'update-name-and-address-journey' are recorded [local only]
+
+  Scenario: Inherited identity journey
+    Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'PCL200' identity
+    And audit events for 'inherited-identity-journey' are recorded [local only]
+
+  Scenario: International address journey
+    Given I start a new 'medium-confidence' journey
+    And I activate the 'internationalAddress' feature sets
+    And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'international' event
+    Then I get a 'non-uk-app-intro' page response
+    When I submit a 'useApp' event
+    Then I get a 'dcmaw' CRI response
+    And audit events for 'international-address-journey' are recorded [local only]
+
+  Scenario: Strategic app journey
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'smartphone' event
+    Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+    When I submit an 'iphone' event
+    Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+    And audit events for 'strategic-app-journey' are recorded [local only]

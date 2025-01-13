@@ -5,6 +5,6 @@ import uk.gov.di.ipv.core.library.service.LocalAuditService;
 
 public class AuditHandler {
     public void getAuditEvents(Context ctx) {
-        ctx.json(LocalAuditService.getAuditEvents(ctx.queryParam("govuk_signin_journey_id")));
+        ctx.json(LocalAuditService.getAuditEvents(ctx.queryParam("user_id")));
     }
 }

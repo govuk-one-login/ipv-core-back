@@ -66,7 +66,6 @@ Feature: Inherited identity extended scenarios
     Then I get a 'pyi-no-match' page response
     When I submit a 'next' event
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
@@ -93,7 +92,6 @@ Feature: Inherited identity extended scenarios
     # Return journey with inherited identity for the same user
     When I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'kenneth-vot-pcl250-passport'
     Then I get an OAuth response
-    And an 'IPV_INHERITED_IDENTITY_VC_RECEIVED' audit event was recorded [local only]
     When I use the OAuth response to get my identity
     Then I get a 'PCL250' identity
 

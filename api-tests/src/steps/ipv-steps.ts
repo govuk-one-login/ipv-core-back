@@ -34,6 +34,10 @@ import { VcJwtPayload } from "../types/external-api.js";
 import * as jose from "jose";
 import { buildCredentialIssuerUrl } from "../clients/cri-stub-client.js";
 import { ApiRequestError } from "../types/errors.js";
+import {
+  compareAuditEvents,
+  getAuditEventsForJourneyType,
+} from "../utils/audit-events.js";
 
 const RETRY_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
@@ -420,16 +424,17 @@ Then("I don't get any return codes", function (this: World): void {
 });
 
 Then(
-  "a(n) {string} audit event was recorded [local only]",
-  async function (this: World, eventName: string): Promise<void> {
+  "audit events for {string} are recorded [local only]",
+  async function (this: World, journeyName: string): Promise<void> {
     if (config.localAuditEvents) {
-      const auditEvents = await auditClient.getAuditEvents(this.journeyId);
-      const event = auditEvents.find((e) => e.event_name === eventName);
-      if (!event) {
-        assert.fail(
-          `Could not find ${eventName} audit event, found: ${auditEvents.map((e) => e.event_name).join(", ")}`,
-        );
-      }
+      const expectedEvents = await getAuditEventsForJourneyType(journeyName);
+      const actualEvents = await auditClient.getAuditEvents(this.userId);
+
+      const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
+      assert.ok(
+        comparisonResult.isPartiallyEqual,
+        comparisonResult.errorMessage,
+      );
     }
   },
 );
