@@ -87,11 +87,11 @@ states:
               successful: false
             checkFeatureFlag:
               processCandidateIdentity:
-              targetState: PROCESS_INCOMPLETE_IDENTITY_UPDATE_DETAILS_INVALID_IDENTITY
-              auditEvents:
-                - IPV_USER_DETAILS_UPDATE_END
-              auditContext:
-                successful: false
+                targetState: PROCESS_INCOMPLETE_IDENTITY_UPDATE_DETAILS_INVALID_IDENTITY
+                auditEvents:
+                  - IPV_USER_DETAILS_UPDATE_END
+                auditContext:
+                  successful: false
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS
