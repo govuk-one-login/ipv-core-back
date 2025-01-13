@@ -1,0 +1,41 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "reprove_identity": false,
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "NEW_P2_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "dcmawAsync",
+      "type": "pending"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_APP_HANDOFF_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  }
+]
