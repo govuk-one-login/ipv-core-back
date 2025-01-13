@@ -1059,7 +1059,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-cri-callback
-      MemorySize: 2048
       Tracing: Active
       DeploymentPreference:
         Alarms: !If
@@ -1194,7 +1193,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-mobile-app-callback
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -1293,7 +1291,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-mobile-app-vc-receipt
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -2353,7 +2350,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-ticf-cri
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
@@ -2449,7 +2445,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-dcmaw-async-cri
-      MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
