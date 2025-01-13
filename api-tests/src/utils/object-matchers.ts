@@ -10,12 +10,9 @@ export const comparePartialEqualityBetweenObjects = (
 ): ObjectPartialEqualityResult => {
   for (const [expectedKey, expectedValue] of Object.entries(expectedObject)) {
     if (actualObject[expectedKey] === undefined) {
-      console.log(
-        `Expected ${expectedKey} to be a property in object ${actualObject}`,
-      );
       return {
         isPartiallyEqual: false,
-        errorMessage: `Expected ${expectedKey} to be a property in object ${actualObject}`,
+        errorMessage: `Expected ${expectedKey} to be a property in ${actualObject}`,
       };
     }
 
@@ -35,12 +32,9 @@ export const comparePartialEqualityBetweenObjects = (
     }
 
     if (expectedValue !== actualObject[expectedKey]) {
-      console.log(
-        `Expected ${expectedValue} for index ${expectedKey} but got ${actualObject[expectedKey]}`,
-      );
       return {
         isPartiallyEqual: false,
-        errorMessage: `Expected ${expectedValue} for index ${expectedKey} but got ${actualObject[expectedKey]}`,
+        errorMessage: `Expected ${expectedValue} for field ${expectedKey} but got ${actualObject[expectedKey]}`,
       };
     }
   }

@@ -430,8 +430,6 @@ Then(
       const expectedEvents = await getAuditEventsForJourneyType(journeyName);
       const actualEvents = await auditClient.getAuditEvents(this.userId);
 
-      console.log(JSON.stringify(actualEvents));
-
       const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
       assert.ok(
         comparisonResult.isPartiallyEqual,
