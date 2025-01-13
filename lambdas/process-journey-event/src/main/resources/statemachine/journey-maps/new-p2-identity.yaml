@@ -336,6 +336,7 @@ states:
         targetState: START
         checkIfDisabled:
           f2f:
+            targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
   # Common pages
