@@ -497,6 +497,25 @@ states:
     events:
       next:
         targetState: EVALUATE_GPG45_SCORES
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_VALID_IDENTITY
+
+  PROCESS_VALID_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: EXISTING
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      profile-unmet:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      vcs-not-correlated:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
 
   EVALUATE_GPG45_SCORES:
     response:
