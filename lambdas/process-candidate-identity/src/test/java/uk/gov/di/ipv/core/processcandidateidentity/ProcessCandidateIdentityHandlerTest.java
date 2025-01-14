@@ -113,6 +113,7 @@ class ProcessCandidateIdentityHandlerTest {
                 ClientOAuthSessionItem.builder()
                         .userId(USER_ID)
                         .govukSigninJourneyId(SIGNIN_JOURNEY_ID)
+                        .vtr(List.of())
                         .reproveIdentity(false);
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
@@ -366,6 +367,11 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
+            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+            when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
+                    .thenReturn(List.of());
+            when(votMatcher.matchFirstVot(eq(List.of(P2)), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
 
             var request =
                     requestBuilder
@@ -381,7 +387,6 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
-            verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), any(), any());
             verify(checkCoiService, times(0))
