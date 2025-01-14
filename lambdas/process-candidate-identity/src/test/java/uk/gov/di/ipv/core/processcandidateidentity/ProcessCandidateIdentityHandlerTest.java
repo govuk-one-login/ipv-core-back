@@ -370,7 +370,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(cimitService.getContraIndicators(USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS))
                     .thenReturn(List.of());
-            when(votMatcher.matchFirstVot(eq(List.of(P2)), eq(List.of()), eq(List.of()), eq(true)))
+            when(votMatcher.matchFirstVot(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
 
             var request =
