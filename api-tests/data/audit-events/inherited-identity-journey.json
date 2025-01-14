@@ -6,7 +6,7 @@
       "iss": "https://orch.stubs.account.gov.uk/migration/v1",
       "evidence": [],
       "vot": "PCL200",
-      "age": 55
+      "age": "type[number]"
     },
     "restricted": {
       "name": [

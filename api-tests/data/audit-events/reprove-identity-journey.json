@@ -58,7 +58,7 @@
       ],
       "successful": true,
       "isUkIssued": true,
-      "age": 59
+      "age": "type[number]"
     },
     "restricted": {
       "device_information": {}
@@ -149,7 +149,7 @@
         }
       ],
       "successful": true,
-      "age": 59
+      "age": "type[number]"
     },
     "restricted": {
       "device_information": {}

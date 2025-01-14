@@ -34,7 +34,7 @@
       "iss": "https://claimed-identity-cri.stubs.account.gov.uk",
       "evidence": null,
       "successful": true,
-      "age": 59
+      "age": "type[number]"
     },
     "restricted": {
       "device_information": {}
@@ -125,7 +125,7 @@
         }
       ],
       "successful": true,
-      "age": 59
+      "age": "type[number]"
     },
     "restricted": {
       "device_information": {}
