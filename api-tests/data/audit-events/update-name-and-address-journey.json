@@ -50,6 +50,28 @@
     }
   },
   {
+    "event_name": "IPV_GPG45_PROFILE_MATCHED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "gpg45Profile": "M1B",
+      "gpg45Scores": {
+        "evidences": [
+          {
+            "strength": 3,
+            "validity": 2
+          }
+        ],
+        "activity": 1,
+        "fraud": 2,
+        "verification": 3
+      },
+      "vcTxnIds": []
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
@@ -142,6 +164,28 @@
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
       "journey_type": "REUSE_EXISTING_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_GPG45_PROFILE_MATCHED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "gpg45Profile": "M1B",
+      "gpg45Scores": {
+        "evidences": [
+          {
+            "strength": 3,
+            "validity": 2
+          }
+        ],
+        "activity": 1,
+        "fraud": 2,
+        "verification": 3
+      },
+      "vcTxnIds": []
     },
     "restricted": {
       "device_information": {}
@@ -453,7 +497,7 @@
     "event_name": "IPV_IDENTITY_STORED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "identity_type": "update",
+      "identity_type": "UPDATE",
       "vot": "P2"
     },
     "restricted": {

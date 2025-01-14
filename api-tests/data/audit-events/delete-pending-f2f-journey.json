@@ -153,6 +153,27 @@
     }
   },
   {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD",
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
@@ -180,6 +201,17 @@
     }
   },
   {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "PENDING",
+      "vot": null
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
     "restricted": {
@@ -192,17 +224,6 @@
     "extensions": {
       "cri": "f2f",
       "type": "pending"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_IDENTITY_STORED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "identity_type": "pending",
-      "vot": null
     },
     "restricted": {
       "device_information": {}
