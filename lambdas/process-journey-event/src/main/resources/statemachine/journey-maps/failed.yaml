@@ -41,14 +41,14 @@ states:
               successful: false
             checkFeatureFlag:
               processCandidateIdentity:
-                targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_WITH_DELETION_INVALID_ID
+                targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
                 auditEvents:
                   - IPV_USER_DETAILS_UPDATE_END
                 auditContext:
                   successful: false
         checkFeatureFlag:
           processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID
+            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_VALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
@@ -64,7 +64,7 @@ states:
           successful: false
         checkFeatureFlag:
           processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_WITH_DELETION_INVALID_ID
+            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
@@ -203,7 +203,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_WITH_DELETION_VALID_ID:
+  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_VALID_ID:
     response:
       type: process
       lambda: process-candidate-identity
@@ -243,7 +243,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_WITH_DELETION_INVALID_ID:
+  PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID:
     response:
       type: process
       lambda: process-candidate-identity
