@@ -100,7 +100,10 @@
   },
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
-    "component_id": "https://identity.local.account.gov.uk"
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
   },
   {
     "event_name": "IPV_VC_RECEIVED",
@@ -182,7 +185,7 @@
         "fraud": 2,
         "verification": 3
       },
-      "vcTxnIds": ["RB000117420948", "3fc67c56-74da-402c-b906-49bb4a06ed23"]
+      "vcTxnIds": []
     },
     "restricted": {
       "device_information": {}
