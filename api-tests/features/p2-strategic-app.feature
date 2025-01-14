@@ -122,7 +122,6 @@ Feature: M2B Strategic App Journeys
     Then I get a 'non-uk-passport' page response
     When I submit a 'next' event
     Then I get a 'identify-device' page response
-    And an 'IPV_INTERNATIONAL_ADDRESS_START' audit event was recorded [local only]
     When I submit an 'appTriage' event
     Then I get a 'pyi-triage-select-device' page response
     When I submit a 'computer-or-tablet' event
