@@ -19,6 +19,7 @@ import { getRandomString } from "../utils/random-string-generator.js";
 import {
   isClientResponse,
   isCriResponse,
+  isErrorResponse,
   isJourneyResponse,
   isPageResponse,
   JourneyEngineResponse,
