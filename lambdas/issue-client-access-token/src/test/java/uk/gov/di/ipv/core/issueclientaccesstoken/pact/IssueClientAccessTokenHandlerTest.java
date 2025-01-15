@@ -129,11 +129,11 @@ class IssueClientAccessTokenHandlerTest {
 
     @State("dummyAuthCode is a valid authorization code")
     public void setAuthCode() {
-        when(ipvSessionDataStore.getItemByIndex(
-                        "authorizationCode",
-                        DigestUtils.sha256Hex(
-                                "dummyAuthCode"))) // 56298e46fe43e76f556b5aaea8601d758dd47c084495bf197b985a4e516ac5ce
-                .thenReturn(ipvSessionItem);
+//        when(ipvSessionDataStore.getItemByIndex(
+//                        "authorizationCode",
+//                        DigestUtils.sha256Hex(
+//                                "dummyAuthCode"))) // 56298e46fe43e76f556b5aaea8601d758dd47c084495bf197b985a4e516ac5ce
+//                .thenReturn(ipvSessionItem);
     }
 
     @State(
