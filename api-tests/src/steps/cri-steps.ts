@@ -45,6 +45,8 @@ const STANDARD_JAR_VALUES = [
   "state",
   "exp",
   "iat",
+  "evidence_requested",
+  "context",
 ];
 
 const submitAndProcessCriAction = async (
