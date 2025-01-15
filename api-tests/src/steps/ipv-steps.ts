@@ -19,6 +19,7 @@ import { getRandomString } from "../utils/random-string-generator.js";
 import {
   isClientResponse,
   isCriResponse,
+  isErrorResponse,
   isJourneyResponse,
   isPageResponse,
   JourneyEngineResponse,
@@ -161,6 +162,22 @@ Then(
       assert.equal(this.error.statusCode, expectedStatusCode);
       assert.equal(this.error.origin, origin);
     }
+  },
+);
+
+Then(
+  /I get an error response with message '([\w,: ]+)' and status code '(\d{3})'/,
+  function (this: World, expectedMessage: string, expectedStatusCode: number) {
+    if (!this.lastJourneyEngineResponse) {
+      throw new Error("No last journey engine response found.");
+    }
+
+    assert.ok(
+      isErrorResponse(this.lastJourneyEngineResponse),
+      `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+    );
+    assert.equal(this.lastJourneyEngineResponse.message, expectedMessage);
+    assert.equal(this.lastJourneyEngineResponse.statusCode, expectedStatusCode);
   },
 );
 
