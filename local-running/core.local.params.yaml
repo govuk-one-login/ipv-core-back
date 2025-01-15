@@ -390,7 +390,7 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: false
-    processCandidateIdentity: true
+    processCandidateIdentity: false
   features:
     processCandidateIdentity:
       featureFlags:
