@@ -54,7 +54,7 @@ Feature: Return exit codes
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response
+    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit a 'f2f' event
     Then I get a 'f2f' CRI response
     When I call the CRI stub with attributes and get an 'access_denied' OAuth error

@@ -36,7 +36,7 @@ Feature: Disabled CRI journeys
       When I submit 'kenneth-score-0' details with attributes to the CRI stub
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-      Then I get a 'photo-id-security-questions-find-another-way' page response
+      Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
       When I submit an 'appTriage' event
       Then I get a 'pyi-technical' page response
 

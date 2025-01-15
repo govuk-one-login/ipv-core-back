@@ -122,7 +122,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-score-0' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-    Then I get a 'photo-id-security-questions-find-another-way' page response
+    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub
