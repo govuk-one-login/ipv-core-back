@@ -260,7 +260,7 @@ public class CriCheckingService {
                         && requiresAuthoritativeSourceCheck(newVcs, sessionVcs)) {
                     return JOURNEY_DL_AUTH_SOURCE_CHECK;
                 }
-                return journeyResponse.get();
+                return jr;
             }
         }
 

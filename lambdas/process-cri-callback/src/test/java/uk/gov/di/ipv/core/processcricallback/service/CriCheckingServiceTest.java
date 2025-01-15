@@ -60,6 +60,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitEmpt
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
@@ -667,6 +668,31 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
+    }
+
+    @Test
+    void checkVcResponseShouldReturnDlIfDrivingPermitIdentifiersDifferAndNotMitigated()
+            throws Exception {
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
+
+        when(mockConfigService.enabled(DL_AUTH_SOURCE_CHECK)).thenReturn(true);
+        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
+        when(mockCimitService.getContraIndicators(any(), any(), any()))
+                .thenReturn(TEST_CONTRA_INDICATORS);
+        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));
+
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        List.of(M1B_DCMAW_VC),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        List.of(vcDrivingPermitNonDcmaw()));
+
+        assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
     }
 
     @Nested
