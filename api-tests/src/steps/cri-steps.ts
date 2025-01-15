@@ -494,7 +494,9 @@ When(
     this: World,
     separateSession: " in a separate session" | undefined,
   ): Promise<void> {
+    // If we've asked the stub to create a VC for us, we will already have the OAuth state.
     if (!this.oauthState) {
+      // If we post to the stub's Enqueue endpoint without specifying VC details it just returns the OAuth state to us.
       this.oauthState = await postToEnqueue({
         user_id: this.userId,
       });
