@@ -160,6 +160,26 @@ Then(
   },
 );
 
+Then(
+    /I get an error response with message '([\w,: ]+)' and status code '(\d{3})'/,
+    function (
+        this: World,
+        expectedMessage: string,
+        expectedStatusCode: number,
+    ) {
+        if (!this.lastJourneyEngineResponse) {
+            throw new Error("No last journey engine response found.");
+        }
+
+        assert.ok(
+            isErrorResponse(this.lastJourneyEngineResponse),
+            `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
+        );
+        assert.equal(this.lastJourneyEngineResponse.message, expectedMessage);
+        assert.equal(this.lastJourneyEngineResponse.statusCode, expectedStatusCode);
+    },
+);
+
 When(
   "I start a new {string} inherited identity journey with an invalid inherited identity JWT",
   async function (this: World, journeyType: string): Promise<void> {

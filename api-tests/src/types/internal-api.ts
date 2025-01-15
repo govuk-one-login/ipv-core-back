@@ -16,7 +16,8 @@ export type JourneyEngineResponse =
   | JourneyResponse
   | PageResponse
   | CriResponse
-  | ClientResponse;
+  | ClientResponse
+  | ErrorResponse;
 
 export interface JourneyResponse {
   journey: string;
@@ -60,6 +61,16 @@ export const isClientResponse = (
   journeyEngineResponse: JourneyEngineResponse,
 ): journeyEngineResponse is ClientResponse => {
   return !!(journeyEngineResponse as ClientResponse).client?.redirectUrl;
+};
+
+export interface ErrorResponse {
+  code: number, message: string, statusCode: number;
+}
+
+export const isErrorResponse = (
+    journeyEngineResponse: JourneyEngineResponse,
+): journeyEngineResponse is ErrorResponse => {
+  return !!(journeyEngineResponse as ErrorResponse).code;
 };
 
 export interface ProcessCriCallbackRequest {
