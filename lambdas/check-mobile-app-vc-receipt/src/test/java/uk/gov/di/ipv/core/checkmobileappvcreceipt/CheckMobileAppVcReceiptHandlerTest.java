@@ -236,6 +236,7 @@ class CheckMobileAppVcReceiptHandlerTest {
 
         // Assert
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
+        assertEquals("\"No VC found\"", response.getBody());
         verify(sessionCredentialsService, never()).persistCredentials(any(), any(), anyBoolean());
     }
 

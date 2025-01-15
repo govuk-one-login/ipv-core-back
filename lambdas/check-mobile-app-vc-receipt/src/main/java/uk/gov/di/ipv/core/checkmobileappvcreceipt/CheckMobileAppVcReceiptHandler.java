@@ -110,7 +110,7 @@ public class CheckMobileAppVcReceiptHandler
             }
 
             // Frontend will continue polling
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_NOT_FOUND, null);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_NOT_FOUND, "No VC found");
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
