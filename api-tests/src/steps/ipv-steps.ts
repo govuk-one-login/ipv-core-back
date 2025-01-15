@@ -450,7 +450,7 @@ Then(
       const comparisonResult = compareAuditEvents(actualEvents, expectedEvents);
       assert.ok(
         comparisonResult.isPartiallyEqual,
-        comparisonResult.errorMessage + JSON.stringify(actualEvents),
+        comparisonResult.errorMessage,
       );
     }
   },
