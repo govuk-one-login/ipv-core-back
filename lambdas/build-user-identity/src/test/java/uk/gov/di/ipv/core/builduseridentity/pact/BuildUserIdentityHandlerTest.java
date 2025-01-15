@@ -327,7 +327,7 @@ class BuildUserIdentityHandlerTest {
                              },
                              {
                                "type": "FamilyName",
-                               "value": "Watson"
+                               "value": "DifferentName"
                              }
                            ]
                          }
