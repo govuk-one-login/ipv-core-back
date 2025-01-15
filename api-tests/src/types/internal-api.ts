@@ -64,11 +64,13 @@ export const isClientResponse = (
 };
 
 export interface ErrorResponse {
-  code: number, message: string, statusCode: number;
+  code: number;
+  message: string;
+  statusCode: number;
 }
 
 export const isErrorResponse = (
-    journeyEngineResponse: JourneyEngineResponse,
+  journeyEngineResponse: JourneyEngineResponse,
 ): journeyEngineResponse is ErrorResponse => {
   return !!(journeyEngineResponse as ErrorResponse).code;
 };
