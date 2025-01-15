@@ -53,6 +53,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
@@ -232,7 +233,6 @@ public class CriCheckingService {
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
             throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody {
-
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
@@ -254,6 +254,12 @@ public class CriCheckingService {
                                                             SC_INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
+                var jr = journeyResponse.get();
+                if (jr.toString().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)
+                        && configService.enabled(DL_AUTH_SOURCE_CHECK)
+                        && requiresAuthoritativeSourceCheck(newVcs, sessionVcs)) {
+                    return JOURNEY_DL_AUTH_SOURCE_CHECK;
+                }
                 return journeyResponse.get();
             }
         }
