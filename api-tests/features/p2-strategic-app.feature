@@ -16,10 +16,10 @@ Feature: M2B Strategic App Journeys
     When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
-    Then I get an 'check-mobile-app-result' page response
+    Then I get a 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
-    And I submit the returned journey event
+    When I submit the returned journey event
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -50,7 +50,7 @@ Feature: M2B Strategic App Journeys
     When I poll for async DCMAW credential receipt
     Then the poll returns a '404'
     When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
-    When I poll for async DCMAW credential receipt
+    And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
 
   Scenario: MAM journey cross-browser scenario
@@ -67,10 +67,11 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
-    Then I pass on the DCMAW callback in a separate session
-    # Mocking the time for the user to log back in
-    And I poll for async DCMAW credential receipt
-    When I start a new 'medium-confidence' journey
+    And I pass on the DCMAW callback in a separate session
+    # Wait for the VC to be received before continuing. In the usual case the VC will be received well before the user
+    # has managed to log back in to the site.
+    When I poll for async DCMAW credential receipt
+    And I start a new 'medium-confidence' journey
     Then I get a 'page-dcmaw-success' page response
     When I submit a 'next' event
     Then I get an 'address' CRI response
@@ -101,7 +102,7 @@ Feature: M2B Strategic App Journeys
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
-    And I submit the returned journey event
+    When I submit the returned journey event
     Then I get an 'page-multiple-doc-check' page response
 
   Scenario: MAM journey credential fails with ci
@@ -122,7 +123,7 @@ Feature: M2B Strategic App Journeys
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a '201'
-    And I submit the returned journey event
+    When I submit the returned journey event
     Then I get an 'pyi-no-match' page response
 
   Scenario: MAM journey detected iphone
