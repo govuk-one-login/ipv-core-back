@@ -13,7 +13,9 @@ Feature: MFA reset journey
       Then I get a 'you-can-change-security-code-method' page response
 
     Scenario: Successful MFA reset journey
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
@@ -25,7 +27,9 @@ Feature: MFA reset journey
       Then I get a successful MFA reset result
 
     Scenario: Failed MFA reset journey with breaching CI - user can still reuse existing identity
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
       Then I get a 'pyi-no-match' page response
@@ -39,24 +43,25 @@ Feature: MFA reset journey
       Then I get a 'page-ipv-reuse' page response
 
     Scenario: Failed MFA reset journey - DCMAW error
-      When I submit an 'next' event
-      Then I get a 'dcmaw' CRI response
-      When I call the CRI stub and get an 'access-denied' OAuth error
       When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
     Scenario: Failed MFA reset journey - find another way to access One Login
       When I submit an 'cannot-change-security-codes' event
-      Then I get a 'pyi-another-way' page response
-      When I submit an 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
     Scenario: Failed MFA reset journey - failed verification score
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-verification-zero' details to the CRI stub
       Then I get a 'pyi-no-match' page response
@@ -66,7 +71,9 @@ Feature: MFA reset journey
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
 
     Scenario: Failed MFA reset journey - non-matching identity
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'alice-passport-valid' details to the CRI stub
       Then I get a 'page-dcmaw-success' page response
@@ -79,7 +86,9 @@ Feature: MFA reset journey
 
     Scenario: Failed MFA reset journey - failed DL auth source check
       Given I activate the 'drivingLicenceAuthCheck' feature set
-      When I submit an 'next' event
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
       Then I get a 'drivingLicence' CRI response
@@ -95,8 +104,6 @@ Feature: MFA reset journey
   Rule: The user has no existing identity
     Scenario: Attempted MFA reset journey
       When I start a new 'reverification' journey
-      Then I get a 'pyi-another-way' page response
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'no_identity_available'

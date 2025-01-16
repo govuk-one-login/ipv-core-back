@@ -88,7 +88,7 @@ states:
         targetState: YOU_CAN_CHOOSE_HOW_YOU_GET_SECURITY_CODES_PAGE
       not-found:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -99,6 +99,17 @@ states:
       pageId: you-can-change-security-code-method
     events:
       next:
+        targetState: IDENTITY_START_PAGE
+      cannot-change-security-codes:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+
+  IDENTITY_START_PAGE:
+    response:
+      type: page
+      pageId: page-ipv-identity-document-start
+    events:
+      appTriage:
         targetState: CRI_DCMAW
         checkFeatureFlag:
           strategicAppEnabled:
@@ -107,9 +118,9 @@ states:
           dcmaw:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
-      cannot-change-security-codes:
+      end:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -121,7 +132,7 @@ states:
         targetState: ERROR
       anotherWay:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -135,13 +146,13 @@ states:
         targetState: POST_DCMAW_SUCCESS_PAGE
       not-found:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       access-denied:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       temporarily-unavailable:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       dl-auth-source-check:
         targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
 
