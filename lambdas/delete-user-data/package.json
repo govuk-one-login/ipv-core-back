@@ -10,12 +10,12 @@
     "local-invoke": "sam local invoke -e local-dev/sample-sqs-event.json -n local-dev/local-env.json"
   },
   "devDependencies": {
-    "@aws-lambda-powertools/commons": "2.11.0",
-    "@aws-sdk/client-dynamodb": "3.709.0",
-    "@aws-sdk/client-sns": "3.709.0",
-    "@aws-sdk/client-sqs": "3.709.0",
-    "@aws-sdk/client-ssm": "3.709.0",
-    "@aws-sdk/lib-dynamodb": "3.709.0",
+    "@aws-lambda-powertools/commons": "2.13.0",
+    "@aws-sdk/client-dynamodb": "3.726.1",
+    "@aws-sdk/client-sns": "3.726.1",
+    "@aws-sdk/client-sqs": "3.726.1",
+    "@aws-sdk/client-ssm": "3.726.1",
+    "@aws-sdk/lib-dynamodb": "3.726.1",
     "@swc/jest": "0.2.24",
     "@types/aws-lambda": "8.10.109",
     "@types/jest": "29.5.8",
@@ -39,6 +39,6 @@
     ]
   },
   "dependencies": {
-    "@aws-lambda-powertools/logger": "2.11.0"
+    "@aws-lambda-powertools/logger": "2.13.0"
   }
 }
