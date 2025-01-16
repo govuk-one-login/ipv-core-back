@@ -36,7 +36,7 @@ public class CoreBack {
         app.post("/journey/{event}", journeyEngineHandler::journeyEngine);
         app.post("/cri/callback", lambdaHandler::criCallback);
         app.post("/app/callback", lambdaHandler::appCallback);
-        app.post("/app/check-vc-receipt", lambdaHandler::checkMobileAppVcReceipt);
+        app.get("/app/check-vc-receipt", lambdaHandler::checkMobileAppVcReceipt);
         app.get("/user/proven-identity-details", lambdaHandler::getProvenUserIdentityDetails);
 
         // External APIs
