@@ -102,7 +102,7 @@ export const pollAsyncDcmaw = async (
 ): Promise<JourneyResponse | undefined> => {
   const url = `${config.core.internalApiUrl}/app/check-vc-receipt`;
   const response = await fetch(url, {
-    method: POST,
+    method: GET,
     headers: {
       ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
