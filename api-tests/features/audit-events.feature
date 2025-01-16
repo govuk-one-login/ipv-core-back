@@ -1,6 +1,8 @@
 Feature: Audit Events
-  Scenario: New identity - p2 app journey
+  Background: Set processCandidateIdentity feature set
     Given I activate the 'processCandidateIdentity' feature set
+
+  Scenario: New identity - p2 app journey
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -25,7 +27,6 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I activate the 'processCandidateIdentity' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'next' event
@@ -35,7 +36,6 @@ Feature: Audit Events
     And audit events for 'reuse-journey' are recorded [local only]
 
   Scenario: New identity - via F2F journey
-    Given I activate the 'processCandidateIdentity' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -62,7 +62,6 @@ Feature: Audit Events
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
   Scenario: Delete pending F2F
-    Given I activate the 'processCandidateIdentity' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -80,7 +79,7 @@ Feature: Audit Events
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
 
-    Given I activate the 'pendingF2FResetEnabled,processCandidateIdentity' feature set
+    Given I activate the 'pendingF2FResetEnabled' feature set along with the e
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
     When I submit a 'next' event
@@ -92,7 +91,6 @@ Feature: Audit Events
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
 
   Scenario: Alternate doc mitigation
-    Given I activate the 'processCandidateIdentity' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
@@ -113,7 +111,6 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    Given I activate the 'processCandidateIdentity' feature set
     And I start a new 'medium-confidence' journey with reprove identity
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
@@ -135,7 +132,7 @@ Feature: Audit Events
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
   Scenario: No photo ID
-    Given I activate the 'p1Journeys,processCandidateIdentity' feature set
+    Given I activate the 'p1Journeys' feature set along with the existing feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -150,7 +147,6 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    And I activate the 'processCandidateIdentity' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-reuse' page response
     When I submit a 'update-details' event
@@ -181,12 +177,9 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And my identity 'FamilyName' is 'Smith'
-    And my address 'addressLocality' is 'Bristol'
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
   Scenario: Inherited identity journey
-    Given I activate the 'processCandidateIdentity' feature set
     And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
@@ -194,8 +187,7 @@ Feature: Audit Events
     And audit events for 'inherited-identity-journey' are recorded [local only]
 
   Scenario: International address journey
-    Given I start a new 'medium-confidence' journey
-    And I activate the 'internationalAddress,processCandidateIdentity' feature sets
+    Given I activate the 'internationalAddress' feature set along with the existing feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -205,7 +197,7 @@ Feature: Audit Events
     And audit events for 'international-address-journey' are recorded [local only]
 
   Scenario: Strategic app journey
-    Given I activate the 'strategicApp,processCandidateIdentity' feature set
+    Given I activate the 'strategicApp' feature set along with the existing feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event

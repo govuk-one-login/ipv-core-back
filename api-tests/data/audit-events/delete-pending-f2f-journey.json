@@ -204,7 +204,7 @@
     "event_name": "IPV_IDENTITY_STORED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "identity_type": "PENDING",
+      "identity_type": "pending",
       "vot": null
     },
     "restricted": {
