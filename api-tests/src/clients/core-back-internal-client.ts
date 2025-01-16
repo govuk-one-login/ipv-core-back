@@ -78,7 +78,7 @@ export const callbackFromStrategicApp = async (
   const response = await fetch(url, {
     method: POST,
     headers: {
-      "Content-Type": "application/json",
+      ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
       ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
     },
@@ -104,7 +104,7 @@ export const pollAsyncDcmaw = async (
   const response = await fetch(url, {
     method: POST,
     headers: {
-      "Content-Type": "application/json",
+      ...internalApiHeaders,
       ...(featureSet ? { "feature-set": featureSet } : {}),
       ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
     },
