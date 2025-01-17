@@ -85,12 +85,24 @@ states:
       lambda: check-reverification-identity
     events:
       found:
-        targetState: IDENTITY_START_PAGE
+        targetState: YOU_CAN_CHOOSE_HOW_YOU_GET_SECURITY_CODES_PAGE
       not-found:
-        targetState: CRI_TICF
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
+
+  YOU_CAN_CHOOSE_HOW_YOU_GET_SECURITY_CODES_PAGE:
+    response:
+      type: page
+      pageId: you-can-change-security-code-method
+    events:
+      next:
+        targetState: IDENTITY_START_PAGE
+      cannot-change-security-codes:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   IDENTITY_START_PAGE:
     response:
@@ -108,7 +120,7 @@ states:
             targetState: ERROR
       end:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
 
   STRATEGIC_APP_TRIAGE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -120,7 +132,7 @@ states:
         targetState: ERROR
       anotherWay:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -134,13 +146,13 @@ states:
         targetState: POST_DCMAW_SUCCESS_PAGE
       not-found:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       access-denied:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       temporarily-unavailable:
         targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
       dl-auth-source-check:
         targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
 
@@ -183,6 +195,14 @@ states:
       type: process
       lambda: call-ticf-cri
     parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
+
+  WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE:
+    response:
+      type: page
+      pageId: we-matched-you-to-your-one-login
     events:
       next:
         targetState: RETURN_TO_RP
