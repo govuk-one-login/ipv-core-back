@@ -79,7 +79,7 @@ Feature: Audit Events
       | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
     Then I get a 'page-face-to-face-handoff' page response
 
-    Given I activate the 'pendingF2FResetEnabled' feature set along with the e
+    Given I activate the 'pendingF2FResetEnabled' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-pending' page response with context 'f2f-delete-details'
     When I submit a 'next' event
@@ -132,7 +132,7 @@ Feature: Audit Events
     And audit events for 'reprove-identity-journey' are recorded [local only]
 
   Scenario: No photo ID
-    Given I activate the 'p1Journeys' feature set along with the existing feature set
+    Given I activate the 'p1Journeys' feature set
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
@@ -187,7 +187,7 @@ Feature: Audit Events
     And audit events for 'inherited-identity-journey' are recorded [local only]
 
   Scenario: International address journey
-    Given I activate the 'internationalAddress' feature set along with the existing feature set
+    Given I activate the 'internationalAddress' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -197,7 +197,7 @@ Feature: Audit Events
     And audit events for 'international-address-journey' are recorded [local only]
 
   Scenario: Strategic app journey
-    Given I activate the 'strategicApp' feature set along with the existing feature set
+    Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
