@@ -307,44 +307,6 @@ states:
             targetJourney: TECHNICAL_ERROR
             targetState: ERROR
 
-  PYI_CRI_ESCAPE:
-    response:
-      type: page
-      pageId: pyi-cri-escape
-    events:
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-
-  PYI_CRI_ESCAPE_NO_F2F:
-    response:
-      type: page
-      pageId: pyi-cri-escape-no-f2f
-    events:
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-
   # Common pages
   KBV_PHOTO_ID:
     nestedJourney: KBVS
@@ -664,24 +626,6 @@ states:
         targetState: INELIGIBLE
 
   # Mitigation journey (02)
-  MITIGATION_02_OPTIONS:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options-no-f2f
-    events:
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
-      end:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE
 
   STRATEGIC_APP_TRIAGE_PYI_ESCAPE:
     nestedJourney: STRATEGIC_APP_TRIAGE
@@ -747,25 +691,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_INCOMPLETE_IDENTITY
-
-  MITIGATION_02_OPTIONS_WITH_F2F:
-    response:
-      type: page
-      pageId: pyi-suggest-other-options
-    events:
-      f2f:
-        targetJourney: F2F_HAND_OFF
-        targetState: START
-      appTriage:
-        targetState: APP_DOC_CHECK_PYI_ESCAPE
-        targetEntryEvent: next
-        checkFeatureFlag:
-          strategicAppEnabled:
-            targetState: STRATEGIC_APP_TRIAGE_PYI_ESCAPE
-        checkIfDisabled:
-          dcmaw:
-            targetJourney: TECHNICAL_ERROR
-            targetState: ERROR
 
   MITIGATION_KBV_FAIL_PHOTO_ID:
     response:
