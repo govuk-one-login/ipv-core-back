@@ -53,7 +53,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COI_CHECK_GIVEN_NAME_CHARS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_FRAUD_CHECK_UNAVAILABLE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.BAV;
@@ -1441,29 +1440,6 @@ class UserIdentityServiceTest {
         var userIdentity =
                 userIdentityService.generateUserIdentity(
                         List.of(), "test-sub", Vot.P0, Vot.P2, contraIndicators);
-
-        // Assert
-        assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
-        verify(mockConfigService, never()).getParameter(RETURN_CODES_ALWAYS_REQUIRED);
-    }
-
-    @Test
-    void generateUserIdentityShouldSetRequiredExitCodeWhenFraudCheckUnavailable() throws Exception {
-        // Arrange
-        when(mockConfigService.getParameter(RETURN_CODES_FRAUD_CHECK_UNAVAILABLE)).thenReturn("🐧");
-
-        var vcs =
-                List.of(
-                        PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
-                        vcFraudApplicableAuthoritativeSourceFailed(),
-                        VC_ADDRESS);
-
-        mockParamStoreCalls(paramsToMockForP2);
-
-        // Act
-        var userIdentity =
-                userIdentityService.generateUserIdentity(
-                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
 
         // Assert
         assertEquals(List.of(new ReturnCode("🐧")), userIdentity.getReturnCode());
