@@ -14,9 +14,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
@@ -25,10 +29,7 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 
@@ -38,8 +39,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -68,6 +68,7 @@ class UserReverificationHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
+    @Mock private AuditService mockAuditService;
     @InjectMocks private UserReverificationHandler userReverificationHandler;
 
     private IpvSessionItem ipvSessionItem;
@@ -102,12 +103,18 @@ class UserReverificationHandlerTest {
         ReverificationResponse reverificationResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(true, reverificationResponse.success());
+        assertTrue(reverificationResponse.success());
         assertEquals(TEST_USER_ID, reverificationResponse.sub());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent auditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_REVERIFY_END, auditEvent.getEventName());
+        assertEquals(new AuditExtensionReverification(true, null), auditEvent.getExtensions());
     }
 
     @Test
@@ -131,7 +138,7 @@ class UserReverificationHandlerTest {
         ReverificationResponse reverificationResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(false, reverificationResponse.success());
+        assertFalse(reverificationResponse.success());
         assertEquals(TEST_USER_ID, reverificationResponse.sub());
         assertEquals(
                 ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE.getFailureCode(),
@@ -140,6 +147,14 @@ class UserReverificationHandlerTest {
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
         verify(mockSessionCredentialsService, times(1))
                 .deleteSessionCredentials(TEST_IPV_SESSION_ID);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent auditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_REVERIFY_END, auditEvent.getEventName());
+        assertEquals(
+                new AuditExtensionReverification(false, "identity_check_incomplete"),
+                auditEvent.getExtensions());
     }
 
     static Stream<Arguments> returnCodesTestCases() {
@@ -171,10 +186,18 @@ class UserReverificationHandlerTest {
         ReverificationResponse reverificationResponse =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(false, reverificationResponse.success());
+        assertFalse(reverificationResponse.success());
         assertEquals(failureCode.getFailureCode(), reverificationResponse.failureCode());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        AuditEvent auditEvent = auditEventCaptor.getValue();
+        assertEquals(AuditEventTypes.IPV_REVERIFY_END, auditEvent.getEventName());
+        assertEquals(
+                new AuditExtensionReverification(false, failureCode.getFailureCode()),
+                auditEvent.getExtensions());
     }
 
     @Test
@@ -199,6 +222,9 @@ class UserReverificationHandlerTest {
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
     }
 
     @Test
@@ -218,6 +244,9 @@ class UserReverificationHandlerTest {
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
     }
 
     @Test
@@ -242,6 +271,9 @@ class UserReverificationHandlerTest {
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
     }
 
     @Test
@@ -267,6 +299,9 @@ class UserReverificationHandlerTest {
         verify(mockUserIdentityService, never())
                 .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
     }
 
     @Test
@@ -300,6 +335,9 @@ class UserReverificationHandlerTest {
         verify(mockUserIdentityService, never())
                 .generateUserIdentity(any(), any(), any(), any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(0)).sendAuditEvent(auditEventCaptor.capture());
     }
 
     @Test
