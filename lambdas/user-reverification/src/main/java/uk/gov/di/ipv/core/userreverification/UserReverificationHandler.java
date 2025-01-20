@@ -46,6 +46,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
     private static final ReverificationFailureCode DEFAULT_FAILURE_CODE =
             ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE;
 
+    @ExcludeFromGeneratedCoverageReport
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,
