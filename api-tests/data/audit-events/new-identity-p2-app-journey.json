@@ -142,7 +142,7 @@
         }
       ],
       "successful": true,
-      "age": 59
+      "age": "type[number]"
     },
     "restricted": {
       "device_information": {}
