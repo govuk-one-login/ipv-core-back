@@ -11,6 +11,23 @@
     }
   },
   {
+    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "REUSE_EXISTING_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_GPG45_PROFILE_MATCHED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
@@ -27,23 +44,6 @@
         "verification": 3
       },
       "vcTxnIds": []
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
-    "component_id": "https://identity.local.account.gov.uk",
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_SUBJOURNEY_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "journey_type": "REUSE_EXISTING_IDENTITY"
     },
     "restricted": {
       "device_information": {}
@@ -109,6 +109,23 @@
     }
   },
   {
+    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "REUSE_EXISTING_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_GPG45_PROFILE_MATCHED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
@@ -125,23 +142,6 @@
         "verification": 3
       },
       "vcTxnIds": []
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
-    "component_id": "https://identity.local.account.gov.uk",
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_SUBJOURNEY_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "journey_type": "REUSE_EXISTING_IDENTITY"
     },
     "restricted": {
       "device_information": {}

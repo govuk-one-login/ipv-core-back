@@ -73,7 +73,7 @@ Feature: Inherited Identity
     | inherited-identity                |
     | alice-vot-pcl200-no-evidence      |
     | kenneth-vot-pcl250-driving-permit |
-#
+
   Scenario Outline: Previous <old-identity> is <is-replaced> with new <new-identity> for the same user
     Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity '<old-details>'
     Then I get an OAuth response

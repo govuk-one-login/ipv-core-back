@@ -173,6 +173,26 @@ states:
     events:
       next:
         targetState: CHECK_COI
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_REVERIFICATION_IDENTITY
+
+  PROCESS_REVERIFICATION_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: REVERIFICATION
+    parent: CRI_TICF_STATE
+    events:
+      next:
+        targetState: RETURN_TO_RP
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   CHECK_COI:
     response:

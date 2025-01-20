@@ -74,6 +74,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STOR
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.EXISTING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.PENDING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.REVERIFICATION;
@@ -119,7 +120,7 @@ public class ProcessCandidateIdentityHandler
 
     // Candidate identities that should match a profile
     private static final Set<CandidateIdentityType> PROFILE_MATCHING_TYPES =
-            EnumSet.of(NEW, UPDATE);
+            EnumSet.of(NEW, UPDATE, EXISTING);
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessCandidateIdentityHandler() {

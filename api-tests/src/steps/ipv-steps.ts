@@ -111,9 +111,18 @@ const startNewJourney = async (
 };
 
 When(
-  "I activate the {string} feature set(s)",
-  function (this: World, featureSet: string) {
-    this.featureSet = featureSet;
+  /I (override the existing feature set(?:s)? and )?activate the '([\w,]+)' feature set(?:s)?/,
+  function (
+    this: World,
+    overrideExistingFeatureSets:
+      | "override the existing feature set and "
+      | "override the existing feature sets and "
+      | undefined,
+    featureSet: string,
+  ) {
+    this.featureSet = overrideExistingFeatureSets
+      ? featureSet
+      : this.featureSet + "," + featureSet;
   },
 );
 

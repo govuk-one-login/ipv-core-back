@@ -167,16 +167,6 @@
     }
   },
   {
-    "event_name": "IPV_SUBJOURNEY_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "journey_type": "EVALUATE_SCORES"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
