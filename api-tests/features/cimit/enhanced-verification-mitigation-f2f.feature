@@ -20,7 +20,7 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
     When I submit 'kenneth-needs-enhanced-verification' details with attributes to the CRI stub
       | Attribute          | Values                                          |
       | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
-    Then I get a 'pyi-suggest-other-options' page response
+    Then I get a 'photo-id-security-questions-find-another-way' page response
 
   Rule: Same session journeys
 
