@@ -28,6 +28,18 @@ Feature: Repeat fraud check failures
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
+    Scenario: Applicable authoritative source failed check evidence too weak
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-no-applicable' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
     Scenario: User is able to delete account from update-details-failed screen
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid'

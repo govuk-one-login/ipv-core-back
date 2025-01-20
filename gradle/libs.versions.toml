@@ -2,7 +2,7 @@
 awsSdk = "2.29.1"
 jackson = "2.18.0"
 log4j = "2.24.0"
-mockito = "5.14.0"
+mockito = "5.15.2"
 pact = "4.6.5"
 powertools = "1.18.0"
 
@@ -18,7 +18,7 @@ awsSdkSqs = { module = "software.amazon.awssdk:sqs" }
 awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-client" }
 commonsCodec = "commons-codec:commons-codec:1.17.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
-diVocab = "uk.gov.di.model:di-data-model-jackson:v1.7.1"
+diVocab = "uk.gov.di.model:di-data-model-jackson:v1.9.0"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
@@ -32,7 +32,7 @@ log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.20"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.21"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.10.0-alpha"
 openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }
@@ -52,4 +52,4 @@ awsLambda = ["awsLambdaJavaCore", "awsLambdaJavaEvents"]
 [plugins]
 postCompileWeaving = "io.freefair.aspectj.post-compile-weaving:8.11"
 sonar = "org.sonarqube:5.1.0.4882"
-spotless = "com.diffplug.spotless:6.25.0"
+spotless = "com.diffplug.spotless:7.0.1"

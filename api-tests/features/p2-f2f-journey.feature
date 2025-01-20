@@ -36,7 +36,6 @@ Feature: P2 F2F journey
       Then I get a 'pyi-confirm-delete-details' page response with context 'f2f'
       When I submit a 'next' event
       Then I get a 'pyi-details-deleted' page response with context 'f2f'
-      And an 'IPV_F2F_USER_CANCEL_START' audit event was recorded [local only]
 
     Scenario: Pending F2F request continue without delete identity
       # Initial journey
@@ -80,7 +79,6 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
       Examples:
         | doc      | details                      |
@@ -115,7 +113,6 @@ Feature: P2 F2F journey
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
-      And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
       Examples:
         | doc      | details                      |

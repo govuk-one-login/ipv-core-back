@@ -23,11 +23,13 @@ dependencies {
 			project(":lambdas:check-coi"),
 			project(":lambdas:check-existing-identity"),
 			project(":lambdas:check-gpg45-score"),
+			project(":lambdas:check-mobile-app-vc-receipt"),
 			project(":lambdas:check-reverification-identity"),
 			project(":lambdas:evaluate-gpg45-scores"),
 			project(":lambdas:initialise-ipv-session"),
 			project(":lambdas:issue-client-access-token"),
 			project(":lambdas:process-async-cri-credential"),
+			project(":lambdas:process-candidate-identity"),
 			project(":lambdas:process-cri-callback"),
 			project(":lambdas:process-journey-event"),
 			project(":lambdas:process-mobile-app-callback"),
@@ -41,11 +43,8 @@ dependencies {
 			project(":libs:gpg45-evaluator"),
 			project(":libs:user-identity-service"),
 			project(":libs:verifiable-credentials"),
-			project(":libs:oauth-key-service")
-}
-
-run.doFirst {
-	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
+			project(":libs:oauth-key-service"),
+			project(":libs:ticf-cri-service")
 }
 
 java {
@@ -58,6 +57,11 @@ application {
 	applicationDefaultJvmArgs = [
 		"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002"
 	]
+}
+
+tasks.named('run', JavaExec) {
+	environment 'AWS_EMF_ENVIRONMENT', 'Local'
+	environment 'AWS_XRAY_CONTEXT_MISSING', 'IGNORE_ERROR'
 }
 
 sonar {

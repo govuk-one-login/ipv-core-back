@@ -11,6 +11,9 @@ states:
     events:
       next:
         targetState: CRI_TICF_BEFORE_ERROR
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   ERROR_NO_TICF:
     events:
@@ -35,6 +38,33 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+      error:
+        targetState: ERROR_PAGE
+
+  PROCESS_INCOMPLETE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: INCOMPLETE
+    events:
+      next:
+        targetState: ERROR_PAGE
+      coi-check-failed:
+        targetState: ERROR_PAGE
+      vcs-not-correlated:
+        targetState: ERROR_PAGE
+      profile-unmet:
+        targetState: ERROR_PAGE
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetState: ERROR_PAGE
+      alternate-doc-invalid-dl:
+        targetState: ERROR_PAGE
+      alternate-doc-invalid-passport:
+        targetState: ERROR_PAGE
       error:
         targetState: ERROR_PAGE
 

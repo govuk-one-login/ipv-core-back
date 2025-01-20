@@ -29,7 +29,6 @@ Feature: Identity reuse update details
         Then I get a 'P2' identity
         And my identity 'GivenName' is '<expected-given-name>'
         And my identity 'FamilyName' is '<expected-family-name>'
-        And an 'IPV_USER_DETAILS_UPDATE_END' audit event was recorded [local only]
 
     Examples:
         | selected-name-change | actual-name-change | details                                          | fraud-details                       | expected-given-name | expected-family-name |
@@ -124,4 +123,3 @@ Feature: Identity reuse update details
         Then I get a 'update-name-date-birth' page response with context 'reuse'
         When I submit a 'continue' event
         Then I get an OAuth response
-        And an 'IPV_USER_DETAILS_UPDATE_ABORTED' audit event was recorded [local only]

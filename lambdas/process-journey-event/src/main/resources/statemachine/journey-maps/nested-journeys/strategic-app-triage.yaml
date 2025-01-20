@@ -41,8 +41,8 @@ nestedJourneyStates:
         targetState: DAD_ANDROID_START_SESSION
       neither:
         targetState: DAD_SELECT_SMARTPHONE_EXIT_BUFFER
-        checkFeatureFlag:
-          internationalAddressEnabled:
+        checkJourneyContext:
+          internationalAddress:
             targetState: DAD_SELECT_SMARTPHONE_NON_UK_NO_APP_OPTIONS
 
   DAD_SELECT_SMARTPHONE_EXIT_BUFFER:
@@ -89,8 +89,8 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkFeatureFlag:
-          internationalAddressEnabled:
+        checkJourneyContext:
+          internationalAddress:
             targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
@@ -115,8 +115,8 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkFeatureFlag:
-          internationalAddressEnabled:
+        checkJourneyContext:
+          internationalAddress:
             targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
@@ -200,8 +200,8 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkFeatureFlag:
-          internationalAddressEnabled:
+        checkJourneyContext:
+          internationalAddress:
             targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay
@@ -226,8 +226,8 @@ nestedJourneyStates:
         targetState: CHECK_MOBILE_APP_RESULT
       preferNoApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkFeatureFlag:
-          internationalAddressEnabled:
+        checkJourneyContext:
+          internationalAddress:
             targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
       anotherWay:
         exitEventToEmit: anotherWay

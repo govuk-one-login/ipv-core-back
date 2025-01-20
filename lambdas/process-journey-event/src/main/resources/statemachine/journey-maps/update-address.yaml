@@ -73,9 +73,17 @@ states:
     exitEvents:
       next:
         targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_UPDATE_IDENTITY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
+      fraud-fail-with-no-ci:
+        targetState: EVALUATE_GPG45_SCORES_UPDATE_ADDRESS
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_UPDATE_IDENTITY
 
   EVALUATE_GPG45_SCORES_UPDATE_ADDRESS:
     response:
@@ -130,6 +138,44 @@ states:
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
+
+  PROCESS_UPDATE_IDENTITY:
+    response:
+      type: process
+      lambda: process-candidate-identity
+      lambdaInput:
+        identityType: UPDATE
+    events:
+      next:
+        targetState: IPV_SUCCESS_PAGE_UPDATE_ADDRESS
+        auditEvents:
+          - IPV_USER_DETAILS_UPDATE_END
+        auditContext:
+          successful: true
+      coi-check-failed:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      profile-unmet:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      enhanced-verification:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      alternate-doc-invalid-passport:
+        targetJourney: FAILED
+        targetState: FAILED_NO_TICF
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   IPV_SUCCESS_PAGE_UPDATE_ADDRESS:
     response:

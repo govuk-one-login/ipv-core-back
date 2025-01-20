@@ -8,12 +8,14 @@ import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
+import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.MobileAppJourneyType;
 import uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnknownCoiCheckTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownResetTypeException;
 
 import java.util.Arrays;
@@ -26,6 +28,7 @@ import java.util.stream.Stream;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_BAD_REQUEST;
 import static software.amazon.awssdk.utils.StringUtils.isBlank;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_CHECK_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_RESET_TYPE;
 
 public class RequestHelper {
@@ -185,6 +188,17 @@ public class RequestHelper {
             return CoiCheckType.valueOf(checkType);
         } catch (IllegalArgumentException e) {
             throw new UnknownCoiCheckTypeException(checkType);
+        }
+    }
+
+    public static CandidateIdentityType getProcessIdentityType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody, UnknownProcessIdentityTypeException {
+        String checkType =
+                extractValueFromLambdaInput(request, IDENTITY_TYPE, MISSING_PROCESS_IDENTITY_TYPE);
+        try {
+            return CandidateIdentityType.valueOf(checkType);
+        } catch (IllegalArgumentException e) {
+            throw new UnknownProcessIdentityTypeException(checkType);
         }
     }
 

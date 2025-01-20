@@ -1,0 +1,104 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "reprove_identity": false,
+      "vtr": ["P2"]
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "NEW_P2_IDENTITY"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CRI_AUTH_RESPONSE_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "error_code": "access_denied",
+      "error_description": "No error description provided"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://driving-license-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 0,
+          "ci": ["NEEDS-ALTERNATE-DOC"],
+          "failedCheckDetails": [
+            {
+              "checkMethod": "data",
+              "identityCheckPolicy": "published"
+            }
+          ],
+          "strengthScore": 3,
+          "type": "IdentityCheck",
+          "validityScore": 0
+        }
+      ],
+      "successful": false,
+      "isUkIssued": true,
+      "age": "type[number]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "drivingLicence",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_MITIGATION_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "mitigation_type": "invalid-dl"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  }
+]

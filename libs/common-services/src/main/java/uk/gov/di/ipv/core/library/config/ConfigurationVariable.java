@@ -45,6 +45,7 @@ public enum ConfigurationVariable {
     OAUTH_KEY_CACHE_DURATION_MINS("self/oauthKeyCacheDurationMins"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     RETURN_CODES_ALWAYS_REQUIRED("self/returnCodes/alwaysRequired"),
+    RETURN_CODES_FRAUD_CHECK_UNAVAILABLE("self/returnCodes/fraudCheckUnavailable"),
     RETURN_CODES_NON_CI_BREACHING_P0("self/returnCodes/nonCiBreachingP0"),
     SESSION_CREDENTIALS_TTL("self/sessionCredentialTtl"),
     SIGNING_KEY_ID("self/signingKeyId"),

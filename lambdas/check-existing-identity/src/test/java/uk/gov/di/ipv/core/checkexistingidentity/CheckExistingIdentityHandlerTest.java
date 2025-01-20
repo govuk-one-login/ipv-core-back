@@ -638,6 +638,88 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        var vcs = List.of(vcDcmawAsync());
+        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                .thenReturn(
+                        new AsyncCriStatus(
+                                DCMAW_ASYNC, AsyncCriStatus.STATUS_PENDING, false, true, false));
+        Mockito.lenient().when(configService.enabled(P1_JOURNEYS_ENABLED)).thenReturn(true);
+        when(mockEvcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(PENDING_RETURN, vcs));
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+        clientOAuthSessionItem.setVtr(vtr);
+
+        // Act
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        // Assert
+        assertEquals(expectedJourney, journeyResponse);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(mockSessionCredentialService).persistCredentials(vcs, TEST_SESSION_ID, false);
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        assertEquals(expectedIdentity, ipvSessionItem.getTargetVot());
+    }
+
+    static Stream<Arguments> lowAndMediumConfidenceVtrs() {
+        return Stream.of(
+                Arguments.of(
+                        List.of(Vot.P1.name(), Vot.P2.name()),
+                        JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW,
+                        Vot.P1),
+                Arguments.of(
+                        List.of(Vot.P2.name()), JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM, Vot.P2));
+    }
+
+    @Test
+    void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
+            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException, EvcsServiceException {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of(PENDING_RETURN, List.of(vcDcmawAsync())));
+        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
+                .thenReturn(emptyAsyncCriStatus);
+        when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
+
+        // Act
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        // Assert
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM, journeyResponse);
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionItem, never()).setVot(any());
+        assertNull(ipvSessionItem.getVot());
+        assertEquals(P2, ipvSessionItem.getTargetVot());
+    }
+
+    @ParameterizedTest
+    @MethodSource("lowAndMediumConfidenceVtrs")
+    void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
+            List<String> vtr, JourneyResponse expectedJourney, Vot expectedIdentity)
+            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
+        // Arrange
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, DCMAW_ASYNC))
                 .thenReturn(
                         CriResponseItem.builder().oauthState(TEST_CRI_OAUTH_SESSION_ID).build());

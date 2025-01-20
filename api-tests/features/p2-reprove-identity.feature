@@ -24,9 +24,6 @@ Feature: Reprove Identity Journey
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
-        And an 'IPV_ACCOUNT_INTERVENTION_START' audit event was recorded [local only]
-        And an 'IPV_ACCOUNT_INTERVENTION_END' audit event was recorded [local only]
 
     Scenario: User reproves with F2F
         Given the subject already has the following credentials
@@ -59,7 +56,6 @@ Feature: Reprove Identity Journey
         Then I get an OAuth response
         When I use the OAuth response to get my identity
         Then I get a 'P2' identity
-        And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
     Scenario: User needs to reprove their identity with F2F pending
         Given I start a new 'medium-confidence' journey
@@ -112,9 +108,6 @@ Feature: Reprove Identity Journey
                 | Attribute          | Values                                          |
                 | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
             Then I get a 'page-face-to-face-handoff' page response
-            And an 'IPV_ACCOUNT_INTERVENTION_START' audit event was recorded [local only]
-            And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_START' audit event was recorded [local only]
-            And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_END' audit event was recorded [local only]
 
             # Return journey after popping out to the Post Office
             When I start a new 'medium-confidence' journey with reprove identity and return to a 'page-ipv-reuse' page response
@@ -122,8 +115,6 @@ Feature: Reprove Identity Journey
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I get a 'P2' identity
-            And an 'IPV_ACCOUNT_INTERVENTION_START' audit event was recorded [local only]
-            And an 'IPV_ACCOUNT_INTERVENTION_END' audit event was recorded [local only]
 
         Scenario: Reproving with F2F journey with different identity fails COI check
             When I submit 'lora' details to the CRI stub
@@ -136,7 +127,3 @@ Feature: Reprove Identity Journey
             Then I get an OAuth response
             When I use the OAuth response to get my identity
             Then I get a 'P0' identity
-            And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_START' audit event was recorded [local only]
-            And an 'IPV_CONTINUITY_OF_IDENTITY_CHECK_END' audit event was recorded [local only]
-            And an 'IPV_ACCOUNT_INTERVENTION_START' audit event was recorded [local only]
-            And an 'IPV_ACCOUNT_INTERVENTION_END' audit event was recorded [local only]

@@ -69,6 +69,58 @@ export const sendJourneyEvent = async (
   return (await response.json()) as JourneyEngineResponse;
 };
 
+export const callbackFromStrategicApp = async (
+  oauthState: string,
+  ipvSessionId: string | undefined,
+  featureSet: string | undefined,
+): Promise<JourneyEngineResponse> => {
+  const url = `${config.core.internalApiUrl}/app/callback`;
+  const response = await fetch(url, {
+    method: POST,
+    headers: {
+      ...internalApiHeaders,
+      ...(featureSet ? { "feature-set": featureSet } : {}),
+      ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
+    },
+    body: JSON.stringify({ state: oauthState }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `callbackFromStrategicApp request failed: ${response.statusText}`,
+    );
+  }
+
+  const body = await response.json();
+
+  return await sendJourneyEvent(body?.journey, ipvSessionId, featureSet);
+};
+
+export const pollAsyncDcmaw = async (
+  ipvSessionId: string | undefined,
+  featureSet: string | undefined,
+): Promise<JourneyResponse | undefined> => {
+  const url = `${config.core.internalApiUrl}/app/check-vc-receipt`;
+  const response = await fetch(url, {
+    method: GET,
+    headers: {
+      ...internalApiHeaders,
+      ...(featureSet ? { "feature-set": featureSet } : {}),
+      ...(ipvSessionId ? { "ipv-session-id": ipvSessionId } : {}),
+    },
+  });
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  if (response.status === 404) {
+    return;
+  }
+
+  throw new Error(`pollAsyncDcmaw request failed: ${response.statusText}`);
+};
+
 export const processCriCallback = async (
   requestBody: ProcessCriCallbackRequest,
   ipvSessionId: string | undefined,

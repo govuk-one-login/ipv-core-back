@@ -82,6 +82,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/check-reverification-identity",
           "Next": "CheckReverificationIdentityLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/process-candidate-identity",
+          "Next": "ProcessCandidateIdentityLambda"
         }
       ],
       "Default": "Success"
@@ -289,6 +294,23 @@
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney",
+      "Retry": [{
+        "ErrorEquals": ["Lambda.SnapStartNotReadyException"],
+        "IntervalSeconds": 1,
+        "BackoffRate": 2,
+        "MaxAttempts": 5,
+        "MaxDelaySeconds": 4
+      }]
+    },
+    "ProcessCandidateIdentityLambda": {
+      "Type": "Task",
+      "Resource": "${ProcessCandidateIdentityFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet",
+        "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney",
       "Retry": [{

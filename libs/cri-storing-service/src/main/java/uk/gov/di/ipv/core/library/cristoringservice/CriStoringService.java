@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -22,6 +21,7 @@ import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -40,7 +40,6 @@ import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class CriStoringService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -142,7 +141,7 @@ public class CriStoringService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+            throws VerifiableCredentialException, CiPostMitigationsException, CiPutException,
                     UnrecognisedVotException {
         var userId = clientOAuthSessionItem.getUserId();
         var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
@@ -150,6 +149,31 @@ public class CriStoringService {
         var auditEventUser =
                 new AuditEventUser(
                         userId, ipvSessionItem.getIpvSessionId(), govukSigninJourneyId, ipAddress);
+
+        storeVcs(
+                cri,
+                ipAddress,
+                deviceInformation,
+                vcs,
+                clientOAuthSessionItem,
+                ipvSessionItem,
+                sessionVcs,
+                auditEventUser);
+    }
+
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
+    public void storeVcs(
+            Cri cri,
+            String ipAddress,
+            String deviceInformation,
+            List<VerifiableCredential> vcs,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            IpvSessionItem ipvSessionItem,
+            List<VerifiableCredential> sessionVcs,
+            AuditEventUser auditEventUser)
+            throws CiPutException, CiPostMitigationsException, VerifiableCredentialException,
+                    UnrecognisedVotException {
+        var govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         List<VerifiableCredential> mitigationVcList = new ArrayList<>(sessionVcs);
 
@@ -200,9 +224,7 @@ public class CriStoringService {
 
         var criId = cri.getId();
         LOGGER.info(
-                new StringMapMessage()
-                        .with(
-                                LOG_LAMBDA_RESULT.getFieldName(),
+                LogHelper.buildLogMessage(
                                 String.format(
                                         "Successfully processed %s CRI credential.",
                                         criResourceRetrievedType))

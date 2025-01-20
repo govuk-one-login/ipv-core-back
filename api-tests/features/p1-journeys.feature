@@ -19,7 +19,6 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Passport after DCMAW dropout
     Given I activate the 'p1Journeys' feature set
@@ -47,7 +46,6 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Driving Licence after DCMAW dropout
     Given I activate the 'p1Journeys' feature set
@@ -75,7 +73,6 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 Face to Face after DCMAW dropout
     Given I activate the 'p1Journeys' feature set
@@ -134,7 +131,6 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 DCMAW after KBV dropout Journey
     Given I activate the 'p1Journeys' feature set
@@ -170,7 +166,6 @@ Feature: P1 journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 F2F Journey
     Given I activate the 'p1Journeys' feature set

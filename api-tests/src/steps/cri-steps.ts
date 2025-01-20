@@ -1,4 +1,4 @@
-import { DataTable, When } from "@cucumber/cucumber";
+import { DataTable, Then, When } from "@cucumber/cucumber";
 import { World } from "../types/world.js";
 import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
@@ -25,6 +25,11 @@ import {
 } from "../types/cri-stub.js";
 import { getRandomString } from "../utils/random-string-generator.js";
 import assert from "assert";
+import {
+  callbackFromStrategicApp,
+  pollAsyncDcmaw,
+} from "../clients/core-back-internal-client.js";
+import config from "../config/config.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
@@ -433,6 +438,124 @@ When(
     );
     for (const credential of credentials) {
       await cimitStubClient.postDetectCi({ signed_jwt: credential });
+    }
+  },
+);
+
+const postToEnqueue = async (body: object) => {
+  const response = await fetch(
+    `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
+    {
+      method: "POST",
+      body: JSON.stringify(body),
+      redirect: "manual",
+    },
+  );
+
+  if (response.status !== 201) {
+    throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
+  }
+
+  const responsePayload = await response.json();
+  if (
+    !responsePayload.oauthState ||
+    typeof responsePayload.oauthState !== "string"
+  ) {
+    throw new Error(
+      `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
+    );
+  }
+  return responsePayload.oauthState;
+};
+
+When(
+  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
+  async function (
+    this: World,
+    testUser: string,
+    documentType: string,
+    evidenceType: string,
+    hasCi: " with a CI" | undefined,
+  ): Promise<void> {
+    this.oauthState = await postToEnqueue({
+      user_id: this.userId,
+      test_user: testUser,
+      document_type: documentType,
+      evidence_type: evidenceType,
+      queue_name: config.asyncQueue.name,
+      ci: hasCi && ["BREACHING"],
+    });
+  },
+);
+
+When(
+  /^I pass on the DCMAW callback( in a separate session)?$/,
+  async function (
+    this: World,
+    separateSession: " in a separate session" | undefined,
+  ): Promise<void> {
+    // If we've asked the stub to create a VC for us, we will already have the OAuth state.
+    if (!this.oauthState) {
+      // If we post to the stub's Enqueue endpoint without specifying VC details it just returns the OAuth state to us.
+      this.oauthState = await postToEnqueue({
+        user_id: this.userId,
+      });
+    }
+
+    if (!this.oauthState) {
+      throw new Error("Oauth state must not be undefined");
+    }
+
+    this.lastJourneyEngineResponse = await callbackFromStrategicApp(
+      this.oauthState,
+      separateSession ? undefined : this.ipvSessionId,
+      this.featureSet,
+    );
+  },
+);
+
+When(
+  "I poll for async DCMAW credential receipt",
+  async function (this: World): Promise<void> {
+    let numberOfAttempts = 0;
+    while (numberOfAttempts < 10 && !this.strategicAppPollResult) {
+      this.strategicAppPollResult = await pollAsyncDcmaw(
+        this.ipvSessionId,
+        this.featureSet,
+      );
+      numberOfAttempts++;
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  },
+);
+
+When(
+  "I submit the returned journey event",
+  async function (this: World): Promise<void> {
+    if (!this.strategicAppPollResult?.journey) {
+      throw new Error("Poll result must have a journey event.");
+    }
+
+    this.lastJourneyEngineResponse = await internalClient.sendJourneyEvent(
+      this.strategicAppPollResult.journey,
+      this.ipvSessionId,
+      this.featureSet,
+      this.clientOAuthSessionId,
+    );
+  },
+);
+
+Then(
+  /^the poll returns a '(\d+)'$/,
+  async function (this: World, statusCode: number): Promise<void> {
+    // Assuming the poll fails whenever the status is not OK or Not Found.
+    // These cases are distinguished by whether a body was returned or not.
+    if (statusCode === 201 && !this.strategicAppPollResult?.journey) {
+      throw new Error("Poll should returned a journey.");
+    }
+    if (statusCode === 404 && this.strategicAppPollResult?.journey) {
+      throw new Error("Poll should have not returned a journey.");
     }
   },
 );

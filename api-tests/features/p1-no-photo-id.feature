@@ -31,7 +31,6 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 No Photo Id after DCMAW dropout Journey
     Given I activate the 'p1Journeys' feature set
@@ -65,7 +64,6 @@ Feature: P1 No Photo Id Journey
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P1' identity
-    And an 'IPV_IDENTITY_ISSUED' audit event was recorded [local only]
 
   Scenario: P1 No Photo Id Journey - NINO dropout
     Given I activate the 'p1Journeys,dwpKbvTest' feature sets

@@ -30,11 +30,6 @@ public class VotMatcher {
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CimitUtilityService cimitUtilityService;
 
-    public VotMatcher(
-            UserIdentityService userIdentityService, Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
-        this(userIdentityService, gpg45ProfileEvaluator, null);
-    }
-
     public Optional<VotMatchingResult> matchFirstVot(
             List<Vot> vots,
             List<VerifiableCredential> vcs,
@@ -58,6 +53,7 @@ public class VotMatcher {
                 return Optional.of(new VotMatchingResult(vot, null, null));
             }
         }
+        LOGGER.info(LogHelper.buildLogMessage("No profiles met"));
         return Optional.empty();
     }
 
@@ -66,10 +62,14 @@ public class VotMatcher {
             List<VerifiableCredential> gpg45Vcs,
             Gpg45Scores gpg45Scores,
             List<ContraIndicator> contraIndicators) {
+
+        var isFraudScoreRequired = !VcHelper.isFraudCheckUnavailable(gpg45Vcs);
+        var achievableProfiles = requestedVot.getSupportedGpg45Profiles(isFraudScoreRequired);
+
         Optional<Gpg45Profile> matchedGpg45Profile =
                 !userIdentityService.checkRequiresAdditionalEvidence(gpg45Vcs)
                         ? gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, requestedVot.getSupportedGpg45Profiles())
+                                gpg45Scores, achievableProfiles)
                         : Optional.empty();
 
         if (matchedGpg45Profile.isEmpty() || isBreaching(contraIndicators, requestedVot)) {
