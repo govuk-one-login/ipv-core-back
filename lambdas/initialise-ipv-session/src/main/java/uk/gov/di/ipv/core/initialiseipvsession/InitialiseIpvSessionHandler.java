@@ -238,6 +238,15 @@ public class InitialiseIpvSessionHandler
 
             auditService.sendAuditEvent(auditEvent);
 
+            if (isReverification) {
+                AuditEvent reverificationAuditEvent =
+                        AuditEvent.createWithoutDeviceInformation(
+                                AuditEventTypes.IPV_REVERIFY_START,
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser);
+                auditService.sendAuditEvent(reverificationAuditEvent);
+            }
+
             if (Boolean.TRUE.equals(isReproveIdentity)) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithoutDeviceInformation(

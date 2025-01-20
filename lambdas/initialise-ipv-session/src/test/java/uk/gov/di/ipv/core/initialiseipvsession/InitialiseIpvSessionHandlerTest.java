@@ -252,6 +252,53 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     @Test
+    void shouldReturnIpvSessionIdGivenValidReverificationRequest() throws Exception {
+        // Arrange
+        signedJWT = getSignedJWT(getValidClaimsBuilder("reverification"));
+        signedEncryptedJwt = getJwe(signedJWT);
+
+        validEvent.setBody(
+                OBJECT_MAPPER.writeValueAsString(
+                        Map.of(
+                                "clientId",
+                                "test-client",
+                                "request",
+                                signedEncryptedJwt.serialize())));
+        validEvent.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
+
+        when(mockConfigService.enabled(MFA_RESET)).thenReturn(Boolean.TRUE);
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), anyBoolean()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(
+                        any(), any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenReturn(signedJWT.getJWTClaimsSet());
+
+        // Act
+        APIGatewayProxyResponseEvent response =
+                initialiseIpvSessionHandler.handleRequest(validEvent, mockContext);
+
+        // Assert
+        Map<String, Object> responseBody =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var auditEventsCaptured = auditEventCaptor.getAllValues();
+
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventsCaptured.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_REVERIFY_START, auditEventsCaptured.get(1).getEventName());
+
+        verify(mockClientOAuthSessionDetailsService)
+                .generateClientSessionDetails(any(), any(), any(), stringArgumentCaptor.capture());
+        assertEquals(TEST_EVCS_ACCESS_TOKEN, stringArgumentCaptor.getValue());
+    }
+
+    @Test
     void shouldReturnIpvSessionIdAndSendAuditEventWhenProvidedValidReproveRequest()
             throws JsonProcessingException, JarValidationException, ParseException {
         // Arrange
@@ -1464,6 +1511,10 @@ class InitialiseIpvSessionHandlerTest {
     }
 
     private static JWTClaimsSet.Builder getValidClaimsBuilder() {
+        return getValidClaimsBuilder("openid");
+    }
+
+    private static JWTClaimsSet.Builder getValidClaimsBuilder(String scope) {
         return new JWTClaimsSet.Builder()
                 .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
                 .issueTime(new Date())
@@ -1476,7 +1527,7 @@ class InitialiseIpvSessionHandlerTest {
                 .claim(STATE, "test-state")
                 .claim(CLIENT_ID, "test-client")
                 .claim(VTR, List.of("P2", "PCL200"))
-                .claim(SCOPE, "openid")
+                .claim(SCOPE, scope)
                 .claim(
                         CLAIMS,
                         Map.of(
