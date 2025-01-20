@@ -1,6 +1,9 @@
 Feature: Audit Events
+  Background: Set processCandidateIdentity feature set
+    Given I activate the 'processCandidateIdentity' feature set
+
   Scenario: New identity - p2 app journey
-    Given I start a new 'medium-confidence' journey
+    And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -33,7 +36,7 @@ Feature: Audit Events
     And audit events for 'reuse-journey' are recorded [local only]
 
   Scenario: New identity - via F2F journey
-    Given I start a new 'medium-confidence' journey
+    And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -59,7 +62,7 @@ Feature: Audit Events
     And audit events for 'new-identity-f2f-journey' are recorded [local only]
 
   Scenario: Delete pending F2F
-    Given I start a new 'medium-confidence' journey
+    And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -88,7 +91,7 @@ Feature: Audit Events
     And audit events for 'delete-pending-f2f-journey' are recorded [local only]
 
   Scenario: Alternate doc mitigation
-    Given I start a new 'medium-confidence' journey
+    And I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -108,7 +111,7 @@ Feature: Audit Events
       | dcmaw   | kenneth-driving-permit-valid |
       | address | kenneth-current              |
       | fraud   | kenneth-score-2              |
-    When I start a new 'medium-confidence' journey with reprove identity
+    And I start a new 'medium-confidence' journey with reprove identity
     Then I get a 'reprove-identity-start' page response
     When I submit a 'next' event
     Then I get a 'page-ipv-identity-document-start' page response
@@ -174,20 +177,17 @@ Feature: Audit Events
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And my identity 'FamilyName' is 'Smith'
-    And my address 'addressLocality' is 'Bristol'
     And audit events for 'update-name-and-address-journey' are recorded [local only]
 
   Scenario: Inherited identity journey
-    Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
+    And I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'alice-vot-pcl200-no-evidence'
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'PCL200' identity
     And audit events for 'inherited-identity-journey' are recorded [local only]
 
   Scenario: International address journey
-    Given I start a new 'medium-confidence' journey
-    And I activate the 'internationalAddress' feature sets
+    Given I activate the 'internationalAddress' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event

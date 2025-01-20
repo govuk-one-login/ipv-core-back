@@ -153,6 +153,27 @@
     }
   },
   {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD",
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
@@ -180,6 +201,17 @@
     }
   },
   {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "pending",
+      "vot": null
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
     "event_name": "IPV_REDIRECT_TO_CRI",
     "component_id": "https://identity.local.account.gov.uk",
     "restricted": {
@@ -192,17 +224,6 @@
     "extensions": {
       "cri": "f2f",
       "type": "pending"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_IDENTITY_STORED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "identity_type": "pending",
-      "vot": null
     },
     "restricted": {
       "device_information": {}
@@ -290,28 +311,6 @@
     }
   },
   {
-    "event_name": "IPV_GPG45_PROFILE_MATCHED",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "gpg45Profile": "M1B",
-      "gpg45Scores": {
-        "evidences": [
-          {
-            "strength": 3,
-            "validity": 2
-          }
-        ],
-        "activity": 1,
-        "fraud": 2,
-        "verification": 3
-      },
-      "vcTxnIds": []
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
     "event_name": "IPV_IDENTITY_REUSE_COMPLETE",
     "component_id": "https://identity.local.account.gov.uk",
     "restricted": {
@@ -329,11 +328,62 @@
     }
   },
   {
-    "event_name": "IPV_IDENTITY_STORED",
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "identity_type": "new",
-      "vot": "P2"
+      "type": "STANDARD"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD",
+      "successful": true
+    },
+    "restricted": {
+      "newName": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "KENNETH"
+            },
+            {
+              "type": "FamilyName",
+              "value": "DECERQUEIRA"
+            }
+          ]
+        }
+      ],
+      "newBirthDate": [
+        {
+          "value": "1965-07-08"
+        }
+      ],
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_GPG45_PROFILE_MATCHED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "gpg45Profile": "M1B",
+      "gpg45Scores": {
+        "evidences": [
+          {
+            "strength": 3,
+            "validity": 2
+          }
+        ],
+        "activity": 1,
+        "fraud": 2,
+        "verification": 3
+      },
+      "vcTxnIds": []
     },
     "restricted": {
       "device_information": {}
@@ -361,6 +411,17 @@
     "extensions": {
       "cri": "ticf",
       "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_IDENTITY_STORED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "identity_type": "new",
+      "vot": "P2"
     },
     "restricted": {
       "device_information": {}

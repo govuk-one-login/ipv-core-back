@@ -62,6 +62,7 @@ import java.util.Optional;
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -429,7 +430,8 @@ public class CheckExistingIdentityHandler
 
         var votMatchingResult = maybeVotMatchingResult.get();
 
-        if (GPG45.equals(votMatchingResult.vot().getProfileType())) {
+        if (GPG45.equals(votMatchingResult.vot().getProfileType())
+                && !configService.enabled(PROCESS_CANDIDATE_IDENTITY)) {
             sendProfileMatchedAuditEvent(
                     votMatchingResult.gpg45Profile(),
                     votMatchingResult.gpg45Scores(),

@@ -95,6 +95,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -338,6 +339,8 @@ class CheckExistingIdentityHandlerTest {
                             Optional.of(
                                     new VotMatchingResult(
                                             P2, matchedProfile, Gpg45Scores.builder().build())));
+            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
+            when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
 
             var journeyResponse =
                     toResponseClass(
@@ -1436,6 +1439,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+        when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1471,6 +1475,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
+        when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this

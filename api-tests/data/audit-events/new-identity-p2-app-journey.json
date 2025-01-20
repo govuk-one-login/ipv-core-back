@@ -160,12 +160,42 @@
     }
   },
   {
-    "event_name": "IPV_SUBJOURNEY_START",
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "journey_type": "EVALUATE_SCORES"
+      "type": "STANDARD"
     },
     "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CONTINUITY_OF_IDENTITY_CHECK_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "type": "STANDARD",
+      "successful": true
+    },
+    "restricted": {
+      "newName": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "Kenneth"
+            },
+            {
+              "type": "FamilyName",
+              "value": "Decerqueira"
+            }
+          ]
+        }
+      ],
+      "newBirthDate": [
+        {
+          "value": "1965-07-08"
+        }
+      ],
       "device_information": {}
     }
   },
