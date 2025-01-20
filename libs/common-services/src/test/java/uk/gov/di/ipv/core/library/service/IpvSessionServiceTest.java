@@ -168,7 +168,7 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldReturnSessionItemByCriOAuthSessionId() throws IpvSessionNotFoundException {
+    void shouldReturnSessionItemByClientOAuthSessionId() throws IpvSessionNotFoundException {
         // Arrange
         var ipvSessionId = SecureTokenHelper.getInstance().generate();
         var clientOAuthSessionId = "56789";
