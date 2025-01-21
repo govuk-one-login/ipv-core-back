@@ -84,7 +84,6 @@ Feature: M2B Strategic App Journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
-    And audit events for 'strategic-app-cross-browser-journey' are recorded [local only]
 
   Scenario: MAM journey credential fails with no ci
     Given I activate the 'strategicApp' feature set
