@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.NamePart;
+import uk.gov.di.model.PostalAddress;
 
 import java.util.List;
 import java.util.Optional;
@@ -76,10 +77,17 @@ class CheckCoiServiceTest {
                 .thenReturn("some-component-id");
 
         when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(getMockIdentityClaim());
+
+        PostalAddress address = new PostalAddress();
+        address.setAddressCountry("AnyCountry");
+        address.setAddressLocality("AnyTown");
+        address.setAddressRegion("AnyRegion");
+        when(mockUserIdentityService.generateAddressClaim(any()))
+                .thenReturn(Optional.of(List.of(address)));
     }
 
     @Test
-    void shouldReturnTrueForSuccessfulNamesAndDobCheck() throws Exception {
+    void shouldReturnTrueForSuccessfulNamesAndDobAndAddressCheck() throws Exception {
         // Arrange
         when(mockUserIdentityService.areNamesAndDobCorrelated(any())).thenReturn(true);
 
@@ -121,12 +129,13 @@ class CheckCoiServiceTest {
         assertEquals(
                 new AuditExtensionCoiCheck(STANDARD, true),
                 auditEventsCaptured.get(1).getExtensions());
-
         var restrictedAuditData = getRestrictedAuditDataNodeFromEvent(auditEventsCaptured.get(1));
         assertTrue(restrictedAuditData.has("newName"));
         assertTrue(restrictedAuditData.has("oldName"));
         assertTrue(restrictedAuditData.has("newBirthDate"));
         assertTrue(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 
@@ -273,6 +282,8 @@ class CheckCoiServiceTest {
         assertFalse(restrictedAuditData.has("oldName"));
         assertFalse(restrictedAuditData.has("newBirthDate"));
         assertFalse(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 
@@ -325,6 +336,8 @@ class CheckCoiServiceTest {
         assertTrue(restrictedAuditData.has("oldName"));
         assertTrue(restrictedAuditData.has("newBirthDate"));
         assertTrue(restrictedAuditData.has("oldBirthDate"));
+        assertTrue(restrictedAuditData.has("oldAddress"));
+        assertTrue(restrictedAuditData.has("newAddress"));
         assertTrue(restrictedAuditData.has("device_information"));
     }
 

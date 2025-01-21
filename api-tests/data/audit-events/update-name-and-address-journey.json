@@ -397,6 +397,32 @@
           "value": "1965-07-08"
         }
       ],
+      "oldAddress": [
+        {
+          "addressCountry": "GB",
+          "uprn": 100120012077,
+          "buildingName": "",
+          "streetName": "HADLEY ROAD",
+          "postalCode": "BA2 5AA",
+          "buildingNumber": "8",
+          "addressLocality": "BATH",
+          "validFrom": "1000-01-01",
+          "subBuildingName": ""
+        }
+      ],
+      "newAddress": [
+        {
+          "addressCountry": "GB",
+          "uprn": 100120012047,
+          "buildingName": "",
+          "streetName": "King Road",
+          "postalCode": "BS9 6NR",
+          "buildingNumber": "28",
+          "addressLocality": "BRISTOL",
+          "validFrom": "1000-01-01",
+          "subBuildingName": ""
+        }
+      ],
       "device_information": {}
     }
   },
