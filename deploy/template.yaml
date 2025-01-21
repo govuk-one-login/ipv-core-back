@@ -3091,8 +3091,6 @@ Resources:
           AttributeType: "S"
         - AttributeName: "accessToken"
           AttributeType: "S"
-        - AttributeName: "criOAuthSessionId"
-          AttributeType: "S"
         - AttributeName: "clientOAuthSessionId"
           AttributeType: "S"
       KeySchema:
@@ -3108,12 +3106,6 @@ Resources:
         - IndexName: "accessToken"
           KeySchema:
             - AttributeName: "accessToken"
-              KeyType: "HASH"
-          Projection:
-            ProjectionType: "ALL"
-        - IndexName: "criOAuthSessionId"
-          KeySchema:
-            - AttributeName: "criOAuthSessionId"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"
