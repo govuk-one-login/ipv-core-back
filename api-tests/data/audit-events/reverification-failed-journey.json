@@ -11,7 +11,10 @@
   },
   {
     "event_name": "IPV_REVERIFY_START",
-    "component_id": "https://identity.local.account.gov.uk"
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
   },
   {
     "event_name": "IPV_REDIRECT_TO_CRI",
