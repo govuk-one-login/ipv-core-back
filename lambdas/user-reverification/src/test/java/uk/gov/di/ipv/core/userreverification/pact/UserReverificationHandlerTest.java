@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -58,6 +59,7 @@ public class UserReverificationHandlerTest {
     @Mock private Sleeper mockSleeper;
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
     @Mock private ConfigService mockConfigService;
+    @Mock private AuditService mockAuditService;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
 
@@ -82,7 +84,8 @@ public class UserReverificationHandlerTest {
                         ipvSessionService,
                         mockConfigService,
                         clientOAuthSessionDetailsService,
-                        mockSessionCredentialsService);
+                        mockSessionCredentialsService,
+                        mockAuditService);
 
         httpServer = new LambdaHttpServer(handler, "/reverification");
         httpServer.startServer();

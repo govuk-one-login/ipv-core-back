@@ -26,7 +26,9 @@ public class LocalAuditService implements AuditService {
     @Override
     public void sendAuditEvent(AuditEvent auditEvent) throws AuditException {
         pendingAuditEvents.add(auditEvent);
-        LOGGER.info(LogHelper.buildLogMessage("Sending audit event").with("event", auditEvent));
+        LOGGER.info(
+                LogHelper.buildLogMessage("Sending audit event")
+                        .with("event", auditEvent.getEventName()));
     }
 
     @Override

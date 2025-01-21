@@ -1513,6 +1513,7 @@ Resources:
         Variables:
           POWERTOOLS_SERVICE_NAME: !Sub user-reverification-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           AWS_LAMBDA_EXEC_WRAPPER: !If
@@ -1546,6 +1547,13 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
@@ -1558,6 +1566,8 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
       Events:
