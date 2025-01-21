@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
@@ -118,7 +119,7 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
             }
 
             var reverificationEndAuditEvent =
-                    AuditEvent.createWithoutDeviceInformation(
+                    AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REVERIFY_END,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             new AuditEventUser(
@@ -127,7 +128,9 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                                     clientOAuthSessionItem.getGovukSigninJourneyId(),
                                     RequestHelper.getIpAddress(input)),
                             new AuditExtensionReverification(
-                                    response.success(), response.failureCode()));
+                                    response.success(), response.failureCode()),
+                            new AuditRestrictedDeviceInformation(
+                                    RequestHelper.getEncodedDeviceInformation(input)));
             auditService.sendAuditEvent(reverificationEndAuditEvent);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
