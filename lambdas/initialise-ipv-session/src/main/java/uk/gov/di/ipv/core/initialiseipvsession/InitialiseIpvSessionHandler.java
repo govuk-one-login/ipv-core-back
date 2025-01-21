@@ -228,28 +228,15 @@ public class InitialiseIpvSessionHandler
             AuditExtensionsIpvJourneyStart extensionsIpvJourneyStart =
                     new AuditExtensionsIpvJourneyStart(isReproveIdentity, vtr);
 
-            var restrictedDeviceInformation =
-                    new AuditRestrictedDeviceInformation(deviceInformation);
-
             AuditEvent auditEvent =
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_JOURNEY_START,
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             extensionsIpvJourneyStart,
-                            restrictedDeviceInformation);
+                            new AuditRestrictedDeviceInformation(deviceInformation));
 
             auditService.sendAuditEvent(auditEvent);
-
-            if (isReverification) {
-                AuditEvent reverificationAuditEvent =
-                        AuditEvent.createWithDeviceInformation(
-                                AuditEventTypes.IPV_REVERIFY_START,
-                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                                auditEventUser,
-                                restrictedDeviceInformation);
-                auditService.sendAuditEvent(reverificationAuditEvent);
-            }
 
             if (Boolean.TRUE.equals(isReproveIdentity)) {
                 auditService.sendAuditEvent(
