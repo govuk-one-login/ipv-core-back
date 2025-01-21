@@ -1625,6 +1625,7 @@ Resources:
             - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
             - !Ref CheckCoiFunctionErrorCanaryAlarm
             - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
+            - !Ref ProcessCandidateIdentityFunctionErrorCanaryAlarm
           - !Ref AWS::NoValue
         StateMachineVersionArn: !Sub "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction}:live"
       Events:
@@ -4104,6 +4105,32 @@ Resources:
           Value: !Ref CheckReverificationIdentityFunction
         - Name: ExecutedVersion
           Value: !GetAtt CheckReverificationIdentityFunction.Version.Version
+      Namespace: AWS/Lambda
+      Statistic: Sum
+      Unit: Count
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  ProcessCandidateIdentityFunctionErrorCanaryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: UseCanaryDeploymentAlarms
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue alarm-alerts-topic
+      AlarmDescription: !Sub "Error returned from the ProcessCandidateIdentityFunction."
+      AlarmName: !Sub ${AWS::StackName}-ProcessCandidateIdentityFunction-ErrorCanary
+      MetricName: Errors
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "process-candidate-identity-${Environment}:live"
+        - Name: FunctionName
+          Value: !Ref ProcessCandidateIdentityFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt ProcessCandidateIdentityFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count
