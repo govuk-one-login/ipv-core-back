@@ -41,6 +41,7 @@ import {
 } from "../utils/audit-events.js";
 
 const RETRY_DELAY_MILLIS = 2000;
+const NEW_SESSION_DELAY_MILLIS = 2000;
 const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
@@ -207,6 +208,11 @@ When(
     reproveIdentity: " with reprove identity" | undefined,
     expectedPage: string,
   ): Promise<void> {
+    // In case we send a request to an async CRI, we want to wait a suitable period of time
+    // to let that request finish before starting a new session. This will hopefully reduce flakiness with
+    // the audit event tests where we expect them to be in a certain order.
+    await delay(NEW_SESSION_DELAY_MILLIS);
+
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
       await startNewJourney(this, journeyType, !!reproveIdentity, undefined);
