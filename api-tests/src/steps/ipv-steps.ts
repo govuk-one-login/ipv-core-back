@@ -208,10 +208,12 @@ When(
     reproveIdentity: " with reprove identity" | undefined,
     expectedPage: string,
   ): Promise<void> {
-    // In case we send a request to an async CRI, we want to wait a suitable period of time
-    // to let that request finish before starting a new session. This will hopefully reduce flakiness with
-    // the audit event tests where we expect them to be in a certain order.
-    await delay(NEW_SESSION_DELAY_MILLIS);
+    // In the case where we were previously on an f2f journey, we want to wait a suitable period of time
+    // to let the request to the process-async-cri lambda to finish before starting a new session. This will
+    // hopefully reduce flakiness with the audit event tests where we expect the events to be in a certain order.
+    if (this.lastCriRequest?.redirectUrl.includes("f2f-cri")) {
+      await delay(NEW_SESSION_DELAY_MILLIS);
+    }
 
     let attempt = 1;
     while (attempt <= MAX_ATTEMPTS) {
