@@ -1205,6 +1205,7 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
             - /opt/dynatrace
@@ -1234,9 +1235,18 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CRIResponseTable
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2061,6 +2071,7 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           AWS_LAMBDA_EXEC_WRAPPER: !If
             - UseDynatrace
@@ -2102,6 +2113,8 @@ Resources:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
@@ -3089,7 +3102,7 @@ Resources:
           AttributeType: "S"
         - AttributeName: "accessToken"
           AttributeType: "S"
-        - AttributeName: "criOAuthSessionId"
+        - AttributeName: "clientOAuthSessionId"
           AttributeType: "S"
       KeySchema:
         - AttributeName: "ipvSessionId"
@@ -3107,9 +3120,9 @@ Resources:
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"
-        - IndexName: "criOAuthSessionId"
+        - IndexName: "clientOAuthSessionId"
           KeySchema:
-            - AttributeName: "criOAuthSessionId"
+            - AttributeName: "clientOAuthSessionId"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"

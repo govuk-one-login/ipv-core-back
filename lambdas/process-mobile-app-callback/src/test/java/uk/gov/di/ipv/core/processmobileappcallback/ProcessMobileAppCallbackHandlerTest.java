@@ -7,9 +7,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -19,6 +23,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -34,6 +39,7 @@ import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -52,6 +58,8 @@ class ProcessMobileAppCallbackHandlerTest {
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private CriResponseService criResponseService;
+    @Mock private AuditService auditService;
+    @Captor private ArgumentCaptor<AuditEvent> auditEventArgumentCaptor;
     @InjectMocks private ProcessMobileAppCallbackHandler processMobileAppCallbackHandler;
 
     @Test
@@ -60,6 +68,8 @@ class ProcessMobileAppCallbackHandlerTest {
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenReturn(buildValidIpvSessionItem());
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(new CriOAuthSessionItem());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
@@ -101,28 +111,10 @@ class ProcessMobileAppCallbackHandlerTest {
                 new JourneyResponse(
                         JOURNEY_BUILD_CLIENT_OAUTH_RESPONSE_PATH, TEST_CLIENT_OAUTH_SESSION_ID),
                 journeyResponse);
-    }
-
-    @Test
-    void shouldReturnErrorWhenCallbackRequestMissingIpvSessionIdAndInvalidState() throws Exception {
-        // Arrange
-        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
-        requestEvent.setHeaders(Map.of());
-        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE)).thenReturn(null);
-
-        // Act
-        var lambdaResponse =
-                processMobileAppCallbackHandler.handleRequest(requestEvent, mockContext);
-        var journeyResponse =
-                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
-
-        // Assert
+        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
-                new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
-                        ErrorResponse.MISSING_IPV_SESSION_ID),
-                journeyResponse);
+                AuditEventTypes.IPV_APP_MISSING_CONTEXT,
+                auditEventArgumentCaptor.getValue().getEventName());
     }
 
     @Test
@@ -131,6 +123,8 @@ class ProcessMobileAppCallbackHandlerTest {
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
         when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
                 .thenThrow(new IpvSessionNotFoundException(""));
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(new CriOAuthSessionItem());
 
         // Act
         var lambdaResponse =
@@ -151,10 +145,6 @@ class ProcessMobileAppCallbackHandlerTest {
     void shouldReturnErrorWhenMissingOAuthState() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState(null);
-        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID))
-                .thenReturn(buildValidIpvSessionItem());
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
-                .thenReturn(buildValidClientOAuthSessionItem());
 
         // Act
         var lambdaResponse =
@@ -172,6 +162,27 @@ class ProcessMobileAppCallbackHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorWhenCriOAuthSessionNotFound() throws Exception {
+        // Arrange
+        var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE)).thenReturn(null);
+
+        // Act
+        var lambdaResponse =
+                processMobileAppCallbackHandler.handleRequest(requestEvent, mockContext);
+        var journeyResponse =
+                OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
+
+        // Assert
+        assertEquals(
+                new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatus.SC_BAD_REQUEST,
+                        ErrorResponse.INVALID_OAUTH_STATE),
+                journeyResponse);
+    }
+
+    @Test
     void shouldReturnErrorWhenCriResponseNotFound() throws Exception {
         // Arrange
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
@@ -180,6 +191,8 @@ class ProcessMobileAppCallbackHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
                 .thenReturn(buildValidClientOAuthSessionItem());
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC)).thenReturn(null);
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(new CriOAuthSessionItem());
 
         // Act
         var lambdaResponse =
@@ -207,6 +220,8 @@ class ProcessMobileAppCallbackHandlerTest {
         var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_ERROR);
         when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
                 .thenReturn(criResponseItem);
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(new CriOAuthSessionItem());
 
         // Act
         var lambdaResponse =
@@ -228,6 +243,8 @@ class ProcessMobileAppCallbackHandlerTest {
         // Arrange
         when(ipvSessionService.getIpvSession(anyString()))
                 .thenThrow(new RuntimeException("Test error"));
+        when(criOAuthSessionService.getCriOauthSessionItem(TEST_OAUTH_STATE))
+                .thenReturn(new CriOAuthSessionItem());
         var requestEvent = buildValidRequestEventWithState(TEST_OAUTH_STATE);
 
         var logCollector = LogCollector.getLogCollectorFor(ProcessMobileAppCallbackHandler.class);
