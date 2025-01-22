@@ -47,6 +47,10 @@ Globals:
           - !Ref AWS::NoValue
         DT_OPEN_TELEMETRY_ENABLE_INTEGRATION: "true"
         OTEL_INSTRUMENTATION_AWS_SDK_EXPERIMENTAL_USE_PROPAGATOR_FOR_MESSAGING: true
+        AWS_LAMBDA_EXEC_WRAPPER: !If
+          - UseDynatrace
+          - /opt/dynatrace
+          - !Ref AWS::NoValue
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
         POWERTOOLS_METRICS_NAMESPACE: !Sub CoreBackEmbeddedMetrics-${Environment}
         POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
@@ -55,6 +59,13 @@ Globals:
           - IsPerformanceSensitive
           - 3
           - 0
+    Layers:
+      - !If
+        - UseDynatrace
+        - !Sub
+          - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
+          - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
+        - !Ref AWS::NoValue
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
@@ -665,17 +676,6 @@ Resources:
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -752,24 +752,15 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          # PYIC-7888 Temporarily disable DT in build
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - !If
-              - IsBuild
-              - !Ref AWS::NoValue
-              - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !If
+          # PYIC-7888 Turn on debug logging in build
+          DT_LOGGING_DESTINATION: !If
             - IsBuild
+            - "stdout"
             - !Ref AWS::NoValue
-            - !Sub
-              - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-              - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
+          DT_LOGGING_JAVA_FLAGS: !If
+            - IsBuild
+            - "log-Transformer=true,log-OpenTelemetryUtils=true,log-AsyncClassRetransformer=true,log-ClassValue=true"
+            - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -852,17 +843,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -969,17 +949,6 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1078,17 +1047,6 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1205,17 +1163,6 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1303,17 +1250,6 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1414,17 +1350,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1516,17 +1441,6 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1768,17 +1682,6 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1860,17 +1763,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1958,17 +1850,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2062,17 +1943,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2162,17 +2032,6 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2293,17 +2152,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2373,17 +2221,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2470,17 +2307,6 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2555,17 +2381,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2645,17 +2460,6 @@ Resources:
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2737,17 +2541,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2827,17 +2620,6 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub check-reverification-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2906,17 +2688,6 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          AWS_LAMBDA_EXEC_WRAPPER: !If
-            - UseDynatrace
-            - /opt/dynatrace
-            - !Ref AWS::NoValue
-      Layers:
-        - !If
-          - UseDynatrace
-          - !Sub
-            - '{{resolve:secretsmanager:${SecretArn}:SecretString:JAVA_LAYER}}' # pragma: allowlist secret or NODEJS_LAYER or PYTHON_LAYER
-            - SecretArn: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, dynatraceSecretArn ]
-          - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
