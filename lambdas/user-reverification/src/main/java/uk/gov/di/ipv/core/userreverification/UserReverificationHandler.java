@@ -13,6 +13,12 @@ import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.builduseridentity.UserIdentityRequestHandler;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionReverification;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationResponse;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
@@ -24,6 +30,8 @@ import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -34,10 +42,12 @@ import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 public class UserReverificationHandler extends UserIdentityRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private final AuditService auditService;
 
     private static final ReverificationFailureCode DEFAULT_FAILURE_CODE =
             ReverificationFailureCode.IDENTITY_CHECK_INCOMPLETE;
 
+    @ExcludeFromGeneratedCoverageReport
     public UserReverificationHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,
@@ -50,11 +60,31 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                 configService,
                 clientOAuthSessionDetailsService,
                 sessionCredentialsService);
+        this.auditService = AuditService.create(configService);
+    }
+
+    public UserReverificationHandler(
+            IpvSessionService ipvSessionService,
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            SessionCredentialsService sessionCredentialsService,
+            AuditService auditService) {
+
+        super(
+                REVERIFICATION,
+                ipvSessionService,
+                configService,
+                clientOAuthSessionDetailsService,
+                sessionCredentialsService);
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public UserReverificationHandler() {
         super(REVERIFICATION);
+
+        var configService = ConfigService.create();
+        this.auditService = AuditService.create(configService);
     }
 
     @Override
@@ -87,6 +117,22 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
 
                 response = ReverificationResponse.failureResponse(userId, failureCode);
             }
+
+            var reverificationEndAuditEvent =
+                    AuditEvent.createWithDeviceInformation(
+                            AuditEventTypes.IPV_REVERIFY_END,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            new AuditEventUser(
+                                    userId,
+                                    ipvSessionItem.getIpvSessionId(),
+                                    clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                    RequestHelper.getIpAddress(input)),
+                            new AuditExtensionReverification(
+                                    response.success(), response.failureCode()),
+                            new AuditRestrictedDeviceInformation(
+                                    RequestHelper.getEncodedDeviceInformation(input)));
+            auditService.sendAuditEvent(reverificationEndAuditEvent);
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, response);
         } catch (ParseException e) {
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
@@ -105,6 +151,8 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
+        } finally {
+            auditService.awaitAuditEvents();
         }
     }
 }

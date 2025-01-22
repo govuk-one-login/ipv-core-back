@@ -1,0 +1,97 @@
+[
+  {
+    "event_name": "IPV_JOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "reprove_identity": false
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REVERIFY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://dcmaw-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 0,
+          "ci": ["BREACHING"],
+          "failedCheckDetails": [
+            {
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "biometricVerificationProcessLevel": 0,
+              "checkMethod": "bvr"
+            }
+          ],
+          "strengthScore": 0,
+          "type": "IdentityCheck",
+          "validityScore": 0
+        }
+      ],
+      "successful": false,
+      "isUkIssued": true,
+      "age": "type[number]"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "dcmaw",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_SUBJOURNEY_START",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "journey_type": "FAILED"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_JOURNEY_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REVERIFY_END",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "success": false,
+      "failure_code": "identity_check_failed"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  }
+]
