@@ -41,7 +41,7 @@ import {
 } from "../utils/audit-events.js";
 
 const RETRY_DELAY_MILLIS = 2000;
-const NEW_SESSION_DELAY_MILLIS = 2000;
+const NEW_SESSION_DELAY_MILLIS = 3000;
 const MAX_ATTEMPTS = 5;
 
 const addressCredential = "https://vocab.account.gov.uk/v1/address";
