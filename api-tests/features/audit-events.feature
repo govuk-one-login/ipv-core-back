@@ -210,6 +210,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
     And audit events for 'strategic-app-journey' are recorded [local only]
 
+  @InitialisesDCMAWSessionState
   Scenario: MAM journey cross-browser scenario
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
