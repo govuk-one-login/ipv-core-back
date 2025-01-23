@@ -170,6 +170,18 @@
       "successful": true
     },
     "restricted": {
+      "newAddress": [
+        {
+          "addressCountry": "GB",
+          "addressLocality": "BATH",
+          "buildingName": "",
+          "buildingNumber": "8",
+          "postalCode": "BA2 5AA",
+          "streetName": "HADLEY ROAD",
+          "subBuildingName": "",
+          "validFrom": "1000-01-01"
+        }
+      ],
       "device_information": {}
     }
   },
@@ -224,27 +236,6 @@
     "extensions": {
       "cri": "f2f",
       "type": "pending"
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_JOURNEY_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "reprove_identity": false,
-      "vtr": ["P2"]
-    },
-    "restricted": {
-      "device_information": {}
-    }
-  },
-  {
-    "event_name": "IPV_SUBJOURNEY_START",
-    "component_id": "https://identity.local.account.gov.uk",
-    "extensions": {
-      "journey_type": "F2F_PENDING"
     },
     "restricted": {
       "device_information": {}
@@ -362,6 +353,18 @@
       "newBirthDate": [
         {
           "value": "1965-07-08"
+        }
+      ],
+      "newAddress": [
+        {
+          "addressCountry": "GB",
+          "addressLocality": "BATH",
+          "buildingName": "",
+          "buildingNumber": "8",
+          "postalCode": "BA2 5AA",
+          "streetName": "HADLEY ROAD",
+          "subBuildingName": "",
+          "validFrom": "1000-01-01"
         }
       ],
       "device_information": {}
