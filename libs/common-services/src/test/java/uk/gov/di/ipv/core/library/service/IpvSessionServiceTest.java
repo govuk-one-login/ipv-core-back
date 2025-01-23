@@ -168,6 +168,26 @@ class IpvSessionServiceTest {
     }
 
     @Test
+    void shouldReturnSessionItemByClientOAuthSessionId() throws IpvSessionNotFoundException {
+        // Arrange
+        var ipvSessionId = SecureTokenHelper.getInstance().generate();
+        var clientOAuthSessionId = "56789";
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionId);
+
+        when(mockDataStore.getItemByIndex("clientOAuthSessionId", clientOAuthSessionId))
+                .thenReturn(ipvSessionItem);
+
+        // Act
+        IpvSessionItem result =
+                ipvSessionService.getIpvSessionByClientOAuthSessionId(clientOAuthSessionId);
+
+        // Assert
+        assertEquals(result, ipvSessionItem);
+    }
+
+    @Test
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
