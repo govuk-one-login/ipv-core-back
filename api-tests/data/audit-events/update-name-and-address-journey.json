@@ -267,14 +267,14 @@
           "activityHistoryScore": 1,
           "checkDetails": [
             {
-              "activityFrom":"1982-05-23",
-              "checkMethod":"data",
-              "identityCheckPolicy":"published"
+              "activityFrom": "1982-05-23",
+              "checkMethod": "data",
+              "identityCheckPolicy": "published"
             }
           ],
           "strengthScore": 3,
-          "type":"IdentityCheck",
-          "validityScore":2
+          "type": "IdentityCheck",
+          "validityScore": 2
         }
       ],
       "successful": true
