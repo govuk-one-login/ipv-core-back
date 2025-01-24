@@ -131,7 +131,7 @@ Feature: P2 Web document journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout
+  Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - Passport
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
