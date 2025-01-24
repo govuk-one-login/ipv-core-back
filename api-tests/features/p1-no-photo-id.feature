@@ -214,6 +214,10 @@ Feature: P1 No Photo Id Journey
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
     Then I get a 'page-ipv-success' page response
     When I submit a 'next' event
     Then I get an OAuth response

@@ -261,6 +261,50 @@
     "event_name": "IPV_VC_RECEIVED",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
+      "iss": "https://driving-license-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "activityHistoryScore": 1,
+          "checkDetails": [
+            {
+              "activityFrom":"1982-05-23",
+              "checkMethod":"data",
+              "identityCheckPolicy":"published"
+            }
+          ],
+          "strengthScore": 3,
+          "type":"IdentityCheck",
+          "validityScore":2
+        }
+      ],
+      "successful": true
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_CORE_CRI_RESOURCE_RETRIEVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "cri": "drivingLicence",
+      "type": "vc"
+    },
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_REDIRECT_TO_CRI",
+    "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "device_information": {}
+    }
+  },
+  {
+    "event_name": "IPV_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
       "iss": "https://address-cri.stubs.account.gov.uk",
       "evidence": null,
       "successful": true

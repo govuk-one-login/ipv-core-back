@@ -102,7 +102,7 @@ Feature: P2 Web document journey
       | drivingLicence | kenneth-driving-permit-valid |
       | ukPassport     | kenneth-passport-valid       |
 
-  Scenario Outline: Successful P2 identity via Web using - DWP KBV transition page dropout
+  Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - DL
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -110,9 +110,9 @@ Feature: P2 Web document journey
     Then I get a 'dcmaw' CRI response
     When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'page-multiple-doc-check' page response
-    When I submit a '<cri>' event
-    Then I get a '<cri>' CRI response
-    When I submit '<details>' details to the CRI stub
+    When I submit a 'drivingLicence' event
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response
@@ -131,10 +131,38 @@ Feature: P2 Web document journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-    Examples:
-      | cri            | details                      |
-      | drivingLicence | kenneth-driving-permit-valid |
-      | ukPassport     | kenneth-passport-valid       |
+  Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a 'ukPassport' event
+    Then I get a 'ukPassport' CRI response
+    When I submit 'kenneth-passport-valid' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'next' event
+    Then I get a 'page-pre-dwp-kbv-transition' page response
+    When I submit a 'end' event
+    Then I get a 'photo-id-security-questions-find-another-way' page response with context 'dropout'
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
 
   Scenario Outline: User drops out of DWP KBV CRI via thin file or failed checks using <cri> - DWP KBV
     Given I activate the 'dwpKbvTest' feature set

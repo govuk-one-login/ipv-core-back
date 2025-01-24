@@ -30,6 +30,10 @@ Feature: Repeat fraud check failures
 
     Scenario: Applicable authoritative source failed check evidence too weak
       When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -64,6 +68,10 @@ Feature: Repeat fraud check failures
 
     Scenario: Zero score in fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -78,6 +86,10 @@ Feature: Repeat fraud check failures
 
     Scenario: Breaching CI received from fraud CRI
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response
@@ -123,6 +135,10 @@ Feature: Repeat fraud check failures
 
     Scenario: Fraud access denied OAuth error
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
       When I submit a 'next' event
       Then I get a 'fraud' CRI response

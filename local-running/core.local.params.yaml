@@ -207,7 +207,7 @@ core:
       name: Driving Licence
       enabled: "true"
       unavailable: false # temporarily unavailable
-      allowedSharedAttributes: "name,birthDate,address"
+      allowedSharedAttributes: "name,birthDate,address,drivingPermit"
       activeConnection: "stub"
       connections:
         stub: '{
@@ -388,7 +388,7 @@ core:
     p1JourneysEnabled: false
     sqsAsync: true
     kidJarHeaderEnabled: true
-    drivingLicenceAuthCheck: false
+    drivingLicenceAuthCheck: true
     processCandidateIdentity: false
   features:
     processCandidateIdentity:
@@ -397,12 +397,6 @@ core:
     internationalAddress:
       featureFlags:
         internationalAddressEnabled: true
-    drivingLicenceAuthCheck:
-      featureFlags:
-        drivingLicenceAuthCheck: true
-      credentialIssuers:
-        drivingLicence:
-          allowedSharedAttributes: "name,birthDate,address,drivingPermit"
     mfaReset:
       featureFlags:
         mfaResetEnabled: true
