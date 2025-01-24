@@ -62,6 +62,10 @@ Feature: Identity reuse update details failures
 
         Scenario: Zero score in fraud CRI - receives old identity (P2)
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            Then I get a 'drivingLicence' CRI response
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+                | Attribute | Values          |
+                | context   | "check_details" |
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
@@ -76,6 +80,10 @@ Feature: Identity reuse update details failures
 
         Scenario: Breaching CI received from fraud CRI - doesn't receive old identity
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            Then I get a 'drivingLicence' CRI response
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+                | Attribute | Values          |
+                | context   | "check_details" |
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response
@@ -121,6 +129,10 @@ Feature: Identity reuse update details failures
 
         Scenario: Fraud access denied OAuth error - receives old identity (P2)
             When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+            Then I get a 'drivingLicence' CRI response
+            When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+                | Attribute | Values          |
+                | context   | "check_details" |
             Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
             When I submit a 'next' event
             Then I get a 'fraud' CRI response

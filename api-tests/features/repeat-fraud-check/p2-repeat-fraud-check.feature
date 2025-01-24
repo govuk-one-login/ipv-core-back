@@ -51,6 +51,10 @@ Feature: Repeat fraud check journeys
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
 
     Scenario: Fraud 6 Months Expiry + Address Update
@@ -75,6 +79,10 @@ Feature: Repeat fraud check journeys
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
       When I submit a 'next' event
       Then I get a 'address' CRI response
@@ -96,6 +104,10 @@ Feature: Repeat fraud check journeys
       When I submit a 'update-name' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-changed-given-name-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-changed-given-name-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
       Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
 
     Scenario: Unsupported Changes
