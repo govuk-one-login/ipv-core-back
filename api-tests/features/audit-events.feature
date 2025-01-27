@@ -265,8 +265,6 @@ Feature: Audit Events
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
     When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-    Then I get a 'pyi-no-match' page response
-    When I submit a 'next' event
     Then I get an OAuth response
     When I use the OAuth response to get my MFA reset result
     Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
