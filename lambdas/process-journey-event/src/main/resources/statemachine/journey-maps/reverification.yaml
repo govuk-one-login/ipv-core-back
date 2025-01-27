@@ -24,37 +24,37 @@ states:
     events:
       not-found:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       fail-with-no-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       access-denied:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       invalid-request:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       enhanced-verification:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       temporarily-unavailable:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
       fail-with-ci:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       vcs-not-correlated:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       alternate-doc-invalid-dl:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       alternate-doc-invalid-passport:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       dl-auth-source-check:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -62,20 +62,15 @@ states:
   CRI_TICF_STATE:
     events:
       enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
+        targetState: RETURN_TO_RP
 
   # Journey states
 
@@ -126,7 +121,10 @@ states:
     nestedJourney: STRATEGIC_APP_TRIAGE
     exitEvents:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
+        targetState: CHECK_COI
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_REVERIFICATION_IDENTITY
       sessionError:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -143,7 +141,10 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
+        targetState: CHECK_COI
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_REVERIFICATION_IDENTITY
       not-found:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
@@ -164,14 +165,6 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: POST_DCMAW_SUCCESS_PAGE
-
-  POST_DCMAW_SUCCESS_PAGE:
-    response:
-      type: page
-      pageId: page-dcmaw-success
-    events:
-      next:
         targetState: CHECK_COI
         checkFeatureFlag:
           processCandidateIdentity:
@@ -186,10 +179,10 @@ states:
     parent: CRI_TICF_STATE
     events:
       next:
-        targetState: RETURN_TO_RP
+        targetState: WE_MATCHED_YOU_TO_YOUR_ONE_LOGIN_PAGE
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -205,7 +198,7 @@ states:
         targetState: CRI_TICF
       coi-check-failed:
         targetJourney: FAILED
-        targetState: FAILED
+        targetState: FAILED_SKIP_MESSAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

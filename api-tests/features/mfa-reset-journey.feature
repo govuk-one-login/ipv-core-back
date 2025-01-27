@@ -13,13 +13,11 @@ Feature: MFA reset journey
       Then I get a 'you-can-change-security-code-method' page response
 
     Scenario: Successful MFA reset journey
-      When I submit a 'next' event
+      When I submit a 'next' even
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
       Then I get a 'we-matched-you-to-your-one-login' page response
       When I submit a 'next' event
       Then I get an OAuth response
@@ -32,8 +30,6 @@ Feature: MFA reset journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-with-breaching-ci' details to the CRI stub
-      Then I get a 'pyi-no-match' page response
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
@@ -64,8 +60,6 @@ Feature: MFA reset journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'kenneth-passport-verification-zero' details to the CRI stub
-      Then I get a 'pyi-no-match' page response
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
@@ -76,10 +70,6 @@ Feature: MFA reset journey
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I submit 'alice-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response
-      When I submit a 'next' event
-      Then I get a 'pyi-no-match' page response
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_did_not_match'
@@ -95,8 +85,6 @@ Feature: MFA reset journey
       When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
         | Attribute | Values          |
         | context   | "check_details" |
-      Then I get a 'pyi-no-match' page response
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
