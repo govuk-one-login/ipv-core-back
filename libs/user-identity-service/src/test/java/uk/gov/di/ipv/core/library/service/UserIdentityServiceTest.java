@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -63,6 +64,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.*;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.NamePartGenerator.createNamePart;
+import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 import static uk.gov.di.model.NamePart.NamePartType.FAMILY_NAME;
 import static uk.gov.di.model.NamePart.NamePartType.GIVEN_NAME;
 
@@ -1766,6 +1768,25 @@ class UserIdentityServiceTest {
 
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
+        }
+
+        @Test
+        void shouldDeduplicateNamesWithCaseInsensitivity() {
+            // Arrange
+            var names =
+                    Set.of(
+                            createName("martin", "smith"),
+                            createName("Martin", "Smith"),
+                            createName("MARTIN", "SMITH"),
+                            createName("Harry", "Smithy"));
+
+            // Act
+            var deduplicateNames = userIdentityService.deduplicateNames(names);
+
+            // Assert
+            assertEquals(
+                    Set.of(createName("martin", "smith"), createName("Harry", "Smithy")),
+                    deduplicateNames);
         }
     }
 

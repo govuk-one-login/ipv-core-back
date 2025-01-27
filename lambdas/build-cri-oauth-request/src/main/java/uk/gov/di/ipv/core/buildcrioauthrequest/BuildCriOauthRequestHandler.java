@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -102,6 +103,7 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
     private final OAuthKeyService oAuthKeyService;
+    private final UserIdentityService userIdentityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -113,7 +115,8 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             SessionCredentialsService sessionCredentialsService,
-            OAuthKeyService oAuthKeyService) {
+            OAuthKeyService oAuthKeyService,
+            UserIdentityService userIdentityService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -123,6 +126,8 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
         this.oAuthKeyService = oAuthKeyService;
+        this.userIdentityService = userIdentityService;
+
         VcHelper.setConfigService(this.configService);
     }
 
@@ -142,6 +147,7 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.oAuthKeyService = new OAuthKeyService(configService);
+        this.userIdentityService = new UserIdentityService(configService);
         VcHelper.setConfigService(configService);
     }
 
@@ -152,6 +158,7 @@ public class BuildCriOauthRequestHandler
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
+            // Parse input
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
             String language = getLanguage(input);
@@ -170,6 +177,8 @@ public class BuildCriOauthRequestHandler
             String criContext = getJourneyParameter(input, CONTEXT);
             EvidenceRequest criEvidenceRequest =
                     EvidenceRequest.fromBase64(getJourneyParameter(input, EVIDENCE_REQUESTED));
+
+            // Get sessions & config
             String connection = configService.getActiveConnection(cri);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, cri);
@@ -179,10 +188,9 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
+            // Get session variables
             String userId = clientOAuthSessionItem.getUserId();
-
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.getInstance().generate();
@@ -326,6 +334,7 @@ public class BuildCriOauthRequestHandler
         var sharedClaims =
                 SharedClaimsHelper.generateSharedClaims(
                         ipvSessionItem.getEmailAddress(), vcs, getAllowedSharedClaimAttrs(cri));
+        sharedClaims.setName(userIdentityService.deduplicateNames(sharedClaims.getName()));
 
         if (cri.equals(F2F)) {
             evidenceRequest =
