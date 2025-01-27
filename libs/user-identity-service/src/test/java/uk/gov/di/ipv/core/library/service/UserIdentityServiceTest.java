@@ -1769,25 +1769,25 @@ class UserIdentityServiceTest {
             // Act & Assert
             assertFalse(userIdentityService.areNamesAndDobCorrelatedForReverification(vcs));
         }
+    }
 
-        @Test
-        void shouldDeduplicateNamesWithCaseInsensitivity() {
-            // Arrange
-            var names =
-                    Set.of(
-                            createName("martin", "smith"),
-                            createName("Martin", "Smith"),
-                            createName("MARTIN", "SMITH"),
-                            createName("Harry", "Smithy"));
+    @Test
+    void shouldDeduplicateNamesWithCaseInsensitivity() {
+        // Arrange
+        var names =
+                Set.of(
+                        createName("martin", "smith"),
+                        createName("Martin", "Smith"),
+                        createName("MARTIN", "SMITH"),
+                        createName("Harry", "Smithy"));
 
-            // Act
-            var deduplicateNames = userIdentityService.deduplicateNames(names);
+        // Act
+        var deduplicateNames = userIdentityService.deduplicateNames(names);
 
-            // Assert
-            assertEquals(
-                    Set.of(createName("martin", "smith"), createName("Harry", "Smithy")),
-                    deduplicateNames);
-        }
+        // Assert
+        assertEquals(
+                Set.of(createName("martin", "smith"), createName("Harry", "Smithy")),
+                deduplicateNames);
     }
 
     private void mockParamStoreCalls(Map<ConfigurationVariable, String> params) {
