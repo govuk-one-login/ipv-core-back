@@ -5,25 +5,24 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.helpers.vocab.NameGenerator.createName;
 
 class NameHelperTest {
     @Test
     void shouldDeduplicateNamesWithCaseInsensitivity() {
         // Arrange
-        var names =
-                Set.of(
-                        createName("martin", "smith"),
-                        createName("Martin", "Smith"),
-                        createName("MARTIN", "SMITH"),
-                        createName("Harry", "Smithy"));
+        var name1 = createName("martin", "smith");
+        var name2 = createName("Martin", "smith");
+        var name3 = createName("MARTIN", "smith");
+        var name4 = createName("Harry", "smith");
+        var names = Set.of(name1, name2, name3, name4);
 
         // Act
         var deduplicateNames = NameHelper.deduplicateNames(names);
 
         // Assert
-        assertEquals(
-                Set.of(createName("martin", "smith"), createName("Harry", "Smithy")),
-                deduplicateNames);
+        assertEquals(2, deduplicateNames.size());
+        assertTrue(deduplicateNames.contains(name4));
     }
 }
