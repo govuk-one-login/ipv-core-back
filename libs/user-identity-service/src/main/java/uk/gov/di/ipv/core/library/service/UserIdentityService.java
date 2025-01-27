@@ -362,7 +362,7 @@ public class UserIdentityService {
 
         return names.stream()
                 .filter(
-                        (name) -> {
+                        name -> {
                             var capitalisedFullName = this.getFullName(name).toUpperCase();
 
                             if (!capitalisedFullNames.contains(capitalisedFullName)) {
