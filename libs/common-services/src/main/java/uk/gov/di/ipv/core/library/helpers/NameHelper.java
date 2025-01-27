@@ -17,7 +17,7 @@ public class NameHelper {
 
     public static Set<Name> deduplicateNames(Set<Name> names) {
         if (names == null) {
-            return null;
+            return Set.of();
         }
 
         var capitalisedFullNames = new ArrayList<String>();

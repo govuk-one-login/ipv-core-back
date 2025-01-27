@@ -103,7 +103,6 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final SessionCredentialsService sessionCredentialsService;
     private final OAuthKeyService oAuthKeyService;
-    private final UserIdentityService userIdentityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public BuildCriOauthRequestHandler(
@@ -126,7 +125,6 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
         this.oAuthKeyService = oAuthKeyService;
-        this.userIdentityService = userIdentityService;
 
         VcHelper.setConfigService(this.configService);
     }
@@ -147,7 +145,6 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.sessionCredentialsService = new SessionCredentialsService(configService);
         this.oAuthKeyService = new OAuthKeyService(configService);
-        this.userIdentityService = new UserIdentityService(configService);
         VcHelper.setConfigService(configService);
     }
 
