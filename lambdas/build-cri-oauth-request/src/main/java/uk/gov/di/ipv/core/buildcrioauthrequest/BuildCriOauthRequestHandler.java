@@ -334,7 +334,6 @@ public class BuildCriOauthRequestHandler
         var sharedClaims =
                 SharedClaimsHelper.generateSharedClaims(
                         ipvSessionItem.getEmailAddress(), vcs, getAllowedSharedClaimAttrs(cri));
-        sharedClaims.setName(userIdentityService.deduplicateNames(sharedClaims.getName()));
 
         if (cri.equals(F2F)) {
             evidenceRequest =

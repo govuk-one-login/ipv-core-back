@@ -5,12 +5,14 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressAssertion;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 
 import java.util.List;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 
@@ -37,20 +39,27 @@ public class SharedClaimsHelper {
                 .filter(VcHelper::isSuccessfulVc)
                 .forEach(vc -> addSharedClaimsFromVc(sharedClaims, vc));
 
-        LOGGER.info(
-                LogHelper.buildLogMessage("Found shared claims")
-                        .with("names", sharedClaims.getName().size())
-                        .with("birthDates", sharedClaims.getBirthDate().size())
-                        .with("addresses", sharedClaims.getAddress().size())
-                        .with("emails", sharedClaims.getEmailAddress() == null ? 0 : 1)
-                        .with(
-                                "socialSecurityRecords",
-                                sharedClaims.getSocialSecurityRecord().size())
-                        .with("drivingPermits", sharedClaims.getDrivingPermit().size()));
+        // Deduplicate name with case insensitivity
+        sharedClaims.setName(NameHelper.deduplicateNames(sharedClaims.getName()));
 
         stripDisallowedSharedClaims(sharedClaims, allowedSharedClaims);
 
+        LOGGER.info(
+                LogHelper.buildLogMessage("Found shared claims")
+                        .with("names", safeSize(sharedClaims.getName()))
+                        .with("birthDates", safeSize(sharedClaims.getBirthDate()))
+                        .with("addresses", safeSize(sharedClaims.getAddress()))
+                        .with("emails", sharedClaims.getEmailAddress() != null ? 1 : 0)
+                        .with(
+                                "socialSecurityRecords",
+                                safeSize(sharedClaims.getSocialSecurityRecord()))
+                        .with("drivingPermits", safeSize(sharedClaims.getDrivingPermit())));
+
         return sharedClaims;
+    }
+
+    private static int safeSize(Set<?> set) {
+        return set != null ? set.size() : 0;
     }
 
     private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc) {

@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
@@ -38,7 +39,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -353,48 +353,8 @@ public class UserIdentityService {
     private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
         return identityClaims.stream()
                 .flatMap(claim -> claim.getName().stream())
-                .map(this::getFullName)
+                .map(NameHelper::getFullName)
                 .toList();
-    }
-
-    public Set<Name> deduplicateNames(Set<Name> names) {
-        var capitalisedFullNames = new ArrayList<String>();
-
-        return names.stream()
-                .filter(
-                        name -> {
-                            var capitalisedFullName = this.getFullName(name).toUpperCase();
-
-                            if (!capitalisedFullNames.contains(capitalisedFullName)) {
-                                capitalisedFullNames.add(capitalisedFullName);
-                                return true;
-                            }
-                            return false;
-                        })
-                .collect(Collectors.toSet());
-    }
-
-    private String getFullName(Name name) {
-        var nameParts = name.getNameParts();
-
-        String givenNames =
-                nameParts.stream()
-                        .filter(
-                                namePart ->
-                                        NamePart.NamePartType.GIVEN_NAME.equals(namePart.getType()))
-                        .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
-
-        String familyNames =
-                nameParts.stream()
-                        .filter(
-                                namePart ->
-                                        NamePart.NamePartType.FAMILY_NAME.equals(
-                                                namePart.getType()))
-                        .map(NamePart::getValue)
-                        .collect(Collectors.joining(" "));
-
-        return (givenNames + " " + familyNames).trim();
     }
 
     private List<String> getFamilyNameWithCharAllowanceForCoiCheck(
