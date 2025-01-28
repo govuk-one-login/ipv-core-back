@@ -69,7 +69,10 @@ public class SharedClaimsHelper {
         return set != null ? set.size() : 0;
     }
 
-    private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc, HashMap<Cri, List<DrivingPermitDetails>> drivingPermitsSharedClaims) {
+    private static void addSharedClaimsFromVc(
+            SharedClaims sharedClaims,
+            VerifiableCredential vc,
+            HashMap<Cri, List<DrivingPermitDetails>> drivingPermitsSharedClaims) {
         var credentialSubject = vc.getCredential().getCredentialSubject();
         var vcCri = vc.getCri();
 
@@ -102,7 +105,7 @@ public class SharedClaimsHelper {
 
             // De-duplicate driving permit shared claims by removing existing DL VC driving permit
             // shared claim and
-            // replacing with DCMAW VC driving permit instead.
+            // replacing with the DCMAW VC driving permit instead.
             if (((Cri.DCMAW.equals(vcCri) || Cri.DCMAW_ASYNC.equals(vcCri))
                     && drivingPermitsSharedClaims.containsKey(Cri.DRIVING_LICENCE))) {
                 drivingPermitsSharedClaims
