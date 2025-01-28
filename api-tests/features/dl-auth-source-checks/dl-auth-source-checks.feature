@@ -212,7 +212,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
-    Then I get a 'page-dcmaw-success' page response
+    Then I get a 'we-matched-you-to-your-one-login' page response
 
   Scenario Outline: Change of details journey through DCMAW with driving licence requires auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
