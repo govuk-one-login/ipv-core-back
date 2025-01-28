@@ -9,9 +9,11 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressAssertion;
+import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +33,7 @@ public class SharedClaimsHelper {
     public static SharedClaims generateSharedClaims(
             String emailAddress, List<VerifiableCredential> vcs, List<String> allowedSharedClaims) {
         var sharedClaims = new SharedClaims();
+        var sharedDrivingPermitsMappedToVc = new HashMap<Cri, List<DrivingPermitDetails>>();
 
         // Email address is provided separately in the session, not from a VC
         sharedClaims.setEmailAddress(emailAddress);
@@ -38,7 +41,10 @@ public class SharedClaimsHelper {
         // Other shared claims are added from successful VCs
         vcs.stream()
                 .filter(VcHelper::isSuccessfulVc)
-                .forEach(vc -> addSharedClaimsFromVc(sharedClaims, vc));
+                .forEach(
+                        vc ->
+                                addSharedClaimsFromVc(
+                                        sharedClaims, vc, sharedDrivingPermitsMappedToVc));
 
         // Deduplicate name with case insensitivity
         sharedClaims.setName(NameHelper.deduplicateNames(sharedClaims.getName()));
@@ -63,7 +69,7 @@ public class SharedClaimsHelper {
         return set != null ? set.size() : 0;
     }
 
-    private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc) {
+    private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc, HashMap<Cri, List<DrivingPermitDetails>> sharedDrivingPermits) {
         var credentialSubject = vc.getCredential().getCredentialSubject();
 
         if (credentialSubject instanceof PersonWithIdentity personWithIdentity
@@ -86,7 +92,19 @@ public class SharedClaimsHelper {
                     .addAll(personWithDocuments.getSocialSecurityRecord());
         }
         if (credentialSubject instanceof PersonWithDocuments personWithDocuments
-                && personWithDocuments.getDrivingPermit() != null) {
+                && personWithDocuments.getDrivingPermit() != null
+                && !((sharedDrivingPermits.containsKey(Cri.DCMAW)
+                                || sharedDrivingPermits.containsKey(Cri.DCMAW_ASYNC))
+                        && Cri.DRIVING_LICENCE.equals(vc.getCri()))) {
+
+            if (((Cri.DCMAW.equals(vc.getCri()) || Cri.DCMAW_ASYNC.equals(vc.getCri()))
+                    && sharedDrivingPermits.containsKey(Cri.DRIVING_LICENCE))) {
+                sharedDrivingPermits
+                        .get(Cri.DRIVING_LICENCE)
+                        .forEach(sharedClaims.getDrivingPermit()::remove);
+            }
+
+            sharedDrivingPermits.put(vc.getCri(), personWithDocuments.getDrivingPermit());
             sharedClaims.getDrivingPermit().addAll(personWithDocuments.getDrivingPermit());
         }
     }

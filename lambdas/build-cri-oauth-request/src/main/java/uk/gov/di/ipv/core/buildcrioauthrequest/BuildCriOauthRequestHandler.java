@@ -330,10 +330,7 @@ public class BuildCriOauthRequestHandler
 
         var sharedClaims =
                 SharedClaimsHelper.generateSharedClaims(
-                        ipvSessionItem.getEmailAddress(),
-                        vcs,
-                        getAllowedSharedClaimAttrs(cri),
-                        cri);
+                        ipvSessionItem.getEmailAddress(), vcs, getAllowedSharedClaimAttrs(cri));
 
         if (cri.equals(F2F)) {
             evidenceRequest =
