@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.signing.SignerFactory;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -113,7 +114,8 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             SessionCredentialsService sessionCredentialsService,
-            OAuthKeyService oAuthKeyService) {
+            OAuthKeyService oAuthKeyService,
+            UserIdentityService userIdentityService) {
         this.configService = configService;
         this.signerFactory = signerFactory;
         this.auditService = auditService;
@@ -123,6 +125,7 @@ public class BuildCriOauthRequestHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.sessionCredentialsService = sessionCredentialsService;
         this.oAuthKeyService = oAuthKeyService;
+
         VcHelper.setConfigService(this.configService);
     }
 
@@ -152,6 +155,7 @@ public class BuildCriOauthRequestHandler
     public Map<String, Object> handleRequest(CriJourneyRequest input, Context context) {
         LogHelper.attachComponentId(configService);
         try {
+            // Parse input
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
             String language = getLanguage(input);
@@ -170,6 +174,8 @@ public class BuildCriOauthRequestHandler
             String criContext = getJourneyParameter(input, CONTEXT);
             EvidenceRequest criEvidenceRequest =
                     EvidenceRequest.fromBase64(getJourneyParameter(input, EVIDENCE_REQUESTED));
+
+            // Get sessions & config
             String connection = configService.getActiveConnection(cri);
             OauthCriConfig criConfig =
                     configService.getOauthCriConfigForConnection(connection, cri);
@@ -179,10 +185,9 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
+            // Get session variables
             String userId = clientOAuthSessionItem.getUserId();
-
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.getInstance().generate();
