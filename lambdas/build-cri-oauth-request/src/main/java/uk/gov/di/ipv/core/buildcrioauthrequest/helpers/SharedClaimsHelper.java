@@ -13,7 +13,7 @@ import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +33,8 @@ public class SharedClaimsHelper {
     public static SharedClaims generateSharedClaims(
             String emailAddress, List<VerifiableCredential> vcs, List<String> allowedSharedClaims) {
         var sharedClaims = new SharedClaims();
-        var sharedDrivingPermitsMappedToVc = new HashMap<Cri, List<DrivingPermitDetails>>();
+        var sharedDrivingPermitsMappedToVc =
+                new EnumMap<Cri, List<DrivingPermitDetails>>(Cri.class);
 
         // Email address is provided separately in the session, not from a VC
         sharedClaims.setEmailAddress(emailAddress);
@@ -72,7 +73,7 @@ public class SharedClaimsHelper {
     private static void addSharedClaimsFromVc(
             SharedClaims sharedClaims,
             VerifiableCredential vc,
-            HashMap<Cri, List<DrivingPermitDetails>> drivingPermitsSharedClaims) {
+            EnumMap<Cri, List<DrivingPermitDetails>> drivingPermitsSharedClaims) {
         var credentialSubject = vc.getCredential().getCredentialSubject();
         var vcCri = vc.getCri();
 
@@ -95,19 +96,21 @@ public class SharedClaimsHelper {
                     .getSocialSecurityRecord()
                     .addAll(personWithDocuments.getSocialSecurityRecord());
         }
+        var isExistingDcmawDrivingPermitSharedClaim =
+                drivingPermitsSharedClaims.containsKey(Cri.DCMAW)
+                        || drivingPermitsSharedClaims.containsKey(Cri.DCMAW_ASYNC);
         if (credentialSubject instanceof PersonWithDocuments personWithDocuments
                 && personWithDocuments.getDrivingPermit() != null
                 // skip adding driving permit from DL VC if there is already a drivingPermit from
                 // DCMAW
-                && !((drivingPermitsSharedClaims.containsKey(Cri.DCMAW)
-                                || drivingPermitsSharedClaims.containsKey(Cri.DCMAW_ASYNC))
+                && !(isExistingDcmawDrivingPermitSharedClaim
                         && Cri.DRIVING_LICENCE.equals(vcCri))) {
 
             // De-duplicate driving permit shared claims by removing existing DL VC driving permit
             // shared claim and
             // replacing with the DCMAW VC driving permit instead.
-            if (((Cri.DCMAW.equals(vcCri) || Cri.DCMAW_ASYNC.equals(vcCri))
-                    && drivingPermitsSharedClaims.containsKey(Cri.DRIVING_LICENCE))) {
+            var isDcmawVc = Cri.DCMAW.equals(vcCri) || Cri.DCMAW_ASYNC.equals(vcCri);
+            if (isDcmawVc && drivingPermitsSharedClaims.containsKey(Cri.DRIVING_LICENCE)) {
                 drivingPermitsSharedClaims
                         .get(Cri.DRIVING_LICENCE)
                         .forEach(sharedClaims.getDrivingPermit()::remove);
