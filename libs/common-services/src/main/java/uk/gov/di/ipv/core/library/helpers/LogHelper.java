@@ -126,6 +126,10 @@ public class LogHelper {
         attachFieldToLogs(LogField.LOG_CLIENT_OAUTH_SESSION_ID, sessionId);
     }
 
+    public static void attachCriSessionIdToLogs(String sessionId) {
+        attachFieldToLogs(LogField.LOG_CRI_OAUTH_SESSION_ID, sessionId);
+    }
+
     public static void attachGovukSigninJourneyIdToLogs(String govukSigninJourneyId) {
         if (StringUtils.isBlank(govukSigninJourneyId)) {
             attachFieldToLogs(
