@@ -276,6 +276,7 @@
       "Resource": "${CheckCoiFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
         "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput"
       },
@@ -309,6 +310,7 @@
       "Resource": "${ProcessCandidateIdentityFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
         "featureSet.$": "$$.Execution.Input.featureSet",
         "lambdaInput.$": "$.lambdaInput"
       },

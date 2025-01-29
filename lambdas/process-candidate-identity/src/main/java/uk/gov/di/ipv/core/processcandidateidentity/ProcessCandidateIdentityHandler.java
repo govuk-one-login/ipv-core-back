@@ -190,7 +190,7 @@ public class ProcessCandidateIdentityHandler
         IpvSessionItem ipvSessionItem = null;
         try {
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
-            var ipAddress = RequestHelper.getIpAddress(request);
+            var ipAddress = request.getIpAddress();
             var deviceInformation = request.getDeviceInformation();
             var processIdentityType = RequestHelper.getProcessIdentityType(request);
 
