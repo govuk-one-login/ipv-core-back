@@ -9,11 +9,9 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.NameHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressAssertion;
-import uk.gov.di.model.DrivingPermitDetails;
 import uk.gov.di.model.PersonWithDocuments;
 import uk.gov.di.model.PersonWithIdentity;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
@@ -36,8 +34,6 @@ public class SharedClaimsHelper {
             List<String> allowedSharedClaims,
             Cri targetCri) {
         var sharedClaims = new SharedClaims();
-        var sharedDrivingPermitsMappedToVc =
-                new EnumMap<Cri, List<DrivingPermitDetails>>(Cri.class);
 
         // Email address is provided separately in the session, not from a VC
         sharedClaims.setEmailAddress(emailAddress);
@@ -55,10 +51,7 @@ public class SharedClaimsHelper {
                                 !(Cri.DRIVING_LICENCE.equals(targetCri)
                                         && Cri.DRIVING_LICENCE.equals(vc.getCri())))
                 .filter(VcHelper::isSuccessfulVc)
-                .forEach(
-                        vc ->
-                                addSharedClaimsFromVc(
-                                        sharedClaims, vc, sharedDrivingPermitsMappedToVc));
+                .forEach(vc -> addSharedClaimsFromVc(sharedClaims, vc));
 
         // Deduplicate name with case insensitivity
         sharedClaims.setName(NameHelper.deduplicateNames(sharedClaims.getName()));
@@ -83,10 +76,7 @@ public class SharedClaimsHelper {
         return set != null ? set.size() : 0;
     }
 
-    private static void addSharedClaimsFromVc(
-            SharedClaims sharedClaims,
-            VerifiableCredential vc,
-            EnumMap<Cri, List<DrivingPermitDetails>> existingDrivingPermitSharedClaims) {
+    private static void addSharedClaimsFromVc(SharedClaims sharedClaims, VerifiableCredential vc) {
         var credentialSubject = vc.getCredential().getCredentialSubject();
         var vcCri = vc.getCri();
 
