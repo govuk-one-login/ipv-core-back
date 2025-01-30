@@ -272,6 +272,7 @@ public class ProcessCriCallbackHandler
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuer());
         LogHelper.attachComponentId(configService);
+        LogHelper.attachCriSessionIdToLogs(callbackRequest.getState());
 
         EmbeddedMetricHelper.criReturn(callbackRequest.getCredentialIssuerId());
 
