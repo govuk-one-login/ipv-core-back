@@ -47,6 +47,8 @@ class SharedClaimsHelperTest {
                     SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD,
                     SHARED_CLAIM_ATTR_DRIVING_PERMIT);
 
+    private static final Cri TEST_CRI = Cri.DCMAW;
+
     private static final String TEST_EMAIL = "test@example.com";
     private static final Name TEST_NAME = createName("Test", "User");
     private static final BirthDate TEST_DOB = createBirthDate("1970-01-01");
@@ -76,7 +78,7 @@ class SharedClaimsHelperTest {
                                         .drivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
         assertEquals(TEST_EMAIL, sharedClaims.getEmailAddress());
         assertEquals(Set.of(TEST_NAME), sharedClaims.getName());
@@ -87,7 +89,8 @@ class SharedClaimsHelperTest {
     }
 
     @Test
-    void generatesSharedClaimsShouldReturnOnlyOneDrivingPermitSharedClaimFromDcmawVcIfPresent() {
+    void
+            generatesSharedClaimsShouldNotReturnDrivingPermitSharedClaimFromDrivingLicenceIfTargetCriIsDrivingLicence() {
         var dlCredentialSubjectBuilder =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(Map.of(VC_NAME_PARTS, TEST_NAME.getNameParts())))
@@ -118,14 +121,19 @@ class SharedClaimsHelperTest {
                                 Cri.DRIVING_LICENCE));
 
         var sharedClaims =
-                generateSharedClaims(TEST_EMAIL, vcs, List.of(SHARED_CLAIM_ATTR_DRIVING_PERMIT));
+                generateSharedClaims(
+                        TEST_EMAIL,
+                        vcs,
+                        List.of(SHARED_CLAIM_ATTR_DRIVING_PERMIT),
+                        Cri.DRIVING_LICENCE);
 
         assertEquals(1, sharedClaims.getDrivingPermit().size());
         assertEquals(Set.of(updatedTestDrivingPermit), sharedClaims.getDrivingPermit());
     }
 
     @Test
-    void generatesSharedClaimsShouldReturnDrivingPermitFromDrivingLicenceCriIfNoDcmawVcPresent() {
+    void
+            generatesSharedClaimsShouldReturnDrivingPermitFromDrivingLicenceCriIfTargetCriIsNotDrivingLicence() {
         var dlCredentialSubjectBuilder =
                 TestVc.TestCredentialSubject.builder()
                         .name(List.of(Map.of(VC_NAME_PARTS, TEST_NAME.getNameParts())))
@@ -148,7 +156,8 @@ class SharedClaimsHelperTest {
                                 Cri.DRIVING_LICENCE));
 
         var sharedClaims =
-                generateSharedClaims(TEST_EMAIL, vcs, List.of(SHARED_CLAIM_ATTR_DRIVING_PERMIT));
+                generateSharedClaims(
+                        TEST_EMAIL, vcs, List.of(SHARED_CLAIM_ATTR_DRIVING_PERMIT), TEST_CRI);
 
         assertEquals(
                 Set.of(TEST_DRIVING_PERMIT, updatedTestDrivingPermit),
@@ -157,7 +166,7 @@ class SharedClaimsHelperTest {
 
     @Test
     void generatesEmptySetsIfNoAttributePresent() {
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, List.of(), ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, List.of(), ALL_ATTRIBUTES, TEST_CRI);
 
         assertTrue(sharedClaims.getName().isEmpty());
         assertTrue(sharedClaims.getBirthDate().isEmpty());
@@ -186,7 +195,7 @@ class SharedClaimsHelperTest {
                                         .drivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, List.of());
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, List.of(), TEST_CRI);
 
         assertNull(sharedClaims.getEmailAddress());
         assertNull(sharedClaims.getName());
@@ -205,7 +214,7 @@ class SharedClaimsHelperTest {
                                         .address(List.of(TEST_ADDRESS))
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
         assertTrue(sharedClaims.getAddress().isEmpty());
     }
@@ -234,7 +243,7 @@ class SharedClaimsHelperTest {
                                         .evidence(DCMAW_FAILED_EVIDENCE)
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
         assertTrue(sharedClaims.getName().isEmpty());
         assertTrue(sharedClaims.getBirthDate().isEmpty());
@@ -285,7 +294,7 @@ class SharedClaimsHelperTest {
                                         .drivingPermit(List.of(otherDrivingPermit))
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
         assertEquals(Set.of(TEST_NAME, otherName), sharedClaims.getName());
         assertEquals(Set.of(TEST_DOB, otherDob), sharedClaims.getBirthDate());
@@ -330,7 +339,7 @@ class SharedClaimsHelperTest {
                                         .drivingPermit(List.of(TEST_DRIVING_PERMIT))
                                         .build()));
 
-        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES);
+        var sharedClaims = generateSharedClaims(TEST_EMAIL, vcs, ALL_ATTRIBUTES, TEST_CRI);
 
         assertEquals(Set.of(TEST_NAME), sharedClaims.getName());
         assertEquals(Set.of(TEST_DOB), sharedClaims.getBirthDate());

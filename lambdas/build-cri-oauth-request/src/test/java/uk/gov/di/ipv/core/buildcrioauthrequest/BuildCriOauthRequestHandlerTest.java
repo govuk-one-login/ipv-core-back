@@ -276,7 +276,7 @@ class BuildCriOauthRequestHandlerTest {
         ipvSessionItem.setTargetVot(Vot.P2);
 
         mockSharedClaimsHelper
-                .when(() -> SharedClaimsHelper.generateSharedClaims(any(), any(), any()))
+                .when(() -> SharedClaimsHelper.generateSharedClaims(any(), any(), any(), any()))
                 .thenReturn(TEST_SHARED_CLAIMS);
     }
 
