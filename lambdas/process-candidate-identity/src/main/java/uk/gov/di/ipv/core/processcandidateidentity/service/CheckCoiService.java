@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processcandidateidentity.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -74,7 +73,6 @@ public class CheckCoiService {
     }
 
     @Tracing
-    @Logging(clearState = true)
     public boolean isCoiCheckSuccessful(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSession,
