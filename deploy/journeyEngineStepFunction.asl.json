@@ -312,6 +312,7 @@
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
         "ipAddress.$": "$$.Execution.Input.ipAddress",
         "featureSet.$": "$$.Execution.Input.featureSet",
+        "deviceInformation.$": "$$.Execution.Input.deviceInformation",
         "lambdaInput.$": "$.lambdaInput"
       },
       "Next": "ProcessNextJourney",
