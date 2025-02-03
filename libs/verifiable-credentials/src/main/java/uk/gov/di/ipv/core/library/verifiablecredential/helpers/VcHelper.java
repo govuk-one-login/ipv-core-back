@@ -202,16 +202,34 @@ public class VcHelper {
 
     private static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            return identityCheckCredential.getEvidence().stream()
-                    .flatMap(
-                            evidence ->
-                                    evidence.getFailedCheckDetails() == null
-                                            ? Stream.empty()
-                                            : evidence.getFailedCheckDetails().stream())
-                    .anyMatch(
-                            failedCheck ->
-                                    CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE
-                                            .equals(failedCheck.getFraudCheck()));
+            boolean isFraudCheckUnavailable =
+                    identityCheckCredential.getEvidence().stream()
+                            .flatMap(
+                                    evidence ->
+                                            evidence.getFailedCheckDetails() == null
+                                                    ? Stream.empty()
+                                                    : evidence.getFailedCheckDetails().stream())
+                            .anyMatch(
+                                    failedCheck ->
+                                            CheckDetails.FraudCheckType
+                                                    .APPLICABLE_AUTHORITATIVE_SOURCE
+                                                    .equals(failedCheck.getFraudCheck()));
+
+            if (!isFraudCheckUnavailable) {
+                isFraudCheckUnavailable =
+                        identityCheckCredential.getEvidence().stream()
+                                .flatMap(
+                                        evidence ->
+                                                evidence.getFailedCheckDetails() == null
+                                                        ? Stream.empty()
+                                                        : evidence.getFailedCheckDetails().stream())
+                                .anyMatch(
+                                        failedCheck ->
+                                                CheckDetails.FraudCheckType
+                                                        .AVAILABLE_AUTHORITATIVE_SOURCE
+                                                        .equals(failedCheck.getFraudCheck()));
+            }
+            return isFraudCheckUnavailable;
         }
         return false;
     }

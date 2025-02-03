@@ -38,6 +38,7 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeAvailableFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
@@ -258,6 +259,24 @@ class VcHelperTest {
                         DCMAW_PASSPORT_VC,
                         M1A_ADDRESS_VC,
                         vcFraudApplicableAuthoritativeSourceFailed(),
+                        vcVerificationM1a());
+
+        // Act
+        var result = VcHelper.isFraudCheckUnavailable(vcs);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void isFraudCheckUnavailableShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
+
+        // Arrange
+        var vcs =
+                List.of(
+                        DCMAW_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        vcFraudApplicableAuthoritativeAvailableFailed(),
                         vcVerificationM1a());
 
         // Act
