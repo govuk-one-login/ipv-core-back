@@ -328,7 +328,7 @@ public class CriCheckingService {
                     permit.getIssuingCountry(),
                     permit.getIssuedBy(),
                     permit.getPersonalNumber(),
-                    permit.getIssueDate());
+                    permit.getIssueDate()).toUpperCase();
         }
         LOGGER.warn(
                 LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")
