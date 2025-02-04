@@ -31,10 +31,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String APP_CONFIG_SOURCE = "app-config";
 
     @Getter @Setter private static boolean local = false;
 
@@ -42,6 +44,10 @@ public abstract class ConfigService {
     public static ConfigService create() {
         if (isLocal()) {
             return new YamlConfigService();
+        }
+        if (Objects.equals(
+                System.getenv(EnvironmentVariable.CONFIG_SOURCE.name()), APP_CONFIG_SOURCE)) {
+            return new AppConfigService();
         }
         return new SsmConfigService();
     }
@@ -58,6 +64,21 @@ public abstract class ConfigService {
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
+    }
+
+    public <T> T getEnvironmentVariable(EnvironmentVariable environmentVariable, T defaultValue) {
+        var value = System.getenv(environmentVariable.name());
+        if (value != null) {
+            if (defaultValue instanceof Integer) {
+                return (T) Integer.valueOf(value);
+            } else if (defaultValue instanceof String) {
+                return (T) value;
+            } else {
+                throw new IllegalArgumentException(
+                        "Unsupported type: " + defaultValue.getClass().getSimpleName());
+            }
+        }
+        return defaultValue;
     }
 
     public String getParameter(

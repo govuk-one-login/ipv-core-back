@@ -70,6 +70,10 @@ services:
       ENVIRONMENT: local
       AWS_EMF_ENVIRONMENT: Local
       AWS_XRAY_CONTEXT_MISSING: IGNORE_ERROR
+      CONFIG_SOURCE: app-config
+      APP_CONFIG_ID: app-config.identity.build.account.gov.uk
+      APP_CONFIG_ENVIRONMENT_ID: app-config-environment.identity.build.account.gov.uk
+      APP_CONFIG_PROFILE_ID: app-config-profile.identity.build.account.gov.uk
     ports:
       - "4502:4502"
       - "5002:5002"

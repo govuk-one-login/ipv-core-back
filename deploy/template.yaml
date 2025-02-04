@@ -15,6 +15,12 @@ Globals:
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
+        CONFIG_SOURCE: !If
+          - IsDevelopment
+          - "app-config"
+          - "ssm"
+        APP_CONFIG_ID: !Ref AppConfigApplication
+        APP_CONFIG_ENVIRONMENT_ID: !Ref AppConfigEnvironment
         DT_CONNECTION_AUTH_TOKEN: !If
           - UseDynatrace
           - !Sub
@@ -661,6 +667,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issue-client-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
       Tracing: Active
@@ -742,6 +749,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-client-oauth-response-${Environment}"
       Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
       Tracing: Active
@@ -828,6 +836,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "initialise-ipv-session-${Environment}"
       Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
       Tracing: Active
@@ -937,6 +946,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-cri-oauth-request-${Environment}"
       Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
       Tracing: Active
@@ -1028,6 +1038,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-cri-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-cri-callback
@@ -1151,6 +1162,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-mobile-app-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-mobile-app-callback
@@ -1248,6 +1260,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}"
       Handler: uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-mobile-app-vc-receipt
@@ -1344,6 +1357,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Tracing: Active
@@ -1440,6 +1454,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "user-reverification-${Environment}"
       Handler: uk.gov.di.ipv.core.userreverification.UserReverificationHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/user-reverification
       Tracing: Active
@@ -1681,6 +1696,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-journey-event-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
       Tracing: Active
@@ -1762,6 +1778,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
       Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
       Tracing: Active
@@ -1845,6 +1862,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-proven-user-identity-details-${Environment}"
       Handler: uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
       Tracing: Active
@@ -1941,6 +1959,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-existing-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
       Tracing: Active
@@ -2030,6 +2049,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-async-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
@@ -2155,6 +2175,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-gpg45-score-${Environment}"
       Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-gpg45-score
       Tracing: Active
@@ -2222,6 +2243,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "call-ticf-cri-${Environment}"
       Handler: uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-ticf-cri
@@ -2306,6 +2328,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "call-dcmaw-async-cri-${Environment}"
       Handler: uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-dcmaw-async-cri
@@ -2383,6 +2406,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "store-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/store-identity
       Tracing: Active
@@ -2462,6 +2486,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "reset-session-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/reset-session-identity
       Tracing: Active
@@ -2543,6 +2568,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-coi-${Environment}"
       Handler: uk.gov.di.ipv.core.checkcoi.CheckCoiHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-coi
       Tracing: Active
@@ -2624,6 +2650,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-reverification-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-reverification-identity
       Tracing: Active
@@ -2690,6 +2717,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-candidate-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler::handleRequest
+      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-candidate-identity
       Tracing: Active
@@ -3942,6 +3970,74 @@ Resources:
       ComparisonOperator: GreaterThanOrEqualToThreshold
       TreatMissingData: notBreaching
 
+  # App Config
+  LambdaReadAppConfigRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AppConfigAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AppConfigAccess
+                Effect: Allow
+                Action:
+                  - appconfig:GetConfiguration
+                  - appconfig:StartConfigurationSession
+                  - appconfig:GetLatestConfiguration
+                Resource: "*"
+
+  AppConfigApplication:
+    Type: AWS::AppConfig::Application
+    Properties:
+      Name: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "app-config-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "app-config-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "app-config.identity.${Environment}.account.gov.uk"
+
+  AppConfigEnvironment:
+    Type: AWS::AppConfig::Environment
+    Properties:
+      Name: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "app-config-environment-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "app-config-environment-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "app-config-environment.identity.${Environment}.account.gov.uk"
+      ApplicationId: !Ref AppConfigApplication
+
+  AppConfigConfigurationProfile:
+    Type: AWS::AppConfig::ConfigurationProfile
+    Properties:
+      Name: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "app-config-profile-${Environment}.01.dev.identity.account.gov.uk"
+          - !Sub "app-config-profile-${Environment}.02.dev.identity.account.gov.uk"
+        - !Sub "app-config-profile.identity.${Environment}.account.gov.uk"
+      ApplicationId: !Ref AppConfigApplication
+      LocationUri: "hosted"
+
+  AppConfigHostedConfigurationVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref AppConfigApplication
+      ConfigurationProfileId: !Ref AppConfigConfigurationProfile
+      Content: |
+        # Placeholder for configuration values
+      ContentType: "application/x-yaml"
 Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
