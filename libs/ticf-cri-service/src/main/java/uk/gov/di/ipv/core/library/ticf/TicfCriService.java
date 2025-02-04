@@ -122,7 +122,7 @@ public class TicfCriService {
             TicfCriDto ticfCriResponse =
                     OBJECT_MAPPER.readValue(ticfCriHttpResponse.body(), TicfCriDto.class);
 
-            if (ticfCriResponse.credentials().isEmpty()) {
+            if (ticfCriResponse.credentials() == null || ticfCriResponse.credentials().isEmpty()) {
                 throw new TicfCriServiceException("No credentials in TICF CRI response");
             }
 
