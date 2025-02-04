@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.ticf;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -122,7 +123,7 @@ public class TicfCriService {
             TicfCriDto ticfCriResponse =
                     OBJECT_MAPPER.readValue(ticfCriHttpResponse.body(), TicfCriDto.class);
 
-            if (ticfCriResponse.credentials() == null || ticfCriResponse.credentials().isEmpty()) {
+            if (CollectionUtils.isEmpty(ticfCriResponse.credentials())) {
                 throw new TicfCriServiceException("No credentials in TICF CRI response");
             }
 
