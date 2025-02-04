@@ -223,9 +223,30 @@ class TicfCriServiceTest {
     }
 
     @Test
-    void getTicfVcShouldThrowIfResponseContainsNoCredentials() throws Exception {
+    void getTicfVcShouldThrowIfResponseContainsEmptyCredentialsList() throws Exception {
         TicfCriDto ticfCriResponseWithoutCreds =
                 new TicfCriDto(VTR_VALUE, Vot.P2, TRUSTMARK, USER_ID, GOVUK_JOURNEY_ID, List.of());
+
+        when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
+                .thenReturn(ticfCriConfig);
+        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
+                .thenReturn(mockHttpResponse);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.body())
+                .thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponseWithoutCreds));
+
+        TicfCriServiceException thrown =
+                assertThrows(
+                        TicfCriServiceException.class,
+                        () -> ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem));
+
+        assertTrue(thrown.getMessage().contains("No credentials in TICF CRI response"));
+    }
+
+    @Test
+    void getTicfVcShouldThrowIfResponseContainsNoCredentials() throws Exception {
+        TicfCriDto ticfCriResponseWithoutCreds =
+                new TicfCriDto(VTR_VALUE, Vot.P2, TRUSTMARK, USER_ID, GOVUK_JOURNEY_ID, null);
 
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
