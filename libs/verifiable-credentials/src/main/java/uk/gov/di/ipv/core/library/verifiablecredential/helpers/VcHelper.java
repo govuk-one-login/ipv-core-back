@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -202,34 +203,21 @@ public class VcHelper {
 
     private static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            boolean isFraudCheckUnavailable =
-                    identityCheckCredential.getEvidence().stream()
-                            .flatMap(
-                                    evidence ->
-                                            evidence.getFailedCheckDetails() == null
-                                                    ? Stream.empty()
-                                                    : evidence.getFailedCheckDetails().stream())
-                            .anyMatch(
-                                    failedCheck ->
-                                            CheckDetails.FraudCheckType
-                                                    .APPLICABLE_AUTHORITATIVE_SOURCE
-                                                    .equals(failedCheck.getFraudCheck()));
 
-            if (!isFraudCheckUnavailable) {
-                isFraudCheckUnavailable =
-                        identityCheckCredential.getEvidence().stream()
-                                .flatMap(
-                                        evidence ->
-                                                evidence.getFailedCheckDetails() == null
-                                                        ? Stream.empty()
-                                                        : evidence.getFailedCheckDetails().stream())
-                                .anyMatch(
-                                        failedCheck ->
-                                                CheckDetails.FraudCheckType
-                                                        .AVAILABLE_AUTHORITATIVE_SOURCE
-                                                        .equals(failedCheck.getFraudCheck()));
-            }
-            return isFraudCheckUnavailable;
+            return identityCheckCredential.getEvidence().stream()
+                    .flatMap(
+                            evidence ->
+                                    evidence.getFailedCheckDetails() == null
+                                            ? Stream.empty()
+                                            : evidence.getFailedCheckDetails().stream())
+                    .anyMatch(
+                            failedCheck ->
+                                    Set.of(
+                                                    CheckDetails.FraudCheckType
+                                                            .APPLICABLE_AUTHORITATIVE_SOURCE,
+                                                    CheckDetails.FraudCheckType
+                                                            .AVAILABLE_AUTHORITATIVE_SOURCE)
+                                            .contains(failedCheck.getFraudCheck()));
         }
         return false;
     }
