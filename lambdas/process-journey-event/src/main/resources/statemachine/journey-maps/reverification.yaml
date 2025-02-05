@@ -126,9 +126,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_REVERIFICATION_IDENTITY
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE

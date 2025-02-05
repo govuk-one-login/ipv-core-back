@@ -65,7 +65,8 @@ nestedJourneyStates:
       next:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: sessionError
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   DAD_ANDROID_START_SESSION:
     response:
@@ -77,7 +78,8 @@ nestedJourneyStates:
       next:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: sessionError
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   DESKTOP_IPHONE_DOWNLOAD_PAGE:
     response:
@@ -176,7 +178,8 @@ nestedJourneyStates:
       next:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: sessionError
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_ANDROID_START_SESSION:
     response:
@@ -188,7 +191,8 @@ nestedJourneyStates:
       next:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
       error:
-        exitEventToEmit: sessionError
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   MOBILE_IPHONE_DOWNLOAD_PAGE:
     response:

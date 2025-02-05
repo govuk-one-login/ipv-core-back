@@ -187,9 +187,6 @@ states:
     exitEvents:
       next:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
       anotherWay:
         targetState: MULTIPLE_DOC_CHECK_PAGE
       returnToRp:
@@ -612,9 +609,6 @@ states:
     exitEvents:
       next:
         targetState: POST_APP_DOC_CHECK_SUCCESS_PAGE
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
       anotherWay:
         targetState: MITIGATION_01_PYI_POST_OFFICE
         checkIfDisabled:
@@ -696,9 +690,6 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
-      sessionError:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
       anotherWay:
         targetState: PYI_POST_OFFICE
         checkIfDisabled:
