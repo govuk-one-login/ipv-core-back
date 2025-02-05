@@ -220,7 +220,7 @@ class BuildUserIdentityHandlerTest {
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -289,7 +289,7 @@ class BuildUserIdentityHandlerTest {
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -378,7 +378,7 @@ class BuildUserIdentityHandlerTest {
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -449,7 +449,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(CONTRA_INDICATORS);
         when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
@@ -525,7 +525,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(CONTRA_INDICATORS);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(CONTRA_INDICATORS);
         when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
@@ -593,7 +593,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicators(any())).thenReturn(contraIndicators);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(contraIndicators);
         when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
                 .thenReturn(
                         VerifiableCredential.fromValidJwt(
@@ -780,7 +780,7 @@ class BuildUserIdentityHandlerTest {
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicators(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))

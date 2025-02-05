@@ -121,7 +121,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                     cimitService.getContraIndicatorsVc(
                             userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
 
-            var contraIndicators = cimitService.getContraIndicators(contraIndicatorsVc);
+            var contraIndicators = cimitService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 

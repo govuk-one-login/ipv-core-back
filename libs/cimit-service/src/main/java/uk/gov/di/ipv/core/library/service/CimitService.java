@@ -129,10 +129,10 @@ public class CimitService {
             ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
-        return getContraIndicators(vc);
+        return getContraIndicatorsFromVc(vc);
     }
 
-    public List<ContraIndicator> getContraIndicators(VerifiableCredential vc)
+    public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)
             throws CiRetrievalException {
         if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
             var evidence = cimitCredential.getEvidence();
