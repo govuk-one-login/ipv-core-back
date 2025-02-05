@@ -36,21 +36,29 @@ public class AppConfigService extends YamlParametersConfigService {
     private final SecretsProvider secretsProvider;
 
     public AppConfigService() {
-        try {
-            var cacheDuration =
-                    getEnvironmentVariable(
-                            CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
+        var cacheDuration =
+                getEnvironmentVariable(
+                        CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
+        var paramsRaw = getRawParams(cacheDuration);
 
-            var paramsRaw = getRawParams(cacheDuration);
+        initializeConfig(paramsRaw);
+        this.secretsProvider =
+                ParamManager.getSecretsProvider(
+                                SecretsManagerClient.builder()
+                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .build())
+                        .defaultMaxAge(cacheDuration, MINUTES);
+    }
+
+    public AppConfigService(String paramsRaw, SecretsProvider secretsProvider) {
+        initializeConfig(paramsRaw);
+        this.secretsProvider = secretsProvider;
+    }
+
+    private void initializeConfig(String paramsRaw) {
+        try {
             var paramsYaml = YAML_OBJECT_MAPPER.readTree(paramsRaw).get(CORE);
             addJsonConfig(parameters, paramsYaml);
-
-            this.secretsProvider =
-                    ParamManager.getSecretsProvider(
-                                    SecretsManagerClient.builder()
-                                            .httpClient(UrlConnectionHttpClient.create())
-                                            .build())
-                            .defaultMaxAge(cacheDuration, MINUTES);
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameter yaml", e);
         }

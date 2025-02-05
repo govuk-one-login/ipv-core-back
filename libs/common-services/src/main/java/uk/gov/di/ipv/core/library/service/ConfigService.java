@@ -212,10 +212,8 @@ public abstract class ConfigService {
 
     public Cri getCriByIssuer(String issuer) throws NoCriForIssuerException {
         for (var cri : Cri.values()) {
-            for (var componentId : getCriComponentIds(cri)) {
-                if (issuer.equals(componentId)) {
-                    return cri;
-                }
+            if (getCriComponentIds(cri).contains(issuer)) {
+                return cri;
             }
         }
         throw new NoCriForIssuerException(String.format("No cri found for issuer: '%s'", issuer));
@@ -234,9 +232,6 @@ public abstract class ConfigService {
                 result.add(criConfig.getComponentId());
             }
             return result;
-        } catch (ConfigParameterNotFoundException e) {
-            throw new NoConfigForConnectionException(
-                    String.format("No config found for criId: '%s'", criId));
         } catch (JsonProcessingException e) {
             throw new ConfigParseException(
                     String.format(
