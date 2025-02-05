@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestExcept
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.dto.CriConfig;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -516,5 +517,25 @@ class AppConfigServiceTest {
                             .build(),
                     result);
         }
+    }
+
+    // Environment variables
+    @Test
+    void getEnvironmentVariableDefaultString() {
+        // Act
+        var result =
+                configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, "some value");
+
+        // Assert
+        assertEquals("some value", result);
+    }
+
+    @Test
+    void getEnvironmentVariableDefaultInteger() {
+        // Act
+        var result = configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 100);
+
+        // Assert
+        assertEquals(100, result);
     }
 }
