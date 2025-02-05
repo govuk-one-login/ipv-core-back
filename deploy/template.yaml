@@ -3983,16 +3983,6 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: LambdaVPCAccessPolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - "ec2:CreateNetworkInterface"
-                  - "ec2:DescribeNetworkInterfaces"
-                  - "ec2:DeleteNetworkInterface"
-                Resource: "*"
         - PolicyName: AppConfigAccess
           PolicyDocument:
             Version: "2012-10-17"
