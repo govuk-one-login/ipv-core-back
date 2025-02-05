@@ -45,7 +45,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
@@ -65,7 +65,7 @@ class CimitServiceTest {
     private static final CimitApiResponse SUCCESSFUL_POST_HTTP_RESPONSE =
             new CimitApiResponse("success", null, null);
     private static final ContraIndicatorCredentialDto SUCCESSFUL_GET_CI_HTTP_RESPONSE =
-            new ContraIndicatorCredentialDto(SIGNED_CONTRA_INDICATOR_VC);
+            new ContraIndicatorCredentialDto(SIGNED_CONTRA_INDICATOR_VC_1);
     private static final CimitApiResponse FAILED_CIMIT_HTTP_RESPONSE =
             new CimitApiResponse(FAILED_RESPONSE, "INTERNAL_ERROR", "Internal Server Error");
     private static final String CIMIT_API_BASE_URL = "https://base-url.co.uk";
@@ -194,7 +194,7 @@ class CimitServiceTest {
     private static Stream<Arguments> provideArgumentsForGetContraIndicators() throws Exception {
         var contraIndicatorVc =
                 VerifiableCredential.fromValidJwt(
-                        TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
+                        TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1));
         var otherContraIndicatorVc =
                 VerifiableCredential.fromValidJwt(
                         TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_2));
@@ -240,7 +240,7 @@ class CimitServiceTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID),
                         eq(null),
-                        eq(SIGNED_CONTRA_INDICATOR_VC),
+                        eq(SIGNED_CONTRA_INDICATOR_VC_1),
                         any(),
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
