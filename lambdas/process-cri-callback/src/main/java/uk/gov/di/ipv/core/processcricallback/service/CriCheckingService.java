@@ -324,11 +324,12 @@ public class CriCheckingService {
                 && !identityCheckSubject.getDrivingPermit().isEmpty()) {
             var permit = identityCheckSubject.getDrivingPermit().get(0);
             return String.format(
-                    "drivingPermit/%s/%s/%s/%s",
-                    permit.getIssuingCountry(),
-                    permit.getIssuedBy(),
-                    permit.getPersonalNumber(),
-                    permit.getIssueDate());
+                            "drivingPermit/%s/%s/%s/%s",
+                            permit.getIssuingCountry(),
+                            permit.getIssuedBy(),
+                            permit.getPersonalNumber(),
+                            permit.getIssueDate())
+                    .toUpperCase();
         }
         LOGGER.warn(
                 LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")
