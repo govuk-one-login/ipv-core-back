@@ -3992,7 +3992,9 @@ Resources:
                   - appconfig:GetConfiguration
                   - appconfig:StartConfigurationSession
                   - appconfig:GetLatestConfiguration
-                Resource: "*"
+                Resource:
+                  - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                  - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
 
   AppConfigApplication:
     Type: AWS::AppConfig::Application
