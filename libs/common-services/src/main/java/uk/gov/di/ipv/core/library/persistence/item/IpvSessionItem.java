@@ -60,6 +60,8 @@ public class IpvSessionItem implements PersistenceItem {
     private boolean inheritedIdentityReceivedThisSession;
     private String riskAssessmentCredential;
 
+    private String securityCheckCredential;
+
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
         return ipvSessionId;

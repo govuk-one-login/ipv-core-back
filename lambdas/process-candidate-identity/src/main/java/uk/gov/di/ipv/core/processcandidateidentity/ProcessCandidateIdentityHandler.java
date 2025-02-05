@@ -395,7 +395,8 @@ public class ProcessCandidateIdentityHandler
                         : cimitService.getContraIndicators(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress);
+                                ipAddress,
+                                ipvSessionItem);
 
         var votResult =
                 votMatcher.matchFirstVot(
@@ -452,7 +453,8 @@ public class ProcessCandidateIdentityHandler
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
+                            ipAddress,
+                            ipvSessionItem);
 
             var thresholdVot = ipvSessionItem.getThresholdVot();
 
