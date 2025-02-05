@@ -198,10 +198,6 @@ class CimitServiceTest {
         var otherContraIndicatorVc =
                 VerifiableCredential.fromValidJwt(
                         TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_2));
-        var ipvSessionItemWithSecurityCheckCredential =
-                IpvSessionItem.builder()
-                        .securityCheckCredential(contraIndicatorVc.getVcString())
-                        .build();
         return Stream.of(
                 Arguments.of(
                         new IpvSessionItem(),
@@ -209,12 +205,16 @@ class CimitServiceTest {
                         contraIndicatorVc.getVcString(),
                         true),
                 Arguments.of(
-                        ipvSessionItemWithSecurityCheckCredential,
+                        IpvSessionItem.builder()
+                                .securityCheckCredential(contraIndicatorVc.getVcString())
+                                .build(),
                         otherContraIndicatorVc,
                         otherContraIndicatorVc.getVcString(),
                         true),
                 Arguments.of(
-                        ipvSessionItemWithSecurityCheckCredential,
+                        IpvSessionItem.builder()
+                                .securityCheckCredential(contraIndicatorVc.getVcString())
+                                .build(),
                         contraIndicatorVc,
                         contraIndicatorVc.getVcString(),
                         false));
@@ -226,7 +226,7 @@ class CimitServiceTest {
             IpvSessionItem ipvSessionItem,
             VerifiableCredential vcFromCimit,
             String expectedStoredVc,
-            boolean hasSecurityCheckCredentialBeenSet)
+            boolean hasSecurityCheckCredentialBeenUpdated)
             throws Exception {
         // Arrange
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
@@ -272,7 +272,7 @@ class CimitServiceTest {
                 OBJECT_MAPPER.writeValueAsString(cis));
 
         assertEquals(expectedStoredVc, ipvSessionItem.getSecurityCheckCredential());
-        verify(ipvSessionService, times(hasSecurityCheckCredentialBeenSet ? 1 : 0))
+        verify(ipvSessionService, times(hasSecurityCheckCredentialBeenUpdated ? 1 : 0))
                 .updateIpvSession(any());
     }
 

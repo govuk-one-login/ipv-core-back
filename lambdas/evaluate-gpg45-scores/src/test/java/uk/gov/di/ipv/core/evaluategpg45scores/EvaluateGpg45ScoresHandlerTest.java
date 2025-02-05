@@ -534,7 +534,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_PROFILES)))
                 .thenReturn(Optional.of(L1A));
-        when(cimitService.getContraIndicators(any(), any(), any())).thenReturn(CONTRAINDICATORS);
+        when(cimitService.getContraIndicators(any(), any(), any(), any()))
+                .thenReturn(CONTRAINDICATORS);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1)).thenReturn(true);
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
@@ -560,7 +561,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_PROFILES)))
                 .thenReturn(Optional.of(L1A));
-        when(cimitService.getContraIndicators(any(), any(), any())).thenReturn(CONTRAINDICATORS);
+        when(cimitService.getContraIndicators(any(), any(), any(), any()))
+                .thenReturn(CONTRAINDICATORS);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1))
                 .thenReturn(false);
