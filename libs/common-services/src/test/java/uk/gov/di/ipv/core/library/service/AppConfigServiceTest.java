@@ -374,7 +374,7 @@ class AppConfigServiceTest {
     @Test
     void shouldThrowErrorOnInvalidCimitConfig() {
         // Arrange
-        var TEST_RAW_PARAMETERS_INVALID_CIMIT =
+        var testRawParametersInvalidCimit =
                 """
             core:
               cimit:
@@ -382,7 +382,7 @@ class AppConfigServiceTest {
                   notvalid: at-all
                 }'
         """;
-        configService = new AppConfigService(TEST_RAW_PARAMETERS_INVALID_CIMIT, secretsProvider);
+        configService = new AppConfigService(testRawParametersInvalidCimit, secretsProvider);
 
         // Act & Assert
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
@@ -520,6 +520,7 @@ class AppConfigServiceTest {
     }
 
     // Environment variables
+
     @Test
     void getEnvironmentVariableDefaultString() {
         // Act

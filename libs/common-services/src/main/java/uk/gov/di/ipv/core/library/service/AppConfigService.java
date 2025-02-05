@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestExcept
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
@@ -35,6 +36,7 @@ public class AppConfigService extends YamlParametersConfigService {
     @Getter @Setter private List<String> featureSet;
     private final SecretsProvider secretsProvider;
 
+    @ExcludeFromGeneratedCoverageReport
     public AppConfigService() {
         var cacheDuration =
                 getEnvironmentVariable(
@@ -50,6 +52,7 @@ public class AppConfigService extends YamlParametersConfigService {
                         .defaultMaxAge(cacheDuration, MINUTES);
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public AppConfigService(String paramsRaw, SecretsProvider secretsProvider) {
         initializeConfig(paramsRaw);
         this.secretsProvider = secretsProvider;
