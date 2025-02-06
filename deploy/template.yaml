@@ -15,13 +15,31 @@ Globals:
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
-        CONFIG_SOURCE: !If
+        CONFIGURATION_SOURCE: !If
           - IsDevelopment
           - "app-config"
           - "ssm"
-        APP_CONFIG_ID: !Ref AppConfigApplication
-        APP_CONFIG_ENVIRONMENT_ID: !Ref AppConfigEnvironment
-        APP_CONFIG_PROFILE_ID: !Ref AppConfigConfigurationProfile
+        APP_CONFIG_ID: !If
+          - IsDevelopment
+          - !If
+            - IsDev01
+            - !Sub "app-config-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "app-config-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "app-config.identity.${Environment}.account.gov.uk"
+        APP_CONFIG_ENVIRONMENT_ID: !If
+          - IsDevelopment
+          - !If
+            - IsDev01
+            - !Sub "app-config-environment-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "app-config-environment-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "app-config-environment.identity.${Environment}.account.gov.uk"
+        APP_CONFIG_PROFILE_ID: !If
+          - IsDevelopment
+          - !If
+            - IsDev01
+            - !Sub "app-config-profile-${Environment}.01.dev.identity.account.gov.uk"
+            - !Sub "app-config-profile-${Environment}.02.dev.identity.account.gov.uk"
+          - !Sub "app-config-profile.identity.${Environment}.account.gov.uk"
         DT_CONNECTION_AUTH_TOKEN: !If
           - UseDynatrace
           - !Sub
@@ -668,7 +686,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issue-client-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
       Tracing: Active
@@ -693,6 +710,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -750,7 +776,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-client-oauth-response-${Environment}"
       Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
       Tracing: Active
@@ -779,6 +804,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -837,7 +871,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "initialise-ipv-session-${Environment}"
       Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
       Tracing: Active
@@ -862,6 +895,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -947,7 +989,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-cri-oauth-request-${Environment}"
       Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
       Tracing: Active
@@ -969,6 +1010,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1039,7 +1089,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-cri-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.processcricallback.ProcessCriCallbackHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-cri-callback
@@ -1096,6 +1145,15 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1163,7 +1221,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-mobile-app-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.processmobileappcallback.ProcessMobileAppCallbackHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-mobile-app-callback
@@ -1200,6 +1257,15 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -1261,7 +1327,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-mobile-app-vc-receipt-${Environment}"
       Handler: uk.gov.di.ipv.core.checkmobileappvcreceipt.CheckMobileAppVcReceiptHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-mobile-app-vc-receipt
@@ -1303,6 +1368,15 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1358,7 +1432,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Tracing: Active
@@ -1384,6 +1457,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1455,7 +1537,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "user-reverification-${Environment}"
       Handler: uk.gov.di.ipv.core.userreverification.UserReverificationHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/user-reverification
       Tracing: Active
@@ -1476,6 +1557,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1697,7 +1787,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-journey-event-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
       Tracing: Active
@@ -1718,6 +1807,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1779,7 +1877,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
       Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
       Tracing: Active
@@ -1800,6 +1897,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1863,7 +1969,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-proven-user-identity-details-${Environment}"
       Handler: uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
       Tracing: Active
@@ -1888,6 +1993,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -1960,7 +2074,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-existing-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
       Tracing: Active
@@ -1983,6 +2096,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2050,7 +2172,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-async-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
@@ -2075,6 +2196,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2176,7 +2306,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-gpg45-score-${Environment}"
       Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-gpg45-score
       Tracing: Active
@@ -2206,6 +2335,15 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - Statement:
+          - Sid: AppConfigAccess
+            Effect: Allow
+            Action:
+              - appconfig:GetConfiguration
+              - appconfig:StartConfigurationSession
+              - appconfig:GetLatestConfiguration
+            Resource:
+              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+              - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
           - Sid: EnforceStayinSpecificVpc
             Effect: Allow
             Action:
@@ -2244,7 +2382,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "call-ticf-cri-${Environment}"
       Handler: uk.gov.di.ipv.core.callticfcri.CallTicfCriHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-ticf-cri
@@ -2284,6 +2421,15 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2329,7 +2475,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "call-dcmaw-async-cri-${Environment}"
       Handler: uk.gov.di.ipv.core.calldcmawasynccri.CallDcmawAsyncCriHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/call-dcmaw-async-cri
@@ -2373,6 +2518,15 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -2407,7 +2561,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "store-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/store-identity
       Tracing: Active
@@ -2428,6 +2581,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2487,7 +2649,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "reset-session-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/reset-session-identity
       Tracing: Active
@@ -2508,6 +2669,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2569,7 +2739,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-coi-${Environment}"
       Handler: uk.gov.di.ipv.core.checkcoi.CheckCoiHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-coi
       Tracing: Active
@@ -2590,6 +2759,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2651,7 +2829,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-reverification-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkreverificationidentity.CheckReverificationIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/check-reverification-identity
       Tracing: Active
@@ -2670,6 +2847,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: { }
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -2718,7 +2904,6 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-candidate-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler::handleRequest
-      Role: !GetAtt LambdaReadAppConfigRole.Arn
       PackageType: Zip
       CodeUri: ../lambdas/process-candidate-identity
       Tracing: Active
@@ -2739,6 +2924,15 @@ Resources:
       Policies:
         - VPCAccessPolicy: {}
         - Statement:
+            - Sid: AppConfigAccess
+              Effect: Allow
+              Action:
+                - appconfig:GetConfiguration
+                - appconfig:StartConfigurationSession
+                - appconfig:GetLatestConfiguration
+              Resource:
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
+                - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
             - Sid: EnforceStayinSpecificVpc
               Effect: Allow
               Action:
@@ -3972,31 +4166,6 @@ Resources:
       TreatMissingData: notBreaching
 
   # App Config
-  LambdaReadAppConfigRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: AppConfigAccess
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Sid: AppConfigAccess
-                Effect: Allow
-                Action:
-                  - appconfig:GetConfiguration
-                  - appconfig:StartConfigurationSession
-                  - appconfig:GetLatestConfiguration
-                Resource:
-                  - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}"
-                  - !Sub "arn:aws:appconfig:${AWS::Region}:${AWS::AccountId}:application/${AppConfigApplication}/*"
-
   AppConfigApplication:
     Type: AWS::AppConfig::Application
     Properties:
