@@ -106,7 +106,7 @@ class BuildUserIdentityHandlerTest {
                         "dummyOAuthUserId", "dummySigninJourneyId", null))
                 .thenReturn(cimitVc);
 
-        when(mockCimitService.getContraIndicators(cimitVc)).thenReturn(List.of());
+        when(mockCimitService.getContraIndicatorsFromVc(cimitVc)).thenReturn(List.of());
 
         // Configure the config service
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");

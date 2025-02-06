@@ -136,7 +136,7 @@ Feature: Authoritative source checks with driving licence CRI
       | kenneth-driving-permit-valid               | page-ipv-success |
       | kenneth-driving-permit-needs-alternate-doc | pyi-no-match     |
 
-  Scenario: Auth source check is not required if user already has a good driving licence VC
+  Scenario: Auth source check is not required if user already has a good driving licence VC even with different case
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -146,7 +146,7 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-multiple-doc-check' page response
     When I submit a 'drivingLicence' event
     Then I get a 'drivingLicence' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    When I submit 'kenneth-driving-permit-valid-lower-case-number' details to the CRI stub
     Then I get an 'address' CRI response
     When I submit 'kenneth-current' details to the CRI stub
     Then I get a 'fraud' CRI response

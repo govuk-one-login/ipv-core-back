@@ -473,7 +473,7 @@ class CriCheckingServiceTest {
         var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
@@ -502,7 +502,7 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
         ipvSessionItem.setTargetVot(Vot.P1);
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
                 .thenReturn(Optional.empty());
@@ -550,7 +550,7 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
@@ -588,7 +588,7 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
-        verify(mockCimitService, never()).getContraIndicators(any(), any(), any());
+        verify(mockCimitService, never()).getContraIndicators(any(), any(), any(), any());
         verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
         verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
     }
@@ -599,7 +599,7 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
@@ -623,7 +623,7 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
@@ -650,7 +650,7 @@ class CriCheckingServiceTest {
         var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.empty());
@@ -679,7 +679,7 @@ class CriCheckingServiceTest {
 
         when(mockConfigService.enabled(DL_AUTH_SOURCE_CHECK)).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
-        when(mockCimitService.getContraIndicators(any(), any(), any()))
+        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));

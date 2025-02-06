@@ -182,7 +182,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            request.getIpAddress());
+                            request.getIpAddress(),
+                            ipvSessionItem);
 
             var journeyResponse =
                     cimitUtilityService.getMitigationJourneyIfBreaching(

@@ -240,7 +240,8 @@ public class CriCheckingService {
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
+                            ipAddress,
+                            ipvSessionItem);
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.
@@ -324,11 +325,12 @@ public class CriCheckingService {
                 && !identityCheckSubject.getDrivingPermit().isEmpty()) {
             var permit = identityCheckSubject.getDrivingPermit().get(0);
             return String.format(
-                    "drivingPermit/%s/%s/%s/%s",
-                    permit.getIssuingCountry(),
-                    permit.getIssuedBy(),
-                    permit.getPersonalNumber(),
-                    permit.getIssueDate());
+                            "drivingPermit/%s/%s/%s/%s",
+                            permit.getIssuingCountry(),
+                            permit.getIssuedBy(),
+                            permit.getPersonalNumber(),
+                            permit.getIssueDate())
+                    .toUpperCase();
         }
         LOGGER.warn(
                 LogHelper.buildLogMessage("Unable to get driving permit identifier from VC")

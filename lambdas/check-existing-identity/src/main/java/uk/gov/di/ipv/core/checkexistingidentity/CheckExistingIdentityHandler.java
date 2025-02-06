@@ -277,7 +277,10 @@ public class CheckExistingIdentityHandler
 
             var contraIndicators =
                     cimitService.getContraIndicators(
-                            clientOAuthSessionItem.getUserId(), govukSigninJourneyId, ipAddress);
+                            clientOAuthSessionItem.getUserId(),
+                            govukSigninJourneyId,
+                            ipAddress,
+                            ipvSessionItem);
 
             var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
