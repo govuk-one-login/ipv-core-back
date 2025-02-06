@@ -67,6 +67,7 @@ public class AppConfigService extends YamlParametersConfigService {
         }
     }
 
+    @ExcludeFromGeneratedCoverageReport
     private String getRawParams(Integer cacheDuration) {
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
@@ -95,16 +96,16 @@ public class AppConfigService extends YamlParametersConfigService {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Internal server error occurred with Secrets manager", e));
+        } catch (InvalidRequestException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            "Parameter value is not valid for the current state of the resource",
+                            e));
         } catch (InvalidParameterException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             String.format(
                                     "An invalid value was provided for the param value: %s", path),
-                            e));
-        } catch (InvalidRequestException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            "Parameter value is not valid for the current state of the resource",
                             e));
         } catch (ResourceNotFoundException e) {
             LOGGER.error(
