@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +34,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -57,7 +59,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
-import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.EnumSet;
@@ -70,6 +71,7 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -264,6 +266,13 @@ public class ProcessCandidateIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
+        } catch (NoCriForIssuerException e) {
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to get credential issuer for VC", e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC)
+                    .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -294,7 +303,7 @@ public class ProcessCandidateIdentityHandler
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                    CredentialParseException, ParseException {
+                    CredentialParseException, ParseException, NoCriForIssuerException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
@@ -321,7 +330,6 @@ public class ProcessCandidateIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             deviceInformation,
-                            ipAddress,
                             sessionVcs,
                             auditEventUser);
 
@@ -375,10 +383,10 @@ public class ProcessCandidateIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
-            String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException {
+            throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException,
+                    NoCriForIssuerException, CredentialParseException {
 
         var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
 
@@ -386,17 +394,11 @@ public class ProcessCandidateIdentityHandler
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        // This is a performance optimisation to save a call to CIMIT if it is not required
-        // If the VTR only contains one entry then it is impossible for a user to reach here
-        // with a breaching CI so we don't have to check.
-        var contraIndicators =
-                clientOAuthSessionItem.getVtr().size() == 1
-                        ? List.<ContraIndicator>of()
-                        : cimitService.getContraIndicators(
-                                clientOAuthSessionItem.getUserId(),
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress,
-                                ipvSessionItem);
+        var jwt = SignedJWT.parse(ipvSessionItem.getSecurityCheckCredential());
+        var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+        var credential =
+                VerifiableCredential.fromValidJwt(clientOAuthSessionItem.getUserId(), cri, jwt);
+        var contraIndicators = cimitService.getContraIndicatorsFromVc(credential);
 
         var votResult =
                 votMatcher.matchFirstVot(

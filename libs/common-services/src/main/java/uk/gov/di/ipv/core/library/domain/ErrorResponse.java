@@ -116,7 +116,8 @@ public enum ErrorResponse {
     MISSING_TARGET_VOT(1101, "Target VOT missing from session"),
     INVALID_VTR_CLAIM(1102, "Invalid VTR claim"),
     MISSING_PROCESS_IDENTITY_TYPE(1103, "Process identity type missing"),
-    UNEXPECTED_PROCESS_IDENTITY_TYPE(1104, "Unexpected process identity type");
+    UNEXPECTED_PROCESS_IDENTITY_TYPE(1104, "Unexpected process identity type"),
+    FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC(1105, "Failed to get credential issuer for VC");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";
