@@ -240,7 +240,8 @@ public class CriCheckingService {
                     cimitService.getContraIndicators(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
+                            ipAddress,
+                            ipvSessionItem);
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.

@@ -157,7 +157,7 @@ public class EvaluateGpg45ScoresHandler
                     clientOAuthSessionItem.getVtr().size() == 1
                             ? null
                             : cimitService.getContraIndicators(
-                                    userId, govukSigninJourneyId, ipAddress);
+                                    userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
 
             var matchingGpg45Profile =
                     findMatchingGpg45Profile(

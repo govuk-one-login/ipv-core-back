@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
@@ -21,6 +22,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 import uk.gov.di.model.ContraIndicator;
@@ -61,21 +63,26 @@ public class CimitService {
     private final VerifiableCredentialValidator verifiableCredentialValidator;
     private final HttpClient httpClient;
 
+    private final IpvSessionService ipvSessionService;
+
     @ExcludeFromGeneratedCoverageReport
     public CimitService(ConfigService configService) {
         this.configService = configService;
         this.verifiableCredentialValidator = new VerifiableCredentialValidator(configService);
         this.httpClient = TracingHttpClient.newHttpClient();
+        this.ipvSessionService = new IpvSessionService(configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public CimitService(
             ConfigService configService,
             VerifiableCredentialValidator verifiableCredentialValidator,
-            HttpClient httpClient) {
+            HttpClient httpClient,
+            IpvSessionService ipvSessionService) {
         this.configService = configService;
         this.verifiableCredentialValidator = verifiableCredentialValidator;
         this.httpClient = httpClient;
+        this.ipvSessionService = ipvSessionService;
     }
 
     @Tracing
@@ -108,14 +115,24 @@ public class CimitService {
     }
 
     public List<ContraIndicator> getContraIndicators(
-            String userId, String govukSigninJourneyId, String ipAddress)
+            String userId,
+            String govukSigninJourneyId,
+            String ipAddress,
+            IpvSessionItem ipvSessionItem)
             throws CiRetrievalException {
         var vc = getContraIndicatorsVc(userId, govukSigninJourneyId, ipAddress);
 
-        return getContraIndicators(vc);
+        var inSessionSecurityCredential = ipvSessionItem.getSecurityCheckCredential();
+        if (StringUtils.isBlank(inSessionSecurityCredential)
+                || !inSessionSecurityCredential.equals(vc.getVcString())) {
+            ipvSessionItem.setSecurityCheckCredential(vc.getVcString());
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+        }
+
+        return getContraIndicatorsFromVc(vc);
     }
 
-    public List<ContraIndicator> getContraIndicators(VerifiableCredential vc)
+    public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)
             throws CiRetrievalException {
         if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
             var evidence = cimitCredential.getEvidence();

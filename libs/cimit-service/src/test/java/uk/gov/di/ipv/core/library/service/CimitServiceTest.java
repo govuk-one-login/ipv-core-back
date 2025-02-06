@@ -5,6 +5,9 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -20,6 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
@@ -28,6 +32,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,10 +41,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
@@ -58,7 +65,7 @@ class CimitServiceTest {
     private static final CimitApiResponse SUCCESSFUL_POST_HTTP_RESPONSE =
             new CimitApiResponse("success", null, null);
     private static final ContraIndicatorCredentialDto SUCCESSFUL_GET_CI_HTTP_RESPONSE =
-            new ContraIndicatorCredentialDto(SIGNED_CONTRA_INDICATOR_VC);
+            new ContraIndicatorCredentialDto(SIGNED_CONTRA_INDICATOR_VC_1);
     private static final CimitApiResponse FAILED_CIMIT_HTTP_RESPONSE =
             new CimitApiResponse(FAILED_RESPONSE, "INTERNAL_ERROR", "Internal Server Error");
     private static final String CIMIT_API_BASE_URL = "https://base-url.co.uk";
@@ -70,6 +77,7 @@ class CimitServiceTest {
     @Mock private VerifiableCredentialValidator verifiableCredentialValidator;
     @Mock private HttpClient mockHttpClient;
     @Mock private HttpResponse<String> mockHttpResponse;
+    @Mock private IpvSessionService ipvSessionService;
     @InjectMocks CimitService cimitService;
 
     @Test
@@ -183,8 +191,43 @@ class CimitServiceTest {
                                 vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
-    @Test
-    void getContraIndicatorsVcSendsHttpRequestToCimitApi() throws Exception {
+    private static Stream<Arguments> provideArgumentsForGetContraIndicators() throws Exception {
+        var contraIndicatorVc =
+                VerifiableCredential.fromValidJwt(
+                        TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1));
+        var otherContraIndicatorVc =
+                VerifiableCredential.fromValidJwt(
+                        TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_2));
+        return Stream.of(
+                Arguments.of(
+                        new IpvSessionItem(),
+                        contraIndicatorVc,
+                        contraIndicatorVc.getVcString(),
+                        true),
+                Arguments.of(
+                        IpvSessionItem.builder()
+                                .securityCheckCredential(contraIndicatorVc.getVcString())
+                                .build(),
+                        otherContraIndicatorVc,
+                        otherContraIndicatorVc.getVcString(),
+                        true),
+                Arguments.of(
+                        IpvSessionItem.builder()
+                                .securityCheckCredential(contraIndicatorVc.getVcString())
+                                .build(),
+                        contraIndicatorVc,
+                        contraIndicatorVc.getVcString(),
+                        false));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideArgumentsForGetContraIndicators")
+    void sendsHttpRequestToCimitApiAndStoresInSession(
+            IpvSessionItem ipvSessionItem,
+            VerifiableCredential vcFromCimit,
+            String expectedStoredVc,
+            boolean hasSecurityCheckCredentialBeenUpdated)
+            throws Exception {
         // Arrange
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
@@ -197,13 +240,11 @@ class CimitServiceTest {
         when(verifiableCredentialValidator.parseAndValidate(
                         eq(TEST_USER_ID),
                         eq(null),
-                        eq(SIGNED_CONTRA_INDICATOR_VC),
+                        eq(SIGNED_CONTRA_INDICATOR_VC_1),
                         any(),
                         eq(CIMIT_COMPONENT_ID),
                         eq(false)))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC)));
+                .thenReturn(vcFromCimit);
         when(configService.getParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn(CIMIT_COMPONENT_ID);
         when(configService.getParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
@@ -212,7 +253,7 @@ class CimitServiceTest {
         // Act
         var cis =
                 cimitService.getContraIndicators(
-                        TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+                        TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, ipvSessionItem);
 
         // Assert
         verify(mockHttpClient).send(httpRequestCaptor.capture(), any());
@@ -229,6 +270,10 @@ class CimitServiceTest {
         assertEquals(
                 "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
                 OBJECT_MAPPER.writeValueAsString(cis));
+
+        assertEquals(expectedStoredVc, ipvSessionItem.getSecurityCheckCredential());
+        verify(ipvSessionService, times(hasSecurityCheckCredentialBeenUpdated ? 1 : 0))
+                .updateIpvSession(any());
     }
 
     @Test
@@ -286,7 +331,7 @@ class CimitServiceTest {
     }
 
     @Test
-    void getContraIndicatorVCThrowsErrorForInvalidJWT() throws Exception {
+    void getContraIndicatorThrowsErrorForInvalidJWT() throws Exception {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
@@ -305,13 +350,16 @@ class CimitServiceTest {
                 CiRetrievalException.class,
                 () ->
                         cimitService.getContraIndicators(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+                                TEST_USER_ID,
+                                GOVUK_SIGNIN_JOURNEY_ID,
+                                CLIENT_SOURCE_IP,
+                                new IpvSessionItem()));
     }
 
     @Test
     void getContraIndicatorsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
         var contraIndicators =
-                cimitService.getContraIndicators(
+                cimitService.getContraIndicatorsFromVc(
                         VerifiableCredential.fromValidJwt(
                                 TEST_USER_ID,
                                 null,
@@ -325,7 +373,7 @@ class CimitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        cimitService.getContraIndicators(
+                        cimitService.getContraIndicatorsFromVc(
                                 VerifiableCredential.fromValidJwt(
                                         TEST_USER_ID,
                                         null,
