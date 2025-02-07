@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
@@ -378,5 +380,32 @@ class CimitServiceTest {
                                         TEST_USER_ID,
                                         null,
                                         SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE))));
+    }
+
+    @Test
+    void getContraIndicatorsFromVcReturnsNoCIsFromVcStringWhenNoCIs() throws Exception {
+        // Arrange
+        when(configService.getCriByIssuer(any())).thenReturn(Cri.CIMIT);
+
+        // Act
+        var cis = cimitService.getContraIndicatorsFromVc(SIGNED_CIMIT_VC_NO_CI, "mock-user-id");
+
+        // Assert
+        assertTrue(cis.isEmpty());
+    }
+
+    @Test
+    void getContraIndicatorsFromVcReturnsCIsFromVcStringIfPresent() throws Exception {
+        // Arrange
+        when(configService.getCriByIssuer(any())).thenReturn(Cri.CIMIT);
+
+        // Act
+        var cis =
+                cimitService.getContraIndicatorsFromVc(
+                        SIGNED_CONTRA_INDICATOR_VC_1, "mock-user-id");
+
+        assertEquals(
+                "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
+                OBJECT_MAPPER.writeValueAsString(cis));
     }
 }
