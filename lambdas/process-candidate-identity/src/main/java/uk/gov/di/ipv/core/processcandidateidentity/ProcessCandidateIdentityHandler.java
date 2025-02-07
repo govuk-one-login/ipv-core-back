@@ -451,9 +451,11 @@ public class ProcessCandidateIdentityHandler
                     auditEventUser);
 
             var cis =
-                    cimitService.getContraIndicatorsFromVc(
-                            ipvSessionItem.getSecurityCheckCredential(),
-                            clientOAuthSessionItem.getUserId());
+                    cimitService.getContraIndicators(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress,
+                            ipvSessionItem);
 
             var thresholdVot = ipvSessionItem.getThresholdVot();
 

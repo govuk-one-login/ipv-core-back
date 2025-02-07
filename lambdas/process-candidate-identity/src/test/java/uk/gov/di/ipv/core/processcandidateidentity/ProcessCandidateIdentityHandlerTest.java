@@ -214,10 +214,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
+            when(cimitService.getContraIndicators(
+                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -271,10 +273,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.of(cimitResponse));
+            when(cimitService.getContraIndicators(
+                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -328,10 +332,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
+            when(cimitService.getContraIndicators(
+                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -406,10 +412,12 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
+            when(cimitService.getContraIndicators(
+                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -661,10 +669,12 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
+            when(cimitService.getContraIndicators(
+                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+                    .thenReturn(ticfCis);
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             ticfCis, ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
-
             var request =
                     requestBuilder
                             .lambdaInput(
