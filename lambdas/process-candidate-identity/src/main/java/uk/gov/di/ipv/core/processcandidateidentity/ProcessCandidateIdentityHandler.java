@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -394,11 +393,10 @@ public class ProcessCandidateIdentityHandler
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        var jwt = SignedJWT.parse(ipvSessionItem.getSecurityCheckCredential());
-        var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
-        var credential =
-                VerifiableCredential.fromValidJwt(clientOAuthSessionItem.getUserId(), cri, jwt);
-        var contraIndicators = cimitService.getContraIndicatorsFromVc(credential);
+        var contraIndicators =
+                cimitService.getContraIndicatorsFromVc(
+                        ipvSessionItem.getSecurityCheckCredential(),
+                        clientOAuthSessionItem.getUserId());
 
         var votResult =
                 votMatcher.matchFirstVot(
@@ -432,7 +430,8 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             String ipAddress,
-            AuditEventUser auditEventUser) {
+            AuditEventUser auditEventUser)
+            throws ParseException, NoCriForIssuerException, CredentialParseException {
         try {
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
@@ -452,11 +451,9 @@ public class ProcessCandidateIdentityHandler
                     auditEventUser);
 
             var cis =
-                    cimitService.getContraIndicators(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress,
-                            ipvSessionItem);
+                    cimitService.getContraIndicatorsFromVc(
+                            ipvSessionItem.getSecurityCheckCredential(),
+                            clientOAuthSessionItem.getUserId());
 
             var thresholdVot = ipvSessionItem.getThresholdVot();
 

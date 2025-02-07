@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -20,6 +21,8 @@ import uk.gov.di.ipv.core.library.cimit.exception.CimitHttpRequestException;
 import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -34,6 +37,7 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.text.ParseException;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
@@ -130,6 +134,15 @@ public class CimitService {
         }
 
         return getContraIndicatorsFromVc(vc);
+    }
+
+    public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
+            throws ParseException, NoCriForIssuerException, CredentialParseException,
+                    CiRetrievalException {
+        var jwt = SignedJWT.parse(vcString);
+        var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
+        var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
+        return getContraIndicatorsFromVc(credential);
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)
