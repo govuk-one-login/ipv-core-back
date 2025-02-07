@@ -41,7 +41,7 @@ public class AppConfigService extends YamlParametersConfigService {
         var cacheDuration =
                 getEnvironmentVariable(
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
-        var paramsRaw = getRawParams(cacheDuration);
+        var paramsRaw = getRawParams();
 
         initializeConfig(paramsRaw);
         this.secretsProvider =
@@ -68,7 +68,7 @@ public class AppConfigService extends YamlParametersConfigService {
     }
 
     @ExcludeFromGeneratedCoverageReport
-    private String getRawParams(Integer cacheDuration) {
+    private String getRawParams() {
         var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
         var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
         var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
@@ -79,7 +79,6 @@ public class AppConfigService extends YamlParametersConfigService {
                                 .build(),
                         environmentId,
                         applicationId)
-                .withMaxAge(cacheDuration, MINUTES)
                 .get(profileId);
     }
 

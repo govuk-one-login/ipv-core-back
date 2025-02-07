@@ -46,8 +46,7 @@ public abstract class ConfigService {
             return new YamlConfigService();
         }
         if (Objects.equals(
-                System.getenv(EnvironmentVariable.CONFIGURATION_SOURCE.name()),
-                APP_CONFIG_SOURCE)) {
+                System.getenv(EnvironmentVariable.CONFIG_SOURCE.name()), APP_CONFIG_SOURCE)) {
             return new AppConfigService();
         }
         return new SsmConfigService();

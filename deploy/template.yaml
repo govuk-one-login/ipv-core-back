@@ -15,7 +15,7 @@ Globals:
     Environment:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
-        CONFIGURATION_SOURCE: !If
+        CONFIG_SOURCE: !If
           - IsDevelopment
           - "app-config"
           - "ssm"
