@@ -1272,6 +1272,8 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBReadPolicy:
