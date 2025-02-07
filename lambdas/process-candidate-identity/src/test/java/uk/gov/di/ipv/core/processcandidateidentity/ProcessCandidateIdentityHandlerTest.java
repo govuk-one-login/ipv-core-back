@@ -10,12 +10,17 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
+import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -38,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,12 +53,18 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
@@ -564,6 +576,40 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
+        void shouldHandleNoCriForIssuerException() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(cimitService.getContraIndicatorsFromVc(any(), any()))
+                    .thenThrow(new NoCriForIssuerException("No CRI for isser"));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(
+                    FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC.getMessage(), response.get("message"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
         void shouldHandleNoProfileMatch() throws Exception {
             // Arrange
             when(checkCoiService.isCoiCheckSuccessful(
@@ -694,6 +740,129 @@ class ProcessCandidateIdentityHandlerTest {
                             eq(ipvSessionItem),
                             eq(List.of()),
                             any(AuditEventUser.class));
+        }
+
+        @Test
+        void shouldReturnJourneyErrorForCredentialParseException() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(any(), any(), any(), any(), any(), any()))
+                    .thenThrow(new CredentialParseException("Unable to parse credentials"));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), response.get("message"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldReturnJourneyErrorForFailedCiRetrieval() throws Exception {
+            // Arrange
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(cimitService.getContraIndicatorsFromVc(any(), any()))
+                    .thenThrow(new CiRetrievalException("Could not retrieve CIs"));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(FAILED_TO_GET_STORED_CIS.getMessage(), response.get("message"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldReturnJourneyErrorWhenFailingToStoreIdentity() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(
+                            List.of(), ipvSessionItem.getThresholdVot()))
+                    .thenReturn(Optional.empty());
+            doThrow(
+                            new EvcsServiceException(
+                                    SC_SERVER_ERROR, RECEIVED_NON_200_RESPONSE_STATUS_CODE))
+                    .when(storeIdentityService)
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(
+                    RECEIVED_NON_200_RESPONSE_STATUS_CODE.getMessage(), response.get("message"));
+        }
+
+        @Test
+        void shouldReturnJourneyErrorWhenFailingToGetSessionVcs() throws Exception {
+            // Arrange
+            when(sessionCredentialsService.getCredentials(any(), any()))
+                    .thenThrow(new VerifiableCredentialException(500, FAILED_TO_GET_CREDENTIAL));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(FAILED_TO_GET_CREDENTIAL.getMessage(), response.get("message"));
         }
     }
 

@@ -259,7 +259,7 @@ public class ProcessCandidateIdentityHandler
                             FAILED_TO_GET_STORED_CIS)
                     .toObjectMap();
         } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to get VOT from operational VC", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
