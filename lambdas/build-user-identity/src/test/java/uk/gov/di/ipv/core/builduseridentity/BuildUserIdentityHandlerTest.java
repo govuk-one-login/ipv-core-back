@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -31,12 +30,12 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -64,6 +63,7 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -87,7 +87,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MFA_RESET;
-import static uk.gov.di.ipv.core.library.domain.Cri.CIMIT;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
@@ -190,6 +189,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setVot(Vot.P2);
         ipvSessionItem.setTargetVot(Vot.P2);
         ipvSessionItem.setFeatureSet("someCoolNewThing");
+        ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
         clientOAuthSessionItem = getClientAuthSessionItemWithScope(OPENID_SCOPE);
     }
@@ -210,19 +210,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
 
         var mitigatedCi = new ContraIndicator();
         mitigatedCi.setCode("test_code");
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -259,7 +253,7 @@ class BuildUserIdentityHandlerTest {
         assertTrue(extensions.isHasMitigations());
         assertEquals(3, userIdentityResponse.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
@@ -281,19 +275,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
 
         var mitigatedCi = new ContraIndicator();
         mitigatedCi.setCode("test_code");
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -330,7 +318,7 @@ class BuildUserIdentityHandlerTest {
         assertTrue(extensions.isHasMitigations());
         assertEquals(3, userIdentityResponse.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
@@ -372,19 +360,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
 
         var mitigatedCi = new ContraIndicator();
         mitigatedCi.setCode("test_code");
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -426,7 +408,7 @@ class BuildUserIdentityHandlerTest {
         assertTrue(extensions.isHasMitigations());
         assertEquals(3, userIdentityResponse.getReturnCode().size());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
 
@@ -455,13 +437,8 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(CONTRA_INDICATORS);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
+                .thenReturn(CONTRA_INDICATORS);
         // Act
         APIGatewayProxyResponseEvent response =
                 buildUserIdentityHandler.handleRequest(testEvent, mockContext);
@@ -509,7 +486,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
 
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
         verify(mockSessionCredentialsService, times(1))
@@ -533,13 +510,8 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(CONTRA_INDICATORS);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
+                .thenReturn(CONTRA_INDICATORS);
         when(mockConfigService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId()))
                 .thenReturn(true);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
@@ -603,13 +575,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(contraIndicators);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(contraIndicators);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
         // Act
         APIGatewayProxyResponseEvent response =
@@ -658,7 +624,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(expectedExtension, capturedAuditEvent.getExtensions());
 
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
 
         verify(mockConfigService).setFeatureSet(List.of("someCoolNewThing"));
         verify(mockSessionCredentialsService, times(1))
@@ -698,7 +664,7 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
                 .thenThrow(new CiRetrievalException("Lambda execution failed"));
 
         APIGatewayProxyResponseEvent response =
@@ -711,7 +677,7 @@ class BuildUserIdentityHandlerTest {
                 "Unexpected server error - Error when fetching CIs from storage system. Lambda execution failed",
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsVc(any(), any(), any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 
@@ -739,7 +705,6 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenScopeIsInvalid() throws Exception {
-
         // Arrange
         ClientOAuthSessionItem clientOAuthSessionItemWithScope =
                 getClientAuthSessionItemWithScope("a-different-scope");
@@ -770,6 +735,52 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorResponseWhenVcStringCannotBeParsed() throws Exception {
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
+                .thenThrow(new ParseException("Unable to parse VC string", 0));
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals("server_error", responseBody.get("error"));
+        assertEquals(
+                "Unexpected server error - Failed to parse credentials. Unable to parse VC string",
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenIssuerCannotBeFound() throws Exception {
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
+                .thenThrow(new NoCriForIssuerException("Issuer does not exist"));
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals("server_error", responseBody.get("error"));
+        assertEquals(
+                "Unexpected server error - Failed to get credential issuer for VC. Issuer does not exist",
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
     void shouldNotReturnErrorResponseWhenScopeIsInvalidAndFeatureDisabled() throws Exception {
 
         // Arrange
@@ -782,19 +793,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItemWithScope);
-        when(mockCimitService.getContraIndicatorsVc(any(), any(), any()))
-                .thenReturn(
-                        VerifiableCredential.fromValidJwt(
-                                TEST_USER_ID,
-                                CIMIT,
-                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1)));
 
         var mitigatedCi = new ContraIndicator();
         mitigatedCi.setCode("test_code");
         mitigatedCi.setMitigation(List.of(new Mitigation()));
         var testCis = List.of(mitigatedCi);
 
-        when(mockCimitService.getContraIndicatorsFromVc(any())).thenReturn(testCis);
+        when(mockCimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(testCis);
         when(mockConfigService.enabled(MFA_RESET)).thenReturn(false);
 
         when(mockSessionCredentialsService.getCredentials(TEST_IPV_SESSION_ID, TEST_USER_ID))

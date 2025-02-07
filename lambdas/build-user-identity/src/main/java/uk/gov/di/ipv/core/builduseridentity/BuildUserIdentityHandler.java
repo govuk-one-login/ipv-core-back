@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
+import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -117,11 +118,10 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
-            var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
-                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
-
-            var contraIndicators = cimitService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var contraIndicators =
+                    cimitService.getContraIndicatorsFromVc(
+                            ipvSessionItem.getSecurityCheckCredential(),
+                            clientOAuthSessionItem.getUserId());
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
@@ -136,7 +136,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             var userIdentity =
                     userIdentityService.generateUserIdentity(
                             vcs, userId, achievedVot, targetVot, contraIndicators);
-            userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
+            userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -161,6 +161,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
+        } catch (java.text.ParseException e) {
+            return serverErrorJsonResponse("Failed to parse credentials.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiRetrievalException e) {
@@ -177,6 +179,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
+        } catch (NoCriForIssuerException e) {
+            return serverErrorJsonResponse("Failed to get credential issuer for VC.", e);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
