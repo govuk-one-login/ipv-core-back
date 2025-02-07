@@ -430,8 +430,7 @@ public class ProcessCandidateIdentityHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
             String ipAddress,
-            AuditEventUser auditEventUser)
-            throws ParseException, NoCriForIssuerException, CredentialParseException {
+            AuditEventUser auditEventUser) {
         try {
             var ticfVcs = ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem);
 
