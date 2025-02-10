@@ -59,6 +59,8 @@ Feature: Reprove Identity Journey
 
     Scenario: User needs to reprove their identity with F2F pending
         Given I start a new 'medium-confidence' journey
+        Then I get a 'live-in-uk' page response
+        When I submit a 'uk' event
         Then I get a 'page-ipv-identity-document-start' page response
         When I submit an 'end' event
         Then I get a 'page-ipv-identity-postoffice-start' page response

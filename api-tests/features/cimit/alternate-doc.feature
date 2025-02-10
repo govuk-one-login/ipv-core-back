@@ -3,6 +3,8 @@ Feature: CIMIT - Alternate doc
   Rule: No existing identity
     Background:
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -41,6 +43,8 @@ Feature: CIMIT - Alternate doc
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV
       Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -79,6 +83,8 @@ Feature: CIMIT - Alternate doc
     Scenario Outline: Alternate doc mitigation user drops out of DWP KBV CRI via thin file or failed checks - DWP KBV
       Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -125,6 +131,8 @@ Feature: CIMIT - Alternate doc
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV PIP page dropout
       Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -163,6 +171,8 @@ Feature: CIMIT - Alternate doc
     Scenario Outline: Alternate doc mitigation via passport or DL - DWP KBV transition page dropout
       Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

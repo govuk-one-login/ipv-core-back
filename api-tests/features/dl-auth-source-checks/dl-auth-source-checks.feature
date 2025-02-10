@@ -1,9 +1,9 @@
 @Build
 Feature: Authoritative source checks with driving licence CRI
 
-  Scenario Outline: Journey through DCMAW with driving licence requires authoritative source check
+  Scenario Outline: Journey through DCMAW with driving licence requires authoritative source check low-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
-    When I start a new '<journey-type>' journey
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -14,14 +14,24 @@ Feature: Authoritative source checks with driving licence CRI
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-    Examples:
-      | journey-type      |
-      | low-confidence    |
-      | medium-confidence |
-
-  Scenario Outline: Journey with auth source check that attracts a CI leads to a mitigation journey
+  Scenario Outline: Journey through DCMAW with driving licence requires authoritative source check medium-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
-    When I start a new '<journey-type>' journey
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'page-dcmaw-success' page response
+
+  Scenario Outline: Journey with auth source check that attracts a CI leads to a mitigation journey low-confidence
+    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -36,10 +46,24 @@ Feature: Authoritative source checks with driving licence CRI
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-    Examples:
-      | journey-type       |
-      | low-confidence    |
-      | medium-confidence |
+  Scenario Outline: Journey with auth source check that attracts a CI leads to a mitigation journey medium-confidence
+    Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+    Then I get a 'drivingLicence' CRI response
+    When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+      | Attribute | Values          |
+      | context   | "check_details" |
+    Then I get a 'pyi-driving-licence-no-match-another-way' page response
+    When I submit an 'end' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
 
   Scenario Outline: Separate session enhanced verification mitigation with DCMAW and driving licence requires auth source check
     Given I activate the 'drivingLicenceAuthCheck' feature set
@@ -69,6 +93,8 @@ Feature: Authoritative source checks with driving licence CRI
   Scenario Outline: Same session enhanced verification mitigation
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -104,6 +130,8 @@ Feature: Authoritative source checks with driving licence CRI
   Scenario Outline: KBV thin file
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -139,6 +167,8 @@ Feature: Authoritative source checks with driving licence CRI
   Scenario: Auth source check is not required if user already has a good driving licence VC even with different case
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -166,6 +196,8 @@ Feature: Authoritative source checks with driving licence CRI
   Scenario: Auth source check is required if doc identifiers do not match
     Given I activate the 'drivingLicenceAuthCheck' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

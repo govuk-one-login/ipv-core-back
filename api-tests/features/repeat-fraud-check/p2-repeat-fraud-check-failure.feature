@@ -182,7 +182,9 @@ Feature: Repeat fraud check failures
       Then I get an 'address' CRI response
 
     Scenario: Address access denied OAuth error
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+            | Attribute | Values               |
+            | context   | "international_user" |
       Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
       When I submit a 'returnToRp' event
       Then I get an OAuth response

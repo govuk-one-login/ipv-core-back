@@ -380,7 +380,7 @@ core:
     deleteDetailsEnabled: false
     pendingF2FResetEnabled: false
     strategicAppEnabled: false
-    internationalAddressEnabled: false
+    internationalAddressEnabled: true
     inheritedIdentity: true
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true

@@ -3,6 +3,8 @@
 Feature: P2 Web document journey
   Background: Start P2 journey and ineligible for the app
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -37,6 +39,8 @@ Feature: P2 Web document journey
   Scenario Outline: Successful P2 identity via Web using <cri> - DWP KBV
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -71,6 +75,8 @@ Feature: P2 Web document journey
   Scenario Outline: Successful P2 identity via Web using <cri> - DWP KBV PIP page dropout
     Given I activate the 'dwpKbvTest' feature sets
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -105,6 +111,8 @@ Feature: P2 Web document journey
   Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - DL
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -134,6 +142,8 @@ Feature: P2 Web document journey
   Scenario: Successful P2 identity via Web using - DWP KBV transition page dropout - Passport
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -167,6 +177,8 @@ Feature: P2 Web document journey
   Scenario Outline: User drops out of DWP KBV CRI via thin file or failed checks using <cri> - DWP KBV
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

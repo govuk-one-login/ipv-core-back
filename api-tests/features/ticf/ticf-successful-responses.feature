@@ -5,6 +5,8 @@ Feature: TICF successful responses
       Given TICF CRI will respond with default parameters and
         | cis | BREACHING                   |
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -32,6 +34,8 @@ Feature: TICF successful responses
       Given TICF CRI will respond with default parameters
         | cis  | BREACHING                    |
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -75,6 +79,8 @@ Feature: TICF successful responses
         | responseDelay | 1         |
       And I activate the 'ticfCriBeta' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -105,6 +111,8 @@ Feature: TICF successful responses
         | txn   |                             |
       And I activate the 'ticfCriBeta' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

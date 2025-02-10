@@ -3,7 +3,6 @@ Feature: P2 App journey
 
   Background:
     Given I start a new 'medium-confidence' journey
-    And I activate the 'internationalAddress' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
 
