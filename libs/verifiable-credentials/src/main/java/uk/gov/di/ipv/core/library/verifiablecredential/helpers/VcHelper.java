@@ -198,10 +198,10 @@ public class VcHelper {
     public static boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(VcHelper::hasNoApplicableFraudCheck);
+                .anyMatch(VcHelper::hasNoApplicableOrAvailableFraudCheck);
     }
 
-    private static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
+    private static boolean hasNoApplicableOrAvailableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
 
             return identityCheckCredential.getEvidence().stream()
