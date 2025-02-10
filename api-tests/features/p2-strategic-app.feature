@@ -4,6 +4,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey declared iphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -35,6 +37,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey pending credential
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -56,6 +60,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey cross-browser scenario
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -88,6 +94,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey credential fails with no ci
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -109,6 +117,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey credential fails with ci
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -130,6 +140,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey detected iphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -141,6 +153,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey declared android
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -154,6 +168,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey detected android
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -165,6 +181,8 @@ Feature: M2B Strategic App Journeys
   Scenario: MAM journey no compatible smartphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -182,6 +200,8 @@ Feature: M2B Strategic App Journeys
   Scenario: DAD journey iphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -195,6 +215,8 @@ Feature: M2B Strategic App Journeys
   Scenario: DAD journey android
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -208,6 +230,8 @@ Feature: M2B Strategic App Journeys
   Scenario: DAD journey no compatible smartphone
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -223,12 +247,14 @@ Feature: M2B Strategic App Journeys
   Scenario: Strategic app no photo ID goes to F2F
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
 
   Scenario: Strategic app non-uk address user gets to download app
-    Given I activate the 'internationalAddress,strategicApp' feature sets
+    Given I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -243,7 +269,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
 
   Scenario: Strategic app non-uk address user abandons due to no biometric passport
-    Given I activate the 'internationalAddress,strategicApp' feature sets
+    Given I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -255,7 +281,7 @@ Feature: M2B Strategic App Journeys
     When I use the OAuth response to get my identity
 
   Scenario: Strategic app non-uk address user abandons due to no biometric passport then returns
-    Given I activate the 'internationalAddress,strategicApp' feature sets
+    Given I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -267,7 +293,7 @@ Feature: M2B Strategic App Journeys
 
   Scenario: Strategic app non-uk address user retries with app
     Given I start a new 'medium-confidence' journey
-    And I activate the 'internationalAddress,strategicApp' feature sets
+    And I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -285,7 +311,7 @@ Feature: M2B Strategic App Journeys
 
   Scenario: Strategic app non-uk address user wants to prove identity another way from download page
     Given I start a new 'medium-confidence' journey
-    And I activate the 'internationalAddress,strategicApp' feature sets
+    And I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event

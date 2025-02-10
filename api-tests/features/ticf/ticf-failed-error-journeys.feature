@@ -4,6 +4,8 @@ Feature: TICF failed/error journeys
   Rule: Via enhanced-verification journey
     Background: Start TICF enhanced verification journey
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -70,6 +72,8 @@ Feature: TICF failed/error journeys
   Rule: Via post-office
     Scenario: TICF failed post-office journey - PYI_ESCAPE
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -89,6 +93,8 @@ Feature: TICF failed/error journeys
     Scenario: TICF failed M2B journey - PYI_ESCAPE_M2B
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

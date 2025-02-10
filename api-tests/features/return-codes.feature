@@ -2,6 +2,8 @@ Feature: Return exit codes
   @Build
   Scenario: Successful journey with identity and no CIs - no return codes
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -21,6 +23,8 @@ Feature: Return exit codes
 
   Scenario: Failed identity journey with no CI - user doesn't hold appropriate documents - non-ci-breaching code returned
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -36,6 +40,8 @@ Feature: Return exit codes
 
   Scenario: KBV score zero and failure to complete journey - non-ci-breaching code returned
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -94,6 +100,8 @@ Feature: Return exit codes
 
   Scenario: Successful journey with always-required return code - always-required code returned
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -113,6 +121,8 @@ Feature: Return exit codes
 
   Scenario: Breaching CI codes generate return codes, including mitigated CIs - CI codes returned
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -166,6 +176,8 @@ Feature: Return exit codes
   @Build
   Scenario: Breaching CI code generates return code
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
