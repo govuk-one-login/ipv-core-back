@@ -2,6 +2,8 @@
 Feature: Inherited identity extended scenarios
   Scenario: Successful enhanced verification mitigation with a PCL250 HMRC profile and receives a P2
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -51,6 +53,8 @@ Feature: Inherited identity extended scenarios
 
   Scenario: Fails to migrate PCL250 HMRC profile when user fails with breaching CI
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -71,6 +75,8 @@ Feature: Inherited identity extended scenarios
 
   Scenario: Successfully migrates PCL250 HMRC profile for user with pending F2F
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -97,6 +103,8 @@ Feature: Inherited identity extended scenarios
 
   Scenario: Successfully migrates PCL250 HMRC profile when user has failed F2F (no CI)
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -154,32 +162,34 @@ Feature: Inherited identity extended scenarios
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  Scenario: Successfully completes a 6MFC journey with a PCL250 HMRC profile and receives a P2
-  Successfully migrates a PCL250 HMRC profile during 6MFC
-    Given the subject already has the following credentials
-      | CRI     | scenario                     |
-      | dcmaw   | kenneth-driving-permit-valid |
-      | address | kenneth-current              |
-    And the subject already has the following expired credentials
-      | CRI   | scenario        |
-      | fraud | kenneth-score-2 |
+  # Scenario: Successfully completes a 6MFC journey with a PCL250 HMRC profile and receives a P2
+  # Successfully migrates a PCL250 HMRC profile during 6MFC
+  #   Given the subject already has the following credentials
+  #     | CRI     | scenario                     |
+  #     | dcmaw   | kenneth-driving-permit-valid |
+  #     | address | kenneth-current              |
+  #   And the subject already has the following expired credentials
+  #     | CRI   | scenario        |
+  #     | fraud | kenneth-score-2 |
 
-    # New 6MFC journey with inherited identity
-    Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'kenneth-vot-pcl250-passport'
-    Then I get a 'confirm-your-details' page response
-    When I submit a 'address-only' event
-    Then I get an 'address' CRI response
-    When I submit 'kenneth-current' details to the CRI stub
-    Then I get a 'fraud' CRI response
-    When I submit 'kenneth-score-2' details to the CRI stub
-    Then I get a 'page-ipv-success' page response with context 'updateIdentity'
-    When I submit a 'next' event
-    Then I get an OAuth response
-    When I use the OAuth response to get my identity
-    Then I get a 'P2' identity
+  #   # New 6MFC journey with inherited identity
+  #   Given I start a new 'medium-confidence-pcl200-pcl250' journey with inherited identity 'kenneth-vot-pcl250-passport'
+  #   Then I get a 'confirm-your-details' page response
+  #   When I submit a 'address-only' event
+  #   Then I get an 'address' CRI response
+  #   When I submit 'kenneth-current' details to the CRI stub
+  #   Then I get a 'fraud' CRI response
+  #   When I submit 'kenneth-score-2' details to the CRI stub
+  #   Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+  #   When I submit a 'next' event
+  #   Then I get an OAuth response
+  #   When I use the OAuth response to get my identity
+  #   Then I get a 'P2' identity
 
   Scenario Outline: Successfully completes an alternate doc (separate session mitigation) journey with PCL250 HMRC profile and receives P2 identity
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

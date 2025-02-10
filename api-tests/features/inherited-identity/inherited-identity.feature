@@ -25,7 +25,7 @@ Feature: Inherited Identity
     Then I get a '<expected-identity>' identity
 
     When I start a new '<return-journey-type>' journey
-    Then I get a 'page-ipv-identity-document-start' page response
+    Then I get a 'live-in-uk' page response
 
     Examples:
     | inherited-identity           | expected-identity | return-journey-type      | vtr       |
@@ -45,6 +45,8 @@ Feature: Inherited Identity
 
   Scenario Outline: P2 identity takes priority over successfully migrated PCL200
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -105,6 +107,8 @@ Feature: Inherited Identity
 
     # New P2 journey
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

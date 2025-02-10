@@ -13,6 +13,8 @@ Feature: Disabled CRI journeys
     Scenario: A P2 journey takes the user to the document select page
       Given I activate the 'dcmawOffTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
@@ -20,6 +22,8 @@ Feature: Disabled CRI journeys
     Scenario: Choosing DCMAW after escaping from KBV CRIs leads to technical failure
       Given I activate the 'dcmawOffTest' feature set
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
@@ -56,6 +60,8 @@ Feature: Disabled CRI journeys
     Scenario: Same session enhanced verification mitigation with DCMAW leads to technical failure
       Given I activate the 'dcmawOffTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'page-multiple-doc-check' page response
@@ -90,6 +96,8 @@ Feature: Disabled CRI journeys
     Scenario: No photo ID leads to ineligible
       Given I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'pyi-another-way' page response
@@ -97,6 +105,8 @@ Feature: Disabled CRI journeys
     Scenario: Choosing not to use passport or driving licence routes to the escape page
       Given I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -108,6 +118,8 @@ Feature: Disabled CRI journeys
     Scenario Outline: Choosing another way after access-denied from passport or DL CRIs leads to escape page
       Given I activate the 'f2fDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -158,6 +170,8 @@ Feature: Disabled CRI journeys
     Scenario: A P2 journey is still successful
       Given I activate the 'ticfDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -179,6 +193,8 @@ Feature: Disabled CRI journeys
     Scenario: Not having ID suitable for F2F leads to the escape page
       Given I activate the 'bavDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -188,6 +204,8 @@ Feature: Disabled CRI journeys
     Scenario: Choosing to prove your identity another way on web journey leads to the escape page
       Given I activate the 'bavDisabled' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -203,6 +221,8 @@ Feature: Disabled CRI journeys
     Scenario: Experian KBV is offered first
       Given I activate the 'dwpKbvDisabled' feature sets
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
@@ -220,6 +240,8 @@ Feature: Disabled CRI journeys
     Scenario: Experian KBV is offered if DWP KBV unsuitable
       Given I activate the 'dwpKbvTest' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response

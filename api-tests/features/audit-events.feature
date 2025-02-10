@@ -4,6 +4,8 @@ Feature: Audit Events
 
   Scenario: New identity - p2 app journey
     And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -37,6 +39,8 @@ Feature: Audit Events
 
   Scenario: New identity - via F2F journey
     And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -67,6 +71,8 @@ Feature: Audit Events
 
   Scenario: Delete pending F2F
     And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -96,6 +102,8 @@ Feature: Audit Events
 
   Scenario: Alternate doc mitigation
     And I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -177,7 +185,9 @@ Feature: Audit Events
     Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
     When I submit a 'next' event
     Then I get a 'address' CRI response
-    When I submit 'kenneth-changed' details to the CRI stub
+    When I submit 'kenneth-changed' details with attributes to the CRI stub
+            | Attribute | Values               |
+            | context   | "international_user" |
     Then I get a 'fraud' CRI response
     When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
     Then I get a 'page-ipv-success' page response with context 'updateIdentity'
@@ -195,7 +205,6 @@ Feature: Audit Events
     And audit events for 'inherited-identity-journey' are recorded [local only]
 
   Scenario: International address journey
-    Given I activate the 'internationalAddress' feature set
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
     When I submit a 'international' event
@@ -207,6 +216,8 @@ Feature: Audit Events
   Scenario: Strategic app journey
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response
@@ -222,6 +233,8 @@ Feature: Audit Events
   Scenario: MAM journey cross-browser scenario
     Given I activate the 'strategicApp' feature set
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'identify-device' page response

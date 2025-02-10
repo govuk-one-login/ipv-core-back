@@ -3,12 +3,14 @@ Feature: Recovery journeys
 
   Scenario: Recovery event from page state - the same page is returned
     When I start a new 'medium-confidence' journey
-    Then I get a 'page-ipv-identity-document-start' page response
+    Then I get a 'live-in-uk' page response
     When I submit a 'attempt-recovery' event
-    Then I get a 'page-ipv-identity-document-start' page response
+    Then I get a 'live-in-uk' page response
 
   Scenario: Recovery event from CRI state - the same CRI is returned
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -20,6 +22,8 @@ Feature: Recovery journeys
   # started the journey from they non-default browser), they lose their session id
   Scenario: Missing ipv session id - pyi-timeout-recoverable returned
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -31,6 +35,8 @@ Feature: Recovery journeys
 
   Scenario: User submits CRI callback for wrong CRI - user is able to continue journey
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit a 'appTriage' event
     Then I get a 'dcmaw' CRI response
