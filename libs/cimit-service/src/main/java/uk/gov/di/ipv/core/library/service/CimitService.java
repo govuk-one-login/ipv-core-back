@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.exception.CimitHttpRequestException;
 import uk.gov.di.ipv.core.library.cimit.exception.PostApiException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
@@ -140,8 +141,7 @@ public class CimitService {
             throws ParseException, NoCriForIssuerException, CredentialParseException,
                     CiRetrievalException {
         var jwt = SignedJWT.parse(vcString);
-        var cri = configService.getCriByIssuer(jwt.getJWTClaimsSet().getIssuer());
-        var credential = VerifiableCredential.fromValidJwt(userId, cri, jwt);
+        var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         return getContraIndicatorsFromVc(credential);
     }
 
