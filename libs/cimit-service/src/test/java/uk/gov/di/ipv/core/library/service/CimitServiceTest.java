@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -384,9 +383,6 @@ class CimitServiceTest {
 
     @Test
     void getContraIndicatorsFromVcReturnsNoCIsFromVcStringWhenNoCIs() throws Exception {
-        // Arrange
-        when(configService.getCriByIssuer(any())).thenReturn(Cri.CIMIT);
-
         // Act
         var cis = cimitService.getContraIndicatorsFromVc(SIGNED_CIMIT_VC_NO_CI, "mock-user-id");
 
@@ -396,9 +392,6 @@ class CimitServiceTest {
 
     @Test
     void getContraIndicatorsFromVcReturnsCIsFromVcStringIfPresent() throws Exception {
-        // Arrange
-        when(configService.getCriByIssuer(any())).thenReturn(Cri.CIMIT);
-
         // Act
         var cis =
                 cimitService.getContraIndicatorsFromVc(
