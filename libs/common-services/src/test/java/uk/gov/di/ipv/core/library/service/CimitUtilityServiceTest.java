@@ -42,6 +42,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_N
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -613,6 +614,26 @@ class CimitUtilityServiceTest {
         assertEquals(
                 "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
                 OBJECT_MAPPER.writeValueAsString(cis));
+    }
+
+    @Test
+    void getContraIndicatorsFromVcThrowsErrorIfVcHasNoEvidence() {
+        // Act/Assert
+        assertThrows(
+                CiExtractionException.class,
+                () ->
+                        cimitUtilityService.getContraIndicatorsFromVc(
+                                SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE, "mock-user-id"));
+    }
+
+    @Test
+    void getContraIndicatorsFromVcThrowsErrorIfInvalidVc() {
+        // Act/Assert
+        assertThrows(
+                CiExtractionException.class,
+                () ->
+                        cimitUtilityService.getContraIndicatorsFromVc(
+                                VC_RESIDENCE_PERMIT_DCMAW, "mock-user-id"));
     }
 
     private static ContraIndicator createCi(String code) {

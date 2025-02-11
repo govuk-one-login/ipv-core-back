@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -1095,6 +1096,53 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.getCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToGetCisFromCiVc() throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                .thenThrow(CiExtractionException.class);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenReturn(Map.of());
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.getMessage());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfUnableToParseCredentials() throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockEvcsService.getVerifiableCredentialsByState(
+                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
+                .thenThrow(CredentialParseException.class);
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                response.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 

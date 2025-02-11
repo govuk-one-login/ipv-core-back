@@ -37,7 +37,6 @@ import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -74,7 +73,6 @@ public class EvaluateGpg45ScoresHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final ConfigService configService;
     private final AuditService auditService;
-    private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final SessionCredentialsService sessionCredentialsService;
@@ -91,7 +89,6 @@ public class EvaluateGpg45ScoresHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             SessionCredentialsService sessionCredentialsService,
-            CimitService cimitService,
             CimitUtilityService cimitUtilityService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -100,7 +97,6 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
@@ -120,7 +116,6 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
