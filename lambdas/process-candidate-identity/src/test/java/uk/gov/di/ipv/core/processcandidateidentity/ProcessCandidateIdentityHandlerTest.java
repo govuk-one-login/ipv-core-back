@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -57,8 +58,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
@@ -159,7 +161,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
@@ -215,9 +217,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
-            when(cimitService.getContraIndicators(
-                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
-                    .thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -274,8 +274,8 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.of(cimitResponse));
-            when(cimitService.getContraIndicators(
-                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
+            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                    .thenReturn(List.of())
                     .thenReturn(List.of());
 
             var request =
@@ -333,9 +333,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
-            when(cimitService.getContraIndicators(
-                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
-                    .thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -374,7 +372,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
@@ -413,9 +411,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
-            when(cimitService.getContraIndicators(
-                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
-                    .thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -457,7 +453,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
@@ -632,10 +628,8 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
-            when(cimitService.getContraIndicators(
-                            USER_ID, SIGNIN_JOURNEY_ID, IP_ADDRESS, ipvSessionItem))
-                    .thenReturn(ticfCis);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             ticfCis, ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
@@ -679,7 +673,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(reproveIdentityClientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());
@@ -741,7 +735,7 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldReturnJourneyErrorForFailedCiRetrieval() throws Exception {
+        void shouldReturnJourneyErrorForFailedCiExtraction() throws Exception {
             // Arrange
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
@@ -752,7 +746,48 @@ class ProcessCandidateIdentityHandlerTest {
                             any(AuditEventUser.class)))
                     .thenReturn(true);
             when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(cimitService.getContraIndicatorsFromVc(any(), any()))
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                    .thenThrow(new CiExtractionException("Could not extract CIs"));
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.get("message"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldReturnJourneyErrorForFailedCiRetrieval() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicf());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(List.of()), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitService.getContraIndicatorsVc(any(), any(), any(), any()))
                     .thenThrow(new CiRetrievalException("Could not retrieve CIs"));
 
             var request =
@@ -767,7 +802,7 @@ class ProcessCandidateIdentityHandlerTest {
             // Assert
             assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
             assertEquals(500, response.get("statusCode"));
-            assertEquals(FAILED_TO_GET_STORED_CIS.getMessage(), response.get("message"));
+            assertEquals(ERROR_PROCESSING_TICF_CRI_RESPONSE.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), anyList(), any());
@@ -792,7 +827,9 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                    .thenReturn(List.of())
+                    .thenReturn(List.of());
             when(cimitUtilityService.getMitigationJourneyIfBreaching(
                             List.of(), ipvSessionItem.getThresholdVot()))
                     .thenReturn(Optional.empty());

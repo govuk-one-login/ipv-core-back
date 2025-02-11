@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -275,12 +276,15 @@ public class CheckExistingIdentityHandler
             ipvSessionItem.setTargetVot(lowestGpg45ConfidenceRequested);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            var contraIndicators =
-                    cimitService.getContraIndicators(
+            var contraIndicatorsVc =
+                    cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             govukSigninJourneyId,
                             ipAddress,
                             ipvSessionItem);
+
+            var contraIndicators =
+                    cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
             var reproveIdentity = TRUE.equals(clientOAuthSessionItem.getReproveIdentity());
             // Only skip starting a new reprove identity journey if the user is returning from a F2F
@@ -392,6 +396,8 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND, e);
+        } catch (CiExtractionException e) {
+            return buildErrorResponse(ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC, e);
         }
     }
 

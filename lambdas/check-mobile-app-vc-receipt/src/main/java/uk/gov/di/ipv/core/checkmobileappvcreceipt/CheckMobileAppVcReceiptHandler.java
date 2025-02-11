@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exception.InvalidCriResponseException;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -132,6 +133,11 @@ public class CheckMobileAppVcReceiptHandler
         } catch (CiRetrievalException e) {
             return buildErrorResponse(
                     e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+        } catch (CiExtractionException e) {
+            return buildErrorResponse(
+                    e,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -150,7 +156,7 @@ public class CheckMobileAppVcReceiptHandler
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     InvalidCriResponseException, CredentialParseException,
                     VerifiableCredentialException, ConfigException, CiRetrievalException,
-                    EvcsServiceException {
+                    EvcsServiceException, CiExtractionException {
         // Validate callback sessions
         validateSessionId(request);
 

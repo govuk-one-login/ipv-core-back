@@ -20,10 +20,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
-import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.SessionCredentialItem;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -74,7 +73,6 @@ class BuildUserIdentityHandlerTest {
     @Mock private DataStore<IpvSessionItem> mockIpvSessionDataStore;
     @Mock private DataStore<SessionCredentialItem> mockSessionCredentialItemStore;
     @Mock private DataStore<ClientOAuthSessionItem> mockOAuthSessionStore;
-    @Mock private CimitService mockCimitService;
     @Mock private CimitUtilityService mockCimitUtilityService;
     @Mock private SessionCredentialsService mockSessionCredentialsService;
     @Mock private Sleeper mockSleeper;
@@ -91,7 +89,7 @@ class BuildUserIdentityHandlerTest {
 
     @BeforeEach
     void pactSetup(PactVerificationContext context)
-            throws IOException, CiRetrievalException, ParseException, CredentialParseException {
+            throws IOException, ParseException, CredentialParseException, CiExtractionException {
 
         var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
@@ -102,11 +100,8 @@ class BuildUserIdentityHandlerTest {
         var jwtBuilder =
                 new PactJwtBuilder(VC_HEADER, CIMIT_VC_NO_CIS_BODY, CIMIT_VC_NO_CIS_SIGNATURE);
         var cimitVc = VerifiableCredential.fromValidJwt(null, null, jwtBuilder.buildSignedJwt());
-        when(mockCimitService.getContraIndicatorsVc(
-                        "dummyOAuthUserId", "dummySigninJourneyId", null))
-                .thenReturn(cimitVc);
 
-        when(mockCimitService.getContraIndicatorsFromVc(cimitVc)).thenReturn(List.of());
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(cimitVc)).thenReturn(List.of());
 
         // Configure the config service
         when(mockConfigService.getParameter(CORE_VTM_CLAIM)).thenReturn("dummyVtmClaim");
@@ -141,7 +136,6 @@ class BuildUserIdentityHandlerTest {
                         mockConfigService,
                         mockAuditService,
                         clientOAuthSessionDetailsService,
-                        mockCimitService,
                         mockCimitUtilityService,
                         sessionCredentialService);
 

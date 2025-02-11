@@ -127,7 +127,7 @@ class CallTicfCriHandlerTest {
                         List.of());
 
         verify(mockCimitService)
-                .getContraIndicators(
+                .getContraIndicatorsVc(
                         TEST_USER_ID, "a-govuk-journey-id", "an-ip-address", ipvSessionItem);
 
         InOrder inOrder = inOrder(mockIpvSessionService);
@@ -149,7 +149,7 @@ class CallTicfCriHandlerTest {
 
         verify(mockCriStoringService, never())
                 .storeVcs(any(), any(), any(), any(), any(), any(), any());
-        verify(mockCimitService, never()).getContraIndicators(any(), any(), any(), any());
+        verify(mockCimitService, never()).getContraIndicatorsVc(any(), any(), any(), any());
 
         InOrder inOrder = inOrder(mockIpvSessionService);
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
@@ -221,7 +221,7 @@ class CallTicfCriHandlerTest {
                         reverificationClientSessionItem,
                         ipvSessionItem,
                         List.of());
-        verify(mockCimitService, never()).getContraIndicators(any(), any(), any(), any());
+        verify(mockCimitService, never()).getContraIndicatorsVc(any(), any(), any(), any());
     }
 
     @Test
@@ -315,7 +315,7 @@ class CallTicfCriHandlerTest {
                 .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
         when(mockTicfCriService.getTicfVc(any(), any()))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCimitService.getContraIndicators(any(), any(), any(), any()))
+        when(mockCimitService.getContraIndicatorsVc(any(), any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Oh dear"));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);

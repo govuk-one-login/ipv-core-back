@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.model.ContraIndicator;
@@ -34,10 +38,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class CimitUtilityServiceTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String TEST_USER_ID = "a-user-id";
     private static final Vot TEST_VOT = Vot.P2;
     private static final String TEST_CI1 = "CI1";
     private static final String TEST_CI2 = "CI2";
@@ -556,6 +566,53 @@ class CimitUtilityServiceTest {
 
         // Assert
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getContraIndicatorsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
+        var contraIndicators =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        VerifiableCredential.fromValidJwt(
+                                TEST_USER_ID,
+                                null,
+                                SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
+
+        assertTrue(contraIndicators.isEmpty());
+    }
+
+    @Test
+    void getContraIndicatorsThrowsErrorIfNoEvidence() {
+        assertThrows(
+                CiExtractionException.class,
+                () ->
+                        cimitUtilityService.getContraIndicatorsFromVc(
+                                VerifiableCredential.fromValidJwt(
+                                        TEST_USER_ID,
+                                        null,
+                                        SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE))));
+    }
+
+    @Test
+    void getContraIndicatorsFromVcReturnsNoCIsFromVcStringWhenNoCIs() throws Exception {
+        // Act
+        var cis =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        SIGNED_CIMIT_VC_NO_CI, "mock-user-id");
+
+        // Assert
+        assertTrue(cis.isEmpty());
+    }
+
+    @Test
+    void getContraIndicatorsFromVcReturnsCIsFromVcStringIfPresent() throws Exception {
+        // Act
+        var cis =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        SIGNED_CONTRA_INDICATOR_VC_1, "mock-user-id");
+
+        assertEquals(
+                "[{\"code\":\"D01\",\"document\":\"passport/GBR/824159121\",\"incompleteMitigation\":[{\"code\":\"M02\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f\",\"issuer\":\"https://another-credential-issuer.example/\",\"txn\":\"cdeef\",\"validFrom\":1663862090000}]}],\"issuanceDate\":1663689290000,\"issuers\":[\"https://issuing-cri.example\"],\"mitigation\":[{\"code\":\"M01\",\"mitigatingCredential\":[{\"id\":\"urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6\",\"issuer\":\"https://credential-issuer.example/\",\"txn\":\"ghij\",\"validFrom\":1663775690000}]}],\"txn\":[\"abcdef\"]}]",
+                OBJECT_MAPPER.writeValueAsString(cis));
     }
 
     private static ContraIndicator createCi(String code) {

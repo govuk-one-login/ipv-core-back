@@ -1,22 +1,34 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.jwt.SignedJWT;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
+import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.SecurityCheckCredential;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 public class CimitUtilityService {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private final ConfigService configService;
@@ -156,5 +168,41 @@ public class CimitUtilityService {
     private boolean isCiMitigatable(ContraIndicator ci) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
         return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
+    }
+
+    public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
+            throws ParseException, CredentialParseException, CiExtractionException {
+        var jwt = SignedJWT.parse(vcString);
+        var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
+        return getContraIndicatorsFromVc(credential);
+    }
+
+    public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)
+            throws CiExtractionException {
+        if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
+            var evidence = cimitCredential.getEvidence();
+            if (evidence == null || evidence.size() != 1) {
+                String message = "Unexpected evidence count";
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                message,
+                                String.format(
+                                        "Expected one evidence item, got %d",
+                                        evidence == null ? 0 : evidence.size())));
+                throw new CiExtractionException(message);
+            }
+
+            return requireNonNullElse(
+                    cimitCredential.getEvidence().get(0).getContraIndicator(), List.of());
+        } else {
+            String message = "Unexpected vc type";
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            message,
+                            String.format(
+                                    "Expected SecurityCheckCredential, got %s",
+                                    vc.getCredential().getClass())));
+            throw new CiExtractionException(message);
+        }
     }
 }

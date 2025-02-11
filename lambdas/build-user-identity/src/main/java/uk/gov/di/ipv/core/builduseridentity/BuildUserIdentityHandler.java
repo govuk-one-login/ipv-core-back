@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
-import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -23,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -62,7 +61,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
-    private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -72,7 +70,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CimitService cimitService,
             CimitUtilityService cimitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
         super(
@@ -83,7 +80,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                 sessionCredentialsService);
         this.userIdentityService = userIdentityService;
         this.auditService = auditService;
-        this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
     }
 
@@ -92,7 +88,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
         this.auditService = AuditService.create(configService);
-        this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
@@ -118,7 +113,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             null);
 
             var contraIndicators =
-                    cimitService.getContraIndicatorsFromVc(
+                    cimitUtilityService.getContraIndicatorsFromVc(
                             ipvSessionItem.getSecurityCheckCredential(),
                             clientOAuthSessionItem.getUserId());
 
@@ -164,8 +159,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return serverErrorJsonResponse("Failed to parse credentials.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
-        } catch (CiRetrievalException e) {
-            return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
+        } catch (CiExtractionException e) {
+            return serverErrorJsonResponse("Failed to extract contra indicators.", e);
         } catch (CredentialParseException e) {
             return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
