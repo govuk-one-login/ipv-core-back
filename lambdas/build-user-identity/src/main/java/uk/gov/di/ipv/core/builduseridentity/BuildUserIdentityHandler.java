@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.InvalidScopeException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.RevokedAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -179,8 +178,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             return getAccessDeniedApiGatewayProxyResponseEvent();
         } catch (IpvSessionNotFoundException e) {
             return getUnknownAccessTokenApiGatewayProxyResponseEvent();
-        } catch (NoCriForIssuerException e) {
-            return serverErrorJsonResponse("Failed to get credential issuer for VC.", e);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

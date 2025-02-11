@@ -35,7 +35,6 @@ import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -751,29 +750,6 @@ class BuildUserIdentityHandlerTest {
         assertEquals("server_error", responseBody.get("error"));
         assertEquals(
                 "Unexpected server error - Failed to parse credentials. Unable to parse VC string",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseWhenIssuerCannotBeFound() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCimitService.getContraIndicatorsFromVc(any(), any()))
-                .thenThrow(new NoCriForIssuerException("Issuer does not exist"));
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Failed to get credential issuer for VC. Issuer does not exist",
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCimitService, times(1)).getContraIndicatorsFromVc(any(), any());

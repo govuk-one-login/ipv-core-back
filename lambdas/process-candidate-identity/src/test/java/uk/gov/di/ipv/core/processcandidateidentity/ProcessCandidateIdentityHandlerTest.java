@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -59,7 +58,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -578,40 +576,6 @@ class ProcessCandidateIdentityHandlerTest {
 
             // Assert
             assertEquals(JOURNEY_VCS_NOT_CORRELATED, response.get("journey"));
-
-            verify(storeIdentityService, times(0))
-                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
-        }
-
-        @Test
-        void shouldHandleNoCriForIssuerException() throws Exception {
-            // Arrange
-            when(checkCoiService.isCoiCheckSuccessful(
-                            eq(ipvSessionItem),
-                            eq(clientOAuthSessionItem),
-                            eq(STANDARD),
-                            eq(DEVICE_INFORMATION),
-                            eq(List.of()),
-                            any(AuditEventUser.class)))
-                    .thenReturn(true);
-            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
-            when(cimitService.getContraIndicatorsFromVc(any(), any()))
-                    .thenThrow(new NoCriForIssuerException("No CRI for isser"));
-
-            var request =
-                    requestBuilder
-                            .lambdaInput(
-                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
-                            .build();
-
-            // Act
-            var response = processCandidateIdentityHandler.handleRequest(request, context);
-
-            // Assert
-            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
-            assertEquals(500, response.get("statusCode"));
-            assertEquals(
-                    FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), anyList(), any());

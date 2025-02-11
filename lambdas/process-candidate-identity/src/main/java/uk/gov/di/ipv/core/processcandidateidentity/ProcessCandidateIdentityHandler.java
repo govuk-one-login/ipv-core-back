@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnknownProcessIdentityTypeException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -70,7 +69,6 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
@@ -265,13 +263,6 @@ public class ProcessCandidateIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
-        } catch (NoCriForIssuerException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to get credential issuer for VC", e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC)
-                    .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -302,7 +293,7 @@ public class ProcessCandidateIdentityHandler
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                    CredentialParseException, ParseException, NoCriForIssuerException {
+                    CredentialParseException, ParseException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
@@ -385,7 +376,7 @@ public class ProcessCandidateIdentityHandler
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
             throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException,
-                    NoCriForIssuerException, CredentialParseException {
+                    CredentialParseException {
 
         var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
 

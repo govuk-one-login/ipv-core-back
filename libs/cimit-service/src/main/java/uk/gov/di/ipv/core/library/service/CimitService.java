@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
-import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -138,8 +137,7 @@ public class CimitService {
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
-            throws ParseException, NoCriForIssuerException, CredentialParseException,
-                    CiRetrievalException {
+            throws ParseException, CredentialParseException, CiRetrievalException {
         var jwt = SignedJWT.parse(vcString);
         var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         return getContraIndicatorsFromVc(credential);
