@@ -21,10 +21,11 @@ export const JOURNEY_TYPES = {
 
 export const NESTED_JOURNEY_TYPES = {
   ADDRESS_AND_FRAUD: "Address and fraud",
+  APP_DOC_CHECK: "App doc check",
+  KBVS: "KBVs",
+  STRATEGIC_APP_HANDLE_RESULT: "Strategic app handle result",
   STRATEGIC_APP_TRIAGE: "Strategic app triage",
   WEB_DL_OR_PASSPORT: "Web DL or passport",
-  KBVS: "KBVs",
-  APP_DOC_CHECK: "App doc check",
 };
 
 export const COMMON_JOURNEY_TYPES = [

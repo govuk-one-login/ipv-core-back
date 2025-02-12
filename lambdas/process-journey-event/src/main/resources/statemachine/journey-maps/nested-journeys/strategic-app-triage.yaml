@@ -88,7 +88,8 @@ nestedJourneyStates:
       context: iphone
     events:
       next:
-        targetState: CHECK_MOBILE_APP_RESULT
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -114,7 +115,8 @@ nestedJourneyStates:
       context: android
     events:
       next:
-        targetState: CHECK_MOBILE_APP_RESULT
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -201,7 +203,8 @@ nestedJourneyStates:
       context: iphone
     events:
       next:
-        targetState: CHECK_MOBILE_APP_RESULT
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: MOBILE_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -227,7 +230,8 @@ nestedJourneyStates:
       context: android
     events:
       next:
-        targetState: CHECK_MOBILE_APP_RESULT
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: check-mobile-app-result
       preferNoApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
@@ -296,28 +300,16 @@ nestedJourneyStates:
       useApp:
         targetState: MOBILE_ANDROID_DOWNLOAD_PAGE
 
-  CHECK_MOBILE_APP_RESULT:
-    response:
-      type: page
-      pageId: check-mobile-app-result
-    events:
+  STRATEGIC_APP_HANDLE_RESULT:
+    nestedJourney: STRATEGIC_APP_HANDLE_RESULT
+    exitEvents:
       next:
         exitEventToEmit: next
-      abandon:
+      anotherWay:
         exitEventToEmit: anotherWay
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      fail-with-no-ci:
-        exitEventToEmit: anotherWay
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-      enhanced-verification:
-        exitEventToEmit: anotherWay
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-      dl-auth-source-check:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
+      incompleteDlAuthCheckInvalidDl:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl
+      failedDlAuthCheckInvalidDl:
+        exitEventToEmit: failedDlAuthCheckInvalidDl
+      retryApp:
+        targetState: IDENTIFY_DEVICE
