@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
@@ -197,11 +198,12 @@ public class VcHelper {
     public static boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(VcHelper::hasNoApplicableFraudCheck);
+                .anyMatch(VcHelper::hasNoApplicableOrAvailableFraudCheck);
     }
 
-    private static boolean hasNoApplicableFraudCheck(VerifiableCredential vc) {
+    private static boolean hasNoApplicableOrAvailableFraudCheck(VerifiableCredential vc) {
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+
             return identityCheckCredential.getEvidence().stream()
                     .flatMap(
                             evidence ->
@@ -210,8 +212,12 @@ public class VcHelper {
                                             : evidence.getFailedCheckDetails().stream())
                     .anyMatch(
                             failedCheck ->
-                                    CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE
-                                            .equals(failedCheck.getFraudCheck()));
+                                    Set.of(
+                                                    CheckDetails.FraudCheckType
+                                                            .APPLICABLE_AUTHORITATIVE_SOURCE,
+                                                    CheckDetails.FraudCheckType
+                                                            .AVAILABLE_AUTHORITATIVE_SOURCE)
+                                            .contains(failedCheck.getFraudCheck()));
         }
         return false;
     }
