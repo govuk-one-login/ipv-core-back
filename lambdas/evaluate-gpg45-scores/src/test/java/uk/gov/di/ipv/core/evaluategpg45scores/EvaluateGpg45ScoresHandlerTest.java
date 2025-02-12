@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -102,7 +101,6 @@ class EvaluateGpg45ScoresHandlerTest {
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private SessionCredentialsService sessionCredentialsService;
-    @Mock private CimitService cimitService;
     @Mock private CimitUtilityService cimitUtilityService;
     @InjectMocks private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
 
@@ -534,7 +532,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_PROFILES)))
                 .thenReturn(Optional.of(L1A));
-        when(cimitService.getContraIndicators(any(), any(), any(), any()))
+        when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(CONTRAINDICATORS);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1)).thenReturn(true);
@@ -561,7 +559,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P1_PROFILES)))
                 .thenReturn(Optional.of(L1A));
-        when(cimitService.getContraIndicators(any(), any(), any(), any()))
+        when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(CONTRAINDICATORS);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P2)).thenReturn(true);
         when(cimitUtilityService.isBreachingCiThreshold(CONTRAINDICATORS, Vot.P1))

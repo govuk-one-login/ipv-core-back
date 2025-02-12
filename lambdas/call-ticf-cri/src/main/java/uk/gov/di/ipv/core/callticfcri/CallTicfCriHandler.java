@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -42,6 +43,7 @@ import java.util.Optional;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
@@ -139,6 +141,14 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ERROR_PROCESSING_TICF_CRI_RESPONSE)
                     .toObjectMap();
+        } catch (CiExtractionException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_EXTRACT_CIS_FROM_VC)
+                    .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -153,7 +163,8 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     private Map<String, Object> callTicfCri(IpvSessionItem ipvSessionItem, ProcessRequest request)
             throws TicfCriServiceException, CiRetrievalException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, ConfigException,
-                    UnrecognisedVotException, HttpResponseExceptionWithErrorBody {
+                    UnrecognisedVotException, HttpResponseExceptionWithErrorBody,
+                    CiExtractionException {
         configService.setFeatureSet(RequestHelper.getFeatureSet(request));
         var clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -178,12 +189,14 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 List.of());
 
         if (!clientOAuthSessionItem.getScopeClaims().contains(REVERIFICATION)) {
-            var cis =
-                    cimitService.getContraIndicators(
+            var contraIndicatorVc =
+                    cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             request.getIpAddress(),
                             ipvSessionItem);
+
+            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorVc);
 
             var journeyResponse =
                     cimitUtilityService.getMitigationJourneyIfBreaching(

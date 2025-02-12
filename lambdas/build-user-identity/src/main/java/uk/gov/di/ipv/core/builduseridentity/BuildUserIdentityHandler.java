@@ -4,8 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
@@ -15,7 +17,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
-import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
@@ -23,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.ReturnCode;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.ExpiredAccessTokenException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -34,7 +36,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -52,6 +53,7 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -62,7 +64,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
     private final UserIdentityService userIdentityService;
     private final AuditService auditService;
-    private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -72,7 +73,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
-            CimitService cimitService,
             CimitUtilityService cimitUtilityService,
             SessionCredentialsService sessionCredentialsService) {
         super(
@@ -83,7 +83,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                 sessionCredentialsService);
         this.userIdentityService = userIdentityService;
         this.auditService = auditService;
-        this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
     }
 
@@ -92,7 +91,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
         super(OPENID);
         this.userIdentityService = new UserIdentityService(configService);
         this.auditService = AuditService.create(configService);
-        this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
@@ -117,11 +115,19 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
-            var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
-                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+            if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                        OAuth2Error.SERVER_ERROR
+                                .appendDescription(
+                                        " - " + MISSING_SECURITY_CHECK_CREDENTIAL.getMessage())
+                                .toJSONObject());
+            }
 
-            var contraIndicators = cimitService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var contraIndicators =
+                    cimitUtilityService.getContraIndicatorsFromVc(
+                            ipvSessionItem.getSecurityCheckCredential(),
+                            clientOAuthSessionItem.getUserId());
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
@@ -136,7 +142,7 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             var userIdentity =
                     userIdentityService.generateUserIdentity(
                             vcs, userId, achievedVot, targetVot, contraIndicators);
-            userIdentity.getVcs().add(contraIndicatorsVc.getVcString());
+            userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())
                     && (ipvSessionItem.getRiskAssessmentCredential() != null)) {
@@ -161,10 +167,12 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
+        } catch (java.text.ParseException e) {
+            return serverErrorJsonResponse("Failed to parse credentials.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
-        } catch (CiRetrievalException e) {
-            return serverErrorJsonResponse("Error when fetching CIs from storage system.", e);
+        } catch (CiExtractionException e) {
+            return serverErrorJsonResponse("Failed to extract contra indicators.", e);
         } catch (CredentialParseException e) {
             return serverErrorJsonResponse("Failed to parse successful VC Store items.", e);
         } catch (UnrecognisedCiException e) {
