@@ -132,6 +132,23 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      incompleteDlAuthCheckInvalidDl:
+        targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY
+      failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_ONLY:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: STRATEGIC_APP_TRIAGE_NAMES_ONLY
+        targetEntryEvent: appTriage
       returnToRp:
         targetState: RETURN_TO_RP
 
@@ -236,6 +253,23 @@ states:
       anotherWay:
         targetJourney: FAILED
         targetState: FAILED_UPDATE_DETAILS
+      incompleteDlAuthCheckInvalidDl:
+        targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS
+      failedDlAuthCheckInvalidDl:
+        targetJourney: FAILED
+        targetState: FAILED_CONFIRM_DETAILS_INVALID_ID
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_NAMES_WITH_ADDRESS:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: STRATEGIC_APP_TRIAGE_NAMES_WITH_ADDRESS
+        targetEntryEvent: appTriage
       returnToRp:
         targetState: RETURN_TO_RP
 
