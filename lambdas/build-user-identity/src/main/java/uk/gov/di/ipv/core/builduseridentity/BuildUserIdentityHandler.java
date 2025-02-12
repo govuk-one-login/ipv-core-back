@@ -4,8 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
@@ -51,6 +53,7 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -111,6 +114,15 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             ipvSessionId,
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
+
+            if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                        OAuth2Error.SERVER_ERROR
+                                .appendDescription(
+                                        " - " + MISSING_SECURITY_CHECK_CREDENTIAL.getMessage())
+                                .toJSONObject());
+            }
 
             var contraIndicators =
                     cimitUtilityService.getContraIndicatorsFromVc(

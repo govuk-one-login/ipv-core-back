@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,6 +74,7 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_T
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.EXISTING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
@@ -379,6 +381,12 @@ public class ProcessCandidateIdentityHandler
             AuditEventUser auditEventUser)
             throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
                     CiExtractionException {
+        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    MISSING_SECURITY_CHECK_CREDENTIAL);
+        }
 
         var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
 

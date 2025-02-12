@@ -118,7 +118,8 @@ public enum ErrorResponse {
     MISSING_PROCESS_IDENTITY_TYPE(1103, "Process identity type missing"),
     UNEXPECTED_PROCESS_IDENTITY_TYPE(1104, "Unexpected process identity type"),
     FAILED_TO_GET_CREDENTIAL_ISSUER_FOR_VC(1105, "Failed to get credential issuer for VC"),
-    FAILED_TO_EXTRACT_CIS_FROM_VC(1106, "Failed to extract contra-indicators from VC");
+    FAILED_TO_EXTRACT_CIS_FROM_VC(1106, "Failed to extract contra-indicators from VC"),
+    MISSING_SECURITY_CHECK_CREDENTIAL(1107, "Missing security check credential");
 
     private static final String ERROR = "error";
     private static final String ERROR_DESCRIPTION = "error_description";

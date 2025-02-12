@@ -64,12 +64,14 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_CRED
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_PROCESS_IDENTITY_TYPE;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.RECEIVED_NON_200_RESPONSE_STATUS_CODE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.ACCOUNT_INTERVENTION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.CoiCheckType.STANDARD;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicf;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcTicfWithCi;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
@@ -130,6 +132,7 @@ class ProcessCandidateIdentityHandlerTest {
 
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setVot(P2);
+        ipvSessionItem.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
     }
 
     @Nested
@@ -762,6 +765,37 @@ class ProcessCandidateIdentityHandlerTest {
             assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
             assertEquals(500, response.get("statusCode"));
             assertEquals(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), response.get("message"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldReturnJourneyErrorForMissingSecurityCheckCredential() throws Exception {
+            // Arrange
+            ipvSessionItem.setSecurityCheckCredential(null);
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_ERROR_PATH, response.get("journey"));
+            assertEquals(500, response.get("statusCode"));
+            assertEquals(MISSING_SECURITY_CHECK_CREDENTIAL.getMessage(), response.get("message"));
 
             verify(storeIdentityService, times(0))
                     .storeIdentity(any(), any(), any(), any(), anyList(), any());

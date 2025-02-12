@@ -49,6 +49,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CIMIT_VC_NO_CI;
 
 // To run these tests locally you need to:
 // - Obtain the relevant pact file (from the pact broker or another team) and put it in
@@ -160,6 +161,7 @@ class BuildUserIdentityHandlerTest {
         ipvSession.setClientOAuthSessionId("dummyClientOAuthSessionId");
         ipvSession.setVot(Vot.P2);
         ipvSession.setTargetVot(Vot.P2);
+        ipvSession.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
         ipvSession.setAccessTokenMetadata(new AccessTokenMetadata());
 
         var oAuthSession = new ClientOAuthSessionItem();

@@ -680,6 +680,27 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnErrorResponseWhenMissingSecurityCheckCredentials() throws Exception {
+        ipvSessionItem.setSecurityCheckCredential(null);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
+        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals("server_error", responseBody.get("error"));
+        assertEquals(
+                "Unexpected server error - Missing security check credential",
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
+    }
+
+    @Test
     void shouldReturnErrorResponseWhenTokenIsNull() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = new HashMap<>(Collections.emptyMap());
