@@ -39,6 +39,10 @@ nestedJourneyStates:
         targetState: REMOVE_DCMAW_FROM_SESSION
       alternate-doc-invalid-dl:
         targetState: RESET_SESSION_INVALID_DL
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
 
   REMOVE_DCMAW_FROM_SESSION:
     response:
