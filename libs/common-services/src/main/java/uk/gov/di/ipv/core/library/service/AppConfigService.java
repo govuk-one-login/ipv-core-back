@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
@@ -68,13 +67,6 @@ public class AppConfigService extends YamlParametersConfigService {
         // Initialise parameters value
         parseParametersIfNew(appConfigProvider.get(profileId));
 
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            LOGGER.error(String.format("WHAT %s", mapper.writeValueAsString(parameters)));
-        } catch (Exception e) {
-            LOGGER.error(String.format("WHAT %s", parameters));
-        }
-
         secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
@@ -100,16 +92,8 @@ public class AppConfigService extends YamlParametersConfigService {
                                 .build(),
                         environmentId,
                         applicationId);
-
-        LOGGER.error(String.format("getParameter path: %s", path));
-        var a = appConfigProvider.get(profileId);
-        parseParametersIfNew(a);
-
-        LOGGER.error(String.format("getParameter a: %s", a));
-        var b = this.getParameterFromStoredValue(path);
-
-        LOGGER.error(String.format("getParameter b: %s", b));
-        return b;
+        parseParametersIfNew(appConfigProvider.get(profileId));
+        return this.getParameterFromStoredValue(path);
     }
 
     @Override
