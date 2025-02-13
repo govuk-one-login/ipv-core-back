@@ -25,7 +25,6 @@ import static uk.gov.di.ipv.core.library.enums.Vot.PCL200;
 import static uk.gov.di.ipv.core.library.enums.Vot.PCL250;
 import static uk.gov.di.ipv.core.library.enums.Vot.SUPPORTED_VOTS_BY_DESCENDING_STRENGTH;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreTwo;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeAvailableFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL250;
@@ -146,28 +145,6 @@ public class VotMatcherTest {
     void shouldMatchM1cIfFraudCheckUnavailable() throws Exception {
         // Arrange
         var vcs = List.of(vcVerificationM1a(), vcFraudApplicableAuthoritativeSourceFailed());
-        var expectedProfiles =
-                List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
-        when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
-        when(mockGpg45ProfileEvaluator.buildScore(vcs)).thenReturn(GPG_45_SCORES);
-        when(mockGpg45ProfileEvaluator.getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles))
-                .thenReturn(Optional.of(Gpg45Profile.M1C));
-
-        // Act
-        var votMatch =
-                votMatcher.matchFirstVot(
-                        SUPPORTED_VOTS_BY_DESCENDING_STRENGTH, vcs, List.of(), true);
-
-        // Assert
-        verify(mockGpg45ProfileEvaluator).getFirstMatchingProfile(GPG_45_SCORES, expectedProfiles);
-        assertEquals(
-                Optional.of(new VotMatchingResult(P2, Gpg45Profile.M1C, GPG_45_SCORES)), votMatch);
-    }
-
-    @Test
-    void shouldMatchM1cIfFraudCheckAuthoritativeUnavailable() throws Exception {
-        // Arrange
-        var vcs = List.of(vcVerificationM1a(), vcFraudApplicableAuthoritativeAvailableFailed());
         var expectedProfiles =
                 List.of(Gpg45Profile.M1A, Gpg45Profile.M1B, Gpg45Profile.M2B, Gpg45Profile.M1C);
         when(mockUseridentityService.checkRequiresAdditionalEvidence(vcs)).thenReturn(false);
