@@ -385,7 +385,7 @@ core:
     repeatFraudCheckEnabled: true
     mfaResetEnabled: true
     parseVcClasses: true
-    p1JourneysEnabled: false
+    p1JourneysEnabled: true
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
