@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.lambda.powertools.parameters.AppConfigProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
@@ -38,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
@@ -110,12 +112,14 @@ class AppConfigServiceTest {
               validRedirectUrls: a,list,of,strings
     """;
     @Mock Cri criMock;
+    @Mock AppConfigProvider appConfigProvider;
     @Mock SecretsProvider secretsProvider;
     AppConfigService configService;
 
     @BeforeEach
     void setUp() {
-        configService = new AppConfigService(TEST_RAW_PARAMETERS, secretsProvider);
+        configService = new AppConfigService(appConfigProvider, secretsProvider);
+        lenient().when(appConfigProvider.get(any())).thenReturn(TEST_RAW_PARAMETERS);
     }
 
     // Get parameter
@@ -382,7 +386,8 @@ class AppConfigServiceTest {
                   notvalid: at-all
                 }'
         """;
-        configService = new AppConfigService(testRawParametersInvalidCimit, secretsProvider);
+        when(appConfigProvider.get(any())).thenReturn(testRawParametersInvalidCimit);
+        configService = new AppConfigService(appConfigProvider, secretsProvider);
 
         // Act & Assert
         assertThrows(ConfigException.class, () -> configService.getCimitConfig());
@@ -522,21 +527,12 @@ class AppConfigServiceTest {
     // Environment variables
 
     @Test
-    void getEnvironmentVariableDefaultString() {
+    void getIntegerEnvironmentVariableDefault() {
         // Act
         var result =
-                configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, "some value");
+                configService.getIntegerEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 1);
 
         // Assert
-        assertEquals("some value", result);
-    }
-
-    @Test
-    void getEnvironmentVariableDefaultInteger() {
-        // Act
-        var result = configService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT, 100);
-
-        // Assert
-        assertEquals(100, result);
+        assertEquals(1, result);
     }
 }

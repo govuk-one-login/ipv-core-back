@@ -16,27 +16,9 @@ Globals:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
         CONFIG_SOURCE: "ssm"
-        APP_CONFIG_ID: !If
-          - IsDevelopment
-          - !If
-            - IsDev01
-            - !Sub "app-config-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "app-config-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "app-config.identity.${Environment}.account.gov.uk"
-        APP_CONFIG_ENVIRONMENT_ID: !If
-          - IsDevelopment
-          - !If
-            - IsDev01
-            - !Sub "app-config-environment-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "app-config-environment-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "app-config-environment.identity.${Environment}.account.gov.uk"
-        APP_CONFIG_PROFILE_ID: !If
-          - IsDevelopment
-          - !If
-            - IsDev01
-            - !Sub "app-config-profile-${Environment}.01.dev.identity.account.gov.uk"
-            - !Sub "app-config-profile-${Environment}.02.dev.identity.account.gov.uk"
-          - !Sub "app-config-profile.identity.${Environment}.account.gov.uk"
+        APP_CONFIG_ID: !Sub "core-back-${Environment}"
+        APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
+        APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
         DT_CONNECTION_AUTH_TOKEN: !If
           - UseDynatrace
           - !Sub
@@ -4166,47 +4148,21 @@ Resources:
   AppConfigApplication:
     Type: AWS::AppConfig::Application
     Properties:
-      Name: !If
-        - IsDevelopment
-        - !If
-          - IsDev01
-          - !Sub "app-config-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "app-config-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "app-config.identity.${Environment}.account.gov.uk"
+      Name: !Sub "core-back-${Environment}"
 
   AppConfigEnvironment:
     Type: AWS::AppConfig::Environment
     Properties:
-      Name: !If
-        - IsDevelopment
-        - !If
-          - IsDev01
-          - !Sub "app-config-environment-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "app-config-environment-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "app-config-environment.identity.${Environment}.account.gov.uk"
+      Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
 
   AppConfigConfigurationProfile:
     Type: AWS::AppConfig::ConfigurationProfile
     Properties:
-      Name: !If
-        - IsDevelopment
-        - !If
-          - IsDev01
-          - !Sub "app-config-profile-${Environment}.01.dev.identity.account.gov.uk"
-          - !Sub "app-config-profile-${Environment}.02.dev.identity.account.gov.uk"
-        - !Sub "app-config-profile.identity.${Environment}.account.gov.uk"
+      Name: !Sub "core-back-${Environment}"
       ApplicationId: !Ref AppConfigApplication
       LocationUri: "hosted"
 
-  AppConfigHostedConfigurationVersion:
-    Type: AWS::AppConfig::HostedConfigurationVersion
-    Properties:
-      ApplicationId: !Ref AppConfigApplication
-      ConfigurationProfileId: !Ref AppConfigConfigurationProfile
-      Content: |
-        # Placeholder for configuration values
-      ContentType: "application/x-yaml"
 Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID

@@ -66,19 +66,17 @@ public abstract class ConfigService {
         return System.getenv(environmentVariable.name());
     }
 
-    public <T> T getEnvironmentVariable(EnvironmentVariable environmentVariable, T defaultValue) {
+    public Integer getIntegerEnvironmentVariable(EnvironmentVariable environmentVariable) {
+        return getIntegerEnvironmentVariable(environmentVariable, null);
+    }
+
+    public Integer getIntegerEnvironmentVariable(
+            EnvironmentVariable environmentVariable, Integer defaultValue) {
         var value = System.getenv(environmentVariable.name());
-        if (value != null) {
-            if (defaultValue instanceof Integer) {
-                return (T) Integer.valueOf(value);
-            } else if (defaultValue instanceof String) {
-                return (T) value;
-            } else {
-                throw new IllegalArgumentException(
-                        "Unsupported type: " + defaultValue.getClass().getSimpleName());
-            }
+        if (value == null) {
+            return defaultValue;
         }
-        return defaultValue;
+        return Integer.valueOf(value);
     }
 
     public String getParameter(

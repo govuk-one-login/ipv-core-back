@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
+import software.amazon.lambda.powertools.parameters.AppConfigProvider;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -19,7 +21,11 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
@@ -34,17 +40,42 @@ public class AppConfigService extends YamlParametersConfigService {
     private static final String CORE = "core";
 
     @Getter @Setter private List<String> featureSet;
+    private final String applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
+    private final String environmentId =
+            getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
+    private final String profileId =
+            getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
+    private String paramsRawHash;
+    private AppConfigProvider appConfigProvider;
     private final SecretsProvider secretsProvider;
 
     @ExcludeFromGeneratedCoverageReport
     public AppConfigService() {
         var cacheDuration =
-                getEnvironmentVariable(
+                getIntegerEnvironmentVariable(
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
-        var paramsRaw = getRawParams();
 
-        initializeConfig(paramsRaw);
-        this.secretsProvider =
+        appConfigProvider =
+                (AppConfigProvider)
+                        ParamManager.getAppConfigProvider(
+                                        AppConfigDataClient.builder()
+                                                .httpClient(UrlConnectionHttpClient.create())
+                                                .build(),
+                                        environmentId,
+                                        applicationId)
+                                .withMaxAge(cacheDuration, MINUTES);
+
+        // Initialise parameters value
+        parseParametersIfNew(appConfigProvider.get(profileId));
+
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            LOGGER.error(String.format("WHAT %s", mapper.writeValueAsString(parameters)));
+        } catch (Exception e) {
+            LOGGER.error(String.format("WHAT %s", parameters));
+        }
+
+        secretsProvider =
                 ParamManager.getSecretsProvider(
                                 SecretsManagerClient.builder()
                                         .httpClient(UrlConnectionHttpClient.create())
@@ -53,9 +84,65 @@ public class AppConfigService extends YamlParametersConfigService {
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public AppConfigService(String paramsRaw, SecretsProvider secretsProvider) {
-        initializeConfig(paramsRaw);
+    public AppConfigService(AppConfigProvider appConfigProvider, SecretsProvider secretsProvider) {
+        this.appConfigProvider = appConfigProvider;
         this.secretsProvider = secretsProvider;
+    }
+
+    @Override
+    public String getParameter(String path) {
+        // Temporary. Delete on next AWS Powertools release:
+        // https://github.com/aws-powertools/powertools-lambda-java/issues/1672
+        appConfigProvider =
+                ParamManager.getAppConfigProvider(
+                        AppConfigDataClient.builder()
+                                .httpClient(UrlConnectionHttpClient.create())
+                                .build(),
+                        environmentId,
+                        applicationId);
+
+        LOGGER.error(String.format("getParameter path: %s", path));
+        var a = appConfigProvider.get(profileId);
+        parseParametersIfNew(a);
+
+        LOGGER.error(String.format("getParameter a: %s", a));
+        var b = this.getParameterFromStoredValue(path);
+
+        LOGGER.error(String.format("getParameter b: %s", b));
+        return b;
+    }
+
+    @Override
+    public Map<String, String> getParametersByPrefix(String path) {
+        // Temporary. Delete on next AWS Powertools release:
+        // https://github.com/aws-powertools/powertools-lambda-java/issues/1672
+        appConfigProvider =
+                ParamManager.getAppConfigProvider(
+                        AppConfigDataClient.builder()
+                                .httpClient(UrlConnectionHttpClient.create())
+                                .build(),
+                        environmentId,
+                        applicationId);
+        parseParametersIfNew(appConfigProvider.get(profileId));
+        return this.getParametersFromStoredValueByPrefix(path);
+    }
+
+    private void parseParametersIfNew(String paramsRaw) {
+        var retrievedParamsHash = getParamsRawHash(paramsRaw);
+        if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
+            initializeConfig(paramsRaw);
+            paramsRawHash = retrievedParamsHash;
+        }
+    }
+
+    private static String getParamsRawHash(String appConfigYaml) {
+        try {
+            var messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.digest(appConfigYaml.getBytes());
+            return new String(messageDigest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void initializeConfig(String paramsRaw) {
@@ -65,21 +152,6 @@ public class AppConfigService extends YamlParametersConfigService {
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not load parameter yaml", e);
         }
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    private String getRawParams() {
-        var applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
-        var environmentId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ENVIRONMENT_ID);
-        var profileId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
-
-        return ParamManager.getAppConfigProvider(
-                        AppConfigDataClient.builder()
-                                .httpClient(UrlConnectionHttpClient.create())
-                                .build(),
-                        environmentId,
-                        applicationId)
-                .get(profileId);
     }
 
     @Override

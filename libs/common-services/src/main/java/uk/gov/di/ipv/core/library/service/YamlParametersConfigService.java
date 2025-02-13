@@ -19,8 +19,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
 
     public final Map<String, String> parameters = new HashMap<>();
 
-    @Override
-    public String getParameter(String path) {
+    protected String getParameterFromStoredValue(String path) {
         if (getFeatureSet() != null) {
             for (String individualFeatureSet : getFeatureSet()) {
                 var featurePath =
@@ -36,8 +35,7 @@ public abstract class YamlParametersConfigService extends ConfigService {
         return parameters.get(path);
     }
 
-    @Override
-    protected Map<String, String> getParametersByPrefix(String path) {
+    protected Map<String, String> getParametersFromStoredValueByPrefix(String path) {
         return parameters.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(path))
                 .collect(

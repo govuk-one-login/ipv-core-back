@@ -43,6 +43,16 @@ public class YamlConfigService extends YamlParametersConfigService {
     }
 
     @Override
+    public String getParameter(String path) {
+        return this.getParameterFromStoredValue(path);
+    }
+
+    @Override
+    public Map<String, String> getParametersByPrefix(String path) {
+        return this.getParametersFromStoredValueByPrefix(path);
+    }
+
+    @Override
     public String getSecret(String path) {
         return secrets.get(path);
     }
