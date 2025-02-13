@@ -137,21 +137,6 @@ public interface VcFixtures {
                             .txn("some-uuid")
                             .build());
 
-    List<TestVc.TestEvidence> FRAUD_EVIDENCE_FAILED_AUTHORITATIVE_AVAILABLE_SOURCE_CHECK_DETAILS =
-            List.of(
-                    TestVc.TestEvidence.builder()
-                            .checkDetails(null)
-                            .failedCheckDetails(
-                                    List.of(
-                                            Map.of(
-                                                    "checkMethod",
-                                                    "data",
-                                                    "fraudCheck",
-                                                    "available_authoritative_source")))
-                            .type(IDENTITY_CHECK_EVIDENCE_TYPE)
-                            .txn("some-uuid")
-                            .build());
-
     List<TestVc.TestEvidence> DCMAW_EVIDENCE_VRI_CHECK =
             List.of(
                     TestVc.TestEvidence.builder()
@@ -710,24 +695,6 @@ public interface VcFixtures {
                 TestVc.builder()
                         .evidence(
                                 FRAUD_EVIDENCE_FAILED_APPLICABLE_AUTHORITATIVE_SOURCE_CHECK_DETAILS)
-                        .credentialSubject(credentialSubject)
-                        .build(),
-                "https://review-f.integration.account.gov.uk",
-                Instant.ofEpochSecond(1658829758));
-    }
-
-    static VerifiableCredential vcFraudApplicableAuthoritativeAvailableFailed() {
-        TestVc.TestCredentialSubject credentialSubject =
-                TestVc.TestCredentialSubject.builder()
-                        .address(List.of(ADDRESS_3))
-                        .birthDate(List.of(createBirthDate("1959-08-23")))
-                        .build();
-        return generateVerifiableCredential(
-                TEST_SUBJECT,
-                EXPERIAN_FRAUD,
-                TestVc.builder()
-                        .evidence(
-                                FRAUD_EVIDENCE_FAILED_AUTHORITATIVE_AVAILABLE_SOURCE_CHECK_DETAILS)
                         .credentialSubject(credentialSubject)
                         .build(),
                 "https://review-f.integration.account.gov.uk",
