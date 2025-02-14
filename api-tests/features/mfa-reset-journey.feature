@@ -116,7 +116,7 @@ Feature: MFA reset journey
         | context   | "check_details" |
       Then I get a 'uk-driving-licence-details-not-correct' page response
       When I submit a 'end' event
-      Then I get a 'prove-identity-another-way' page response
+      Then I get a 'prove-identity-another-way' page response with context 'noF2f'
       When I submit a 'returnToRp' event
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
