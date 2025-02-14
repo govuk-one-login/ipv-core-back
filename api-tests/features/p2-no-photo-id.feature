@@ -4,6 +4,8 @@ Feature: P2 no photo id journey
     Background: Start P2 no photo id with Experian KBV
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -164,6 +166,8 @@ Feature: P2 no photo id journey
     Background: Abandon P2 no photo id journey
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -212,6 +216,8 @@ Feature: P2 no photo id journey
     Background: Escape P2 no photo id journey
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -236,6 +242,8 @@ Feature: P2 no photo id journey
     Background: Start P2 no photo id KBV mitigation journey
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -276,6 +284,8 @@ Feature: P2 no photo id journey
     Background: Start P2 no photo id KBV mitigation journey
       Given I activate the 'm2bBetaExperianKbv' feature set
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response

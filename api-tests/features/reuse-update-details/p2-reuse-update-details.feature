@@ -42,7 +42,9 @@ Feature: Identity reuse update details
     Scenario: Address Change
         When I submit a 'address-only' event
         Then I get a 'address' CRI response
-        When I submit 'kenneth-changed' details to the CRI stub
+        When I submit 'kenneth-changed' details with attributes to the CRI stub
+            | Attribute | Values               |
+            | context   | "international_user" |
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-score-2' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'
@@ -65,7 +67,9 @@ Feature: Identity reuse update details
         Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
         When I submit a 'next' event
         Then I get a 'address' CRI response
-        When I submit 'kenneth-changed' details to the CRI stub
+        When I submit 'kenneth-changed' details with attributes to the CRI stub
+            | Attribute | Values               |
+            | context   | "international_user" |
         Then I get a 'fraud' CRI response
         When I submit 'kenneth-changed-family-name-score-2' details to the CRI stub
         Then I get a 'page-ipv-success' page response with context 'updateIdentity'

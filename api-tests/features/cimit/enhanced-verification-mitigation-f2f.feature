@@ -2,6 +2,8 @@
 Feature: Mitigating CIs with enhanced verification using the F2F CRI
   Background:
     Given I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

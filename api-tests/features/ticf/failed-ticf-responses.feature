@@ -4,6 +4,8 @@ Feature: Failed TICF responses
     Given TICF CRI will respond with default parameters and
       | statusCode    | <statusCode>                 |
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
@@ -33,6 +35,8 @@ Feature: Failed TICF responses
     Given TICF CRI will respond with default parameters and
       | responseDelay | 10         |
     When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response

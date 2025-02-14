@@ -4,6 +4,8 @@ Feature: P2 F2F journey
   Rule: Pending F2F journey
     Background: User has pending f2f verification
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -57,6 +59,8 @@ Feature: P2 F2F journey
     Scenario Outline: Successful P2 identity via F2F using <doc>
       # Initial journey
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -88,7 +92,10 @@ Feature: P2 F2F journey
     Scenario Outline: Successful P2 identity via F2F using <doc> - DCMAW access_denied
       # Initial journey
       Given I start a new 'medium-confidence' journey
-      When I submit an 'appTriage' event
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit a 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response
@@ -122,6 +129,8 @@ Feature: P2 F2F journey
   Rule: Oauth error F2F journeys
     Background: User starts F2F journey
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -159,6 +168,8 @@ Feature: P2 F2F journey
 
   Scenario: F2F PYI escape route
     Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -168,6 +179,8 @@ Feature: P2 F2F journey
   Rule: F2F evidence requested strength score
     Background: User has pending F2F verification
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
@@ -216,6 +229,8 @@ Feature: P2 F2F journey
   Rule: Failed F2F journeys are only shown the fail page once
     Background:
       Given I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'end' event
       Then I get a 'page-ipv-identity-postoffice-start' page response
@@ -236,10 +251,14 @@ Feature: P2 F2F journey
       # Return journey
       When I start a new 'medium-confidence' journey and return to a 'pyi-f2f-technical' page response
       And I submit a 'next' event
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
 
       # Start another return journey
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
 
     Scenario: User chooses to return to the service
@@ -252,4 +271,6 @@ Feature: P2 F2F journey
 
       # Start another return journey
       When I start a new 'medium-confidence' journey
+      Then I get a 'live-in-uk' page response
+      When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
