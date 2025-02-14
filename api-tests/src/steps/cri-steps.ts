@@ -45,6 +45,7 @@ const STANDARD_JAR_VALUES = [
   "state",
   "exp",
   "iat",
+  "context",
 ];
 
 const submitAndProcessCriAction = async (

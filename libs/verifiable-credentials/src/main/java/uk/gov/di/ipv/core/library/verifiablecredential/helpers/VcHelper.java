@@ -211,13 +211,17 @@ public class VcHelper {
                                             ? Stream.empty()
                                             : evidence.getFailedCheckDetails().stream())
                     .anyMatch(
-                            failedCheck ->
-                                    Set.of(
-                                                    CheckDetails.FraudCheckType
-                                                            .APPLICABLE_AUTHORITATIVE_SOURCE,
-                                                    CheckDetails.FraudCheckType
-                                                            .AVAILABLE_AUTHORITATIVE_SOURCE)
-                                            .contains(failedCheck.getFraudCheck()));
+                            failedCheck -> {
+                                CheckDetails.FraudCheckType fraudCheck =
+                                        failedCheck.getFraudCheck();
+                                return fraudCheck != null
+                                        && Set.of(
+                                                        CheckDetails.FraudCheckType
+                                                                .APPLICABLE_AUTHORITATIVE_SOURCE,
+                                                        CheckDetails.FraudCheckType
+                                                                .AVAILABLE_AUTHORITATIVE_SOURCE)
+                                                .contains(fraudCheck);
+                            });
         }
         return false;
     }
