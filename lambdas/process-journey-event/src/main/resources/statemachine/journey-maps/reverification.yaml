@@ -164,42 +164,6 @@ states:
       returnToRp:
         targetState: RETURN_TO_RP
 
-  CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_REVERIFICATION_IDENTITY
-      not-found:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      access-denied:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      temporarily-unavailable:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-
-  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
-    response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
-    events:
-      next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_REVERIFICATION_IDENTITY
-
   PROCESS_REVERIFICATION_IDENTITY:
     response:
       type: process
