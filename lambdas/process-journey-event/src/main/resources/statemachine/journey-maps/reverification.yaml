@@ -105,7 +105,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: CRI_DCMAW
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -131,6 +132,35 @@ states:
       anotherWay:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
+      returnToRp:
+        targetState: RETURN_TO_RP
+
+  APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
+      next:
+        targetState: CHECK_COI
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_REVERIFICATION_IDENTITY
+      incomplete:
+        targetJourney: INELIGIBLE
+        targetState: INELIGIBLE_SKIP_MESSAGE
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+      incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
       returnToRp:
         targetState: RETURN_TO_RP
 
