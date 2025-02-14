@@ -470,7 +470,7 @@ const postToEnqueue = async (body: object) => {
 };
 
 When(
-  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
+  /^the async DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
   async function (
     this: World,
     testUser: string,
