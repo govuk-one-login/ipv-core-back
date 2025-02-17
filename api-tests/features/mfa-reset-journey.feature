@@ -24,6 +24,22 @@ Feature: MFA reset journey
       When I use the OAuth response to get my MFA reset result
       Then I get a successful MFA reset result
 
+    Scenario: Successful MFA reset journey - with DL auth source check
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'we-matched-you-to-your-one-login' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get an successful MFA reset result
+
     Scenario: Failed MFA reset journey with breaching CI - user can still reuse existing identity
       When I submit a 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
@@ -75,7 +91,6 @@ Feature: MFA reset journey
       Then I get an unsuccessful MFA reset result with failure code 'identity_did_not_match'
 
     Scenario: Failed MFA reset journey - failed DL auth source check
-      Given I activate the 'drivingLicenceAuthCheck' feature set
       When I submit a 'next' event
       Then I get a 'page-ipv-identity-document-start' page response
       When I submit an 'appTriage' event
@@ -88,6 +103,38 @@ Feature: MFA reset journey
       Then I get an OAuth response
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
+
+    Scenario: Failed MFA reset journey - incorrect DL details from DL auth source check - prove identity another way
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'uk-driving-licence-details-not-correct' page response
+      When I submit a 'end' event
+      Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
+
+    Scenario: Incorrect DL details from DL auth source check - allowed retry through the app
+      When I submit a 'next' event
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'uk-driving-licence-details-not-correct' page response
+      When I submit a 'next' event
+      Then I get a 'dcmaw' CRI response
 
   Rule: The user has no existing identity
     Scenario: Attempted MFA reset journey

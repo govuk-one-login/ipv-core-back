@@ -70,7 +70,7 @@
     "event_name": "IPV_SUBJOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {
-      "journey_type": "FAILED"
+      "journey_type": "INELIGIBLE"
     },
     "restricted": {
       "device_information": {}
