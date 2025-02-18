@@ -24,6 +24,7 @@ import java.util.Map;
  * fixed to check for empty configuration string.
  */
 @ExcludeFromGeneratedCoverageReport
+@SuppressWarnings("all")
 public class CustomAppConfigProvider extends BaseProvider {
 
     private final AppConfigDataClient client;
