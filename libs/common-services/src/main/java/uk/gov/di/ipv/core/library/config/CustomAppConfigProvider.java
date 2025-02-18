@@ -14,7 +14,6 @@ import software.amazon.lambda.powertools.core.internal.UserAgentConfigurator;
 import software.amazon.lambda.powertools.parameters.BaseProvider;
 import software.amazon.lambda.powertools.parameters.cache.CacheManager;
 import software.amazon.lambda.powertools.parameters.transform.TransformationManager;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +22,6 @@ import java.util.Map;
  * Modified copy of {@link software.amazon.lambda.powertools.parameters.AppConfigProvider}. getValue
  * fixed to check for empty configuration string.
  */
-@ExcludeFromGeneratedCoverageReport
-@SuppressWarnings("all")
 public class CustomAppConfigProvider extends BaseProvider {
 
     private final AppConfigDataClient client;
