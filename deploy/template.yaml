@@ -16,6 +16,7 @@ Globals:
       Variables:
         ENVIRONMENT: !Sub "${Environment}"
         CONFIG_SOURCE: "ssm"
+        CONFIGURATION_SOURCE: "ssm"
         APP_CONFIG_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_ENVIRONMENT_ID: !Sub "core-back-${Environment}"
         APP_CONFIG_PROFILE_ID: !Sub "core-back-${Environment}"
@@ -658,6 +659,8 @@ Resources:
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "IssueClientAccessTokenFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -692,7 +695,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -748,6 +750,8 @@ Resources:
   BuildClientOauthResponseFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "BuildClientOauthResponseFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -786,7 +790,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -843,6 +846,8 @@ Resources:
   InitialiseIpvSessionFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "InitialiseIpvSessionFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -877,7 +882,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -961,6 +965,8 @@ Resources:
   BuildCriOauthRequestFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "BuildCriOauthRequestFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -992,7 +998,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1061,6 +1066,8 @@ Resources:
   ProcessCriCallbackFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "ProcessCriCallbackLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1127,7 +1134,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1193,6 +1199,8 @@ Resources:
   ProcessMobileAppCallbackFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "ProcessMobileAppCallbackLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1239,7 +1247,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1299,6 +1306,8 @@ Resources:
   CheckMobileAppVcReceiptFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "CheckMobileAppVcReceiptLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1350,7 +1359,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1404,6 +1412,8 @@ Resources:
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "BuildUserIdentityFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1439,7 +1449,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1509,6 +1518,8 @@ Resources:
   UserReverificationFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "UserReverificationFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1539,7 +1550,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1759,6 +1769,8 @@ Resources:
   IPVProcessJourneyEventFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "IPVProcessJourneyEventFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1789,7 +1801,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1849,6 +1860,8 @@ Resources:
   EvaluateGpg45ScoresFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - EvaluateGpg45ScoresFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1879,7 +1892,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -1941,6 +1953,8 @@ Resources:
   BuildProvenUserIdentityDetailsFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - BuildProvenUserIdentityDetailsFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1975,7 +1989,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2046,6 +2059,8 @@ Resources:
   CheckExistingIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CheckExistingIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2078,7 +2093,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2144,6 +2158,8 @@ Resources:
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - "ProcessAsyncCriCredentialFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2178,7 +2194,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2278,6 +2293,8 @@ Resources:
   CheckGpg45ScoreFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CheckGpg45ScoreFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2317,7 +2334,6 @@ Resources:
           - Sid: AppConfigAccess
             Effect: Allow
             Action:
-              - appconfig:GetConfiguration
               - appconfig:StartConfigurationSession
               - appconfig:GetLatestConfiguration
             Resource:
@@ -2354,6 +2370,8 @@ Resources:
   CallTicfCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CallTicfCriFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2403,7 +2421,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2447,6 +2464,8 @@ Resources:
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CallDcmawAsyncCriFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2500,7 +2519,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2533,6 +2551,8 @@ Resources:
   StoreIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - StoreIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2563,7 +2583,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2621,6 +2640,8 @@ Resources:
   ResetSessionIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - ResetSessionIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2651,7 +2672,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2711,6 +2731,8 @@ Resources:
   CheckCoiFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CheckCoiFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2741,7 +2763,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2801,6 +2822,8 @@ Resources:
   CheckReverificationIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - CheckReverificationIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2829,7 +2852,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:
@@ -2876,6 +2898,8 @@ Resources:
   ProcessCandidateIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
+      - AppConfigEnvironment
+      - AppConfigConfigurationProfile
       - ProcessCandidateIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2906,7 +2930,6 @@ Resources:
             - Sid: AppConfigAccess
               Effect: Allow
               Action:
-                - appconfig:GetConfiguration
                 - appconfig:StartConfigurationSession
                 - appconfig:GetLatestConfiguration
               Resource:

@@ -13,13 +13,14 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.AppConfigProvider;
+import software.amazon.lambda.powertools.parameters.BaseProvider;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.CustomAppConfigProvider;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -32,11 +33,9 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
 
 public class AppConfigService extends YamlParametersConfigService {
-
     private static final Logger LOGGER = LogManager.getLogger(AppConfigService.class);
     private static final int DEFAULT_CACHE_DURATION_MINUTES = 3;
     private static final String CORE_BASE_PATH = "/%s/core/";
-    private static final String CORE = "core";
 
     @Getter @Setter private List<String> featureSet;
     private final String applicationId = getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_ID);
@@ -45,7 +44,7 @@ public class AppConfigService extends YamlParametersConfigService {
     private final String profileId =
             getEnvironmentVariable(EnvironmentVariable.APP_CONFIG_PROFILE_ID);
     private String paramsRawHash;
-    private AppConfigProvider appConfigProvider;
+    private final BaseProvider appConfigProvider;
     private final SecretsProvider secretsProvider;
 
     @ExcludeFromGeneratedCoverageReport
@@ -55,17 +54,17 @@ public class AppConfigService extends YamlParametersConfigService {
                         CONFIG_SERVICE_CACHE_DURATION_MINUTES, DEFAULT_CACHE_DURATION_MINUTES);
 
         appConfigProvider =
-                (AppConfigProvider)
-                        ParamManager.getAppConfigProvider(
-                                        AppConfigDataClient.builder()
-                                                .httpClient(UrlConnectionHttpClient.create())
-                                                .build(),
-                                        environmentId,
-                                        applicationId)
-                                .withMaxAge(cacheDuration, MINUTES);
-
-        // Initialise parameters value
-        parseParametersIfNew(appConfigProvider.get(profileId));
+                CustomAppConfigProvider.builder()
+                        .withClient(
+                                AppConfigDataClient.builder()
+                                        .httpClient(UrlConnectionHttpClient.create())
+                                        .build())
+                        .withCacheManager(ParamManager.getCacheManager())
+                        .withTransformationManager(ParamManager.getTransformationManager())
+                        .withApplication(applicationId)
+                        .withEnvironment(environmentId)
+                        .build()
+                        .withMaxAge(0, MINUTES);
 
         secretsProvider =
                 ParamManager.getSecretsProvider(
@@ -83,38 +82,20 @@ public class AppConfigService extends YamlParametersConfigService {
 
     @Override
     public String getParameter(String path) {
-        // Temporary. Delete on next AWS Powertools release:
-        // https://github.com/aws-powertools/powertools-lambda-java/issues/1672
-        appConfigProvider =
-                ParamManager.getAppConfigProvider(
-                        AppConfigDataClient.builder()
-                                .httpClient(UrlConnectionHttpClient.create())
-                                .build(),
-                        environmentId,
-                        applicationId);
         parseParametersIfNew(appConfigProvider.get(profileId));
-        return this.getParameterFromStoredValue(path);
+        return super.getParameter(path);
     }
 
     @Override
     public Map<String, String> getParametersByPrefix(String path) {
-        // Temporary. Delete on next AWS Powertools release:
-        // https://github.com/aws-powertools/powertools-lambda-java/issues/1672
-        appConfigProvider =
-                ParamManager.getAppConfigProvider(
-                        AppConfigDataClient.builder()
-                                .httpClient(UrlConnectionHttpClient.create())
-                                .build(),
-                        environmentId,
-                        applicationId);
         parseParametersIfNew(appConfigProvider.get(profileId));
-        return this.getParametersFromStoredValueByPrefix(path);
+        return super.getParametersByPrefix(path);
     }
 
     private void parseParametersIfNew(String paramsRaw) {
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
-            initializeConfig(paramsRaw);
+            updateParameters(parameters, paramsRaw);
             paramsRawHash = retrievedParamsHash;
         }
     }
@@ -126,15 +107,6 @@ public class AppConfigService extends YamlParametersConfigService {
             return new String(messageDigest.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private void initializeConfig(String paramsRaw) {
-        try {
-            var paramsYaml = YAML_OBJECT_MAPPER.readTree(paramsRaw).get(CORE);
-            addJsonConfig(parameters, paramsYaml);
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not load parameter yaml", e);
         }
     }
 

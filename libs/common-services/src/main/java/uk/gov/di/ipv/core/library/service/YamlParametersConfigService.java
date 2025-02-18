@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,12 +17,14 @@ import static com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DET
 public abstract class YamlParametersConfigService extends ConfigService {
     private static final String PATH_SEPARATOR = "/";
     private static final String FEATURE_SETS = "features";
+    private static final String CORE = "core";
     public static final ObjectMapper YAML_OBJECT_MAPPER =
             new ObjectMapper(new YAMLFactory()).configure(STRICT_DUPLICATE_DETECTION, true);
 
     public final Map<String, String> parameters = new HashMap<>();
 
-    protected String getParameterFromStoredValue(String path) {
+    @Override
+    public String getParameter(String path) {
         if (getFeatureSet() != null) {
             for (String individualFeatureSet : getFeatureSet()) {
                 var featurePath =
@@ -35,7 +40,8 @@ public abstract class YamlParametersConfigService extends ConfigService {
         return parameters.get(path);
     }
 
-    protected Map<String, String> getParametersFromStoredValueByPrefix(String path) {
+    @Override
+    public Map<String, String> getParametersByPrefix(String path) {
         return parameters.entrySet().stream()
                 .filter(e -> e.getKey().startsWith(path))
                 .collect(
@@ -43,11 +49,25 @@ public abstract class YamlParametersConfigService extends ConfigService {
                                 e -> e.getKey().substring(path.length()), Map.Entry::getValue));
     }
 
-    void addJsonConfig(Map<String, String> map, JsonNode tree) {
-        addJsonConfig(map, tree, "");
+    protected void updateParameters(Map<String, String> map, File yamlFile) {
+        try {
+            String yamlContent = Files.readString(yamlFile.toPath());
+            updateParameters(map, yamlContent);
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not read parameters yaml file", e);
+        }
     }
 
-    void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
+    protected void updateParameters(Map<String, String> map, String yaml) {
+        try {
+            var yamlParsed = YAML_OBJECT_MAPPER.readTree(yaml).get(CORE);
+            addJsonConfig(map, yamlParsed, "");
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Could not load parameters yaml", e);
+        }
+    }
+
+    private void addJsonConfig(Map<String, String> map, JsonNode tree, String prefix) {
         switch (tree.getNodeType()) {
             case BOOLEAN, NUMBER, STRING -> map.put(prefix.substring(1), tree.asText());
             case OBJECT -> tree.fields()
