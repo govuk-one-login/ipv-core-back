@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -232,16 +233,18 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody {
+            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
+                    CiExtractionException {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
-            var cis =
-                    cimitService.getContraIndicators(
+            var contraIndicatorsVc =
+                    cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
                             ipvSessionItem);
+            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
             // Check CIs only against the target Vot so we don't send the user on an unnecessary
             // mitigation journey.

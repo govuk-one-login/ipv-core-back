@@ -9,7 +9,7 @@ powertools = "1.18.0"
 [libraries]
 aspectj = { module = "org.aspectj:aspectjrt", version = { strictly = "1.9.8" } }
 awsLambdaJavaCore = "com.amazonaws:aws-lambda-java-core:1.2.3"
-awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.14.0"
+awsLambdaJavaEvents = "com.amazonaws:aws-lambda-java-events:3.15.0"
 awsSdkBom = { module = "software.amazon.awssdk:bom", version.ref = "awsSdk" }
 awsSdkDynamodb = { module = "software.amazon.awssdk:dynamodb" }
 awsSdkDynamodbEnhanced = { module = "software.amazon.awssdk:dynamodb-enhanced" }
@@ -19,7 +19,7 @@ awsSdkUrlConnectionClient = { module = "software.amazon.awssdk:url-connection-cl
 awsSdkAppConfigData = { module = "software.amazon.awssdk:appconfigdata" }
 commonsCodec = "commons-codec:commons-codec:1.18.0"
 commonsCollections = "org.apache.commons:commons-collections4:4.5.0-M2"
-diVocab = "uk.gov.di.model:di-data-model-jackson:v1.9.0"
+diVocab = "uk.gov.di.model:di-data-model-jackson:1.9.1"
 hamcrest = "org.hamcrest:hamcrest:3.0"
 jacksonDatabind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
 jacksonDataformatYaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
@@ -33,7 +33,7 @@ log4jCore = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log
 lombok = "org.projectlombok:lombok:1.18.30"
 mockitoCore = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockitoJunit = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
-nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.21"
+nimbusdsOauth2OidcSdk = "com.nimbusds:oauth2-oidc-sdk:11.22.1"
 notificationsJavaClient = "uk.gov.service.notify:notifications-java-client:5.2.0-RELEASE"
 openTelemetryBom = "io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:2.12.0-alpha"
 openTelemetryAwsSdkAutoConfigure = { module = "io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure" }

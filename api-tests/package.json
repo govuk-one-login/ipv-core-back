@@ -22,11 +22,11 @@
     "eslint-config-prettier": "10.0.1",
     "jose": "5.9.2",
     "jsonschema": "1.5.0",
-    "prettier": "3.4.1",
+    "prettier": "3.5.0",
     "start-server-and-test": "2.0.4",
     "ts-node": "10.9.2",
     "typescript": "5.7.2",
-    "typescript-eslint": "8.23.0",
+    "typescript-eslint": "8.24.0",
     "yaml": "2.7.0"
   }
 }

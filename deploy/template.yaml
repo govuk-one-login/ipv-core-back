@@ -131,7 +131,6 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "175872367215" ]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
-  IsBuild: !Equals [ !Ref Environment, "build" ]
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -769,15 +768,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          # PYIC-7888 Turn on debug logging in build
-          DT_LOGGING_DESTINATION: !If
-            - IsBuild
-            - "stdout"
-            - !Ref AWS::NoValue
-          DT_LOGGING_JAVA_FLAGS: !If
-            - IsBuild
-            - "log-Transformer=true,log-OpenTelemetryUtils=true,log-AsyncClassRetransformer=true,log-ClassValue=true"
-            - !Ref AWS::NoValue
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1338,6 +1328,8 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable

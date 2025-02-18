@@ -105,7 +105,8 @@ states:
       pageId: page-ipv-identity-document-start
     events:
       appTriage:
-        targetState: CRI_DCMAW
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
         checkFeatureFlag:
           strategicAppEnabled:
             targetState: STRATEGIC_APP_TRIAGE
@@ -134,41 +135,34 @@ states:
       returnToRp:
         targetState: RETURN_TO_RP
 
-  CRI_DCMAW:
-    response:
-      type: cri
-      criId: dcmaw
-    parent: CRI_STATE
-    events:
+  APP_DOC_CHECK:
+    nestedJourney: APP_DOC_CHECK
+    exitEvents:
       next:
         targetState: CHECK_COI
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_REVERIFICATION_IDENTITY
-      not-found:
+      incomplete:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE_SKIP_MESSAGE
-      access-denied:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      temporarily-unavailable:
-        targetJourney: INELIGIBLE
-        targetState: INELIGIBLE_SKIP_MESSAGE
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
+      alternate-doc-invalid-dl:
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+      incomplete-invalid-dl:
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
 
-  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
-      type: cri
-      criId: drivingLicence
-      context: check_details
-    parent: CRI_STATE
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
     events:
-      next:
-        targetState: CHECK_COI
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_REVERIFICATION_IDENTITY
+      anotherTypePhotoId:
+        targetState: APP_DOC_CHECK
+        targetEntryEvent: next
+      returnToRp:
+        targetState: RETURN_TO_RP
 
   PROCESS_REVERIFICATION_IDENTITY:
     response:

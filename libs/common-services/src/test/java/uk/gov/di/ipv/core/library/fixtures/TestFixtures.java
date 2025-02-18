@@ -170,6 +170,9 @@ public interface TestFixtures {
     String SIGNED_CONTRA_INDICATOR_NO_VC =
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.JEB0XsBplsmqz18ntjz_0hpDhjBus1HNvU280S7Mcjo"; // pragma: allowlist secret
 
+    String SIGNED_CIMIT_VC_NO_CI =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDowYWI1NWQ1Ny1hYmJmLTQ0YWEtOTVmMy1lN2Y1YzMwMTZkMTUiLCJuYmYiOjE3Mzg5MTgzMjgsImlzcyI6Imh0dHBzOi8vY2ltaXQuc3R1YnMuYWNjb3VudC5nb3YudWsiLCJleHAiOjE3Mzg5MTkyMjgsInZjIjp7ImV2aWRlbmNlIjpbeyJjb250cmFJbmRpY2F0b3IiOltdLCJ0eXBlIjoiU2VjdXJpdHlDaGVjayJ9XSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlNlY3VyaXR5Q2hlY2tDcmVkZW50aWFsIl19fQ.6fAqnjlaU0VoUMhhw6JxnZ2mrwSiHp0kpjpMudRf0VS3fteAN1K_JWIl7-2vJnSMWMlIj1vPmuCpQ2W2VtGcqQ"; // pragma: allowlist secret
+
     String EXAMPLE_GENERATED_SECURE_TOKEN =
             "ScnF4dGXthZYXS_5k85ObEoSU04W-H3qa_p6npv2ZUY"; // pragma: allowlist secret
 

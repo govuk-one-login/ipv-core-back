@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.checkmobileappvcreceipt;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -17,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -41,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
@@ -238,6 +241,44 @@ class CheckMobileAppVcReceiptHandlerTest {
         assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
         assertEquals("\"No VC found\"", response.getBody());
         verify(sessionCredentialsService, never()).persistCredentials(any(), any(), anyBoolean());
+    }
+
+    @Test
+    void shouldReturn500IfUnableToExtractContraIndicatorsFromVc() throws Exception {
+        // Arrange
+        var ipvSessionItem = buildValidIpvSessionItem();
+        var requestEvent = buildValidRequestEventWithState();
+        when(ipvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(TEST_CLIENT_OAUTH_SESSION_ID))
+                .thenReturn(buildValidClientOAuthSessionItem());
+        var criResponseItem = buildValidCriResponseItem(CriResponseService.STATUS_PENDING);
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, Cri.DCMAW_ASYNC))
+                .thenReturn(criResponseItem);
+        when(mockSignedJwt.getJWTClaimsSet())
+                .thenReturn(
+                        JWTClaimsSet.parse(
+                                Map.of(
+                                        "vc",
+                                        Map.of("type", List.of("IdentityAssertionCredential")))));
+        var vc = VerifiableCredential.fromValidJwt(TEST_USER_ID, Cri.DCMAW_ASYNC, mockSignedJwt);
+        when(sessionCredentialsService.getCredentials(
+                        ipvSessionItem.getIpvSessionId(), TEST_USER_ID))
+                .thenReturn(List.of());
+        when(evcsService.getVerifiableCredentials(
+                        TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, PENDING_RETURN))
+                .thenReturn(List.of(vc));
+        when(criCheckingService.checkVcResponse(any(), any(), any(), any(), any()))
+                .thenThrow(new CiExtractionException("Unable to extract CIs"));
+
+        // Act
+        var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
+
+        // Assert
+        Map<String, String> body =
+                OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("Unable to extract CIs", body.get("message"));
+        verify(sessionCredentialsService, times(1)).persistCredentials(any(), any(), anyBoolean());
     }
 
     @Test

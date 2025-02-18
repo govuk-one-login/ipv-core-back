@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -24,6 +23,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProfileType;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -36,7 +37,6 @@ import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -46,6 +46,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,7 +73,6 @@ public class EvaluateGpg45ScoresHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final ConfigService configService;
     private final AuditService auditService;
-    private final CimitService cimitService;
     private final CimitUtilityService cimitUtilityService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final SessionCredentialsService sessionCredentialsService;
@@ -89,7 +89,6 @@ public class EvaluateGpg45ScoresHandler
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             SessionCredentialsService sessionCredentialsService,
-            CimitService cimitService,
             CimitUtilityService cimitUtilityService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -98,7 +97,6 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.sessionCredentialsService = sessionCredentialsService;
-        this.cimitService = cimitService;
         this.cimitUtilityService = cimitUtilityService;
         VcHelper.setConfigService(this.configService);
     }
@@ -118,7 +116,6 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = AuditService.create(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.sessionCredentialsService = new SessionCredentialsService(configService);
-        this.cimitService = new CimitService(configService);
         this.cimitUtilityService = new CimitUtilityService(configService);
         VcHelper.setConfigService(this.configService);
     }
@@ -149,15 +146,9 @@ public class EvaluateGpg45ScoresHandler
                 return JOURNEY_VCS_NOT_CORRELATED.toObjectMap();
             }
 
-            // This is a performance optimisation as calling cimitService.getContraIndicators()
-            // takes about 0.5 seconds.
-            // If the VTR only contains one entry then it is impossible for a user to reach here
-            // with a breaching CI so we don't have to check.
             var contraIndicators =
-                    clientOAuthSessionItem.getVtr().size() == 1
-                            ? null
-                            : cimitService.getContraIndicators(
-                                    userId, govukSigninJourneyId, ipAddress, ipvSessionItem);
+                    cimitUtilityService.getContraIndicatorsFromVc(
+                            ipvSessionItem.getSecurityCheckCredential(), userId);
 
             var matchingGpg45Profile =
                     findMatchingGpg45Profile(
@@ -183,16 +174,16 @@ public class EvaluateGpg45ScoresHandler
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();
-        } catch (CiRetrievalException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), e));
-            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
+        } catch (CiExtractionException | ParseException | CredentialParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                            ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
+            return buildJourneyErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

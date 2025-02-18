@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,6 +30,7 @@ import uk.gov.di.ipv.core.library.enums.CandidateIdentityType;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -57,7 +59,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.CheckCoiService;
 import uk.gov.di.ipv.core.processcandidateidentity.service.StoreIdentityService;
-import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
 import java.util.EnumSet;
@@ -70,9 +71,10 @@ import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_PROCESS_IDENTITY_TYPE;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.EXISTING;
 import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.NEW;
@@ -250,19 +252,20 @@ public class ProcessCandidateIdentityHandler
                             SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
-        } catch (CiRetrievalException e) {
-            LOGGER.error(LogHelper.buildErrorMessage(FAILED_TO_GET_STORED_CIS.getMessage(), e));
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            FAILED_TO_GET_STORED_CIS)
-                    .toObjectMap();
         } catch (ParseException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Failed to get VOT from operational VC", e));
+            LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
+        } catch (CiExtractionException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
@@ -293,8 +296,8 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws EvcsServiceException, HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                    CredentialParseException, ParseException {
+            throws EvcsServiceException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException, ParseException, CiExtractionException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
@@ -321,7 +324,6 @@ public class ProcessCandidateIdentityHandler
                             ipvSessionItem,
                             clientOAuthSessionItem,
                             deviceInformation,
-                            ipAddress,
                             sessionVcs,
                             auditEventUser);
 
@@ -375,10 +377,16 @@ public class ProcessCandidateIdentityHandler
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
             String deviceInformation,
-            String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, CiRetrievalException, ParseException {
+            throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
+                    CiExtractionException {
+        if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    MISSING_SECURITY_CHECK_CREDENTIAL);
+        }
 
         var areVcsCorrelated = userIdentityService.areVcsCorrelated(sessionVcs);
 
@@ -386,17 +394,10 @@ public class ProcessCandidateIdentityHandler
             return JOURNEY_VCS_NOT_CORRELATED;
         }
 
-        // This is a performance optimisation to save a call to CIMIT if it is not required
-        // If the VTR only contains one entry then it is impossible for a user to reach here
-        // with a breaching CI so we don't have to check.
         var contraIndicators =
-                clientOAuthSessionItem.getVtr().size() == 1
-                        ? List.<ContraIndicator>of()
-                        : cimitService.getContraIndicators(
-                                clientOAuthSessionItem.getUserId(),
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress,
-                                ipvSessionItem);
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        ipvSessionItem.getSecurityCheckCredential(),
+                        clientOAuthSessionItem.getUserId());
 
         var votResult =
                 votMatcher.matchFirstVot(
@@ -449,12 +450,14 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     auditEventUser);
 
-            var cis =
-                    cimitService.getContraIndicators(
+            var contraIndicatorsVc =
+                    cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
                             ipvSessionItem);
+
+            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
             var thresholdVot = ipvSessionItem.getThresholdVot();
 
@@ -478,6 +481,7 @@ public class ProcessCandidateIdentityHandler
                 | CiPostMitigationsException
                 | CiPutException
                 | CiRetrievalException
+                | CiExtractionException
                 | ConfigException
                 | UnrecognisedVotException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));

@@ -25,8 +25,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
-import uk.gov.di.model.ContraIndicator;
-import uk.gov.di.model.SecurityCheckCredential;
 
 import java.io.IOException;
 import java.net.URI;
@@ -37,7 +35,6 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
-import static java.util.Objects.requireNonNullElse;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 
@@ -114,13 +111,13 @@ public class CimitService {
         }
     }
 
-    public List<ContraIndicator> getContraIndicators(
+    public VerifiableCredential getContraIndicatorsVc(
             String userId,
             String govukSigninJourneyId,
             String ipAddress,
             IpvSessionItem ipvSessionItem)
             throws CiRetrievalException {
-        var vc = getContraIndicatorsVc(userId, govukSigninJourneyId, ipAddress);
+        var vc = fetchContraIndicatorsVc(userId, govukSigninJourneyId, ipAddress);
 
         var inSessionSecurityCredential = ipvSessionItem.getSecurityCheckCredential();
         if (StringUtils.isBlank(inSessionSecurityCredential)
@@ -129,40 +126,11 @@ public class CimitService {
             ipvSessionService.updateIpvSession(ipvSessionItem);
         }
 
-        return getContraIndicatorsFromVc(vc);
-    }
-
-    public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)
-            throws CiRetrievalException {
-        if (vc.getCredential() instanceof SecurityCheckCredential cimitCredential) {
-            var evidence = cimitCredential.getEvidence();
-            if (evidence == null || evidence.size() != 1) {
-                String message = "Unexpected evidence count";
-                LOGGER.error(
-                        LogHelper.buildErrorMessage(
-                                message,
-                                String.format(
-                                        "Expected one evidence item, got %d",
-                                        evidence == null ? 0 : evidence.size())));
-                throw new CiRetrievalException(message);
-            }
-
-            return requireNonNullElse(
-                    cimitCredential.getEvidence().get(0).getContraIndicator(), List.of());
-        } else {
-            String message = "Unexpected vc type";
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                            message,
-                            String.format(
-                                    "Expected SecurityCheckCredential, got %s",
-                                    vc.getCredential().getClass())));
-            throw new CiRetrievalException(message);
-        }
+        return vc;
     }
 
     @Tracing
-    public VerifiableCredential getContraIndicatorsVc(
+    private VerifiableCredential fetchContraIndicatorsVc(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         var response = sendGetHttpRequest(govukSigninJourneyId, ipAddress, userId);

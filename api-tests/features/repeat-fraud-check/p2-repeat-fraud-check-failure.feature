@@ -44,6 +44,22 @@ Feature: Repeat fraud check failures
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
+    Scenario: Applicable authoritative source failed check evidence too weak
+      When I submit 'kenneth-driving-permit-valid' details to the CRI stub
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-unavailable' details to the CRI stub
+      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P0' identity
+
     Scenario: User is able to delete account from update-details-failed screen
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get an 'update-details-failed' page response with context 'existingIdentityInvalid'
@@ -166,7 +182,9 @@ Feature: Repeat fraud check failures
       Then I get an 'address' CRI response
 
     Scenario: Address access denied OAuth error
-      When I call the CRI stub and get an 'access_denied' OAuth error
+      When I call the CRI stub with attributes and get an 'access_denied' OAuth error
+            | Attribute | Values               |
+            | context   | "international_user" |
       Then I get an 'sorry-could-not-confirm-details' page response with context 'existingIdentityInvalid'
       When I submit a 'returnToRp' event
       Then I get an OAuth response

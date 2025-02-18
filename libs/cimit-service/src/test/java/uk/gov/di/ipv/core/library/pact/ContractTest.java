@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
@@ -104,17 +105,19 @@ class ContractTest {
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
         var underTest = new CimitService(mockConfigService);
+        var ipvSessionItem =
+                IpvSessionItem.builder().securityCheckCredential(VALID_CI_VC_JWT).build();
 
         // Act
-        var contraIndicator =
+        var contraIndicatorVc =
                 underTest.getContraIndicatorsVc(
-                        MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
+                        MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
-        assertEquals(MOCK_USER_ID, contraIndicator.getUserId());
-        assertInstanceOf(SecurityCheckCredential.class, contraIndicator.getCredential());
+        assertEquals(MOCK_USER_ID, contraIndicatorVc.getUserId());
+        assertInstanceOf(SecurityCheckCredential.class, contraIndicatorVc.getCredential());
 
-        var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
+        var securityCheckCredential = (SecurityCheckCredential) contraIndicatorVc.getCredential();
         var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
 
         assertEquals(2, evidence.getContraIndicator().size());
@@ -169,17 +172,19 @@ class ContractTest {
         when(mockConfigService.getParameter(CIMIT_API_BASE_URL))
                 .thenReturn(getMockApiBaseUrl(mockServer));
         var underTest = new CimitService(mockConfigService);
+        var ipvSessionItem =
+                IpvSessionItem.builder().securityCheckCredential(VALID_NO_CI_VC_JWT).build();
 
         // Act
-        var contraIndicator =
+        var contraIndicatorsVc =
                 underTest.getContraIndicatorsVc(
-                        MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS);
+                        MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
-        assertEquals(MOCK_USER_ID, contraIndicator.getUserId());
-        assertInstanceOf(SecurityCheckCredential.class, contraIndicator.getCredential());
+        assertEquals(MOCK_USER_ID, contraIndicatorsVc.getUserId());
+        assertInstanceOf(SecurityCheckCredential.class, contraIndicatorsVc.getCredential());
 
-        var securityCheckCredential = (SecurityCheckCredential) contraIndicator.getCredential();
+        var securityCheckCredential = (SecurityCheckCredential) contraIndicatorsVc.getCredential();
         var evidence = (SecurityCheck) securityCheckCredential.getEvidence().get(0);
 
         assertEquals(0, evidence.getContraIndicator().size());
