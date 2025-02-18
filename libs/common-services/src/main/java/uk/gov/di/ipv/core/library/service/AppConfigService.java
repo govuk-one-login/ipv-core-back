@@ -19,6 +19,7 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.CustomAppConfigProvider;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.exceptions.ConfigParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.security.MessageDigest;
@@ -106,7 +107,7 @@ public class AppConfigService extends YamlParametersConfigService {
             messageDigest.digest(appConfigYaml.getBytes());
             return new String(messageDigest.digest());
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            throw new ConfigParseException(e.getMessage());
         }
     }
 
