@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequestException;
 import uk.gov.di.model.IdentityCheckSubject;
 
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +49,7 @@ import java.util.Optional;
 import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
+import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
@@ -299,7 +301,17 @@ public class CriCheckingService {
 
     private boolean requiresAuthoritativeSourceCheck(
             List<VerifiableCredential> newVcs, List<VerifiableCredential> sessionVcs) {
-        return findSuccessfulVcFromCri(DCMAW, newVcs)
+
+        var dcmawVc = findSuccessfulVcFromCri(DCMAW, newVcs);
+        var dcmawAsyncVc = findSuccessfulVcFromCri(DCMAW_ASYNC, newVcs);
+
+        if (dcmawVc.isPresent() && dcmawAsyncVc.isPresent()) {
+            throw new InvalidParameterException("New VCs contains both DCMAW and DCMAW Async VCs");
+        }
+
+        var newVc = dcmawVc.isPresent() ? dcmawVc : dcmawAsyncVc;
+
+        return newVc
                 .map(this::getDrivingPermitIdentifier)
                 .map(
                         dcmawDpId ->

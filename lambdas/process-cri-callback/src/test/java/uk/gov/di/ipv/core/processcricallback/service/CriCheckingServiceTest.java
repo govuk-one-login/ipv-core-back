@@ -55,8 +55,11 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncDl;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDcmawAsyncPassport;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitEmptyDrivingPermit;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMissingDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
@@ -741,7 +744,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(M1B_DCMAW_VC));
+                            List.of(drivingPermitVc));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -759,7 +762,7 @@ class CriCheckingServiceTest {
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
-                            List.of(M1B_DCMAW_VC));
+                            List.of(vcDrivingPermitMissingDrivingPermit()));
 
             assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
         }
@@ -802,8 +805,8 @@ class CriCheckingServiceTest {
 
         @Test
         void
-                checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndDrivingLicenceVcIfIdentifiersMatch()
-                        throws Exception {
+        checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndDrivingLicenceVcIfIdentifiersMatch()
+                throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
@@ -828,6 +831,138 @@ class CriCheckingServiceTest {
             JourneyResponse result =
                     criCheckingService.checkVcResponse(
                             List.of(DCMAW_PASSPORT_VC),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of());
+
+            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndNoDrivingLicenceVc()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDl()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of());
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndFailedDrivingLicenceVc()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            var dcmawAsyncVc = vcDcmawAsyncDl();
+            var drivingPermitVc = vcDrivingPermit();
+
+            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(dcmawAsyncVc)).thenCallRealMethod();
+            mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(drivingPermitVc)).thenReturn(false);
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(dcmawAsyncVc),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of(drivingPermitVc));
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawVcAsyncAndDlVcWithMissingPermit()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDl()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of(vcDrivingPermitMissingDrivingPermit()));
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndDlVcEmptyDrivingPermit()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDl()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of(vcDrivingPermitEmptyDrivingPermit()));
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldReturnDlAuthSourceIfAsyncDrivingPermitIdentifiersDiffer()
+                throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDl()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of(vcDrivingPermitNonDcmaw()));
+
+            assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
+        }
+
+        @Test
+        void
+                checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawAsyncVcAndDrivingLicenceVcIfIdentifiersMatch()
+                        throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncDl()),
+                            callbackRequest.getIpAddress(),
+                            clientOAuthSessionItem,
+                            ipvSessionItem,
+                            List.of(vcDrivingPermit()));
+
+            assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
+        }
+
+        @Test
+        void checkVcResponseShouldNotReturnDlAuthSourceCheckForNonDlDcmawAsyncVc() throws Exception {
+            var callbackRequest = buildValidCallbackRequest();
+            var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+            var ipvSessionItem = buildValidIpvSessionItem();
+
+            JourneyResponse result =
+                    criCheckingService.checkVcResponse(
+                            List.of(vcDcmawAsyncPassport()),
                             callbackRequest.getIpAddress(),
                             clientOAuthSessionItem,
                             ipvSessionItem,
