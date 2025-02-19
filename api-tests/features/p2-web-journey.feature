@@ -174,7 +174,51 @@ Feature: P2 Web document journey
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  Scenario Outline: User drops out of DWP KBV CRI via thin file or failed checks using <cri> - DWP KBV
+  Scenario Outline: User drops out of DWP KBV CRI via thin file - DWP KBV
+    Given I activate the 'dwpKbvTest' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'dcmaw' CRI response
+    When I call the CRI stub and get an 'access_denied' OAuth error
+    Then I get a 'page-multiple-doc-check' page response
+    When I submit a '<cri>' event
+    Then I get a '<cri>' CRI response
+    When I submit '<details>' details to the CRI stub
+    Then I get an 'address' CRI response
+    When I submit 'kenneth-current' details to the CRI stub
+    Then I get a 'fraud' CRI response
+    When I submit 'kenneth-score-2' details to the CRI stub
+    Then I get a 'personal-independence-payment' page response
+    When I submit a 'next' event
+    Then I get a 'page-pre-dwp-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'dwpKbv' CRI response
+    When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'page-different-security-questions' page response
+    When I submit a 'next' event
+    Then I get a 'page-pre-experian-kbv-transition' page response
+    When I submit a 'next' event
+    Then I get a 'kbv' CRI response
+    When I submit 'kenneth-score-2' details with attributes to the CRI stub
+      | Attribute          | Values                                          |
+      | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
+    Then I get a 'page-ipv-success' page response
+    When I submit a 'next' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P2' identity
+
+    Examples:
+      | cri            | details                      |
+      | drivingLicence | kenneth-driving-permit-valid |
+      | ukPassport     | kenneth-passport-valid       |
+
+  Scenario Outline: User drops out of DWP KBV CRI - unable to answer questions - DWP KBV
     Given I activate the 'dwpKbvTest' feature set
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
