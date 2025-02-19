@@ -1,7 +1,7 @@
 @Build
 Feature: Authoritative source checks with driving licence CRI
 
-  Scenario Outline: Journey through DCMAW with driving licence requires authoritative source check low-confidence
+  Scenario: Journey through DCMAW with driving licence requires authoritative source check low-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -14,7 +14,7 @@ Feature: Authoritative source checks with driving licence CRI
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: Journey through DCMAW with driving licence requires authoritative source check medium-confidence
+  Scenario: Journey through DCMAW with driving licence requires authoritative source check medium-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -29,7 +29,7 @@ Feature: Authoritative source checks with driving licence CRI
       | context   | "check_details" |
     Then I get a 'page-dcmaw-success' page response
 
-  Scenario Outline: Journey with auth source check that attracts a CI leads to a mitigation journey low-confidence
+  Scenario: Journey with auth source check that attracts a CI leads to a mitigation journey low-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
     When I start a new 'low-confidence' journey
     Then I get a 'page-ipv-identity-document-start' page response
@@ -46,7 +46,7 @@ Feature: Authoritative source checks with driving licence CRI
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-  Scenario Outline: Journey with auth source check that attracts a CI leads to a mitigation journey medium-confidence
+  Scenario: Journey with auth source check that attracts a CI leads to a mitigation journey medium-confidence
     Given I activate the 'drivingLicenceAuthCheck,p1Journeys' feature sets
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
