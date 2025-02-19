@@ -27,19 +27,13 @@ const expandParents = (journeyStates, otherStates) => {
   parentStates.forEach((state) => delete journeyStates[state]);
 };
 
-const mapTargetStateToExpandedState = (eventDef, subJourneyState) => {
+const mapTargetStateToExpandedState = (eventDef, subJourneyState, formData) => {
   // Map target states to expanded states
-  if (eventDef.targetState && !eventDef.targetJourney) {
-    eventDef.targetState = `${eventDef.targetState}_${subJourneyState}`;
-  }
-
-  if (eventDef.checkJourneyContext) {
-    const journeyCtx = Object.keys(eventDef.checkJourneyContext)[0];
-    return mapTargetStateToExpandedState(
-      eventDef.checkJourneyContext[journeyCtx],
-      subJourneyState,
-    );
-  }
+  resolveEventTargets(eventDef, formData).forEach((targetDef) => {
+    if (targetDef.targetState && !targetDef.targetJourney) {
+      targetDef.targetState = `${subJourneyState}/${targetDef.targetState}`;
+    }
+  });
 };
 
 // Expand out nested states
@@ -60,7 +54,11 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
           Object.entries(expandedDefinition.events || {}).forEach(
             ([evt, eventDef]) => {
-              mapTargetStateToExpandedState(eventDef, subJourneyState);
+              mapTargetStateToExpandedState(
+                eventDef,
+                subJourneyState,
+                formData,
+              );
 
               // Map exit events to targets in the parent definition
               const exitEvent = eventDef.exitEventToEmit;
@@ -79,7 +77,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
             },
           );
 
-          journeyMap[`${nestedState}_${subJourneyState}`] = expandedDefinition;
+          journeyMap[`${subJourneyState}/${nestedState}`] = expandedDefinition;
         },
       );
 
@@ -87,7 +85,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
       const entryEvents = JSON.parse(JSON.stringify(subjourney.entryEvents));
       // Update entry events on other states to expanded states
       Object.entries(entryEvents).forEach(([entryEvent, entryEventDef]) => {
-        mapTargetStateToExpandedState(entryEventDef, subJourneyState);
+        mapTargetStateToExpandedState(entryEventDef, subJourneyState, formData);
 
         Object.values(journeyMap).forEach((journeyDef) => {
           if (journeyDef.events?.[entryEvent]) {

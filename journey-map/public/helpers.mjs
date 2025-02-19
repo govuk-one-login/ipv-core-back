@@ -63,25 +63,20 @@ export const resolveEventTargets = (
     (k) => disabledCris.includes(k),
   );
   if (disabledResolution) {
-    return resolveEventTargets(
-      {
-        ...definition.checkIfDisabled[disabledResolution],
-        journeyContext: definition.journeyContext,
-      },
-      formData,
-      resolvedTargets,
-    );
+    // Resolve target and propagate journeyContext property
+    const resolved = definition.checkIfDisabled[disabledResolution];
+    resolved.journeyContext = definition.journeyContext;
+
+    return resolveEventTargets(resolved, formData, resolvedTargets);
   }
 
   Object.keys(definition.checkJourneyContext || {}).forEach(
     (journeyContext) => {
-      const targets = resolveEventTargets(
-        {
-          ...definition.checkJourneyContext[journeyContext],
-          journeyContext: journeyContext,
-        },
-        formData,
-      );
+      // Resolve target and set journeyContext property
+      const resolved = definition.checkJourneyContext[journeyContext];
+      resolved.journeyContext = journeyContext;
+
+      const targets = resolveEventTargets(resolved, formData);
       resolvedTargets.push(...targets);
     },
   );
@@ -92,14 +87,11 @@ export const resolveEventTargets = (
     definition.checkFeatureFlag || {},
   ).find((k) => featureFlags.includes(k));
   if (featureFlagResolution) {
-    return resolveEventTargets(
-      {
-        ...definition.checkFeatureFlag[featureFlagResolution],
-        journeyContext: definition.journeyContext,
-      },
-      formData,
-      resolvedTargets,
-    );
+    // Resolve target and propagate journeyContext property
+    const resolved = definition.checkFeatureFlag[featureFlagResolution];
+    resolved.journeyContext = definition.journeyContext;
+
+    return resolveEventTargets(resolved, formData, resolvedTargets);
   }
 
   return [...resolvedTargets, definition];
