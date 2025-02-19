@@ -20,7 +20,8 @@ import java.util.Map;
 
 /**
  * Modified copy of {@link software.amazon.lambda.powertools.parameters.AppConfigProvider}. getValue
- * fixed to check for empty configuration string.
+ * fixed to check for empty configuration string. TODO: Replace with the updated official version
+ * PYIC-8087.
  */
 public class CustomAppConfigProvider extends BaseProvider {
 

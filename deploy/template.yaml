@@ -657,8 +657,6 @@ Resources:
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "IssueClientAccessTokenFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -748,8 +746,6 @@ Resources:
   BuildClientOauthResponseFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "BuildClientOauthResponseFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -835,8 +831,6 @@ Resources:
   InitialiseIpvSessionFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "InitialiseIpvSessionFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -954,8 +948,6 @@ Resources:
   BuildCriOauthRequestFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "BuildCriOauthRequestFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1055,8 +1047,6 @@ Resources:
   ProcessCriCallbackFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "ProcessCriCallbackLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1188,8 +1178,6 @@ Resources:
   ProcessMobileAppCallbackFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "ProcessMobileAppCallbackLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1295,8 +1283,6 @@ Resources:
   CheckMobileAppVcReceiptFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "CheckMobileAppVcReceiptLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1403,8 +1389,6 @@ Resources:
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "BuildUserIdentityFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1509,8 +1493,6 @@ Resources:
   UserReverificationFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "UserReverificationFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1760,8 +1742,6 @@ Resources:
   IPVProcessJourneyEventFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "IPVProcessJourneyEventFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1851,8 +1831,6 @@ Resources:
   EvaluateGpg45ScoresFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - EvaluateGpg45ScoresFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -1944,8 +1922,6 @@ Resources:
   BuildProvenUserIdentityDetailsFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - BuildProvenUserIdentityDetailsFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2050,8 +2026,6 @@ Resources:
   CheckExistingIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CheckExistingIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2149,8 +2123,6 @@ Resources:
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - "ProcessAsyncCriCredentialFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2284,8 +2256,6 @@ Resources:
   CheckGpg45ScoreFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CheckGpg45ScoreFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2361,8 +2331,6 @@ Resources:
   CallTicfCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CallTicfCriFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2455,8 +2423,6 @@ Resources:
   CallDcmawAsyncCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CallDcmawAsyncCriFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2542,8 +2508,6 @@ Resources:
   StoreIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - StoreIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2631,8 +2595,6 @@ Resources:
   ResetSessionIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - ResetSessionIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2722,8 +2684,6 @@ Resources:
   CheckCoiFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CheckCoiFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2813,8 +2773,6 @@ Resources:
   CheckReverificationIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - CheckReverificationIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
@@ -2889,8 +2847,6 @@ Resources:
   ProcessCandidateIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - AppConfigEnvironment
-      - AppConfigConfigurationProfile
       - ProcessCandidateIdentityFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.

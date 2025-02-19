@@ -83,17 +83,18 @@ public class AppConfigService extends YamlParametersConfigService {
 
     @Override
     public String getParameter(String path) {
-        parseParametersIfNew(appConfigProvider.get(profileId));
+        reloadParameters();
         return super.getParameter(path);
     }
 
     @Override
     public Map<String, String> getParametersByPrefix(String path) {
-        parseParametersIfNew(appConfigProvider.get(profileId));
+        reloadParameters();
         return super.getParametersByPrefix(path);
     }
 
-    private void parseParametersIfNew(String paramsRaw) {
+    private void reloadParameters() {
+        var paramsRaw = appConfigProvider.get(profileId);
         var retrievedParamsHash = getParamsRawHash(paramsRaw);
         if (!Objects.equals(paramsRawHash, retrievedParamsHash)) {
             updateParameters(parameters, paramsRaw);
