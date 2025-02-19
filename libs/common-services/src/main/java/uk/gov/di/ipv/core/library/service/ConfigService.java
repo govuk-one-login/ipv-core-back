@@ -31,12 +31,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public abstract class ConfigService {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String APP_CONFIG_SOURCE = "app-config";
 
     @Getter @Setter private static boolean local = false;
 
@@ -44,10 +42,6 @@ public abstract class ConfigService {
     public static ConfigService create() {
         if (isLocal()) {
             return new YamlConfigService();
-        }
-        if (Objects.equals(
-                System.getenv(EnvironmentVariable.CONFIG_SOURCE.name()), APP_CONFIG_SOURCE)) {
-            return new AppConfigService();
         }
         return new SsmConfigService();
     }
@@ -64,19 +58,6 @@ public abstract class ConfigService {
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
-    }
-
-    public Integer getIntegerEnvironmentVariable(EnvironmentVariable environmentVariable) {
-        return getIntegerEnvironmentVariable(environmentVariable, null);
-    }
-
-    public Integer getIntegerEnvironmentVariable(
-            EnvironmentVariable environmentVariable, Integer defaultValue) {
-        var value = System.getenv(environmentVariable.name());
-        if (value == null) {
-            return defaultValue;
-        }
-        return Integer.valueOf(value);
     }
 
     public String getParameter(
@@ -210,8 +191,10 @@ public abstract class ConfigService {
 
     public Cri getCriByIssuer(String issuer) throws NoCriForIssuerException {
         for (var cri : Cri.values()) {
-            if (getCriComponentIds(cri).contains(issuer)) {
-                return cri;
+            for (var componentId : getCriComponentIds(cri)) {
+                if (issuer.equals(componentId)) {
+                    return cri;
+                }
             }
         }
         throw new NoCriForIssuerException(String.format("No cri found for issuer: '%s'", issuer));
@@ -230,6 +213,9 @@ public abstract class ConfigService {
                 result.add(criConfig.getComponentId());
             }
             return result;
+        } catch (ConfigParameterNotFoundException e) {
+            throw new NoConfigForConnectionException(
+                    String.format("No config found for criId: '%s'", criId));
         } catch (JsonProcessingException e) {
             throw new ConfigParseException(
                     String.format(
