@@ -106,32 +106,38 @@ class JourneyMapTest {
                 for (var sourceKey : stateMachineKeys) {
                     var sourceState = stateMachine.get(sourceKey);
 
-                    if (sourceState instanceof BasicState sourceBasicState) {
-                        var sourceEvents = sourceBasicState.getEvents();
+                    for (var entry : getOnwardEventMap(sourceState).entrySet()) {
+                        String sourceEventName = entry.getKey();
+                        Event sourceEvent = entry.getValue();
 
-                        for (var entry : sourceEvents.entrySet()) {
-                            String sourceEventName = entry.getKey();
-                            Event sourceEvent = entry.getValue();
+                        if (sourceEvent instanceof BasicEvent sourceBasicEvent
+                                && Objects.equals(sourceBasicEvent.getTargetState(), targetKey)) {
+                            var eventToCompare =
+                                    requireNonNullElse(
+                                            sourceBasicEvent.getTargetEntryEvent(),
+                                            sourceEventName);
 
-                            if (sourceEvent instanceof BasicEvent sourceBasicEvent
-                                    && Objects.equals(
-                                            sourceBasicEvent.getTargetState(), targetKey)) {
-                                var eventToCompare =
-                                        requireNonNullElse(
-                                                sourceBasicEvent.getTargetEntryEvent(),
-                                                sourceEventName);
-
-                                assertTrue(
-                                        expectedEntryEvents.contains(eventToCompare),
-                                        String.format(
-                                                "%s has unexpected entry event: %s, from %s",
-                                                targetKey, eventToCompare, sourceKey));
-                            }
+                            assertTrue(
+                                    expectedEntryEvents.contains(eventToCompare),
+                                    String.format(
+                                            "%s has unexpected entry event: %s, from %s",
+                                            targetKey, eventToCompare, sourceKey));
                         }
                     }
                 }
             }
         }
+    }
+
+    // Get events that might follow from the given state
+    private Map<String, Event> getOnwardEventMap(State state) {
+        if (state instanceof BasicState basicState) {
+            return basicState.getEvents();
+        }
+        if (state instanceof NestedJourneyInvokeState nestedJourneyInvokeState) {
+            return nestedJourneyInvokeState.getExitEvents();
+        }
+        return Map.of();
     }
 
     @Test
