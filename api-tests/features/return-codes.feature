@@ -1,5 +1,5 @@
+@Build
 Feature: Return exit codes
-  @Build
   Scenario: Successful journey with identity and no CIs - no return codes
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
@@ -173,7 +173,6 @@ Feature: Return exit codes
     Then I get a 'P0' identity
     And I get 'non-breaching,breaching,needs-enhanced-verification' return codes
 
-  @Build
   Scenario: Breaching CI code generates return code
     When I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response
