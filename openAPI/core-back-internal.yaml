@@ -126,7 +126,13 @@ paths:
                 #set ($bodyObj = $util.parseJson($input.body))
 
                 #if ($bodyObj.status == "SUCCEEDED")
-                  $bodyObj.output
+                  #set ($outputObj = $bodyObj.output)
+
+                  #if ($outputObj.statusCode && $outputObj.statusCode.matches("^[0-9]+$"))
+                    #set($context.responseOverride.status = $outputObj.statusCode)
+                  #end
+
+                  $outputObj
 
                 #elseif ($bodyObj.status == "FAILED")
                   #set($context.responseOverride.status = 500)
@@ -191,3 +197,4 @@ components:
         - required: [ "client" ]
         - required: [ "cri" ]
         - required: [ "journey" ]
+        - required: [ "errorCode" ]
