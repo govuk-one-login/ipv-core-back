@@ -126,7 +126,6 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "175872367215" ]
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
-  IsBuild: !Equals [ !Ref Environment, "build" ]
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -737,12 +736,6 @@ Resources:
     DependsOn:
       - "BuildClientOauthResponseFunctionLogGroup"
     Properties:
-      # PYIC-7888 Disable snapstart in build to try and isolate segfault issue
-      SnapStart:
-        ApplyOn: !If
-          - IsBuild
-          - None
-          - PublishedVersions
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
