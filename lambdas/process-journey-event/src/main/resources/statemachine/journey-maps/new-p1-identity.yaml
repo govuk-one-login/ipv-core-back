@@ -258,8 +258,10 @@ states:
         targetEntryEvent: next
       alternate-doc-next-dl:
         targetState: MITIGATION_KBVS
+        targetEntryEvent: next
       alternate-doc-next-passport:
         targetState: MITIGATION_KBVS
+        targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
