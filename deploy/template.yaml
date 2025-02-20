@@ -3229,6 +3229,17 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda
       PermissionsBoundary: !If [ UsePermissionsBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue ]
+      Policies:
+        - PolicyName: AppConfigCreationPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - appconfig:CreateApplication
+                  - appconfig:CreateEnvironment
+                  - appconfig:CreateConfigurationProfile
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
   ####################################################################
   #                                                                  #
