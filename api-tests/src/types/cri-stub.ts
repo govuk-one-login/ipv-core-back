@@ -50,3 +50,11 @@ export interface CriStubGenerateVcRequest {
   evidenceJson: string;
   nbf?: number;
 }
+
+export interface CriStubGenerateDcmawAsyncVcScenarioRequest {
+  user_id: any;
+  queue_name?: string;
+  credential_subject?: object;
+  evidence?: object;
+  nbf?: number;
+}
