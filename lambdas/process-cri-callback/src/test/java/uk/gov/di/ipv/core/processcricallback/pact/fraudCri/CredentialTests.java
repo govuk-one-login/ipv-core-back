@@ -570,10 +570,6 @@ class CredentialTests {
                       },
                       {
                         "checkMethod": "data",
-                        "fraudCheck": "available_authoritative_source"
-                      },
-                      {
-                        "checkMethod": "data",
                         "fraudCheck": "mortality_check"
                       },
                       {
@@ -605,7 +601,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "CpyzOMgJH0rDzzl-NCy2PXj9fCyCJD5zEGMkejcsfm-TDtkR4Oy4veXV_HR5JGaSVpMMj6UJ05NutcuSQwML9Q"; // pragma: allowlist secret
+            "0Te_kOqYqrvXr03FbJp6mAybcK9wGhS5rxeMbEmsJ8jC4jDjhZcrJ6FslVXyKSkEvIIGn9kKkChwR7NAIrui_g"; // pragma: allowlist secret
 
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_BODY =
             """
@@ -665,10 +661,6 @@ class CredentialTests {
                       },
                       {
                         "checkMethod": "data",
-                        "fraudCheck": "available_authoritative_source"
-                      },
-                      {
-                        "checkMethod": "data",
                         "fraudCheck": "mortality_check"
                       },
                       {
@@ -700,7 +692,7 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String FAILED_EXPERIAN_FRAUD_CHECK_VC_SIGNATURE =
-            "KhDmliwU2182R-zmUZdm-TccBMrJXOsx1f_-pV_YKYUBr16CWPVpZffwlMr2zOTrzpO_8u_mdCuYm1VmtXFc_A"; // pragma: allowlist secret
+            "uC_i9ey1KgH9JX5fwpv4RfY0C8V_bU5impV0KNXjQI5UQrAgSrVk2txtLoMwAZ0vVboPotiTyEipZbMUjRw3Cw"; // pragma: allowlist secret
 
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_BODY =
             """
@@ -758,10 +750,6 @@ class CredentialTests {
                       },
                       {
                         "checkMethod": "data",
-                        "fraudCheck": "available_authoritative_source"
-                      },
-                      {
-                        "checkMethod": "data",
                         "fraudCheck": "mortality_check"
                       },
                       {
@@ -795,5 +783,5 @@ class CredentialTests {
     // valid signature (using https://jwt.io works well) and record it here so the PACT file doesn't
     // change each time we run the tests.
     private static final String VALID_EXPERIAN_FRAUD_CHECK_FAILED_PEP_SIGNATURE =
-            "bCHcCM5hoozwTUvVr-6kf623R6gYkbXZL69CD7qH2lGuNf2Ih-dHzFKSUmNFivbD5CE5AOJ0dgpClqvN_X_IbQ"; // pragma: allowlist secret
+            "Ps4HKiGwNZSdXWpc7dTndzp0PmJ3GMdZYYry5mDjXdtxxf07N-UrlzxoHK_tPEOjWCV3l3bKUI_0MtJDUI1pMw"; // pragma: allowlist secret
 }
