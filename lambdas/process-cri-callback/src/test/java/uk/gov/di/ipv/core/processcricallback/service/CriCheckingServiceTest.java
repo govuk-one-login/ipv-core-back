@@ -805,8 +805,8 @@ class CriCheckingServiceTest {
 
         @Test
         void
-        checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndDrivingLicenceVcIfIdentifiersMatch()
-                throws Exception {
+                checkVcResponseShouldNotReturnDlAuthSourceCheckForDlDcmawVcAndDrivingLicenceVcIfIdentifiersMatch()
+                        throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
@@ -858,8 +858,9 @@ class CriCheckingServiceTest {
         }
 
         @Test
-        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndFailedDrivingLicenceVc()
-                throws Exception {
+        void
+                checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndFailedDrivingLicenceVc()
+                        throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
@@ -900,8 +901,9 @@ class CriCheckingServiceTest {
         }
 
         @Test
-        void checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndDlVcEmptyDrivingPermit()
-                throws Exception {
+        void
+                checkVcResponseShouldReturnDlAuthSourceCheckForDlDcmawAsyncVcAndDlVcEmptyDrivingPermit()
+                        throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();
@@ -955,7 +957,8 @@ class CriCheckingServiceTest {
         }
 
         @Test
-        void checkVcResponseShouldNotReturnDlAuthSourceCheckForNonDlDcmawAsyncVc() throws Exception {
+        void checkVcResponseShouldNotReturnDlAuthSourceCheckForNonDlDcmawAsyncVc()
+                throws Exception {
             var callbackRequest = buildValidCallbackRequest();
             var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
             var ipvSessionItem = buildValidIpvSessionItem();

@@ -1065,25 +1065,26 @@ public interface VcFixtures {
                 DCMAW_ASYNC,
                 TestVc.builder()
                         .evidence(
-                                List.of(TestVc.TestEvidence.builder()
-                                        .txn("bcd2346")
-                                .strengthScore(4)
-                                .validityScore(2)
-                                .checkDetails(
-                                        List.of(
-                                                Map.of(
-                                                        "checkMethod",
-                                                        "vri",
-                                                        "identityCheckPolicy",
-                                                        "published",
-                                                        "activityFrom",
-                                                        "2019-01-01"),
-                                                Map.of(
-                                                        "checkMethod",
-                                                        "bvr",
-                                                        "biometricVerificationProcessLevel",
-                                                        2)))
-                                .build()))
+                                List.of(
+                                        TestVc.TestEvidence.builder()
+                                                .txn("bcd2346")
+                                                .strengthScore(4)
+                                                .validityScore(2)
+                                                .checkDetails(
+                                                        List.of(
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "vri",
+                                                                        "identityCheckPolicy",
+                                                                        "published",
+                                                                        "activityFrom",
+                                                                        "2019-01-01"),
+                                                                Map.of(
+                                                                        "checkMethod",
+                                                                        "bvr",
+                                                                        "biometricVerificationProcessLevel",
+                                                                        2)))
+                                                .build()))
                         .credentialSubject(credentialSubject)
                         .build(),
                 "https://dcmaw-async.stubs.account.gov.uk/async/credential",

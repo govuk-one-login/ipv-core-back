@@ -120,8 +120,10 @@ public class CriResponseService {
                             null,
                             false,
                             isPendingReturn,
-                            // This shouldn't happen in prod, but default to false is there is no cri response.
-                            // This allows us to test journeys with pre-existing DCMAW Async VCs without having to go through
+                            // This shouldn't happen in prod, but default to false is there is no
+                            // cri response.
+                            // This allows us to test journeys with pre-existing DCMAW Async VCs
+                            // without having to go through
                             // the whole journey to populate the datastore.
                             criResponse != null && criResponse.isReproveIdentity());
                 }

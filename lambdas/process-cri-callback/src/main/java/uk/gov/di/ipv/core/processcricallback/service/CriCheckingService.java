@@ -311,8 +311,7 @@ public class CriCheckingService {
 
         var newVc = dcmawVc.isPresent() ? dcmawVc : dcmawAsyncVc;
 
-        return newVc
-                .map(this::getDrivingPermitIdentifier)
+        return newVc.map(this::getDrivingPermitIdentifier)
                 .map(
                         dcmawDpId ->
                                 findSuccessfulVcFromCri(DRIVING_LICENCE, sessionVcs)

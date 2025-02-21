@@ -30,9 +30,7 @@ import {
   callbackFromStrategicApp,
   pollAsyncDcmaw,
 } from "../clients/core-back-internal-client.js";
-import config from "../config/config.js";
 import {enqueueError, enqueueVc, enqueueVcFromDetails, getOAuthState} from "../clients/dcmaw-async-cri-stub-client.js";
-import {comparePartialEqualityBetweenObjects} from "../utils/object-matchers.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [

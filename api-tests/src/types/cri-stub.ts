@@ -52,7 +52,7 @@ export interface CriStubGenerateVcRequest {
 }
 
 export interface CriStubGenerateDcmawAsyncVcScenarioRequest {
-  user_id: any;
+  user_id: string;
   queue_name?: string;
   credential_subject?: object;
   evidence?: object;
