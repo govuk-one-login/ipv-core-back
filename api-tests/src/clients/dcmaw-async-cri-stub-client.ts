@@ -4,7 +4,7 @@ import {
 import config from "../config/config.js";
 import {generateDcmawAsyncVcCreationBodyFromScenario} from "../utils/request-body-generators.js";
 
-const CRI_URL = 'https://dcmaw-async-cri.stubs.account.gov.uk';
+const CRI_URL = 'https://dcmaw-async.stubs.account.gov.uk';
 const CRI_ID = 'dcmawAsync';
 
 export const enqueueVc = async (
