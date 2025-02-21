@@ -153,6 +153,7 @@ states:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK
       failedDlAuthCheckInvalidDl:
         targetState: WEB_DL_OR_PASSPORT
+        targetEntryEvent: alternate-doc-invalid-dl-another-way
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -686,7 +687,7 @@ states:
           f2f:
             targetJourney: INELIGIBLE
             targetState: INELIGIBLE
-      incompleteDlAuthCheckInvalid:
+      incompleteDlAuthCheckInvalidDl:
         targetState: STRATEGIC_APP_PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED

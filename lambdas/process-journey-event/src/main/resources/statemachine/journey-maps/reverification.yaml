@@ -131,6 +131,13 @@ states:
         targetState: INELIGIBLE_SKIP_MESSAGE
       returnToRp:
         targetState: RETURN_TO_RP
+      #  PYIC-8067 Fix up the exit events here
+      incompleteDlAuthCheckInvalidDl:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      failedDlAuthCheckInvalidDl:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
 
   APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
