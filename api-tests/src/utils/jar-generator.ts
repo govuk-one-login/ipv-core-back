@@ -24,8 +24,7 @@ BeforeAll(async () => {
       throw Error("No public encryption key found for core-back");
     }
     encKeyJwk = encKey;
-  }
-  catch (e) {
+  } catch (e) {
     console.log(`Exception caught getting public keys: ${e}`);
     throw e;
   }

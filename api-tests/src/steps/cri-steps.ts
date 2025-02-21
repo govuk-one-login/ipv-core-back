@@ -8,7 +8,8 @@ import * as dcmawAsyncStubClient from "../clients/dcmaw-async-cri-stub-client.js
 import {
   generateCriStubBody,
   generateCriStubOAuthErrorBody,
-  generateCriStubUserInfoEndpointErrorBody, generateDcmawAsyncVcCreationBodyFromScenario,
+  generateCriStubUserInfoEndpointErrorBody,
+  generateDcmawAsyncVcCreationBodyFromScenario,
   generatePostVcsBody,
   generateProcessCriCallbackBody,
   generateVcRequestBody,
@@ -30,7 +31,12 @@ import {
   callbackFromStrategicApp,
   pollAsyncDcmaw,
 } from "../clients/core-back-internal-client.js";
-import {enqueueError, enqueueVc, enqueueVcFromDetails, getOAuthState} from "../clients/dcmaw-async-cri-stub-client.js";
+import {
+  enqueueError,
+  enqueueVc,
+  enqueueVcFromDetails,
+  getOAuthState,
+} from "../clients/dcmaw-async-cri-stub-client.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
@@ -422,27 +428,28 @@ When(
     const credentials: string[] = [];
     for (const row of table.hashes()) {
       if (row.CRI === "dcmawAsync") {
-        credentials.push(await dcmawAsyncStubClient.generateVc(
+        credentials.push(
+          await dcmawAsyncStubClient.generateVc(
             row.CRI,
             await generateDcmawAsyncVcCreationBodyFromScenario(
-                this.userId,
-                row.CRI,
-                row.scenario,
-                expired ? EXPIRED_NBF : undefined,
+              this.userId,
+              row.CRI,
+              row.scenario,
+              expired ? EXPIRED_NBF : undefined,
             ),
-        ));
-      }
-      else {
+          ),
+        );
+      } else {
         credentials.push(
-            await criStubClient.generateVc(
-                row.CRI,
-                await generateVcRequestBody(
-                    this.userId,
-                    row.CRI,
-                    row.scenario,
-                    expired ? EXPIRED_NBF : undefined,
-                ),
+          await criStubClient.generateVc(
+            row.CRI,
+            await generateVcRequestBody(
+              this.userId,
+              row.CRI,
+              row.scenario,
+              expired ? EXPIRED_NBF : undefined,
             ),
+          ),
         );
       }
     }
@@ -467,35 +474,29 @@ When(
     hasCi: " with a CI" | undefined,
   ): Promise<void> {
     this.oauthState = await enqueueVcFromDetails(
-        this.userId,
-        testUser,
-        documentType,
-        evidenceType,
-        hasCi && ["BREACHING"],
+      this.userId,
+      testUser,
+      documentType,
+      evidenceType,
+      hasCi && ["BREACHING"],
     );
   },
 );
 
 When(
-    /^the async DCMAW CRI produces an? '([\w-]+)' VC$/,
-    async function (
-        this: World,
-        scenario: string,
-    ): Promise<void> {
-      this.userId = this.userId ?? getRandomString(16);
-      this.oauthState = await enqueueVc(this.userId, scenario);
-    },
+  /^the async DCMAW CRI produces an? '([\w-]+)' VC$/,
+  async function (this: World, scenario: string): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    this.oauthState = await enqueueVc(this.userId, scenario);
+  },
 );
 
 When(
-    /^the async DCMAW CRI produces an? '([\w-]+)' error response$/,
-    async function (
-        this: World,
-        errorCode: string,
-    ): Promise<void> {
-      this.userId = this.userId ?? getRandomString(16);
-      await enqueueError(this.userId, errorCode);
-    },
+  /^the async DCMAW CRI produces an? '([\w-]+)' error response$/,
+  async function (this: World, errorCode: string): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    await enqueueError(this.userId, errorCode);
+  },
 );
 
 When(
@@ -563,10 +564,15 @@ Then(
     // Assuming the poll fails whenever the status is not OK or Not Found.
     // These cases are distinguished by whether a body was returned or not.
     if (statusCode === 201 && !this.strategicAppPollResult?.journey) {
-      throw new Error("Poll should have returned a journey: " + this.strategicAppPollResult);
+      throw new Error(
+        "Poll should have returned a journey: " + this.strategicAppPollResult,
+      );
     }
     if (statusCode === 404 && this.strategicAppPollResult?.journey) {
-      throw new Error("Poll should have not returned a journey: " + this.strategicAppPollResult);
+      throw new Error(
+        "Poll should have not returned a journey: " +
+          this.strategicAppPollResult,
+      );
     }
   },
 );

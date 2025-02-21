@@ -21,8 +21,7 @@ BeforeAll(async () => {
         "../../../openAPI/core-back-external.yaml",
       ),
     );
-  }
-  catch (e) {
+  } catch (e) {
     console.log(`Exception caught creating schema validator: ${e}`);
     throw e;
   }
