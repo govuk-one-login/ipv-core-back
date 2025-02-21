@@ -253,21 +253,6 @@ Feature: M2B Strategic App Journeys
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
 
-  Scenario: Strategic app non-uk address user gets to download app
-    Given I activate the 'strategicApp' feature sets
-    And I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'international' event
-    Then I get a 'non-uk-passport' page response
-    When I submit a 'next' event
-    Then I get a 'identify-device' page response
-    When I submit an 'appTriage' event
-    Then I get a 'pyi-triage-select-device' page response
-    When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
-    When I submit a 'iphone' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
-
   Scenario: Strategic app non-uk address user abandons due to no biometric passport
     Given I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
@@ -279,6 +264,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
 
   Scenario: Strategic app non-uk address user abandons due to no biometric passport then returns
     Given I activate the 'strategicApp' feature sets
@@ -326,3 +312,13 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
     When I submit a 'preferNoApp' event
     Then I get a 'non-uk-no-app-options' page response
+    # Change their mind and go back
+    When I submit a 'useApp' event
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+    # Decide to abandon again
+    When I submit a 'preferNoApp' event
+    Then I get a 'non-uk-no-app-options' page response
+    When I submit a 'returnToRp' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
