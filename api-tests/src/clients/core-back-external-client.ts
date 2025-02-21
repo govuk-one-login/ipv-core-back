@@ -14,12 +14,18 @@ import { createValidator } from "../utils/schema-validator.js";
 let schemaValidator: Validator;
 
 BeforeAll(async () => {
-  schemaValidator = await createValidator(
-    path.resolve(
-      import.meta.dirname,
-      "../../../openAPI/core-back-external.yaml",
-    ),
-  );
+  try {
+    schemaValidator = await createValidator(
+      path.resolve(
+        import.meta.dirname,
+        "../../../openAPI/core-back-external.yaml",
+      ),
+    );
+  }
+  catch (e) {
+    console.log(`Exception caught creating schema validator: ${e}`);
+    throw e;
+  }
 });
 
 const validateResponseSchema = async (
