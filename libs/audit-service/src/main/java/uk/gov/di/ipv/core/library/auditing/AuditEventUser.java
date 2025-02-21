@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.auditing;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import lombok.EqualsAndHashCode;
@@ -20,6 +21,7 @@ public class AuditEventUser {
     private final String sessionId;
 
     @JsonProperty(value = "govuk_signin_journey_id")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private final String govukSigninJourneyId;
 
     @JsonProperty(value = "ip_address")

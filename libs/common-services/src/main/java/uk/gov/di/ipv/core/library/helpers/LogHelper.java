@@ -20,7 +20,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
-    public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
+    public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = null;
 
     public enum LogField {
         LOG_ACCESS_TOKEN("accessToken"),
