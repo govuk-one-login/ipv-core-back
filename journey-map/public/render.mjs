@@ -1,4 +1,5 @@
 import { getNestedJourneyStates, resolveEventTargets } from "./helpers.mjs";
+import { visits } from "./visits.mjs";
 
 const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
 const errorJourneys = ["TECHNICAL_ERROR"];
@@ -122,7 +123,7 @@ const expandNestedJourneys = (journeyMap, subjourneys, formData) => {
 
 // Render the transitions into mermaid, while tracking the states traced from the initial states
 // This allows us to skip
-const renderTransitions = (journeyStates, formData) => {
+const renderTransitions = (journeyStates, formData, selectedJourney) => {
   // Initial states have no response or nested journey
   const initialStates = Object.keys(journeyStates).filter(
     (s) => !journeyStates[s].response && !journeyStates[s].nestedJourney,
@@ -215,9 +216,27 @@ const renderTransitions = (journeyStates, formData) => {
       }
     });
 
+    const isExpandingNested = formData.getAll("otherOption").includes("expandNestedJourneys");
+
     Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
+      // This currently doesn't work for
+      // - exit events from a nested state (where the exit event and underlying event are different)
+      // - entry events for a subjourney (where there are multiple entry events going to the same state)
+      const transitionVisits = visits
+          .filter((visit) =>
+              // Transitions within the subjourney
+              (visit.fromJourney === selectedJourney &&
+              (isExpandingNested ? visit.from : visit.from.split("/")[0]) === state &&
+              eventNames.map(ev => ev.split("/")[0]).includes(visit.event)) ||
+              // Transitions into the subjourney
+              (visit.fromJourney !== selectedJourney &&
+                  visit.toJourney === selectedJourney &&
+                  (isExpandingNested ? visit.to : visit.to.split("/")[0]) === target))
+          .map((visit) => parseInt(visit.count))
+          .reduce((a, b) => a + b, 0);
+
       stateTransitions.push(
-        `    ${state}-->|${eventNames.join("\\n")}|${target}`,
+        `    ${state}-->|${eventNames.join("\\n")}\n${transitionVisits}|${target}`,
       );
     });
   }
@@ -374,7 +393,7 @@ export const render = (
     .getAll("otherOption")
     .includes("onlyOrphanStates")
     ? { transitionsMermaid: "", states: calcOrphanStates(journeyStates) }
-    : renderTransitions(journeyStates, formData);
+    : renderTransitions(journeyStates, formData, selectedJourney);
 
   const { statesMermaid } = renderStates(journeyStates, states);
 
