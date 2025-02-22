@@ -522,10 +522,14 @@ When(
   },
 );
 
+// This will leave this.strategicAppPollResult as undefined if core-back consistently returns 404, or the journey response if core-back returns one.
 When(
   "I poll for async DCMAW credential receipt",
   async function (this: World): Promise<void> {
+    // Reset the polling result
+    this.strategicAppPollResult = undefined;
     let numberOfAttempts = 0;
+
     while (numberOfAttempts < 10 && !this.strategicAppPollResult) {
       this.strategicAppPollResult = await pollAsyncDcmaw(
         this.ipvSessionId,
@@ -534,10 +538,6 @@ When(
       numberOfAttempts++;
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    if (!this.strategicAppPollResult) {
-      throw new Error("Polling for async DCMAW response timed out");
     }
   },
 );
