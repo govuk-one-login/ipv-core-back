@@ -61,5 +61,6 @@ api-tests/reports/*
 api-tests/.npmrc
 api-tests/.env*
 !api-tests/.env.template
+!api-tests/.env.dev.template
 !api-tests/.env.local
 !api-tests/.env.build

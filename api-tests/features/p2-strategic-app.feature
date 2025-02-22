@@ -15,7 +15,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get a 'check-mobile-app-result' page response
@@ -53,7 +53,7 @@ Feature: M2B Strategic App Journeys
     Then I get an 'check-mobile-app-result' page response
     When I poll for async DCMAW credential receipt
     Then the poll returns a '404'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     And I poll for async DCMAW credential receipt
     Then the poll returns a '201'
 
@@ -71,7 +71,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
     Then I get an error response with message 'Missing ipv session id header' and status code '400'
@@ -105,7 +105,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
@@ -128,7 +128,7 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'fail' VC with a CI
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback
     Then I get an 'check-mobile-app-result' page response
@@ -253,21 +253,6 @@ Feature: M2B Strategic App Journeys
     When I submit an 'end' event
     Then I get a 'page-ipv-identity-postoffice-start' page response
 
-  Scenario: Strategic app non-uk address user gets to download app
-    Given I activate the 'strategicApp' feature sets
-    And I start a new 'medium-confidence' journey
-    Then I get a 'live-in-uk' page response
-    When I submit a 'international' event
-    Then I get a 'non-uk-passport' page response
-    When I submit a 'next' event
-    Then I get a 'identify-device' page response
-    When I submit an 'appTriage' event
-    Then I get a 'pyi-triage-select-device' page response
-    When I submit a 'computer-or-tablet' event
-    Then I get a 'pyi-triage-select-smartphone' page response with context 'dad'
-    When I submit a 'iphone' event
-    Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
-
   Scenario: Strategic app non-uk address user abandons due to no biometric passport
     Given I activate the 'strategicApp' feature sets
     And I start a new 'medium-confidence' journey
@@ -279,6 +264,7 @@ Feature: M2B Strategic App Journeys
     When I submit a 'returnToRp' event
     Then I get an OAuth response
     When I use the OAuth response to get my identity
+    Then I get a 'P0' identity
 
   Scenario: Strategic app non-uk address user abandons due to no biometric passport then returns
     Given I activate the 'strategicApp' feature sets
@@ -326,3 +312,13 @@ Feature: M2B Strategic App Journeys
     Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
     When I submit a 'preferNoApp' event
     Then I get a 'non-uk-no-app-options' page response
+    # Change their mind and go back
+    When I submit a 'useApp' event
+    Then I get a 'pyi-triage-desktop-download-app' page response with context 'iphone'
+    # Decide to abandon again
+    When I submit a 'preferNoApp' event
+    Then I get a 'non-uk-no-app-options' page response
+    When I submit a 'returnToRp' event
+    Then I get an OAuth response
+    When I use the OAuth response to get my identity
+    Then I get a 'P0' identity

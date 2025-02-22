@@ -244,7 +244,7 @@ Feature: Audit Events
     Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
     When I submit an 'iphone' event
     Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-    When the DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
+    When the async DCMAW CRI produces a 'kennethD' 'ukChippedPassport' 'success' VC
     # And the user returns from the app to core-front
     And I pass on the DCMAW callback in a separate session
     Then I get an error response with message 'Missing ipv session id header' and status code '400'

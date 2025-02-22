@@ -16,13 +16,18 @@ const encMethod = "A256GCM";
 
 let encKeyJwk: JWK;
 BeforeAll(async () => {
-  const publicKeySet = await jwks();
-  const encKey = publicKeySet.keys.find((key) => key.use === "enc");
+  try {
+    const publicKeySet = await jwks();
+    const encKey = publicKeySet.keys.find((key) => key.use === "enc");
 
-  if (!encKey) {
-    throw Error("No public encryption key found for core-back");
+    if (!encKey) {
+      throw Error("No public encryption key found for core-back");
+    }
+    encKeyJwk = encKey;
+  } catch (e) {
+    console.log(`Exception caught getting public keys: ${e}`);
+    throw e;
   }
-  encKeyJwk = encKey;
 });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

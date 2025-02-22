@@ -95,7 +95,7 @@ Feature: P2 F2F journey
       Then I get a 'live-in-uk' page response
       When I submit a 'uk' event
       Then I get a 'page-ipv-identity-document-start' page response
-      When I submit a 'appTriage' event
+      When I submit an 'appTriage' event
       Then I get a 'dcmaw' CRI response
       When I call the CRI stub and get an 'access_denied' OAuth error
       Then I get a 'page-multiple-doc-check' page response

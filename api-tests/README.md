@@ -20,6 +20,7 @@ There are 3 presets that can be used:
 
 - `npm run test:build` - runs against the deployed build environment
 - `npm run test:local` - runs against an already-running local instance of core-back
+- `npm run test:dev` - runs against a dev environment
 - `npm run test:ci` - starts a new local instance of core-back and tests against it
 
 Additional arguments can be passed to cucumber, e.g. to include specific tests: `npm run test:local -- --name 'F2F'`
@@ -32,6 +33,8 @@ Env variables are provided by [dotenv][dotenv] and read from a `.env` file.
 Non-secret values are stored in `.env.build` and `.env.local` for the corresponding environments.
 
 Secret values are stored in `.env`: copy `.env.template` to `.env` and provide appropriate values.
+
+To run against dev environments copy `.env.dev.template` to `.env.dev` and provide appropriate values.
 
 #### Other environments
 
