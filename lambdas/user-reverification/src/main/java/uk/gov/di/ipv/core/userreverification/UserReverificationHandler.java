@@ -118,6 +118,10 @@ public class UserReverificationHandler extends UserIdentityRequestHandler
                 response = ReverificationResponse.failureResponse(userId, failureCode);
             }
 
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
+
             var reverificationEndAuditEvent =
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_REVERIFY_END,
