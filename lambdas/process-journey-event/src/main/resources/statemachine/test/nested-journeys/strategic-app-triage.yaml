@@ -1,0 +1,22 @@
+name: Identify device response definition
+description: >-
+  A test identify device journey
+entryEvents:
+  eventEight:
+    targetState: IDENTIFY_DEVICE
+nestedJourneyStates:
+  IDENTIFY_DEVICE:
+    response:
+      type: page
+      pageId: identify-device
+    parent: PARENT_STATE
+    events:
+      eventOne:
+        targetState: NESTED_STATE_TWO
+  NESTED_STATE_TWO:
+    response:
+      type: page
+      pageId: page-id-nested-state-two
+    events:
+      eventOne:
+        exitEventToEmit: exitEventFromNestedStateOne

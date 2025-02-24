@@ -93,7 +93,10 @@ class ProcessJourneyEventHandlerTest {
     private static final String STATUS_CODE = "statusCode";
     private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
     private static final List<String> TEST_NESTED_JOURNEY_TYPES =
-            List.of("nested-journey-definition", "doubly-nested-definition");
+            List.of(
+                    "nested-journey-definition",
+                    "doubly-nested-definition",
+                    "strategic-app-triage");
     private static final List<String> REAL_NESTED_JOURNEY_TYPES =
             Stream.of(NestedJourneyTypes.values()).map(NestedJourneyTypes::getJourneyName).toList();
     private static final String TEST_USER_ID = "testuserid";
@@ -920,38 +923,6 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfCurrentStateNotPageState() throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("back")
-                        .ipvSessionId(TEST_SESSION_ID)
-                        .build();
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-        IpvSessionItem ipvSession = mockIpvSessionService.getIpvSession("anyString");
-        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"));
-        ipvSession.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, "CRI_STATE"));
-
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService);
-
-        var response = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
-    }
-
-    @Test
     void shouldReturn500IfPreviousStateNotPageState() throws Exception {
         var input =
                 JourneyRequest.builder()
@@ -981,6 +952,61 @@ class ProcessJourneyEventHandlerTest {
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
+    }
+
+    @Test
+    @Tag(SKIP_CHECK_AUDIT_EVENT_WAIT_TAG)
+    void shouldGoBackIfPreviousStateIsIdentifyDeviceState() throws Exception {
+        var firstTransitionInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventEight")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var secondTransitionInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        var backInput =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("back")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        var ipvSessionItem = mockIpvSessionService.getIpvSession("anyString");
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService);
+
+        processJourneyEventHandler.handleRequest(firstTransitionInput, mockContext);
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "STRATEGIC_APP_TRIAGE/IDENTIFY_DEVICE"),
+                ipvSessionItem.getState());
+
+        processJourneyEventHandler.handleRequest(secondTransitionInput, mockContext);
+        assertEquals(
+                new JourneyState(
+                        INITIAL_JOURNEY_SELECTION, "STRATEGIC_APP_TRIAGE/NESTED_STATE_TWO"),
+                ipvSessionItem.getState());
+
+        processJourneyEventHandler.handleRequest(backInput, mockContext);
+        assertEquals(
+                new JourneyState(INITIAL_JOURNEY_SELECTION, "PAGE_STATE"),
+                ipvSessionItem.getState());
     }
 
     @Test

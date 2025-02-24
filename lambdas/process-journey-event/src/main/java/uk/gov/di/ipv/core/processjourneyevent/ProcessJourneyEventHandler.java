@@ -323,17 +323,9 @@ public class ProcessJourneyEventHandler
                                 "Found state machine for journey type: %s",
                                 initialJourneyState.subJourney())));
 
-        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
-            var previousJourneyState = ipvSessionItem.getPreviousState();
-
-            if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
-                ipvSessionItem.popState();
-                return journeyStateToBasicState(previousJourneyState);
-            }
-
-            throw new UnknownEventException(
-                    String.format(
-                            "Back event provided to state: '%s'", initialJourneyState.state()));
+        State backEventState = handleBackEvent(initialJourneyState, ipvSessionItem, journeyEvent);
+        if (backEventState != null) {
+            return backEventState;
         }
 
         var result =
@@ -394,6 +386,32 @@ public class ProcessJourneyEventHandler
         }
 
         return result.state();
+    }
+
+    private State handleBackEvent(
+            JourneyState initialJourneyState, IpvSessionItem ipvSessionItem, String journeyEvent)
+            throws UnknownEventException, StateMachineNotFoundException, UnknownStateException {
+        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
+            var previousJourneyState = ipvSessionItem.getPreviousState();
+
+            if (previousJourneyState != null
+                    && previousJourneyState
+                            .state()
+                            .equals("STRATEGIC_APP_TRIAGE/IDENTIFY_DEVICE")) {
+                ipvSessionItem.popState();
+                previousJourneyState = ipvSessionItem.getPreviousState();
+            }
+
+            if (previousJourneyState != null && isPageState(previousJourneyState)) {
+                ipvSessionItem.popState();
+                return journeyStateToBasicState(previousJourneyState);
+            }
+
+            throw new UnknownEventException(
+                    String.format(
+                            "Back event provided to state: '%s'", initialJourneyState.state()));
+        }
+        return null;
     }
 
     private boolean hasExistingIdentity(ClientOAuthSessionItem clientOAuthSessionItem)
