@@ -6,8 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class StepFunctionHelpers {
-    private static final String ERROR_CODE = "errorCode";
-    private static final String ERROR_MESSAGE = "errorMessage";
+    private static final String CODE = "code";
+    private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
@@ -20,8 +20,8 @@ public class StepFunctionHelpers {
             int statusCode, ErrorResponse errorResponse) {
         Map<String, Object> output = new HashMap<>();
         output.put(STATUS_CODE, statusCode);
-        output.put(ERROR_CODE, errorResponse.getCode());
-        output.put(ERROR_MESSAGE, errorResponse.getMessage());
+        output.put(MESSAGE, errorResponse.getMessage());
+        output.put(CODE, errorResponse.getCode());
         return output;
     }
 
