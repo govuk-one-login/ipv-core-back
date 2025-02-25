@@ -175,8 +175,8 @@ Then(
 );
 
 Then(
-  /I get an error response with message '([\w,: ]+)'/,
-  function (this: World, expectedMessage: string) {
+  /I get an error response with message '([\w,: ]+)' and status code '(\d{3})'/,
+  function (this: World, expectedMessage: string, expectedStatusCode: number) {
     if (!this.lastJourneyEngineResponse) {
       throw new Error("No last journey engine response found.");
     }
@@ -185,6 +185,7 @@ Then(
       isErrorResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
+    assert.equal(this.lastJourneyEngineResponse.statusCode, expectedStatusCode);
     assert.equal(this.lastJourneyEngineResponse.errorMessage, expectedMessage);
   },
 );
