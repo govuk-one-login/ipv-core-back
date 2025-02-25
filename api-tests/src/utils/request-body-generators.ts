@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import fs from "node:fs/promises";
 import { createSignedJwt } from "./jwt-signer.js";
 import {
+  CriStubGenerateDcmawAsyncVcScenarioRequest,
   CriStubGenerateVcRequest,
   CriStubRequest,
   CriStubResponse,
@@ -184,6 +185,23 @@ export const generatePostVcsBody = (
     metadata: {},
     provenance: "ONLINE",
   }));
+};
+
+export const generateDcmawAsyncVcCreationBodyFromScenario = async (
+  userId: string,
+  criId: string,
+  scenario: string,
+  nbf?: number,
+): Promise<CriStubGenerateDcmawAsyncVcScenarioRequest> => {
+  return {
+    user_id: userId,
+    credential_subject: JSON.parse(
+      await readJsonFile(criId, scenario, "credentialSubject"),
+    ),
+    evidence: JSON.parse(await readJsonFile(criId, scenario, "evidence")),
+    queue_name: config.asyncQueue.name,
+    nbf: nbf,
+  };
 };
 
 const readJsonFile = async (

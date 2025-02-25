@@ -4,10 +4,12 @@ import * as internalClient from "../clients/core-back-internal-client.js";
 import * as criStubClient from "../clients/cri-stub-client.js";
 import * as evcsStubClient from "../clients/evcs-stub-client.js";
 import * as cimitStubClient from "../clients/cimit-stub-client.js";
+import * as dcmawAsyncStubClient from "../clients/dcmaw-async-cri-stub-client.js";
 import {
   generateCriStubBody,
   generateCriStubOAuthErrorBody,
   generateCriStubUserInfoEndpointErrorBody,
+  generateDcmawAsyncVcCreationBodyFromScenario,
   generatePostVcsBody,
   generateProcessCriCallbackBody,
   generateVcRequestBody,
@@ -29,7 +31,12 @@ import {
   callbackFromStrategicApp,
   pollAsyncDcmaw,
 } from "../clients/core-back-internal-client.js";
-import config from "../config/config.js";
+import {
+  enqueueError,
+  enqueueVc,
+  enqueueVcFromDetails,
+  getOAuthState,
+} from "../clients/dcmaw-async-cri-stub-client.js";
 
 const EXPIRED_NBF = 1658829758; // 26/07/2022 in epoch seconds
 const STANDARD_JAR_VALUES = [
@@ -420,17 +427,31 @@ When(
     this.userId = this.userId ?? getRandomString(16);
     const credentials: string[] = [];
     for (const row of table.hashes()) {
-      credentials.push(
-        await criStubClient.generateVc(
-          row.CRI,
-          await generateVcRequestBody(
-            this.userId,
+      if (row.CRI === "dcmawAsync") {
+        credentials.push(
+          await dcmawAsyncStubClient.generateVc(
             row.CRI,
-            row.scenario,
-            expired ? EXPIRED_NBF : undefined,
+            await generateDcmawAsyncVcCreationBodyFromScenario(
+              this.userId,
+              row.CRI,
+              row.scenario,
+              expired ? EXPIRED_NBF : undefined,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        credentials.push(
+          await criStubClient.generateVc(
+            row.CRI,
+            await generateVcRequestBody(
+              this.userId,
+              row.CRI,
+              row.scenario,
+              expired ? EXPIRED_NBF : undefined,
+            ),
+          ),
+        );
+      }
     }
 
     await evcsStubClient.postCredentials(
@@ -443,34 +464,8 @@ When(
   },
 );
 
-const postToEnqueue = async (body: object) => {
-  const response = await fetch(
-    `https://dcmaw-async.stubs.account.gov.uk/management/enqueueVc`,
-    {
-      method: "POST",
-      body: JSON.stringify(body),
-      redirect: "manual",
-    },
-  );
-
-  if (response.status !== 201) {
-    throw new Error(`DCMAW enqueue request failed: ${response.statusText}`);
-  }
-
-  const responsePayload = await response.json();
-  if (
-    !responsePayload.oauthState ||
-    typeof responsePayload.oauthState !== "string"
-  ) {
-    throw new Error(
-      `DCMAW enqueue request did not return a string oauthState: ${responsePayload.oauthState}`,
-    );
-  }
-  return responsePayload.oauthState;
-};
-
 When(
-  /^the DCMAW CRI produces a '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
+  /^the async DCMAW CRI produces an? '([\w-]+)' '([\w-]+)' '([\w-]+)' VC( with a CI)?$/,
   async function (
     this: World,
     testUser: string,
@@ -478,14 +473,29 @@ When(
     evidenceType: string,
     hasCi: " with a CI" | undefined,
   ): Promise<void> {
-    this.oauthState = await postToEnqueue({
-      user_id: this.userId,
-      test_user: testUser,
-      document_type: documentType,
-      evidence_type: evidenceType,
-      queue_name: config.asyncQueue.name,
-      ci: hasCi && ["BREACHING"],
-    });
+    this.oauthState = await enqueueVcFromDetails(
+      this.userId,
+      testUser,
+      documentType,
+      evidenceType,
+      hasCi && ["BREACHING"],
+    );
+  },
+);
+
+When(
+  /^the async DCMAW CRI produces an? '([\w-]+)' VC$/,
+  async function (this: World, scenario: string): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    this.oauthState = await enqueueVc(this.userId, scenario);
+  },
+);
+
+When(
+  /^the async DCMAW CRI produces an? '([\w-]+)' error response$/,
+  async function (this: World, errorCode: string): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    await enqueueError(this.userId, errorCode);
   },
 );
 
@@ -497,10 +507,7 @@ When(
   ): Promise<void> {
     // If we've asked the stub to create a VC for us, we will already have the OAuth state.
     if (!this.oauthState) {
-      // If we post to the stub's Enqueue endpoint without specifying VC details it just returns the OAuth state to us.
-      this.oauthState = await postToEnqueue({
-        user_id: this.userId,
-      });
+      this.oauthState = await getOAuthState(this.userId);
     }
 
     if (!this.oauthState) {
@@ -515,10 +522,14 @@ When(
   },
 );
 
+// This will leave this.strategicAppPollResult as undefined if core-back consistently returns 404, or the journey response if core-back returns one.
 When(
   "I poll for async DCMAW credential receipt",
   async function (this: World): Promise<void> {
+    // Reset the polling result
+    this.strategicAppPollResult = undefined;
     let numberOfAttempts = 0;
+
     while (numberOfAttempts < 10 && !this.strategicAppPollResult) {
       this.strategicAppPollResult = await pollAsyncDcmaw(
         this.ipvSessionId,
@@ -553,10 +564,15 @@ Then(
     // Assuming the poll fails whenever the status is not OK or Not Found.
     // These cases are distinguished by whether a body was returned or not.
     if (statusCode === 201 && !this.strategicAppPollResult?.journey) {
-      throw new Error("Poll should returned a journey.");
+      throw new Error(
+        "Poll should have returned a journey: " + this.strategicAppPollResult,
+      );
     }
     if (statusCode === 404 && this.strategicAppPollResult?.journey) {
-      throw new Error("Poll should have not returned a journey.");
+      throw new Error(
+        "Poll should have not returned a journey: " +
+          this.strategicAppPollResult,
+      );
     }
   },
 );

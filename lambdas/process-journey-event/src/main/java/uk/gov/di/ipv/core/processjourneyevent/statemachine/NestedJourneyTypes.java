@@ -11,10 +11,11 @@ public enum NestedJourneyTypes {
     // The NESTED_JOURNEY_TYPES constant in the journey map visualisation
     // will also need to be updated.
     ADDRESS_AND_FRAUD("address-and-fraud"),
+    APP_DOC_CHECK("app-doc-check"),
     KBVS("kbvs"),
+    STRATEGIC_APP_HANDLE_RESULT("strategic-app-handle-result"),
     STRATEGIC_APP_TRIAGE("strategic-app-triage"),
-    WEB_DL_OR_PASSPORT("web-dl-or-passport"),
-    APP_DOC_CHECK("app-doc-check");
+    WEB_DL_OR_PASSPORT("web-dl-or-passport");
 
     private final String journeyName;
 

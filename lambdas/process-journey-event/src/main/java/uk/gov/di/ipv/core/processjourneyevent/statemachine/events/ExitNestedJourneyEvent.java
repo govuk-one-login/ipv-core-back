@@ -18,7 +18,9 @@ public class ExitNestedJourneyEvent implements Event {
     public TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException {
         Event event = nestedJourneyExitEvents.get(exitEventToEmit);
         if (event == null) {
-            throw new UnknownEventException("Event '%s' not found in nested journey's exit events");
+            throw new UnknownEventException(
+                    "Event '%s' not found in nested journey's exit events"
+                            .formatted(exitEventToEmit));
         }
         return event.resolve(journeyContext);
     }

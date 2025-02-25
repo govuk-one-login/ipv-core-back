@@ -1,0 +1,77 @@
+name: Strategic App Handle Result
+description: >-
+  Deals with the result from the strategic app and the user choices immediately afterwards.
+entryEvents:
+  check-mobile-app-result:
+    targetState: CHECK_MOBILE_APP_RESULT
+
+nestedJourneyStates:
+  CHECK_MOBILE_APP_RESULT:
+    response:
+      type: page
+      pageId: check-mobile-app-result
+    events:
+      next:
+        exitEventToEmit: next
+      abandon:
+        exitEventToEmit: anotherWay
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      fail-with-no-ci:
+        exitEventToEmit: anotherWay
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+      enhanced-verification:
+        exitEventToEmit: anotherWay
+      vcs-not-correlated:
+        targetJourney: FAILED
+        targetState: FAILED
+      dl-auth-source-check:
+        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
+
+  CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
+    response:
+      type: cri
+      criId: drivingLicence
+      context: check_details
+    parent: CRI_STATE
+    events:
+      next:
+        exitEventToEmit: next
+      access-denied:
+        targetState: REMOVE_DCMAW_FROM_SESSION
+      alternate-doc-invalid-dl:
+        targetState: RESET_SESSION_INVALID_DL
+
+  REMOVE_DCMAW_FROM_SESSION:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: DCMAW
+    events:
+      next:
+        targetState: DL_DETAILS_INCORRECT_PAGE
+
+  RESET_SESSION_INVALID_DL:
+    response:
+      type: process
+      lambda: reset-session-identity
+      lambdaInput:
+        resetType: DCMAW
+    events:
+      next:
+        exitEventToEmit: failedDlAuthCheckInvalidDl
+
+  DL_DETAILS_INCORRECT_PAGE:
+    response:
+      type: page
+      pageId: uk-driving-licence-details-not-correct
+      context: strategicApp
+    events:
+      next:
+        exitEventToEmit: retryApp
+      end:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl

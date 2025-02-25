@@ -96,6 +96,7 @@ export const callbackFromStrategicApp = async (
   return await sendJourneyEvent(body?.journey, ipvSessionId, featureSet);
 };
 
+// Returns the response if there is a VC, or undefined if no VC is found (404). Any other response will trigger an error.
 export const pollAsyncDcmaw = async (
   ipvSessionId: string | undefined,
   featureSet: string | undefined,
