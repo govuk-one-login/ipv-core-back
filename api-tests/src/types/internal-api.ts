@@ -64,6 +64,7 @@ export const isClientResponse = (
 };
 
 export interface ErrorResponse {
+  statusCode: number;
   errorCode: number;
   errorMessage: string;
 }

@@ -126,6 +126,8 @@ paths:
                 #set ($bodyObj = $util.parseJson($input.body))
 
                 #if ($bodyObj.status == "SUCCEEDED")
+                  #set($output = $util.parseJson($bodyObj.output))
+                  #set($context.responseOverride.status = $output.statusCode)
                   $bodyObj.output
 
                 #elseif ($bodyObj.status == "FAILED")
