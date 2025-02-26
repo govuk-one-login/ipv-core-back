@@ -397,7 +397,7 @@ public class ProcessJourneyEventHandler
             var skipBackResponse =
                     ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
 
-            if (skipBackResponse != null && Boolean.TRUE.equals(skipBackResponse)) {
+            if (Boolean.TRUE.equals(skipBackResponse)) {
                 ipvSessionItem.popState();
                 previousJourneyState = ipvSessionItem.getPreviousState();
             }
