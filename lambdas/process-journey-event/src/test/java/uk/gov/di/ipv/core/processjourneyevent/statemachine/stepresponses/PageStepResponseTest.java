@@ -13,6 +13,8 @@ public class PageStepResponseTest {
 
     @Test
     void valueReturnsCorrectPageResponse() {
-        assertEquals(Map.of("page", "aPageId", "context", "testContext"), PAGE_RESPONSE.value());
+        assertEquals(
+                Map.of("page", "aPageId", "context", "testContext", "skipBack", false),
+                PAGE_RESPONSE.value());
     }
 }

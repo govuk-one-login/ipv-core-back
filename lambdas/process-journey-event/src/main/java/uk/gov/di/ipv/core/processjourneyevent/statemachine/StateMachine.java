@@ -81,23 +81,6 @@ public class StateMachine {
                 && basicState.getResponse() instanceof PageStepResponse;
     }
 
-    public boolean isSkipBackPageState(JourneyState journeyState) throws UnknownStateException {
-        var state = getState(journeyState.state());
-        if (state == null) {
-            throw new UnknownStateException(
-                    String.format(
-                            "Unknown state provided to state machine: '%s'", journeyState.state()));
-        }
-
-        if (state instanceof BasicState basicState
-                && basicState.getResponse() instanceof PageStepResponse) {
-            PageStepResponse pageStepResponse = (PageStepResponse) basicState.getResponse();
-            return Boolean.TRUE.equals(pageStepResponse.getSkipBack());
-        }
-
-        return false;
-    }
-
     public State getState(String state) {
         return recurseToState(
                 states, new ArrayList<>(Arrays.asList(state.split(JOURNEY_STATE_DELIMITER))));

@@ -53,6 +53,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
@@ -323,10 +324,8 @@ public class ProcessJourneyEventHandler
                                 "Found state machine for journey type: %s",
                                 initialJourneyState.subJourney())));
 
-        State backEventState =
-                handleBackEvent(initialJourneyState, ipvSessionItem, journeyEvent, stateMachine);
-        if (backEventState != null) {
-            return backEventState;
+        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
+            return handleBackEvent(ipvSessionItem, initialJourneyState);
         }
 
         var result =
@@ -389,31 +388,26 @@ public class ProcessJourneyEventHandler
         return result.state();
     }
 
-    private State handleBackEvent(
-            JourneyState initialJourneyState,
-            IpvSessionItem ipvSessionItem,
-            String journeyEvent,
-            StateMachine stateMachine)
+    private State handleBackEvent(IpvSessionItem ipvSessionItem, JourneyState initialJourneyState)
             throws UnknownEventException, StateMachineNotFoundException, UnknownStateException {
-        if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
-            var previousJourneyState = ipvSessionItem.getPreviousState();
+        var previousJourneyState = ipvSessionItem.getPreviousState();
 
-            if (previousJourneyState != null
-                    && stateMachine.isSkipBackPageState(previousJourneyState)) {
+        if (isPageState(initialJourneyState) && isPageState(previousJourneyState)) {
+            var state = journeyStateToBasicState(previousJourneyState);
+            var skipBackResponse =
+                    ((PageStepResponse) ((BasicState) state).getResponse()).getSkipBack();
+
+            if (skipBackResponse != null && Boolean.TRUE.equals(skipBackResponse)) {
                 ipvSessionItem.popState();
                 previousJourneyState = ipvSessionItem.getPreviousState();
             }
+            ipvSessionItem.popState();
 
-            if (previousJourneyState != null && isPageState(previousJourneyState)) {
-                ipvSessionItem.popState();
-                return journeyStateToBasicState(previousJourneyState);
-            }
-
-            throw new UnknownEventException(
-                    String.format(
-                            "Back event provided to state: '%s'", initialJourneyState.state()));
+            return journeyStateToBasicState(previousJourneyState);
         }
-        return null;
+
+        throw new UnknownEventException(
+                String.format("Back event provided to state: '%s'", initialJourneyState.state()));
     }
 
     private boolean hasExistingIdentity(ClientOAuthSessionItem clientOAuthSessionItem)
