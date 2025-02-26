@@ -1027,7 +1027,7 @@ class ContractTest {
     @Pact(provider = "DcmawCriProvider", consumer = "IpvCoreBack")
     public RequestResponsePact validRequestReturnsNldPassportCredential(
             PactDslWithProvider builder) {
-        return builder.given("dummyAccessToken is a valid access token") // qqqqqqqqqqq
+        return builder.given("dummyAccessToken is a valid access token")
                 .given("test-subject is a valid subject")
                 .given("dummyDcmawComponentId is a valid issuer")
                 .given("the current time is 2099-01-01 00:00:00")

@@ -24,7 +24,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
     When I submit the returned journey event
     Then I get a 'drivingLicence' CRI response
 
-  Scenario: Successful auth check qqqqqq
+  Scenario: Successful auth check
     When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
@@ -40,7 +40,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
     When I use the OAuth response to get my identity
     Then I get a 'P2' identity
 
-  Scenario: Auth check access_denied qqqq
+  Scenario: Auth check access_denied
     When I call the CRI stub and get an 'access_denied' OAuth error
     Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
     When I submit a 'next' event
@@ -92,7 +92,7 @@ Feature: M2B Strategic App Journeys with DL authoritative source check
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
 
-  Scenario: CI on auth check asks for alternative document qqqq
+  Scenario: CI on auth check asks for alternative document
     When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
       | Attribute | Values          |
       | context   | "check_details" |
