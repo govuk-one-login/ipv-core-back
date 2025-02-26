@@ -322,3 +322,16 @@ Feature: M2B Strategic App Journeys
     Then I get an OAuth response
     When I use the OAuth response to get my identity
     Then I get a 'P0' identity
+
+  Scenario: Strategic app uk address user wants to go back over identify-device page
+    Given I activate the 'strategicApp' feature set
+    When I start a new 'medium-confidence' journey
+    Then I get a 'live-in-uk' page response
+    When I submit a 'uk' event
+    Then I get a 'page-ipv-identity-document-start' page response
+    When I submit an 'appTriage' event
+    Then I get a 'identify-device' page response
+    When I submit an 'appTriage' event
+    Then I get a 'pyi-triage-select-device' page response
+    When I submit a 'back' event
+    Then I get a 'page-ipv-identity-document-start' page response

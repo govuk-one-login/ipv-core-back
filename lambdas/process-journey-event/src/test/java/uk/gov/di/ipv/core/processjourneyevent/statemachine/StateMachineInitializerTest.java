@@ -27,7 +27,10 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_
 
 class StateMachineInitializerTest {
     private static final List<String> TEST_NESTED_JOURNEY_TYPES =
-            List.of("nested-journey-definition", "doubly-nested-definition");
+            List.of(
+                    "nested-journey-definition",
+                    "doubly-nested-definition",
+                    "strategic-app-triage");
 
     @ParameterizedTest
     @EnumSource

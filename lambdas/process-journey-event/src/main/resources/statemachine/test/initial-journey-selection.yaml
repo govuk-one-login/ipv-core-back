@@ -30,6 +30,8 @@ states:
         targetState: TICF_CRI_STATE
       eventSeven:
         targetState: COI_CHECK
+      eventEight:
+        targetState: STRATEGIC_APP_TRIAGE
 
   CRI_STATE:
     response:
@@ -154,6 +156,12 @@ states:
         targetState: ANOTHER_PAGE_STATE
       exitEventFromDoublyNestedInvokeState:
         targetState: ERROR_STATE
+
+  STRATEGIC_APP_TRIAGE:
+    nestedJourney: STRATEGIC_APP_TRIAGE
+    exitEvents:
+      exitEventFromNestedStateOne:
+        targetState: ANOTHER_PAGE_STATE
 
   ANOTHER_PAGE_STATE:
     response:
