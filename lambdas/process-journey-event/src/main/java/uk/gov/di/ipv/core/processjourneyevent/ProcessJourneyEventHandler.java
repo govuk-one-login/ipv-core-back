@@ -323,7 +323,8 @@ public class ProcessJourneyEventHandler
                                 "Found state machine for journey type: %s",
                                 initialJourneyState.subJourney())));
 
-        State backEventState = handleBackEvent(initialJourneyState, ipvSessionItem, journeyEvent);
+        State backEventState =
+                handleBackEvent(initialJourneyState, ipvSessionItem, journeyEvent, stateMachine);
         if (backEventState != null) {
             return backEventState;
         }
@@ -389,15 +390,16 @@ public class ProcessJourneyEventHandler
     }
 
     private State handleBackEvent(
-            JourneyState initialJourneyState, IpvSessionItem ipvSessionItem, String journeyEvent)
+            JourneyState initialJourneyState,
+            IpvSessionItem ipvSessionItem,
+            String journeyEvent,
+            StateMachine stateMachine)
             throws UnknownEventException, StateMachineNotFoundException, UnknownStateException {
         if (BACK_EVENT.equals(journeyEvent) && !isBackEventDefinedOnState(initialJourneyState)) {
             var previousJourneyState = ipvSessionItem.getPreviousState();
 
             if (previousJourneyState != null
-                    && previousJourneyState
-                            .state()
-                            .equals("STRATEGIC_APP_TRIAGE/IDENTIFY_DEVICE")) {
+                    && stateMachine.isSkipBackPageState(previousJourneyState)) {
                 ipvSessionItem.popState();
                 previousJourneyState = ipvSessionItem.getPreviousState();
             }

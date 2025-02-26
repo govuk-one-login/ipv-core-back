@@ -11,6 +11,7 @@ nestedJourneyStates:
     response:
       type: page
       pageId: identify-device
+      skipBack: true
     events:
       appTriage:
         targetState: SELECT_DEVICE_PAGE

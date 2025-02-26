@@ -9,6 +9,7 @@ nestedJourneyStates:
     response:
       type: page
       pageId: identify-device
+      skipBack: true
     parent: PARENT_STATE
     events:
       eventOne:
