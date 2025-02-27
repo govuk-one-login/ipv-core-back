@@ -87,9 +87,9 @@ class ProcessJourneyEventHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TIMEOUT_UNRECOVERABLE_STATE = "TIMEOUT_UNRECOVERABLE_PAGE";
     private static final String PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE = "pyi-timeout-unrecoverable";
-    private static final String CODE = "code";
+    private static final String CODE = "errorCode";
     private static final String JOURNEY = "journey";
-    private static final String MESSAGE = "message";
+    private static final String MESSAGE = "errorMessage";
     private static final String STATUS_CODE = "statusCode";
     private static final String SKIP_CHECK_AUDIT_EVENT_WAIT_TAG = "skipCheckAuditEventWait";
     private static final List<String> TEST_NESTED_JOURNEY_TYPES =

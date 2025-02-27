@@ -185,8 +185,8 @@ Then(
       isErrorResponse(this.lastJourneyEngineResponse),
       `got a ${describeResponse(this.lastJourneyEngineResponse)}`,
     );
-    assert.equal(this.lastJourneyEngineResponse.message, expectedMessage);
     assert.equal(this.lastJourneyEngineResponse.statusCode, expectedStatusCode);
+    assert.equal(this.lastJourneyEngineResponse.errorMessage, expectedMessage);
   },
 );
 

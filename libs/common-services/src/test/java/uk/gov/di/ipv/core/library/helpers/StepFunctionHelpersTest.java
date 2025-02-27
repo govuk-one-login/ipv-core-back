@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class StepFunctionHelpersTest {
 
-    private static final String CODE = "code";
-    private static final String MESSAGE = "message";
+    private static final String ERROR_CODE = "errorCode";
+    private static final String ERROR_MESSAGE = "errorMessage";
     private static final String STATUS_CODE = "statusCode";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
@@ -20,8 +20,8 @@ class StepFunctionHelpersTest {
         Map<String, Object> expected =
                 Map.of(
                         STATUS_CODE, 400,
-                        MESSAGE, ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage(),
-                        CODE, ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getCode());
+                        ERROR_MESSAGE, ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage(),
+                        ERROR_CODE, ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getCode());
 
         assertEquals(
                 expected,
