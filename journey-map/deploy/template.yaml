@@ -1,0 +1,413 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  This creates the necessary components to deploy the journey map visualisation tool.
+  Deploys into the dev and stub accounts.
+
+Parameters:
+  Environment:
+    Description: The name of the environment to deploy to.
+    Type: String
+    AllowedPattern: ((production)|(build)|(dev.*))
+  VpcStackName:
+    Description: >
+      The name of the stack that defines the VPC in which this container will
+      run.
+    Type: String
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
+
+Conditions:
+  IsDev01: !Equals [!Ref AWS::AccountId, "130355686670"]
+  IsDev02: !Equals [!Ref AWS::AccountId, "175872367215"]
+  IsDevelopment: !Or [!Condition IsDev01, !Condition IsDev02]
+  IsNotDevelopment: !Not [!Condition IsDevelopment]
+  IsProduction: !Equals [!Ref Environment, "production"]
+  UsePermissionsBoundary: !Not
+    - !Equals [!Ref PermissionsBoundary, "none"]
+
+Resources:
+  # ssl cert
+  JourneyMapSSLCert:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "${Environment}-journey-map.01.core.dev.stubs.account.gov.uk"
+          - !Sub "${Environment}-journey-map.02.core.dev.stubs.account.gov.uk"
+        - !If
+          - IsProduction
+          - "journey-map.stubs.account.gov.uk"
+          - !Sub "journey-map.${Environment}.stubs.account.gov.uk"
+      DomainValidationOptions:
+        - DomainName: !If
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !Sub "${Environment}-journey-map.01.core.dev.stubs.account.gov.uk"
+              - !Sub "${Environment}-journey-map.02.core.dev.stubs.account.gov.uk"
+            - !If
+              - IsProduction
+              - "journey-map.stubs.account.gov.uk"
+              - !Sub "journey-map.${Environment}.stubs.account.gov.uk"
+          HostedZoneId: !If
+            - IsDevelopment
+            - !If
+              - IsDev01
+              - !ImportValue Dev01StubsHostedZoneId
+              - !ImportValue Dev02StubsHostedZoneId
+            - !If
+              - IsProduction
+              - RootPublicHostedZoneId
+              - BuildPublicHostedZoneId
+      ValidationMethod: DNS
+
+  # api domain entries / mapping
+  JourneyMapApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Properties:
+      DomainName: !If
+        - IsDevelopment
+        - !If
+          - IsDev01
+          - !Sub "${Environment}-journey-map.01.core.dev.stubs.account.gov.uk"
+          - !Sub "${Environment}-journey-map.02.core.dev.stubs.account.gov.uk"
+        - !If
+          - IsProduction
+          - "journey-map.stubs.account.gov.uk"
+          - !Sub "journey-map.${Environment}.stubs.account.gov.uk"
+      DomainNameConfigurations:
+        - CertificateArn: !Ref JourneyMapSSLCert
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  JourneyMapApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Properties:
+      DomainName: !Ref JourneyMapApiDomain
+      ApiId: !Ref ApiGwHttpEndpoint
+      Stage: !Ref ApiGwStage
+
+  # dns rcord
+  JourneyMapDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref JourneyMapApiDomain
+      HostedZoneId: !If
+        - IsDev01
+        - !ImportValue Dev01StubsHostedZoneId
+        - !ImportValue Dev02StubsHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt JourneyMapApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt JourneyMapApiDomain.RegionalHostedZoneId
+
+  # Security Groups for the ECS service and load balancer
+  LoadBalancerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: >-
+        Journey map load balancer Security Group
+      SecurityGroupIngress:
+        - CidrIp:
+            Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+          Description: Allow vpc cidr ingress to port 80
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+
+  LoadBalancerSGEgressToECSSecurityGroup:
+    Type: "AWS::EC2::SecurityGroupEgress"
+    Properties:
+      GroupId: !GetAtt LoadBalancerSG.GroupId
+      Description: >-
+        Egress between the Journey Map load balancer and
+        the Journey Map ECS security group
+      DestinationSecurityGroupId: !GetAtt JourneyMapECSSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+
+  JourneyMapECSSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: >-
+        Journey map ECS Security Group outbound permissions ruleset
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow outbound traffic to everywhere 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      SecurityGroupIngress:
+        - CidrIp:
+            Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+          Description: Allow inbound traffic from vpc cidr to port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+
+  JourneyMapECSSecurityGroupIngressFromLoadBalancer:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      IpProtocol: tcp
+      Description: >-
+        Journey Map ECS permits inbound from the Journey Map
+        load balancer.
+      FromPort: 8080
+      ToPort: 8080
+      GroupId: !GetAtt JourneyMapECSSecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt LoadBalancerSG.GroupId
+
+  # http api gateway - which does nothing other than route everything to LB
+  ApiGwHttpEndpoint:
+    Type: "AWS::ApiGatewayV2::Api"
+    Properties:
+      Name: !Sub ${AWS::StackName}-journey-map-api-gw
+      ProtocolType: HTTP
+
+  ApiGwHttpEndpointIntegration:
+    Type: "AWS::ApiGatewayV2::Integration"
+    Properties:
+      ApiId: !Ref ApiGwHttpEndpoint
+      IntegrationType: HTTP_PROXY
+      ConnectionId:
+        Fn::ImportValue: !Sub "${VpcStackName}-VpcLinkId"
+      ConnectionType: VPC_LINK
+      IntegrationMethod: ANY
+      IntegrationUri: !Ref LoadBalancerListener
+      PayloadFormatVersion: "1.0"
+
+  ApiGwRoute:
+    Type: "AWS::ApiGatewayV2::Route"
+    Properties:
+      ApiId: !Ref ApiGwHttpEndpoint
+      RouteKey: "ANY /{proxy+}"
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref ApiGwHttpEndpointIntegration
+
+  ApiGwStage:
+    Type: "AWS::ApiGatewayV2::Stage"
+    Properties:
+      ApiId: !Ref ApiGwHttpEndpoint
+      StageName: $default
+      AutoDeploy: true
+
+  # Private Application Load Balancer
+  LoadBalancer:
+    Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+    Properties:
+      Scheme: internal
+      SecurityGroups:
+        - !GetAtt LoadBalancerSG.GroupId
+      Subnets:
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdA
+        - Fn::ImportValue: !Sub ${VpcStackName}-PrivateSubnetIdB
+      Type: application
+      #checkov:skip=CKV_AWS_91:ALB access logging is disabled in developer environments to make them easier to manage.
+      LoadBalancerAttributes:
+        - Key: routing.http.drop_invalid_header_fields.enabled
+          Value: true
+        - !If
+          - IsNotDevelopment
+          - Key: deletion_protection.enabled
+            Value: false
+          - !Ref AWS::NoValue
+
+  LoadBalancerListenerTargetGroupECS:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckEnabled: TRUE
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /healthcheck
+      Matcher:
+        HttpCode: 200
+      Port: 8080
+      Protocol: HTTP
+      TargetType: ip
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 60
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      # checkov:skip=CKV_AWS_2:Certificate generation must be resolved before the listener can use HTTPS.
+      # checkov:skip=CKV_AWS_103:The load balancer cannot use TLS v1.2 until HTTPS is enabled
+      LoadBalancerArn: !Ref LoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+        - TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+          Type: forward
+
+  # ECS cluster, service, task and autoscaling definition
+  JourneyMapCluster:
+    Type: "AWS::ECS::Cluster"
+    Properties:
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  JourneyMapService:
+    Type: "AWS::ECS::Service"
+    Properties:
+      Cluster: !Ref JourneyMapCluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 50
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      EnableECSManagedTags: false
+      HealthCheckGracePeriodSeconds: 60
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: app
+          ContainerPort: 8080
+          TargetGroupArn: !Ref LoadBalancerListenerTargetGroupECS
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+            - !GetAtt JourneyMapECSSecurityGroup.GroupId
+          Subnets:
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+            - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+      TaskDefinition: !Ref ECSServiceTaskDefinition
+    DependsOn:
+      - LoadBalancerListener
+
+  ECSAccessLogsGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}-JourneyMap-ECS
+      RetentionInDays: 14
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  ECSServiceTaskDefinition:
+    Type: "AWS::ECS::TaskDefinition"
+    Properties:
+      ContainerDefinitions:
+        - Essential: true
+          Image: CONTAINER-IMAGE-PLACEHOLDER
+          Name: app
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSAccessLogsGroup
+              awslogs-region: !Sub ${AWS::Region}
+              awslogs-stream-prefix: !Sub journey-map-${Environment}
+      Cpu: "256"
+      Memory: "512"
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+
+  ECSTaskExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: PullJourneyMapImage
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:BatchGetImage"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:GetAuthorizationToken"
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !GetAtt "ECSAccessLogsGroup.Arn"
+                  - !Sub "${ECSAccessLogsGroup.Arn}:*"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
+  ECSTaskRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
+  # kms key for logging
+  LoggingKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+Outputs:
+  JourneyMapEnvironment:
+    Description: Journey Map Environment
+    Value: !Ref Environment
+  JourneyMapDomain:
+    Description: Journey Map DNS Domain
+    Value: !Ref JourneyMapDNSRecord
+  JourneyMapApiDomain:
+    Description: Journey Map API Domain
+    Value: !Ref JourneyMapApiDomain
