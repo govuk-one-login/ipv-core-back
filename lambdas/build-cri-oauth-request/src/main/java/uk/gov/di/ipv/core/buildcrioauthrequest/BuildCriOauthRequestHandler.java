@@ -8,11 +8,11 @@ import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -64,8 +64,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.KID_JAR_HEADER;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
@@ -165,7 +163,7 @@ public class BuildCriOauthRequestHandler
             if (cri == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
-                                SC_BAD_REQUEST,
+                                HttpStatusCode.BAD_REQUEST,
                                 ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
                         .toObjectMap();
             }
@@ -240,31 +238,31 @@ public class BuildCriOauthRequestHandler
             return buildJourneyErrorResponse(
                     "Failed to parse encryption public JWK",
                     e,
-                    SC_BAD_REQUEST,
+                    HttpStatusCode.BAD_REQUEST,
                     FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (URISyntaxException e) {
             return buildJourneyErrorResponse(
                     "Failed to construct redirect uri",
                     e,
-                    SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     FAILED_TO_CONSTRUCT_REDIRECT_URI);
         } catch (JsonProcessingException e) {
             return buildJourneyErrorResponse(
                     "Failed to parse evidenceRequest.",
                     e,
-                    SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     FAILED_TO_PARSE_EVIDENCE_REQUESTED);
         } catch (IllegalArgumentException e) {
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            SC_BAD_REQUEST,
+                            HttpStatusCode.BAD_REQUEST,
                             ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             return buildJourneyErrorResponse(
                     "Failed to find ipv session.",
                     e,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     IPV_SESSION_NOT_FOUND);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
@@ -345,7 +343,7 @@ public class BuildCriOauthRequestHandler
                                     .orElseThrow(
                                             () ->
                                                     new HttpResponseExceptionWithErrorBody(
-                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
         } else if (cri.isKbvCri()) {
             evidenceRequest =
@@ -354,7 +352,7 @@ public class BuildCriOauthRequestHandler
                                     .orElseThrow(
                                             () ->
                                                     new HttpResponseExceptionWithErrorBody(
-                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
         }
         SignedJWT signedJWT =

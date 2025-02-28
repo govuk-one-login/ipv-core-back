@@ -7,11 +7,11 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -126,7 +126,7 @@ public class BuildClientOauthResponseHandler
                         .toObjectMap();
             } else {
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
+                        HttpStatusCode.BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
             }
 
             ipvSessionItem.setFeatureSetFromList(featureSet);
@@ -159,7 +159,7 @@ public class BuildClientOauthResponseHandler
                 var validationResult = authRequestValidator.validateRequest(authParameters, params);
                 if (!validationResult.isValid()) {
                     return new JourneyErrorResponse(
-                                    null, HttpStatus.SC_BAD_REQUEST, validationResult.getError())
+                                    null, HttpStatusCode.BAD_REQUEST, validationResult.getError())
                             .toObjectMap();
                 }
 
@@ -211,12 +211,12 @@ public class BuildClientOauthResponseHandler
             LOGGER.error(
                     LogHelper.buildErrorMessage("Authentication request could not be parsed", e));
             return buildJourneyErrorResponse(
-                    HttpStatus.SC_BAD_REQUEST,
+                    HttpStatusCode.BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (URISyntaxException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to construct redirect uri.", e));
             return buildJourneyErrorResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI);
         } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
@@ -224,7 +224,7 @@ public class BuildClientOauthResponseHandler
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             return buildJourneyErrorResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

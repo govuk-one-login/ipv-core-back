@@ -10,6 +10,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -31,7 +32,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -329,7 +329,7 @@ class ResetSessionIdentityHandlerTest {
         verifyVotSetToP0();
 
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
-        assertEquals(SC_INTERNAL_SERVER_ERROR, journeyResponse.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, journeyResponse.get(STATUS_CODE));
         assertEquals(UNKNOWN_RESET_TYPE.getCode(), journeyResponse.get("code"));
         assertEquals(UNKNOWN_RESET_TYPE.getMessage(), journeyResponse.get("message"));
     }

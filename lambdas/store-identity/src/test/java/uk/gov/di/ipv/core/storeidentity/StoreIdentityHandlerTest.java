@@ -12,6 +12,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionIdentityType;
@@ -35,8 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_SERVER_ERROR;
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -231,7 +230,7 @@ class StoreIdentityHandlerTest {
         var response = storeIdentityHandler.handleRequest(missingReq, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
-        assertEquals(SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.get(STATUS_CODE));
         assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getCode(), response.get(CODE));
         assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get(MESSAGE));
         verify(mockEvcsService, never()).storeCompletedIdentity(any(), any(), any());
@@ -250,7 +249,7 @@ class StoreIdentityHandlerTest {
         var response = storeIdentityHandler.handleRequest(invalidReq, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
-        assertEquals(SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.get(STATUS_CODE));
         assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getCode(), response.get(CODE));
         assertEquals(INVALID_IDENTITY_TYPE_PARAMETER.getMessage(), response.get(MESSAGE));
         verify(mockEvcsService, never()).storeCompletedIdentity(any(), any(), any());
@@ -265,7 +264,7 @@ class StoreIdentityHandlerTest {
                 storeIdentityHandler.handleRequest(processRequestWithMissingSessionId, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
-        assertEquals(SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.get(STATUS_CODE));
         assertEquals(MISSING_IPV_SESSION_ID.getCode(), response.get(CODE));
         assertEquals(MISSING_IPV_SESSION_ID.getMessage(), response.get(MESSAGE));
         verify(mockEvcsService, never()).storeCompletedIdentity(any(), any(), any());
@@ -329,7 +328,10 @@ class StoreIdentityHandlerTest {
 
     @Test
     void shouldReturnAnErrorJourneyIfStoringPendingFailed() throws Exception {
-        doThrow(new EvcsServiceException(SC_SERVER_ERROR, FAILED_AT_EVCS_HTTP_REQUEST_SEND))
+        doThrow(
+                        new EvcsServiceException(
+                                HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                FAILED_AT_EVCS_HTTP_REQUEST_SEND))
                 .when(mockEvcsService)
                 .storePendingIdentity(USER_ID, VCS, TEST_EVCS_ACCESS_TOKEN);
 
@@ -338,7 +340,7 @@ class StoreIdentityHandlerTest {
                         PROCESS_REQUEST_FOR_PENDING_IDENTITY, mockContext);
 
         assertEquals(JOURNEY_ERROR_PATH, response.get(JOURNEY));
-        assertEquals(SC_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getCode(), response.get(CODE));
         assertEquals(FAILED_AT_EVCS_HTTP_REQUEST_SEND.getMessage(), response.get(MESSAGE));
     }

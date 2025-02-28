@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
@@ -232,7 +232,7 @@ class CallTicfCriHandlerTest {
                 callTicfCriHandler.handleRequest(inputWithoutSessionId, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.BAD_REQUEST, lambdaResult.get("statusCode"));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), lambdaResult.get("code"));
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), lambdaResult.get("message"));
@@ -251,7 +251,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(ErrorResponse.MISSING_TARGET_VOT.getCode(), lambdaResult.get("code"));
         assertEquals(ErrorResponse.MISSING_TARGET_VOT.getMessage(), lambdaResult.get("message"));
     }
@@ -267,7 +267,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
                 ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
                 lambdaResult.get("code"));
@@ -299,7 +299,7 @@ class CallTicfCriHandlerTest {
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
                 ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
                 lambdaResult.get("code"));
@@ -325,7 +325,7 @@ class CallTicfCriHandlerTest {
         inOrder.verifyNoMoreInteractions();
 
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
                 ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE.getCode(),
                 lambdaResult.get("code"));

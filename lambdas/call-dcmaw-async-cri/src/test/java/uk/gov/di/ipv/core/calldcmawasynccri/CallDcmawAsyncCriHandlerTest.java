@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.calldcmawasynccri;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -132,7 +132,7 @@ class CallDcmawAsyncCriHandlerTest {
 
         // Assert
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_BAD_REQUEST, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.BAD_REQUEST, lambdaResult.get("statusCode"));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), lambdaResult.get("code"));
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), lambdaResult.get("message"));
@@ -162,7 +162,7 @@ class CallDcmawAsyncCriHandlerTest {
 
         // Assert
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
                 ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getCode(), lambdaResult.get("code"));
         assertEquals(
@@ -194,7 +194,7 @@ class CallDcmawAsyncCriHandlerTest {
 
         // Assert
         assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
         assertEquals(
                 ErrorResponse.ERROR_CALLING_DCMAW_ASYNC_CRI.getCode(), lambdaResult.get("code"));
         assertEquals(

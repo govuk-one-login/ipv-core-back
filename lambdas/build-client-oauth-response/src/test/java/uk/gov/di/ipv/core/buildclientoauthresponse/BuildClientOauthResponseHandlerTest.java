@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -21,6 +20,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -229,7 +229,7 @@ class BuildClientOauthResponseHandlerTest {
         JourneyErrorResponse errorResponse =
                 toResponseClass(handler.handleRequest(event, context), JourneyErrorResponse.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), errorResponse.getCode());
         assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), errorResponse.getMessage());
     }
@@ -282,7 +282,7 @@ class BuildClientOauthResponseHandlerTest {
         JourneyErrorResponse errorResponse =
                 toResponseClass(handler.handleRequest(event, context), JourneyErrorResponse.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), errorResponse.getCode());
         assertEquals(
                 ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), errorResponse.getMessage());
@@ -316,7 +316,7 @@ class BuildClientOauthResponseHandlerTest {
         JourneyErrorResponse errorResponse =
                 toResponseClass(handler.handleRequest(event, context), JourneyErrorResponse.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, errorResponse.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
                 errorResponse.getCode());
