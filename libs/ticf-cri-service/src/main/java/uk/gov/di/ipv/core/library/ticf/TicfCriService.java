@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -76,7 +75,6 @@ public class TicfCriService {
         this.sessionCredentialsService = sessionCredentialsService;
     }
 
-    @Tracing
     public List<VerifiableCredential> getTicfVc(
             ClientOAuthSessionItem clientOAuthSessionItem, IpvSessionItem ipvSessionItem)
             throws TicfCriServiceException {

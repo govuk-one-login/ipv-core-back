@@ -10,7 +10,6 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
@@ -329,7 +328,7 @@ class ResetSessionIdentityHandlerTest {
         verifyVotSetToP0();
 
         assertEquals(JOURNEY_ERROR_PATH, journeyResponse.get("journey"));
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, journeyResponse.get(STATUS_CODE));
+        assertEquals(500, journeyResponse.get(STATUS_CODE));
         assertEquals(UNKNOWN_RESET_TYPE.getCode(), journeyResponse.get("code"));
         assertEquals(UNKNOWN_RESET_TYPE.getMessage(), journeyResponse.get("message"));
     }

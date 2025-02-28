@@ -26,7 +26,6 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criapiservice.dto.AsyncCredentialRequestBodyDto;
@@ -144,7 +143,6 @@ public class CriApiService {
         return fetchAccessToken(httpRequest);
     }
 
-    @Tracing
     private BearerAccessToken fetchAccessToken(HTTPRequest accessTokenRequest)
             throws CriApiException {
         try {
@@ -274,7 +272,6 @@ public class CriApiService {
         return fetchVerifiableCredential(cri, request);
     }
 
-    @Tracing
     private VerifiableCredentialResponse fetchVerifiableCredential(
             Cri cri, HTTPRequest credentialRequest) throws CriApiException {
         try {

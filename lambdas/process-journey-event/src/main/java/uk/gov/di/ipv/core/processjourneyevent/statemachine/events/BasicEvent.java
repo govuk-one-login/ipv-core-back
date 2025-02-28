@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
-import com.amazonaws.util.StringUtils;
 import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
@@ -50,7 +50,7 @@ public class BasicEvent implements Event {
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
             }
         }
-        if (checkJourneyContext != null && !StringUtils.isNullOrEmpty(journeyContext.name())) {
+        if (checkJourneyContext != null && !StringUtils.isEmpty(journeyContext.name())) {
             Optional<String> matchingContext =
                     checkJourneyContext.keySet().stream()
                             .filter(ctx -> ctx.equals(journeyContext.name()))

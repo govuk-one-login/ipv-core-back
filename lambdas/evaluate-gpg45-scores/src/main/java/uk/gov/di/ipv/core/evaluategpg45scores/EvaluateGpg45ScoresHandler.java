@@ -8,7 +8,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -120,7 +119,6 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {

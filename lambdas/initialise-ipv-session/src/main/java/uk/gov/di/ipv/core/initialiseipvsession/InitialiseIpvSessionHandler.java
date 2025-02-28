@@ -20,7 +20,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
@@ -141,7 +140,6 @@ public class InitialiseIpvSessionHandler
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
@@ -342,7 +340,6 @@ public class InitialiseIpvSessionHandler
         return list == null || list.isEmpty() || list.stream().allMatch(String::isEmpty);
     }
 
-    @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
             ClientOAuthSessionItem clientOAuthSessionItem,
             StringListClaim inheritedIdentityJwtClaim,

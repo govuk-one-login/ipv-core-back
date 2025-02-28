@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.calldcmawasynccri.exception.DcmawAsyncCriHttpResponseException;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -93,7 +92,6 @@ public class CallDcmawAsyncCriHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
