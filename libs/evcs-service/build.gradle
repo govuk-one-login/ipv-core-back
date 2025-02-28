@@ -7,7 +7,8 @@ plugins {
 }
 
 dependencies {
-	implementation libs.jacksonDatabind,
+	implementation libs.apacheHttpCore,
+			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsTracing,
 			libs.powertoolsParameters,
