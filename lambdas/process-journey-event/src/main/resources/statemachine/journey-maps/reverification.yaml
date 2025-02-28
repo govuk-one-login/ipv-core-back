@@ -131,13 +131,29 @@ states:
         targetState: INELIGIBLE_SKIP_MESSAGE
       returnToRp:
         targetState: RETURN_TO_RP
-      #  PYIC-8067 Fix up the exit events here
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
       incompleteDlAuthCheckInvalidDl:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
+        targetState: PROVE_IDENTITY_ANOTHER_WAY_AFTER_STRATEGIC_APP
       failedDlAuthCheckInvalidDl:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
+        targetJourney: FAILED
+        targetState: FAILED_SKIP_MESSAGE
+
+  PROVE_IDENTITY_ANOTHER_WAY_AFTER_STRATEGIC_APP:
+    response:
+      type: page
+      pageId: prove-identity-another-way
+      context: noF2f
+    events:
+      anotherTypePhotoId:
+        targetState: STRATEGIC_APP_TRIAGE
+        targetEntryEvent: appTriage
+      returnToRp:
+        targetState: RETURN_TO_RP
+        checkFeatureFlag:
+          processCandidateIdentity:
+            targetState: PROCESS_INCOMPLETE_IDENTITY
 
   APP_DOC_CHECK:
     nestedJourney: APP_DOC_CHECK
