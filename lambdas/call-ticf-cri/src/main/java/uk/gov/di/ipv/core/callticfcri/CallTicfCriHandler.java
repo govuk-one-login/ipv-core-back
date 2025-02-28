@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -205,7 +204,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                                     .orElseThrow(
                                             () ->
                                                     new HttpResponseExceptionWithErrorBody(
-                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
                 LOGGER.info(

@@ -4,9 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,6 @@ import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -128,8 +126,7 @@ class BuildClientOauthResponseHandlerTest {
                         .build();
 
         URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
-        List<NameValuePair> params =
-                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        List<NameValuePair> params = new URIBuilder(actualRedirectUrl).getQueryParams();
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
@@ -185,8 +182,7 @@ class BuildClientOauthResponseHandlerTest {
                         .build();
 
         URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
-        List<NameValuePair> params =
-                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        List<NameValuePair> params = new URIBuilder(actualRedirectUrl).getQueryParams();
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
@@ -213,8 +209,7 @@ class BuildClientOauthResponseHandlerTest {
                 toResponseClass(handler.handleRequest(event, context), ClientResponse.class);
 
         URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
-        List<NameValuePair> params =
-                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        List<NameValuePair> params = new URIBuilder(actualRedirectUrl).getQueryParams();
         assertEquals("example.com", actualRedirectUrl.getHost());
         assertEquals("access_denied", params.get(0).getValue());
         assertEquals("Missing Context", params.get(1).getValue());
@@ -258,8 +253,7 @@ class BuildClientOauthResponseHandlerTest {
                         .addParameter("code", authorizationCode)
                         .build();
         URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
-        List<NameValuePair> params =
-                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        List<NameValuePair> params = new URIBuilder(actualRedirectUrl).getQueryParams();
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertEquals(1, params.size());
         assertNotNull(params.get(0).getValue());
@@ -411,8 +405,7 @@ class BuildClientOauthResponseHandlerTest {
 
         ClientResponse responseBody = OBJECT_MAPPER.convertValue(response, ClientResponse.class);
         URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
-        List<NameValuePair> params =
-                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        List<NameValuePair> params = new URIBuilder(actualRedirectUrl).getQueryParams();
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
