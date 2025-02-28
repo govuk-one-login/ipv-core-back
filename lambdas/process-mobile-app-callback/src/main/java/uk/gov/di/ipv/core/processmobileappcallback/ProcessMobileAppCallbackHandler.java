@@ -7,9 +7,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -92,14 +92,15 @@ public class ProcessMobileAppCallbackHandler
             var response = validateCallback(callbackRequest);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
+                    HttpStatusCode.OK, Objects.requireNonNullElse(response, JOURNEY_NEXT));
         } catch (InvalidMobileAppCallbackRequestException | ClientOauthSessionNotFoundException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+            return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
-                    e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (InvalidCriResponseException e) {
-            return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
+            return buildErrorResponse(
+                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;

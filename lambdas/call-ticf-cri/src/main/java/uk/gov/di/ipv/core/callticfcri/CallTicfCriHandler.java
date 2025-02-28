@@ -2,9 +2,9 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -138,7 +138,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             ERROR_PROCESSING_TICF_CRI_RESPONSE)
                     .toObjectMap();
         } catch (CiExtractionException e) {
@@ -146,7 +146,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     LogHelper.buildErrorMessage(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
         } catch (Exception e) {

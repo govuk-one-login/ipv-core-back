@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -49,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
@@ -136,7 +136,8 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
                             .orElseThrow(
                                     () ->
                                             new HttpResponseExceptionWithErrorBody(
-                                                    SC_INTERNAL_SERVER_ERROR, MISSING_TARGET_VOT));
+                                                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                                    MISSING_TARGET_VOT));
             var achievedVot = ipvSessionItem.getVot();
             var thresholdVot = ipvSessionItem.getThresholdVot();
             var userIdentity =

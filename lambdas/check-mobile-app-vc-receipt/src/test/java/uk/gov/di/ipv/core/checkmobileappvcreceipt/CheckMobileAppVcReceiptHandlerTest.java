@@ -7,12 +7,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -81,11 +81,11 @@ class CheckMobileAppVcReceiptHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.MISSING_IPV_SESSION_ID),
                 journeyResponse);
     }
@@ -103,11 +103,11 @@ class CheckMobileAppVcReceiptHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.IPV_SESSION_NOT_FOUND),
                 journeyResponse);
     }
@@ -128,11 +128,11 @@ class CheckMobileAppVcReceiptHandlerTest {
                 OBJECT_MAPPER.readValue(response.getBody(), JourneyErrorResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        HttpStatusCode.INTERNAL_SERVER_ERROR,
                         ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND),
                 journeyResponse);
     }
@@ -171,7 +171,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         var journeyResponse = OBJECT_MAPPER.readValue(response.getBody(), JourneyResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), journeyResponse);
         verify(sessionCredentialsService)
                 .persistCredentials(List.of(vc), TEST_IPV_SESSION_ID, false);
@@ -194,7 +194,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         var journeyResponse = OBJECT_MAPPER.readValue(response.getBody(), JourneyResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_ABANDON_PATH), journeyResponse);
     }
 
@@ -215,7 +215,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         var journeyResponse = OBJECT_MAPPER.readValue(response.getBody(), JourneyResponse.class);
 
         // Assert
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(new JourneyResponse(JOURNEY_ERROR_PATH), journeyResponse);
     }
 
@@ -238,7 +238,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         var response = checkMobileAppVcReceiptHandler.handleRequest(requestEvent, mockContext);
 
         // Assert
-        assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
+        assertEquals(HttpStatusCode.NOT_FOUND, response.getStatusCode());
         assertEquals("\"No VC found\"", response.getBody());
         verify(sessionCredentialsService, never()).persistCredentials(any(), any(), anyBoolean());
     }
@@ -276,7 +276,7 @@ class CheckMobileAppVcReceiptHandlerTest {
         // Assert
         Map<String, String> body =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("Unable to extract CIs", body.get("message"));
         verify(sessionCredentialsService, times(1)).persistCredentials(any(), any(), anyBoolean());
     }

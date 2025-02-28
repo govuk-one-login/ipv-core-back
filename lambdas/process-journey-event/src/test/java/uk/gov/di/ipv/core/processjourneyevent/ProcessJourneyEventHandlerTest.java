@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.processjourneyevent;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,6 +16,7 @@ import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionMitigationType;
@@ -129,7 +129,7 @@ class ProcessJourneyEventHandlerTest {
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST)
                         .handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT.getMessage(), output.get(MESSAGE));
     }
@@ -141,7 +141,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), output.get(MESSAGE));
     }
@@ -160,7 +160,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.IPV_SESSION_NOT_FOUND.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.IPV_SESSION_NOT_FOUND.getMessage(), output.get(MESSAGE));
     }
@@ -179,7 +179,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
     }
@@ -198,7 +198,7 @@ class ProcessJourneyEventHandlerTest {
         Map<String, Object> output =
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
     }
@@ -227,7 +227,7 @@ class ProcessJourneyEventHandlerTest {
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
     }
@@ -373,7 +373,7 @@ class ProcessJourneyEventHandlerTest {
 
         Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), output.get(MESSAGE));
     }
@@ -949,7 +949,7 @@ class ProcessJourneyEventHandlerTest {
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
@@ -1036,7 +1036,7 @@ class ProcessJourneyEventHandlerTest {
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
