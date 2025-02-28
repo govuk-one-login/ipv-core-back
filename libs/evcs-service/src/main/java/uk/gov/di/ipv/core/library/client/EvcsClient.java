@@ -9,7 +9,6 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -73,7 +72,6 @@ public class EvcsClient {
         this.sleeper = sleeper;
     }
 
-    @Tracing
     public EvcsGetUserVCsDto getUserVcs(
             String userId, String evcsAccessToken, List<EvcsVCState> vcStatesToQueryFor)
             throws EvcsServiceException {
@@ -109,7 +107,6 @@ public class EvcsClient {
         }
     }
 
-    @Tracing
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
         LOGGER.info(
@@ -137,7 +134,6 @@ public class EvcsClient {
         }
     }
 
-    @Tracing
     public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
         LOGGER.info(

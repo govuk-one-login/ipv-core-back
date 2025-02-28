@@ -4,10 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -49,6 +47,8 @@ public class ResetSessionIdentityHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT =
             new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
+    private static final int INTERNAL_SERVER_ERROR = 500;
+
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final SessionCredentialsService sessionCredentialsService;
@@ -87,7 +87,6 @@ public class ResetSessionIdentityHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest input, Context context) {
@@ -142,22 +141,18 @@ public class ResetSessionIdentityHandler
                     LogHelper.buildErrorMessage("Unknown reset type received", e)
                             .with(LOG_RESET_TYPE.getFieldName(), e.getResetType()));
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                            UNKNOWN_RESET_TYPE)
+                            JOURNEY_ERROR_PATH, INTERNAL_SERVER_ERROR, UNKNOWN_RESET_TYPE)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
-                            IPV_SESSION_NOT_FOUND)
+                            JOURNEY_ERROR_PATH, INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
         } catch (CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to fetch existing credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                            INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (Exception e) {

@@ -18,7 +18,6 @@ subprojects {
 
 			aspect libs.powertoolsLogging,
 					libs.powertoolsMetrics,
-					libs.powertoolsTracing,
 					libs.aspectj
 		}
 	}

@@ -29,7 +29,7 @@ import java.util.Map;
 
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonArray;
 import static au.com.dius.pact.consumer.dsl.LambdaDsl.newJsonBody;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;

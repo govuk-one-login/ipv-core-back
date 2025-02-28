@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
-import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,7 +55,8 @@ public class StateMachineInitializer {
     private final IpvJourneyTypes journeyType;
 
     public Map<String, State> initialize() throws IOException {
-        Journey journey = yamlOm.readValue(getJourneyConfig(journeyType), new TypeReference<>() {});
+        Journey journey =
+                yamlOm.readValue(getJourneyConfig(journeyType.getPath()), new TypeReference<>() {});
         journeyStates = journey.states();
         nestedJourneyDefinitions = getNestedJourneysFromConfig();
 
@@ -190,8 +190,18 @@ public class StateMachineInitializer {
         return String.format("%s/%s", state.getName(), nestedJourneyStateName);
     }
 
-    private String getJourneyConfig(IpvJourneyTypes journeyType) throws IOException {
-        return readFileToString(journeyType.getPath());
+    private InputStream getJourneyConfig(String path) {
+        var inputStream =
+                getClass()
+                        .getClassLoader()
+                        .getResourceAsStream(
+                                String.format("statemachine/%s%s.yaml", mode.getPathPart(), path));
+
+        if (inputStream == null) {
+            throw new JourneyMapDeserializationException("Could not find journey map");
+        }
+
+        return inputStream;
     }
 
     private String transformToUpperSnakeCase(String input) {
@@ -201,29 +211,12 @@ public class StateMachineInitializer {
     private Map<String, NestedJourneyDefinition> getNestedJourneysFromConfig() throws IOException {
         var map = new HashMap<String, NestedJourneyDefinition>();
         for (var nestedJourney : nestedJourneyTypes) {
-            var contents =
-                    readFileToString(
-                            String.format("%s/%s", NESTED_JOURNEYS_SUBFOLDER, nestedJourney));
-
+            var path = String.format("%s/%s", NESTED_JOURNEYS_SUBFOLDER, nestedJourney);
             var journeyName = transformToUpperSnakeCase(nestedJourney);
-            var journeyDef = yamlOm.readValue(contents, NestedJourneyDefinition.class);
+            var journeyDef =
+                    yamlOm.readValue(getJourneyConfig(path), NestedJourneyDefinition.class);
             map.put(journeyName, journeyDef);
         }
         return map;
-    }
-
-    private String readFileToString(String filename) throws IOException {
-        InputStream inputStream =
-                getClass()
-                        .getClassLoader()
-                        .getResourceAsStream(
-                                String.format(
-                                        "statemachine/%s%s.yaml", mode.getPathPart(), filename));
-
-        if (inputStream == null) {
-            throw new JourneyMapDeserializationException("Could not find journey map");
-        }
-
-        return IOUtils.toString(inputStream);
     }
 }
