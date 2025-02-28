@@ -8,14 +8,12 @@ plugins {
 dependencies {
 	implementation libs.bundles.log4j,
 			libs.jacksonDatabind,
-			libs.powertoolsTracing,
 			project(":libs:common-services")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
 
 	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,

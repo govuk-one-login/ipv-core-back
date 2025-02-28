@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -12,6 +11,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Cri;
@@ -136,7 +136,7 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.IPV_SESSION_NOT_FOUND),
                 journeyResponse);
     }
@@ -156,7 +156,7 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.MISSING_OAUTH_STATE),
                 journeyResponse);
     }
@@ -177,7 +177,7 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.INVALID_OAUTH_STATE),
                 journeyResponse);
     }
@@ -204,7 +204,7 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
+                        HttpStatusCode.BAD_REQUEST,
                         ErrorResponse.CRI_RESPONSE_ITEM_NOT_FOUND),
                 journeyResponse);
     }
@@ -233,7 +233,7 @@ class ProcessMobileAppCallbackHandlerTest {
         assertEquals(
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        HttpStatusCode.INTERNAL_SERVER_ERROR,
                         ErrorResponse.ERROR_MOBILE_APP_RESPONSE_STATUS),
                 journeyResponse);
     }

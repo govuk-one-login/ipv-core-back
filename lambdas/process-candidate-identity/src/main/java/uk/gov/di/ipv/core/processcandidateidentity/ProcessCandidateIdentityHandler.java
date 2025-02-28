@@ -3,12 +3,11 @@ package uk.gov.di.ipv.core.processcandidateidentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -67,7 +66,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.lang.Boolean.TRUE;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
@@ -182,7 +180,6 @@ public class ProcessCandidateIdentityHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
@@ -230,14 +227,14 @@ public class ProcessCandidateIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unknown process identity type", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
+                            HttpStatusCode.BAD_REQUEST,
                             UNEXPECTED_PROCESS_IDENTITY_TYPE)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
         } catch (VerifiableCredentialException | EvcsServiceException e) {
@@ -249,14 +246,14 @@ public class ProcessCandidateIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse issued credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (CiExtractionException e) {
@@ -264,7 +261,7 @@ public class ProcessCandidateIdentityHandler
                     LogHelper.buildErrorMessage(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
         } catch (Exception e) {
@@ -384,7 +381,7 @@ public class ProcessCandidateIdentityHandler
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     MISSING_SECURITY_CHECK_CREDENTIAL);
         }
 
@@ -487,7 +484,7 @@ public class ProcessCandidateIdentityHandler
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ERROR_PROCESSING_TICF_CRI_RESPONSE);
         }
     }

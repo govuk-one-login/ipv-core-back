@@ -16,7 +16,6 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +35,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.Essential;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
@@ -239,7 +239,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -283,7 +283,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -319,7 +319,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -363,7 +363,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
         verify(mockClientOAuthSessionDetailsService)
                 .generateErrorClientSessionDetails(
@@ -403,7 +403,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -436,7 +436,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
         verify(mockClientOAuthSessionDetailsService)
                 .generateErrorClientSessionDetails(
@@ -499,7 +499,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_VTR.getCode(), responseBody.get("code"));
         assertEquals(ErrorResponse.MISSING_VTR.getMessage(), responseBody.get("message"));
     }
@@ -534,7 +534,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
@@ -559,7 +559,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
@@ -580,7 +580,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
@@ -602,7 +602,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
@@ -624,7 +624,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
@@ -647,7 +647,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
@@ -679,7 +679,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> responseBody =
                 OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(HttpStatusCode.OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
@@ -963,7 +963,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1000,7 +1000,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
             ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
@@ -1027,7 +1027,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
             verify(mockIpvSessionService, times(2))
@@ -1061,7 +1061,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1117,7 +1117,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1168,7 +1168,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1231,7 +1231,7 @@ class InitialiseIpvSessionHandlerTest {
             Map<String, Object> responseBody =
                     OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1297,7 +1297,7 @@ class InitialiseIpvSessionHandlerTest {
                     OBJECT_MAPPER.readValue(
                             response.getBody(), new TypeReference<Map<String, Object>>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1365,7 +1365,7 @@ class InitialiseIpvSessionHandlerTest {
                     OBJECT_MAPPER.readValue(
                             response.getBody(), new TypeReference<Map<String, Object>>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(
@@ -1431,7 +1431,7 @@ class InitialiseIpvSessionHandlerTest {
                     OBJECT_MAPPER.readValue(
                             response.getBody(), new TypeReference<Map<String, Object>>() {});
 
-            assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+            assertEquals(HttpStatusCode.OK, response.getStatusCode());
             assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
             verify(mockClientOAuthSessionDetailsService)
                     .generateErrorClientSessionDetails(

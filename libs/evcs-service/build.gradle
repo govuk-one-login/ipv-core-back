@@ -7,9 +7,9 @@ plugins {
 }
 
 dependencies {
-	implementation libs.jacksonDatabind,
+	implementation libs.apacheHttpCore,
+			libs.jacksonDatabind,
 			libs.powertoolsLogging,
-			libs.powertoolsTracing,
 			libs.powertoolsParameters,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
@@ -18,7 +18,6 @@ dependencies {
 	annotationProcessor libs.lombok
 
 	aspect libs.powertoolsLogging,
-			libs.powertoolsTracing,
 			libs.aspectj
 
 	testImplementation libs.junitJupiter,

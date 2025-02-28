@@ -13,9 +13,8 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
@@ -76,7 +76,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -303,7 +302,7 @@ class BuildCriOauthRequestHandlerTest {
 
         // Assert
         assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                HttpStatusCode.BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -323,7 +322,7 @@ class BuildCriOauthRequestHandlerTest {
 
         // Assert
         assertErrorResponse(
-                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                HttpStatusCode.BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -827,7 +826,7 @@ class BuildCriOauthRequestHandlerTest {
         // Assert
         JourneyErrorResponse response =
                 OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.getMessage());
     }
@@ -946,7 +945,7 @@ class BuildCriOauthRequestHandlerTest {
                 OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
 
         assertEquals(MISSING_TARGET_VOT.getMessage(), response.getMessage());
-        assertEquals(SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
     @Test

@@ -14,13 +14,12 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarClaims;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.JarUserInfo;
 import uk.gov.di.ipv.core.initialiseipvsession.domain.StringListClaim;
@@ -141,7 +140,6 @@ public class InitialiseIpvSessionHandler
 
     @SuppressWarnings("java:S3776") // Cognitive Complexity of methods should not be too high
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
@@ -161,7 +159,7 @@ public class InitialiseIpvSessionHandler
                                 "Validation of the client session params failed.",
                                 error.get().getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_BAD_REQUEST, error.get());
+                        HttpStatusCode.BAD_REQUEST, error.get());
             }
 
             SignedJWT signedJWT =
@@ -185,7 +183,7 @@ public class InitialiseIpvSessionHandler
             if (!isReverification && isListEmpty(vtr)) {
                 LOGGER.error(LogHelper.buildLogMessage(ErrorResponse.MISSING_VTR.getMessage()));
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_VTR);
+                        HttpStatusCode.BAD_REQUEST, ErrorResponse.MISSING_VTR);
             }
 
             String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
@@ -271,7 +269,7 @@ public class InitialiseIpvSessionHandler
                             .with(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, response);
         } catch (RecoverableJarValidationException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -293,27 +291,27 @@ public class InitialiseIpvSessionHandler
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatusCode.OK, response);
         } catch (ParseException e) {
             // Doesn't match all the potential causes
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse the decrypted JWE.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             "Jar validation failed.", e.getErrorObject().getDescription()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JsonProcessingException | IllegalArgumentException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to parse request body into map.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (CredentialParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage("Failed to check if stronger vot vc present.", e));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -342,7 +340,6 @@ public class InitialiseIpvSessionHandler
         return list == null || list.isEmpty() || list.stream().allMatch(String::isEmpty);
     }
 
-    @Tracing
     private void validateAndStoreHMRCInheritedIdentity(
             ClientOAuthSessionItem clientOAuthSessionItem,
             StringListClaim inheritedIdentityJwtClaim,

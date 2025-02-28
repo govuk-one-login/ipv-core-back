@@ -3,12 +3,11 @@ package uk.gov.di.ipv.core.calldcmawasynccri;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.calldcmawasynccri.exception.DcmawAsyncCriHttpResponseException;
 import uk.gov.di.ipv.core.calldcmawasynccri.service.DcmawAsyncCriService;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -93,7 +92,6 @@ public class CallDcmawAsyncCriHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
@@ -146,7 +144,7 @@ public class CallDcmawAsyncCriHandler
             LOGGER.error(LogHelper.buildErrorMessage("Error calling DCMAW Async CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             ERROR_CALLING_DCMAW_ASYNC_CRI)
                     .toObjectMap();
         } finally {

@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.checkgpg45score;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -165,7 +165,7 @@ class CheckGpg45ScoreHandlerTest {
                         checkGpg45ScoreHandler.handleRequest(requestWithoutSessionId, context),
                         JourneyErrorResponse.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
         verify(mockSessionCredentialsService, never())
                 .getCredentials(TEST_SESSION_ID, TEST_USER_ID);
@@ -184,7 +184,7 @@ class CheckGpg45ScoreHandlerTest {
                 toResponseClass(
                         checkGpg45ScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNKNOWN_SCORE_TYPE.getMessage(), response.getMessage());
         verify(mockSessionCredentialsService).getCredentials(TEST_SESSION_ID, TEST_USER_ID);

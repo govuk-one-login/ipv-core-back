@@ -5,12 +5,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -73,7 +71,6 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
@@ -128,7 +125,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private APIGatewayProxyResponseEvent buildJourneyErrorResponse(ErrorResponse errorResponse) {
-        return buildJourneyErrorResponse(errorResponse, HttpStatus.SC_INTERNAL_SERVER_ERROR);
+        return buildJourneyErrorResponse(errorResponse, 500);
     }
 
     private APIGatewayProxyResponseEvent buildJourneyErrorResponse(

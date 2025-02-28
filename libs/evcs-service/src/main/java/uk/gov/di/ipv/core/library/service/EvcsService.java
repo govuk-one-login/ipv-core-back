@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -45,7 +44,6 @@ public class EvcsService {
         this.configService = configService;
     }
 
-    @Tracing
     public void storeCompletedIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
@@ -56,7 +54,6 @@ public class EvcsService {
                 false);
     }
 
-    @Tracing
     public void storePendingIdentity(
             String userId, List<VerifiableCredential> credentials, String evcsAccessToken)
             throws EvcsServiceException {
@@ -67,7 +64,6 @@ public class EvcsService {
                 true);
     }
 
-    @Tracing
     public void storeMigratedIdentity(String userId, List<VerifiableCredential> credentials)
             throws EvcsServiceException {
         // If we are migrating, assume that there is no existing identity to mark as historic
@@ -81,7 +77,6 @@ public class EvcsService {
                         .toList());
     }
 
-    @Tracing
     public void storeInheritedIdentity(
             String userId,
             VerifiableCredential incomingInheritedIdentity,
@@ -118,7 +113,6 @@ public class EvcsService {
                 .toList();
     }
 
-    @Tracing
     public Map<EvcsVCState, List<VerifiableCredential>> getVerifiableCredentialsByState(
             String userId, String evcsAccessToken, EvcsVCState... states)
             throws CredentialParseException, EvcsServiceException {
@@ -143,7 +137,6 @@ public class EvcsService {
         return credentials;
     }
 
-    @Tracing
     public void storePendingVc(VerifiableCredential credential) throws EvcsServiceException {
         evcsClient.storeUserVCs(
                 credential.getUserId(),

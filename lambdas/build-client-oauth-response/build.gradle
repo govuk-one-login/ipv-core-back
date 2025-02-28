@@ -8,6 +8,7 @@ plugins {
 dependencies {
 
 	implementation libs.bundles.awsLambda,
+			libs.apacheHttpCore,
 			project(":libs:common-services"),
 			project(":libs:audit-service")
 
