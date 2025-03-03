@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.time.Instant;
 import java.util.List;
@@ -66,7 +65,6 @@ class StoreIdentityServiceTest {
 
     @Mock ConfigService configService;
     @Mock SessionCredentialsService sessionCredentialsService;
-    @Mock VerifiableCredentialService verifiableCredentialService;
     @Mock AuditService auditService;
     @Mock EvcsService evcsService;
     @InjectMocks StoreIdentityService storeIdentityService;

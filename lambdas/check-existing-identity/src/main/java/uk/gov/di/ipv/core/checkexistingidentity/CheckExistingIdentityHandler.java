@@ -52,7 +52,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.service.VotMatcher;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
-import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.model.ContraIndicator;
 
 import java.text.ParseException;
@@ -151,7 +150,6 @@ public class CheckExistingIdentityHandler
             CriResponseService criResponseService,
             CimitService cimitService,
             CimitUtilityService cimitUtilityService,
-            VerifiableCredentialService verifiableCredentialService,
             SessionCredentialsService sessionCredentialsService,
             CriOAuthSessionService criOAuthSessionService,
             EvcsService evcsService,
