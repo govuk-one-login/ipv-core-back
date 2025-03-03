@@ -10,6 +10,7 @@ dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
 			libs.bundles.awsLambda,
+			libs.commonsCodec,
 			project(":libs:common-services"),
 			project(":libs:oauth-key-service")
 

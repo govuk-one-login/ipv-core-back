@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -46,7 +47,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -257,7 +257,7 @@ public class CriCheckingService {
                                     .orElseThrow(
                                             () ->
                                                     new HttpResponseExceptionWithErrorBody(
-                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
                 var jr = journeyResponse.get();

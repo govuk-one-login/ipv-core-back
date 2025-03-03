@@ -2,12 +2,11 @@ package uk.gov.di.ipv.core.callticfcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
@@ -40,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
@@ -108,7 +106,6 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
@@ -138,7 +135,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             ERROR_PROCESSING_TICF_CRI_RESPONSE)
                     .toObjectMap();
         } catch (CiExtractionException e) {
@@ -146,7 +143,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                     LogHelper.buildErrorMessage(FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_EXTRACT_CIS_FROM_VC)
                     .toObjectMap();
         } catch (Exception e) {
@@ -205,7 +202,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                                     .orElseThrow(
                                             () ->
                                                     new HttpResponseExceptionWithErrorBody(
-                                                            SC_INTERNAL_SERVER_ERROR,
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                                                             MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
                 LOGGER.info(

@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.calldcmawasynccri.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -112,7 +112,7 @@ public class DcmawAsyncCriService {
                 break;
             default:
                 throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        HttpStatusCode.INTERNAL_SERVER_ERROR,
                         ErrorResponse.INVALID_PROCESS_MOBILE_APP_JOURNEY_TYPE);
         }
 

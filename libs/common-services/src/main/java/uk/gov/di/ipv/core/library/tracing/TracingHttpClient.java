@@ -1,9 +1,5 @@
 package uk.gov.di.ipv.core.library.tracing;
 
-import com.amazonaws.xray.AWSXRay;
-import com.amazonaws.xray.AWSXRayRecorder;
-import com.amazonaws.xray.entities.Namespace;
-import com.amazonaws.xray.entities.Subsegment;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetry;
 import org.apache.logging.log4j.LogManager;
@@ -23,24 +19,21 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-// Implementation of java.net.HttpClient that includes AWS X-Ray tracing
+// Implementation of java.net.HttpClient that includes OpenTelemetry tracing and additional error
+// handling
 @ExcludeFromGeneratedCoverageReport
 public class TracingHttpClient extends HttpClient {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Duration MAX_CLIENT_AGE = Duration.ofHours(1);
     private HttpClient baseClient;
-    private final AWSXRayRecorder recorder;
     private Instant creationTime;
 
     private TracingHttpClient(HttpClient baseClient) {
         this.baseClient = baseClient;
-        this.recorder = AWSXRay.getGlobalRecorder();
         this.creationTime = Instant.now();
     }
 
@@ -56,7 +49,7 @@ public class TracingHttpClient extends HttpClient {
         // Check for client is 1hour old, and recreate if older.
         recreateBaseClientIfNecessary();
         try {
-            return sendWithTracing(request, responseBodyHandler);
+            return baseClient.send(request, responseBodyHandler);
         } catch (IOException e) {
             // In the build environment we see connection resets for idle connections in
             // the pool. Retrying uses a different connection.
@@ -64,7 +57,7 @@ public class TracingHttpClient extends HttpClient {
                 LOGGER.warn(
                         LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
                                 .with("host", request.uri().getHost()));
-                return sendWithTracing(request, responseBodyHandler);
+                return baseClient.send(request, responseBodyHandler);
             }
             throw e;
         }
@@ -138,36 +131,6 @@ public class TracingHttpClient extends HttpClient {
             this.baseClient = getOTelInstrumentedHttpClient();
             this.creationTime = Instant.now(); // Reset creation time
         }
-    }
-
-    private <T> HttpResponse<T> sendWithTracing(
-            HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-            throws IOException, InterruptedException {
-        var subsegment = recorder.beginSubsegment(request.uri().getHost());
-        addRequestInformation(subsegment, request);
-        try {
-            return baseClient.send(
-                    request, new TracingResponseHandler<>(subsegment, responseBodyHandler));
-        } catch (Exception e) {
-            subsegment.addException(e);
-            throw e;
-        } finally {
-            recorder.endSubsegment();
-        }
-    }
-
-    // Adapted from
-    // https://github.com/aws/aws-xray-sdk-java/blob/master/aws-xray-recorder-sdk-apache-http/src/main/java/com/amazonaws/xray/proxies/apache/http/TracedHttpClient.java#L103
-    private static void addRequestInformation(Subsegment subsegment, HttpRequest request) {
-        subsegment.setNamespace(Namespace.REMOTE.toString());
-
-        Map<String, Object> requestInformation = new HashMap<>();
-
-        // Resolve against `/` to strip any sensitive data from the path
-        requestInformation.put("url", request.uri().resolve("/").toString());
-        requestInformation.put("method", request.method());
-
-        subsegment.putHttp("request", requestInformation);
     }
 
     private static HttpClient getOTelInstrumentedHttpClient() {

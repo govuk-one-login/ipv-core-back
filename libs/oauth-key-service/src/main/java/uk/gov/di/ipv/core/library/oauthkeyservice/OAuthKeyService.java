@@ -8,7 +8,6 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -152,7 +151,6 @@ public class OAuthKeyService {
                                 MINUTES));
     }
 
-    @Tracing
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving JWKSet from well-known endpoint"));

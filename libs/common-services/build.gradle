@@ -21,8 +21,7 @@ dependencies {
 			libs.jacksonDataformatYaml,
 			libs.openTelemetryJavaHttpClient,
 			libs.powertoolsLogging,
-			libs.powertoolsParameters,
-			libs.powertoolsTracing
+			libs.powertoolsParameters
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
