@@ -82,7 +82,11 @@ export const generateCriStubBody = async (
       }
     : undefined;
   const mitigations = mitigatedCis
-    ? generateMitigations(mitigatedCis)
+    ? {
+        mitigatedCi: mitigatedCis,
+        cimitStubUrl: config.cimit.managementCimitUrl,
+        cimitStubApiKey: config.cimit.managementCimitApiKey,
+      }
     : undefined;
 
   return {
@@ -191,6 +195,7 @@ export const generateDcmawAsyncVcCreationBodyFromScenario = async (
   userId: string,
   criId: string,
   scenario: string,
+  mitigatedCis: string[] = [],
   nbf?: number,
 ): Promise<CriStubGenerateDcmawAsyncVcScenarioRequest> => {
   return {
@@ -201,6 +206,11 @@ export const generateDcmawAsyncVcCreationBodyFromScenario = async (
     evidence: JSON.parse(await readJsonFile(criId, scenario, "evidence")),
     queue_name: config.asyncQueue.name,
     nbf: nbf,
+    mitigated_cis: {
+      mitigatedCis: mitigatedCis,
+      cimitStubUrl: config.cimit.managementCimitUrl,
+      cimitStubApiKey: config.cimit.managementCimitApiKey,
+    },
   };
 };
 
@@ -217,9 +227,3 @@ const readJsonFile = async (
     "utf8",
   );
 };
-
-const generateMitigations = (mitigatedCi: string[]) => ({
-  mitigatedCi,
-  cimitStubUrl: config.cimit.managementCimitUrl,
-  cimitStubApiKey: config.cimit.managementCimitApiKey,
-});

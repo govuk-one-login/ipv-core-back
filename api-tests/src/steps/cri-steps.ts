@@ -435,6 +435,7 @@ When(
               this.userId,
               row.CRI,
               row.scenario,
+              [],
               expired ? EXPIRED_NBF : undefined,
             ),
           ),
@@ -488,6 +489,18 @@ When(
   async function (this: World, scenario: string): Promise<void> {
     this.userId = this.userId ?? getRandomString(16);
     this.oauthState = await enqueueVc(this.userId, scenario);
+  },
+);
+
+When(
+  /^the async DCMAW CRI produces an? '([\w-]+)' VC that mitigates the '([\w-]+)' CI$/,
+  async function (
+    this: World,
+    scenario: string,
+    mitigatedCi: string,
+  ): Promise<void> {
+    this.userId = this.userId ?? getRandomString(16);
+    this.oauthState = await enqueueVc(this.userId, scenario, [mitigatedCi]);
   },
 );
 
