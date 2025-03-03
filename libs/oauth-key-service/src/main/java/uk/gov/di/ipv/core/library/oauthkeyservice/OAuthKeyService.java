@@ -154,7 +154,12 @@ public class OAuthKeyService {
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving JWKSet from well-known endpoint"));
-            var request = HttpRequest.newBuilder().uri(jwksEndpoint).GET().build();
+            var request =
+                    HttpRequest.newBuilder()
+                            .uri(jwksEndpoint)
+                            .header("Connection", "keep-alive")
+                            .GET()
+                            .build();
             var httpResponse = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (httpResponse.statusCode() != SC_OK) {
