@@ -11,12 +11,15 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.Authenticator;
 import java.net.CookieHandler;
+import java.net.HttpRetryException;
 import java.net.ProxySelector;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -51,15 +54,25 @@ public class TracingHttpClient extends HttpClient {
         try {
             return baseClient.send(request, responseBodyHandler);
         } catch (IOException e) {
-            // In the build environment we see connection resets for idle connections in
-            // the pool. Retrying uses a different connection.
-            if (e.getMessage().contains("Connection reset")) {
-                LOGGER.warn(
-                        LogHelper.buildErrorMessage("Retrying after HTTP IOException", e)
-                                .with("host", request.uri().getHost()));
-                return baseClient.send(request, responseBodyHandler);
+            LOGGER.error("HTTP request failed with IOException", e);
+            if (e instanceof HttpTimeoutException) {
+                throw e;
             }
-            throw e;
+            // In the build environment we see connection resets for idle connections in the
+            // pool. Retrying uses a different connection.
+            if (e.getMessage().contains("Connection reset") || e instanceof HttpRetryException) {
+                LOGGER.warn(
+                        LogHelper.buildErrorMessage("Retrying after non-fatal HTTP IOException", e)
+                                .with("host", request.uri().getHost()));
+                try {
+                    return baseClient.send(request, responseBodyHandler);
+                } catch (IOException ex) {
+                    throw new UncheckedIOException(ex);
+                }
+            }
+            // Rethrow any other IOException as unchecked exception to force a crash (see PYIC-8058
+            // and linked incident INC0014124)
+            throw new UncheckedIOException(e);
         }
     }
 

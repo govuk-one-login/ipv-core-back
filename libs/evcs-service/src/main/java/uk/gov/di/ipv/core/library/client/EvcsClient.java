@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -233,15 +232,7 @@ public class EvcsClient {
                                             evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
                             checkResponseStatusCode(res);
                             return res;
-                        } catch (IOException e) {
-                            LOGGER.error(
-                                    LogHelper.buildErrorMessage(
-                                            "HTTP request failed with IOException", e));
-                            // Rethrow IOException as unchecked exception for now to force lambda to
-                            // crash (see
-                            // PYIC-8058 and linked incident INC0014124)
-                            throw new UncheckedIOException(e);
-                        } catch (EvcsServiceException e) {
+                        } catch (EvcsServiceException | IOException e) {
                             throw new NonRetryableException(e);
                         } catch (InterruptedException e) {
                             // This should never happen running in Lambda as it's single

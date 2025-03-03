@@ -27,8 +27,6 @@ import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -260,21 +258,6 @@ class EvcsClientTest {
         // Assert
         assertThrows(
                 EvcsServiceException.class,
-                () ->
-                        evcsClient.getUserVcs(
-                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
-    }
-
-    @Test
-    void testGetUserVCs_shouldRethrowUncheckedException_ifIOException() throws Exception {
-        // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new IOException("I/O error"));
-
-        // Act
-        // Assert
-        assertThrows(
-                UncheckedIOException.class,
                 () ->
                         evcsClient.getUserVcs(
                                 TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
