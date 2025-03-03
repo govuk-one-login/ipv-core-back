@@ -166,7 +166,7 @@ Feature: MFA reset journey
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
-    Rule: the user has a valid DCMAW VC
+    Rule: the user enters valid evidence into the app
       Background:
         When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
         # And the user returns from the app to core-front
@@ -194,6 +194,8 @@ Feature: MFA reset journey
         Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
         When I submit an 'end' event
         Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+
+        # User gives up
         When I submit a 'returnToRp' event
         Then I get an OAuth response
         When I use the OAuth response to get my MFA reset result
@@ -205,6 +207,8 @@ Feature: MFA reset journey
         Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
         When I submit an 'end' event
         Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+
+        # User trys again
         When I submit an 'anotherTypePhotoId' event
         Then I get a 'identify-device' page response
         When I submit an 'appTriage' event
