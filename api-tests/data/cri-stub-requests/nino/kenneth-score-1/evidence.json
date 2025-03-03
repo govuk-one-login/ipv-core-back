@@ -1,5 +1,6 @@
 {
   "type": "IdentityCheck",
+  "txn": "RB000117420948",
   "strengthScore": 1,
   "validityScore": 1,
   "checkDetails": [
