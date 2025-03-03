@@ -67,7 +67,7 @@ class SqsAuditServiceTest {
         // Arrange
         var event =
                 AuditEvent.createWithoutDeviceInformation(
-                        AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
+                        AuditEventTypes.IPV_JOURNEY_START, null, null, null, null, null);
 
         // Act
         auditService.sendAuditEvent(event);
@@ -329,7 +329,7 @@ class SqsAuditServiceTest {
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_JOURNEY_START,
                         "{\\}",
-                        new AuditEventUser("1234", "1234", "1234", "1.1.1.1"));
+                        new AuditEventUser("4321", "4321", "4321", "1.1.1.1"));
         when(mockObjectMapper.writeValueAsString(any(AuditEvent.class)))
                 .thenThrow(new JsonProcessingException("") {});
 
@@ -405,7 +405,7 @@ class SqsAuditServiceTest {
 
             var event =
                     AuditEvent.createWithoutDeviceInformation(
-                            AuditEventTypes.IPV_JOURNEY_START, null, null, null, null);
+                            AuditEventTypes.IPV_JOURNEY_START, null, null, null, null, null);
             auditService.sendAuditEvent(event);
 
             var auditException =

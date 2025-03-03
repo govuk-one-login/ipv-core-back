@@ -233,6 +233,14 @@ public class ProcessAsyncCriCredentialHandler
                             getExtensionsForAudit(verifiableCredential, isSuccessful));
             auditService.sendAuditEvent(auditEvent);
         }
+        AuditEvent genericAuditEvent =
+                AuditEvent.createWithoutDeviceInformation(
+                        AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        cri.getId(),
+                        getExtensionsForAudit(verifiableCredential, isSuccessful));
+        auditService.sendAuditEvent(genericAuditEvent);
     }
 
     void sendIpvVcConsumedAuditEvent(
@@ -247,19 +255,27 @@ public class ProcessAsyncCriCredentialHandler
                             getRestrictedAuditDataForF2F(vc));
             auditService.sendAuditEvent(auditEvent);
         }
+        AuditEvent auditEvent =
+                AuditEvent.createWithoutDeviceInformation(
+                        AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        cri.getId(),
+                        null,
+                        getRestrictedAuditDataForF2F(vc));
+        auditService.sendAuditEvent(auditEvent);
     }
 
     private void sendIpvVcErrorAuditEvent(ErrorAsyncCriResponse errorAsyncCriResponse, Cri cri) {
+        AuditEventUser auditEventUser =
+                new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
+        AuditExtensionErrorParams extensionErrorParams =
+                new AuditExtensionErrorParams.Builder()
+                        .setErrorCode(errorAsyncCriResponse.getError())
+                        .setErrorDescription(errorAsyncCriResponse.getErrorDescription())
+                        .build();
+
         if (Cri.F2F.equals(cri)) {
-            AuditEventUser auditEventUser =
-                    new AuditEventUser(errorAsyncCriResponse.getUserId(), null, null, null);
-
-            AuditExtensionErrorParams extensionErrorParams =
-                    new AuditExtensionErrorParams.Builder()
-                            .setErrorCode(errorAsyncCriResponse.getError())
-                            .setErrorDescription(errorAsyncCriResponse.getErrorDescription())
-                            .build();
-
             AuditEvent auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
                             AuditEventTypes.IPV_F2F_CRI_VC_ERROR,
@@ -270,6 +286,17 @@ public class ProcessAsyncCriCredentialHandler
                     LogHelper.buildLogMessage("Sending audit event IPV_F2F_CRI_VC_ERROR message."));
             auditService.sendAuditEvent(auditEvent);
         }
+
+        AuditEvent auditEvent =
+                AuditEvent.createWithoutDeviceInformation(
+                        AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR,
+                        configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                        auditEventUser,
+                        cri.getId(),
+                        extensionErrorParams);
+        LOGGER.info(
+                LogHelper.buildLogMessage("Sending audit event IPV_ASYNC_CRI_VC_ERROR message."));
+        auditService.sendAuditEvent(auditEvent);
     }
 
     private void submitVcToCiStorage(VerifiableCredential vc) throws CiPutException {

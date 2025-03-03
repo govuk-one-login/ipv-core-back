@@ -270,8 +270,59 @@
     }
   },
   {
+    "event_name": "IPV_ASYNC_CRI_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "credential_issuer_id": "f2f",
+    "extensions": {
+      "iss": "https://f2f-cri.stubs.account.gov.uk",
+      "evidence": [
+        {
+          "checkDetails": [
+            {
+              "checkMethod": "vri",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "checkMethod": "pvr",
+              "photoVerificationProcessLevel": 3
+            }
+          ],
+          "strengthScore": 3,
+          "type": "IdentityCheck",
+          "validityScore": 2,
+          "verificationScore": 3
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]"
+    }
+  },
+  {
     "event_name": "IPV_F2F_CRI_VC_CONSUMED",
     "component_id": "https://identity.local.account.gov.uk",
+    "restricted": {
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "KENNETH"
+            },
+            {
+              "type": "FamilyName",
+              "value": "DECERQUEIRA"
+            }
+          ]
+        }
+      ],
+      "docExpiryDate": "2033-01-18"
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_CONSUMED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "credential_issuer_id": "f2f",
     "restricted": {
       "name": [
         {
