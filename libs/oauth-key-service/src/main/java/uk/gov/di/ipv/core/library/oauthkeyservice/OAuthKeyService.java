@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedJWKSet;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -51,7 +52,7 @@ public class OAuthKeyService {
     @ExcludeFromGeneratedCoverageReport
     public OAuthKeyService(ConfigService configService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
     }
 
     @ExcludeFromGeneratedCoverageReport
