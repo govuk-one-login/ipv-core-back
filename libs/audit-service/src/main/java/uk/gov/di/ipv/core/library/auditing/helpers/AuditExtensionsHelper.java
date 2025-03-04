@@ -28,22 +28,30 @@ public class AuditExtensionsHelper {
         var vot = VcHelper.getVcVot(vc);
         var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
         var age = VcHelper.extractAgeFromCredential(vc);
+        var credentialIssuerId = vc.getCri().getId();
 
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             var identityChecks = identityCheckCredential.getEvidence();
 
             return new AuditExtensionsVcEvidence(
-                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age);
+                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age, credentialIssuerId);
         }
 
         if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
             var riskAssessments = riskAssessmentCredential.getEvidence();
 
             return new AuditExtensionsVcEvidence(
-                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age);
+                    issuer,
+                    riskAssessments,
+                    isSuccessful,
+                    vot,
+                    isUkIssued,
+                    age,
+                    credentialIssuerId);
         }
 
-        return new AuditExtensionsVcEvidence(issuer, null, isSuccessful, vot, isUkIssued, age);
+        return new AuditExtensionsVcEvidence(
+                issuer, null, isSuccessful, vot, isUkIssued, age, credentialIssuerId);
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {

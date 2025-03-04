@@ -15,5 +15,6 @@ public record AuditExtensionsVcEvidence(
         @JsonInclude(NON_NULL) Boolean successful,
         @JsonInclude(NON_NULL) Vot vot,
         @JsonInclude(NON_NULL) Boolean isUkIssued,
-        @JsonInclude(NON_NULL) Integer age)
+        @JsonInclude(NON_NULL) Integer age,
+        @JsonInclude(NON_NULL) String credential_issuer_id)
         implements AuditExtensions {}

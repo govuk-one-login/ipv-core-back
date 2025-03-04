@@ -886,7 +886,8 @@ class InitialiseIpvSessionHandlerTest {
                             Vot.PCL200,
                             Boolean.TRUE,
                             Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now())
-                                    .getYears());
+                                    .getYears(),
+                            "hmrcMigration");
             assertEquals(expectedExtension, extension);
 
             var restricted =
