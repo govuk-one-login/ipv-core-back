@@ -7,11 +7,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,5 +36,27 @@ class TracingHttpClientTest {
                 HttpResponse.BodyHandlers.ofString());
 
         verify(mockHttpClient, times(2)).send(any(), any());
+    }
+
+    @Test
+    void sendShouldRethrowIfTimeoutException() throws Exception {
+        when(mockHttpClient.send(any(), any()))
+                .thenThrow(new HttpTimeoutException("Timed out"))
+                .thenReturn(null);
+        var req = HttpRequest.newBuilder().uri(URI.create("https://example.com")).build();
+        var handler = HttpResponse.BodyHandlers.ofString();
+
+        assertThrowsExactly(HttpTimeoutException.class, () -> tracingHttpClient.send(req, handler));
+    }
+
+    @Test
+    void sendShouldThrowUncheckedExceptionIfFatalIOException() throws Exception {
+        when(mockHttpClient.send(any(), any()))
+                .thenThrow(new IOException("Something fatal"))
+                .thenReturn(null);
+        var req = HttpRequest.newBuilder().uri(URI.create("https://example.com")).build();
+        var handler = HttpResponse.BodyHandlers.ofString();
+
+        assertThrowsExactly(UncheckedIOException.class, () -> tracingHttpClient.send(req, handler));
     }
 }

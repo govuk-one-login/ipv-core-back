@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +15,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -232,7 +232,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         var output = handler.handleRequest(input, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.getStatusCode());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, output.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS,
                 toResponseClass(output, ErrorResponse.class));

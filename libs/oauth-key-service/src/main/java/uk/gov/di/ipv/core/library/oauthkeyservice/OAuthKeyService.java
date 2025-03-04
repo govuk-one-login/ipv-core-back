@@ -8,7 +8,6 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
@@ -16,6 +15,7 @@ import uk.gov.di.ipv.core.library.exceptions.ConfigParameterNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.oauthkeyservice.domain.CachedJWKSet;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
 import java.net.URI;
@@ -52,7 +52,7 @@ public class OAuthKeyService {
     @ExcludeFromGeneratedCoverageReport
     public OAuthKeyService(ConfigService configService) {
         this.configService = configService;
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = TracingHttpClient.newHttpClient();
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -152,7 +152,6 @@ public class OAuthKeyService {
                                 MINUTES));
     }
 
-    @Tracing
     private JWKSet getJWKSetFromJwksEndpoint(URI jwksEndpoint) {
         try {
             LOGGER.info(LogHelper.buildLogMessage("Retrieving JWKSet from well-known endpoint"));

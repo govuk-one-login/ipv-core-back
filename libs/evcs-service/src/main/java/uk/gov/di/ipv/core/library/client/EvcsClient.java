@@ -5,11 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -27,7 +26,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.tracing.TracingHttpClient;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -41,8 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.apache.http.HttpHeaders.AUTHORIZATION;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.EVCS_APPLICATION_URL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_MESSAGE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
@@ -73,7 +71,6 @@ public class EvcsClient {
         this.sleeper = sleeper;
     }
 
-    @Tracing
     public EvcsGetUserVCsDto getUserVcs(
             String userId, String evcsAccessToken, List<EvcsVCState> vcStatesToQueryFor)
             throws EvcsServiceException {
@@ -109,7 +106,6 @@ public class EvcsClient {
         }
     }
 
-    @Tracing
     public void storeUserVCs(String userId, List<EvcsCreateUserVCsDto> userVCsForEvcs)
             throws EvcsServiceException {
         LOGGER.info(
@@ -137,7 +133,6 @@ public class EvcsClient {
         }
     }
 
-    @Tracing
     public void updateUserVCs(String userId, List<EvcsUpdateUserVCsDto> evcsUserVCsToUpdate)
             throws EvcsServiceException {
         LOGGER.info(
@@ -237,15 +232,7 @@ public class EvcsClient {
                                             evcsHttpRequest, HttpResponse.BodyHandlers.ofString());
                             checkResponseStatusCode(res);
                             return res;
-                        } catch (IOException e) {
-                            LOGGER.error(
-                                    LogHelper.buildErrorMessage(
-                                            "HTTP request failed with IOException", e));
-                            // Rethrow IOException as unchecked exception for now to force lambda to
-                            // crash (see
-                            // PYIC-8058 and linked incident INC0014124)
-                            throw new UncheckedIOException(e);
-                        } catch (EvcsServiceException e) {
+                        } catch (EvcsServiceException | IOException e) {
                             throw new NonRetryableException(e);
                         } catch (InterruptedException e) {
                             // This should never happen running in Lambda as it's single

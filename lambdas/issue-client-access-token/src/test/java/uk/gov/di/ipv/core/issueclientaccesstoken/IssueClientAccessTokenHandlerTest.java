@@ -16,12 +16,12 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
@@ -141,7 +141,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), errorResponse.getCode());
         assertEquals(
                 OAuth2Error.INVALID_REQUEST.getDescription() + ": Missing grant_type parameter",
@@ -160,7 +160,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
         assertEquals(
                 OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(),
@@ -180,7 +180,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
         assertEquals(
                 OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(),
@@ -206,7 +206,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
         assertEquals(
                 "The supplied authorization code was not found in the database",
@@ -230,7 +230,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
         assertEquals("Error", errorResponse.getDescription());
     }
@@ -255,7 +255,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatusCode.BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
         assertEquals("Authorization code expired", errorResponse.getDescription());
     }
@@ -276,7 +276,7 @@ class IssueClientAccessTokenHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, mockContext);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatusCode.UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
         assertEquals("Client authentication failed", errorResponse.getDescription());
     }
@@ -408,7 +408,7 @@ class IssueClientAccessTokenHandlerTest {
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {
-        HTTPResponse httpErrorResponse = new HTTPResponse(HttpStatus.SC_BAD_REQUEST);
+        HTTPResponse httpErrorResponse = new HTTPResponse(HttpStatusCode.BAD_REQUEST);
         httpErrorResponse.setContentType(ContentType.APPLICATION_JSON.getType());
         httpErrorResponse.setBody(responseBody);
         return ErrorObject.parse(httpErrorResponse);

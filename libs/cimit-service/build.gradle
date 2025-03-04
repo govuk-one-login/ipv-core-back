@@ -7,11 +7,11 @@ plugins {
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
+			libs.apacheHttpCore,
 			libs.awsSdkUrlConnectionClient,
 			libs.jacksonDatabind,
 			libs.powertoolsLogging,
 			libs.powertoolsParameters,
-			libs.powertoolsTracing,
 			project(":libs:common-services"),
 			project(":libs:verifiable-credentials")
 

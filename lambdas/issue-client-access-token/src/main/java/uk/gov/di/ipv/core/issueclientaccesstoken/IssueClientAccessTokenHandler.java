@@ -13,13 +13,12 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationException;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
@@ -84,7 +83,6 @@ public class IssueClientAccessTokenHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
@@ -193,7 +191,7 @@ public class IssueClientAccessTokenHandler
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
+                    HttpStatusCode.OK, accessTokenResponse.toJSONObject());
         } catch (ParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
@@ -236,7 +234,7 @@ public class IssueClientAccessTokenHandler
     private int getHttpStatusCodeForErrorResponse(ErrorObject errorObject) {
         return errorObject.getHTTPStatusCode() > 0
                 ? errorObject.getHTTPStatusCode()
-                : HttpStatus.SC_BAD_REQUEST;
+                : HttpStatusCode.BAD_REQUEST;
     }
 
     private boolean redirectUrlsDoNotMatch(

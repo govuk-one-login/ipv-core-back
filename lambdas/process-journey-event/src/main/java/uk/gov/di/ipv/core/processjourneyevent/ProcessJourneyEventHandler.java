@@ -2,15 +2,13 @@ package uk.gov.di.ipv.core.processjourneyevent;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.util.StringUtils;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -65,7 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
+import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
@@ -140,7 +138,6 @@ public class ProcessJourneyEventHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(JourneyRequest journeyRequest, Context context) {
@@ -200,13 +197,13 @@ public class ProcessJourneyEventHandler
                     e.getResponseCode(), e.getErrorResponse());
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+                    HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         } catch (IpvSessionNotFoundException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (EvcsServiceException | CredentialParseException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_EVCS_RESPONSE);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
@@ -380,7 +377,7 @@ public class ProcessJourneyEventHandler
             ipvSessionItem.pushState(
                     new JourneyState(basicState.getJourneyType(), basicState.getName()));
             var ctx = basicState.getJourneyContext();
-            if (!StringUtils.isNullOrEmpty(ctx)) {
+            if (ctx != null && !ctx.isEmpty()) {
                 ipvSessionItem.setJourneyContext(ctx);
             }
         }

@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.ticf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.RestCriConfig;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -120,7 +120,7 @@ class TicfCriServiceTest {
                 .thenReturn(List.of(M1B_DCMAW_VC));
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(VC_ADDRESS));
@@ -154,7 +154,7 @@ class TicfCriServiceTest {
                 .thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
 
         ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem);
@@ -214,7 +214,7 @@ class TicfCriServiceTest {
                 .thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn("🐛");
 
         assertThrows(
@@ -231,7 +231,7 @@ class TicfCriServiceTest {
                 .thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponseWithoutCreds));
 
@@ -252,7 +252,7 @@ class TicfCriServiceTest {
                 .thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponseWithoutCreds));
 
@@ -273,7 +273,7 @@ class TicfCriServiceTest {
                 .thenReturn(ticfCriConfig);
         when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(
                         any(), any(), eq(List.of(someCredential)), any(), any()))

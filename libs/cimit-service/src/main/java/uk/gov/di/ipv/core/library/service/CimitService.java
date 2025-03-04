@@ -3,11 +3,10 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.net.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.domain.CimitApiResponse;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiApiRequest;
@@ -35,7 +34,7 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 import static com.nimbusds.oauth2.sdk.http.HTTPResponse.SC_OK;
-import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 
 public class CimitService {
@@ -82,7 +81,6 @@ public class CimitService {
         this.ipvSessionService = ipvSessionService;
     }
 
-    @Tracing
     public void submitVC(VerifiableCredential vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
         LOGGER.info(LogHelper.buildLogMessage("Sending VC to CIMIT."));
@@ -95,7 +93,6 @@ public class CimitService {
         }
     }
 
-    @Tracing
     public void submitMitigatingVcList(
             List<VerifiableCredential> vcs, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
@@ -129,7 +126,6 @@ public class CimitService {
         return vc;
     }
 
-    @Tracing
     private VerifiableCredential fetchContraIndicatorsVc(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {

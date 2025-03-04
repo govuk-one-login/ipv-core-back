@@ -5,12 +5,11 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.dto.CheckMobileAppVcReceiptRequest;
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAppVcReceiptRequestException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -95,7 +94,6 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public APIGatewayProxyResponseEvent handleRequest(
@@ -107,36 +105,39 @@ public class CheckMobileAppVcReceiptHandler
 
             if (journeyResponse != null) {
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_OK, journeyResponse);
+                        HttpStatusCode.OK, journeyResponse);
             }
 
             // Frontend will continue polling
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_NOT_FOUND, "No VC found");
+                    HttpStatusCode.NOT_FOUND, "No VC found");
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            return buildErrorResponse(e, HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
+            return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
-                    e, HttpStatus.SC_BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    e, HttpStatusCode.BAD_REQUEST, ErrorResponse.IPV_SESSION_NOT_FOUND);
         } catch (InvalidCriResponseException e) {
-            return buildErrorResponse(e, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
+            return buildErrorResponse(
+                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
         } catch (CredentialParseException e) {
             return buildErrorResponse(
                     e,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (EvcsServiceException e) {
             return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
         } catch (ConfigException e) {
             return buildErrorResponse(
-                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
+                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(
-                    e, HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+                    e,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (CiExtractionException e) {
             return buildErrorResponse(
                     e,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));

@@ -4,9 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -50,7 +50,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.Boolean.TRUE;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.IPV_SESSION_NOT_FOUND;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_CHECK_TYPE;
@@ -110,7 +109,6 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
     }
 
     @Override
-    @Tracing
     @Logging(clearState = true)
     @Metrics(captureColdStart = true)
     public Map<String, Object> handleRequest(ProcessRequest request, Context context) {
@@ -205,7 +203,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             LOGGER.error(LogHelper.buildErrorMessage("Unable to parse existing credentials", e));
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
-                            SC_INTERNAL_SERVER_ERROR,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
                             FAILED_TO_PARSE_ISSUED_CREDENTIALS)
                     .toObjectMap();
         } catch (UnknownCoiCheckTypeException e) {
@@ -213,12 +211,16 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     LogHelper.buildErrorMessage("Unknown COI check type received", e)
                             .with(LOG_CHECK_TYPE.getFieldName(), e.getCheckType()));
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, UNKNOWN_CHECK_TYPE)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                            UNKNOWN_CHECK_TYPE)
                     .toObjectMap();
         } catch (IpvSessionNotFoundException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Failed to find ipv session", e));
             return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, SC_INTERNAL_SERVER_ERROR, IPV_SESSION_NOT_FOUND)
+                            JOURNEY_ERROR_PATH,
+                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                            IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));

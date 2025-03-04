@@ -2,8 +2,7 @@ package uk.gov.di.ipv.core.library.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.utils.URIBuilder;
+import org.apache.hc.core5.net.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
@@ -27,8 +27,6 @@ import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -39,8 +37,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.apache.http.HttpHeaders.AUTHORIZATION;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.apache.hc.core5.http.HttpHeaders.AUTHORIZATION;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.inOrder;
@@ -141,7 +142,7 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
 
@@ -175,7 +176,7 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(
                         OBJECT_MAPPER.writeValueAsString(
@@ -263,26 +264,11 @@ class EvcsClientTest {
     }
 
     @Test
-    void testGetUserVCs_shouldRethrowUncheckedException_ifIOException() throws Exception {
-        // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new IOException("I/O error"));
-
-        // Act
-        // Assert
-        assertThrows(
-                UncheckedIOException.class,
-                () ->
-                        evcsClient.getUserVcs(
-                                TEST_USER_ID, TEST_EVCS_ACCESS_TOKEN, VC_STATES_FOR_QUERY));
-    }
-
-    @Test
     void testGetUserVCs_shouldThrowException_ifResponseBodyParsingFail() throws Exception {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_OK);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn("🐛");
         // Act
         // Assert
@@ -312,7 +298,7 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_ACCEPTED);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
@@ -353,7 +339,7 @@ class EvcsClientTest {
         // Arrange
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockHttpResponse);
-        when(mockHttpResponse.statusCode()).thenReturn(HttpStatus.SC_ACCEPTED);
+        when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
                 mockStatic(HttpRequest.BodyPublishers.class, CALLS_REAL_METHODS)) {
