@@ -17,7 +17,7 @@ public class LocalAuditService implements AuditService {
 
     private static final Deque<AuditEvent> AUDIT_EVENTS = new ConcurrentLinkedDeque<>();
 
-    private Deque<AuditEvent> pendingAuditEvents = new ConcurrentLinkedDeque<>();
+    private final Deque<AuditEvent> pendingAuditEvents = new ConcurrentLinkedDeque<>();
 
     public static List<AuditEvent> getAuditEvents(String userId) {
         return AUDIT_EVENTS.stream()
@@ -35,15 +35,18 @@ public class LocalAuditService implements AuditService {
 
     @Override
     public void sendAuditEvent(AuditEvent auditEvent) throws AuditException {
-        pendingAuditEvents.add(auditEvent);
+        pendingAuditEvents.addLast(auditEvent);
         LOGGER.info(
                 LogHelper.buildLogMessage("Sending audit event")
                         .with("event", auditEvent.getEventName()));
     }
 
     @Override
-    public synchronized void awaitAuditEvents() {
-        AUDIT_EVENTS.addAll(pendingAuditEvents);
-        pendingAuditEvents = new ConcurrentLinkedDeque<>();
+    public void awaitAuditEvents() {
+        var next = pendingAuditEvents.pollFirst();
+        while (next != null) {
+            AUDIT_EVENTS.addLast(next);
+            next = pendingAuditEvents.pollFirst();
+        }
     }
 }
