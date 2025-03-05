@@ -17,4 +17,16 @@ public record AuditExtensionsVcEvidence(
         @JsonInclude(NON_NULL) Boolean isUkIssued,
         @JsonInclude(NON_NULL) Integer age,
         @JsonInclude(NON_NULL) String credential_issuer_id)
-        implements AuditExtensions {}
+        implements AuditExtensions {
+
+    // Constructor without credential_issuer_id
+    public AuditExtensionsVcEvidence(
+            String iss,
+            List<?> evidence,
+            Boolean successful,
+            Vot vot,
+            Boolean isUkIssued,
+            Integer age) {
+        this(iss, evidence, successful, vot, isUkIssued, age, null);
+    }
+}

@@ -10,7 +10,7 @@ class AuditExtensionsVcEvidenceTest {
     void shouldInitWithNullEvidence() {
         var auditExtensions =
                 new AuditExtensionsVcEvidence(
-                        "http://issuer.example.com", null, false, null, null, null, null);
+                        "http://issuer.example.com", null, false, null, null, null);
         assertNull(auditExtensions.evidence());
     }
 }

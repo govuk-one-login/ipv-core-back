@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionCriId;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditIncCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -212,7 +214,7 @@ public class ProcessAsyncCriCredentialHandler
             submitVcToCiStorage(vc);
             postMitigatingVc(vc);
             evcsService.storePendingVc(vc);
-            sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri, VcHelper.isSuccessfulVc(vc));
+            sendIpvVcConsumedAuditEvent(auditEventUser, vc, cri);
         }
     }
 
@@ -236,13 +238,12 @@ public class ProcessAsyncCriCredentialHandler
                         AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        getExtensionsForAudit(verifiableCredential, isSuccessful));
+                        getExtensionsForAuditIncCriId(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(genericAuditEvent);
     }
 
     void sendIpvVcConsumedAuditEvent(
-            AuditEventUser auditEventUser, VerifiableCredential vc, Cri cri, boolean isSuccessful)
-            throws UnrecognisedVotException {
+            AuditEventUser auditEventUser, VerifiableCredential vc, Cri cri) {
         if (Cri.F2F.equals(cri)) {
             AuditEvent auditEvent =
                     AuditEvent.createWithoutDeviceInformation(
@@ -253,12 +254,15 @@ public class ProcessAsyncCriCredentialHandler
                             getRestrictedAuditDataForF2F(vc));
             auditService.sendAuditEvent(auditEvent);
         }
+
+        AuditExtensionCriId extension = new AuditExtensionCriId(cri.getId());
+
         AuditEvent auditEvent =
                 AuditEvent.createWithoutDeviceInformation(
                         AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED,
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
-                        getExtensionsForAudit(vc, isSuccessful),
+                        extension,
                         getRestrictedAuditDataForF2F(vc));
         auditService.sendAuditEvent(auditEvent);
     }
