@@ -89,15 +89,23 @@ nestedJourneyStates:
       context: iphone
     events:
       next:
-        targetState: STRATEGIC_APP_HANDLE_RESULT
-        targetEntryEvent: check-mobile-app-result
+        exitEventToEmit: next
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        exitEventToEmit: anotherWay
+      incompleteDlAuthCheckInvalidDl:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl
+      failedDlAuthCheckInvalidDl:
+        exitEventToEmit: failedDlAuthCheckInvalidDl
+      retryApp:
+        targetState: IDENTIFY_DEVICE
       preferNoApp:
         targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-      anotherWay:
-        exitEventToEmit: anotherWay
 
   DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
@@ -116,15 +124,23 @@ nestedJourneyStates:
       context: android
     events:
       next:
-        targetState: STRATEGIC_APP_HANDLE_RESULT
-        targetEntryEvent: check-mobile-app-result
+        exitEventToEmit: next
+      error:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR
+      anotherWay:
+        exitEventToEmit: anotherWay
+      incompleteDlAuthCheckInvalidDl:
+        exitEventToEmit: incompleteDlAuthCheckInvalidDl
+      failedDlAuthCheckInvalidDl:
+        exitEventToEmit: failedDlAuthCheckInvalidDl
+      retryApp:
+        targetState: IDENTIFY_DEVICE
       preferNoApp:
         targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
         checkJourneyContext:
           internationalAddress:
             targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-      anotherWay:
-        exitEventToEmit: anotherWay
 
   DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
     response:
