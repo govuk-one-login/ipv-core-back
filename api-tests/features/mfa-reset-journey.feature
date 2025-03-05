@@ -166,82 +166,103 @@ Feature: MFA reset journey
       When I use the OAuth response to get my MFA reset result
       Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
-    Rule: the user enters valid evidence into the app
-      Background:
-        When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
-        # And the user returns from the app to core-front
-        And I pass on the DCMAW callback
-        Then I get a 'check-mobile-app-result' page response
-        When I poll for async DCMAW credential receipt
-        Then the poll returns a '201'
-        When I submit the returned journey event
-        Then I get a 'drivingLicence' CRI response
+    @InitialisesDCMAWSessionState
+    Scenario: MAM, successful
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'we-matched-you-to-your-one-login' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get a successful MFA reset result
 
-      @InitialisesDCMAWSessionState
-      Scenario: MAM, successful
-        When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
-          | Attribute | Values          |
-          | context   | "check_details" |
-        Then I get a 'we-matched-you-to-your-one-login' page response
-        When I submit a 'next' event
-        Then I get an OAuth response
-        When I use the OAuth response to get my MFA reset result
-        Then I get a successful MFA reset result
+    @InitialisesDCMAWSessionState
+    Scenario: MAM, incomplete DL auth check
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response with context 'noF2f'
 
-      @InitialisesDCMAWSessionState
-      Scenario: MAM, incomplete DL auth check
-        When I call the CRI stub and get an 'access_denied' OAuth error
-        Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
-        When I submit an 'end' event
-        Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+      # User gives up
+      When I submit a 'returnToRp' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
 
-        # User gives up
-        When I submit a 'returnToRp' event
-        Then I get an OAuth response
-        When I use the OAuth response to get my MFA reset result
-        Then I get an unsuccessful MFA reset result with failure code 'identity_check_incomplete'
+    @InitialisesDCMAWSessionState
+    Scenario: MAM, retry from incomplete DL auth check
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I call the CRI stub and get an 'access_denied' OAuth error
+      Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
+      When I submit an 'end' event
+      Then I get a 'prove-identity-another-way' page response with context 'noF2f'
 
-      @InitialisesDCMAWSessionState
-      Scenario: MAM, retry from incomplete DL auth check
-        When I call the CRI stub and get an 'access_denied' OAuth error
-        Then I get a 'uk-driving-licence-details-not-correct' page response with context 'strategicApp'
-        When I submit an 'end' event
-        Then I get a 'prove-identity-another-way' page response with context 'noF2f'
+      # User trys again
+      When I submit an 'anotherTypePhotoId' event
+      Then I get a 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get a 'we-matched-you-to-your-one-login' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get a successful MFA reset result
 
-        # User trys again
-        When I submit an 'anotherTypePhotoId' event
-        Then I get a 'identify-device' page response
-        When I submit an 'appTriage' event
-        Then I get a 'pyi-triage-select-device' page response
-        When I submit a 'smartphone' event
-        Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
-        When I submit an 'iphone' event
-        Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
-        When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
-        # And the user returns from the app to core-front
-        And I pass on the DCMAW callback
-        Then I get a 'check-mobile-app-result' page response
-        When I poll for async DCMAW credential receipt
-        Then the poll returns a '201'
-        When I submit the returned journey event
-        Then I get a 'drivingLicence' CRI response
-        When I submit 'kenneth-driving-permit-valid' details with attributes to the CRI stub
-          | Attribute | Values          |
-          | context   | "check_details" |
-        Then I get a 'we-matched-you-to-your-one-login' page response
-        When I submit a 'next' event
-        Then I get an OAuth response
-        When I use the OAuth response to get my MFA reset result
-        Then I get a successful MFA reset result
-
-      @InitialisesDCMAWSessionState
-      Scenario: MAM, alternate doc failure
-        When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
-          | Attribute | Values          |
-          | context   | "check_details" |
-        Then I get an OAuth response
-        When I use the OAuth response to get my MFA reset result
-        Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
+    @InitialisesDCMAWSessionState
+    Scenario: MAM, alternate doc failure
+      When the async DCMAW CRI produces a 'kenneth-driving-permit-valid' VC
+      # And the user returns from the app to core-front
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'drivingLicence' CRI response
+      When I submit 'kenneth-driving-permit-needs-alternate-doc' details with attributes to the CRI stub
+        | Attribute | Values          |
+        | context   | "check_details" |
+      Then I get an OAuth response
+      When I use the OAuth response to get my MFA reset result
+      Then I get an unsuccessful MFA reset result with failure code 'identity_check_failed'
 
   Rule: The user has no existing identity
     Scenario: Attempted MFA reset journey
