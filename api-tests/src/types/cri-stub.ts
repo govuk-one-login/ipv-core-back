@@ -57,4 +57,9 @@ export interface CriStubGenerateDcmawAsyncVcScenarioRequest {
   credential_subject?: object;
   evidence?: object;
   nbf?: number;
+  mitigated_cis?: {
+    mitigatedCis: string[];
+    cimitStubUrl: string;
+    cimitStubApiKey: string;
+  };
 }

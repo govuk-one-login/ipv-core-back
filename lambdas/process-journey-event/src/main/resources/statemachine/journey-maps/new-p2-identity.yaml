@@ -1068,26 +1068,19 @@ states:
       next:
         targetState: RETURN_TO_RP
       coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: RETURN_TO_RP
       vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: RETURN_TO_RP
       profile-unmet:
-        targetJourney: FAILED
-        targetState: FAILED
+        targetState: RETURN_TO_RP
       fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        targetState: RETURN_TO_RP
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
