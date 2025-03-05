@@ -39,6 +39,58 @@
     }
   },
   {
+    "event_name": "IPV_ASYNC_CRI_VC_RECEIVED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "iss": "https://dcmaw-async.stubs.account.gov.uk",
+      "credential_issuer_id": "dcmawAsync",
+      "evidence": [
+        {
+          "type": "IdentityCheck",
+          "strengthScore": 4,
+          "validityScore": 3,
+          "checkDetails": [
+            {
+              "checkMethod": "vcrypt",
+              "identityCheckPolicy": "published"
+            },
+            {
+              "checkMethod": "bvr",
+              "biometricVerificationProcessLevel": 3
+            }
+          ]
+        }
+      ],
+      "successful": true,
+      "isUkIssued": true,
+      "age": "type[number]"
+    }
+  },
+  {
+    "event_name": "IPV_ASYNC_CRI_VC_CONSUMED",
+    "component_id": "https://identity.local.account.gov.uk",
+    "extensions": {
+      "credential_issuer_id": "dcmawAsync"
+    },
+    "restricted": {
+      "name": [
+        {
+          "nameParts": [
+            {
+              "type": "GivenName",
+              "value": "Kenneth"
+            },
+            {
+              "type": "FamilyName",
+              "value": "Decerqueira"
+            }
+          ]
+        }
+      ],
+      "docExpiryDate": "2030-01-01"
+    }
+  },
+  {
     "event_name": "IPV_JOURNEY_START",
     "component_id": "https://identity.local.account.gov.uk",
     "extensions": {

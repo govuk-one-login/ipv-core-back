@@ -9,11 +9,12 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 public class AuditExtensionCriId implements AuditExtensions {
 
-    @JsonProperty("cri")
+    @JsonProperty("credential_issuer_id")
     private final String criId;
 
     @JsonCreator
-    public AuditExtensionCriId(@JsonProperty(value = "cri", required = true) String criId) {
+    public AuditExtensionCriId(
+            @JsonProperty(value = "credential_issuer_id", required = true) String criId) {
         this.criId = criId;
     }
 }

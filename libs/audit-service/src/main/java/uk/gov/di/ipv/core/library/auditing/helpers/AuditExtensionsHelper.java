@@ -46,6 +46,32 @@ public class AuditExtensionsHelper {
         return new AuditExtensionsVcEvidence(issuer, null, isSuccessful, vot, isUkIssued, age);
     }
 
+    public static AuditExtensionsVcEvidence getExtensionsForAuditIncCriId(
+            VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
+        var issuer = vc.getClaimsSet().getIssuer();
+        var vot = VcHelper.getVcVot(vc);
+        var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
+        var age = VcHelper.extractAgeFromCredential(vc);
+        var criId = vc.getCri().getId();
+
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+            var identityChecks = identityCheckCredential.getEvidence();
+
+            return new AuditExtensionsVcEvidence(
+                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age, criId);
+        }
+
+        if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
+            var riskAssessments = riskAssessmentCredential.getEvidence();
+
+            return new AuditExtensionsVcEvidence(
+                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age, criId);
+        }
+
+        return new AuditExtensionsVcEvidence(
+                issuer, null, isSuccessful, vot, isUkIssued, age, criId);
+    }
+
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject()
                 instanceof IdentityCheckSubject credentialSubject) {

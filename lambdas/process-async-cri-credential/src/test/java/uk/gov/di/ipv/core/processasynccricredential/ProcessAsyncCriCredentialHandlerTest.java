@@ -147,10 +147,11 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(0, batchResponse.getBatchItemFailures().size());
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        assertEquals(1, auditEvents.size());
+        assertEquals(2, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(1).getEventName());
         assertEquals(CriResponseService.STATUS_ERROR, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
@@ -168,10 +169,11 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(0, batchResponse.getBatchItemFailures().size());
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        assertEquals(1, auditEvents.size());
+        assertEquals(2, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_ERROR, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_ERROR, auditEvents.get(1).getEventName());
         assertEquals(CriResponseService.STATUS_ABANDON, TEST_CRI_RESPONSE_ITEM.getStatus());
     }
 
@@ -240,10 +242,11 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         verifyVerifiableCredentialJwtValidator();
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        assertEquals(1, auditEvents.size());
+        assertEquals(2, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED, auditEvents.get(1).getEventName());
 
         verify(evcsService, never()).storePendingVc(any());
 
@@ -269,7 +272,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
         verifyVerifiableCredentialJwtValidator();
-        verify(auditService, times(1))
+        verify(auditService, times(2))
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(cimitService, times(1)).submitVC(any(), any(), any());
         verify(evcsService, never()).storePendingVc(any());
@@ -336,11 +339,13 @@ class ProcessAsyncCriCredentialHandlerTest {
 
     private void verifyAuditService() {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        verify(auditService, times(4)).sendAuditEvent(auditEventCaptor.capture());
         List<AuditEvent> auditEvents = auditEventCaptor.getAllValues();
-        assertEquals(2, auditEvents.size());
+        assertEquals(4, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
-        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_RECEIVED, auditEvents.get(1).getEventName());
+        assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(2).getEventName());
+        assertEquals(AuditEventTypes.IPV_ASYNC_CRI_VC_CONSUMED, auditEvents.get(3).getEventName());
     }
 
     private void verifyCiStorageServicePutContraIndicators() throws Exception {
