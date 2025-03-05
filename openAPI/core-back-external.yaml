@@ -127,6 +127,11 @@ paths:
       responses:
         200:
           description: "The list of public keys"
+          headers:
+            Cache-Control:
+              description: "Cache-Control header"
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -153,6 +158,8 @@ paths:
         responses:
           default:
             statusCode: 200
+            responseParameters:
+              method.response.header.Cache-Control: "'max-age=300'"
           \[45\]\d{2}:
             statusCode: 500
 
