@@ -2,11 +2,13 @@
   "name": "ipv-core-journey-map",
   "version": "0.0.1",
   "description": "Generate an interactive IPV core journey map",
-  "main": "server.js",
-  "type": "module",
+  "main": "src/server.ts",
   "author": "Government Digital Service",
   "license": "MIT",
   "scripts": {
+    "start": "NODE_ENV=development ts-node src/server.ts",
+    "start-build": "node --enable-source-maps build/server.js",
+    "tsc": "tsc",
     "lint": "eslint . && prettier . --check",
     "lint-fix": "eslint --fix . && prettier . --write"
   },
@@ -15,9 +17,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.11.0",
+    "@types/express": "^5.0.0",
     "eslint": "^9.11.0",
     "eslint-config-prettier": "^9.1.0",
     "globals": "^15.9.0",
-    "prettier": "3.3.3"
+    "prettier": "^3.5.1",
+    "ts-node": "^10.9.2"
   }
 }
