@@ -14,6 +14,8 @@ import uk.gov.di.model.IdentityCheckCredential;
 import uk.gov.di.model.IdentityCheckSubject;
 import uk.gov.di.model.RiskAssessmentCredential;
 
+import java.util.List;
+
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 
 public class AuditExtensionsHelper {
@@ -24,52 +26,30 @@ public class AuditExtensionsHelper {
 
     public static AuditExtensionsVcEvidence getExtensionsForAudit(
             VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
-        var issuer = vc.getClaimsSet().getIssuer();
-        var vot = VcHelper.getVcVot(vc);
-        var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
-        var age = VcHelper.extractAgeFromCredential(vc);
-
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            var identityChecks = identityCheckCredential.getEvidence();
-
-            return new AuditExtensionsVcEvidence(
-                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age);
-        }
-
-        if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
-            var riskAssessments = riskAssessmentCredential.getEvidence();
-
-            return new AuditExtensionsVcEvidence(
-                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age);
-        }
-
-        return new AuditExtensionsVcEvidence(issuer, null, isSuccessful, vot, isUkIssued, age);
+        return getExtensionsForAudit(vc, isSuccessful, null);
     }
 
-    public static AuditExtensionsVcEvidence getExtensionsForAuditIncCriId(
+    public static AuditExtensionsVcEvidence getExtensionsForAuditWithCriId(
             VerifiableCredential vc, Boolean isSuccessful) throws UnrecognisedVotException {
+        return getExtensionsForAudit(vc, isSuccessful, vc.getCri().getId());
+    }
+
+    private static AuditExtensionsVcEvidence getExtensionsForAudit(
+            VerifiableCredential vc, Boolean isSuccessful, String cridId)
+            throws UnrecognisedVotException {
         var issuer = vc.getClaimsSet().getIssuer();
         var vot = VcHelper.getVcVot(vc);
         var isUkIssued = VcHelper.checkIfDocUKIssuedForCredential(vc);
         var age = VcHelper.extractAgeFromCredential(vc);
-        var criId = vc.getCri().getId();
-
+        List<?> evidence = null;
         if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
-            var identityChecks = identityCheckCredential.getEvidence();
-
-            return new AuditExtensionsVcEvidence(
-                    issuer, identityChecks, isSuccessful, vot, isUkIssued, age, criId);
+            evidence = identityCheckCredential.getEvidence();
         }
-
         if (vc.getCredential() instanceof RiskAssessmentCredential riskAssessmentCredential) {
-            var riskAssessments = riskAssessmentCredential.getEvidence();
-
-            return new AuditExtensionsVcEvidence(
-                    issuer, riskAssessments, isSuccessful, vot, isUkIssued, age, criId);
+            evidence = riskAssessmentCredential.getEvidence();
         }
-
         return new AuditExtensionsVcEvidence(
-                issuer, null, isSuccessful, vot, isUkIssued, age, criId);
+                issuer, evidence, isSuccessful, vot, isUkIssued, age, cridId);
     }
 
     public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {

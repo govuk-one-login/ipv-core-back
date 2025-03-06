@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
-import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditIncCriId;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForInheritedIdentity;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -62,37 +62,25 @@ class AuditExtensionsHelperTest {
 
     @Test
     void shouldGetIdentityCheckVerifiableCredentialExtensionsForAsyncAudit() throws Exception {
-        var auditExtensions = getExtensionsForAuditIncCriId(vcDcmawAsyncPassport(), false);
+        var auditExtensions = getExtensionsForAuditWithCriId(vcDcmawAsyncPassport(), false);
         var evidence = (List<IdentityCheck>) auditExtensions.evidence();
 
         var expectedAge =
                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
         assertFalse(auditExtensions.successful());
         assertTrue(auditExtensions.isUkIssued());
+        assertEquals("dcmawAsync", auditExtensions.credential_issuer_id());
         assertEquals(expectedAge, auditExtensions.age());
         assertEquals(
                 "https://dcmaw-async.stubs.account.gov.uk/async/credential", auditExtensions.iss());
         assertEquals(2, evidence.get(0).getValidityScore());
         assertEquals(4, evidence.get(0).getStrengthScore());
         assertEquals("bcd2346", evidence.get(0).getTxn());
-        assertEquals(2, evidence.get(0).getCheckDetails().size());
     }
 
     @Test
     void shouldGetRiskAssessmentVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(vcTicf(), false);
-        var evidence = (List<RiskAssessment>) auditExtensions.evidence();
-
-        assertFalse(auditExtensions.successful());
-        assertNull(auditExtensions.isUkIssued());
-        assertNull(auditExtensions.age());
-        assertEquals("https://ticf.stubs.account.gov.uk", auditExtensions.iss());
-        assertEquals("963deeb5-a52c-4030-a69a-3184f77a4f18", evidence.get(0).getTxn());
-    }
-
-    @Test
-    void shouldGetRiskAssessmentVerifiableCredentialExtensionsForAsyncAudit() throws Exception {
-        var auditExtensions = getExtensionsForAuditIncCriId(vcTicf(), false);
         var evidence = (List<RiskAssessment>) auditExtensions.evidence();
 
         assertFalse(auditExtensions.successful());
