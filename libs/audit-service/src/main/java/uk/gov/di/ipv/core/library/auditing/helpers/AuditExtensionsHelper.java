@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.auditing.helpers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedAsync;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedInheritedIdentity;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
@@ -52,7 +52,7 @@ public class AuditExtensionsHelper {
                 issuer, evidence, isSuccessful, vot, isUkIssued, age, cridId);
     }
 
-    public static AuditRestrictedF2F getRestrictedAuditDataForF2F(VerifiableCredential vc) {
+    public static AuditRestrictedAsync getRestrictedAuditDataForAsync(VerifiableCredential vc) {
         if (vc.getCredential().getCredentialSubject()
                 instanceof IdentityCheckSubject credentialSubject) {
             var name = credentialSubject.getName();
@@ -60,31 +60,31 @@ public class AuditExtensionsHelper {
             var passport = credentialSubject.getPassport();
             if (!isNullOrEmpty(passport)) {
                 var docExpiryDate = passport.get(0).getExpiryDate();
-                return new AuditRestrictedF2F(name, docExpiryDate);
+                return new AuditRestrictedAsync(name, docExpiryDate);
             }
 
             var drivingPermit = credentialSubject.getDrivingPermit();
             if (!isNullOrEmpty(drivingPermit)) {
                 var docExpiryDate = drivingPermit.get(0).getExpiryDate();
-                return new AuditRestrictedF2F(name, docExpiryDate);
+                return new AuditRestrictedAsync(name, docExpiryDate);
             }
 
             var brp = credentialSubject.getResidencePermit();
             if (!isNullOrEmpty(brp)) {
                 var docExpiryDate = brp.get(0).getExpiryDate();
-                return new AuditRestrictedF2F(name, docExpiryDate);
+                return new AuditRestrictedAsync(name, docExpiryDate);
             }
 
             var idCard = credentialSubject.getIdCard();
             if (!isNullOrEmpty(idCard)) {
                 var docExpiryDate = idCard.get(0).getExpiryDate();
-                return new AuditRestrictedF2F(name, docExpiryDate);
+                return new AuditRestrictedAsync(name, docExpiryDate);
             }
 
-            return new AuditRestrictedF2F(name);
+            return new AuditRestrictedAsync(name);
         } else {
             LOGGER.warn(LogHelper.buildLogMessage("VC not of type IdentityCheckCredential."));
-            return new AuditRestrictedF2F(null);
+            return new AuditRestrictedAsync(null);
         }
     }
 

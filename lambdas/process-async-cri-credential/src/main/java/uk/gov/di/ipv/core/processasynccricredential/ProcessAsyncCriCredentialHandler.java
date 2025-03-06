@@ -46,7 +46,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAuditWithCriId;
-import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForF2F;
+import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getRestrictedAuditDataForAsync;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
@@ -254,7 +254,7 @@ public class ProcessAsyncCriCredentialHandler
                             configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             null,
-                            getRestrictedAuditDataForF2F(verifiableCredential));
+                            getRestrictedAuditDataForAsync(verifiableCredential));
             auditService.sendAuditEvent(auditEvent);
         }
 
@@ -264,7 +264,7 @@ public class ProcessAsyncCriCredentialHandler
                         configService.getParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getExtensionsForAuditWithCriId(verifiableCredential, isSuccessful),
-                        getRestrictedAuditDataForF2F(verifiableCredential));
+                        getRestrictedAuditDataForAsync(verifiableCredential));
         auditService.sendAuditEvent(auditEvent);
     }
 
