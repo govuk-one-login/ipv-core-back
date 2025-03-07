@@ -884,12 +884,6 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-      coi-check-failed:
-        targetState: RETURN_TO_RP
-      vcs-not-correlated:
-        targetState: RETURN_TO_RP
-      profile-unmet:
-        targetState: RETURN_TO_RP
       fail-with-ci:
         targetState: RETURN_TO_RP
       enhanced-verification:
@@ -898,6 +892,15 @@ states:
         targetState: RETURN_TO_RP
       alternate-doc-invalid-passport:
         targetState: RETURN_TO_RP
+      coi-check-failed:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      vcs-not-correlated:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
+      profile-unmet:
+        targetJourney: TECHNICAL_ERROR
+        targetState: ERROR_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
