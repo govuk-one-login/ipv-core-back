@@ -29,6 +29,9 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -41,11 +44,14 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
+import uk.gov.di.model.ContraIndicator;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -69,6 +75,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.TECHNICAL_ERROR;
 import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
 
 @ExtendWith(MockitoExtension.class)
@@ -1093,7 +1100,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
+    @CsvSource({"false,,page-id-for-another-page-state"})
     void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
             boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
         var input =
@@ -1125,6 +1132,112 @@ class ProcessJourneyEventHandlerTest {
 
         assertEquals(expectedJourney, output.get("journey"));
         assertEquals(expectedPage, output.get("page"));
+    }
+
+    @Test
+    void shouldReturnMitigationStateIfCheckMitigationIsConfigured() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithMitigation")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                .thenReturn(List.of(new ContraIndicator()));
+        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+                .thenReturn(Optional.of("first-mitigation"));
+
+        var processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService,
+                        mockCimitUtilityService);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
+    }
+
+    private static Stream<Arguments> getContraIndicatorsFromVcErrors() {
+        return Stream.of(
+                Arguments.of(new ParseException("Unable to parse vc string", 0)),
+                Arguments.of(new CredentialParseException("Unable to parse credentials")),
+                Arguments.of(new CiExtractionException("Unable to extract CIs from VC")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("getContraIndicatorsFromVcErrors")
+    void shouldReturn500IfCimitUtilityServiceThrowsExceptionWhenGettingContraIndicators(
+            Exception exception) throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithMitigation")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenThrow(exception);
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService,
+                        mockCimitUtilityService);
+
+        var response = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
+    }
+
+    @Test
+    void shouldReturn500IfCimitUtilityServiceThrowsConfigException() throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventWithMitigation")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("PAGE_STATE");
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                .thenReturn(List.of(new ContraIndicator()));
+        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+                .thenThrow(new ConfigException("Unable to get CIMIT config."));
+
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService,
+                        mockCimitUtilityService);
+
+        var response = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
     }
 
     @Test
@@ -1173,6 +1286,7 @@ class ProcessJourneyEventHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.pushState(new JourneyState(INITIAL_JOURNEY_SELECTION, userState));
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.getInstance().generate());
+        ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
 
         when(mockConfigService.getParameter(COMPONENT_ID)).thenReturn("core");
         when(mockConfigService.getLongParameter(BACKEND_SESSION_TIMEOUT)).thenReturn(7200L);
@@ -1190,6 +1304,7 @@ class ProcessJourneyEventHandlerTest {
                 .govukSigninJourneyId("testjourneyid")
                 .userId(TEST_USER_ID)
                 .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
+                .vtr(List.of("P2"))
                 .build();
     }
 

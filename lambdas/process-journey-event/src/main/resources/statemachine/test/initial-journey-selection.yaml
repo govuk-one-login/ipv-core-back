@@ -32,6 +32,11 @@ states:
         targetState: COI_CHECK
       eventEight:
         targetState: STRATEGIC_APP_TRIAGE
+      eventWithMitigation:
+        targetState: ANOTHER_PAGE_STATE
+        checkMitigation:
+          first-mitigation:
+            targetState: CRI_STATE
 
   CRI_STATE:
     response:

@@ -338,6 +338,14 @@ public class ProcessJourneyEventHandler
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getState().subJourney().name()));
             throw new JourneyEngineException();
+        } catch (CredentialParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Unable to parse credentials.", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getState().subJourney().name()));
+            throw new JourneyEngineException();
         }
     }
 

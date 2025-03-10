@@ -157,6 +157,11 @@ public class BasicEvent implements Event {
                     (eventName, event) ->
                             initialiseEvent(event, eventName, states, nestedJourneyExitEvents));
         }
+        if (checkMitigation != null) {
+            checkMitigation.forEach(
+                    (eventName, event) ->
+                            initialiseEvent(event, eventName, states, nestedJourneyExitEvents));
+        }
     }
 
     private void initialiseEvent(
