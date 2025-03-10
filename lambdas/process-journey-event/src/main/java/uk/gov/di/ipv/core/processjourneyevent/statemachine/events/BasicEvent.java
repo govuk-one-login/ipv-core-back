@@ -6,18 +6,24 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
+import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
 
 @Data
 public class BasicEvent implements Event {
@@ -32,8 +38,13 @@ public class BasicEvent implements Event {
     private LinkedHashMap<String, Event> checkJourneyContext;
     private List<AuditEventTypes> auditEvents;
     private LinkedHashMap<String, String> auditContext;
+    private LinkedHashMap<String, Event> checkMitigation;
 
-    public TransitionResult resolve(JourneyContext journeyContext) throws UnknownEventException {
+    public TransitionResult resolve(EventResolveParameters resolveParameters)
+            throws UnknownEventException, MissingSecurityCheckCredential, CiExtractionException,
+                    CredentialParseException, ParseException, ConfigException {
+        var journeyContext = resolveParameters.journeyContext();
+
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
@@ -47,7 +58,7 @@ public class BasicEvent implements Event {
             if (firstDisabledCri.isPresent()) {
                 String disabledCriId = firstDisabledCri.get();
                 LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
-                return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
+                return checkIfDisabled.get(disabledCriId).resolve(resolveParameters);
             }
         }
         if (checkJourneyContext != null && !StringUtils.isEmpty(journeyContext.name())) {
@@ -58,7 +69,7 @@ public class BasicEvent implements Event {
             if (matchingContext.isPresent()) {
                 String contextValue = matchingContext.get();
                 LOGGER.info("Matching context '{}' is set. Using alternative event", contextValue);
-                return checkJourneyContext.get(contextValue).resolve(journeyContext);
+                return checkJourneyContext.get(contextValue).resolve(resolveParameters);
             }
         }
         if (checkFeatureFlag != null) {
@@ -73,10 +84,56 @@ public class BasicEvent implements Event {
             if (firstFeatureFlag.isPresent()) {
                 String featureFlagValue = firstFeatureFlag.get();
                 LOGGER.info("Feature flag '{}' is set. Using alternative event", featureFlagValue);
-                return checkFeatureFlag.get(featureFlagValue).resolve(journeyContext);
+                return checkFeatureFlag.get(featureFlagValue).resolve(resolveParameters);
             }
         }
+        if (checkMitigation != null) {
+            var validMitigation = getMitigationEvent(resolveParameters);
+
+            if (validMitigation.isPresent()) {
+                Optional<String> firstMitigationEvent =
+                        checkMitigation.keySet().stream()
+                                .filter(
+                                        mitigationValue ->
+                                                validMitigation.get().equals(mitigationValue))
+                                .findFirst();
+                if (firstMitigationEvent.isPresent()) {
+                    var event = firstMitigationEvent.get();
+                    LOGGER.info("Mitigation found. Starting '{}' event.", event);
+                    return checkMitigation.get(event).resolve(resolveParameters);
+                }
+            }
+        }
+
         return new TransitionResult(targetStateObj, auditEvents, auditContext, targetEntryEvent);
+    }
+
+    private Optional<String> getMitigationEvent(EventResolveParameters resolveParameters)
+            throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
+                    ParseException, ConfigException {
+        var ipvSessionItem = resolveParameters.ipvSessionItem();
+        var clientOAuthSessionItem = resolveParameters.clientOAuthSessionItem();
+        var cimitUtilityService = resolveParameters.cimitUtilityService();
+
+        var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
+
+        if (StringUtils.isEmpty(securityCheckCredential)) {
+            LOGGER.error(LogHelper.buildErrorMessage(MISSING_SECURITY_CHECK_CREDENTIAL));
+            throw new MissingSecurityCheckCredential("Missing security check credential");
+        }
+
+        var contraIndicators =
+                cimitUtilityService.getContraIndicatorsFromVc(
+                        securityCheckCredential, clientOAuthSessionItem.getUserId());
+
+        var lowestGpg45ConfidenceRequested =
+                clientOAuthSessionItem
+                        .getParsedVtr()
+                        .getLowestStrengthRequestedGpg45Vot(
+                                resolveParameters.journeyContext().configService());
+
+        return cimitUtilityService.getMitigationJourneyEvent(
+                contraIndicators, lowestGpg45ConfidenceRequested);
     }
 
     @Override

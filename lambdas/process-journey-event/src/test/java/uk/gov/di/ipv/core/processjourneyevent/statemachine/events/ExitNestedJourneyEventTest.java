@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
@@ -19,19 +22,26 @@ import static org.mockito.Mockito.when;
 class ExitNestedJourneyEventTest {
     private static final JourneyContext JOURNEY_CONTEXT =
             new JourneyContext(mock(ConfigService.class), "");
+    private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
+            new EventResolveParameters(
+                    JOURNEY_CONTEXT,
+                    new IpvSessionItem(),
+                    new ClientOAuthSessionItem(),
+                    new CimitUtilityService(mock(ConfigService.class)));
 
     @Test
-    void resolveShouldResolveEventFromNestedJourneyExitEvents() throws UnknownEventException {
+    void resolveShouldResolveEventFromNestedJourneyExitEvents() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
         BasicEvent nestedJourneyExitEvent = mock(BasicEvent.class);
-        when(nestedJourneyExitEvent.resolve(any(JourneyContext.class))).thenReturn(expectedResult);
+        when(nestedJourneyExitEvent.resolve(any(EventResolveParameters.class)))
+                .thenReturn(expectedResult);
 
         ExitNestedJourneyEvent exitNestedJourneyEvent = new ExitNestedJourneyEvent();
         exitNestedJourneyEvent.setExitEventToEmit("exiting");
         exitNestedJourneyEvent.setNestedJourneyExitEvents(
                 Map.of("exiting", nestedJourneyExitEvent));
 
-        assertEquals(expectedResult, exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
+        assertEquals(expectedResult, exitNestedJourneyEvent.resolve(EVENT_RESOLVE_PARAMETERS));
     }
 
     @Test
@@ -41,7 +51,8 @@ class ExitNestedJourneyEventTest {
         exitNestedJourneyEvent.setExitEventToEmit("not-found");
 
         assertThrows(
-                UnknownEventException.class, () -> exitNestedJourneyEvent.resolve(JOURNEY_CONTEXT));
+                UnknownEventException.class,
+                () -> exitNestedJourneyEvent.resolve(EVENT_RESOLVE_PARAMETERS));
     }
 
     @Test

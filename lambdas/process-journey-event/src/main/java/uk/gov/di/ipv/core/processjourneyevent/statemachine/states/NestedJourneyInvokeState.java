@@ -6,12 +6,17 @@ import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
@@ -33,8 +38,10 @@ public class NestedJourneyInvokeState implements State {
 
     @Override
     public TransitionResult transition(
-            String eventName, String startState, JourneyContext journeyContext)
-            throws UnknownEventException, UnknownStateException {
+            String eventName, String startState, EventResolveParameters eventResolveParameters)
+            throws UnknownEventException, UnknownStateException, CiExtractionException,
+                    CredentialParseException, ConfigException, ParseException,
+                    MissingSecurityCheckCredential {
         Queue<String> stateNameParts = getStateNameParts(startState);
 
         TransitionResult result;
@@ -46,7 +53,7 @@ public class NestedJourneyInvokeState implements State {
                                 "Unknown entry event '%s' for '%s' state nested journey definition",
                                 eventName, name));
             }
-            result = event.resolve(journeyContext);
+            result = event.resolve(eventResolveParameters);
         } else {
             stateNameParts.remove();
             State currentNestedState =
@@ -61,7 +68,7 @@ public class NestedJourneyInvokeState implements State {
                     currentNestedState.transition(
                             eventName,
                             String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
-                            journeyContext);
+                            eventResolveParameters);
         }
 
         if (result.state() instanceof NestedJourneyInvokeState) {
@@ -70,7 +77,7 @@ public class NestedJourneyInvokeState implements State {
                     .transition(
                             entryEvent,
                             String.join(JOURNEY_STATE_DELIMITER, stateNameParts),
-                            journeyContext);
+                            eventResolveParameters);
         }
 
         return result;

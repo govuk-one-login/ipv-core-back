@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
 import java.util.Map;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(MockitoExtension.class)
 class BasicStateTest {
     @Mock private ConfigService mockConfigService;
-    @InjectMocks private JourneyContext journeyContext;
+    @InjectMocks private EventResolveParameters eventResolveParameters;
 
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
@@ -32,7 +32,7 @@ class BasicStateTest {
         currentToTargetEvent.setTargetStateObj(targetState);
         currentState.setEvents(Map.of("next", currentToTargetEvent));
 
-        var result = currentState.transition("next", "startState", journeyContext);
+        var result = currentState.transition("next", "startState", eventResolveParameters);
 
         assertEquals(targetState, result.state());
     }
@@ -49,7 +49,7 @@ class BasicStateTest {
         BasicState currentState = new BasicState();
         currentState.setParentObj(parentState);
 
-        var result = currentState.transition("parent-event", "startState", journeyContext);
+        var result = currentState.transition("parent-event", "startState", eventResolveParameters);
 
         assertEquals(parentEventTargetState, result.state());
     }
@@ -59,14 +59,17 @@ class BasicStateTest {
         var state = new BasicState();
 
         assertEquals(
-                state, state.transition("attempt-recovery", "startState", journeyContext).state());
+                state,
+                state.transition("attempt-recovery", "startState", eventResolveParameters).state());
     }
 
     @Test
     void transitionShouldThrowIfEventNotFound() {
         assertThrows(
                 UnknownEventException.class,
-                () -> new BasicState().transition("unknown-event", "startState", journeyContext));
+                () ->
+                        new BasicState()
+                                .transition("unknown-event", "startState", eventResolveParameters));
     }
 
     @Test

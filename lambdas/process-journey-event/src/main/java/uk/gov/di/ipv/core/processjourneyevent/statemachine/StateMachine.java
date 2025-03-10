@@ -1,17 +1,22 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import uk.gov.di.ipv.core.library.domain.JourneyState;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.CriStepResponse;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,8 +36,13 @@ public class StateMachine {
     }
 
     public TransitionResult transition(
-            String startState, String event, JourneyContext journeyContext, String currentPage)
-            throws UnknownEventException, UnknownStateException {
+            String startState,
+            String event,
+            String currentPage,
+            EventResolveParameters eventResolveParameters)
+            throws UnknownEventException, UnknownStateException, CiExtractionException,
+                    CredentialParseException, ConfigException, ParseException,
+                    MissingSecurityCheckCredential {
         var state = states.get(startState.split(JOURNEY_STATE_DELIMITER)[0]);
 
         if (state == null) {
@@ -52,12 +62,13 @@ public class StateMachine {
             }
         }
 
-        var result = state.transition(event, startState, journeyContext);
+        var result = state.transition(event, startState, eventResolveParameters);
 
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {
             var entryEvent = requireNonNullElse(result.targetEntryEvent(), event);
-            var nestedResult = result.state().transition(entryEvent, startState, journeyContext);
+            var nestedResult =
+                    result.state().transition(entryEvent, startState, eventResolveParameters);
             // Add audit events and context from the outer event
             return new TransitionResult(
                     nestedResult.state(),

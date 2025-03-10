@@ -106,6 +106,16 @@ public class CimitUtilityService {
                 > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD, vot.name()));
     }
 
+    public Optional<String> getMitigationJourneyEvent(
+            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
+        var journeyResponse = getMitigationJourneyIfBreaching(cis, confidenceRequested);
+        if (journeyResponse.isPresent()) {
+            var journey = journeyResponse.get().getJourney();
+            return Optional.of(journey.substring(journey.lastIndexOf("/") + 1));
+        }
+        return Optional.empty();
+    }
+
     public Optional<JourneyResponse> getMitigationJourneyIfBreaching(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {

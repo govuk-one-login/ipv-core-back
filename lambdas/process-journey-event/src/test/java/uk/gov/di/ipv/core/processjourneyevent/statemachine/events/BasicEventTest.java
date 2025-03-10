@@ -1,11 +1,15 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -23,13 +27,27 @@ class BasicEventTest {
     @Mock private ConfigService mockConfigService;
     @InjectMocks private JourneyContext journeyContext;
 
+    @Mock private CimitUtilityService mockCimitUtilityService;
+
+    private EventResolveParameters eventResolveParameters;
+
+    @BeforeEach
+    void setUp() {
+        eventResolveParameters =
+                new EventResolveParameters(
+                        journeyContext,
+                        new IpvSessionItem(),
+                        new ClientOAuthSessionItem(),
+                        mockCimitUtilityService);
+    }
+
     @Test
     void resolveShouldReturnAState() throws Exception {
         var expectedResult = new TransitionResult(new BasicState(), null, null, null);
         BasicEvent basicEvent = new BasicEvent();
         basicEvent.setTargetStateObj(expectedResult.state());
 
-        assertEquals(expectedResult, basicEvent.resolve(journeyContext));
+        assertEquals(expectedResult, basicEvent.resolve(eventResolveParameters));
     }
 
     @Test
@@ -50,7 +68,7 @@ class BasicEventTest {
         checkIfDisabled.put("aDisabledCri", alternativeEvent);
         basicEventWithCheckIfDisabledConfigured.setCheckIfDisabled(checkIfDisabled);
 
-        var result = basicEventWithCheckIfDisabledConfigured.resolve(journeyContext);
+        var result = basicEventWithCheckIfDisabledConfigured.resolve(eventResolveParameters);
 
         assertEquals(alternativeTargetState, result.state());
     }
@@ -69,7 +87,7 @@ class BasicEventTest {
                 CoreFeatureFlag.UNUSED_PLACEHOLDER.getName(), eventWithCheckFeatureFlagConfigured);
         defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
 
-        var result = defaultEvent.resolve(journeyContext);
+        var result = defaultEvent.resolve(eventResolveParameters);
 
         assertEquals(featureFlagTargetState, result.state());
     }
@@ -100,8 +118,10 @@ class BasicEventTest {
 
         defaultEvent.setCheckJourneyContext(checkContext);
 
-        var journeyContextWithName = new JourneyContext(mockConfigService, "test-context");
-        var result = defaultEvent.resolve(journeyContextWithName);
+        var eventResolveParameters =
+                new EventResolveParameters(
+                        new JourneyContext(mockConfigService, "test-context"), null, null, null);
+        var result = defaultEvent.resolve(eventResolveParameters);
 
         assertEquals(contextTargetState, result.state());
     }

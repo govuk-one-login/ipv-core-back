@@ -27,6 +27,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
+import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
@@ -36,6 +38,7 @@ import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -44,6 +47,8 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -56,6 +61,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.Process
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -91,6 +97,7 @@ public class ProcessJourneyEventHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
     private final EvcsService evcsService;
+    private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessJourneyEventHandler(
@@ -101,7 +108,8 @@ public class ProcessJourneyEventHandler
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
             List<String> nestedJourneyTypes,
-            EvcsService evcsService)
+            EvcsService evcsService,
+            CimitUtilityService cimitUtilityService)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
@@ -110,6 +118,7 @@ public class ProcessJourneyEventHandler
         this.stateMachines =
                 loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
         this.evcsService = evcsService;
+        this.cimitUtilityService = cimitUtilityService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -135,6 +144,7 @@ public class ProcessJourneyEventHandler
                         StateMachineInitializerMode.STANDARD,
                         nestedJourneyTypes);
         this.evcsService = new EvcsService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
     @Override
@@ -293,6 +303,41 @@ public class ProcessJourneyEventHandler
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getState().subJourney().name()));
             throw new JourneyEngineException();
+        } catch (MissingSecurityCheckCredential e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                                    "Missing security check credential from session.", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getState().subJourney().name()));
+            throw new JourneyEngineException();
+        } catch (CiExtractionException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                                    "Unable to extract CIs from security check credential.", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getState().subJourney().name()));
+            throw new JourneyEngineException();
+        } catch (ConfigException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage("Failed to get CIMIT config.", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getState().subJourney().name()));
+            throw new JourneyEngineException();
+        } catch (ParseException e) {
+            LOGGER.error(
+                    LogHelper.buildErrorMessage(
+                                    "Unable to parse security check credential string.", e)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getState().subJourney().name()));
+            throw new JourneyEngineException();
         }
     }
 
@@ -306,7 +351,8 @@ public class ProcessJourneyEventHandler
             String deviceInformation,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException,
-                    EvcsServiceException, CredentialParseException {
+                    EvcsServiceException, CredentialParseException, CiExtractionException,
+                    ConfigException, ParseException, MissingSecurityCheckCredential {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
@@ -329,8 +375,13 @@ public class ProcessJourneyEventHandler
                 stateMachine.transition(
                         initialJourneyState.state(),
                         journeyEvent,
-                        new JourneyContext(configService, ipvSessionItem.getJourneyContext()),
-                        currentPage);
+                        currentPage,
+                        new EventResolveParameters(
+                                new JourneyContext(
+                                        configService, ipvSessionItem.getJourneyContext()),
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                cimitUtilityService));
 
         if (!isNullOrEmpty(result.auditEvents())) {
             for (var auditEventType : result.auditEvents()) {

@@ -1,9 +1,13 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
@@ -20,12 +24,18 @@ import static org.mockito.Mockito.when;
 class NestedJourneyInvokeStateTest {
     private static final JourneyContext JOURNEY_CONTEXT =
             new JourneyContext(mock(ConfigService.class), "");
+    private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
+            new EventResolveParameters(
+                    JOURNEY_CONTEXT,
+                    new IpvSessionItem(),
+                    new ClientOAuthSessionItem(),
+                    new CimitUtilityService(mock(ConfigService.class)));
 
     @Test
     void transitionShouldUseEntryEventsWhenStartStateHasOnePart() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
         BasicEvent basicEvent = mock(BasicEvent.class);
-        when(basicEvent.resolve(any(JourneyContext.class))).thenReturn(expectedResult);
+        when(basicEvent.resolve(any(EventResolveParameters.class))).thenReturn(expectedResult);
 
         NestedJourneyDefinition nestedJourneyDefinition = new NestedJourneyDefinition();
         nestedJourneyDefinition.setEntryEvents(Map.of("next", basicEvent));
@@ -34,7 +44,8 @@ class NestedJourneyInvokeStateTest {
         nestedJourneyInvokeState.setNestedJourneyDefinition(nestedJourneyDefinition);
 
         var actualResult =
-                nestedJourneyInvokeState.transition("next", "INVOKE_STATE", JOURNEY_CONTEXT);
+                nestedJourneyInvokeState.transition(
+                        "next", "INVOKE_STATE", EVENT_RESOLVE_PARAMETERS);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -48,7 +59,7 @@ class NestedJourneyInvokeStateTest {
 
         var expectedResult = new TransitionResult(new BasicState());
         when(currentNestedState.transition(
-                        eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
+                        eq("next"), eq("NESTED_STATE"), any(EventResolveParameters.class)))
                 .thenReturn(expectedResult);
 
         NestedJourneyInvokeState nestedJourneyInvokeState = new NestedJourneyInvokeState();
@@ -56,7 +67,7 @@ class NestedJourneyInvokeStateTest {
 
         var actualResult =
                 nestedJourneyInvokeState.transition(
-                        "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
+                        "next", "INVOKE_STATE/NESTED_STATE", EVENT_RESOLVE_PARAMETERS);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -74,15 +85,15 @@ class NestedJourneyInvokeStateTest {
                 mock(NestedJourneyInvokeState.class);
         var expectedResult = new TransitionResult(new BasicState());
         when(nestedNestedJourneyInvokeState.transition(
-                        eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
+                        eq("next"), eq("NESTED_STATE"), any(EventResolveParameters.class)))
                 .thenReturn(expectedResult);
         when(currentNestedState.transition(
-                        eq("next"), eq("NESTED_STATE"), any(JourneyContext.class)))
+                        eq("next"), eq("NESTED_STATE"), any(EventResolveParameters.class)))
                 .thenReturn(new TransitionResult(nestedNestedJourneyInvokeState));
 
         var actualResult =
                 nestedJourneyInvokeState.transition(
-                        "next", "INVOKE_STATE/NESTED_STATE", JOURNEY_CONTEXT);
+                        "next", "INVOKE_STATE/NESTED_STATE", EVENT_RESOLVE_PARAMETERS);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -99,7 +110,7 @@ class NestedJourneyInvokeStateTest {
                 UnknownEventException.class,
                 () ->
                         nestedJourneyInvokeState.transition(
-                                "unknown", "INVOKE_STATE", JOURNEY_CONTEXT));
+                                "unknown", "INVOKE_STATE", EVENT_RESOLVE_PARAMETERS));
     }
 
     @Test
@@ -115,7 +126,7 @@ class NestedJourneyInvokeStateTest {
                 UnknownStateException.class,
                 () ->
                         nestedJourneyInvokeState.transition(
-                                "unknown", "INVOKE_STATE/UNKNOWN_STATE", JOURNEY_CONTEXT));
+                                "unknown", "INVOKE_STATE/UNKNOWN_STATE", EVENT_RESOLVE_PARAMETERS));
     }
 
     @Test
