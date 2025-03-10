@@ -175,6 +175,7 @@ public class JourneyEngineHandler {
                 .build();
     }
 
+    @SuppressWarnings("unchecked")
     private ProcessRequest buildProcessRequest(
             Context ctx, Map<String, Object> processJourneyEventOutput) {
         return ProcessRequest.processRequestBuilder()

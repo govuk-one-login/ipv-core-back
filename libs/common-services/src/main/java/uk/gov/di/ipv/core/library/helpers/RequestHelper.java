@@ -235,6 +235,7 @@ public class RequestHelper {
             LOGGER.error(LogHelper.buildLogMessage("Missing lambdaInput map"));
             throw new HttpResponseExceptionWithErrorBody(SC_BAD_REQUEST, errorResponse);
         }
+        @SuppressWarnings("unchecked") // We assume the lambda input uses the correct types
         T value = (T) lambdaInput.get(key);
         if (value == null) {
             LOGGER.error(

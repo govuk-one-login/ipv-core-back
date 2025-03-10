@@ -140,8 +140,7 @@ class EvcsClientTest {
         when(mockConfigService.getParameter(ConfigurationVariable.EVCS_APPLICATION_URL))
                 .thenReturn(appUrl);
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
@@ -174,8 +173,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_emptyListIsReturned() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(
@@ -197,8 +195,7 @@ class EvcsClientTest {
     void testGetUserVCs_shouldThrowException_ifNon200ResponseStatus(int statusCode)
             throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body()).thenReturn("{\"message\":\"Forbidden\"}");
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
         // Act
@@ -216,8 +213,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_shouldNotThrowException_for404ResponseStatus() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(404);
         // Act
         // Assert
@@ -237,8 +233,7 @@ class EvcsClientTest {
     void testGetUserVCs_shouldThrowException_non200Response_failedParsingResponseBody()
             throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(500);
         when(mockHttpResponse.body()).thenReturn("{}}");
         // Act
@@ -266,8 +261,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCs_shouldThrowException_ifResponseBodyParsingFail() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn("🐛");
         // Act
@@ -296,8 +290,7 @@ class EvcsClientTest {
     @Test
     void testCreateUserVCs() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
@@ -337,8 +330,7 @@ class EvcsClientTest {
     @Test
     void testUpdateUserVCs() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.ACCEPTED);
         // Act
         try (MockedStatic<HttpRequest.BodyPublishers> mockedBodyPublishers =
@@ -378,8 +370,7 @@ class EvcsClientTest {
     @Test
     void testGetUserVCsShouldRetryRequestIfStatusCode429() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
 
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(EVCS_GET_USER_VCS_DTO));
@@ -401,8 +392,7 @@ class EvcsClientTest {
     @Test
     void testThrowExceptionIfRetryRequestLimitExceeded() throws Exception {
         // Arrange
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body()).thenReturn("{\"message\":\"throttled\"}");
         when(mockHttpResponse.statusCode()).thenReturn(429);
 

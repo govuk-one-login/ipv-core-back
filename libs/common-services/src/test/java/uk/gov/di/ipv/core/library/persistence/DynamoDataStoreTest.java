@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -84,13 +84,14 @@ class DynamoDataStoreTest {
         assertEquals(
                 authorizationCodeItem.getIpvSessionId(),
                 authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(Long.valueOf(authorizationCodeItemArgumentCaptor.getValue().getTtl()));
+        assertNotEquals(0L, authorizationCodeItemArgumentCaptor.getValue().getTtl());
     }
 
     @Test
     void shouldPutItemIntoDynamoDbTableIfNotExists() throws Exception {
         dataStore.createIfNotExists(authorizationCodeItem);
 
+        @SuppressWarnings("unchecked")
         ArgumentCaptor<PutItemEnhancedRequest<AuthorizationCodeItem>>
                 authorizationCodeItemArgumentCaptor =
                         ArgumentCaptor.forClass(PutItemEnhancedRequest.class);

@@ -6,6 +6,7 @@ import com.nimbusds.oauth2.sdk.auth.JWTAuthenticationClaimsSet;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
+import com.nimbusds.oauth2.sdk.auth.verifier.JWTAudienceCheck;
 import com.nimbusds.oauth2.sdk.id.Audience;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -95,6 +96,7 @@ public class TokenRequestValidator {
             ConfigService configService) {
         return new ClientAuthenticationVerifier<>(
                 new OAuthKeyServiceClientCredentialsSelector(oAuthKeyService),
-                Set.of(new Audience(configService.getParameter(COMPONENT_ID))));
+                Set.of(new Audience(configService.getParameter(COMPONENT_ID))),
+                JWTAudienceCheck.STRICT);
     }
 }
