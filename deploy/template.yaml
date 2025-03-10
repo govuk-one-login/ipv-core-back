@@ -127,6 +127,7 @@ Conditions:
   IsDev01: !Equals [ !Ref AWS::AccountId, "130355686670" ]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsBuild: !Equals [ !Ref Environment, "build" ]
+  IsStaging: !Equals [ !Ref Environment, staging ]
   IsProduction: !Equals [ !Ref Environment, "production" ]
   IsSubscriptionEnviroment: !Or
     - !Equals [ !Ref Environment, staging ]
@@ -2107,6 +2108,20 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueKmsKeyArn ]
+            - Sid: stagingAsyncCriResponseQueuePermission
+              Condition: IsStaging
+              Effect: Allow
+              Action:
+                - sqs:DeleteMessage
+                - sqs:GetQueueAttributes
+                - sqs:ReceiveMessage
+              Resource:  "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
+            - Sid: asyncCriResponseQueueKmsKeyPermission
+              Condition: IsStaging
+              Effect: Allow
+              Action:
+                - kms:Decrypt
+              Resource: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
       Events:
         AsyncCriResponse:
           Type: SQS
@@ -2123,6 +2138,17 @@ Resources:
             FunctionResponseTypes:
               - ReportBatchItemFailures
       AutoPublishAlias: live
+
+  StagingAsyncCriResponseMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Condition: IsStaging
+    Properties:
+      FunctionName: !Ref ProcessAsyncCriCredentialFunction
+      EventSourceArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
+      BatchSize: 1
+      Enabled: true
+      FunctionResponseTypes:
+        - ReportBatchItemFailures
 
   ProcessAsyncCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
