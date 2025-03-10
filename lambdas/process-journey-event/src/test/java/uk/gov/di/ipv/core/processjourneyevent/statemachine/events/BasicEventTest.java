@@ -129,10 +129,10 @@ class BasicEventTest {
 
         defaultEvent.setCheckJourneyContext(checkContext);
 
-        var eventResolveParameters =
+        var testParams =
                 new EventResolveParameters(
                         new JourneyContext(mockConfigService, "test-context"), null, null, null);
-        var result = defaultEvent.resolve(eventResolveParameters);
+        var result = defaultEvent.resolve(testParams);
 
         assertEquals(contextTargetState, result.state());
     }
@@ -322,8 +322,7 @@ class BasicEventTest {
         }
 
         @Test
-        void resolveShouldThrowIfIpvSessionItemDoesNotContainSecurityCheckCredential()
-                throws Exception {
+        void resolveShouldThrowIfIpvSessionItemDoesNotContainSecurityCheckCredential() {
             // Arrange
             var basicEventWithCheckMitigationConfigured = new BasicEvent();
             LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();

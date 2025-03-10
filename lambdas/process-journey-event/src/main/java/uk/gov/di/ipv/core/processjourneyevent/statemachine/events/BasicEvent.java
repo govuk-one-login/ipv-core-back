@@ -88,23 +88,19 @@ public class BasicEvent implements Event {
             }
         }
         if (checkMitigation != null) {
-            var validMitigation = getMitigationEvent(resolveParameters);
+            var matchedMitigationEvent = getMitigationEvent(resolveParameters);
 
-            if (validMitigation.isPresent()) {
-                var mitigationName = validMitigation.get();
-                var matchedMitigationEvent = checkMitigation.get(mitigationName);
-
-                if (matchedMitigationEvent != null) {
-                    LOGGER.info("Mitigation found. Starting '{}' event.", mitigationName);
-                    return matchedMitigationEvent.resolve(resolveParameters);
-                }
+            if (matchedMitigationEvent.isPresent()) {
+                var mitigationEvent = matchedMitigationEvent.get();
+                LOGGER.info("Mitigation found. Using alternative event.");
+                return mitigationEvent.resolve(resolveParameters);
             }
         }
 
         return new TransitionResult(targetStateObj, auditEvents, auditContext, targetEntryEvent);
     }
 
-    private Optional<String> getMitigationEvent(EventResolveParameters resolveParameters)
+    private Optional<Event> getMitigationEvent(EventResolveParameters resolveParameters)
             throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
                     ParseException, ConfigException {
         var ipvSessionItem = resolveParameters.ipvSessionItem();
@@ -128,8 +124,11 @@ public class BasicEvent implements Event {
                         .getLowestStrengthRequestedGpg45Vot(
                                 resolveParameters.journeyContext().configService());
 
-        return cimitUtilityService.getMitigationJourneyEvent(
-                contraIndicators, lowestGpg45ConfidenceRequested);
+        var validMitigation =
+                cimitUtilityService.getMitigationJourneyEvent(
+                        contraIndicators, lowestGpg45ConfidenceRequested);
+
+        return validMitigation.map(s -> checkMitigation.get(s));
     }
 
     @Override
