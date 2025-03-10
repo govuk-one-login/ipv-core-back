@@ -91,16 +91,12 @@ public class BasicEvent implements Event {
             var validMitigation = getMitigationEvent(resolveParameters);
 
             if (validMitigation.isPresent()) {
-                Optional<String> firstMitigationEvent =
-                        checkMitigation.keySet().stream()
-                                .filter(
-                                        mitigationValue ->
-                                                validMitigation.get().equals(mitigationValue))
-                                .findFirst();
-                if (firstMitigationEvent.isPresent()) {
-                    var event = firstMitigationEvent.get();
-                    LOGGER.info("Mitigation found. Starting '{}' event.", event);
-                    return checkMitigation.get(event).resolve(resolveParameters);
+                var mitigationName = validMitigation.get();
+                var matchedMitigationEvent = checkMitigation.get(mitigationName);
+
+                if (matchedMitigationEvent != null) {
+                    LOGGER.info("Mitigation found. Starting '{}' event.", mitigationName);
+                    return matchedMitigationEvent.resolve(resolveParameters);
                 }
             }
         }

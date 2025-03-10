@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,15 +13,25 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
+import uk.gov.di.model.ContraIndicator;
+import uk.gov.di.model.Mitigation;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 
 @ExtendWith(MockitoExtension.class)
 class BasicEventTest {
@@ -183,5 +194,154 @@ class BasicEventTest {
         assertEquals(
                 nestedJourneyExitEvent,
                 exitNestedJourneyEvent.getNestedJourneyExitEvents().get("getMeOut"));
+    }
+
+    @Nested
+    class CheckMitigationConfigured {
+        private List<ContraIndicator> testCis;
+        private ClientOAuthSessionItem clientOAuthSessionItem;
+        private IpvSessionItem ipvSessionItem;
+
+        @BeforeEach
+        void setUp() {
+            var ci = new ContraIndicator();
+            ci.setCode("test_ci");
+            ci.setMitigation(List.of(new Mitigation()));
+            testCis = List.of(ci);
+
+            clientOAuthSessionItem =
+                    ClientOAuthSessionItem.builder()
+                            .userId("user-id")
+                            .vtr(List.of(P2.name()))
+                            .build();
+
+            ipvSessionItem = new IpvSessionItem();
+            ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
+        }
+
+        @Test
+        void
+                resolveShouldReturnAlternativeStateIfMitigationJourneyIsFoundAndExistsInCheckMitigation()
+                        throws Exception {
+            // Arrange
+            var basicEventWithCheckMitigationConfigured = new BasicEvent();
+
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
+            var alternativeEvent = new BasicEvent();
+            var alternativeTargetState = new BasicState();
+            alternativeEvent.setTargetStateObj(alternativeTargetState);
+
+            checkMitigation.put("first-mitigation", alternativeEvent);
+
+            basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
+
+            when(mockCimitUtilityService.getContraIndicatorsFromVc(
+                            SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
+                    .thenReturn(testCis);
+            when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                    .thenReturn(Optional.of("first-mitigation"));
+
+            // Act
+            var result =
+                    basicEventWithCheckMitigationConfigured.resolve(
+                            new EventResolveParameters(
+                                    journeyContext,
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    mockCimitUtilityService));
+
+            // Assert
+            assertEquals(alternativeTargetState, result.state());
+        }
+
+        @Test
+        void
+                resolveShouldReturnTargetStateIfMitigationJourneyIsFoundButDoesNotExistInCheckMitigation()
+                        throws Exception {
+            // Arrange
+            var basicEventWithCheckMitigationConfigured = new BasicEvent();
+            var originalTargetStateObj = new BasicState();
+            basicEventWithCheckMitigationConfigured.setTargetStateObj(originalTargetStateObj);
+
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
+
+            checkMitigation.put("first-mitigation", new BasicEvent());
+
+            basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
+
+            when(mockCimitUtilityService.getContraIndicatorsFromVc(
+                            SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
+                    .thenReturn(testCis);
+            when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                    .thenReturn(Optional.of("mitigation-not-in-check-mitigation"));
+
+            // Act
+            var result =
+                    basicEventWithCheckMitigationConfigured.resolve(
+                            new EventResolveParameters(
+                                    journeyContext,
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    mockCimitUtilityService));
+
+            // Assert
+            assertEquals(originalTargetStateObj, result.state());
+        }
+
+        @Test
+        void resolveShouldReturnTargetStateIfNoValidMitigationFoundInSecurityCheckCredential()
+                throws Exception {
+            // Arrange
+            var basicEventWithCheckMitigationConfigured = new BasicEvent();
+            var originalTargetStateObj = new BasicState();
+            basicEventWithCheckMitigationConfigured.setTargetStateObj(originalTargetStateObj);
+
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
+
+            checkMitigation.put("first-mitigation", new BasicEvent());
+
+            basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
+
+            when(mockCimitUtilityService.getContraIndicatorsFromVc(
+                            SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
+                    .thenReturn(List.of());
+            when(mockCimitUtilityService.getMitigationJourneyEvent(eq(List.of()), any()))
+                    .thenReturn(Optional.empty());
+
+            // Act
+            var result =
+                    basicEventWithCheckMitigationConfigured.resolve(
+                            new EventResolveParameters(
+                                    journeyContext,
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    mockCimitUtilityService));
+
+            // Assert
+            assertEquals(originalTargetStateObj, result.state());
+        }
+
+        @Test
+        void resolveShouldThrowIfIpvSessionItemDoesNotContainSecurityCheckCredential()
+                throws Exception {
+            // Arrange
+            var basicEventWithCheckMitigationConfigured = new BasicEvent();
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
+            checkMitigation.put("first-mitigation", new BasicEvent());
+            basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
+
+            var ipvSessionWithMissingSecurityCheckCredential = new IpvSessionItem();
+
+            // Act/Assert
+            assertThrows(
+                    MissingSecurityCheckCredential.class,
+                    () ->
+                            basicEventWithCheckMitigationConfigured.resolve(
+                                    new EventResolveParameters(
+                                            journeyContext,
+                                            ipvSessionWithMissingSecurityCheckCredential,
+                                            clientOAuthSessionItem,
+                                            mockCimitUtilityService)));
+        }
     }
 }
