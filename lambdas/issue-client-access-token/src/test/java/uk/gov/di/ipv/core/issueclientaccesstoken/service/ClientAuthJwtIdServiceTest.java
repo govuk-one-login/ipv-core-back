@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.issueclientaccesstoken.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
@@ -21,7 +20,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 @ExtendWith(MockitoExtension.class)
 class ClientAuthJwtIdServiceTest {
     @Mock private DataStore<ClientAuthJwtIdItem> mockDataStore;
-    @InjectMocks private ClientAuthJwtIdService clientAuthJwtIdService;
 
     @Test
     void shouldReturnClientAuthJwtIdItemGivenJwtId() {
@@ -29,6 +27,7 @@ class ClientAuthJwtIdServiceTest {
         String testTimestamp = Instant.now().toString();
         ClientAuthJwtIdItem clientAuthJwtIdItem = new ClientAuthJwtIdItem(testJwtId, testTimestamp);
         when(mockDataStore.getItem(testJwtId)).thenReturn(clientAuthJwtIdItem);
+        var clientAuthJwtIdService = new ClientAuthJwtIdService(mockDataStore);
 
         ClientAuthJwtIdItem result = clientAuthJwtIdService.getClientAuthJwtIdItem(testJwtId);
 
@@ -41,6 +40,7 @@ class ClientAuthJwtIdServiceTest {
         String testJwtId = "test-jwt-id";
         ArgumentCaptor<ClientAuthJwtIdItem> clientAuthJwtIdItemArgCaptor =
                 ArgumentCaptor.forClass(ClientAuthJwtIdItem.class);
+        var clientAuthJwtIdService = new ClientAuthJwtIdService(mockDataStore);
 
         clientAuthJwtIdService.persistClientAuthJwtId(testJwtId);
 
