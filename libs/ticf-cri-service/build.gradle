@@ -2,18 +2,16 @@ plugins {
 	id "java"
 	id "idea"
 	id "jacoco"
-	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
 
 	implementation libs.bundles.awsLambda,
+			libs.bundles.log4j,
+			libs.jacksonDatabind,
 			project(":libs:common-services"),
 			project(":libs:audit-service"),
 			project(":libs:verifiable-credentials")
-
-	aspect libs.powertoolsLogging,
-			libs.aspectj
 
 	testImplementation libs.hamcrest,
 			libs.junitJupiter,
