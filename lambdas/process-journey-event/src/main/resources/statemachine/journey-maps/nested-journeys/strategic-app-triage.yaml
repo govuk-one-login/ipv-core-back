@@ -64,7 +64,8 @@ nestedJourneyStates:
         mobileAppJourneyType: dad
     events:
       next:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: handle-dad-iphone-result
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -77,80 +78,11 @@ nestedJourneyStates:
         mobileAppJourneyType: dad
     events:
       next:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
+        targetState: STRATEGIC_APP_HANDLE_RESULT
+        targetEntryEvent: handle-dad-android-result
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-desktop-download-app
-      context: iphone
-    events:
-      next:
-        exitEventToEmit: next
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        exitEventToEmit: anotherWay
-      incompleteDlAuthCheckInvalidDl:
-        exitEventToEmit: incompleteDlAuthCheckInvalidDl
-      failedDlAuthCheckInvalidDl:
-        exitEventToEmit: failedDlAuthCheckInvalidDl
-      retryApp:
-        targetState: IDENTIFY_DEVICE
-      preferNoApp:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkJourneyContext:
-          internationalAddress:
-            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
-    response:
-      type: page
-      pageId: pyi-triage-buffer
-    events:
-      anotherWay:
-        exitEventToEmit: anotherWay
-      back:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-desktop-download-app
-      context: android
-    events:
-      next:
-        exitEventToEmit: next
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      anotherWay:
-        exitEventToEmit: anotherWay
-      incompleteDlAuthCheckInvalidDl:
-        exitEventToEmit: incompleteDlAuthCheckInvalidDl
-      failedDlAuthCheckInvalidDl:
-        exitEventToEmit: failedDlAuthCheckInvalidDl
-      retryApp:
-        targetState: IDENTIFY_DEVICE
-      preferNoApp:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkJourneyContext:
-          internationalAddress:
-            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
-    response:
-      type: page
-      pageId: pyi-triage-buffer
-    events:
-      anotherWay:
-        exitEventToEmit: anotherWay
-      back:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
   MAM_SELECT_SMARTPHONE:
     response:
@@ -276,26 +208,6 @@ nestedJourneyStates:
         exitEventToEmit: returnToRp
       useApp:
         targetState: DAD_SELECT_SMARTPHONE
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE
 
   MOBILE_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
     response:
