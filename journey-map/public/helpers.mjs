@@ -81,6 +81,14 @@ export const resolveEventTargets = (
     },
   );
 
+  Object.keys(definition.checkMitigation || {}).forEach((mitigation) => {
+    const resolved = definition.checkMitigation[mitigation];
+    resolved.mitigation = mitigation;
+
+    const targets = resolveEventTargets(resolved, formData);
+    resolvedTargets.push(...targets);
+  });
+
   // Look for an override for feature flags
   const featureFlags = formData.getAll("featureFlag");
   const featureFlagResolution = Object.keys(

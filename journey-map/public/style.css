@@ -224,3 +224,6 @@ form fieldset p {
 .journeyCtxList {
   padding: 4px 24px 0;
 }
+.mitigationTransition {
+  background-color: #e4c4ff;
+}
