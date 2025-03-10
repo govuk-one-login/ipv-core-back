@@ -2141,18 +2141,16 @@ Resources:
             BatchSize: 1
             FunctionResponseTypes:
               - ReportBatchItemFailures
+        AsyncCriResponseStagingStub:
+          Type: SQS
+          Condition: IsStaging
+          Properties:
+            Enabled: true
+            Queue: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
+            BatchSize: 1
+            FunctionResponseTypes:
+              - ReportBatchItemFailures
       AutoPublishAlias: live
-
-  StagingAsyncCriResponseMapping:
-    Type: AWS::Lambda::EventSourceMapping
-    Condition: IsStaging
-    Properties:
-      FunctionName: !Ref ProcessAsyncCriCredentialFunction
-      EventSourceArn: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
-      BatchSize: 1
-      Enabled: true
-      FunctionResponseTypes:
-        - ReportBatchItemFailures
 
   ProcessAsyncCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
