@@ -100,18 +100,23 @@ public class SessionCredentialsService {
             var vcsToDelete =
                     switch (resetType) {
                         case ALL, PENDING_F2F_ALL, REINSTATE -> sessionCredentialItems;
-                        case ADDRESS_ONLY_CHANGE -> sessionCredentialItems.stream()
-                                .filter(
-                                        item ->
-                                                List.of(ADDRESS.getId(), EXPERIAN_FRAUD.getId())
-                                                        .contains(item.getCriId()))
-                                .toList();
-                        case DCMAW -> sessionCredentialItems.stream()
-                                .filter(item -> DCMAW.getId().equals(item.getCriId()))
-                                .toList();
-                        case NAME_ONLY_CHANGE -> sessionCredentialItems.stream()
-                                .filter(item -> !item.getCriId().equals(ADDRESS.getId()))
-                                .toList();
+                        case ADDRESS_ONLY_CHANGE ->
+                                sessionCredentialItems.stream()
+                                        .filter(
+                                                item ->
+                                                        List.of(
+                                                                        ADDRESS.getId(),
+                                                                        EXPERIAN_FRAUD.getId())
+                                                                .contains(item.getCriId()))
+                                        .toList();
+                        case DCMAW ->
+                                sessionCredentialItems.stream()
+                                        .filter(item -> DCMAW.getId().equals(item.getCriId()))
+                                        .toList();
+                        case NAME_ONLY_CHANGE ->
+                                sessionCredentialItems.stream()
+                                        .filter(item -> !item.getCriId().equals(ADDRESS.getId()))
+                                        .toList();
                     };
 
             dataStore.delete(vcsToDelete);

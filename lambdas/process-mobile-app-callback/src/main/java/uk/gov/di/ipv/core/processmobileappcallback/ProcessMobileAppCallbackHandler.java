@@ -138,8 +138,10 @@ public class ProcessMobileAppCallbackHandler
     }
 
     private JourneyResponse validateCallback(MobileAppCallbackRequest callbackRequest)
-            throws InvalidMobileAppCallbackRequestException, IpvSessionNotFoundException,
-                    ClientOauthSessionNotFoundException, InvalidCriResponseException {
+            throws InvalidMobileAppCallbackRequestException,
+                    IpvSessionNotFoundException,
+                    ClientOauthSessionNotFoundException,
+                    InvalidCriResponseException {
         // Attach variables to logs
         LogHelper.attachIpvSessionIdToLogs(callbackRequest.getIpvSessionId());
         LogHelper.attachFeatureSetToLogs(callbackRequest.getFeatureSet());

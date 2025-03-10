@@ -303,8 +303,11 @@ public class ProcessCandidateIdentityHandler
             String ipAddress,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws EvcsServiceException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, ParseException, CiExtractionException {
+            throws EvcsServiceException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    ParseException,
+                    CiExtractionException {
         if (COI_CHECK_TYPES.contains(processIdentityType)) {
             var coiCheckType = getCoiCheckType(processIdentityType, clientOAuthSessionItem);
             LOGGER.info(
@@ -386,7 +389,9 @@ public class ProcessCandidateIdentityHandler
             String deviceInformation,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, ParseException, CredentialParseException,
+            throws HttpResponseExceptionWithErrorBody,
+                    ParseException,
+                    CredentialParseException,
                     CiExtractionException {
         if (StringUtils.isBlank(ipvSessionItem.getSecurityCheckCredential())) {
             return new JourneyErrorResponse(
