@@ -15,6 +15,9 @@ nestedJourneyStates:
     events:
       eventOne:
         targetState: NESTED_STATE_TWO
+        checkMitigation:
+          first-mitigation:
+            exitEventToEmit: exitEventFromNestedStateOne
   NESTED_STATE_TWO:
     response:
       type: page

@@ -157,6 +157,8 @@ states:
   NESTED_JOURNEY_INVOKE_STATE:
     nestedJourney: NESTED_JOURNEY_DEFINITION
     exitEvents:
+      exitEventFromNestedStateOne:
+        targetState: PAGE_STATE
       exitEventFromNestedStateTwo:
         targetState: ANOTHER_PAGE_STATE
       exitEventFromDoublyNestedInvokeState:

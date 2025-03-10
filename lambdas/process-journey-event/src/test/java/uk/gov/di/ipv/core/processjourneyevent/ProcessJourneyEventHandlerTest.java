@@ -1166,6 +1166,39 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("/journey/cri/build-oauth-request/aCriId", output.get("journey"));
     }
 
+    @Test
+    void shouldReturnMitigationStateFromNestedJourneyIfCheckMitigationIsConfigured()
+            throws Exception {
+        var input =
+                JourneyRequest.builder()
+                        .ipAddress(TEST_IP)
+                        .journey("eventOne")
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .build();
+
+        mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
+                .thenReturn(List.of(new ContraIndicator()));
+        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+                .thenReturn(Optional.of("first-mitigation"));
+
+        var processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
+                        mockAuditService,
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of(INITIAL_JOURNEY_SELECTION),
+                        StateMachineInitializerMode.TEST,
+                        TEST_NESTED_JOURNEY_TYPES,
+                        mockEvcsService,
+                        mockCimitUtilityService);
+
+        var output = processJourneyEventHandler.handleRequest(input, mockContext);
+
+        assertEquals("page-id-for-page-state", output.get("page"));
+    }
+
     private static Stream<Arguments> getContraIndicatorsFromVcErrors() {
         return Stream.of(
                 Arguments.of(new ParseException("Unable to parse vc string", 0)),
