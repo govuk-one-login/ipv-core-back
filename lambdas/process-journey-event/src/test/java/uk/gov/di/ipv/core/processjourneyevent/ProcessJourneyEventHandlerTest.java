@@ -1100,7 +1100,7 @@ class ProcessJourneyEventHandlerTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"false,,page-id-for-another-page-state"})
+    @CsvSource({"true,/journey/check-coi,", "false,,page-id-for-another-page-state"})
     void shouldSkipCoiCheckOnlyIfNoVcInEvcs(
             boolean hasVcsInEvcs, String expectedJourney, String expectedPage) throws Exception {
         var input =
