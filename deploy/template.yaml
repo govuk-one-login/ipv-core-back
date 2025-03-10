@@ -2108,20 +2108,24 @@ Resources:
               Action:
                 - kms:Decrypt
               Resource: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueKmsKeyArn ]
-            - Sid: stagingAsyncCriResponseQueuePermission
-              Condition: IsStaging
-              Effect: Allow
-              Action:
-                - sqs:DeleteMessage
-                - sqs:GetQueueAttributes
-                - sqs:ReceiveMessage
-              Resource:  "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
-            - Sid: asyncCriResponseQueueKmsKeyPermission
-              Condition: IsStaging
-              Effect: Allow
-              Action:
-                - kms:Decrypt
-              Resource: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+            - !If
+              - IsStaging
+              - Sid: stagingAsyncCriResponseQueuePermission
+                Effect: Allow
+                Action:
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:ReceiveMessage
+                Resource: "arn:aws:sqs:eu-west-2:388905755587:stubQueue_criResponseQueue_staging"
+              - !Ref AWS::NoValue
+            - !If
+              - IsStaging
+              - Sid: stagingAsyncCriResponseQueueKmsKeyPermission
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource: "arn:aws:kms:eu-west-2:388905755587:key/60feaacf-271c-4cba-81d3-17df3952e605"
+              - !Ref AWS::NoValue
       Events:
         AsyncCriResponse:
           Type: SQS
