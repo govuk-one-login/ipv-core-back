@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
 import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
 import uk.gov.di.ipv.core.library.enums.EvcsVCState;
 import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Collections;
@@ -47,14 +46,19 @@ class ContractTest {
     private static final String TEST_EVCS_ACCESS_TOKEN = "test-acess-token";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String INVALID_USER_ID = "invalid-user-id";
+
     private static final String VC_SIGNATURE =
             "LQy-7Yzes0HwH2ezhvoAahhxQCPjOSwRSl_yFe9KZlbXnKHDnHRY7lJZ_selbn5ZPxtlyECWTMIR_bKcmx3Whg"; // pragma: allowlist secret
+    private static final String VC_STRING =
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczovL3Jldmlldy1wLnN0YWdpbmcuYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDowMWE0NDM0Mi1lNjQzLTRjYTktODMwNi1hOGUwNDQwOTJmYjAiLCJuYmYiOjE3MDU5ODY1MjEsInZjIjp7InR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJJZGVudGl0eUNoZWNrQ3JlZGVudGlhbCJdLCJjcmVkZW50aWFsU3ViamVjdCI6eyJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6Ik1PUkdBTiJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IlNBUkFIIE1FUkVEWVRIIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTY1LTA3LTA4In1dLCJwYXNzcG9ydCI6W3siZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODciLCJleHBpcnlEYXRlIjoiMjAzMC0wMS0wMSIsImljYW9Jc3N1ZXJDb2RlIjoiR0JSIn1dLCJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6IkdCIiwiYWRkcmVzc0xvY2FsaXR5IjoiR1JFQVQgTUlTU0VOREVOIiwiYnVpbGRpbmdOYW1lIjoiQ09ZIFBPTkQgQlVTSU5FU1MgUEFSSyIsImJ1aWxkaW5nTnVtYmVyIjoiMTYiLCJkZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJMT05HIEVBVE9OIiwiZGVwZW5kZW50U3RyZWV0TmFtZSI6IktJTkdTIFBBUksiLCJkb3VibGVEZXBlbmRlbnRBZGRyZXNzTG9jYWxpdHkiOiJTT01FIERJU1RSSUNUIiwib3JnYW5pc2F0aW9uTmFtZSI6IkZJTkNIIEdST1VQIiwicG9zdGFsQ29kZSI6IkhQMTYgMEFMIiwic3RyZWV0TmFtZSI6IkJJRyBTVFJFRVQiLCJzdWJCdWlsZGluZ05hbWUiOiJVTklUIDJCIiwidXBybiI6MTAwMTIwMDEyMDc3fV19LCJldmlkZW5jZSI6W3sidHlwZSI6IklkZW50aXR5Q2hlY2siLCJ0eG4iOiJiY2QyMzQ2Iiwic3RyZW5ndGhTY29yZSI6NCwidmFsaWRpdHlTY29yZSI6MiwidmVyaWZpY2F0aW9uU2NvcmUiOjMsImNpIjpbXSwiY2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6ImRhdGEiLCJkYXRhQ2hlY2siOiJjYW5jZWxsZWRfY2hlY2sifSx7ImNoZWNrTWV0aG9kIjoiZGF0YSIsImRhdGFDaGVjayI6InJlY29yZF9jaGVjayJ9XX1dfX0." // pragma: allowlist secret
+                    + VC_SIGNATURE;
+
     private static final List<EvcsVCState> VC_STATES_FOR_QUERY = List.of(PENDING_RETURN);
 
     private static final List<EvcsCreateUserVCsDto> EVCS_CREATE_USER_VCS_DTO =
             List.of(
                     new EvcsCreateUserVCsDto(
-                            VcFixtures.VC_ADDRESS.getVcString(),
+                            VC_STRING,
                             EvcsVCState.CURRENT,
                             Map.of(
                                     "reason", "testing",
@@ -63,9 +67,7 @@ class ContractTest {
                             ONLINE));
 
     private static final List<EvcsCreateUserVCsDto> INVALID_CREATE_USER_VCS_DTO =
-            List.of(
-                    new EvcsCreateUserVCsDto(
-                            VcFixtures.VC_ADDRESS.getVcString(), EvcsVCState.CURRENT, null, null));
+            List.of(new EvcsCreateUserVCsDto(VC_STRING, EvcsVCState.CURRENT, null, null));
 
     private static final List<EvcsUpdateUserVCsDto> EVCS_UPDATE_USER_VCS_DTO =
             List.of(
@@ -118,10 +120,7 @@ class ContractTest {
                                     vcs -> {
                                         vcs.object(
                                                 vc -> {
-                                                    vc.stringType(
-                                                            "vc",
-                                                            VcFixtures.DCMAW_PASSPORT_VC
-                                                                    .getVcString());
+                                                    vc.stringType("vc", VC_STRING);
                                                     vc.stringType("state", "PENDING_RETURN");
                                                     vc.object("metadata", metadata -> {});
                                                 });
@@ -273,8 +272,7 @@ class ContractTest {
                         array -> {
                             array.object(
                                     vcObject -> {
-                                        vcObject.stringType(
-                                                "vc", VcFixtures.DCMAW_PASSPORT_VC.getVcString());
+                                        vcObject.stringType("vc", VC_STRING);
                                         vcObject.stringType("state", "CURRENT");
                                         vcObject.object(
                                                 "metadata",
