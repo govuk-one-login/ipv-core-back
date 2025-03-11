@@ -88,11 +88,12 @@ public class BasicEvent implements Event {
             }
         }
         if (checkMitigation != null) {
-            var matchedMitigationEvent = getMitigationEvent(resolveParameters);
+            var matchedMitigation = getMitigationEvent(resolveParameters);
 
-            if (matchedMitigationEvent.isPresent()) {
-                var mitigationEvent = matchedMitigationEvent.get();
-                LOGGER.info("Mitigation found. Using alternative event.");
+            if (matchedMitigation.isPresent()) {
+                var mitigationEvent = checkMitigation.get(matchedMitigation.get());
+                LOGGER.info(
+                        "Mitigation '{}' found. Using alternative event.", matchedMitigation.get());
                 return mitigationEvent.resolve(resolveParameters);
             }
         }
@@ -100,7 +101,7 @@ public class BasicEvent implements Event {
         return new TransitionResult(targetStateObj, auditEvents, auditContext, targetEntryEvent);
     }
 
-    private Optional<Event> getMitigationEvent(EventResolveParameters resolveParameters)
+    private Optional<String> getMitigationEvent(EventResolveParameters resolveParameters)
             throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
                     ParseException, ConfigException {
         var ipvSessionItem = resolveParameters.ipvSessionItem();
@@ -128,7 +129,10 @@ public class BasicEvent implements Event {
                 cimitUtilityService.getMitigationJourneyEvent(
                         contraIndicators, lowestGpg45ConfidenceRequested);
 
-        return validMitigation.map(s -> checkMitigation.get(s));
+        //        return validMitigation.map(s -> checkMitigation.get(s));
+        return (validMitigation.isPresent() && checkMitigation.containsKey(validMitigation.get()))
+                ? validMitigation
+                : Optional.empty();
     }
 
     @Override
