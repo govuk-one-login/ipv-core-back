@@ -1,11 +1,8 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -16,7 +13,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageSte
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,9 +36,7 @@ public class StateMachine {
             String event,
             String currentPage,
             EventResolveParameters eventResolveParameters)
-            throws UnknownEventException, UnknownStateException, CiExtractionException,
-                    CredentialParseException, ConfigException, ParseException,
-                    MissingSecurityCheckCredential {
+            throws UnknownEventException, UnknownStateException, JourneyEngineException {
         var state = states.get(startState.split(JOURNEY_STATE_DELIMITER)[0]);
 
         if (state == null) {

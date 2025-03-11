@@ -6,17 +6,13 @@ import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
-import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
@@ -39,9 +35,7 @@ public class NestedJourneyInvokeState implements State {
     @Override
     public TransitionResult transition(
             String eventName, String startState, EventResolveParameters eventResolveParameters)
-            throws UnknownEventException, UnknownStateException, CiExtractionException,
-                    CredentialParseException, ConfigException, ParseException,
-                    MissingSecurityCheckCredential {
+            throws UnknownEventException, UnknownStateException, JourneyEngineException {
         Queue<String> stateNameParts = getStateNameParts(startState);
 
         TransitionResult result;

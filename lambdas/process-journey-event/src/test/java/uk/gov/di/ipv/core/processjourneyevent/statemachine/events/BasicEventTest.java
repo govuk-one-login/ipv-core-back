@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
@@ -12,10 +11,9 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.model.ContraIndicator;
 
 import java.util.LinkedHashMap;
@@ -35,8 +33,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 @ExtendWith(MockitoExtension.class)
 class BasicEventTest {
     @Mock private ConfigService mockConfigService;
-    @InjectMocks private JourneyContext journeyContext;
-
     @Mock private CimitUtilityService mockCimitUtilityService;
 
     private EventResolveParameters eventResolveParameters;
@@ -45,7 +41,8 @@ class BasicEventTest {
     void setUp() {
         eventResolveParameters =
                 new EventResolveParameters(
-                        journeyContext,
+                        "",
+                        mockConfigService,
                         new IpvSessionItem(),
                         new ClientOAuthSessionItem(),
                         mockCimitUtilityService);
@@ -129,8 +126,7 @@ class BasicEventTest {
         defaultEvent.setCheckJourneyContext(checkContext);
 
         var testParams =
-                new EventResolveParameters(
-                        new JourneyContext(mockConfigService, "test-context"), null, null, null);
+                new EventResolveParameters("test-context", mockConfigService, null, null, null);
         var result = defaultEvent.resolve(testParams);
 
         assertEquals(contextTargetState, result.state());
@@ -241,7 +237,8 @@ class BasicEventTest {
             var result =
                     basicEventWithCheckMitigationConfigured.resolve(
                             new EventResolveParameters(
-                                    journeyContext,
+                                    "journeyContext",
+                                    mockConfigService,
                                     ipvSessionItem,
                                     clientOAuthSessionItem,
                                     mockCimitUtilityService));
@@ -273,7 +270,8 @@ class BasicEventTest {
             var result =
                     basicEventWithCheckMitigationConfigured.resolve(
                             new EventResolveParameters(
-                                    journeyContext,
+                                    "journeyContext",
+                                    mockConfigService,
                                     ipvSessionItem,
                                     clientOAuthSessionItem,
                                     mockCimitUtilityService));
@@ -306,7 +304,8 @@ class BasicEventTest {
             var result =
                     basicEventWithCheckMitigationConfigured.resolve(
                             new EventResolveParameters(
-                                    journeyContext,
+                                    "journeyContext",
+                                    mockConfigService,
                                     ipvSessionItem,
                                     clientOAuthSessionItem,
                                     mockCimitUtilityService));
@@ -326,15 +325,19 @@ class BasicEventTest {
             var ipvSessionWithMissingSecurityCheckCredential = new IpvSessionItem();
 
             // Act/Assert
-            assertThrows(
-                    MissingSecurityCheckCredential.class,
-                    () ->
-                            basicEventWithCheckMitigationConfigured.resolve(
-                                    new EventResolveParameters(
-                                            journeyContext,
-                                            ipvSessionWithMissingSecurityCheckCredential,
-                                            clientOAuthSessionItem,
-                                            mockCimitUtilityService)));
+            var exception =
+                    assertThrows(
+                            JourneyEngineException.class,
+                            () ->
+                                    basicEventWithCheckMitigationConfigured.resolve(
+                                            new EventResolveParameters(
+                                                    "journeyContext",
+                                                    mockConfigService,
+                                                    ipvSessionWithMissingSecurityCheckCredential,
+                                                    clientOAuthSessionItem,
+                                                    mockCimitUtilityService)));
+
+            assertEquals("Missing security check credential", exception.getCause().getMessage());
         }
     }
 }

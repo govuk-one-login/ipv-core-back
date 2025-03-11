@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Map;
 
@@ -20,11 +19,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ExitNestedJourneyEventTest {
-    private static final JourneyContext JOURNEY_CONTEXT =
-            new JourneyContext(mock(ConfigService.class), "");
     private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
             new EventResolveParameters(
-                    JOURNEY_CONTEXT,
+                    "journeyContext",
+                    mock(ConfigService.class),
                     new IpvSessionItem(),
                     new ClientOAuthSessionItem(),
                     new CimitUtilityService(mock(ConfigService.class)));

@@ -4,17 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
-import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
 
-import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,8 +33,7 @@ public class BasicState implements State {
     @Override
     public TransitionResult transition(
             String eventName, String startState, EventResolveParameters eventResolveParameters)
-            throws UnknownEventException, CiExtractionException, CredentialParseException,
-                    ConfigException, ParseException, MissingSecurityCheckCredential {
+            throws UnknownEventException, UnknownStateException, JourneyEngineException {
         // Special recovery event
         if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
             return new TransitionResult(this);

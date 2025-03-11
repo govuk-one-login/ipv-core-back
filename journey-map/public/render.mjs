@@ -238,23 +238,24 @@ const createTransitionLabel = ({
   mitigation,
 }) => {
   const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
-  const journeyContextLabel = journeyContext
-    ? ` - journeyContext: ${journeyContext}`
-    : "";
-  const mitigationLabel = mitigation ? `CI mitigation: ${mitigation}` : "";
 
-  const labelWithClass = (className, eventTransitionLabel) =>
-    `<span class="${className}">${eventTransitionLabel}</span>`;
+  const labelWithClass = (className, label, value) =>
+    `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
 
   if (journeyContext) {
     return labelWithClass(
       JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
-      eventLabel + journeyContextLabel,
+      "journeyContext",
+      journeyContext,
     );
   }
 
-  if (mitigationLabel) {
-    return labelWithClass(MITIGATIONS_TRANSITION_CLASSNAME, mitigationLabel);
+  if (mitigation) {
+    return labelWithClass(
+      MITIGATIONS_TRANSITION_CLASSNAME,
+      "mitigation",
+      mitigation,
+    );
   }
 
   return eventLabel;

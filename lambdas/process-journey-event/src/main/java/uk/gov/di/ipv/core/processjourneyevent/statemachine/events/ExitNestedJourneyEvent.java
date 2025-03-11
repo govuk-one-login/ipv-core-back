@@ -1,15 +1,11 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
 import lombok.Data;
-import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
-import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
-import java.text.ParseException;
 import java.util.Map;
 
 @Data
@@ -20,8 +16,7 @@ public class ExitNestedJourneyEvent implements Event {
 
     @Override
     public TransitionResult resolve(EventResolveParameters resolveParameters)
-            throws UnknownEventException, MissingSecurityCheckCredential, CiExtractionException,
-                    CredentialParseException, ParseException, ConfigException {
+            throws UnknownEventException, JourneyEngineException {
         Event event = nestedJourneyExitEvents.get(exitEventToEmit);
         if (event == null) {
             throw new UnknownEventException(

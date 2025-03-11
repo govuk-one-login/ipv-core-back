@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
@@ -29,11 +28,10 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 
 class StateMachineTest {
-    private static final JourneyContext JOURNEY_CONTEXT =
-            new JourneyContext(mock(ConfigService.class), "");
     private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
             new EventResolveParameters(
-                    JOURNEY_CONTEXT,
+                    "journeyContext",
+                    mock(ConfigService.class),
                     new IpvSessionItem(),
                     new ClientOAuthSessionItem(),
                     new CimitUtilityService(mock(ConfigService.class)));

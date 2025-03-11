@@ -3,9 +3,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
@@ -18,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
 class BasicStateTest {
-    @Mock private ConfigService mockConfigService;
     @InjectMocks private EventResolveParameters eventResolveParameters;
 
     @Test

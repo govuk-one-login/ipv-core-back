@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
@@ -41,64 +42,71 @@ public class BasicEvent implements Event {
     private LinkedHashMap<String, Event> checkMitigation;
 
     public TransitionResult resolve(EventResolveParameters resolveParameters)
-            throws UnknownEventException, MissingSecurityCheckCredential, CiExtractionException,
-                    CredentialParseException, ParseException, ConfigException {
-        var journeyContext = resolveParameters.journeyContext();
+            throws UnknownEventException, JourneyEngineException {
+        try {
+            var journeyContext = resolveParameters.journeyContext();
+            var configService = resolveParameters.configService();
 
-        if (checkIfDisabled != null) {
-            Optional<String> firstDisabledCri =
-                    checkIfDisabled.keySet().stream()
-                            .filter(
-                                    id ->
-                                            !journeyContext
-                                                    .configService()
-                                                    .getBooleanParameter(
-                                                            CREDENTIAL_ISSUER_ENABLED, id))
-                            .findFirst();
-            if (firstDisabledCri.isPresent()) {
-                String disabledCriId = firstDisabledCri.get();
-                LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
-                return checkIfDisabled.get(disabledCriId).resolve(resolveParameters);
+            if (checkIfDisabled != null) {
+                Optional<String> firstDisabledCri =
+                        checkIfDisabled.keySet().stream()
+                                .filter(
+                                        id ->
+                                                !configService.getBooleanParameter(
+                                                        CREDENTIAL_ISSUER_ENABLED, id))
+                                .findFirst();
+                if (firstDisabledCri.isPresent()) {
+                    String disabledCriId = firstDisabledCri.get();
+                    LOGGER.info(
+                            "CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
+                    return checkIfDisabled.get(disabledCriId).resolve(resolveParameters);
+                }
             }
-        }
-        if (checkJourneyContext != null && !StringUtils.isEmpty(journeyContext.name())) {
-            Optional<String> matchingContext =
-                    checkJourneyContext.keySet().stream()
-                            .filter(ctx -> ctx.equals(journeyContext.name()))
-                            .findFirst();
-            if (matchingContext.isPresent()) {
-                String contextValue = matchingContext.get();
-                LOGGER.info("Matching context '{}' is set. Using alternative event", contextValue);
-                return checkJourneyContext.get(contextValue).resolve(resolveParameters);
+            if (checkJourneyContext != null && !StringUtils.isEmpty(journeyContext)) {
+                Optional<String> matchingContext =
+                        checkJourneyContext.keySet().stream()
+                                .filter(ctx -> ctx.equals(journeyContext))
+                                .findFirst();
+                if (matchingContext.isPresent()) {
+                    String contextValue = matchingContext.get();
+                    LOGGER.info(
+                            "Matching context '{}' is set. Using alternative event", contextValue);
+                    return checkJourneyContext.get(contextValue).resolve(resolveParameters);
+                }
             }
-        }
-        if (checkFeatureFlag != null) {
-            Optional<String> firstFeatureFlag =
-                    checkFeatureFlag.keySet().stream()
-                            .filter(
-                                    featureFlagValue ->
-                                            journeyContext
-                                                    .configService()
-                                                    .enabled(featureFlagValue))
-                            .findFirst();
-            if (firstFeatureFlag.isPresent()) {
-                String featureFlagValue = firstFeatureFlag.get();
-                LOGGER.info("Feature flag '{}' is set. Using alternative event", featureFlagValue);
-                return checkFeatureFlag.get(featureFlagValue).resolve(resolveParameters);
+            if (checkFeatureFlag != null) {
+                Optional<String> firstFeatureFlag =
+                        checkFeatureFlag.keySet().stream()
+                                .filter(configService::enabled)
+                                .findFirst();
+                if (firstFeatureFlag.isPresent()) {
+                    String featureFlagValue = firstFeatureFlag.get();
+                    LOGGER.info(
+                            "Feature flag '{}' is set. Using alternative event", featureFlagValue);
+                    return checkFeatureFlag.get(featureFlagValue).resolve(resolveParameters);
+                }
             }
-        }
-        if (checkMitigation != null) {
-            var matchedMitigation = getMitigationEvent(resolveParameters);
+            if (checkMitigation != null) {
+                var matchedMitigation = getMitigationEvent(resolveParameters);
 
-            if (matchedMitigation.isPresent()) {
-                var mitigationEvent = checkMitigation.get(matchedMitigation.get());
-                LOGGER.info(
-                        "Mitigation '{}' found. Using alternative event.", matchedMitigation.get());
-                return mitigationEvent.resolve(resolveParameters);
+                if (matchedMitigation.isPresent()) {
+                    var mitigationEvent = checkMitigation.get(matchedMitigation.get());
+                    LOGGER.info(
+                            "Mitigation '{}' found. Using alternative event.",
+                            matchedMitigation.get());
+                    return mitigationEvent.resolve(resolveParameters);
+                }
             }
-        }
 
-        return new TransitionResult(targetStateObj, auditEvents, auditContext, targetEntryEvent);
+            return new TransitionResult(
+                    targetStateObj, auditEvents, auditContext, targetEntryEvent);
+        } catch (MissingSecurityCheckCredential
+                | CiExtractionException
+                | CredentialParseException
+                | ParseException
+                | ConfigException e) {
+            throw new JourneyEngineException("Failed to resolve event", e);
+        }
     }
 
     private Optional<String> getMitigationEvent(EventResolveParameters resolveParameters)
@@ -122,14 +130,12 @@ public class BasicEvent implements Event {
         var lowestGpg45ConfidenceRequested =
                 clientOAuthSessionItem
                         .getParsedVtr()
-                        .getLowestStrengthRequestedGpg45Vot(
-                                resolveParameters.journeyContext().configService());
+                        .getLowestStrengthRequestedGpg45Vot(resolveParameters.configService());
 
         var validMitigation =
                 cimitUtilityService.getMitigationJourneyEvent(
                         contraIndicators, lowestGpg45ConfidenceRequested);
 
-        //        return validMitigation.map(s -> checkMitigation.get(s));
         return (validMitigation.isPresent() && checkMitigation.containsKey(validMitigation.get()))
                 ? validMitigation
                 : Optional.empty();

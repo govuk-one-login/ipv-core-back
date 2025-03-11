@@ -279,6 +279,7 @@ class JourneyMapTest {
                 checkTargetStatesExist(basicEvent.getCheckIfDisabled(), stateMachineKeys);
                 checkTargetStatesExist(basicEvent.getCheckFeatureFlag(), stateMachineKeys);
                 checkTargetStatesExist(basicEvent.getCheckJourneyContext(), stateMachineKeys);
+                checkTargetStatesExist(basicEvent.getCheckMitigation(), stateMachineKeys);
             }
         }
     }
@@ -330,6 +331,19 @@ class JourneyMapTest {
                                                     actualExitEvents.add(
                                                             ((ExitNestedJourneyEvent)
                                                                             checkContextEvent)
+                                                                    .getExitEventToEmit()));
+                        }
+                        if (basicEvent.getCheckMitigation() != null) {
+                            basicEvent.getCheckMitigation().values().stream()
+                                    .filter(
+                                            checkMitigationEvent ->
+                                                    checkMitigationEvent
+                                                            instanceof ExitNestedJourneyEvent)
+                                    .forEach(
+                                            checkMitigationEvent ->
+                                                    actualExitEvents.add(
+                                                            ((ExitNestedJourneyEvent)
+                                                                            checkMitigationEvent)
                                                                     .getExitEventToEmit()));
                         }
                     }
