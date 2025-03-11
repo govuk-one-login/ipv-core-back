@@ -4,10 +4,8 @@ description: >-
 entryEvents:
   check-mobile-app-result:
     targetState: CHECK_MOBILE_APP_RESULT
-  handle-dad-iphone-result:
-    targetState: DAD_DESKTOP_IPHONE_DOWNLOAD_PAGE
-  handle-dad-android-result:
-    targetState: DAD_DESKTOP_ANDROID_DOWNLOAD_PAGE
+  dl-auth-source-check:
+    targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
 
 nestedJourneyStates:
   CHECK_MOBILE_APP_RESULT:
@@ -79,105 +77,3 @@ nestedJourneyStates:
         exitEventToEmit: retryApp
       end:
         exitEventToEmit: incompleteDlAuthCheckInvalidDl
-
-  DAD_DESKTOP_IPHONE_DOWNLOAD_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-desktop-download-app
-      context: iphone
-    events:
-      next:
-        exitEventToEmit: next
-      abandon:
-        exitEventToEmit: anotherWay
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      fail-with-no-ci:
-        exitEventToEmit: anotherWay
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-      enhanced-verification:
-        exitEventToEmit: anotherWay
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      preferNoApp:
-        targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkJourneyContext:
-          internationalAddress:
-            targetState: DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_EXIT_BUFFER:
-    response:
-      type: page
-      pageId: pyi-triage-buffer
-    events:
-      anotherWay:
-        exitEventToEmit: anotherWay
-      back:
-        targetState: DAD_DESKTOP_IPHONE_DOWNLOAD_PAGE
-
-  DESKTOP_IPHONE_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DAD_DESKTOP_IPHONE_DOWNLOAD_PAGE
-
-  DAD_DESKTOP_ANDROID_DOWNLOAD_PAGE:
-    response:
-      type: page
-      pageId: pyi-triage-desktop-download-app
-      context: android
-    events:
-      next:
-        exitEventToEmit: next
-      abandon:
-        exitEventToEmit: anotherWay
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      fail-with-no-ci:
-        exitEventToEmit: anotherWay
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED
-      enhanced-verification:
-        exitEventToEmit: anotherWay
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED
-      dl-auth-source-check:
-        targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
-      preferNoApp:
-        targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER
-        checkJourneyContext:
-          internationalAddress:
-            targetState: DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_EXIT_BUFFER:
-    response:
-      type: page
-      pageId: pyi-triage-buffer
-    events:
-      anotherWay:
-        exitEventToEmit: anotherWay
-      back:
-        targetState: DAD_DESKTOP_ANDROID_DOWNLOAD_PAGE
-
-  DESKTOP_ANDROID_DOWNLOAD_PAGE_NON_UK_NO_APP_OPTIONS:
-    response:
-      type: page
-      pageId: non-uk-no-app-options
-    events:
-      returnToRp:
-        exitEventToEmit: returnToRp
-      useApp:
-        targetState: DAD_DESKTOP_ANDROID_DOWNLOAD_PAGE
