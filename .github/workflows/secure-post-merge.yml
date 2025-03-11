@@ -5,9 +5,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge.yml'
-      - 'lambdas/delete-user-data/**'
       - '.github/workflows/secure-post-merge-notags.yml'
 
 jobs:
