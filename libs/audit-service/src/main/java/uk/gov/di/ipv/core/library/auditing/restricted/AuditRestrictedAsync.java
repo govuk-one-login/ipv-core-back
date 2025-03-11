@@ -9,18 +9,18 @@ import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class AuditRestrictedF2F implements AuditRestricted {
+public class AuditRestrictedAsync implements AuditRestricted {
     private final List<Name> name;
 
     private String docExpiryDate;
 
     @JsonCreator
-    public AuditRestrictedF2F(List<Name> name, String docExpiryDate) {
+    public AuditRestrictedAsync(List<Name> name, String docExpiryDate) {
         this.name = name;
         this.docExpiryDate = docExpiryDate;
     }
 
-    public AuditRestrictedF2F(List<Name> name) {
+    public AuditRestrictedAsync(List<Name> name) {
         this.name = name;
     }
 }

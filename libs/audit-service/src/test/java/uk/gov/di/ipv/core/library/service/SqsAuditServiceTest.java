@@ -19,8 +19,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
+import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedAsync;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
-import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedF2F;
 import uk.gov.di.ipv.core.library.domain.AuditEventReturnCode;
 import uk.gov.di.ipv.core.library.enums.Vot;
 import uk.gov.di.ipv.core.library.exception.AuditException;
@@ -297,7 +297,7 @@ class SqsAuditServiceTest {
                         null,
                         null,
                         null,
-                        new AuditRestrictedF2F(name));
+                        new AuditRestrictedAsync(name));
 
         // Act
         auditService.sendAuditEvent(event);
