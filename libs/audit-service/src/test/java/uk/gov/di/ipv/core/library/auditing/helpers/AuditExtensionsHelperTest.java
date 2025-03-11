@@ -42,7 +42,7 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetIdentityCheckVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(PASSPORT_NON_DCMAW_SUCCESSFUL_VC, false);
-        var evidence = (List<IdentityCheck>) auditExtensions.evidence();
+        var evidence = (IdentityCheck) auditExtensions.evidence().get(0);
 
         var expectedAge =
                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
@@ -50,12 +50,12 @@ class AuditExtensionsHelperTest {
         assertTrue(auditExtensions.isUkIssued());
         assertEquals(expectedAge, auditExtensions.age());
         assertEquals("https://review-p.staging.account.gov.uk", auditExtensions.iss());
-        assertEquals(2, evidence.get(0).getValidityScore());
-        assertEquals(4, evidence.get(0).getStrengthScore());
-        assertEquals("1c04edf0-a205-4585-8877-be6bd1776a39", evidence.get(0).getTxn());
+        assertEquals(2, evidence.getValidityScore());
+        assertEquals(4, evidence.getStrengthScore());
+        assertEquals("1c04edf0-a205-4585-8877-be6bd1776a39", evidence.getTxn());
         assertEquals(
                 2,
-                evidence.get(0).getCheckDetails().stream()
+                evidence.getCheckDetails().stream()
                         .filter(checkDetail -> checkDetail.getDataCheck() != null)
                         .count());
     }
@@ -63,7 +63,7 @@ class AuditExtensionsHelperTest {
     @Test
     void shouldGetIdentityCheckVerifiableCredentialExtensionsForAsyncAudit() throws Exception {
         var auditExtensions = getExtensionsForAuditWithCriId(vcDcmawAsyncPassport(), false);
-        var evidence = (List<IdentityCheck>) auditExtensions.evidence();
+        var evidence = (IdentityCheck) auditExtensions.evidence().get(0);
 
         var expectedAge =
                 Period.between(LocalDate.parse(TestVc.DEFAULT_DOB), LocalDate.now()).getYears();
@@ -73,21 +73,21 @@ class AuditExtensionsHelperTest {
         assertEquals(expectedAge, auditExtensions.age());
         assertEquals(
                 "https://dcmaw-async.stubs.account.gov.uk/async/credential", auditExtensions.iss());
-        assertEquals(2, evidence.get(0).getValidityScore());
-        assertEquals(4, evidence.get(0).getStrengthScore());
-        assertEquals("bcd2346", evidence.get(0).getTxn());
+        assertEquals(2, evidence.getValidityScore());
+        assertEquals(4, evidence.getStrengthScore());
+        assertEquals("bcd2346", evidence.getTxn());
     }
 
     @Test
     void shouldGetRiskAssessmentVerifiableCredentialExtensionsForAudit() throws Exception {
         var auditExtensions = getExtensionsForAudit(vcTicf(), false);
-        var evidence = (List<RiskAssessment>) auditExtensions.evidence();
+        var evidence = (RiskAssessment) auditExtensions.evidence().get(0);
 
         assertFalse(auditExtensions.successful());
         assertNull(auditExtensions.isUkIssued());
         assertNull(auditExtensions.age());
         assertEquals("https://ticf.stubs.account.gov.uk", auditExtensions.iss());
-        assertEquals("963deeb5-a52c-4030-a69a-3184f77a4f18", evidence.get(0).getTxn());
+        assertEquals("963deeb5-a52c-4030-a69a-3184f77a4f18", evidence.getTxn());
     }
 
     @Test

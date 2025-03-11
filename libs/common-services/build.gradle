@@ -3,7 +3,6 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
-	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
@@ -21,13 +20,11 @@ dependencies {
 			libs.jacksonDataformatYaml,
 			libs.openTelemetryJavaHttpClient,
 			libs.powertoolsLogging,
-			libs.powertoolsParameters
+			libs.powertoolsParameters,
+			libs.powertoolsMetrics
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
-
-	aspect libs.powertoolsMetrics,
-			libs.aspectj
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,

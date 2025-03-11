@@ -30,7 +30,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpTimeoutException;
 import java.util.List;
 
@@ -118,8 +117,7 @@ class TicfCriServiceTest {
                 .thenReturn("api-key");
         when(mockSessionCredentialsService.getCredentials(SESSION_ID, USER_ID, true))
                 .thenReturn(List.of(M1B_DCMAW_VC));
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(any(), any(), any(), any(), any()))
@@ -152,8 +150,7 @@ class TicfCriServiceTest {
     void getTicfVcShouldNotIncludeApiKeyIfNotRequired() throws Exception {
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponse));
 
@@ -169,8 +166,7 @@ class TicfCriServiceTest {
     void getTicfVcShouldReturnEmptyListIfNon200HttpResponse(int statusCode) throws Exception {
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(statusCode);
 
         assertEquals(
@@ -212,8 +208,7 @@ class TicfCriServiceTest {
     void getTicfVcShouldThrowIfCanNotParseResponseBody() throws Exception {
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn("🐛");
 
@@ -229,8 +224,7 @@ class TicfCriServiceTest {
 
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponseWithoutCreds));
@@ -250,8 +244,7 @@ class TicfCriServiceTest {
 
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(ticfCriResponseWithoutCreds));
@@ -271,8 +264,7 @@ class TicfCriServiceTest {
 
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfig);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body()).thenReturn(OBJECT_MAPPER.writeValueAsString(ticfResponse));
         when(mockVerifiableCredentialValidator.parseAndValidate(
@@ -299,7 +291,7 @@ class TicfCriServiceTest {
 
         when(mockConfigService.getRestCriConfigForConnection(any(), eq(TICF)))
                 .thenReturn(ticfCriConfigWithZeroTimeout);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
+        when(mockHttpClient.<String>send(any(), any()))
                 .thenThrow(new HttpTimeoutException("too slow"));
 
         ticfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem);

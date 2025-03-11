@@ -74,8 +74,7 @@ class OAuthKeyServiceTest {
             when(mockConfigService.getLongParameter(
                             ConfigurationVariable.OAUTH_KEY_CACHE_DURATION_MINS))
                     .thenReturn(5L);
-            when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                    .thenReturn(mockHttpResponse);
+            when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
             when(mockHttpResponse.body())
                     .thenReturn(String.format("{\"keys\":[%s]}", RSA_ENCRYPTION_PUBLIC_JWK));
@@ -191,8 +190,7 @@ class OAuthKeyServiceTest {
                     .thenReturn(5L);
             when(mockConfigService.getParameter(CLIENT_JWKS_URL, TEST_CLIENT_ID))
                     .thenReturn(TEST_JWKS_ENDPOINT);
-            when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                    .thenReturn(mockHttpResponse);
+            when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
             when(mockHttpResponse.statusCode()).thenReturn(200);
         }
 

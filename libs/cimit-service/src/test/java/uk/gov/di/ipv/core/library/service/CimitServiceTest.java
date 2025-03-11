@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandler;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -84,8 +83,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_POST_HTTP_RESPONSE));
 
@@ -119,8 +117,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(FAILED_CIMIT_HTTP_RESPONSE));
 
@@ -139,8 +136,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_POST_HTTP_RESPONSE));
 
@@ -176,8 +172,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(FAILED_CIMIT_HTTP_RESPONSE));
 
@@ -230,8 +225,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_GET_CI_HTTP_RESPONSE));
@@ -276,8 +270,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.INTERNAL_SERVER_ERROR);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(FAILED_CIMIT_HTTP_RESPONSE));
@@ -299,8 +292,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenThrow(new InterruptedException());
+        when(mockHttpClient.send(any(), any())).thenThrow(new InterruptedException());
 
         // Act/Assert
         assertThrows(
@@ -319,8 +311,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenThrow(new IOException());
+        when(mockHttpClient.send(any(), any())).thenThrow(new IOException());
 
         // Act/Assert
         assertThrows(
@@ -338,8 +329,7 @@ class CimitServiceTest {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
-        when(mockHttpClient.send(any(HttpRequest.class), any(BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
+        when(mockHttpClient.<String>send(any(), any())).thenReturn(mockHttpResponse);
         when(mockHttpResponse.statusCode()).thenReturn(HttpStatusCode.OK);
         when(mockHttpResponse.body())
                 .thenReturn(OBJECT_MAPPER.writeValueAsString(SUCCESSFUL_GET_CI_HTTP_RESPONSE));

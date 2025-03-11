@@ -4,7 +4,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
@@ -29,8 +28,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 class ClientOAuthSessionDetailsServiceTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockDataStore;
 
-    @InjectMocks private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-
     @Test
     void shouldReturnClientOAuthSessionItem() throws Exception {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
@@ -46,6 +43,8 @@ class ClientOAuthSessionDetailsServiceTest {
         clientOAuthSessionItem.setReproveIdentity(true);
 
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(clientOAuthSessionItem);
+
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         ClientOAuthSessionItem result =
                 clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
@@ -71,6 +70,8 @@ class ClientOAuthSessionDetailsServiceTest {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(null);
 
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
+
         assertThrows(
                 ClientOauthSessionNotFoundException.class,
                 () -> clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId));
@@ -91,6 +92,9 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("vtr", List.of("P1"))
                         .subject("test-user-id")
                         .build();
+
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
+
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
                         clientOAuthSessionId,
@@ -136,6 +140,8 @@ class ClientOAuthSessionDetailsServiceTest {
     @Test
     void shouldCreateSessionItemWithErrorObject() {
         String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
+
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(
                         clientOAuthSessionId,

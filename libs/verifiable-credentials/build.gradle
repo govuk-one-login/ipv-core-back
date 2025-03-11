@@ -3,22 +3,18 @@ plugins {
 	id 'java-library'
 	id "idea"
 	id "jacoco"
-	alias libs.plugins.postCompileWeaving
 }
 
 dependencies {
 	implementation platform(libs.awsSdkBom),
 			libs.awsSdkDynamodbEnhanced,
-			libs.powertoolsLogging,
-			libs.powertoolsParameters,
+			libs.bundles.log4j,
+			libs.jacksonDatabind,
 			project(":libs:common-services"),
 			project(":libs:gpg45-evaluator")
 
 	compileOnly libs.lombok
 	annotationProcessor libs.lombok
-
-	aspect libs.powertoolsLogging,
-			libs.aspectj
 
 	testImplementation libs.junitJupiter,
 			libs.mockitoJunit,
