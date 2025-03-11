@@ -1150,16 +1150,7 @@ class ProcessJourneyEventHandlerTest {
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
 
         var output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -1183,16 +1174,7 @@ class ProcessJourneyEventHandlerTest {
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
 
         var output = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -1220,17 +1202,8 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenThrow(exception);
 
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 
@@ -1254,17 +1227,8 @@ class ProcessJourneyEventHandlerTest {
         when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
                 .thenThrow(new ConfigException("Unable to get CIMIT config."));
 
-        ProcessJourneyEventHandler processJourneyEventHandler =
-                new ProcessJourneyEventHandler(
-                        mockAuditService,
-                        mockIpvSessionService,
-                        mockConfigService,
-                        mockClientOAuthSessionService,
-                        List.of(INITIAL_JOURNEY_SELECTION),
-                        StateMachineInitializerMode.TEST,
-                        TEST_NESTED_JOURNEY_TYPES,
-                        mockEvcsService,
-                        mockCimitUtilityService);
+        var processJourneyEventHandler =
+                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
 
         var response = processJourneyEventHandler.handleRequest(input, mockContext);
 

@@ -287,64 +287,53 @@ public class ProcessJourneyEventHandler
                                     ipvSessionItem.getState().state()));
             throw new JourneyEngineException();
         } catch (UnknownEventException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Invalid journey event provided, failed to execute journey engine step.",
-                                    e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Invalid journey event provided, failed to execute journey engine step.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (StateMachineNotFoundException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "State machine not found for journey type, failed to execute journey engine step",
-                                    e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "State machine not found for journey type, failed to execute journey engine step",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (MissingSecurityCheckCredential e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Missing security check credential from session.", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Missing security check credential from session.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (CiExtractionException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Unable to extract CIs from security check credential.", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Unable to extract CIs from security check credential.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (ConfigException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Failed to get CIMIT config.", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Failed to get CIMIT config.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (ParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Unable to parse security check credential string.", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Unable to parse security check credential string.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         } catch (CredentialParseException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage("Unable to parse credentials.", e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithJourneyEventAndJourneyType(
+                    "Unable to parse credentials.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState().subJourney().name());
             throw new JourneyEngineException();
         }
     }
@@ -603,5 +592,13 @@ public class ProcessJourneyEventHandler
         return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
                         instanceof BasicState basicState
                 && basicState.getEvents().containsKey(BACK_EVENT);
+    }
+
+    private void logErrorWithJourneyEventAndJourneyType(
+            String message, Exception e, String journeyEvent, String subJourney) {
+        LOGGER.error(
+                LogHelper.buildErrorMessage(message, e)
+                        .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                        .with(LOG_JOURNEY_TYPE.getFieldName(), subJourney));
     }
 }

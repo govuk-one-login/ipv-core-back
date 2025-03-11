@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSec
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.model.ContraIndicator;
-import uk.gov.di.model.Mitigation;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -204,10 +203,7 @@ class BasicEventTest {
 
         @BeforeEach
         void setUp() {
-            var ci = new ContraIndicator();
-            ci.setCode("test_ci");
-            ci.setMitigation(List.of(new Mitigation()));
-            testCis = List.of(ci);
+            testCis = List.of(new ContraIndicator());
 
             clientOAuthSessionItem =
                     ClientOAuthSessionItem.builder()
@@ -226,11 +222,11 @@ class BasicEventTest {
             // Arrange
             var basicEventWithCheckMitigationConfigured = new BasicEvent();
 
-            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
             var alternativeEvent = new BasicEvent();
             var alternativeTargetState = new BasicState();
             alternativeEvent.setTargetStateObj(alternativeTargetState);
 
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
             checkMitigation.put("first-mitigation", alternativeEvent);
 
             basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
@@ -264,9 +260,7 @@ class BasicEventTest {
             basicEventWithCheckMitigationConfigured.setTargetStateObj(originalTargetStateObj);
 
             LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
-
             checkMitigation.put("first-mitigation", new BasicEvent());
-
             basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
             when(mockCimitUtilityService.getContraIndicatorsFromVc(
