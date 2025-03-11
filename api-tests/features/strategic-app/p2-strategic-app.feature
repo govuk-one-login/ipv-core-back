@@ -214,7 +214,7 @@ Feature: M2B Strategic App Journeys
       And I poll for async DCMAW credential receipt
       Then the poll returns a '201'
       When I submit the returned journey event
-      Then I get an 'pyi-no-match' page response
+      Then I get an 'page-multiple-doc-check' page response
 
     Scenario: DAD journey no compatible smartphone
       When I submit an 'appTriage' event
