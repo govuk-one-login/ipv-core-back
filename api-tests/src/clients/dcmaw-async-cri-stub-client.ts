@@ -8,11 +8,13 @@ const CRI_ID = "dcmawAsync";
 export const enqueueVc = async (
   userId: string,
   scenario: string,
+  mitigatedCis?: string[],
 ): Promise<string> => {
   const request = await generateDcmawAsyncVcCreationBodyFromScenario(
     userId,
     CRI_ID,
     scenario,
+    mitigatedCis,
   );
   return await postToEnqueue(request);
 };
