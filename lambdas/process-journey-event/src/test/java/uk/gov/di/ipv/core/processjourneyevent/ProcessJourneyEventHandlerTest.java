@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -1302,6 +1303,7 @@ class ProcessJourneyEventHandlerTest {
                 .userId(TEST_USER_ID)
                 .evcsAccessToken(TEST_EVCS_ACCESS_TOKEN)
                 .vtr(List.of("P2"))
+                .scope(ScopeConstants.OPENID)
                 .build();
     }
 

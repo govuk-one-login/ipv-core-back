@@ -1,9 +1,14 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.states;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
@@ -13,10 +18,22 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class BasicStateTest {
-    @InjectMocks private EventResolveParameters eventResolveParameters;
+    private EventResolveParameters eventResolveParameters;
+
+    @BeforeEach
+    void setUp() {
+        eventResolveParameters =
+                new EventResolveParameters(
+                        "journeyContext",
+                        mock(ConfigService.class),
+                        new IpvSessionItem(),
+                        ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build(),
+                        mock(CimitUtilityService.class));
+    }
 
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {

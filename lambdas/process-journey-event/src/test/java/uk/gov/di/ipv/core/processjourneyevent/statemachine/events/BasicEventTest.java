@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
@@ -25,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
@@ -44,7 +47,7 @@ class BasicEventTest {
                         "",
                         mockConfigService,
                         new IpvSessionItem(),
-                        new ClientOAuthSessionItem(),
+                        ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build(),
                         mockCimitUtilityService);
     }
 
@@ -126,7 +129,12 @@ class BasicEventTest {
         defaultEvent.setCheckJourneyContext(checkContext);
 
         var testParams =
-                new EventResolveParameters("test-context", mockConfigService, null, null, null);
+                new EventResolveParameters(
+                        "test-context",
+                        mockConfigService,
+                        null,
+                        ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build(),
+                        null);
         var result = defaultEvent.resolve(testParams);
 
         assertEquals(contextTargetState, result.state());
@@ -205,6 +213,7 @@ class BasicEventTest {
                     ClientOAuthSessionItem.builder()
                             .userId("user-id")
                             .vtr(List.of(P2.name()))
+                            .scope(ScopeConstants.OPENID)
                             .build();
 
             ipvSessionItem = new IpvSessionItem();
@@ -312,6 +321,37 @@ class BasicEventTest {
 
             // Assert
             assertEquals(originalTargetStateObj, result.state());
+        }
+
+        @Test
+        void
+                resolveReturnsOriginalTargetStateIfOnReverificationJourneyAndCheckMitigationIsConfigured()
+                        throws Exception {
+            var basicEventWithCheckMitigationConfigured = new BasicEvent();
+            var originalTargetStateObj = new BasicState();
+            basicEventWithCheckMitigationConfigured.setTargetStateObj(originalTargetStateObj);
+
+            LinkedHashMap<String, Event> checkMitigation = new LinkedHashMap<>();
+
+            checkMitigation.put("first-mitigation", new BasicEvent());
+
+            basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
+
+            // Act
+            var result =
+                    basicEventWithCheckMitigationConfigured.resolve(
+                            new EventResolveParameters(
+                                    "journeyContext",
+                                    mockConfigService,
+                                    ipvSessionItem,
+                                    ClientOAuthSessionItem.builder()
+                                            .scope(ScopeConstants.REVERIFICATION)
+                                            .build(),
+                                    mockCimitUtilityService));
+
+            // Assert
+            assertEquals(originalTargetStateObj, result.state());
+            verify(mockCimitUtilityService, times(0)).getContraIndicatorsFromVc(any(), any());
         }
 
         @Test

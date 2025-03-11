@@ -6,10 +6,12 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
@@ -86,7 +88,8 @@ public class BasicEvent implements Event {
                     return checkFeatureFlag.get(featureFlagValue).resolve(resolveParameters);
                 }
             }
-            if (checkMitigation != null) {
+
+            if (isCheckMitigationAllowed(resolveParameters.clientOAuthSessionItem())) {
                 var matchedMitigation = getMitigationEvent(resolveParameters);
 
                 if (matchedMitigation.isPresent()) {
@@ -109,6 +112,12 @@ public class BasicEvent implements Event {
         }
     }
 
+    private boolean isCheckMitigationAllowed(ClientOAuthSessionItem clientOAuthSessionItem) {
+        var isReverification =
+                clientOAuthSessionItem.getScopeClaims().contains(ScopeConstants.REVERIFICATION);
+        return checkMitigation != null && !isReverification;
+    }
+
     private Optional<String> getMitigationEvent(EventResolveParameters resolveParameters)
             throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
                     ParseException, ConfigException {
@@ -127,14 +136,9 @@ public class BasicEvent implements Event {
                 cimitUtilityService.getContraIndicatorsFromVc(
                         securityCheckCredential, clientOAuthSessionItem.getUserId());
 
-        var lowestGpg45ConfidenceRequested =
-                clientOAuthSessionItem
-                        .getParsedVtr()
-                        .getLowestStrengthRequestedGpg45Vot(resolveParameters.configService());
-
         var validMitigation =
                 cimitUtilityService.getMitigationJourneyEvent(
-                        contraIndicators, lowestGpg45ConfidenceRequested);
+                        contraIndicators, ipvSessionItem.getTargetVot());
 
         return (validMitigation.isPresent() && checkMitigation.containsKey(validMitigation.get()))
                 ? validMitigation
