@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.client;
+package uk.gov.di.ipv.core.library.evcs.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,11 +12,11 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
-import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
-import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.exceptions.NonRetryableException;
 import uk.gov.di.ipv.core.library.exceptions.RetryableException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;

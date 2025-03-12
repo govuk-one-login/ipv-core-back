@@ -1,8 +1,8 @@
-package uk.gov.di.ipv.core.library.dto;
+package uk.gov.di.ipv.core.library.evcs.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
-import uk.gov.di.ipv.core.library.enums.EvcsVcProvenance;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record EvcsCreateUserVCsDto(

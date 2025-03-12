@@ -1,6 +1,6 @@
-package uk.gov.di.ipv.core.library.dto;
+package uk.gov.di.ipv.core.library.evcs.dto;
 
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
 
 import java.util.Map;
 

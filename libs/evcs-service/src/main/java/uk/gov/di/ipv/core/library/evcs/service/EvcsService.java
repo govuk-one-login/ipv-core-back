@@ -1,18 +1,19 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.evcs.service;
 
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.client.EvcsClient;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
-import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
-import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.client.EvcsClient;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.metadata.InheritedIdentityMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.NoCriForIssuerException;
-import uk.gov.di.ipv.core.library.metadata.InheritedIdentityMetadata;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -20,13 +21,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.ABANDONED;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.HISTORIC;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
-import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.EXTERNAL;
-import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.OFFLINE;
-import static uk.gov.di.ipv.core.library.enums.EvcsVcProvenance.ONLINE;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.ABANDONED;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.HISTORIC;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.EXTERNAL;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.OFFLINE;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVcProvenance.ONLINE;
 
 public class EvcsService {
     private final EvcsClient evcsClient;

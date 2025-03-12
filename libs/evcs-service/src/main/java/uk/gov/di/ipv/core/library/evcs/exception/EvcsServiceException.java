@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.exception;
+package uk.gov.di.ipv.core.library.evcs.exception;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.ErrorResponseException;

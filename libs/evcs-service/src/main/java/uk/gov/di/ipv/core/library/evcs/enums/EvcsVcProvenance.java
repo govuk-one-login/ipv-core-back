@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.enums;
+package uk.gov.di.ipv.core.library.evcs.enums;
 
 public enum EvcsVcProvenance {
     ONLINE,

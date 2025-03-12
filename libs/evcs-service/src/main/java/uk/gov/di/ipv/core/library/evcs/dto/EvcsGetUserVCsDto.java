@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.dto;
+package uk.gov.di.ipv.core.library.evcs.dto;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.client;
+package uk.gov.di.ipv.core.library.evcs.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,12 +17,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.awssdk.http.HttpStatusCode;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.EvcsCreateUserVCsDto;
-import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCDto;
-import uk.gov.di.ipv.core.library.dto.EvcsGetUserVCsDto;
-import uk.gov.di.ipv.core.library.dto.EvcsUpdateUserVCsDto;
-import uk.gov.di.ipv.core.library.enums.EvcsVCState;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsCreateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsGetUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.dto.EvcsUpdateUserVCsDto;
+import uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
 import uk.gov.di.ipv.core.library.fixtures.VcFixtures;
 import uk.gov.di.ipv.core.library.retry.Sleeper;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -50,10 +50,10 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.client.EvcsClient.VC_STATE_PARAM;
-import static uk.gov.di.ipv.core.library.client.EvcsClient.X_API_KEY_HEADER;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.VC_STATE_PARAM;
+import static uk.gov.di.ipv.core.library.evcs.client.EvcsClient.X_API_KEY_HEADER;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 
 @ExtendWith(MockitoExtension.class)
 class EvcsClientTest {
