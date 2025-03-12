@@ -108,10 +108,29 @@ public class CimitUtilityService {
 
     public Optional<String> getMitigationJourneyEvent(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        var journeyResponse = getMitigationJourneyIfBreaching(cis, confidenceRequested);
+        var journeyResponse = getMitigationJourneyIfActive(cis, confidenceRequested);
         if (journeyResponse.isPresent()) {
             var journey = journeyResponse.get().getJourney();
             return Optional.of(journey.substring(journey.lastIndexOf("/") + 1));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<JourneyResponse> getMitigationJourneyIfActive(
+            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
+        if (isBreachingCiThreshold(cis, confidenceRequested)) {
+            return Optional.of(
+                    getCiMitigationJourneyResponse(cis, confidenceRequested)
+                            .orElse(JOURNEY_FAIL_WITH_CI));
+        } else {
+            var mitigatedCi = hasMitigatedContraIndicator(cis);
+            if (mitigatedCi.isPresent()) {
+                var cimitConfig = configService.getCimitConfig();
+
+                return getMitigationJourneyResponse(
+                        cimitConfig.get(mitigatedCi.get().getCode()),
+                        mitigatedCi.get().getDocument());
+            }
         }
         return Optional.empty();
     }

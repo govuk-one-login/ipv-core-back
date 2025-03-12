@@ -636,6 +636,73 @@ class CimitUtilityServiceTest {
                                 VC_RESIDENCE_PERMIT_DCMAW, "mock-user-id"));
     }
 
+    @Test
+    void getMitigationJourneyEventReturnsBreachingMitigationJourneyEvent() throws Exception {
+        // Arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String documentType = "passport";
+        var ci = createCi(code);
+        ci.setDocument("passport/some-document");
+
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 7, -5, "X"));
+
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
+
+        // act
+        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(ci), TEST_VOT);
+
+        // assert
+        assertEquals(Optional.of(journey), result);
+    }
+
+    @Test
+    void getMitigationJourneyEventReturnsMitigationJourneyEventIfNotBreachingButCiIsMitigated()
+            throws Exception {
+        // Arrange
+        var code = "ci_code";
+        var journey = "some_mitigation";
+        String documentType = "passport";
+        var ci = createCi(code, BASE_TIME.minusSeconds(1), List.of(new Mitigation()), documentType);
+
+        when(mockConfigService.getCimitConfig())
+                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
+
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 4, -3, "X"));
+
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
+
+        // act
+        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(ci), TEST_VOT);
+
+        // assert
+        assertEquals(Optional.of(journey), result);
+    }
+
+    @Test
+    void getMitigationJourneyEventReturnsEmptyIfNoCis() throws Exception {
+        // Arrange
+        var code = "ci_code";
+        Map<String, ContraIndicatorConfig> ciConfigMap =
+                Map.of(code, new ContraIndicatorConfig(code, 4, -3, "X"));
+        when(mockConfigService.getContraIndicatorConfigMap()).thenReturn(ciConfigMap);
+
+        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
+
+        // act
+        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(), TEST_VOT);
+
+        // assert
+        assertEquals(Optional.empty(), result);
+    }
+
     private static ContraIndicator createCi(String code) {
         var ci = new ContraIndicator();
         ci.setCode(code);
