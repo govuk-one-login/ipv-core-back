@@ -1,6 +1,7 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.email.service;
 
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.service.notify.NotificationClient;
 
 /**
