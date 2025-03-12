@@ -52,7 +52,7 @@ test {
 
 task pactConsumerTests (type: Test) {
 	useJUnitPlatform()
-	include 'uk/gov/di/ipv/core/library/pact/**'
+	include 'uk/gov/di/ipv/core/library/pact/cimit/**'
 	systemProperties['pact.rootDir'] = "$rootDir/build/pacts"
 }
 

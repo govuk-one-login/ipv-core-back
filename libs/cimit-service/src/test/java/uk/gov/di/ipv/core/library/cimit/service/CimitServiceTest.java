@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.cimit.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -24,6 +24,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialValidator;
 
 import java.io.IOException;
@@ -43,14 +45,14 @@ import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.FAILED_RESPONSE;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.X_API_KEY_HEADER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.TEST_EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
-import static uk.gov.di.ipv.core.library.service.CimitService.FAILED_RESPONSE;
-import static uk.gov.di.ipv.core.library.service.CimitService.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.service.CimitService.X_API_KEY_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class CimitServiceTest {

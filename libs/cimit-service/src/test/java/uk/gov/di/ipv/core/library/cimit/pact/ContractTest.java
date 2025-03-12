@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.pact;
+package uk.gov.di.ipv.core.library.cimit.pact;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
@@ -19,10 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
+import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.testhelpers.pact.PactJwtBuilder;
 import uk.gov.di.model.SecurityCheck;
@@ -39,16 +39,16 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.FAILED_API_REQUEST;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.GET_VCS_ENDPOINT;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.POST_CI_ENDPOINT;
+import static uk.gov.di.ipv.core.library.cimit.service.CimitService.POST_MITIGATIONS_ENDPOINT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_API_BASE_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CIMIT_SIGNING_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.service.CimitService.FAILED_API_REQUEST;
-import static uk.gov.di.ipv.core.library.service.CimitService.GET_VCS_ENDPOINT;
-import static uk.gov.di.ipv.core.library.service.CimitService.GOVUK_SIGNIN_JOURNEY_ID_HEADER;
-import static uk.gov.di.ipv.core.library.service.CimitService.IP_ADDRESS_HEADER;
-import static uk.gov.di.ipv.core.library.service.CimitService.POST_CI_ENDPOINT;
-import static uk.gov.di.ipv.core.library.service.CimitService.POST_MITIGATIONS_ENDPOINT;
 
 @ExtendWith(PactConsumerTestExt.class)
 @ExtendWith(MockitoExtension.class)
