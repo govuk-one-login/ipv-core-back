@@ -23,10 +23,10 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.service.VotMatcher;
-import uk.gov.di.ipv.core.library.service.VotMatchingResult;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
+import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatcher;
+import uk.gov.di.ipv.core.library.useridentity.service.VotMatchingResult;
 
 import java.text.ParseException;
 import java.util.List;

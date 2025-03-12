@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.useridentity.service;
 
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
@@ -19,6 +19,8 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.NameHelper;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.model.AddressCredential;
 import uk.gov.di.model.BirthDate;
