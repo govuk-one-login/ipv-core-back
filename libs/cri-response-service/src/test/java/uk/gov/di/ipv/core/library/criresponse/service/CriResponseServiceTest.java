@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.criresponse.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.ArrayList;

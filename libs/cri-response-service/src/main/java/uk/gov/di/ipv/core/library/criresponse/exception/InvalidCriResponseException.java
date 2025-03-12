@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.exception;
+package uk.gov.di.ipv.core.library.criresponse.exception;
 
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;

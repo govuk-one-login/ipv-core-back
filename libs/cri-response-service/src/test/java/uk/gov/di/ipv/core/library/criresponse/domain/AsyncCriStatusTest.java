@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.criresponse.domain;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;

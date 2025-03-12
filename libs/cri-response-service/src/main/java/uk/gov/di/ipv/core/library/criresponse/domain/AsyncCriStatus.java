@@ -1,7 +1,9 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.criresponse.domain;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.Cri;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ABANDON_PATH;
