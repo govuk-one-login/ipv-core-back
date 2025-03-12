@@ -18,7 +18,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.enums.IdentityType;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -29,7 +30,6 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 

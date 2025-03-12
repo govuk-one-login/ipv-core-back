@@ -10,11 +10,13 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -22,8 +24,6 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
@@ -47,12 +47,12 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_AT_EVCS_HTT
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_DELETE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_IPV_SESSION_ID;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNKNOWN_RESET_TYPE;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.NAME_ONLY_CHANGE;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.PENDING_F2F_ALL;
 import static uk.gov.di.ipv.core.library.enums.SessionCredentialsResetType.REINSTATE;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.CURRENT;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)

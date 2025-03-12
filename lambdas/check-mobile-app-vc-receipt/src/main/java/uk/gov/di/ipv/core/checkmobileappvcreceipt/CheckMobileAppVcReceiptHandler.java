@@ -14,12 +14,15 @@ import uk.gov.di.ipv.core.checkmobileappvcreceipt.dto.CheckMobileAppVcReceiptReq
 import uk.gov.di.ipv.core.checkmobileappvcreceipt.exception.InvalidCheckMobileAppVcReceiptRequestException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.domain.AsyncCriStatus;
+import uk.gov.di.ipv.core.library.cimit.service.CimitService;
+import uk.gov.di.ipv.core.library.criresponse.domain.AsyncCriStatus;
+import uk.gov.di.ipv.core.library.criresponse.exception.InvalidCriResponseException;
+import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.exception.EvcsServiceException;
-import uk.gov.di.ipv.core.library.exception.InvalidCriResponseException;
+import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
+import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -30,21 +33,18 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CimitService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriResponseService;
-import uk.gov.di.ipv.core.library.service.EvcsService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
-import static uk.gov.di.ipv.core.library.enums.EvcsVCState.PENDING_RETURN;
+import static uk.gov.di.ipv.core.library.evcs.enums.EvcsVCState.PENDING_RETURN;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class CheckMobileAppVcReceiptHandler
