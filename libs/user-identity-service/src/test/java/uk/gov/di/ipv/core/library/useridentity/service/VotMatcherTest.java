@@ -35,7 +35,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.L1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 @ExtendWith(MockitoExtension.class)
-public class VotMatcherTest {
+class VotMatcherTest {
     private static final Gpg45Scores GPG_45_SCORES = Gpg45Scores.builder().build();
     private static VerifiableCredential pcl200vc;
     private static VerifiableCredential pcl250vc;
@@ -47,7 +47,7 @@ public class VotMatcherTest {
     @InjectMocks private VotMatcher votMatcher;
 
     @BeforeAll
-    public static void beforeAll() throws Exception {
+    static void beforeAll() throws Exception {
         gpg45Vcs = List.of(vcExperianFraudScoreTwo(), vcVerificationM1a());
         pcl200vc = vcHmrcMigrationPCL200();
         pcl250vc = vcHmrcMigrationPCL250();
