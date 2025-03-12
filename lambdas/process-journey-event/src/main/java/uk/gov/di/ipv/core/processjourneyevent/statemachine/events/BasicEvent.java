@@ -114,7 +114,10 @@ public class BasicEvent implements Event {
 
     private boolean isCheckMitigationAllowed(ClientOAuthSessionItem clientOAuthSessionItem) {
         var isReverification =
-                clientOAuthSessionItem.getScopeClaims().contains(ScopeConstants.REVERIFICATION);
+                !StringUtils.isEmpty(clientOAuthSessionItem.getScope())
+                        && clientOAuthSessionItem
+                                .getScopeClaims()
+                                .contains(ScopeConstants.REVERIFICATION);
         return checkMitigation != null && !isReverification;
     }
 
