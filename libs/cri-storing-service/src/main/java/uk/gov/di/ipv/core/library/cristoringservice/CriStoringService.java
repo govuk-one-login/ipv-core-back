@@ -38,6 +38,7 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.auditing.helpers.AuditExtensionsHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 
@@ -179,6 +180,15 @@ public class CriStoringService {
 
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
+            if (DWP_KBV.equals(cri)) {
+                auditService.sendAuditEvent(
+                        AuditEvent.createWithDeviceInformation(
+                                AuditEventTypes.IPV_DWP_KBV_CRI_VC_ISSUED,
+                                configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser,
+                                getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
+                                new AuditRestrictedDeviceInformation(deviceInformation)));
+            }
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
                             AuditEventTypes.IPV_VC_RECEIVED,

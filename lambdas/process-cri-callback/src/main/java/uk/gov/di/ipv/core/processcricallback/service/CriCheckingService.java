@@ -51,6 +51,7 @@ import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_C
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
@@ -93,6 +94,8 @@ public class CriCheckingService {
     private final CimitUtilityService cimitUtilityService;
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
+
+    private static final String USER_ABANDONED_ERROR_DESCRIPTION = "user_abandoned";
 
     @ExcludeFromGeneratedCoverageReport
     public CriCheckingService(
@@ -141,6 +144,17 @@ public class CriCheckingService {
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(errorCode)) {
             LOGGER.warn(LogHelper.buildLogMessage("Unknown Oauth error code received"));
+        }
+
+        if (OAuth2Error.ACCESS_DENIED_CODE.equals(errorCode)
+                && DWP_KBV.equals(callbackRequest.getCredentialIssuer())
+                && USER_ABANDONED_ERROR_DESCRIPTION.equals(errorDescription)) {
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithDeviceInformation(
+                            AuditEventTypes.IPV_DWP_KBV_CRI_ABANDONED,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            new AuditRestrictedDeviceInformation(deviceInformation)));
         }
 
         LOGGER.error(
