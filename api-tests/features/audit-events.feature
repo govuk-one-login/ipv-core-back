@@ -314,7 +314,7 @@ Feature: Audit Events
       Then I get a 'page-ipv-success' page response
       And audit events for 'dwp-kbv-successful-journey' are recorded [local only]
 
-    Scenario: DWP KBV - dropout via thin file thin file
+    Scenario: DWP KBV - dropout via thin file
       When I call the CRI stub with attributes and get an 'invalid_request' OAuth error
         | Attribute          | Values                                          |
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
