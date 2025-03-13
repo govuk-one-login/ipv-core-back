@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
 import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
@@ -35,7 +36,8 @@ public class StateMachine {
             String startState,
             String event,
             String currentPage,
-            EventResolveParameters eventResolveParameters)
+            EventResolveParameters eventResolveParameters,
+            EventResolver eventResolver)
             throws UnknownEventException, UnknownStateException, JourneyEngineException {
         var state = states.get(startState.split(JOURNEY_STATE_DELIMITER)[0]);
 
@@ -56,13 +58,15 @@ public class StateMachine {
             }
         }
 
-        var result = state.transition(event, startState, eventResolveParameters);
+        var result = state.transition(event, startState, eventResolveParameters, eventResolver);
 
         // Resolve nested journey
         if (result.state() instanceof NestedJourneyInvokeState) {
             var entryEvent = requireNonNullElse(result.targetEntryEvent(), event);
             var nestedResult =
-                    result.state().transition(entryEvent, startState, eventResolveParameters);
+                    result.state()
+                            .transition(
+                                    entryEvent, startState, eventResolveParameters, eventResolver);
             // Add audit events and context from the outer event
             return new TransitionResult(
                     nestedResult.state(),

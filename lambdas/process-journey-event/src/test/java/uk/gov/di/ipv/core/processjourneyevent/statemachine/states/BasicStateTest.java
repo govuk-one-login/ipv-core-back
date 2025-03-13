@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
@@ -23,16 +24,18 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(MockitoExtension.class)
 class BasicStateTest {
     private EventResolveParameters eventResolveParameters;
+    private EventResolver eventResolver;
 
     @BeforeEach
     void setUp() {
         eventResolveParameters =
                 new EventResolveParameters(
                         "journeyContext",
-                        mock(ConfigService.class),
                         new IpvSessionItem(),
-                        ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build(),
-                        mock(CimitUtilityService.class));
+                        ClientOAuthSessionItem.builder().scope(ScopeConstants.OPENID).build());
+
+        eventResolver =
+                new EventResolver(mock(CimitUtilityService.class), mock(ConfigService.class));
     }
 
     @Test
@@ -46,7 +49,9 @@ class BasicStateTest {
         currentToTargetEvent.setTargetStateObj(targetState);
         currentState.setEvents(Map.of("next", currentToTargetEvent));
 
-        var result = currentState.transition("next", "startState", eventResolveParameters);
+        var result =
+                currentState.transition(
+                        "next", "startState", eventResolveParameters, eventResolver);
 
         assertEquals(targetState, result.state());
     }
@@ -63,7 +68,9 @@ class BasicStateTest {
         BasicState currentState = new BasicState();
         currentState.setParentObj(parentState);
 
-        var result = currentState.transition("parent-event", "startState", eventResolveParameters);
+        var result =
+                currentState.transition(
+                        "parent-event", "startState", eventResolveParameters, eventResolver);
 
         assertEquals(parentEventTargetState, result.state());
     }
@@ -74,7 +81,12 @@ class BasicStateTest {
 
         assertEquals(
                 state,
-                state.transition("attempt-recovery", "startState", eventResolveParameters).state());
+                state.transition(
+                                "attempt-recovery",
+                                "startState",
+                                eventResolveParameters,
+                                eventResolver)
+                        .state());
     }
 
     @Test
@@ -83,7 +95,11 @@ class BasicStateTest {
                 UnknownEventException.class,
                 () ->
                         new BasicState()
-                                .transition("unknown-event", "startState", eventResolveParameters));
+                                .transition(
+                                        "unknown-event",
+                                        "startState",
+                                        eventResolveParameters,
+                                        eventResolver));
     }
 
     @Test

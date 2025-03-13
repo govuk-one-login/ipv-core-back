@@ -48,6 +48,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
@@ -335,6 +336,8 @@ public class ProcessJourneyEventHandler
             return handleBackEvent(ipvSessionItem, initialJourneyState);
         }
 
+        var eventResolver = new EventResolver(cimitUtilityService, configService);
+
         var result =
                 stateMachine.transition(
                         initialJourneyState.state(),
@@ -342,10 +345,9 @@ public class ProcessJourneyEventHandler
                         currentPage,
                         new EventResolveParameters(
                                 ipvSessionItem.getJourneyContext(),
-                                configService,
                                 ipvSessionItem,
-                                clientOAuthSessionItem,
-                                cimitUtilityService));
+                                clientOAuthSessionItem),
+                        eventResolver);
 
         if (!isNullOrEmpty(result.auditEvents())) {
             for (var auditEventType : result.auditEvents()) {

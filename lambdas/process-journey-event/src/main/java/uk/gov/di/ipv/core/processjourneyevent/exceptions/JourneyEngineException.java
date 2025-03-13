@@ -5,6 +5,10 @@ public class JourneyEngineException extends Exception {
         super();
     }
 
+    public JourneyEngineException(String message) {
+        super(message);
+    }
+
     public JourneyEngineException(String message, Throwable cause) {
         super(message, cause);
     }
