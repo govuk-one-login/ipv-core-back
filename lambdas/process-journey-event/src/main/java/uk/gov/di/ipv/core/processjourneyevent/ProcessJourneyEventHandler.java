@@ -36,6 +36,7 @@ import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -44,13 +45,14 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.JourneyChangeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.StepResponse;
@@ -91,6 +93,7 @@ public class ProcessJourneyEventHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
     private final EvcsService evcsService;
+    private final CimitUtilityService cimitUtilityService;
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public ProcessJourneyEventHandler(
@@ -101,7 +104,8 @@ public class ProcessJourneyEventHandler
             List<IpvJourneyTypes> journeyTypes,
             StateMachineInitializerMode stateMachineInitializerMode,
             List<String> nestedJourneyTypes,
-            EvcsService evcsService)
+            EvcsService evcsService,
+            CimitUtilityService cimitUtilityService)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
@@ -110,6 +114,7 @@ public class ProcessJourneyEventHandler
         this.stateMachines =
                 loadStateMachines(journeyTypes, stateMachineInitializerMode, nestedJourneyTypes);
         this.evcsService = evcsService;
+        this.cimitUtilityService = cimitUtilityService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -135,6 +140,7 @@ public class ProcessJourneyEventHandler
                         StateMachineInitializerMode.STANDARD,
                         nestedJourneyTypes);
         this.evcsService = new EvcsService(configService);
+        this.cimitUtilityService = new CimitUtilityService(configService);
     }
 
     @Override
@@ -268,31 +274,34 @@ public class ProcessJourneyEventHandler
 
             return ((BasicState) newState).getResponse();
         } catch (UnknownStateException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Invalid journey state encountered, failed to execute journey engine step.",
-                                    e)
-                            .with(
-                                    LOG_USER_STATE.getFieldName(),
-                                    ipvSessionItem.getState().state()));
+            logErrorWithCurrentJourneyDetails(
+                    "Invalid journey state encountered, failed to execute journey engine step.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState());
             throw new JourneyEngineException();
         } catch (UnknownEventException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "Invalid journey event provided, failed to execute journey engine step.",
-                                    e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
+            logErrorWithCurrentJourneyDetails(
+                    "Invalid journey event provided, failed to execute journey engine step.",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState());
             throw new JourneyEngineException();
         } catch (StateMachineNotFoundException e) {
-            LOGGER.error(
-                    LogHelper.buildErrorMessage(
-                                    "State machine not found for journey type, failed to execute journey engine step",
-                                    e)
-                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
-                            .with(
-                                    LOG_JOURNEY_TYPE.getFieldName(),
-                                    ipvSessionItem.getState().subJourney().name()));
+            logErrorWithCurrentJourneyDetails(
+                    "State machine not found for journey type, failed to execute journey engine step",
+                    e,
+                    journeyEvent,
+                    ipvSessionItem.getState());
             throw new JourneyEngineException();
+        } catch (CredentialParseException e) {
+            logErrorWithCurrentJourneyDetails(
+                    "Unable to parse credentials.", e, journeyEvent, ipvSessionItem.getState());
+            throw new JourneyEngineException();
+        } catch (JourneyEngineException e) {
+            logErrorWithCurrentJourneyDetails(
+                    e.getMessage(), e, journeyEvent, ipvSessionItem.getState());
+            throw e;
         }
     }
 
@@ -306,7 +315,7 @@ public class ProcessJourneyEventHandler
             String deviceInformation,
             ClientOAuthSessionItem clientOAuthSessionItem)
             throws StateMachineNotFoundException, UnknownEventException, UnknownStateException,
-                    EvcsServiceException, CredentialParseException {
+                    JourneyEngineException, EvcsServiceException, CredentialParseException {
 
         StateMachine stateMachine = stateMachines.get(initialJourneyState.subJourney());
         if (stateMachine == null) {
@@ -325,12 +334,18 @@ public class ProcessJourneyEventHandler
             return handleBackEvent(ipvSessionItem, initialJourneyState);
         }
 
+        var eventResolver = new EventResolver(cimitUtilityService, configService);
+
         var result =
                 stateMachine.transition(
                         initialJourneyState.state(),
                         journeyEvent,
-                        new JourneyContext(configService, ipvSessionItem.getJourneyContext()),
-                        currentPage);
+                        currentPage,
+                        new EventResolveParameters(
+                                ipvSessionItem.getJourneyContext(),
+                                ipvSessionItem,
+                                clientOAuthSessionItem),
+                        eventResolver);
 
         if (!isNullOrEmpty(result.auditEvents())) {
             for (var auditEventType : result.auditEvents()) {
@@ -544,5 +559,14 @@ public class ProcessJourneyEventHandler
         return stateMachines.get(journeyState.subJourney()).getState(journeyState.state())
                         instanceof BasicState basicState
                 && basicState.getEvents().containsKey(BACK_EVENT);
+    }
+
+    private void logErrorWithCurrentJourneyDetails(
+            String message, Exception e, String journeyEvent, JourneyState journeyState) {
+        LOGGER.error(
+                LogHelper.buildErrorMessage(message, e)
+                        .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
+                        .with(LOG_USER_STATE.getFieldName(), journeyState.state())
+                        .with(LOG_JOURNEY_TYPE.getFieldName(), journeyState.subJourney().name()));
     }
 }

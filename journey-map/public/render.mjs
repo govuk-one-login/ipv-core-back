@@ -4,6 +4,9 @@ const topDownJourneys = ["INITIAL_JOURNEY_SELECTION"];
 const errorJourneys = ["TECHNICAL_ERROR"];
 const failureJourneys = ["INELIGIBLE", "FAILED"];
 
+const JOURNEY_CONTEXT_TRANSITION_CLASSNAME = "journeyCtxTransition";
+const MITIGATIONS_TRANSITION_CLASSNAME = "mitigationTransition";
+
 // Expand out parent states
 // Will also search 'otherStates' (e.g. for nested journeys)
 const expandParents = (journeyStates, otherStates) => {
@@ -162,6 +165,7 @@ const renderTransitions = (journeyStates, formData) => {
           targetEntryEvent,
           exitEventToEmit,
           journeyContext,
+          mitigation,
         } = resolvedTarget;
 
         const target = exitEventToEmit
@@ -188,11 +192,13 @@ const renderTransitions = (journeyStates, formData) => {
         }
 
         eventsByTarget[target] = eventsByTarget[target] || [];
-        const eventTransitionLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}${journeyContext ? ` - journeyContext: ${journeyContext}` : ""}`;
         eventsByTarget[target].push(
-          journeyContext
-            ? `<span class="journeyCtxTransition">${eventTransitionLabel}</span>`
-            : eventTransitionLabel,
+          createTransitionLabel({
+            eventName,
+            targetEntryEvent,
+            journeyContext,
+            mitigation,
+          }),
         );
 
         if (!journeyStates[target]) {
@@ -223,6 +229,36 @@ const renderTransitions = (journeyStates, formData) => {
   }
 
   return { transitionsMermaid: stateTransitions.join("\n"), states };
+};
+
+const createTransitionLabel = ({
+  eventName,
+  targetEntryEvent,
+  journeyContext,
+  mitigation,
+}) => {
+  const eventLabel = `${eventName}${targetEntryEvent ? `/${targetEntryEvent}` : ""}`;
+
+  const labelWithClass = (className, label, value) =>
+    `<span class="${className}">${eventLabel} - ${label}: ${value}</span>`;
+
+  if (journeyContext) {
+    return labelWithClass(
+      JOURNEY_CONTEXT_TRANSITION_CLASSNAME,
+      "journeyContext",
+      journeyContext,
+    );
+  }
+
+  if (mitigation) {
+    return labelWithClass(
+      MITIGATIONS_TRANSITION_CLASSNAME,
+      "mitigation",
+      mitigation,
+    );
+  }
+
+  return eventLabel;
 };
 
 const renderClickHandler = (state, definition) => {

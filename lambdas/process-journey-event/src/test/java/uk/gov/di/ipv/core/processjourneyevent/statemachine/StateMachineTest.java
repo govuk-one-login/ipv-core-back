@@ -1,15 +1,18 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyState;
-import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolveParameters;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.EventResolver;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.ProcessStepResponse;
 
@@ -25,15 +28,18 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.INITIAL_JOURNEY_SELECTION;
 
 class StateMachineTest {
-    private static final JourneyContext JOURNEY_CONTEXT =
-            new JourneyContext(mock(ConfigService.class), "");
+    private static final EventResolveParameters EVENT_RESOLVE_PARAMETERS =
+            new EventResolveParameters(
+                    "journeyContext", new IpvSessionItem(), new ClientOAuthSessionItem());
+    @Mock private EventResolver eventResolver;
 
     @Test
     void transitionShouldReturnAppropriateState() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
 
         State startingState = mock(BasicState.class);
-        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(expectedResult);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
@@ -42,7 +48,9 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -57,18 +65,26 @@ class StateMachineTest {
 
         assertThrows(
                 UnknownStateException.class,
-                () -> stateMachine.transition("UNKNOWN_STATE", "event", JOURNEY_CONTEXT, null));
+                () ->
+                        stateMachine.transition(
+                                "UNKNOWN_STATE",
+                                "event",
+                                null,
+                                EVENT_RESOLVE_PARAMETERS,
+                                eventResolver));
     }
 
     @Test
     void transitionShouldTransitionIntoNestedJourneyInvokeState() throws Exception {
         var expectedResult = new TransitionResult(new BasicState());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
-        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(nestedJourneyInvokeState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(expectedResult);
 
         State startingState = mock(BasicState.class);
-        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(new TransitionResult(nestedJourneyInvokeState));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
@@ -77,7 +93,9 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -88,11 +106,13 @@ class StateMachineTest {
         // Arrange
         var nestedResult = new TransitionResult(new BasicState());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
-        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(nestedJourneyInvokeState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(nestedResult);
 
         State startingState = mock(BasicState.class);
-        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(
                         new TransitionResult(
                                 nestedJourneyInvokeState,
@@ -107,7 +127,9 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         // Act
-        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         // Assert
         var expectedResult =
@@ -130,11 +152,13 @@ class StateMachineTest {
                         Map.of("testKey", "testValue"),
                         null);
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
-        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(nestedJourneyInvokeState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(nestedResult);
 
         State startingState = mock(BasicState.class);
-        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(new TransitionResult(nestedJourneyInvokeState));
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
@@ -144,7 +168,9 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         // Act
-        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         // Assert
         var expectedResult =
@@ -167,11 +193,13 @@ class StateMachineTest {
                         Map.of("testKey1", "testValue1"),
                         null);
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
-        when(nestedJourneyInvokeState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(nestedJourneyInvokeState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(nestedResult);
 
         State startingState = mock(BasicState.class);
-        when(startingState.transition("event", "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event", "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(
                         new TransitionResult(
                                 nestedJourneyInvokeState,
@@ -186,7 +214,9 @@ class StateMachineTest {
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
         // Act
-        var actualResult = stateMachine.transition("START_STATE", "event", JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", "event", null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         // Assert
         var expectedResult =
@@ -209,12 +239,14 @@ class StateMachineTest {
         // Nested event transitions using the override
         var expectedResult = new TransitionResult(new BasicState());
         State nestedJourneyInvokeState = mock(NestedJourneyInvokeState.class);
-        when(nestedJourneyInvokeState.transition(eventOverride, "START_STATE", JOURNEY_CONTEXT))
+        when(nestedJourneyInvokeState.transition(
+                        eventOverride, "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(expectedResult);
 
         // Outer event transitions using the overall event
         State startingState = mock(BasicState.class);
-        when(startingState.transition(event, "START_STATE", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        event, "START_STATE", EVENT_RESOLVE_PARAMETERS, eventResolver))
                 .thenReturn(
                         new TransitionResult(nestedJourneyInvokeState, null, null, eventOverride));
 
@@ -224,7 +256,9 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        var actualResult = stateMachine.transition("START_STATE", event, JOURNEY_CONTEXT, null);
+        var actualResult =
+                stateMachine.transition(
+                        "START_STATE", event, null, EVENT_RESOLVE_PARAMETERS, eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }
@@ -234,7 +268,11 @@ class StateMachineTest {
         var expectedResult = new TransitionResult(new BasicState());
 
         State startingState = mock(NestedJourneyInvokeState.class);
-        when(startingState.transition("event", "START_STATE/NESTED_JOURNEY", JOURNEY_CONTEXT))
+        when(startingState.transition(
+                        "event",
+                        "START_STATE/NESTED_JOURNEY",
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver))
                 .thenReturn(expectedResult);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
@@ -245,7 +283,11 @@ class StateMachineTest {
 
         var actualResult =
                 stateMachine.transition(
-                        "START_STATE/NESTED_JOURNEY", "event", JOURNEY_CONTEXT, null);
+                        "START_STATE/NESTED_JOURNEY",
+                        "event",
+                        null,
+                        EVENT_RESOLVE_PARAMETERS,
+                        eventResolver);
 
         assertEquals(expectedResult, actualResult);
     }

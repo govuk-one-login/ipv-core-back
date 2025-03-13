@@ -50,7 +50,6 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
         clientOAuthSessionItem.setState(claimsSet.getStringClaim("state"));
         clientOAuthSessionItem.setUserId(claimsSet.getSubject());
-        clientOAuthSessionItem.setScope(claimsSet.getStringClaim("scope"));
         clientOAuthSessionItem.setGovukSigninJourneyId(
                 claimsSet.getStringClaim("govuk_signin_journey_id"));
         clientOAuthSessionItem.setVtr(claimsSet.getStringListClaim("vtr"));
