@@ -165,8 +165,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
 
             var request =
@@ -217,8 +216,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
@@ -274,8 +272,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.of(cimitResponse));
             when(cimitUtilityService.getContraIndicatorsFromVc(any()))
                     .thenReturn(List.of())
@@ -333,8 +330,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
@@ -376,8 +372,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(votMatcher.matchFirstVot(List.of(P2), List.of(), List.of(), true))
@@ -411,8 +406,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
@@ -457,8 +451,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
 
             var request =
@@ -633,8 +626,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            ticfCis, ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(ticfCis, P2))
                     .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
             var request =
                     requestBuilder
@@ -677,8 +669,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(reproveIdentityClientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
 
             var request =
@@ -864,8 +855,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                     .thenReturn(List.of())
                     .thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(
-                            List.of(), ipvSessionItem.getThresholdVot()))
+            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
                     .thenReturn(Optional.empty());
             doThrow(
                             new EvcsServiceException(

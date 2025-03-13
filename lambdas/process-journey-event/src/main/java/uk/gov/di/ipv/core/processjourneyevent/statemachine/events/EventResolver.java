@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -160,7 +161,8 @@ public class EventResolver {
 
         var validMitigation =
                 cimitUtilityService.getMitigationJourneyEvent(
-                        contraIndicators, ipvSessionItem.getTargetVot());
+                        contraIndicators,
+                        VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
 
         return (validMitigation.isPresent()
                         && event.getCheckMitigation().containsKey(validMitigation.get()))

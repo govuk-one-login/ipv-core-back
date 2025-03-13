@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -398,9 +399,7 @@ public class ProcessCandidateIdentityHandler
 
         var votResult =
                 votMatcher.matchFirstVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getRequestedVotsByStrengthDescending(),
+                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
                         sessionVcs,
                         contraIndicators,
                         areVcsCorrelated);
@@ -456,7 +455,7 @@ public class ProcessCandidateIdentityHandler
 
             var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var thresholdVot = ipvSessionItem.getThresholdVot();
+            var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
             var journeyResponse =
                     cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
