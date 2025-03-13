@@ -19,6 +19,7 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.EXPERIAN_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
@@ -975,6 +976,27 @@ public interface VcFixtures {
                 "https://review-k.integration.account.gov.uk",
                 Instant.ofEpochSecond(1653403140));
     }
+
+    VerifiableCredential DWP_KBV_VC =
+            generateVerifiableCredential(
+                    "urn:uuid:01a44342-e643-4ca9-8306-a8e044092fb0",
+                    DWP_KBV,
+                    TestVc.builder()
+                            .evidence(
+                                    List.of(
+                                            TestVc.TestEvidence.builder()
+                                                    .txn("abc1234")
+                                                    .verificationScore(2)
+                                                    .build()))
+                            .credentialSubject(
+                                    TestVc.TestCredentialSubject.builder()
+                                            .address(List.of(ADDRESS_4))
+                                            .name(List.of((ALICE_PARKER_NAME)))
+                                            .birthDate(List.of(createBirthDate("1970-01-01")))
+                                            .build())
+                            .build(),
+                    "https://dwp-kbv-issuer.integration.account.gov.uk",
+                    Instant.ofEpochSecond(1653403140));
 
     VerifiableCredential M1B_DCMAW_VC =
             generateVerifiableCredential(

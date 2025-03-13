@@ -39,8 +39,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DWP_KBV_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.VC_ADDRESS;
@@ -140,8 +142,8 @@ class CriStoringServiceTest {
     @Test
     void storeVcsShouldProcessVcsAndSendAuditEvents() throws Exception {
         // Arrange
-        var callbackRequest = buildValidCallbackRequest();
-        var vc = PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
+        var callbackRequest = buildValidCallbackRequest(DWP_KBV);
+        var vc = DWP_KBV_VC;
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var sessionVcs = List.of(M1A_ADDRESS_VC);
 
@@ -172,13 +174,15 @@ class CriStoringServiceTest {
 
         assertEquals(vc, vcCaptor.getValue());
 
-        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        verify(mockAuditService, times(3)).sendAuditEvent(auditEventCaptor.capture());
         var capturedAuditEvents = auditEventCaptor.getAllValues();
-        var firstAuditEvent = capturedAuditEvents.get(0);
-        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, firstAuditEvent.getEventName());
-        var secondAuditEvent = capturedAuditEvents.get(1);
         assertEquals(
-                AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED, secondAuditEvent.getEventName());
+                AuditEventTypes.IPV_DWP_KBV_CRI_VC_ISSUED,
+                capturedAuditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, capturedAuditEvents.get(1).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_CORE_CRI_RESOURCE_RETRIEVED,
+                capturedAuditEvents.get(2).getEventName());
 
         verify(mockSessionCredentialsService, never()).deleteSessionCredentialsForCri(any(), any());
         verify(mockSessionCredentialsService)
@@ -351,9 +355,13 @@ class CriStoringServiceTest {
     }
 
     private CriCallbackRequest buildValidCallbackRequest() {
+        return buildValidCallbackRequest(F2F);
+    }
+
+    private CriCallbackRequest buildValidCallbackRequest(Cri credentialIssuer) {
         return CriCallbackRequest.builder()
                 .ipvSessionId(TEST_IPV_SESSION_ID)
-                .credentialIssuerId(F2F.getId())
+                .credentialIssuerId(credentialIssuer.getId())
                 .authorizationCode(TEST_AUTHORISATION_CODE)
                 .state(TEST_CRI_OAUTH_SESSION_ID)
                 .build();

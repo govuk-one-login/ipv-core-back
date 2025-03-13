@@ -50,6 +50,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
+import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
@@ -218,6 +219,39 @@ class CriCheckingServiceTest {
                 TEST_ERROR_DESCRIPTION,
                 ((AuditExtensionErrorParams) capturedAuditEvent.getExtensions())
                         .getErrorDescription());
+    }
+
+    @Test
+    void handleCallbackErrorShouldReturnSendDwpKbvAuditEvent() {
+        // Arrange
+        var callbackRequest =
+                CriCallbackRequest.builder()
+                        .credentialIssuerId(DWP_KBV.getId())
+                        .error(OAuth2Error.ACCESS_DENIED_CODE)
+                        .errorDescription("user_abandoned")
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .build();
+        var clientOauthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .userId(TEST_USER_ID)
+                        .govukSigninJourneyId(TEST_GOVUK_SIGNIN_JOURNEY_ID)
+                        .build();
+        when(mockConfigService.getParameter(ConfigurationVariable.COMPONENT_ID))
+                .thenReturn(TEST_COMPONENT_ID);
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+
+        // Act
+        criCheckingService.handleCallbackError(callbackRequest, clientOauthSessionItem);
+
+        // Assert
+        verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var capturedAuditEvents = auditEventCaptor.getAllValues();
+        assertEquals(
+                AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
+                capturedAuditEvents.get(0).getEventName());
+        assertEquals(
+                AuditEventTypes.IPV_DWP_KBV_CRI_ABANDONED,
+                capturedAuditEvents.get(1).getEventName());
     }
 
     @Test

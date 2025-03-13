@@ -23,6 +23,8 @@ nestedJourneyStates:
         exitEventToEmit: enhanced-verification
       invalid-request:
         targetState: DWP_THIN_FILE_PAGE
+        auditEvents:
+          - IPV_DWP_KBV_CRI_THIN_FILE_ENCOUNTERED
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
   CRI_EXPERIAN_KBV:
