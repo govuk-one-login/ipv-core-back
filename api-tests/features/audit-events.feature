@@ -320,7 +320,7 @@ Feature: Audit Events
         | evidence_requested | {"scoringPolicy":"gpg45","verificationScore":2} |
       Then I get a 'page-different-security-questions' page response
       And audit events for 'dwp-kbv-dropout-via-thin-file' are recorded [local only]
- d
+
     Scenario: DWP KBV - user abandons CRI
       When I call the CRI stub with attributes and get an 'access_denied' OAuth error with error description 'user_abandoned'
         | Attribute          | Values                                          |
