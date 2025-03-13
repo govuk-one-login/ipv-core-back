@@ -817,8 +817,8 @@ class BuildCriOauthRequestHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
         var auditEvents = auditEventCaptor.getAllValues();
-        assertEquals(AuditEventTypes.IPV_DWP_KBV_CRI_START, auditEvents.get(0).getEventName());
-        assertEquals(AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEvents.get(1).getEventName());
+        assertEquals(AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_DWP_KBV_CRI_START, auditEvents.get(1).getEventName());
     }
 
     @Test

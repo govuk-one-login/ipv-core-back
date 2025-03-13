@@ -271,10 +271,11 @@ When(
 // have to wait for the CRI stub to decrypt them and send them back to the test code rather than just validating
 // CRI stub request directly.
 When(
-  "I call the CRI stub with attributes and get a(n) {string} OAuth error",
+  /I call the CRI stub with attributes and get an? '([\w_]+)' OAuth error( with error description '([\w_]+)')?/,
   async function (
     this: World,
     error: string,
+    errorDescription: string | undefined,
     dataTable: DataTable | undefined,
   ): Promise<void> {
     if (!this.lastJourneyEngineResponse) {
@@ -288,7 +289,7 @@ When(
     const redirectUrl = this.lastJourneyEngineResponse.cri.redirectUrl;
     const jarPayload = await submitAndProcessCriAction(
       this,
-      generateCriStubOAuthErrorBody(error, redirectUrl),
+      generateCriStubOAuthErrorBody(error, redirectUrl, errorDescription),
       redirectUrl,
     );
 

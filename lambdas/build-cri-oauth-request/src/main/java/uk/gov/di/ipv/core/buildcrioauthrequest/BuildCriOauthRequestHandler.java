@@ -209,6 +209,13 @@ public class BuildCriOauthRequestHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
+            auditService.sendAuditEvent(
+                    AuditEvent.createWithDeviceInformation(
+                            AuditEventTypes.IPV_REDIRECT_TO_CRI,
+                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser,
+                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
+
             if (DWP_KBV.equals(cri)) {
                 auditService.sendAuditEvent(
                         AuditEvent.createWithDeviceInformation(
@@ -218,13 +225,6 @@ public class BuildCriOauthRequestHandler
                                 new AuditRestrictedDeviceInformation(
                                         input.getDeviceInformation())));
             }
-
-            auditService.sendAuditEvent(
-                    AuditEvent.createWithDeviceInformation(
-                            AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            configService.getParameter(ConfigurationVariable.COMPONENT_ID),
-                            auditEventUser,
-                            new AuditRestrictedDeviceInformation(input.getDeviceInformation())));
 
             EmbeddedMetricHelper.criRedirect(cri.getId());
 
