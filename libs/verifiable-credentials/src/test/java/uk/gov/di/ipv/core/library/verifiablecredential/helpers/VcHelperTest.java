@@ -38,8 +38,8 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeAvailableFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudNotExpired;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcHmrcMigrationPCL200;
@@ -251,7 +251,8 @@ class VcHelperTest {
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
+    void
+            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForApplicableAuthoritativeSourceFailedFraudCheck() {
 
         // Arrange
         var vcs =
@@ -262,32 +263,33 @@ class VcHelperTest {
                         vcVerificationM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertTrue(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
+    void
+            hasUnavailableOrNotApplicableFraudCheckShouldReturnTrueForAuthoritativeAvailableSourceFailedFraudCheck() {
 
         // Arrange
         var vcs =
                 List.of(
                         DCMAW_PASSPORT_VC,
                         M1A_ADDRESS_VC,
-                        vcFraudApplicableAuthoritativeAvailableFailed(),
+                        vcFraudAvailableAuthoritativeFailed(),
                         vcVerificationM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertTrue(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForOtherFailedFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForOtherFailedFraudCheck() {
 
         // Arrange
         var vcs =
@@ -298,14 +300,14 @@ class VcHelperTest {
                         vcVerificationM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForSuccessfulFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForSuccessfulFraudCheck() {
 
         // Arrange
         var vcs =
@@ -316,20 +318,53 @@ class VcHelperTest {
                         vcVerificationM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
 
         // Assert
         assertFalse(result);
     }
 
     @Test
-    void isFraudCheckUnavailableShouldReturnFalseForMissingFraudCheck() {
+    void hasUnavailableOrNotApplicableFraudCheckShouldReturnFalseForMissingFraudCheck() {
 
         // Arrange
         var vcs = List.of(DCMAW_PASSPORT_VC, M1A_ADDRESS_VC, vcVerificationM1a());
 
         // Act
-        var result = VcHelper.isFraudCheckUnavailable(vcs);
+        var result = VcHelper.hasUnavailableOrNotApplicableFraudCheck(vcs);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnTrueForUnavailableFraudCheck() {
+
+        // Arrange
+        var vc = vcFraudAvailableAuthoritativeFailed();
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(vc);
+
+        // Assert
+        assertTrue(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnFalseForSuccessfulFraudCheck() {
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(vcExperianFraudScoreOne());
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void hasUnavailableFraudCheckShouldReturnFalseForMissingFraudCheck() {
+
+        // Act
+        var result = VcHelper.hasUnavailableFraudCheck(DCMAW_PASSPORT_VC);
 
         // Assert
         assertFalse(result);

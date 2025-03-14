@@ -716,7 +716,7 @@ public interface VcFixtures {
                 Instant.ofEpochSecond(1658829758));
     }
 
-    static VerifiableCredential vcFraudApplicableAuthoritativeAvailableFailed() {
+    static VerifiableCredential vcFraudAvailableAuthoritativeFailed() {
         TestVc.TestCredentialSubject credentialSubject =
                 TestVc.TestCredentialSubject.builder()
                         .address(List.of(ADDRESS_3))

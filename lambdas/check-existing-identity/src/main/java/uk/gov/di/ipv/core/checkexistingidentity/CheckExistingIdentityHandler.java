@@ -570,8 +570,10 @@ public class CheckExistingIdentityHandler
         // check the result of 6MFC and return the appropriate journey
         if (configService.enabled(REPEAT_FRAUD_CHECK)
                 && attainedVot.getProfileType() == GPG45
-                && allFraudVcsAreExpired(credentialBundle.credentials)) {
-            LOGGER.info(LogHelper.buildLogMessage("Expired fraud VC found"));
+                && allFraudVcsAreExpiredOrFromUnavailableSource(credentialBundle.credentials)) {
+            LOGGER.info(
+                    LogHelper.buildLogMessage(
+                            "All Fraud VCs are expired or from unavailable source"));
             sessionCredentialsService.persistCredentials(
                     allVcsExceptFraud(credentialBundle.credentials),
                     auditEventUser.getSessionId(),
@@ -632,10 +634,13 @@ public class CheckExistingIdentityHandler
         return vcs.stream().filter(vc -> !EXPERIAN_FRAUD.equals(vc.getCri())).toList();
     }
 
-    private boolean allFraudVcsAreExpired(List<VerifiableCredential> vcs) {
+    private boolean allFraudVcsAreExpiredOrFromUnavailableSource(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == EXPERIAN_FRAUD)
-                .allMatch(VcHelper::isExpiredFraudVc);
+                .allMatch(
+                        vc ->
+                                VcHelper.isExpiredFraudVc(vc)
+                                        || VcHelper.hasUnavailableFraudCheck(vc));
     }
 
     private void sendAuditEvent(
