@@ -6,7 +6,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.exceptions.ClientOauthSessionNotFoundException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -17,7 +16,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -25,13 +27,12 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 @ExtendWith(MockitoExtension.class)
 class ClientOAuthSessionDetailsServiceTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockDataStore;
-    @Mock private ConfigService mockConfigService;
 
     @Test
     void shouldReturnClientOAuthSessionItem() throws Exception {
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
-        var clientOAuthSessionItem = new ClientOAuthSessionItem();
+        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
         clientOAuthSessionItem.setResponseType("test-type");
         clientOAuthSessionItem.setClientId("test-client");
@@ -43,8 +44,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(clientOAuthSessionItem);
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         ClientOAuthSessionItem result =
                 clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
@@ -67,11 +67,10 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldThrowIfNoClientOauthSessionItem() {
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(null);
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
         assertThrows(
                 ClientOauthSessionNotFoundException.class,
@@ -80,11 +79,9 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(true);
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
 
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        var testClaimSet =
+        JWTClaimsSet testClaimSet =
                 new JWTClaimsSet.Builder()
                         .claim("response_type", "test-type")
                         .claim("redirect_uri", "http://example.com")
@@ -92,73 +89,60 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("govuk_signin_journey_id", "test-journey-id")
                         .claim("reprove_identity", false)
                         .claim("scope", "test-scope")
-                        .claim("vtr", List.of("P1", "P2"))
+                        .claim("vtr", List.of("P1"))
                         .subject("test-user-id")
                         .build();
 
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
-        var clientOAuthSessionItem =
+        ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
                         clientOAuthSessionId,
                         testClaimSet,
                         "test-client",
                         "test-evcs-access-token");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
-
+        ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
-        assertEquals("test-client", clientOAuthSessionItem.getClientId());
-        assertEquals("test-type", clientOAuthSessionItem.getResponseType());
-        assertEquals("http://example.com", clientOAuthSessionItem.getRedirectUri());
-        assertEquals("test-state", clientOAuthSessionItem.getState());
-        assertEquals("test-user-id", clientOAuthSessionItem.getUserId());
-        assertEquals("test-evcs-access-token", clientOAuthSessionItem.getEvcsAccessToken());
-        assertEquals("test-journey-id", clientOAuthSessionItem.getGovukSigninJourneyId());
-        assertEquals("test-scope", clientOAuthSessionItem.getScope());
+        assertEquals(
+                clientOAuthSessionItem.getClientId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
+        assertEquals(
+                clientOAuthSessionItem.getResponseType(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getResponseType());
+        assertEquals(
+                clientOAuthSessionItem.getRedirectUri(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
+        assertEquals(
+                clientOAuthSessionItem.getState(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getState());
+        assertEquals(
+                clientOAuthSessionItem.getUserId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
+        assertEquals(
+                clientOAuthSessionItem.getEvcsAccessToken(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getEvcsAccessToken());
+        assertEquals(
+                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getScope(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getScope());
         assertFalse(clientOAuthSessionItem.getReproveIdentity());
-        assertEquals(List.of("P1", "P2"), clientOAuthSessionItem.getVtr());
-    }
-
-    @Test
-    void shouldFilterLowConfidenceVotIfNotEnabled() throws ParseException {
-        when(mockConfigService.enabled(CoreFeatureFlag.P1_JOURNEYS_ENABLED)).thenReturn(false);
-
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-
-        var testClaimSet =
-                new JWTClaimsSet.Builder()
-                        .claim("response_type", "test-type")
-                        .claim("redirect_uri", "http://example.com")
-                        .claim("state", "test-state")
-                        .claim("govuk_signin_journey_id", "test-journey-id")
-                        .claim("reprove_identity", false)
-                        .claim("scope", "test-scope")
-                        .claim("vtr", List.of("P1", "P2"))
-                        .subject("test-user-id")
-                        .build();
-
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
-
-        var clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        clientOAuthSessionId,
-                        testClaimSet,
-                        "test-client",
-                        "test-evcs-access-token");
-
-        assertEquals(clientOAuthSessionItem.getVtr(), List.of("P2"));
+        assertEquals(
+                clientOAuthSessionItem.getVtr(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getVtr());
     }
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
-        var clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
-        var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockDataStore, mockConfigService);
+        String clientOAuthSessionId = SecureTokenHelper.getInstance().generate();
+        var clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(mockDataStore);
 
-        var clientOAuthSessionItem =
+        ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(
                         clientOAuthSessionId,
                         "http://example.com",
@@ -166,12 +150,26 @@ class ClientOAuthSessionDetailsServiceTest {
                         "test-state",
                         "test-journey-id");
 
-        verify(mockDataStore).create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
-
+        ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
+        verify(mockDataStore)
+                .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        assertNotNull(clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
         assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
-        assertEquals("test-client", clientOAuthSessionItem.getClientId());
-        assertEquals("http://example.com", clientOAuthSessionItem.getRedirectUri());
-        assertEquals("test-state", clientOAuthSessionItem.getState());
-        assertEquals("test-journey-id", clientOAuthSessionItem.getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getClientId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
+        assertNull(clientOAuthSessionItem.getResponseType());
+        assertEquals(
+                clientOAuthSessionItem.getRedirectUri(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
+        assertNull(clientOAuthSessionItem.getUserId());
+        assertEquals(
+                clientOAuthSessionItem.getState(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getState());
+        assertEquals(
+                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+        assertNull(clientOAuthSessionItem.getReproveIdentity());
     }
 }

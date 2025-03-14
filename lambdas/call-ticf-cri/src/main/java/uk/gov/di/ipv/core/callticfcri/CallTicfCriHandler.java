@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
@@ -38,10 +37,13 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredential
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
+import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -183,7 +185,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ipvSessionItem,
                 List.of());
 
-        if (!clientOAuthSessionItem.isReverification()) {
+        if (!clientOAuthSessionItem.getScopeClaims().contains(REVERIFICATION)) {
             var contraIndicatorVc =
                     cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
@@ -195,7 +197,13 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
             var journeyResponse =
                     cimitUtilityService.getMitigationJourneyIfBreaching(
-                            cis, VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
+                            cis,
+                            Optional.ofNullable(ipvSessionItem.getThresholdVot())
+                                    .orElseThrow(
+                                            () ->
+                                                    new HttpResponseExceptionWithErrorBody(
+                                                            HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                                            MISSING_TARGET_VOT)));
             if (journeyResponse.isPresent()) {
                 LOGGER.info(
                         LogHelper.buildLogMessage(

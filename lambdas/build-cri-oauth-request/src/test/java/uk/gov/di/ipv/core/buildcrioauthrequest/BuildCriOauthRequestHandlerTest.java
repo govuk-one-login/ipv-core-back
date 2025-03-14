@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -35,6 +36,7 @@ import uk.gov.di.ipv.core.buildcrioauthrequest.domain.SharedClaims;
 import uk.gov.di.ipv.core.buildcrioauthrequest.helpers.SharedClaimsHelper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.CriJourneyRequest;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -96,6 +98,9 @@ import static uk.gov.di.ipv.core.library.domain.Cri.DWP_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_KBV;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
+import static uk.gov.di.ipv.core.library.enums.Vot.P1;
+import static uk.gov.di.ipv.core.library.enums.Vot.P2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -267,7 +272,7 @@ class BuildCriOauthRequestHandlerTest {
         ipvSessionItem.setIpvSessionId(SESSION_ID);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setEmailAddress(TEST_EMAIL_ADDRESS);
-        ipvSessionItem.setVot(Vot.P0);
+        ipvSessionItem.setTargetVot(Vot.P2);
 
         mockSharedClaimsHelper
                 .when(() -> SharedClaimsHelper.generateSharedClaims(any(), any(), any(), any()))
@@ -844,6 +849,7 @@ class BuildCriOauthRequestHandlerTest {
         // Arrange
         when(mockOauthKeyService.getEncryptionKey(f2FOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        ipvSessionItem.setTargetVot(Vot.P1);
         when(configService.getActiveConnection(F2F)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, F2F))
                 .thenReturn(f2FOauthCriConfig);
@@ -913,11 +919,41 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
+    @ParameterizedTest
+    @EnumSource(names = {"F2F", "DWP_KBV", "EXPERIAN_KBV", "HMRC_KBV"})
+    void shouldReturnJourneyErrorResponseIfTargetVotIsMissing(Cri cri) throws Exception {
+        // Arrange
+        ipvSessionItem.setTargetVot(null);
+
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        CriJourneyRequest input =
+                CriJourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .language(TEST_LANGUAGE)
+                        .journey(String.format(JOURNEY_BASE_URL, cri.getId()))
+                        .build();
+
+        // Act
+        var responseJson = handleRequest(input, context);
+
+        // Assert
+        JourneyErrorResponse response =
+                OBJECT_MAPPER.readValue(responseJson, JourneyErrorResponse.class);
+
+        assertEquals(MISSING_TARGET_VOT.getMessage(), response.getMessage());
+        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
     @Test
     void shouldSetEvidenceRequestForKbvCriForP2() throws Exception {
         // Arrange
         when(mockOauthKeyService.getEncryptionKey(hmrcKbvOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        ipvSessionItem.setTargetVot(P2);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);
@@ -975,9 +1011,9 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldSetEvidenceRequestForKbvCriForP1() throws Exception {
         // Arrange
-        clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
         when(mockOauthKeyService.getEncryptionKey(dcmawOauthCriConfig))
                 .thenReturn(RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK));
+        ipvSessionItem.setTargetVot(P1);
         when(configService.getActiveConnection(HMRC_KBV)).thenReturn(MAIN_CONNECTION);
         when(configService.getOauthCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV))
                 .thenReturn(hmrcKbvOauthCriConfig);

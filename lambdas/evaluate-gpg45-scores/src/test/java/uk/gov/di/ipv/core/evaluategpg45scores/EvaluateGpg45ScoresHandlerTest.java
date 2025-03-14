@@ -120,6 +120,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void setUpEach() {
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        ipvSessionItem.setTargetVot(Vot.P2);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -483,6 +484,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldReturnJourneyMetForMeetingMediumAndLowConfidences() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
+        ipvSessionItem.setTargetVot(Vot.P1);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(P2_PROFILES)))

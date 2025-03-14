@@ -38,6 +38,7 @@ public class IpvSessionItem implements PersistenceItem {
     private String errorCode;
     private String errorDescription;
     private Vot vot;
+    private Vot targetVot;
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;
@@ -112,6 +113,13 @@ public class IpvSessionItem implements PersistenceItem {
             throw new IllegalStateException();
         }
         return new JourneyState(stateStack.get(stateStack.size() - 2));
+    }
+
+    // We need to know what vot to check for CI breaches against.
+    // If the user has achieved a profile we should use that, if they haven't then we should use the
+    // target Vot.
+    public Vot getThresholdVot() {
+        return Vot.P0 == vot ? targetVot : vot;
     }
 
     public void setJourneyContext(String journeyContext) {
