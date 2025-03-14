@@ -341,7 +341,7 @@ class VcHelperTest {
     void hasUnavailableFraudCheckShouldReturnTrueForUnavailableFraudCheck() {
 
         // Arrange
-        var vc = vcFraudApplicableAuthoritativeSourceFailed();
+        var vc = vcFraudAvailableAuthoritativeFailed();
 
         // Act
         var result = VcHelper.hasUnavailableFraudCheck(vc);
