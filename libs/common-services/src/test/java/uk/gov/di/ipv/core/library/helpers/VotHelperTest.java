@@ -62,4 +62,14 @@ class VotHelperTest {
                 IllegalStateException.class,
                 () -> VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
     }
+
+    @Test
+    void getThresholdVotThrowsIfEmptyVtr() {
+        var ipvSessionItem = IpvSessionItem.builder().vot(Vot.P0).build();
+        var clientOAuthSessionItem = ClientOAuthSessionItem.builder().vtr(List.of()).build();
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
+    }
 }

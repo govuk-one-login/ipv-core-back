@@ -29,7 +29,7 @@ public class VotHelper {
             return ipvSessionItem.getVot();
         }
 
-        if (clientOAuthSessionItem.getVtr() == null) {
+        if (clientOAuthSessionItem.getVtr() == null || clientOAuthSessionItem.getVtr().isEmpty()) {
             // This may happen on (e.g.) a reverification request
             throw new IllegalStateException("Attempted to calculate threshold VOT with no VTR");
         }
