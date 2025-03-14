@@ -1,6 +1,16 @@
 @Build
 Feature: Repeat fraud check journeys
 
+  Scenario: User is sent on RFC journey to remedy unavailable fraud check
+    Given the subject already has the following credentials
+      | CRI     | scenario               |
+      | dcmaw   | kenneth-passport-valid |
+      | address | kenneth-current        |
+      | fraud   | kenneth-unavailable    |
+
+    When I start a new 'medium-confidence' journey
+    Then I get a 'confirm-your-details' page response
+
   Rule: Match M1B
 
     Background:

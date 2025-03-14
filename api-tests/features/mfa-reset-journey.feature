@@ -1,15 +1,5 @@
 @Build
 Feature: MFA reset journey
-  Scenario: User is sent on reverification journey to remedy unavailable fraud check
-    Given the subject already has the following credentials
-      | CRI     | scenario               |
-      | dcmaw   | kenneth-passport-valid |
-      | address | kenneth-current        |
-      | fraud   | kenneth-unavailable    |
-
-    When I start a new 'medium-confidence' journey
-    Then I get a 'confirm-your-details' page response
-
   Rule: User has an existing identity
     Background: There is an existing user and they start an MFA reset journey
       Given the subject already has the following credentials
