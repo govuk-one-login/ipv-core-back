@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationFailureCode;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.evcs.exception.EvcsServiceException;
@@ -154,6 +155,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                                 combinedCredentials);
                     };
 
+            var scopeClaims = clientOAuthSession.getScopeClaims();
+            var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
+
             sendAuditEvent(
                     AuditEventTypes.IPV_CONTINUITY_OF_IDENTITY_CHECK_END,
                     checkType,
@@ -163,7 +167,7 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
                     sessionVcs,
                     deviceInformation);
 
-            if (clientOAuthSession.isReverification()) {
+            if (isReverification) {
                 setIpvSessionReverificationStatus(
                         ipvSession,
                         successfulCheck

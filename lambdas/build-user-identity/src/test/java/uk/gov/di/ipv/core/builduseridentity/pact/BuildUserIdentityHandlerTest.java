@@ -95,7 +95,7 @@ class BuildUserIdentityHandlerTest {
         var userIdentityService = new UserIdentityService(mockConfigService);
         var ipvSessionService = new IpvSessionService(mockIpvSessionDataStore, mockSleeper);
         var clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(mockOAuthSessionStore, mockConfigService);
+                new ClientOAuthSessionDetailsService(mockOAuthSessionStore);
 
         // Configure CIMIT service to return VC and no CIs
         var jwtBuilder =
@@ -160,6 +160,7 @@ class BuildUserIdentityHandlerTest {
         ipvSession.setIpvSessionId(IPV_SESSION_ID);
         ipvSession.setClientOAuthSessionId("dummyClientOAuthSessionId");
         ipvSession.setVot(Vot.P2);
+        ipvSession.setTargetVot(Vot.P2);
         ipvSession.setSecurityCheckCredential(SIGNED_CIMIT_VC_NO_CI);
         ipvSession.setAccessTokenMetadata(new AccessTokenMetadata());
 

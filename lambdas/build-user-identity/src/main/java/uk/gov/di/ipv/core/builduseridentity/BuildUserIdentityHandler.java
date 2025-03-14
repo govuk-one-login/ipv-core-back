@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -34,7 +35,6 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -47,11 +47,13 @@ import uk.gov.di.model.ContraIndicator;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static software.amazon.awssdk.utils.CollectionUtils.isNullOrEmpty;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_SECURITY_CHECK_CREDENTIAL;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
@@ -127,11 +129,18 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
 
             var vcs = sessionCredentialsService.getCredentials(ipvSessionId, userId);
 
+            var targetVot =
+                    Optional.ofNullable(ipvSessionItem.getTargetVot())
+                            .orElseThrow(
+                                    () ->
+                                            new HttpResponseExceptionWithErrorBody(
+                                                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                                                    MISSING_TARGET_VOT));
             var achievedVot = ipvSessionItem.getVot();
-            var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            var thresholdVot = ipvSessionItem.getThresholdVot();
             var userIdentity =
                     userIdentityService.generateUserIdentity(
-                            vcs, userId, achievedVot, thresholdVot, contraIndicators);
+                            vcs, userId, achievedVot, targetVot, contraIndicators);
             userIdentity.getVcs().add(ipvSessionItem.getSecurityCheckCredential());
 
             if (configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, TICF.getId())

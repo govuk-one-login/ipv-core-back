@@ -3,11 +3,11 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.service.CimitUtilityService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -133,7 +133,12 @@ public class EventResolver {
 
     private boolean isCheckMitigationAllowed(
             BasicEvent event, ClientOAuthSessionItem clientOAuthSessionItem) {
-        return event.getCheckMitigation() != null && !clientOAuthSessionItem.isReverification();
+        var isReverification =
+                !StringUtils.isEmpty(clientOAuthSessionItem.getScope())
+                        && clientOAuthSessionItem
+                                .getScopeClaims()
+                                .contains(ScopeConstants.REVERIFICATION);
+        return event.getCheckMitigation() != null && !isReverification;
     }
 
     private Optional<String> getMitigationEvent(
@@ -155,8 +160,7 @@ public class EventResolver {
 
         var validMitigation =
                 cimitUtilityService.getMitigationJourneyEvent(
-                        contraIndicators,
-                        VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
+                        contraIndicators, ipvSessionItem.getTargetVot());
 
         return (validMitigation.isPresent()
                         && event.getCheckMitigation().containsKey(validMitigation.get()))

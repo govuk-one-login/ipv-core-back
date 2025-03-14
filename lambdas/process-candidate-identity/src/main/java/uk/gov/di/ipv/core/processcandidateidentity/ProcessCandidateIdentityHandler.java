@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -399,7 +398,9 @@ public class ProcessCandidateIdentityHandler
 
         var votResult =
                 votMatcher.matchFirstVot(
-                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
+                        clientOAuthSessionItem
+                                .getParsedVtr()
+                                .getRequestedVotsByStrengthDescending(),
                         sessionVcs,
                         contraIndicators,
                         areVcsCorrelated);
@@ -446,33 +447,30 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     auditEventUser);
 
-            if (!clientOAuthSessionItem.isReverification()) {
-                var contraIndicatorsVc =
-                        cimitService.getContraIndicatorsVc(
-                                clientOAuthSessionItem.getUserId(),
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress,
-                                ipvSessionItem);
+            var contraIndicatorsVc =
+                    cimitService.getContraIndicatorsVc(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress,
+                            ipvSessionItem);
 
-                var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-                var thresholdVot =
-                        VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            var thresholdVot = ipvSessionItem.getThresholdVot();
 
-                var journeyResponse =
-                        cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
-                if (journeyResponse.isPresent()) {
-                    LOGGER.info(
-                            LogHelper.buildLogMessage(
-                                    "CI score is breaching threshold - setting VOT to P0"));
-                    ipvSessionItem.setVot(Vot.P0);
-                    ipvSessionService.updateIpvSession(ipvSessionItem);
+            var journeyResponse =
+                    cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
+            if (journeyResponse.isPresent()) {
+                LOGGER.info(
+                        LogHelper.buildLogMessage(
+                                "CI score is breaching threshold - setting VOT to P0"));
+                ipvSessionItem.setVot(Vot.P0);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                    return journeyResponse.get();
-                }
-
-                LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
+                return journeyResponse.get();
             }
+
+            LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
 
             return null;
         } catch (TicfCriServiceException
