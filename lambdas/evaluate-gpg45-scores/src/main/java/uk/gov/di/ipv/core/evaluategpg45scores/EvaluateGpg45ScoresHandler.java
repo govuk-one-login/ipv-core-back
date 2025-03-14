@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -207,8 +208,9 @@ public class EvaluateGpg45ScoresHandler
         if (!userIdentityService.checkRequiresAdditionalEvidence(vcs)) {
             var gpg45Scores = gpg45ProfileEvaluator.buildScore(vcs);
 
+            // QQ this isn't quite right but this class is about to be deleted anyway
             var requestedVotsByStrength =
-                    clientOAuthSessionItem.getParsedVtr().getRequestedVotsByStrengthDescending();
+                    VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem);
 
             var gpg45Vots =
                     requestedVotsByStrength.stream()

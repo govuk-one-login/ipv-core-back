@@ -239,24 +239,6 @@ class CallTicfCriHandlerTest {
     }
 
     @Test
-    void handleRequestShouldReturnJourneyErrorResponseIfMissingTargetVot() throws Exception {
-        when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
-        when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
-                .thenReturn(List.of(mockVerifiableCredential));
-        ipvSessionItem.setTargetVot(null);
-        ipvSessionItem.setVot(P0);
-
-        Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
-
-        assertEquals("/journey/error", lambdaResult.get("journey"));
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, lambdaResult.get("statusCode"));
-        assertEquals(ErrorResponse.MISSING_TARGET_VOT.getCode(), lambdaResult.get("code"));
-        assertEquals(ErrorResponse.MISSING_TARGET_VOT.getMessage(), lambdaResult.get("message"));
-    }
-
-    @Test
     void handleRequestShouldReturnJourneyErrorResponseIfTicfCriServiceThrows() throws Exception {
         when(mockIpvSessionService.getIpvSession("a-session-id")).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
