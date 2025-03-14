@@ -42,7 +42,6 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
-import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
@@ -184,7 +183,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                 ipvSessionItem,
                 List.of());
 
-        if (!clientOAuthSessionItem.getScopeClaims().contains(REVERIFICATION)) {
+        if (!clientOAuthSessionItem.isReverification()) {
             var contraIndicatorVc =
                     cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),

@@ -446,30 +446,33 @@ public class ProcessCandidateIdentityHandler
                     List.of(),
                     auditEventUser);
 
-            var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress,
-                            ipvSessionItem);
+            if (!clientOAuthSessionItem.isReverification()) {
+                var contraIndicatorsVc =
+                        cimitService.getContraIndicatorsVc(
+                                clientOAuthSessionItem.getUserId(),
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                ipAddress,
+                                ipvSessionItem);
 
-            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+                var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
-            var thresholdVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+                var thresholdVot =
+                        VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
-            var journeyResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
-            if (journeyResponse.isPresent()) {
-                LOGGER.info(
-                        LogHelper.buildLogMessage(
-                                "CI score is breaching threshold - setting VOT to P0"));
-                ipvSessionItem.setVot(Vot.P0);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
+                var journeyResponse =
+                        cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
+                if (journeyResponse.isPresent()) {
+                    LOGGER.info(
+                            LogHelper.buildLogMessage(
+                                    "CI score is breaching threshold - setting VOT to P0"));
+                    ipvSessionItem.setVot(Vot.P0);
+                    ipvSessionService.updateIpvSession(ipvSessionItem);
 
-                return journeyResponse.get();
+                    return journeyResponse.get();
+                }
+
+                LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
             }
-
-            LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
 
             return null;
         } catch (TicfCriServiceException

@@ -139,7 +139,8 @@ class ProcessCandidateIdentityHandlerTest {
     class processIdentity {
         @BeforeEach
         void setUp() throws Exception {
-            clientOAuthSessionItem = clientOAuthSessionItemBuilder.vtr(List.of("P2")).build();
+            clientOAuthSessionItem =
+                    clientOAuthSessionItemBuilder.vtr(List.of("P2")).scope("openid").build();
             when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(ipvSessionItem);
             when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
@@ -317,6 +318,9 @@ class ProcessCandidateIdentityHandlerTest {
         void shouldHandleCandidateIdentityTypeReverificationAndReturnJourneyNext()
                 throws Exception {
             // Arrange
+            clientOAuthSessionItem.setVtr(null);
+            clientOAuthSessionItem.setScope("reverification");
+
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
@@ -330,9 +334,6 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
-            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
                     requestBuilder

@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
-import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -134,12 +133,7 @@ public class EventResolver {
 
     private boolean isCheckMitigationAllowed(
             BasicEvent event, ClientOAuthSessionItem clientOAuthSessionItem) {
-        var isReverification =
-                !StringUtils.isEmpty(clientOAuthSessionItem.getScope())
-                        && clientOAuthSessionItem
-                                .getScopeClaims()
-                                .contains(ScopeConstants.REVERIFICATION);
-        return event.getCheckMitigation() != null && !isReverification;
+        return event.getCheckMitigation() != null && !clientOAuthSessionItem.isReverification();
     }
 
     private Optional<String> getMitigationEvent(
