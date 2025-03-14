@@ -25,6 +25,12 @@ nestedJourneyStates:
         targetState: DWP_THIN_FILE_PAGE
       access-denied:
         targetState: PRE_EXPERIAN_PAGE
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            exitEventToEmit: enhanced-verification
   CRI_EXPERIAN_KBV:
     response:
       type: cri
@@ -37,6 +43,12 @@ nestedJourneyStates:
         exitEventToEmit: next
       enhanced-verification:
         exitEventToEmit: enhanced-verification
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            exitEventToEmit: enhanced-verification
   PRE_EXPERIAN_PAGE:
     response:
       type: page
