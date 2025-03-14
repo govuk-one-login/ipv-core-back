@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.criresponse.service.CriResponseService;
 import uk.gov.di.ipv.core.library.domain.Cri;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.CriResourceRetrievedType;
@@ -177,7 +176,6 @@ public class CriStoringService {
 
         List<VerifiableCredential> mitigationVcList = new ArrayList<>(sessionVcs);
 
-        var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         for (var vc : vcs) {
             auditService.sendAuditEvent(
                     AuditEvent.createWithDeviceInformation(
@@ -187,7 +185,7 @@ public class CriStoringService {
                             getExtensionsForAudit(vc, VcHelper.isSuccessfulVc(vc)),
                             new AuditRestrictedDeviceInformation(deviceInformation)));
 
-            if (!scopeClaims.contains(ScopeConstants.REVERIFICATION)) {
+            if (!clientOAuthSessionItem.isReverification()) {
                 mitigationVcList.add(vc);
                 cimitService.submitVC(vc, govukSigninJourneyId, ipAddress);
                 cimitService.submitMitigatingVcList(

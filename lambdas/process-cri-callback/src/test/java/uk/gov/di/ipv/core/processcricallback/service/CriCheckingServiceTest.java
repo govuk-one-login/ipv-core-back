@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.enums.Vot;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -51,7 +50,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.DL_AUTH_SOURCE_CHECK;
 import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.MISSING_TARGET_VOT;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
@@ -503,8 +501,8 @@ class CriCheckingServiceTest {
         var vcs = List.of(M1A_ADDRESS_VC);
         var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
         var ipvSessionItem = buildValidIpvSessionItem();
-        ipvSessionItem.setTargetVot(Vot.P1);
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
@@ -523,28 +521,6 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_NEXT_PATH), result);
-    }
-
-    @Test
-    void checkVcResponseShouldThrowIfTargetVotIsNull() {
-        // Arrange
-        var ipvSessionItem = buildValidIpvSessionItem();
-        ipvSessionItem.setTargetVot(null);
-
-        // Act
-        var exception =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                criCheckingService.checkVcResponse(
-                                        List.of(),
-                                        "1.1.1.1",
-                                        buildValidClientOAuthSessionItem(),
-                                        ipvSessionItem,
-                                        List.of(M1B_DCMAW_VC)));
-
-        // Assert
-        assertEquals(MISSING_TARGET_VOT, exception.getErrorResponse());
     }
 
     @Test
@@ -990,9 +966,9 @@ class CriCheckingServiceTest {
 
     private IpvSessionItem buildValidIpvSessionItem() {
         var ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setTargetVot(Vot.P2);
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setCriOAuthSessionId(TEST_CRI_OAUTH_SESSION_ID);
+        ipvSessionItem.setVot(Vot.P0);
         return ipvSessionItem;
     }
 

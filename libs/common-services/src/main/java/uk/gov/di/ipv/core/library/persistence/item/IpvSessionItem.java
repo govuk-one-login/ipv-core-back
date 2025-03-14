@@ -115,13 +115,6 @@ public class IpvSessionItem implements PersistenceItem {
         return new JourneyState(stateStack.get(stateStack.size() - 2));
     }
 
-    // We need to know what vot to check for CI breaches against.
-    // If the user has achieved a profile we should use that, if they haven't then we should use the
-    // target Vot.
-    public Vot getThresholdVot() {
-        return Vot.P0 == vot ? targetVot : vot;
-    }
-
     public void setJourneyContext(String journeyContext) {
         this.journeyContext = journeyContext;
     }

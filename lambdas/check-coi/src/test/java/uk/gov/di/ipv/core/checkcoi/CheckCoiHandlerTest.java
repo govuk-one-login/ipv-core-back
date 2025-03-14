@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.ReverificationStatus;
-import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.enums.CoiCheckType;
 import uk.gov.di.ipv.core.library.evcs.service.EvcsService;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -153,8 +152,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.isReverification()).thenReturn(false);
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -197,8 +195,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelatedForReverification(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.isReverification()).thenReturn(false);
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -286,8 +283,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelatedForReverification(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
+                when(mockClientSessionItem.isReverification()).thenReturn(true);
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -332,8 +328,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelatedForReverification(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(true);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.isReverification()).thenReturn(false);
                 when(mockUserIdentityService.findIdentityClaim(any())).thenReturn(Optional.empty());
 
                 var request =
@@ -381,8 +376,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.isReverification()).thenReturn(false);
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -425,8 +419,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelated(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.OPENID));
+                when(mockClientSessionItem.isReverification()).thenReturn(false);
 
                 var request =
                         ProcessRequest.processRequestBuilder()
@@ -461,8 +454,7 @@ class CheckCoiHandlerTest {
                 when(mockUserIdentityService.areNamesAndDobCorrelatedForReverification(
                                 List.of(M1A_ADDRESS_VC, M1A_EXPERIAN_FRAUD_VC)))
                         .thenReturn(false);
-                when(mockClientSessionItem.getScopeClaims())
-                        .thenReturn(List.of(ScopeConstants.REVERIFICATION));
+                when(mockClientSessionItem.isReverification()).thenReturn(true);
 
                 var request =
                         ProcessRequest.processRequestBuilder()

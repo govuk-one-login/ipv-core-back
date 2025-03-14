@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.Vtr;
+import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 
 import java.util.Arrays;
 import java.util.List;
@@ -41,8 +41,7 @@ public class ClientOAuthSessionItem implements PersistenceItem {
         return Arrays.asList(this.scope.split(" "));
     }
 
-    // PYIC-6984 can we store the Vtr object directly in dynamo instead of creating it here?
-    public Vtr getParsedVtr() {
-        return new Vtr(vtr);
+    public boolean isReverification() {
+        return getScopeClaims().contains(ScopeConstants.REVERIFICATION);
     }
 }
