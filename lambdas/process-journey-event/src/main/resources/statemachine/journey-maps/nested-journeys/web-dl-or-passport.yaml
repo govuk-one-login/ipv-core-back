@@ -31,6 +31,16 @@ nestedJourneyStates:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-passport
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-passport
   ADDRESS_AND_FRAUD_AFTER_PASSPORT:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -69,6 +79,16 @@ nestedJourneyStates:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
   ADDRESS_AND_FRAUD_AFTER_DL:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
