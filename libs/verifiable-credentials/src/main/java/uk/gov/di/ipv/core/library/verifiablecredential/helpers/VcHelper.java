@@ -39,6 +39,8 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHEC
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.ListHelper.extractFromFirstElementOfList;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.model.CheckDetails.FraudCheckType.APPLICABLE_AUTHORITATIVE_SOURCE;
+import static uk.gov.di.model.CheckDetails.FraudCheckType.AVAILABLE_AUTHORITATIVE_SOURCE;
 
 public class VcHelper {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -195,15 +197,25 @@ public class VcHelper {
         return nbf.plus(expiryPeriod, ChronoUnit.HOURS).isBefore(now);
     }
 
-    public static boolean isFraudCheckUnavailable(List<VerifiableCredential> vcs) {
+    public static boolean hasUnavailableOrNotApplicableFraudCheck(List<VerifiableCredential> vcs) {
         return vcs.stream()
                 .filter(vc -> vc.getCri() == Cri.EXPERIAN_FRAUD)
-                .anyMatch(VcHelper::hasNoApplicableOrAvailableFraudCheck);
+                .anyMatch(
+                        vc ->
+                                VcHelper.hasFailedFraudCheck(
+                                        vc,
+                                        Set.of(
+                                                APPLICABLE_AUTHORITATIVE_SOURCE,
+                                                AVAILABLE_AUTHORITATIVE_SOURCE)));
     }
 
-    private static boolean hasNoApplicableOrAvailableFraudCheck(VerifiableCredential vc) {
-        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
+    public static boolean hasUnavailableFraudCheck(VerifiableCredential vc) {
+        return hasFailedFraudCheck(vc, Set.of(AVAILABLE_AUTHORITATIVE_SOURCE));
+    }
 
+    private static boolean hasFailedFraudCheck(
+            VerifiableCredential vc, Set<CheckDetails.FraudCheckType> failedFraudChecks) {
+        if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
             return identityCheckCredential.getEvidence().stream()
                     .flatMap(
                             evidence ->
@@ -214,13 +226,7 @@ public class VcHelper {
                             failedCheck -> {
                                 CheckDetails.FraudCheckType fraudCheck =
                                         failedCheck.getFraudCheck();
-                                return fraudCheck != null
-                                        && Set.of(
-                                                        CheckDetails.FraudCheckType
-                                                                .APPLICABLE_AUTHORITATIVE_SOURCE,
-                                                        CheckDetails.FraudCheckType
-                                                                .AVAILABLE_AUTHORITATIVE_SOURCE)
-                                                .contains(fraudCheck);
+                                return fraudCheck != null && failedFraudChecks.contains(fraudCheck);
                             });
         }
         return false;
