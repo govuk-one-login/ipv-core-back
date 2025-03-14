@@ -78,7 +78,8 @@ public class CheckCoiService {
             String deviceInformation,
             List<VerifiableCredential> sessionVcs,
             AuditEventUser auditEventUser)
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException,
+            throws HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
                     EvcsServiceException {
 
         var userId = clientOAuthSession.getUserId();
@@ -105,12 +106,13 @@ public class CheckCoiService {
         var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
         var successfulCheck =
                 switch (checkType) {
-                    case STANDARD -> userIdentityService.areNamesAndDobCorrelated(
-                            combinedCredentials);
-                    case REVERIFICATION -> userIdentityService
-                            .areNamesAndDobCorrelatedForReverification(combinedCredentials);
-                    case ACCOUNT_INTERVENTION -> userIdentityService.areVcsCorrelated(
-                            combinedCredentials);
+                    case STANDARD ->
+                            userIdentityService.areNamesAndDobCorrelated(combinedCredentials);
+                    case REVERIFICATION ->
+                            userIdentityService.areNamesAndDobCorrelatedForReverification(
+                                    combinedCredentials);
+                    case ACCOUNT_INTERVENTION ->
+                            userIdentityService.areVcsCorrelated(combinedCredentials);
                 };
 
         var scopeClaims = clientOAuthSession.getScopeClaims();

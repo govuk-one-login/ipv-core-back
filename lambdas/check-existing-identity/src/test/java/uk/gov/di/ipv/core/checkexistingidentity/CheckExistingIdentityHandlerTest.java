@@ -636,8 +636,11 @@ class CheckExistingIdentityHandlerTest {
     @MethodSource("lowAndMediumConfidenceVtrs")
     void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
             List<String> vtr, JourneyResponse expectedJourney, Vot expectedIdentity)
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, VerifiableCredentialException, EvcsServiceException {
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    VerifiableCredentialException,
+                    EvcsServiceException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -703,8 +706,10 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyIpvGpg45MediumForDcmawAsyncCompleteAndVcIsExpired()
-            throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException, EvcsServiceException {
+            throws IpvSessionNotFoundException,
+                    HttpResponseExceptionWithErrorBody,
+                    CredentialParseException,
+                    EvcsServiceException {
         // Arrange
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
