@@ -4,6 +4,8 @@ description: >-
 entryEvents:
   check-mobile-app-result:
     targetState: CHECK_MOBILE_APP_RESULT
+  dl-auth-source-check:
+    targetState: CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK
 
 nestedJourneyStates:
   CHECK_MOBILE_APP_RESULT:
