@@ -621,7 +621,7 @@ class CheckExistingIdentityHandlerTest {
     @ParameterizedTest
     @MethodSource("lowAndMediumConfidenceVtrs")
     void shouldReturnJourneyDcmawAsyncVcReceivedForDcmawAsyncComplete(
-            List<String> vtr, JourneyResponse expectedJourney, Vot expectedIdentity)
+            List<String> vtr, JourneyResponse expectedJourney)
             throws IpvSessionNotFoundException,
                     HttpResponseExceptionWithErrorBody,
                     CredentialParseException,
