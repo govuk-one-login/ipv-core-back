@@ -168,18 +168,12 @@ states:
     parent: CRI_STATE
     events:
       next:
-        targetState: CHECK_COI_NAMES
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
+        targetState: PROCESS_UPDATE_IDENTITY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       fail-with-no-ci:
-        targetState: CHECK_COI_NAMES
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
+        targetState: PROCESS_UPDATE_IDENTITY
 
   NAMES_ONLY_AFTER_RFC:
     response:
@@ -316,90 +310,14 @@ states:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
-        targetState: CHECK_COI_NAMES
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
+        targetState: PROCESS_UPDATE_IDENTITY
       enhanced-verification:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       fraud-fail-with-no-ci:
-        targetState: CHECK_COI_NAMES
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_UPDATE_IDENTITY
+        targetState: PROCESS_UPDATE_IDENTITY
 
   # SHARED STATES
-
-  CHECK_COI_NAMES:
-    response:
-      type: process
-      lambda: check-coi
-      lambdaInput:
-        checkType: STANDARD
-    events:
-      coi-check-passed:
-        targetState: EVALUATE_GPG45_SCORES
-      coi-check-failed:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  EVALUATE_GPG45_SCORES:
-    response:
-      type: process
-      lambda: evaluate-gpg45-scores
-    events:
-      met:
-        targetState: CRI_TICF_BEFORE_SUCCESS
-      unmet:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-      vcs-not-correlated:
-        targetJourney: FAILED
-        targetState: FAILED_CONFIRM_DETAILS
-
-  STORE_IDENTITY_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: UPDATE
-    events:
-      identity-stored:
-        targetState: IPV_SUCCESS_PAGE
-        auditEvents:
-          - IPV_USER_DETAILS_UPDATE_END
-        auditContext:
-          successful: true
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  CRI_TICF_BEFORE_SUCCESS:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: STORE_IDENTITY_BEFORE_SUCCESS
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
 
   PROCESS_UPDATE_IDENTITY:
     response:

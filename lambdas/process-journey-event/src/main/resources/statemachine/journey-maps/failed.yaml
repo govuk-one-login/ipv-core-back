@@ -11,44 +11,24 @@ states:
   FAILED:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_NO_MATCH
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH
 
   FAILED_SKIP_MESSAGE:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_RETURN_TO_RP
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_RETURN_TO_RP
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_RETURN_TO_RP
 
   FAILED_CONFIRM_DETAILS:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_VALID_ID
+        targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_VALID_ID
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
         checkJourneyContext:
           rfc:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
-            checkFeatureFlag:
-              processCandidateIdentity:
-                targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_VALID_ID
+            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
@@ -57,70 +37,37 @@ states:
   FAILED_CONFIRM_DETAILS_INVALID_ID:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
+        targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_INVALID_ID
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
 
   FAILED_UPDATE_DETAILS:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS
+        targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_END
         auditContext:
           successful: false
         checkJourneyContext:
           rfc:
-            targetState: CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY
+            targetState: PROCESS_INCOMPLETE_IDENTITY_UPDATE_DETAILS_INVALID_IDENTITY
             auditEvents:
               - IPV_USER_DETAILS_UPDATE_END
             auditContext:
               successful: false
-            checkFeatureFlag:
-              processCandidateIdentity:
-                targetState: PROCESS_INCOMPLETE_IDENTITY_UPDATE_DETAILS_INVALID_IDENTITY
-                auditEvents:
-                  - IPV_USER_DETAILS_UPDATE_END
-                auditContext:
-                  successful: false
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS
-            auditEvents:
-              - IPV_USER_DETAILS_UPDATE_END
-            auditContext:
-              successful: false
-
 
   FAILED_BAV:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_NO_MATCH_BAV
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_BAV
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_BAV
 
   FAILED_NINO:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_NO_MATCH_NINO
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
-
-  FAILED_NO_TICF:
-    events:
-      next:
-        targetState: NO_MATCH_PAGE
+        targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
 
   # Journey states
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH:
@@ -129,25 +76,6 @@ states:
       lambda: process-candidate-identity
       lambdaInput:
         identityType: INCOMPLETE
-    events:
-      next:
-        targetState: NO_MATCH_PAGE
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE
-      fail-with-ci:
-        targetState: NO_MATCH_PAGE
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_NO_MATCH:
-    response:
-      type: process
-      lambda: call-ticf-cri
     events:
       next:
         targetState: NO_MATCH_PAGE
@@ -184,50 +112,12 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_RETURN_TO_RP:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
-        targetState: RETURN_TO_RP
-      fail-with-ci:
-        targetState: RETURN_TO_RP
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_CONFIRM_DETAILS_VALID_ID:
     response:
       type: process
       lambda: process-candidate-identity
       lambdaInput:
         identityType: INCOMPLETE
-    events:
-      next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_VALID_ID:
-    response:
-      type: process
-      lambda: call-ticf-cri
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
@@ -264,50 +154,12 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_CONFIRM_DETAILS_INVALID_ID:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      fail-with-ci:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   PROCESS_INCOMPLETE_IDENTITY_COULD_NOT_UPDATE_DETAILS:
     response:
       type: process
       lambda: process-candidate-identity
       lambdaInput:
         identityType: INCOMPLETE
-    events:
-      next:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      enhanced-verification:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS:
-    response:
-      type: process
-      lambda: call-ticf-cri
     events:
       next:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
@@ -344,25 +196,6 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_COULD_NOT_UPDATE_DETAILS_INVALID_IDENTITY:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      enhanced-verification:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      fail-with-ci:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_BAV:
     response:
       type: process
@@ -384,50 +217,12 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
 
-  CRI_TICF_BEFORE_NO_MATCH_BAV:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: NO_MATCH_PAGE_BAV
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE_BAV
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE_BAV
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE_BAV
-      fail-with-ci:
-        targetState: NO_MATCH_PAGE_BAV
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO:
     response:
       type: process
       lambda: process-candidate-identity
       lambdaInput:
         identityType: INCOMPLETE
-    events:
-      next:
-        targetState: NO_MATCH_PAGE_NINO
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE_NINO
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE_NINO
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE_NINO
-      fail-with-ci:
-        targetState: NO_MATCH_PAGE_NINO
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  CRI_TICF_BEFORE_NO_MATCH_NINO:
-    response:
-      type: process
-      lambda: call-ticf-cri
     events:
       next:
         targetState: NO_MATCH_PAGE_NINO
@@ -496,10 +291,7 @@ states:
         resetType: REINSTATE
     events:
       next:
-        targetState: EVALUATE_GPG45_SCORES
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_VALID_IDENTITY
+        targetState: PROCESS_VALID_IDENTITY
 
   PROCESS_VALID_IDENTITY:
     response:
@@ -511,22 +303,6 @@ states:
       next:
         targetState: RETURN_TO_RP
       profile-unmet:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-      vcs-not-correlated:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
-
-  EVALUATE_GPG45_SCORES:
-    response:
-      type: process
-      lambda: evaluate-gpg45-scores
-    events:
-      met:
-        targetState: RETURN_TO_RP
-      # The user should always have a valid profile to reach this point,
-      # if they don't then it's an error.
-      unmet:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
       vcs-not-correlated:
@@ -563,6 +339,11 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
+
+  FAILED_NO_TICF:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE
 
   RETURN_TO_RP:
     response:
