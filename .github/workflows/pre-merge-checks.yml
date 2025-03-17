@@ -42,7 +42,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'adopt'
+          distribution: 'corretto'
           cache: gradle
 
       - name: Cache SonarCloud packages
@@ -106,7 +106,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'adopt'
+          distribution: 'corretto'
           cache: gradle
 
       - name: Cache Gradle packages
@@ -168,7 +168,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'adopt'
+          distribution: 'corretto'
           cache: gradle
 
       - uses: aws-actions/setup-sam@v2

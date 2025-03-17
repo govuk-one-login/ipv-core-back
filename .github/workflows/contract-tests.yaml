@@ -33,7 +33,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
+          distribution: 'corretto'
           cache: 'gradle'
       - name: Run consumer contract tests
         run: ./gradlew --parallel pactConsumerTests
