@@ -1524,7 +1524,6 @@ Resources:
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Version
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Version
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Version
-        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Version
         CallDcmawAsyncCriLambdaArn: !Ref CallDcmawAsyncCriFunction.Version
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
         CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
@@ -1543,7 +1542,6 @@ Resources:
             - !Ref BuildCriOauthRequestFunctionErrorCanaryAlarm
             - !Ref BuildClientOauthResponseFunctionErrorCanaryAlarm
             - !Ref CheckGpg45ScoreFunctionErrorCanaryAlarm
-            - !Ref EvaluateGpg45ScoresFunctionErrorCanaryAlarm
             - !Ref CallDcmawAsyncCriFunctionErrorCanaryAlarm
             - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
             - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
@@ -1581,8 +1579,6 @@ Resources:
             FunctionName: !Ref BuildClientOauthResponseFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGpg45ScoreFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CallDcmawAsyncCriFunction
         - LambdaInvokePolicy:
@@ -1733,89 +1729,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
-
-  EvaluateGpg45ScoresFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - EvaluateGpg45ScoresFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
-      Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/evaluate-gpg45-scores
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: {}
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ciConfig-*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/cimitApi/apiKey-*
-      AutoPublishAlias: live
-
-  EvaluateGpg45ScoresFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}"
-
-  EvaluateGpg45ScoresFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
 
   BuildProvenUserIdentityDetailsFunction:
     Type: AWS::Serverless::Function
@@ -3432,32 +3345,6 @@ Resources:
           Value: !Ref CheckGpg45ScoreFunction
         - Name: ExecutedVersion
           Value: !GetAtt CheckGpg45ScoreFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
-  EvaluateGpg45ScoresFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the EvaluateGpg45ScoresFunction."
-      AlarmName: !Sub ${AWS::StackName}-EvaluateGpg45ScoresFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "evaluate-gpg45-scores-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref EvaluateGpg45ScoresFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt EvaluateGpg45ScoresFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count
