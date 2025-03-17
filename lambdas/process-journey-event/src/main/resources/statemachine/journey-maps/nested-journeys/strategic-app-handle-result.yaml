@@ -42,7 +42,7 @@ nestedJourneyStates:
         exitEventToEmit: next
       access-denied:
         targetState: REMOVE_DCMAW_FROM_SESSION
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: RESET_SESSION_INVALID_DL
       fail-with-ci:
         targetJourney: FAILED

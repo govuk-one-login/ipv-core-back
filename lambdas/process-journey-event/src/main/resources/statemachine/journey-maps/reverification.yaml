@@ -37,7 +37,7 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
       temporarily-unavailable:
@@ -49,10 +49,10 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
-      alternate-doc-invalid-passport:
+      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_SKIP_MESSAGE
       dl-auth-source-check:

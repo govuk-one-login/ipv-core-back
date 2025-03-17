@@ -19,7 +19,7 @@ nestedJourneyStates:
     events:
       next:
         exitEventToEmit: next
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         exitEventToEmit: enhanced-verification
       invalid-request:
         targetState: DWP_THIN_FILE_PAGE
@@ -41,7 +41,7 @@ nestedJourneyStates:
         exitEventToEmit: fail-with-no-ci
       next:
         exitEventToEmit: next
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         exitEventToEmit: enhanced-verification
       fail-with-ci:
         targetJourney: FAILED

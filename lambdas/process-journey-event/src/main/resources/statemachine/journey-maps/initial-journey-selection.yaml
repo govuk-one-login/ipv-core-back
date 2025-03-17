@@ -23,6 +23,16 @@ states:
       ipv-gpg45-medium:
         targetJourney: NEW_P2_IDENTITY
         targetState: START
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: ALTERNATE_DOC_PASSPORT
+          alternate-doc-invalid-passport:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: ALTERNATE_DOC_DL
+          enhanced-verification:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: ENHANCED_VERIFICATION
       ipv-gpg45-low:
         targetJourney: NEW_P1_IDENTITY
         targetState: START
@@ -53,19 +63,23 @@ states:
       f2f-fail:
         targetJourney: F2F_FAILED
         targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetJourney: NEW_P2_IDENTITY
+            targetState: ENHANCED_VERIFICATION_F2F_FAIL
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
-      enhanced-verification:
+      enhanced-verification: # To delete
         targetJourney: NEW_P2_IDENTITY
         targetState: ENHANCED_VERIFICATION
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete
         targetJourney: NEW_P2_IDENTITY
         targetState: ALTERNATE_DOC_PASSPORT
-      alternate-doc-invalid-passport:
+      alternate-doc-invalid-passport: # To delete
         targetJourney: NEW_P2_IDENTITY
         targetState: ALTERNATE_DOC_DL
-      enhanced-verification-f2f-fail:
+      enhanced-verification-f2f-fail: # To delete
         targetJourney: NEW_P2_IDENTITY
         targetState: ENHANCED_VERIFICATION_F2F_FAIL
       repeat-fraud-check:
