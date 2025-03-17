@@ -511,65 +511,6 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnMitigation_WhenCiCanBeMitigated()
-            throws Exception {
-        // arrange
-        var code = "ci_code";
-        var journey = "some_mitigation";
-        String document = "doc_type/213123";
-        String documentType = "doc_type";
-        var ci = createCi(code);
-        ci.setDocument(document);
-        ci.setMitigation(List.of(new Mitigation()));
-
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-
-        // act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
-
-        // assert
-        assertEquals(Optional.of(new JourneyResponse(journey)), result);
-    }
-
-    @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnEmpty_WhenCiIsNotMitigatable() throws Exception {
-        // arrange
-        var code = "ci_code";
-        var ci = createCi(code);
-
-        when(mockConfigService.getCimitConfig()).thenReturn(Collections.emptyMap());
-
-        // act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
-
-        // assert
-        assertEquals(Optional.empty(), result);
-    }
-
-    @Test
-    void getMitigatedCiJourneyResponse_ShouldReturnEmptyOptional_IfMitigationRouteNotFound()
-            throws Exception {
-        // Arrange
-        var code = "ci_code";
-        var journey = "some_mitigation";
-        String document = "not-configured-doc-type/213123";
-        String documentType = "doc_type";
-        var ci = createCi(code);
-        ci.setDocument(document);
-        ci.setMitigation(List.of(new Mitigation()));
-
-        when(mockConfigService.getCimitConfig())
-                .thenReturn(Map.of(code, List.of(new MitigationRoute(journey, documentType))));
-
-        // Act
-        var result = cimitUtilityService.getMitigatedCiJourneyResponse(ci);
-
-        // Assert
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
     void getContraIndicatorsReturnEmptyCIIfInvalidEvidenceWithNoCI() throws Exception {
         var contraIndicators =
                 cimitUtilityService.getContraIndicatorsFromVc(

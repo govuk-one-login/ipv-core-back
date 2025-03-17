@@ -166,13 +166,10 @@ public class CimitUtilityService {
         return Optional.empty();
     }
 
-    public Optional<JourneyResponse> getMitigatedCiJourneyResponse(ContraIndicator ci)
+    public boolean hasMitigationsAvailable(List<ContraIndicator> contraIndicators)
             throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        if (cimitConfig.containsKey(ci.getCode()) && isMitigated(ci)) {
-            return getMitigationJourneyResponse(cimitConfig.get(ci.getCode()), ci.getDocument());
-        }
-        return Optional.empty();
+        return contraIndicators.stream().anyMatch(ci -> cimitConfig.containsKey(ci.getCode()));
     }
 
     public Optional<ContraIndicator> hasMitigatedContraIndicator(

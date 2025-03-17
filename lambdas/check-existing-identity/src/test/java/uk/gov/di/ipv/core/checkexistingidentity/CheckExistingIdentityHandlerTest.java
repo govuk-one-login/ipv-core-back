@@ -129,8 +129,7 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -870,8 +869,8 @@ class CheckExistingIdentityHandlerTest {
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, true, false, false));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
-                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+        when(cimitUtilityService.hasMitigationsAvailable(any())).thenReturn(true);
 
         var journeyResponse =
                 toResponseClass(
@@ -998,32 +997,12 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnCiJourneyResponseIfPresent() throws Exception {
-        var testJourneyResponse = "/journey/test-response";
-
+    void shouldReturnFailWithCiJourneyResponseForCiBreachAndNoMitigationsAvailable()
+            throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
-                .thenReturn(Optional.of(new JourneyResponse(testJourneyResponse)));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(testJourneyResponse, response.getJourney());
-    }
-
-    @Test
-    void shouldReturnFailWithCiJourneyResponseForCiBreach() throws Exception {
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
-                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+        when(cimitUtilityService.hasMitigationsAvailable(any())).thenReturn(false);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
@@ -1035,6 +1014,54 @@ class CheckExistingIdentityHandlerTest {
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnNewIdentityJourneyWhenCiIsBreachingButMitigationIsAvailable()
+            throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+        when(cimitUtilityService.hasMitigationsAvailable(any())).thenReturn(true);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
+                .thenReturn(emptyAsyncCriStatus);
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, response.getJourney());
+    }
+
+    private static Stream<Arguments> f2fIncompleteStatus() {
+        return Stream.of(
+                Arguments.of(AsyncCriStatus.STATUS_PENDING, JOURNEY_F2F_PENDING_PATH),
+                Arguments.of(AsyncCriStatus.STATUS_ABANDON, JOURNEY_F2F_FAIL_PATH),
+                Arguments.of(AsyncCriStatus.STATUS_ERROR, JOURNEY_F2F_FAIL_PATH));
+    }
+
+    @ParameterizedTest
+    @MethodSource("f2fIncompleteStatus")
+    void shouldReturnF2fJourneyResponseWhenCiIsBreachingButMitigationIsAvailable(
+            String asyncCriStatus, String expectedJourney) throws Exception {
+        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+        when(cimitUtilityService.hasMitigationsAvailable(any())).thenReturn(true);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
+                .thenReturn(new AsyncCriStatus(F2F, asyncCriStatus, true, true, false));
+
+        var response =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(expectedJourney, response.getJourney());
     }
 
     @Test
@@ -1111,7 +1138,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
+        when(cimitUtilityService.hasMitigationsAvailable(any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         var response =
@@ -1144,27 +1172,6 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), response.getCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
-    }
-
-    @Test
-    void
-            shouldReturnJourneyFailedWithCiIfTrueCiMitigationJourneyStepPresentAndNoMitigationJourneyStep()
-                    throws Exception {
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                .thenReturn(emptyAsyncCriStatus);
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(TEST_VOT)))
-                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
-
-        var journeyResponse =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyResponse.class);
-
-        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, journeyResponse.getJourney());
     }
 
     @Nested
@@ -1296,8 +1303,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnSameMitigationJourneyWhenCiAlreadyMitigated() throws Exception {
-        var journey = "some_mitigation";
+    void shouldReturnNewIdentityJourneyIfNotBreachingCiThreshold() throws Exception {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
@@ -1310,25 +1316,20 @@ class CheckExistingIdentityHandlerTest {
                         TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
                 .thenReturn(Map.of());
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
-                .thenReturn(Optional.empty());
-        when(cimitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
-                .thenReturn(Optional.of(mitigatedCI));
-        when(cimitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
-                .thenReturn(Optional.of(new JourneyResponse(journey)));
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
                 .thenReturn(emptyAsyncCriStatus);
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
 
         var journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(journey, journeyResponse.getJourney());
+        assertEquals(JOURNEY_IPV_GPG45_MEDIUM_PATH, journeyResponse.getJourney());
     }
 
     @Test
-    void shouldReturnSameJourneyMitigationWhenCiAlreadyMitigatedF2F() throws Exception {
+    void shouldReturnF2fFailJourneyResponseWhenFailedToMatchF2fProfile() throws Exception {
         var mitigatedCI = new ContraIndicator();
         mitigatedCI.setCode("test_code");
         mitigatedCI.setMitigation(List.of(new Mitigation()));
@@ -1344,93 +1345,14 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(
                         new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
-                .thenReturn(Optional.empty());
-        when(cimitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
-                .thenReturn(Optional.of(mitigatedCI));
-        when(cimitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));
+        when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
 
         var journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH, journeyResponse.getJourney());
-    }
-
-    @Test
-    void
-            shouldReturnErrorResponseIfNoMitigationRouteFoundForAlreadyMitigatedCiWhenBuildingF2FNoMatchResponse()
-                    throws Exception {
-        var mitigatedCI = new ContraIndicator();
-        mitigatedCI.setCode("test_code");
-        mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = List.of(mitigatedCI);
-
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
-                .thenReturn(Optional.empty());
-        when(cimitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
-                .thenReturn(Optional.of(mitigatedCI));
-        when(cimitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
-                .thenReturn(Optional.empty());
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getCode(), response.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getMessage(), response.getMessage());
-    }
-
-    @Test
-    void shouldReturnErrorResponseWhenCiMitigationJourneyStepPresentButNotSupported()
-            throws Exception {
-        var journey = "unsupported_mitigation";
-        var mitigatedCI = new ContraIndicator();
-        mitigatedCI.setCode("test_code");
-        mitigatedCI.setMitigation(List.of(new Mitigation()));
-        var testContraIndicators = List.of(mitigatedCI);
-
-        when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockEvcsService.getVerifiableCredentialsByState(
-                        TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                .thenReturn(Map.of(PENDING_RETURN, new ArrayList<>(List.of(vcF2fM1a()))));
-        when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(true)))
-                .thenReturn(
-                        new AsyncCriStatus(F2F, AsyncCriStatus.STATUS_PENDING, false, true, false));
-        when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(testContraIndicators);
-        when(cimitUtilityService.getMitigationJourneyIfBreaching(testContraIndicators, TEST_VOT))
-                .thenReturn(Optional.empty());
-        when(cimitUtilityService.hasMitigatedContraIndicator(testContraIndicators))
-                .thenReturn(Optional.of(mitigatedCI));
-        when(cimitUtilityService.getMitigatedCiJourneyResponse(mitigatedCI))
-                .thenReturn(Optional.of(new JourneyResponse(journey)));
-
-        var response =
-                toResponseClass(
-                        checkExistingIdentityHandler.handleRequest(event, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getCode(), response.getCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE.getMessage(), response.getMessage());
+        assertEquals(JOURNEY_F2F_FAIL_PATH, journeyResponse.getJourney());
     }
 
     @Test
