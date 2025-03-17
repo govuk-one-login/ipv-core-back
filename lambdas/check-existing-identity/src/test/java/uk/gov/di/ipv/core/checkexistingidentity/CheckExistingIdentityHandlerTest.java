@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -52,7 +51,6 @@ import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.helpers.TestVc;
 import uk.gov.di.ipv.core.library.journeys.JourneyUris;
@@ -99,7 +97,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CHECK_EXPIRY_PERIOD_HOURS;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.P1_JOURNEYS_ENABLED;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.REPEAT_FRAUD_CHECK;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.RESET_IDENTITY;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -141,7 +138,6 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_OPERATIONA
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPEAT_FRAUD_CHECK_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_REUSE_WITH_STORE_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -168,7 +164,6 @@ class CheckExistingIdentityHandlerTest {
                     M1A_EXPERIAN_FRAUD_VC,
                     vcVerificationM1a(),
                     M1B_DCMAW_VC);
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse(JOURNEY_REUSE_PATH);
     private static final JourneyResponse JOURNEY_REUSE_WITH_STORE =
             new JourneyResponse(JOURNEY_REUSE_WITH_STORE_PATH);
     private static final JourneyResponse JOURNEY_OP_PROFILE_REUSE =
@@ -325,51 +320,6 @@ class CheckExistingIdentityHandlerTest {
             verify(mockEvcsService)
                     .getVerifiableCredentialsByState(
                             TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN);
-        }
-
-        @ParameterizedTest
-        @EnumSource(names = {"M1A", "M1B", "M2B"})
-        void shouldReturnJourneyReuseResponseIfScoresSatisfyGpg45Profile(
-                Gpg45Profile matchedProfile) throws Exception {
-            var hmrcMigrationVC = vcHmrcMigrationPCL200();
-            when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
-            when(mockEvcsService.getVerifiableCredentialsByState(
-                            TEST_USER_ID, EVCS_TEST_TOKEN, CURRENT, PENDING_RETURN))
-                    .thenReturn(Map.of(CURRENT, List.of(gpg45Vc, hmrcMigrationVC)));
-            when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
-                    .thenReturn(emptyAsyncCriStatus);
-            when(mockVotMatcher.matchFirstVot(
-                            List.of(P2), List.of(gpg45Vc, hmrcMigrationVC), List.of(), true))
-                    .thenReturn(
-                            Optional.of(
-                                    new VotMatchingResult(
-                                            P2, matchedProfile, Gpg45Scores.builder().build())));
-            when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
-            when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
-
-            var journeyResponse =
-                    toResponseClass(
-                            checkExistingIdentityHandler.handleRequest(event, context),
-                            JourneyResponse.class);
-
-            assertEquals(JOURNEY_REUSE, journeyResponse);
-
-            verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
-            assertEquals(
-                    AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                    auditEventArgumentCaptor.getAllValues().get(0).getEventName());
-            assertEquals(
-                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                    auditEventArgumentCaptor.getAllValues().get(1).getEventName());
-
-            verify(mockSessionCredentialService)
-                    .persistCredentials(List.of(gpg45Vc), ipvSessionItem.getIpvSessionId(), false);
-
-            var inOrder = inOrder(ipvSessionItem, ipvSessionService);
-            inOrder.verify(ipvSessionItem).setVot(P2);
-            inOrder.verify(ipvSessionService).updateIpvSession(ipvSessionItem);
-            inOrder.verify(ipvSessionItem, never()).setVot(any());
-            assertEquals(P2, ipvSessionItem.getVot());
         }
 
         @Test
@@ -1455,7 +1405,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS)).thenReturn("1");
 
@@ -1490,7 +1439,6 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
         when(configService.enabled(RESET_IDENTITY)).thenReturn(false);
         when(configService.enabled(REPEAT_FRAUD_CHECK)).thenReturn(true);
-        when(configService.enabled(PROCESS_CANDIDATE_IDENTITY)).thenReturn(false);
         when(configService.getParameter(COMPONENT_ID)).thenReturn("http://ipv/");
         when(configService.getParameter(FRAUD_CHECK_EXPIRY_PERIOD_HOURS))
                 .thenReturn("100000000"); // not the best way to test this
