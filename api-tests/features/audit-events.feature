@@ -1,7 +1,4 @@
 Feature: Audit Events
-  Background: Set processCandidateIdentity feature set
-    Given I activate the 'processCandidateIdentity' feature set
-
   Scenario: New identity - p2 app journey
     And I start a new 'medium-confidence' journey
     Then I get a 'live-in-uk' page response

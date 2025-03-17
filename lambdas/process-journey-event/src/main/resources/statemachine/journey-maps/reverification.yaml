@@ -59,9 +59,7 @@ states:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
 
-
   # Journey states
-
   CHECK_REVERIFICATION_IDENTITY:
     response:
       type: process

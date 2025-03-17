@@ -389,11 +389,7 @@ core:
     sqsAsync: true
     kidJarHeaderEnabled: true
     drivingLicenceAuthCheck: true
-    processCandidateIdentity: true
   features:
-    processCandidateIdentity:
-      featureFlags:
-        processCandidateIdentity: true
     internationalAddress:
       featureFlags:
         internationalAddressEnabled: true
