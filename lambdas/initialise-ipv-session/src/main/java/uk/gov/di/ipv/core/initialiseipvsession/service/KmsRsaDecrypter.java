@@ -79,8 +79,10 @@ public class KmsRsaDecrypter implements JWEDecrypter {
                     AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, supportedJWEAlgorithms()));
         }
 
-        var primaryKeyAlias = configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY);
-        var secondaryKeyAlias = configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY);
+        var primaryKeyAlias =
+                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY);
+        var secondaryKeyAlias =
+                configService.getParameter(CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY);
 
         var encryptedKeyDecryptRequestPrimary =
                 DecryptRequest.builder()
@@ -100,13 +102,14 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         DecryptResponse decryptResponse;
         try {
             decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestPrimary);
-        }
-        catch (IncorrectKeyException e) {
+        } catch (IncorrectKeyException e) {
             decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestSecondary);
-        }
-        catch (Exception e) {
-            // We only expect to get IncorrectKeyExceptions, but if we get another error we should still try the secondary key
-            LOGGER.warn("Unexpected exception decrypting JWT key with primary key. Trying secondary key. %s".formatted(e.getMessage()));
+        } catch (Exception e) {
+            // We only expect to get IncorrectKeyExceptions, but if we get another error we should
+            // still try the secondary key
+            LOGGER.warn(
+                    "Unexpected exception decrypting JWT key with primary key. Trying secondary key. %s"
+                            .formatted(e.getMessage()));
             decryptResponse = kmsClient.decrypt(encryptedKeyDecryptRequestSecondary);
         }
 
