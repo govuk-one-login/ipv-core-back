@@ -1526,7 +1526,6 @@ Resources:
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Version
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Version
         CallDcmawAsyncCriLambdaArn: !Ref CallDcmawAsyncCriFunction.Version
-        StoreIdentityLambdaArn: !Ref StoreIdentityFunction.Version
         ResetSessionIdentityFunctionArn: !Ref ResetSessionIdentityFunction.Version
         CheckReverificationIdentityFunctionArn: !Ref CheckReverificationIdentityFunction.Version
         ProcessCandidateIdentityFunctionArn: !Ref ProcessCandidateIdentityFunction.Version
@@ -1546,7 +1545,6 @@ Resources:
             - !Ref CheckGpg45ScoreFunctionErrorCanaryAlarm
             - !Ref EvaluateGpg45ScoresFunctionErrorCanaryAlarm
             - !Ref CallDcmawAsyncCriFunctionErrorCanaryAlarm
-            - !Ref StoreIdentityFunctionErrorCanaryAlarm
             - !Ref ResetSessionIdentityFunctionErrorCanaryAlarm
             - !Ref CheckReverificationIdentityFunctionErrorCanaryAlarm
             - !Ref ProcessCandidateIdentityFunctionErrorCanaryAlarm
@@ -1587,8 +1585,6 @@ Resources:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CallDcmawAsyncCriFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref StoreIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ResetSessionIdentityFunction
         - LambdaInvokePolicy:
@@ -2273,85 +2269,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CallDcmawAsyncCriFunctionLogGroup
-
-  StoreIdentityFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - StoreIdentityFunctionLogGroup
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "store-identity-${Environment}"
-      Handler: uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler::handleRequest
-      PackageType: Zip
-      CodeUri: ../lambdas/store-identity
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          POWERTOOLS_SERVICE_NAME: !Sub store-identity-${Environment}
-          SESSION_CREDENTIALS_TABLE_NAME: !Ref SessionCredentialsTable
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      VpcConfig:
-        SubnetIds:
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
-          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
-        SecurityGroupIds:
-          - !GetAtt LambdaSecurityGroup.GroupId
-      Policies:
-        - VPCAccessPolicy: { }
-        - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-        - KMSDecryptPolicy:
-            KeyId: !Ref DynamoDBKmsKey
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/evcs/apiKey-*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref ClientOAuthSessionsTable
-      AutoPublishAlias: live
-
-  StoreIdentityFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/store-identity-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  StoreIdentityFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsSubscriptionEnviroment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref StoreIdentityFunctionLogGroup
 
   ResetSessionIdentityFunction:
     Type: AWS::Serverless::Function
@@ -3567,32 +3484,6 @@ Resources:
           Value: !Ref CallDcmawAsyncCriFunction
         - Name: ExecutedVersion
           Value: !GetAtt CallDcmawAsyncCriFunction.Version.Version
-      Namespace: AWS/Lambda
-      Statistic: Sum
-      Unit: Count
-      Period: 60
-      EvaluationPeriods: 3
-      Threshold: 1
-      ComparisonOperator: GreaterThanOrEqualToThreshold
-      TreatMissingData: notBreaching
-
-  StoreIdentityFunctionErrorCanaryAlarm:
-    Type: AWS::CloudWatch::Alarm
-    Condition: UseCanaryDeploymentAlarms
-    Properties:
-      ActionsEnabled: true
-      AlarmActions:
-        - !ImportValue alarm-alerts-topic
-      AlarmDescription: !Sub "Error returned from the StoreIdentityFunction."
-      AlarmName: !Sub ${AWS::StackName}-StoreIdentityFunction-ErrorCanary
-      MetricName: Errors
-      Dimensions:
-        - Name: Resource
-          Value: !Sub "store-identity-${Environment}:live"
-        - Name: FunctionName
-          Value: !Ref StoreIdentityFunction
-        - Name: ExecutedVersion
-          Value: !GetAtt StoreIdentityFunction.Version.Version
       Namespace: AWS/Lambda
       Statistic: Sum
       Unit: Count

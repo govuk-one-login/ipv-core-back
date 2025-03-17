@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.service.YamlConfigService;
 import uk.gov.di.ipv.core.processcandidateidentity.ProcessCandidateIdentityHandler;
 import uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler;
 import uk.gov.di.ipv.core.resetsessionidentity.ResetSessionIdentityHandler;
-import uk.gov.di.ipv.core.storeidentity.StoreIdentityHandler;
 import uk.gov.di.ipv.coreback.domain.CoreContext;
 import uk.gov.di.ipv.coreback.exceptions.UnrecognisedJourneyException;
 
@@ -30,7 +29,6 @@ import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_CHECK_REVE
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_EVALUATE_GPG45_SCORES_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROCESS_CANDIDATE_IDENTITY;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_RESET_SESSION_IDENTITY_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_STORE_IDENTITY_PATH;
 
 public class JourneyEngineHandler {
     public static final CoreContext EMPTY_CONTEXT = new CoreContext();
@@ -52,7 +50,6 @@ public class JourneyEngineHandler {
     private final CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private final EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
     private final CallDcmawAsyncCriHandler callDcmawAsyncHandler;
-    private final StoreIdentityHandler storeIdentityHandler;
     private final CheckReverificationIdentityHandler checkReverificationIdentityHandler;
     private final ProcessCandidateIdentityHandler processCandidateIdentityHandler;
 
@@ -66,7 +63,6 @@ public class JourneyEngineHandler {
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler(configService);
         this.evaluateGpg45ScoresHandler = new EvaluateGpg45ScoresHandler(configService);
         this.callDcmawAsyncHandler = new CallDcmawAsyncCriHandler(configService);
-        this.storeIdentityHandler = new StoreIdentityHandler(configService);
         this.checkReverificationIdentityHandler =
                 new CheckReverificationIdentityHandler(configService);
         this.processCandidateIdentityHandler = new ProcessCandidateIdentityHandler(configService);
@@ -119,8 +115,6 @@ public class JourneyEngineHandler {
             case JOURNEY_CHECK_GPG45_SCORE_PATH -> checkGpg45ScoreHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_CALL_DCMAW_ASYNC_CRI_PATH -> callDcmawAsyncHandler.handleRequest(
-                    buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
-            case JOURNEY_STORE_IDENTITY_PATH -> storeIdentityHandler.handleRequest(
                     buildProcessRequest(ctx, processJourneyEventOutput), EMPTY_CONTEXT);
             case JOURNEY_CHECK_REVERIFICATION_IDENTITY_PATH -> checkReverificationIdentityHandler
                     .handleRequest(
