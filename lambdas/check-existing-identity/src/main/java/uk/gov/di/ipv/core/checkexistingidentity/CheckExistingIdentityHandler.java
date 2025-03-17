@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VotHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -259,17 +260,11 @@ public class CheckExistingIdentityHandler
                     criResponseService.getAsyncResponseStatus(
                             userId, credentialBundle.credentials, credentialBundle.isPendingReturn);
 
-            // If we want to prove or mitigate CIs for an identity we want to go for the lowest
-            // strength that is acceptable to the caller. We can only prove/mitigate GPG45
-            // identities
-            var lowestGpg45ConfidenceRequested =
-                    clientOAuthSessionItem
-                            .getParsedVtr()
-                            .getLowestStrengthRequestedGpg45Vot(configService);
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
             // As almost all of our journeys are proving or mitigating a GPG45 vot we set the
             // target vot here as a default value. It will be overridden for identity reuse.
-            ipvSessionItem.setTargetVot(lowestGpg45ConfidenceRequested);
+            ipvSessionItem.setTargetVot(targetVot);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var contraIndicatorsVc =
@@ -287,7 +282,7 @@ public class CheckExistingIdentityHandler
             // journey
             if (reproveIdentity && !isReprovingWithF2f(asyncCriStatus, credentialBundle)
                     || configService.enabled(RESET_IDENTITY)) {
-                if (lowestGpg45ConfidenceRequested == Vot.P1) {
+                if (targetVot == Vot.P1) {
                     LOGGER.info(LogHelper.buildLogMessage("Reproving P1 identity"));
                     return JOURNEY_REPROVE_IDENTITY_GPG45_LOW;
                 }
@@ -302,7 +297,7 @@ public class CheckExistingIdentityHandler
             // though.
             var ciScoringCheckResponse =
                     cimitUtilityService.getMitigationJourneyIfBreaching(
-                            contraIndicators, lowestGpg45ConfidenceRequested);
+                            contraIndicators, targetVot);
             if (ciScoringCheckResponse.isPresent()) {
                 if (asyncCriStatus.isAwaitingVc()) {
                     return asyncCriStatus.getJourneyForAwaitingVc(false);
@@ -325,12 +320,6 @@ public class CheckExistingIdentityHandler
                             areGpg45VcsCorrelated,
                             contraIndicators);
             if (profileMatchResponse.isPresent()) {
-                // We are re-using an existing Vot, so it might not be a GPG45 vot
-                ipvSessionItem.setTargetVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getLowestStrengthRequestedVot(configService));
-                ipvSessionService.updateIpvSession(ipvSessionItem);
                 return profileMatchResponse.get();
             }
 
@@ -360,7 +349,7 @@ public class CheckExistingIdentityHandler
                     var dcmawContinuationResponse =
                             buildDCMAWContinuationResponse(
                                     credentialBundle,
-                                    lowestGpg45ConfidenceRequested,
+                                    targetVot,
                                     clientOAuthSessionItem,
                                     auditEventUser,
                                     deviceInformation);
@@ -373,7 +362,7 @@ public class CheckExistingIdentityHandler
 
             // No relevant async CRI
 
-            return buildNoMatchResponse(contraIndicators, lowestGpg45ConfidenceRequested);
+            return buildNoMatchResponse(contraIndicators, targetVot);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -433,9 +422,7 @@ public class CheckExistingIdentityHandler
         // Check for attained vot from requested vots
         var maybeVotMatchingResult =
                 votMatcher.matchFirstVot(
-                        clientOAuthSessionItem
-                                .getParsedVtr()
-                                .getRequestedVotsByStrengthDescending(),
+                        VotHelper.getVotsByStrengthDescending(clientOAuthSessionItem),
                         credentialBundle.credentials,
                         contraIndicators,
                         areGpg45VcsCorrelated);
