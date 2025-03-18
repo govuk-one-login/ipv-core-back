@@ -289,7 +289,7 @@ public class CheckExistingIdentityHandler
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
             if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)) {
-                if (cimitUtilityService.hasMitigationsAvailable(contraIndicators)) {
+                if (cimitUtilityService.areMitigationsAvailable(contraIndicators)) {
                     if (asyncCriStatus.isAwaitingVc()) {
                         return asyncCriStatus.getJourneyForAwaitingVc(false);
                     }

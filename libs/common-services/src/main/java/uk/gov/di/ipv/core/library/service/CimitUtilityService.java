@@ -167,12 +167,6 @@ public class CimitUtilityService {
         return Optional.empty();
     }
 
-    public boolean hasMitigationsAvailable(List<ContraIndicator> contraIndicators)
-            throws ConfigException {
-        var cimitConfig = configService.getCimitConfig();
-        return contraIndicators.stream().anyMatch(ci -> cimitConfig.containsKey(ci.getCode()));
-    }
-
     public Optional<ContraIndicator> hasMitigatedContraIndicator(
             List<ContraIndicator> contraIndicators) {
         return contraIndicators.stream().filter(this::isMitigated).findFirst();

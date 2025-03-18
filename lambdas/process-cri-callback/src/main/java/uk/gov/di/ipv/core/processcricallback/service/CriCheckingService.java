@@ -243,12 +243,13 @@ public class CriCheckingService {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
+            // Get CIs from old CIMIT VC to check if we have new CIs
             var oldCis =
                     cimitUtilityService.getContraIndicatorsFromVc(
                             ipvSessionItem.getSecurityCheckCredential(),
                             clientOAuthSessionItem.getUserId());
 
-            var contraIndicatorsVc = // new CI VC
+            var contraIndicatorsVc =
                     cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
