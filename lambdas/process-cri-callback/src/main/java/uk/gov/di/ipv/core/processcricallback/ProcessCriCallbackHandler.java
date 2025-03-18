@@ -191,7 +191,6 @@ public class ProcessCriCallbackHandler
                                     PYI_ATTEMPT_RECOVERY_PAGE_ID));
                 }
                 case MISSING_IPV_SESSION_ID -> {
-                    LOGGER.warn(LogHelper.buildErrorMessage(e.getErrorResponse()));
                     return buildErrorResponse(
                             e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
                 }
