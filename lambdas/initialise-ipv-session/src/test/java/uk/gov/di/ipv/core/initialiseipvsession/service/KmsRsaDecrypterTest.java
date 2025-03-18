@@ -121,6 +121,44 @@ class KmsRsaDecrypterTest {
     }
 
     @Test
+    void decrypt_whenPrimaryKeyWorks_shouldNotTrySecondaryKey() throws JOSEException {
+        // Arrange
+        try (var staticMock = Mockito.mockStatic(ContentCryptoProvider.class)) {
+            var expectedResult = new byte[] {};
+            Mockito.when(
+                            ContentCryptoProvider.decrypt(
+                                    any(), any(), any(), any(), any(), any(), any()))
+                    .thenReturn(expectedResult);
+            JWEHeader header = new JWEHeader(RSA_OAEP_256, EncryptionMethod.A256GCM);
+            Base64URL encryptedKey = new Base64URL("ZW5jcnlwdGVkS2V5");
+            Base64URL iv = new Base64URL("iv");
+            Base64URL cypherText = new Base64URL("cypherText");
+            Base64URL authTag = new Base64URL("authTag");
+            byte[] aad = new byte[] {};
+
+            when(mockKmsClient.decrypt(
+                            argThat(
+                                    (DecryptRequest dr) ->
+                                            dr != null && dr.keyId().contains("primary"))))
+                    .thenReturn(
+                            DecryptResponse.builder()
+                                    .plaintext(SdkBytes.fromByteArray(new byte[] {1}))
+                                    .build());
+
+            // Act
+            var result = underTest.decrypt(header, encryptedKey, iv, cypherText, authTag, aad);
+
+            // Assert
+            ArgumentCaptor<DecryptRequest> decryptRequestCaptor =
+                    ArgumentCaptor.forClass(DecryptRequest.class);
+            verify(mockKmsClient, times(1)).decrypt(decryptRequestCaptor.capture());
+            assertThat(
+                    decryptRequestCaptor.getAllValues().get(0).keyId(), containsString("primary"));
+            assertThat(result, equalTo(expectedResult));
+        }
+    }
+
+    @Test
     void decrypt_whenPrimaryKeyIsWrong_shouldTrySecondaryKey() throws JOSEException {
         // Arrange
         try (var staticMock = Mockito.mockStatic(ContentCryptoProvider.class)) {
