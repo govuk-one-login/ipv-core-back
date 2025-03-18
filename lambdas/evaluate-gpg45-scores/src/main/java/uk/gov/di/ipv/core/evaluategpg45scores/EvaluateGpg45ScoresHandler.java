@@ -167,7 +167,12 @@ public class EvaluateGpg45ScoresHandler
             logLambdaResponse("A GPG45 profile has been met", JOURNEY_MET);
             return JOURNEY_MET.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
+            var errorMessage = LogHelper.buildErrorMessage("Received exception", e);
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                LOGGER.info(errorMessage);
+            } else {
+                LOGGER.error(errorMessage);
+            }
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();

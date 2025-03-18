@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedCheckCoi;
 import uk.gov.di.ipv.core.library.auditing.restricted.AuditRestrictedDeviceInformation;
 import uk.gov.di.ipv.core.library.auditing.restricted.DeviceInformation;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -195,7 +196,12 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         } catch (HttpResponseExceptionWithErrorBody
                 | EvcsServiceException
                 | VerifiableCredentialException e) {
-            LOGGER.error(LogHelper.buildErrorMessage("Received exception", e));
+            var errorMessage = LogHelper.buildErrorMessage("Received exception", e);
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                LOGGER.info(errorMessage);
+            } else {
+                LOGGER.error(errorMessage);
+            }
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();

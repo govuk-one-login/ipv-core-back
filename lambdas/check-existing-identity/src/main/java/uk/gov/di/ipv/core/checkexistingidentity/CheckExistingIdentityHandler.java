@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -377,6 +378,9 @@ public class CheckExistingIdentityHandler
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                return buildErrorResponse(e.getErrorResponse(), e, Level.INFO);
+            }
             return buildErrorResponse(e.getErrorResponse(), e);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(ErrorResponse.FAILED_TO_GET_STORED_CIS, e);
@@ -664,10 +668,15 @@ public class CheckExistingIdentityHandler
                         new AuditRestrictedDeviceInformation(deviceInformation)));
     }
 
-    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+    private JourneyResponse buildErrorResponse(
+            ErrorResponse errorResponse, Exception e, Level level) {
+        LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return new JourneyErrorResponse(
                 JOURNEY_ERROR_PATH, HttpStatusCode.INTERNAL_SERVER_ERROR, errorResponse);
+    }
+
+    private JourneyResponse buildErrorResponse(ErrorResponse errorResponse, Exception e) {
+        return buildErrorResponse(errorResponse, e, Level.ERROR);
     }
 
     private JourneyResponse buildErrorResponse(ErrorResponse errorResponse) {
