@@ -538,7 +538,8 @@ class CriCheckingServiceTest {
         when(mockCimitUtilityService.areContraIndicatorsTheSame(
                         TEST_CONTRA_INDICATORS, TEST_CONTRA_INDICATORS))
                 .thenReturn(true);
-        when(mockCimitUtilityService.areMitigationsAvailable(any())).thenReturn(false);
+        when(mockCimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(false);
 
         // Act
         JourneyResponse result =
@@ -619,7 +620,8 @@ class CriCheckingServiceTest {
                 .thenReturn(TEST_CONTRA_INDICATORS);
         when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
         when(mockCimitUtilityService.areContraIndicatorsTheSame(any(), any())).thenReturn(true);
-        when(mockCimitUtilityService.areMitigationsAvailable(any())).thenReturn(true);
+        when(mockCimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(true);
 
         // Act
         JourneyResponse result =

@@ -289,7 +289,8 @@ public class CheckExistingIdentityHandler
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
             if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)) {
-                if (cimitUtilityService.areMitigationsAvailable(contraIndicators)) {
+                if (cimitUtilityService.areMitigationsAvailableForBreachingCi(
+                        contraIndicators, targetVot)) {
                     if (asyncCriStatus.isAwaitingVc()) {
                         return asyncCriStatus.getJourneyForAwaitingVc(false);
                     }
@@ -442,8 +443,9 @@ public class CheckExistingIdentityHandler
     }
 
     private JourneyResponse buildF2FNoMatchResponse(
-            boolean areGpg45VcsCorrelated, AuditEventUser auditEventUser, String deviceInformation)
-            throws ConfigException {
+            boolean areGpg45VcsCorrelated,
+            AuditEventUser auditEventUser,
+            String deviceInformation) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated

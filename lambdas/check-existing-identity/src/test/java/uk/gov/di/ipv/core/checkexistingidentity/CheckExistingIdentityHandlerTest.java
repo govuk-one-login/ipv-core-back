@@ -129,7 +129,6 @@ import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_PENDING_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
@@ -157,9 +156,6 @@ class CheckExistingIdentityHandlerTest {
     public static final String EVCS_TEST_TOKEN = "evcsTestToken";
     public static final String TEST_CRI_OAUTH_SESSION_ID = "test-cri-oauth-session-id";
     public static final String TEST_PREVIOUS_IPV_SESSION_ID = "previous-ipv-session-id";
-    private static final Vot TEST_VOT = P2;
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final List<VerifiableCredential> VCS_FROM_STORE =
             List.of(
                     PASSPORT_NON_DCMAW_SUCCESSFUL_VC,
@@ -870,7 +866,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.areMitigationsAvailable(any())).thenReturn(true);
+        when(cimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(true);
 
         var journeyResponse =
                 toResponseClass(
@@ -1002,7 +999,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.areMitigationsAvailable(any())).thenReturn(false);
+        when(cimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(false);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
@@ -1022,7 +1020,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.areMitigationsAvailable(any())).thenReturn(true);
+        when(cimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(eq(TEST_USER_ID), any(), eq(false)))
@@ -1050,7 +1049,8 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
-        when(cimitUtilityService.areMitigationsAvailable(any())).thenReturn(true);
+        when(cimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
+                .thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(criResponseService.getAsyncResponseStatus(TEST_USER_ID, List.of(), false))
@@ -1139,7 +1139,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(Boolean.TRUE);
-        when(cimitUtilityService.areMitigationsAvailable(any()))
+        when(cimitUtilityService.areMitigationsAvailableForBreachingCi(any(), any()))
                 .thenThrow(new ConfigException("Failed to get cimit config"));
 
         var response =

@@ -203,9 +203,16 @@ public class CimitUtilityService {
         return new HashSet<>(oldCis).equals(new HashSet<>(newCis));
     }
 
-    public boolean areMitigationsAvailable(List<ContraIndicator> cis) throws ConfigException {
+    public boolean areMitigationsAvailableForBreachingCi(
+            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         var cimitConfig = configService.getCimitConfig();
-        return !cis.isEmpty() && cis.stream().allMatch(ci -> cimitConfig.containsKey(ci.getCode()));
+        return !cis.isEmpty()
+                && cis.stream()
+                        .anyMatch(
+                                ci ->
+                                        cimitConfig.containsKey(ci.getCode())
+                                                && !isBreachingCiThresholdIfMitigated(
+                                                        ci, cis, confidenceRequested));
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)

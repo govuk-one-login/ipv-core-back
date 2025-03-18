@@ -259,11 +259,11 @@ public class CriCheckingService {
 
             // If there are new CIs or the CIs don't have any available mitigations, we return
             // fail-with-ci
-            if (cimitUtilityService.isBreachingCiThreshold(
-                            newCis,
-                            VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem))
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
                     && (!cimitUtilityService.areContraIndicatorsTheSame(oldCis, newCis)
-                            || !cimitUtilityService.areMitigationsAvailable(newCis))) {
+                            || !cimitUtilityService.areMitigationsAvailableForBreachingCi(
+                                    newCis, targetVot))) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }
