@@ -31,7 +31,6 @@ import static software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec.
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY;
 
-@ExcludeFromGeneratedCoverageReport
 public class KmsRsaDecrypter implements JWEDecrypter {
     private static final Set<JWEAlgorithm> SUPPORTED_ALGORITHMS = Set.of(JWEAlgorithm.RSA_OAEP_256);
     private static final Set<EncryptionMethod> SUPPORTED_ENCRYPTION_METHODS =
@@ -42,6 +41,7 @@ public class KmsRsaDecrypter implements JWEDecrypter {
     private final KmsClient kmsClient;
     private final JWEJCAContext jwejcaContext = new JWEJCAContext();
 
+    @ExcludeFromGeneratedCoverageReport
     public KmsRsaDecrypter(ConfigService configService) {
         this.configService = configService;
         this.kmsClient =
@@ -49,6 +49,11 @@ public class KmsRsaDecrypter implements JWEDecrypter {
                         .region(EU_WEST_2)
                         .httpClientBuilder(UrlConnectionHttpClient.builder())
                         .build();
+    }
+
+    public KmsRsaDecrypter(ConfigService configService, KmsClient kmsClient) {
+        this.configService = configService;
+        this.kmsClient = kmsClient;
     }
 
     @Override
