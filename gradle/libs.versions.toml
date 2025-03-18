@@ -1,5 +1,5 @@
 [versions]
-awsSdk = "2.30.31"
+awsSdk = "2.31.2"
 jackson = "2.18.0"
 log4j = "2.24.0"
 mockito = "5.16.0"
