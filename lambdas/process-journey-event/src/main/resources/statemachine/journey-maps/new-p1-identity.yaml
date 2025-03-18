@@ -146,7 +146,7 @@ states:
       end:
         targetState: NINO_START_PAGE
         checkMitigation:
-          enhanced-mitigation:
+          enhanced-verification:
             targetState: MITIGATION_01_F2F_START_PAGE
             checkIfDisabled:
               f2f:
@@ -195,10 +195,6 @@ states:
         checkMitigation:
           enhanced-verification:
             targetState: MITIGATION_01_PYI_POST_OFFICE
-            checkIfDisabled:
-              f2f:
-                targetJourney: INELIGIBLE
-                targetState: INELIGIBLE
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -251,7 +247,7 @@ states:
         targetState: MULTIPLE_DOC_CHECK_PAGE
         checkMitigation:
           enhanced-verification:
-            targetState: PYI_POST_OFFICE
+            targetState: MITIGATION_01_PYI_POST_OFFICE
             checkIfDisabled:
               f2f:
                 targetJourney: INELIGIBLE
@@ -453,8 +449,15 @@ states:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_J4
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         targetState: ADDRESS_AND_FRAUD_J4
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetState: ADDRESS_AND_FRAUD_J4
+            targetEntryEvent: enhanced-verification
 
   ADDRESS_AND_FRAUD_J4:
     nestedJourney: ADDRESS_AND_FRAUD
@@ -479,8 +482,14 @@ states:
     events:
       next:
         targetState: CRI_NINO_NO_PHOTO_ID
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         targetState: CRI_NINO_NO_PHOTO_ID
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetState: CRI_NINO_NO_PHOTO_ID
 
   CRI_NINO_NO_PHOTO_ID:
     response:
@@ -724,7 +733,7 @@ states:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE
 
-  MITIGATION_01_PYI_POST_OFFICE: # To delete - now matches PYI_POST_OFFICE
+  MITIGATION_01_PYI_POST_OFFICE:
     response:
       type: page
       pageId: pyi-post-office
@@ -855,9 +864,6 @@ states:
       next:
         targetJourney: F2F_HAND_OFF
         targetState: START
-        checkMitigation:
-          enhanced-verification:
-            targetState: CRI_CLAIMED_IDENTITY_J4
       end:
         targetJourney: INELIGIBLE
         targetState: INELIGIBLE

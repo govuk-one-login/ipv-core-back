@@ -23,7 +23,10 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification:
+        checkMitigation:
+          enhanced-verification:
+            exitEventToEmit: anotherWay
+      enhanced-verification: # To delete - checkMobileAppVcReceipt no longer emits this
         exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
