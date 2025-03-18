@@ -153,7 +153,10 @@ public class CriCheckingService {
             case OAuth2Error.INVALID_REQUEST_CODE -> JOURNEY_INVALID_REQUEST;
             default -> {
                 LOGGER.error(
-                        LogHelper.buildErrorMessage("Unacceptable callback error code", errorCode));
+                        LogHelper.buildErrorMessage(
+                                "Unexpected OAuth error received from CRI",
+                                errorDescription,
+                                errorCode));
                 yield JOURNEY_ERROR;
             }
         });
