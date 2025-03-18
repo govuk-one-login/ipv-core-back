@@ -644,6 +644,53 @@ class CimitUtilityServiceTest {
         assertEquals(Optional.empty(), result);
     }
 
+    private static Stream<Arguments> areContraIndicatorsTheSameArguments() {
+        var ci1 = createCi("test-code1");
+        var ci2 = createCi("test-code2");
+
+        return Stream.of(
+                Arguments.of(true, List.of(ci1, ci2)),
+                Arguments.of(false, List.of(ci1)),
+                Arguments.of(false, List.of(ci1, ci2, createCi("test-code3"))),
+                Arguments.of(false, List.of()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("areContraIndicatorsTheSameArguments")
+    void areContraIndicatorsTheSameShouldReturnCorrectResult(
+            boolean expectedResult, List<ContraIndicator> testCis) {
+        var oldCis = List.of(createCi("test-code1"), createCi("test-code2"));
+        assertEquals(
+                expectedResult, cimitUtilityService.areContraIndicatorsTheSame(oldCis, testCis));
+    }
+
+    private static Stream<Arguments> areMitigationsAvailableArguments() {
+        var ci1 = createCi("test-code1");
+        var ci2 = createCi("test-code2");
+
+        return Stream.of(
+                Arguments.of(true, List.of(ci1, ci2)),
+                Arguments.of(true, List.of(ci1)),
+                Arguments.of(false, List.of(ci1, ci2, createCi("test-code3"))),
+                Arguments.of(false, List.of()),
+                Arguments.of(false, List.of(createCi("test-code3"))));
+    }
+
+    @ParameterizedTest
+    @MethodSource("areMitigationsAvailableArguments")
+    void areMitigationsAvailableArgumentsShouldReturnCorrectResult(
+            boolean expectedResult, List<ContraIndicator> testCis) throws ConfigException {
+        Map<String, List<MitigationRoute>> ciConfigMap =
+                Map.of(
+                        "test-code1",
+                        List.of(new MitigationRoute("/journey/do-a-thing", "document")),
+                        "test-code2",
+                        List.of(new MitigationRoute("/journey/do-a-thing", "document")));
+        when(mockConfigService.getCimitConfig()).thenReturn(ciConfigMap);
+
+        assertEquals(expectedResult, cimitUtilityService.areMitigationsAvailable(testCis));
+    }
+
     private static ContraIndicator createCi(String code) {
         var ci = new ContraIndicator();
         ci.setCode(code);

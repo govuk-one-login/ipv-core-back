@@ -18,6 +18,7 @@ import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.SecurityCheckCredential;
 
 import java.text.ParseException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,6 +202,16 @@ public class CimitUtilityService {
         var jwt = SignedJWT.parse(vcString);
         var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
         return getContraIndicatorsFromVc(credential);
+    }
+
+    public boolean areContraIndicatorsTheSame(
+            List<ContraIndicator> oldCis, List<ContraIndicator> newCis) {
+        return new HashSet<>(oldCis).equals(new HashSet<>(newCis));
+    }
+
+    public boolean areMitigationsAvailable(List<ContraIndicator> cis) throws ConfigException {
+        var cimitConfig = configService.getCimitConfig();
+        return !cis.isEmpty() && cis.stream().allMatch(ci -> cimitConfig.containsKey(ci.getCode()));
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)

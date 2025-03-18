@@ -22,6 +22,8 @@ import uk.gov.di.ipv.core.library.domain.ScopeConstants;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -41,6 +43,7 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.security.InvalidParameterException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -235,21 +238,31 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException {
+            throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
+                    CredentialParseException, ParseException, ConfigException {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
-            var contraIndicatorsVc =
+            var oldCis =
+                    cimitUtilityService.getContraIndicatorsFromVc(
+                            ipvSessionItem.getSecurityCheckCredential(),
+                            clientOAuthSessionItem.getUserId());
+
+            var contraIndicatorsVc = // new CI VC
                     cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
                             ipvSessionItem);
-            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
 
+            // If there are new CIs or the CIs don't have any available mitigations, we return
+            // fail-with-ci
             if (cimitUtilityService.isBreachingCiThreshold(
-                            cis, VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem))
-                    && cimitUtilityService.hasMitigatedContraIndicator(cis).isEmpty()) {
+                            newCis,
+                            VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem))
+                    && (!cimitUtilityService.areContraIndicatorsTheSame(oldCis, newCis)
+                            || !cimitUtilityService.areMitigationsAvailable(newCis))) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }
