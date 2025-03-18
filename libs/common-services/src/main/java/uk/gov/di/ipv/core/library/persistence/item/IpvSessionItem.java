@@ -38,7 +38,6 @@ public class IpvSessionItem implements PersistenceItem {
     private String errorCode;
     private String errorDescription;
     private Vot vot;
-    private Vot targetVot;
     private long ttl;
     private String emailAddress;
     private ReverificationStatus reverificationStatus;

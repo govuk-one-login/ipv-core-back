@@ -262,11 +262,6 @@ public class CheckExistingIdentityHandler
 
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
-            // As almost all of our journeys are proving or mitigating a GPG45 vot we set the
-            // target vot here as a default value. It will be overridden for identity reuse.
-            ipvSessionItem.setTargetVot(targetVot);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
             var contraIndicatorsVc =
                     cimitService.getContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
