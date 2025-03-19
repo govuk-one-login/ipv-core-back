@@ -8,6 +8,14 @@ on:
     paths-ignore:
       - '.github/workflows/secure-post-merge.yml'
       - '.github/workflows/secure-post-merge-notags.yml'
+  pull_request:
+    branches:
+      - pyic-8155
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
 
 jobs:
   check-if-api-tests-changed:
@@ -53,7 +61,7 @@ jobs:
     timeout-minutes: 15
     env:
       AWS_REGION: eu-west-2
-      ENVIRONMENT: ${{ github.head_ref != 'main'
+      ENVIRONMENT: ${{ github.event_name == 'pull_request'
         ? 'dev'
         : 'build'
       }}
@@ -108,11 +116,11 @@ jobs:
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
-          artifact-bucket-name: ${{ github.head_ref != 'main'
+          artifact-bucket-name: ${{ github.event_name == 'pull_request'
             ? secrets.ARTIFACT_BUCKET_NAME_DEV
             : secrets.ARTIFACT_BUCKET_NAME
           }}
-          signing-profile-name: ${{ github.head_ref != 'main'
+          signing-profile-name: ${{ github.event_name == 'pull_request'
             ? secrets.SIGNING_PROFILE_NAME_DEV
             : secrets.SIGNING_PROFILE_NAME
           }}
