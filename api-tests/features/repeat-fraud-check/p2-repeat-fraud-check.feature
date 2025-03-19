@@ -165,7 +165,7 @@ Feature: Repeat fraud check journeys
       When I submit a 'address-family-given' event
       Then I get a 'update-name-date-birth' page response with context 'rfcAccountDeletion'
 
-  Rule: Match M1C
+  Rule: Match M1C Fraud Check Not Applicable
 
     Background:
       Given the subject already has the following credentials
@@ -250,8 +250,8 @@ Feature: Repeat fraud check journeys
         | dcmaw   | kenneth-passport-valid |
         | address | kenneth-current        |
       And the subject already has the following expired credentials
-        | CRI   | scenario              |
-        | fraud | kenneth-unavailable |
+        | CRI   | scenario          |
+        | fraud | kenneth-score-2   |
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
