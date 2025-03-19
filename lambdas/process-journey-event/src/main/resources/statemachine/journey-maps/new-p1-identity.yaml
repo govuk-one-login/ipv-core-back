@@ -418,19 +418,16 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetState: MITIGATION_KBV_FAIL_PHOTO_ID
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
         checkMitigation:
-          alternate-doc-invalid-passport:
-            targetJourney: FAILED
-            targetState: FAILED
-          alternate-doc-invalid-dl:
-            targetJourney: FAILED
-            targetState: FAILED
+          enhanced-verification:
+            targetState: MITIGATION_KBV_FAIL_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   # DCMAW journey (J1)
   POST_APP_DOC_CHECK_SUCCESS_PAGE:
@@ -549,12 +546,16 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
-        targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: enhanced-verification
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          enhanced-verification:
+            targetState: MITIGATION_KBV_FAIL_NO_PHOTO_ID
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   MITIGATION_KBV_FAIL_NO_PHOTO_ID:
     response:
@@ -900,7 +901,7 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_NEW_IDENTITY
-      enhanced-verification:
+      fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
 
