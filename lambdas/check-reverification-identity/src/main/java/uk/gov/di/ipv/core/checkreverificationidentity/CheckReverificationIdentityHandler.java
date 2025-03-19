@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -127,7 +128,12 @@ public class CheckReverificationIdentityHandler
             return FOUND_RESPONSE;
 
         } catch (HttpResponseExceptionWithErrorBody | EvcsServiceException e) {
-            LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
+            var errorMessage = LogHelper.buildErrorMessage(e.getErrorResponse());
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                LOGGER.info(errorMessage);
+            } else {
+                LOGGER.error(errorMessage);
+            }
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
                     .toObjectMap();

@@ -177,15 +177,14 @@ public class UserIdentityService {
             return false;
         }
 
+        var identityClaimsForNameCorrelation = getIdentityClaimsForNameCorrelation(successfulVcs);
         if (!checkNamesForCorrelation(
-                getGivenNamesWithCharAllowanceForCoiCheck(
-                        getIdentityClaimsForNameCorrelation(successfulVcs)))) {
+                getGivenNamesWithCharAllowanceForCoiCheck(identityClaimsForNameCorrelation))) {
             return false;
         }
 
         return checkNamesForCorrelation(
-                getFamilyNameWithCharAllowanceForCoiCheck(
-                        getIdentityClaimsForNameCorrelation(successfulVcs)));
+                getFamilyNameWithCharAllowanceForCoiCheck(identityClaimsForNameCorrelation));
     }
 
     public boolean areVcsCorrelated(List<VerifiableCredential> vcs)
@@ -193,7 +192,7 @@ public class UserIdentityService {
         var successfulVcs = getSuccessfulVcs(vcs);
 
         if (!checkNameAndFamilyNameCorrelationInCredentials(successfulVcs)) {
-            LOGGER.error(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
+            LOGGER.info(LogHelper.buildErrorMessage(ErrorResponse.FAILED_NAME_CORRELATION));
             return false;
         }
 
@@ -207,17 +206,18 @@ public class UserIdentityService {
     public boolean areNamesAndDobCorrelated(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody {
         var successfulVcs = getSuccessfulVcs(vcs);
+        var identityClaimsForNameCorrelation = getIdentityClaimsForNameCorrelation(successfulVcs);
 
         var areGivenNamesCorrelated =
                 checkNamesForCorrelation(
                         getNameProperty(
-                                getIdentityClaimsForNameCorrelation(successfulVcs),
+                                identityClaimsForNameCorrelation,
                                 NamePart.NamePartType.GIVEN_NAME));
 
         var isFamilyNameCorrelated =
                 checkNamesForCorrelation(
                         getFamilyNameWithCharAllowanceForCoiCheck(
-                                getIdentityClaimsForNameCorrelation(successfulVcs)));
+                                identityClaimsForNameCorrelation));
 
         // Given names AND family name cannot both be changed
         if (!areGivenNamesCorrelated && !isFamilyNameCorrelated) {

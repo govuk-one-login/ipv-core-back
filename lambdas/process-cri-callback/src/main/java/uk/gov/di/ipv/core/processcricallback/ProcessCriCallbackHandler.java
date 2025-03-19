@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -155,61 +156,85 @@ public class ProcessCriCallbackHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.OK, journeyResponse);
         } catch (ParseCriCallbackRequestException e) {
-
             return buildErrorResponse(
                     e,
                     HttpStatusCode.BAD_REQUEST,
-                    ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST);
+                    ErrorResponse.FAILED_TO_PARSE_CRI_CALLBACK_REQUEST,
+                    Level.ERROR);
         } catch (InvalidCriCallbackRequestException e) {
-            if (e.getErrorResponse() == ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION) {
-                LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
-                var pageOutput =
-                        StepFunctionHelpers.generatePageOutputMap(
-                                "error",
-                                HttpStatusCode.UNAUTHORIZED,
-                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
-                var criOAuthSessionItem =
-                        criOAuthSessionService.getCriOauthSessionItem(callbackRequest.getState());
-                if (criOAuthSessionItem != null) {
-                    pageOutput.put(
-                            "clientOAuthSessionId", criOAuthSessionItem.getClientOAuthSessionId());
+            switch (e.getErrorResponse()) {
+                case NO_IPV_FOR_CRI_OAUTH_SESSION -> {
+                    LOGGER.warn(LogHelper.buildErrorMessage(e.getErrorResponse()));
+                    var pageOutput =
+                            StepFunctionHelpers.generatePageOutputMap(
+                                    "error",
+                                    HttpStatusCode.UNAUTHORIZED,
+                                    PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
+                    var criOAuthSessionItem =
+                            criOAuthSessionService.getCriOauthSessionItem(
+                                    callbackRequest.getState());
+                    if (criOAuthSessionItem != null) {
+                        pageOutput.put(
+                                "clientOAuthSessionId",
+                                criOAuthSessionItem.getClientOAuthSessionId());
+                    }
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatusCode.UNAUTHORIZED, pageOutput);
                 }
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatusCode.UNAUTHORIZED, pageOutput);
+                case INVALID_OAUTH_STATE -> {
+                    LOGGER.warn(LogHelper.buildErrorMessage(e.getErrorResponse()));
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatusCode.BAD_REQUEST,
+                            StepFunctionHelpers.generatePageOutputMap(
+                                    "error",
+                                    HttpStatusCode.BAD_REQUEST,
+                                    PYI_ATTEMPT_RECOVERY_PAGE_ID));
+                }
+                case MISSING_IPV_SESSION_ID -> {
+                    return buildErrorResponse(
+                            e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.WARN);
+                }
+                default -> {
+                    return buildErrorResponse(
+                            e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.ERROR);
+                }
             }
-            if (e.getErrorResponse() == ErrorResponse.INVALID_OAUTH_STATE) {
-                LOGGER.error(LogHelper.buildErrorMessage(e.getErrorResponse()));
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatusCode.BAD_REQUEST,
-                        StepFunctionHelpers.generatePageOutputMap(
-                                "error", HttpStatusCode.BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID));
-            }
-            return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
-            return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse());
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                return buildErrorResponse(
+                        e, e.getResponseCode(), ErrorResponse.FAILED_NAME_CORRELATION, Level.INFO);
+            }
+            return buildErrorResponse(e, e.getResponseCode(), e.getErrorResponse(), Level.ERROR);
         } catch (JsonProcessingException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
+                    Level.ERROR);
         } catch (UnrecognisedVotException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS,
+                    Level.ERROR);
         } catch (CiPutException | CiPostMitigationsException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL,
+                    Level.ERROR);
         } catch (CiRetrievalException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
+                    ErrorResponse.FAILED_TO_GET_STORED_CIS,
+                    Level.ERROR);
         } catch (ConfigException e) {
             return buildErrorResponse(
-                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CONFIG);
+                    e,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_CONFIG,
+                    Level.ERROR);
         } catch (CriApiException e) {
             if (DCMAW.equals(callbackRequest.getCredentialIssuer())
                     && e.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
@@ -219,15 +244,19 @@ public class ProcessCriCallbackHandler
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatusCode.OK, JOURNEY_NOT_FOUND);
             }
-            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse());
+            return buildErrorResponse(e, e.getHttpStatusCode(), e.getErrorResponse(), Level.ERROR);
         } catch (CiExtractionException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC);
+                    ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC,
+                    Level.ERROR);
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
-                    e, HttpStatusCode.INTERNAL_SERVER_ERROR, ErrorResponse.IPV_SESSION_NOT_FOUND);
+                    e,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                    ErrorResponse.IPV_SESSION_NOT_FOUND,
+                    Level.ERROR);
         } catch (Exception e) {
             LOGGER.error(LogHelper.buildErrorMessage("Unhandled lambda exception", e));
             throw e;
@@ -365,8 +394,8 @@ public class ProcessCriCallbackHandler
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(
-            Exception e, int status, ErrorResponse errorResponse) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+            Exception e, int status, ErrorResponse errorResponse, Level level) {
+        LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 status,
                 new JourneyErrorResponse(
