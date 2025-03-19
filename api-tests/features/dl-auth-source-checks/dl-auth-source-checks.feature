@@ -125,7 +125,7 @@ Feature: Authoritative source checks with driving licence CRI
     Examples:
       | dl_details                                 | page_response    |
       | kenneth-driving-permit-valid               | page-ipv-success |
-#      | kenneth-driving-permit-needs-alternate-doc | pyi-no-match     |
+      | kenneth-driving-permit-needs-alternate-doc | pyi-no-match     |
 
   Scenario Outline: KBV thin file
     Given I activate the 'drivingLicenceAuthCheck' feature set

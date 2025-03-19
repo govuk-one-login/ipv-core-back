@@ -191,13 +191,6 @@ public class CimitUtilityService {
         return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
     }
 
-    public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
-            throws ParseException, CredentialParseException, CiExtractionException {
-        var jwt = SignedJWT.parse(vcString);
-        var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
-        return getContraIndicatorsFromVc(credential);
-    }
-
     public boolean areContraIndicatorsTheSame(
             List<ContraIndicator> oldCis, List<ContraIndicator> newCis) {
         return new HashSet<>(oldCis).equals(new HashSet<>(newCis));
@@ -213,6 +206,13 @@ public class CimitUtilityService {
                                         cimitConfig.containsKey(ci.getCode())
                                                 && !isBreachingCiThresholdIfMitigated(
                                                         ci, cis, confidenceRequested));
+    }
+
+    public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
+            throws ParseException, CredentialParseException, CiExtractionException {
+        var jwt = SignedJWT.parse(vcString);
+        var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
+        return getContraIndicatorsFromVc(credential);
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)

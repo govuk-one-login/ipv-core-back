@@ -601,7 +601,7 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
-        verify(mockCimitService, never()).getContraIndicatorsVc(any(), any(), any(), any());
+        verify(mockCimitService, never()).fetchContraIndicatorsVc(any(), any(), any(), any());
         verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
         verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
     }

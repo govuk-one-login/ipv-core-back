@@ -262,7 +262,7 @@ public class CheckExistingIdentityHandler
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
             var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             govukSigninJourneyId,
                             ipAddress,

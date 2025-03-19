@@ -1067,7 +1067,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitService.getContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
+        when(cimitService.fetchContraIndicatorsVc(anyString(), anyString(), anyString(), any()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1156,7 +1156,7 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(ipvSessionService.getIpvSessionWithRetry(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(cimitService.getContraIndicatorsVc(
+        when(cimitService.fetchContraIndicatorsVc(
                         TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP, ipvSessionItem))
                 .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
 

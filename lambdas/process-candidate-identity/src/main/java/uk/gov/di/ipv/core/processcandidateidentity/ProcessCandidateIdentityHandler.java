@@ -454,7 +454,7 @@ public class ProcessCandidateIdentityHandler
 
             if (!clientOAuthSessionItem.isReverification()) {
                 var contraIndicatorsVc =
-                        cimitService.getContraIndicatorsVc(
+                        cimitService.fetchContraIndicatorsVc(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress,

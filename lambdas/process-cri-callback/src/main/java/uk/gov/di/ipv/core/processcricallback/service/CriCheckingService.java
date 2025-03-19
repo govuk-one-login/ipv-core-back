@@ -257,7 +257,7 @@ public class CriCheckingService {
                             clientOAuthSessionItem.getUserId());
 
             var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
@@ -267,10 +267,12 @@ public class CriCheckingService {
             // If there are new CIs or the CIs don't have any available mitigations, we return
             // fail-with-ci
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            var hasExistingMitigations =
+                    cimitUtilityService.areContraIndicatorsTheSame(oldCis, newCis)
+                            && cimitUtilityService.areMitigationsAvailableForBreachingCi(
+                                    newCis, targetVot);
             if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                    && (!cimitUtilityService.areContraIndicatorsTheSame(oldCis, newCis)
-                            || !cimitUtilityService.areMitigationsAvailableForBreachingCi(
-                                    newCis, targetVot))) {
+                    && !hasExistingMitigations) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }

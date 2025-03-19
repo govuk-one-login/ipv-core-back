@@ -110,7 +110,7 @@ class ContractTest {
 
         // Act
         var contraIndicatorVc =
-                underTest.getContraIndicatorsVc(
+                underTest.fetchContraIndicatorsVc(
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
@@ -177,7 +177,7 @@ class ContractTest {
 
         // Act
         var contraIndicatorsVc =
-                underTest.getContraIndicatorsVc(
+                underTest.fetchContraIndicatorsVc(
                         MOCK_USER_ID, MOCK_GOVUK_SIGNIN_ID, MOCK_IP_ADDRESS, ipvSessionItem);
 
         // Assert
