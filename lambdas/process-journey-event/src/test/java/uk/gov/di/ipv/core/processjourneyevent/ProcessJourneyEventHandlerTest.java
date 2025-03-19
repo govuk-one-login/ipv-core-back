@@ -1147,7 +1147,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1171,7 +1171,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1225,7 +1225,7 @@ class ProcessJourneyEventHandlerTest {
         mockIpvSessionItemAndTimeout("PAGE_STATE");
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                 .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationJourneyEvent(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
                 .thenThrow(new ConfigException("Unable to get CIMIT config."));
 
         var processJourneyEventHandler =

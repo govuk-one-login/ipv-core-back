@@ -578,7 +578,8 @@ class CimitUtilityServiceTest {
     }
 
     @Test
-    void getMitigationJourneyEventReturnsBreachingMitigationJourneyEvent() throws Exception {
+    void getMitigationJourneyEventReturnsBreachingMitigationJourneyEventIfBreachingOrActive()
+            throws Exception {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -596,15 +597,17 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(ci), TEST_VOT);
+        var result =
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(List.of(ci), TEST_VOT);
 
         // assert
         assertEquals(Optional.of(journey), result);
     }
 
     @Test
-    void getMitigationJourneyEventReturnsMitigationJourneyEventIfNotBreachingButCiIsMitigated()
-            throws Exception {
+    void
+            getMitigationJourneyEventReturnsMitigationJourneyEventIfBreachingOrActiveIfNotBreachingButCiIsMitigated()
+                    throws Exception {
         // Arrange
         var code = "ci_code";
         var journey = "some_mitigation";
@@ -621,14 +624,15 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(ci), TEST_VOT);
+        var result =
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(List.of(ci), TEST_VOT);
 
         // assert
         assertEquals(Optional.of(journey), result);
     }
 
     @Test
-    void getMitigationJourneyEventReturnsEmptyIfNoCis() throws Exception {
+    void getMitigationEventIfBreachingOrActiveReturnsEmptyIfNoCis() throws Exception {
         // Arrange
         var code = "ci_code";
         Map<String, ContraIndicatorConfig> ciConfigMap =
@@ -638,7 +642,7 @@ class CimitUtilityServiceTest {
         when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("5");
 
         // act
-        var result = cimitUtilityService.getMitigationJourneyEvent(List.of(), TEST_VOT);
+        var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(List.of(), TEST_VOT);
 
         // assert
         assertEquals(Optional.empty(), result);

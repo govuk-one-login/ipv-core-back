@@ -154,7 +154,7 @@ public class EventResolver {
                         securityCheckCredential, clientOAuthSessionItem.getUserId());
 
         var validMitigation =
-                cimitUtilityService.getMitigationJourneyEvent(
+                cimitUtilityService.getMitigationEventIfBreachingOrActive(
                         contraIndicators,
                         VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
 

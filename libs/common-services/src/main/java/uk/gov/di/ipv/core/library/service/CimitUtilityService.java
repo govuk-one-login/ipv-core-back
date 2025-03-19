@@ -107,9 +107,9 @@ public class CimitUtilityService {
                 > Integer.parseInt(configService.getParameter(CI_SCORING_THRESHOLD, vot.name()));
     }
 
-    public Optional<String> getMitigationJourneyEvent(
+    public Optional<String> getMitigationEventIfBreachingOrActive(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        var journeyResponse = getMitigationJourneyIfActive(cis, confidenceRequested);
+        var journeyResponse = getMitigationJourneyIfBreachingOrActive(cis, confidenceRequested);
         if (journeyResponse.isPresent()) {
             var journey = journeyResponse.get().getJourney();
             return Optional.of(journey.substring(journey.lastIndexOf("/") + 1));
@@ -117,22 +117,24 @@ public class CimitUtilityService {
         return Optional.empty();
     }
 
-    private Optional<JourneyResponse> getMitigationJourneyIfActive(
+    private Optional<JourneyResponse> getMitigationJourneyIfBreachingOrActive(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        if (isBreachingCiThreshold(cis, confidenceRequested)) {
-            return Optional.of(
-                    getCiMitigationJourneyResponse(cis, confidenceRequested)
-                            .orElse(JOURNEY_FAIL_WITH_CI));
-        } else {
-            var mitigatedCi = hasMitigatedContraIndicator(cis);
-            if (mitigatedCi.isPresent()) {
-                var cimitConfig = configService.getCimitConfig();
+        var breachingMitigationJourney = getMitigationJourneyIfBreaching(cis, confidenceRequested);
 
-                return getMitigationJourneyResponse(
-                        cimitConfig.get(mitigatedCi.get().getCode()),
-                        mitigatedCi.get().getDocument());
-            }
+        if (breachingMitigationJourney.isPresent()) {
+            return breachingMitigationJourney;
         }
+
+        // If the user has a mitigated CI, return the mitigation to prevent
+        // them from going down routes to access CRIs they gained the CI from
+        var mitigatedCi = hasMitigatedContraIndicator(cis);
+        if (mitigatedCi.isPresent()) {
+            var cimitConfig = configService.getCimitConfig();
+
+            return getMitigationJourneyResponse(
+                    cimitConfig.get(mitigatedCi.get().getCode()), mitigatedCi.get().getDocument());
+        }
+
         return Optional.empty();
     }
 

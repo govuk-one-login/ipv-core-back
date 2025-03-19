@@ -182,7 +182,8 @@ public class EventResolverTest {
                 when(mockCimitUtilityService.getContraIndicatorsFromVc(
                                 SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
                         .thenReturn(testCis);
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                eq(testCis), any()))
                         .thenReturn(Optional.of("first-mitigation"));
 
                 // Act
@@ -212,7 +213,8 @@ public class EventResolverTest {
                 when(mockCimitUtilityService.getContraIndicatorsFromVc(
                                 SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
                         .thenReturn(testCis);
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                eq(testCis), any()))
                         .thenReturn(Optional.of("mitigation-not-in-check-mitigation"));
 
                 // Act
@@ -243,7 +245,8 @@ public class EventResolverTest {
                 when(mockCimitUtilityService.getContraIndicatorsFromVc(
                                 SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
                         .thenReturn(List.of());
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(List.of()), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                eq(List.of()), any()))
                         .thenReturn(Optional.empty());
 
                 // Act
