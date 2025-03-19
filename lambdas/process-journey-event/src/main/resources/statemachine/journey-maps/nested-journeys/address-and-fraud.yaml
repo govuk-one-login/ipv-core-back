@@ -22,9 +22,6 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          enhanced-verification:
-            targetState: CRI_FRAUD
   CRI_ADDRESS_ASK_INTERNATIONAL:
     response:
       type: cri
@@ -39,9 +36,6 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          enhanced-verification:
-            targetState: CRI_FRAUD
   CRI_FRAUD:
     response:
       type: cri
@@ -57,6 +51,3 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          enhanced-verification:
-            exitEventToEmit: enhanced-verification

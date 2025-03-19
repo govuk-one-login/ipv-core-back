@@ -9,10 +9,20 @@ states:
   START:
     events:
       next:
-        targetState: IDENTITY_START_PAGE
-        checkFeatureFlag:
-          internationalAddressEnabled:
-            targetState: LIVE_IN_UK_PAGE
+        targetState: LIVE_IN_UK_PAGE
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: alternate-doc-invalid-dl
+          alternate-doc-invalid-passport:
+            targetState: WEB_DL_OR_PASSPORT
+            targetEntryEvent: alternate-doc-invalid-passport
+          enhanced-verification:
+            targetState: MITIGATION_01_IDENTITY_START_PAGE
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: enhanced-verification
 
   ENHANCED_VERIFICATION:
     events:
@@ -487,10 +497,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-        checkMitigation:
-          enhanced-verification:
-            targetState: ADDRESS_AND_FRAUD_J4
-            targetEntryEvent: enhanced-verification
 
   ADDRESS_AND_FRAUD_J4:
     nestedJourney: ADDRESS_AND_FRAUD
