@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
@@ -113,6 +114,10 @@ public class CheckMobileAppVcReceiptHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatusCode.NOT_FOUND, "No VC found");
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
+            if (ErrorResponse.FAILED_NAME_CORRELATION.equals(e.getErrorResponse())) {
+                return buildErrorResponse(
+                        e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse(), Level.INFO);
+            }
             return buildErrorResponse(e, HttpStatusCode.BAD_REQUEST, e.getErrorResponse());
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(
@@ -225,11 +230,16 @@ public class CheckMobileAppVcReceiptHandler
     }
 
     private APIGatewayProxyResponseEvent buildErrorResponse(
-            Exception e, int status, ErrorResponse errorResponse) {
-        LOGGER.error(LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
+            Exception e, int status, ErrorResponse errorResponse, Level level) {
+        LOGGER.log(level, LogHelper.buildErrorMessage(errorResponse.getMessage(), e));
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 status,
                 new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, status, errorResponse, e.getMessage()));
+    }
+
+    private APIGatewayProxyResponseEvent buildErrorResponse(
+            Exception e, int status, ErrorResponse errorResponse) {
+        return buildErrorResponse(e, status, errorResponse, Level.ERROR);
     }
 }

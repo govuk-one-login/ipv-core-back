@@ -146,7 +146,7 @@ public class CriCheckingService {
             LOGGER.warn(LogHelper.buildLogMessage("Unknown Oauth error code received"));
         }
 
-        LOGGER.error(
+        LOGGER.info(
                 LogHelper.buildErrorMessage(
                         "OAuth error received from CRI", errorDescription, errorCode));
 
@@ -154,7 +154,14 @@ public class CriCheckingService {
             case OAuth2Error.ACCESS_DENIED_CODE -> JOURNEY_ACCESS_DENIED;
             case OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE -> JOURNEY_TEMPORARILY_UNAVAILABLE;
             case OAuth2Error.INVALID_REQUEST_CODE -> JOURNEY_INVALID_REQUEST;
-            default -> JOURNEY_ERROR;
+            default -> {
+                LOGGER.error(
+                        LogHelper.buildErrorMessage(
+                                "Unexpected OAuth error received from CRI",
+                                errorDescription,
+                                errorCode));
+                yield JOURNEY_ERROR;
+            }
         });
     }
 
@@ -168,7 +175,7 @@ public class CriCheckingService {
                 throw new InvalidCriCallbackRequestException(
                         ErrorResponse.NO_IPV_FOR_CRI_OAUTH_SESSION);
             }
-            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_OAUTH_STATE);
+            throw new InvalidCriCallbackRequestException(ErrorResponse.MISSING_IPV_SESSION_ID);
         }
     }
 

@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processjourneyevent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -281,7 +282,8 @@ public class ProcessJourneyEventHandler
                     ipvSessionItem.getState());
             throw new JourneyEngineException();
         } catch (UnknownEventException e) {
-            logErrorWithCurrentJourneyDetails(
+            logWithCurrentJourneyDetails(
+                    Level.WARN,
                     "Invalid journey event provided, failed to execute journey engine step.",
                     e,
                     journeyEvent,
@@ -561,12 +563,22 @@ public class ProcessJourneyEventHandler
                 && basicState.getEvents().containsKey(BACK_EVENT);
     }
 
-    private void logErrorWithCurrentJourneyDetails(
-            String message, Exception e, String journeyEvent, JourneyState journeyState) {
-        LOGGER.error(
+    private void logWithCurrentJourneyDetails(
+            Level level,
+            String message,
+            Exception e,
+            String journeyEvent,
+            JourneyState journeyState) {
+        LOGGER.log(
+                level,
                 LogHelper.buildErrorMessage(message, e)
                         .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                         .with(LOG_USER_STATE.getFieldName(), journeyState.state())
                         .with(LOG_JOURNEY_TYPE.getFieldName(), journeyState.subJourney().name()));
+    }
+
+    private void logErrorWithCurrentJourneyDetails(
+            String message, Exception e, String journeyEvent, JourneyState journeyState) {
+        logWithCurrentJourneyDetails(Level.ERROR, message, e, journeyEvent, journeyState);
     }
 }
