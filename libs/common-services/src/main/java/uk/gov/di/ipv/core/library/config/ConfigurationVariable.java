@@ -38,7 +38,8 @@ public enum ConfigurationVariable {
             "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmationF2f"),
     GOV_UK_NOTIFY_TEMPLATE_ID_USER_TRIGGERED_IDENTITY_RESET_CONFIRMATION(
             "self/govUkNotify/emailTemplates/UserTriggeredIdentityResetConfirmation"),
-    JAR_KMS_ENCRYPTION_KEY_ID("self/jarKmsEncryptionKeyId"),
+    CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_PRIMARY("self/clientJarKmsEncryptionKeyAliasPrimary"),
+    CLIENT_JAR_KMS_ENCRYPTION_KEY_ALIAS_SECONDARY("self/clientJarKmsEncryptionKeyAliasSecondary"),
     JAR_ENCRYPTION_KEY_JWK("self/jarEncryptionKey"),
     JWT_TTL_SECONDS("self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
