@@ -69,6 +69,11 @@ states:
       next:
         targetState: PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH_NINO
 
+  FAILED_NO_TICF:
+    events:
+      next:
+        targetState: NO_MATCH_PAGE
+
   # Journey states
   PROCESS_INCOMPLETE_IDENTITY_BEFORE_NO_MATCH:
     response:
@@ -339,11 +344,6 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-
-  FAILED_NO_TICF:
-    events:
-      next:
-        targetState: NO_MATCH_PAGE
 
   RETURN_TO_RP:
     response:
