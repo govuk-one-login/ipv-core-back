@@ -9,59 +9,14 @@ states:
   START:
     events:
       next:
-        targetState: CRI_TICF_BEFORE_REUSE
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_EXISTING_IDENTITY
+        targetState: PROCESS_EXISTING_IDENTITY
 
   REUSE_WITH_STORE_IDENTITY:
     events:
       next:
-        targetState: STORE_NEW_IDENTITY
-        checkFeatureFlag:
-          processCandidateIdentity:
-            targetState: PROCESS_NEW_IDENTITY
+        targetState: PROCESS_NEW_IDENTITY
 
   # Journey states
-
-  STORE_NEW_IDENTITY:
-    response:
-      type: process
-      lambda: store-identity
-      lambdaInput:
-        identityType: NEW
-    events:
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-      identity-stored:
-        targetState: CRI_TICF_BEFORE_REUSE
-
-  CRI_TICF_BEFORE_REUSE:
-    response:
-      type: process
-      lambda: call-ticf-cri
-    events:
-      next:
-        targetState: IDENTITY_REUSE_PAGE
-        checkFeatureFlag:
-          deleteDetailsEnabled:
-            targetState: IDENTITY_REUSE_PAGE_TEST
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      fail-with-ci:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      error:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR_NO_TICF
 
   PROCESS_NEW_IDENTITY:
     response:
@@ -143,27 +98,6 @@ states:
         auditEvents:
           - IPV_USER_DETAILS_UPDATE_START
 
-  IDENTITY_REUSE_PAGE_TEST:
-    response:
-      type: page
-      pageId: page-ipv-reuse
-    events:
-      next:
-        targetState: NEW_DETAILS_PAGE
-      update-details:
-        targetJourney: TECHNICAL_ERROR
-        targetState: ERROR
-
-  NEW_DETAILS_PAGE:
-    response:
-      type: page
-      pageId: pyi-new-details
-    events:
-      next:
-        targetState: CONFIRM_DELETE_DETAILS_PAGE
-      end:
-        targetState: IDENTITY_REUSE_PAGE
-
   RESET_SESSION_IDENTITY:
     response:
       type: process
@@ -173,16 +107,6 @@ states:
     events:
       next:
         targetState: DETAILS_DELETED_PAGE
-
-  CONFIRM_DELETE_DETAILS_PAGE:
-    response:
-      type: page
-      pageId: pyi-confirm-delete-details
-    events:
-      next:
-        targetState: RESET_SESSION_IDENTITY
-      end:
-        targetState: IDENTITY_REUSE_PAGE
 
   UPDATE_DETAILS_PAGE:
     response:
