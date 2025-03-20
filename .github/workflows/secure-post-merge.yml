@@ -120,9 +120,6 @@ jobs:
             ? secrets.ARTIFACT_BUCKET_NAME_DEV
             : secrets.ARTIFACT_BUCKET_NAME
           }}
-          signing-profile-name: ${{ github.event_name == 'pull_request'
-            ? secrets.SIGNING_PROFILE_NAME_DEV
-            : secrets.SIGNING_PROFILE_NAME
-          }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
           working-directory: ./deploy
           template-file: .aws-sam/build/template.yaml
