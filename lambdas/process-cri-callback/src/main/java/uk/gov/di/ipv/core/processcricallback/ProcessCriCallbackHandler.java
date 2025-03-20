@@ -281,10 +281,18 @@ public class ProcessCriCallbackHandler
     }
 
     private JourneyResponse getJourneyResponse(CriCallbackRequest callbackRequest)
-            throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
-                    CiRetrievalException, CriApiException, VerifiableCredentialException,
-                    CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException, IpvSessionNotFoundException, CiExtractionException {
+            throws JsonProcessingException,
+                    HttpResponseExceptionWithErrorBody,
+                    ConfigException,
+                    CiRetrievalException,
+                    CriApiException,
+                    VerifiableCredentialException,
+                    CiPostMitigationsException,
+                    CiPutException,
+                    InvalidCriCallbackRequestException,
+                    UnrecognisedVotException,
+                    IpvSessionNotFoundException,
+                    CiExtractionException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 
@@ -353,8 +361,11 @@ public class ProcessCriCallbackHandler
             CriOAuthSessionItem criOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws VerifiableCredentialException, JsonProcessingException,
-                    InvalidCriCallbackRequestException, CiPutException, CiPostMitigationsException,
+            throws VerifiableCredentialException,
+                    JsonProcessingException,
+                    InvalidCriCallbackRequestException,
+                    CiPutException,
+                    CiPostMitigationsException,
                     UnrecognisedVotException {
         if (VerifiableCredentialStatus.PENDING.equals(vcResponse.getCredentialStatus())) {
             criCheckingService.validatePendingVcResponse(vcResponse, clientOAuthSessionItem);

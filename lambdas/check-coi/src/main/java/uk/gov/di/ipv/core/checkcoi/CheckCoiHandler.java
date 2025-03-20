@@ -147,12 +147,13 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
             var combinedCredentials = Stream.concat(oldVcs.stream(), sessionVcs.stream()).toList();
             var successfulCheck =
                     switch (checkType) {
-                        case STANDARD -> userIdentityService.areNamesAndDobCorrelated(
-                                combinedCredentials);
-                        case REVERIFICATION -> userIdentityService
-                                .areNamesAndDobCorrelatedForReverification(combinedCredentials);
-                        case ACCOUNT_INTERVENTION -> userIdentityService.areVcsCorrelated(
-                                combinedCredentials);
+                        case STANDARD ->
+                                userIdentityService.areNamesAndDobCorrelated(combinedCredentials);
+                        case REVERIFICATION ->
+                                userIdentityService.areNamesAndDobCorrelatedForReverification(
+                                        combinedCredentials);
+                        case ACCOUNT_INTERVENTION ->
+                                userIdentityService.areVcsCorrelated(combinedCredentials);
                     };
 
             sendAuditEvent(
