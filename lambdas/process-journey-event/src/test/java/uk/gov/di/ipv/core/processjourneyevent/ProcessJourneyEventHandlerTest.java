@@ -45,10 +45,8 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.testhelpers.unit.LogCollector;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.NestedJourneyTypes;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.StateMachineInitializerMode;
-import uk.gov.di.model.ContraIndicator;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -1145,9 +1143,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
-                .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1169,9 +1165,7 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("NESTED_JOURNEY_INVOKE_STATE/NESTED_STATE_ONE");
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
-                .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
                 .thenReturn(Optional.of("first-mitigation"));
 
         var processJourneyEventHandler =
@@ -1182,16 +1176,16 @@ class ProcessJourneyEventHandlerTest {
         assertEquals("page-id-for-page-state", output.get("page"));
     }
 
-    private static Stream<Arguments> getContraIndicatorsFromVcErrors() {
+    private static Stream<Arguments> getMitigationEventIfBreachingOrActiveErrors() {
         return Stream.of(
-                Arguments.of(new ParseException("Unable to parse vc string", 0)),
                 Arguments.of(new CredentialParseException("Unable to parse credentials")),
+                Arguments.of(new ConfigException("Unable to get config")),
                 Arguments.of(new CiExtractionException("Unable to extract CIs from VC")));
     }
 
     @ParameterizedTest
-    @MethodSource("getContraIndicatorsFromVcErrors")
-    void shouldReturn500IfCimitUtilityServiceThrowsExceptionWhenGettingContraIndicators(
+    @MethodSource("getMitigationEventIfBreachingOrActiveErrors")
+    void shouldReturn500IfCimitUtilityServiceThrowsExceptionWhenGettingMitigations(
             Exception exception) throws Exception {
         var input =
                 JourneyRequest.builder()
@@ -1201,32 +1195,8 @@ class ProcessJourneyEventHandlerTest {
                         .build();
 
         mockIpvSessionItemAndTimeout("PAGE_STATE");
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenThrow(exception);
-
-        var processJourneyEventHandler =
-                getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);
-
-        var response = processJourneyEventHandler.handleRequest(input, mockContext);
-
-        assertEquals(HttpStatusCode.INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), response.get(CODE));
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), response.get(MESSAGE));
-    }
-
-    @Test
-    void shouldReturn500IfCimitUtilityServiceThrowsConfigException() throws Exception {
-        var input =
-                JourneyRequest.builder()
-                        .ipAddress(TEST_IP)
-                        .journey("eventWithMitigation")
-                        .ipvSessionId(TEST_SESSION_ID)
-                        .build();
-
-        mockIpvSessionItemAndTimeout("PAGE_STATE");
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
-                .thenReturn(List.of(new ContraIndicator()));
-        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
-                .thenThrow(new ConfigException("Unable to get CIMIT config."));
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenThrow(exception);
 
         var processJourneyEventHandler =
                 getProcessJourneyStepHandler(StateMachineInitializerMode.TEST);

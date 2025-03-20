@@ -43,7 +43,6 @@ import uk.gov.di.ipv.core.processcricallback.exception.InvalidCriCallbackRequest
 import uk.gov.di.model.IdentityCheckSubject;
 
 import java.security.InvalidParameterException;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -246,15 +245,17 @@ public class CriCheckingService {
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
             throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
-                    CredentialParseException, ParseException, ConfigException {
+                    CredentialParseException, ConfigException {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
-            // Get CIs from old CIMIT VC to check if we have new CIs
-            var oldCis =
-                    cimitUtilityService.getContraIndicatorsFromVc(
+            // Get mitigations from old CIMIT VC to compare against the mitigations on the new CIs
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            var oldMitigations =
+                    cimitUtilityService.getMitigationEventIfBreachingOrActive(
                             ipvSessionItem.getSecurityCheckCredential(),
-                            clientOAuthSessionItem.getUserId());
+                            clientOAuthSessionItem.getUserId(),
+                            targetVot);
 
             var contraIndicatorsVc =
                     cimitService.fetchContraIndicatorsVc(
@@ -263,16 +264,13 @@ public class CriCheckingService {
                             ipAddress,
                             ipvSessionItem);
             var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var newMitigations =
+                    cimitUtilityService.getMitigationEventIfBreachingOrActive(newCis, targetVot);
 
-            // If there are new CIs or the CIs don't have any available mitigations, we return
-            // fail-with-ci
-            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-            var hasExistingMitigations =
-                    cimitUtilityService.areContraIndicatorsTheSame(oldCis, newCis)
-                            && cimitUtilityService.areMitigationsAvailableForBreachingCi(
-                                    newCis, targetVot);
+            // If breaching and no available mitigations or a new mitigation is required, we
+            // return fail-with-ci
             if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
-                    && !hasExistingMitigations) {
+                    && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
                 return JOURNEY_FAIL_WITH_CI;
             }
         }

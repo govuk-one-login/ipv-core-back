@@ -149,13 +149,10 @@ public class EventResolver {
             throw new MissingSecurityCheckCredential("Missing security check credential");
         }
 
-        var contraIndicators =
-                cimitUtilityService.getContraIndicatorsFromVc(
-                        securityCheckCredential, clientOAuthSessionItem.getUserId());
-
         var validMitigation =
                 cimitUtilityService.getMitigationEventIfBreachingOrActive(
-                        contraIndicators,
+                        securityCheckCredential,
+                        clientOAuthSessionItem.getUserId(),
                         VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
 
         return (validMitigation.isPresent()

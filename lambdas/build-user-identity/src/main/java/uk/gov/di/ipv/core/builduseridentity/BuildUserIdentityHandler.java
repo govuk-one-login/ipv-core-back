@@ -157,8 +157,6 @@ public class BuildUserIdentityHandler extends UserIdentityRequestHandler
             LOGGER.error(LogHelper.buildLogMessage("Failed to parse access token"));
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
-        } catch (java.text.ParseException e) {
-            return serverErrorJsonResponse("Failed to parse credentials.", e);
         } catch (HttpResponseExceptionWithErrorBody | VerifiableCredentialException e) {
             return errorResponseJsonResponse(e.getResponseCode(), e.getErrorResponse());
         } catch (CiExtractionException e) {

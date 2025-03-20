@@ -61,7 +61,6 @@ import uk.gov.di.model.SocialSecurityRecordDetails;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -727,29 +726,6 @@ class BuildUserIdentityHandlerTest {
 
         verify(mockUserIdentityService, never())
                 .generateUserIdentity(any(), any(), any(), any(), any());
-        verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
-    }
-
-    @Test
-    void shouldReturnErrorResponseWhenVcStringCannotBeParsed() throws Exception {
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any(), any()))
-                .thenThrow(new ParseException("Unable to parse VC string", 0));
-
-        APIGatewayProxyResponseEvent response =
-                buildUserIdentityHandler.handleRequest(testEvent, mockContext);
-        responseBody = OBJECT_MAPPER.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
-        assertEquals("server_error", responseBody.get("error"));
-        assertEquals(
-                "Unexpected server error - Failed to parse credentials. Unable to parse VC string",
-                responseBody.get("error_description"));
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCimitUtilityService, times(1)).getContraIndicatorsFromVc(any(), any());
         verify(mockSessionCredentialsService, never()).deleteSessionCredentials(any());
     }
 

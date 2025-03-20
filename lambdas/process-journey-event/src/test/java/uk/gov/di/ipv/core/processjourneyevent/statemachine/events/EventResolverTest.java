@@ -27,7 +27,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -179,11 +178,8 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(testCis);
                 when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                eq(testCis), any()))
+                                any(), any(), any()))
                         .thenReturn(Optional.of("first-mitigation"));
 
                 // Act
@@ -210,11 +206,8 @@ public class EventResolverTest {
                 checkMitigation.put("first-mitigation", new BasicEvent());
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(testCis);
                 when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                eq(testCis), any()))
+                                any(), any(), any()))
                         .thenReturn(Optional.of("mitigation-not-in-check-mitigation"));
 
                 // Act
@@ -242,11 +235,8 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(List.of());
                 when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
-                                eq(List.of()), any()))
+                                any(), any(), any()))
                         .thenReturn(Optional.empty());
 
                 // Act

@@ -42,7 +42,6 @@ import uk.gov.di.ipv.core.library.useridentity.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.ipv.core.processcricallback.service.CriCheckingService;
 
-import java.text.ParseException;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW_ASYNC;
@@ -125,7 +124,7 @@ public class CheckMobileAppVcReceiptHandler
         } catch (InvalidCriResponseException e) {
             return buildErrorResponse(
                     e, HttpStatusCode.INTERNAL_SERVER_ERROR, e.getErrorResponse());
-        } catch (CredentialParseException | ParseException e) {
+        } catch (CredentialParseException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
@@ -163,7 +162,7 @@ public class CheckMobileAppVcReceiptHandler
             throws IpvSessionNotFoundException, HttpResponseExceptionWithErrorBody,
                     InvalidCriResponseException, CredentialParseException,
                     VerifiableCredentialException, ConfigException, CiRetrievalException,
-                    EvcsServiceException, CiExtractionException, ParseException {
+                    EvcsServiceException, CiExtractionException {
         // Validate callback sessions
         validateSessionId(request);
 

@@ -289,14 +289,10 @@ public class CheckExistingIdentityHandler
             // That might cause an issue if a user needs to mitigate a P2 journey but comes back to
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
-            if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)) {
-                if (cimitUtilityService.areMitigationsAvailableForBreachingCi(
-                        contraIndicators, targetVot)) {
-                    if (asyncCriStatus.isAwaitingVc()) {
-                        return asyncCriStatus.getJourneyForAwaitingVc(false);
-                    }
-                    return getNewIdentityJourney(targetVot);
-                }
+            if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
+                    && cimitUtilityService
+                            .getCiMitigationJourneyResponse(contraIndicators, targetVot)
+                            .isEmpty()) {
                 return JOURNEY_FAIL_WITH_CI;
             }
 

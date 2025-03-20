@@ -18,7 +18,6 @@ import uk.gov.di.model.ContraIndicator;
 import uk.gov.di.model.SecurityCheckCredential;
 
 import java.text.ParseException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -108,6 +107,13 @@ public class CimitUtilityService {
     }
 
     public Optional<String> getMitigationEventIfBreachingOrActive(
+            String securityCheckCredential, String userID, Vot confidenceRequested)
+            throws CiExtractionException, CredentialParseException, ConfigException {
+        var cis = getContraIndicatorsFromVc(securityCheckCredential, userID);
+        return getMitigationEventIfBreachingOrActive(cis, confidenceRequested);
+    }
+
+    public Optional<String> getMitigationEventIfBreachingOrActive(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         var journeyResponse = getMitigationJourneyIfBreachingOrActive(cis, confidenceRequested);
         if (journeyResponse.isPresent()) {
@@ -148,7 +154,7 @@ public class CimitUtilityService {
         return Optional.empty();
     }
 
-    private Optional<JourneyResponse> getCiMitigationJourneyResponse(
+    public Optional<JourneyResponse> getCiMitigationJourneyResponse(
             List<ContraIndicator> contraIndicators, Vot confidenceRequested)
             throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
@@ -193,28 +199,15 @@ public class CimitUtilityService {
         return cimitConfig.containsKey(ci.getCode()) && !isMitigated(ci);
     }
 
-    public boolean areContraIndicatorsTheSame(
-            List<ContraIndicator> oldCis, List<ContraIndicator> newCis) {
-        return new HashSet<>(oldCis).equals(new HashSet<>(newCis));
-    }
-
-    public boolean areMitigationsAvailableForBreachingCi(
-            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        var cimitConfig = configService.getCimitConfig();
-        return !cis.isEmpty()
-                && cis.stream()
-                        .anyMatch(
-                                ci ->
-                                        cimitConfig.containsKey(ci.getCode())
-                                                && !isBreachingCiThresholdIfMitigated(
-                                                        ci, cis, confidenceRequested));
-    }
-
     public List<ContraIndicator> getContraIndicatorsFromVc(String vcString, String userId)
-            throws ParseException, CredentialParseException, CiExtractionException {
-        var jwt = SignedJWT.parse(vcString);
-        var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
-        return getContraIndicatorsFromVc(credential);
+            throws CredentialParseException, CiExtractionException {
+        try {
+            var jwt = SignedJWT.parse(vcString);
+            var credential = VerifiableCredential.fromValidJwt(userId, Cri.CIMIT, jwt);
+            return getContraIndicatorsFromVc(credential);
+        } catch (ParseException e) {
+            throw new CiExtractionException("Unable to parse vc string");
+        }
     }
 
     public List<ContraIndicator> getContraIndicatorsFromVc(VerifiableCredential vc)

@@ -648,63 +648,6 @@ class CimitUtilityServiceTest {
         assertEquals(Optional.empty(), result);
     }
 
-    private static Stream<Arguments> areContraIndicatorsTheSameArguments() {
-        var ci1 = createCi("test-code1");
-        var ci2 = createCi("test-code2");
-
-        return Stream.of(
-                Arguments.of(true, List.of(ci1, ci2)),
-                Arguments.of(false, List.of(ci1)),
-                Arguments.of(false, List.of(ci1, ci2, createCi("test-code3"))),
-                Arguments.of(false, List.of()));
-    }
-
-    @ParameterizedTest
-    @MethodSource("areContraIndicatorsTheSameArguments")
-    void areContraIndicatorsTheSameShouldReturnCorrectResult(
-            boolean expectedResult, List<ContraIndicator> testCis) {
-        var oldCis = List.of(createCi("test-code1"), createCi("test-code2"));
-        assertEquals(
-                expectedResult, cimitUtilityService.areContraIndicatorsTheSame(oldCis, testCis));
-    }
-
-    private static Stream<Arguments> areMitigationsAvailableForBreachingCiArguments() {
-        var ci1 = createCi("test-code1");
-        var ci2 = createCi("test-code2");
-        var nonBreachingCi = createCi("test-code3");
-
-        return Stream.of(
-                Arguments.of(true, List.of(ci1, ci2)),
-                Arguments.of(true, List.of(ci1)),
-                Arguments.of(true, List.of(ci1, nonBreachingCi)));
-    }
-
-    @ParameterizedTest
-    @MethodSource("areMitigationsAvailableForBreachingCiArguments")
-    void areMitigationsAvailableForBreachingCiArgumentsShouldReturnCorrectResult(
-            boolean expectedResult, List<ContraIndicator> testCis) throws ConfigException {
-        var cimitConfig =
-                Map.of(
-                        "test-code1",
-                        List.of(new MitigationRoute("/journey/do-a-thing", "document")),
-                        "test-code2",
-                        List.of(new MitigationRoute("/journey/do-a-thing", "document")));
-        when(mockConfigService.getCimitConfig()).thenReturn(cimitConfig);
-        when(mockConfigService.getParameter(CI_SCORING_THRESHOLD, TEST_VOT.name())).thenReturn("4");
-        var configMap =
-                Map.of(
-                        "test-code1", new ContraIndicatorConfig("test-code1", 4, -4, "4"),
-                        "test-code2", new ContraIndicatorConfig("test-code2", 4, -4, "2"),
-                        "test-code3", new ContraIndicatorConfig("test-code3", 1, -1, "2"));
-        when(mockConfigService.getContraIndicatorConfigMap())
-                .thenReturn(configMap)
-                .thenReturn(configMap);
-
-        assertEquals(
-                expectedResult,
-                cimitUtilityService.areMitigationsAvailableForBreachingCi(testCis, TEST_VOT));
-    }
-
     private static ContraIndicator createCi(String code) {
         var ci = new ContraIndicator();
         ci.setCode(code);
