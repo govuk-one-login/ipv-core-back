@@ -66,7 +66,23 @@ Feature: M1C Unavailable Journeys
       When I start a new 'medium-confidence' journey
       Then I get a 'confirm-your-details' page response
 
-    Scenario Outline: Existing M1C name change to <endScore>
+    Scenario Outline: No details changed, finish with <endScore>
+      # Repeat fraud check with no update
+      When I submit a 'next' event
+      Then I get a 'fraud' CRI response
+      When I submit <fraudResponse> details to the CRI stub
+      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+
+      Examples:
+        | fraudResponse            | endScore  |
+        | 'kenneth-unavailable'    | 'M1C'     |
+        | 'kenneth-score-2'        | 'M1A'     |
+
+    Scenario Outline: Existing M1C name change, finish with <endScore>
       When I submit a 'family-name-only' event
       Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
       When I submit a 'update-name' event
@@ -87,7 +103,7 @@ Feature: M1C Unavailable Journeys
         | 'kenneth-changed-family-name-unavailable'    | 'M1C'     |
         | 'kenneth-changed-family-name-score-2'        | 'M1A'     |
 
-    Scenario Outline: Existing M1C address change to <endScore>
+    Scenario Outline: Existing M1C address change, finish with  <endScore>
       When I submit an 'address-only' event
       Then I get a 'address' CRI response
       When I submit 'kenneth-changed' details to the CRI stub
@@ -103,6 +119,30 @@ Feature: M1C Unavailable Journeys
         | fraudResponse            | endScore  |
         | 'kenneth-unavailable'    | 'M1C'     |
         | 'kenneth-score-2'        | 'M1A'     |
+
+    Scenario Outline: Existing M1C address and name change, finish with  <endScore>
+      # Repeat fraud check with update address and family name
+      When I submit a 'family-name-and-address' event
+      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
+      When I submit a 'update-name' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-changed-family-name-passport-valid' details to the CRI stub
+      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
+      When I submit a 'next' event
+      Then I get a 'address' CRI response
+      When I submit 'kenneth-changed' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit <fraudResponse> details to the CRI stub
+      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
+
+      Examples:
+        | fraudResponse                                | endScore  |
+        | 'kenneth-changed-family-name-unavailable'    | 'M1C'     |
+        | 'kenneth-changed-family-name-score-2'        | 'M1A'     |
 
     Scenario: Existing M1C name change to M1A using DL
       When I submit a 'family-name-only' event
@@ -154,37 +194,6 @@ Feature: M1C Unavailable Journeys
       Then I get a 'P2' identity
 
     Scenario: Existing M1A user cannot change name with DL and unavailable fraud check
-      When I submit a 'family-name-only' event
-      Then I get a 'page-update-name' page response
-      When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-family-name-driving-permit-valid' details to the CRI stub
-      Then I get a 'drivingLicence' CRI response
-      When I submit 'kenneth-changed-family-name-driving-permit-valid' details with attributes to the CRI stub
-        | Attribute | Values          |
-        | context   | "check_details" |
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-changed-family-name-unavailable' details to the CRI stub
-      Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
-      When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-  Rule: Existing DL M1A user
-
-    Scenario: Existing M1A DL user cannot change name with DL and unavailable fraud check
-      Given the subject already has the following credentials
-        | CRI           | scenario                     |
-        | dcmawAsync    | kenneth-driving-permit-valid |
-        | address       | kenneth-current              |
-        | fraud         | kenneth-score-2              |
-      When I start a new 'medium-confidence' journey
-      Then I get a 'page-ipv-reuse' page response
-      When I submit a 'update-details' event
-      Then I get a 'update-details' page response
       When I submit a 'family-name-only' event
       Then I get a 'page-update-name' page response
       When I submit a 'update-name' event
