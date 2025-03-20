@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
-import uk.gov.di.model.ContraIndicator;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -151,13 +150,10 @@ public class EventResolverTest {
 
         @Nested
         class CheckMitigationConfigured {
-            private List<ContraIndicator> testCis;
             private IpvSessionItem ipvSessionItem;
 
             @BeforeEach
             void setUp() {
-                testCis = List.of(new ContraIndicator());
-
                 ipvSessionItem = new IpvSessionItem();
                 ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
             }

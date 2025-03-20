@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.MissingSecurityCheckCredential;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 
-import java.text.ParseException;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CREDENTIAL_ISSUER_ENABLED;
@@ -125,7 +124,6 @@ public class EventResolver {
         } catch (MissingSecurityCheckCredential
                 | CiExtractionException
                 | CredentialParseException
-                | ParseException
                 | ConfigException e) {
             throw new JourneyEngineException("Failed to resolve event", e);
         }
@@ -139,7 +137,7 @@ public class EventResolver {
     private Optional<String> getMitigationEvent(
             BasicEvent event, EventResolveParameters resolveParameters)
             throws MissingSecurityCheckCredential, CiExtractionException, CredentialParseException,
-                    ParseException, ConfigException {
+                    ConfigException {
         var ipvSessionItem = resolveParameters.ipvSessionItem();
         var clientOAuthSessionItem = resolveParameters.clientOAuthSessionItem();
         var securityCheckCredential = ipvSessionItem.getSecurityCheckCredential();
