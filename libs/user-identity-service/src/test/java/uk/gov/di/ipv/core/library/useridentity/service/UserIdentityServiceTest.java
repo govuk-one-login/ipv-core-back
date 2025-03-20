@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -38,9 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -847,6 +851,31 @@ class UserIdentityServiceTest {
         assertEquals("2030-01-01", passportClaim.getExpiryDate());
     }
 
+    @ParameterizedTest
+    @MethodSource("VcsWithPassportClaim")
+    void shouldSetPassportClaimWhenVotIsP2(VerifiableCredential vcWithPassportClaim)
+            throws Exception {
+        // Arrange
+        mockParamStoreCalls(paramsToMockForP2);
+
+        var vcs = List.of(vcWithPassportClaim, vcExperianFraudScoreTwo(), VC_ADDRESS);
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNotNull(credentials.getPassportClaim().get(0));
+    }
+
+    private static Stream<Arguments> VcsWithPassportClaim() {
+        return Stream.of(
+                Arguments.of(PASSPORT_NON_DCMAW_SUCCESSFUL_VC),
+                Arguments.of(DCMAW_PASSPORT_VC),
+                Arguments.of(vcF2fPassportM1a()));
+    }
+
     @Test
     void shouldNotSetPassportClaimWhenVotIsP0() throws Exception {
         // Arrange
@@ -1189,6 +1218,31 @@ class UserIdentityServiceTest {
         assertEquals("2042-10-01", drivingPermitClaim.getExpiryDate());
     }
 
+    @ParameterizedTest
+    @MethodSource("VcsWithDrivingPermitClaim")
+    void shouldSetDrivingPermitClaimForAllowedCris(VerifiableCredential vcWithDrivingPermitClaim)
+            throws Exception {
+        // Arrange
+        var vcs = List.of(vcWithDrivingPermitClaim, vcExperianFraudScoreOne(), VC_ADDRESS);
+
+        mockParamStoreCalls(paramsToMockForP2);
+
+        // Act
+        var credentials =
+                userIdentityService.generateUserIdentity(
+                        vcs, "test-sub", Vot.P2, Vot.P2, emptyContraIndicators);
+
+        // Assert
+        assertNotNull(credentials.getDrivingPermitClaim().get(0));
+    }
+
+    private static Stream<Arguments> VcsWithDrivingPermitClaim() {
+        return Stream.of(
+                Arguments.of(vcDrivingPermit()),
+                Arguments.of(M1B_DCMAW_DL_VC),
+                Arguments.of(vcF2fDrivingLicenceM1a()));
+    }
+
     @Test
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws Exception {
         // Arrange
@@ -1474,7 +1528,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithSingleCredentialAndOnlyOneValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC);
+        var vcs = List.of(M1B_DCMAW_DL_VC);
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1487,7 +1541,7 @@ class UserIdentityServiceTest {
     void
             getCredentialsWithSingleCredentialWithOnlyOneValidEvidenceAndRequiresAdditionalEvidencesFalse() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC);
+        var vcs = List.of(M1B_DCMAW_DL_VC);
         claimedIdentityConfig.setRequiresAdditionalEvidence(false);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))
                 .thenReturn(claimedIdentityConfig);
@@ -1499,7 +1553,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndAllValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC, vcF2fM1a());
+        var vcs = List.of(M1B_DCMAW_DL_VC, vcF2fPassportM1a());
 
         // Act & Assert
         assertFalse(userIdentityService.checkRequiresAdditionalEvidence(vcs));
@@ -1517,7 +1571,7 @@ class UserIdentityServiceTest {
     @Test
     void getCredentialsWithMultipleCredentialsAndValidAndInValidEvidence() {
         // Arrange
-        var vcs = List.of(M1B_DCMAW_VC, vcExperianFraudScoreTwo());
+        var vcs = List.of(M1B_DCMAW_DL_VC, vcExperianFraudScoreTwo());
 
         claimedIdentityConfig.setRequiresAdditionalEvidence(true);
         when(mockConfigService.getOauthCriActiveConnectionConfig(any()))

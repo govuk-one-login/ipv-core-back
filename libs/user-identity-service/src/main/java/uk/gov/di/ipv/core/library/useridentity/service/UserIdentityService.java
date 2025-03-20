@@ -55,6 +55,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_COD
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
 import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
 import static uk.gov.di.ipv.core.library.domain.Cri.HMRC_MIGRATION;
 import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
 import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
@@ -66,8 +67,8 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GIVEN_NA
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    private static final List<Cri> PASSPORT_CRI_TYPES = List.of(PASSPORT, DCMAW);
-    private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, DRIVING_LICENCE);
+    private static final List<Cri> PASSPORT_CRI_TYPES = List.of(PASSPORT, DCMAW, F2F);
+    private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DRIVING_LICENCE, DCMAW, F2F);
 
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS);
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS);
