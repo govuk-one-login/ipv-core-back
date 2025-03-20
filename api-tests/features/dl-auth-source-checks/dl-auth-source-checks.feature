@@ -79,9 +79,9 @@ Feature: Authoritative source checks with driving licence CRI
     Then I get a 'page-ipv-identity-document-start' page response
     When I submit an 'appTriage' event
     Then I get a 'dcmaw' CRI response
-    When I submit 'kenneth-driving-permit-valid' details to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+    When I submit 'kenneth-driving-permit-valid' details to the CRI stub
     Then I get a 'drivingLicence' CRI response
-    When I submit '<dl_details>' details with attributes to the CRI stub
+    When I submit '<dl_details>' details with attributes to the CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
       | Attribute | Values          |
       | context   | "check_details" |
     Then I get a '<page_response>' page response

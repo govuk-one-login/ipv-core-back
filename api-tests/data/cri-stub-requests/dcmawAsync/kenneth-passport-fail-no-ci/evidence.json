@@ -1,0 +1,18 @@
+{
+  "activityHistoryScore": 0,
+  "failedCheckDetails": [
+    {
+      "checkMethod": "vri",
+      "identityCheckPolicy": "published",
+      "activityFrom": "2019-01-01"
+    },
+    {
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 3
+    }
+  ],
+  "txn": "RB000117420948",
+  "validityScore": 0,
+  "strengthScore": 4,
+  "type": "IdentityCheck"
+}

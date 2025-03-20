@@ -147,3 +147,30 @@ Feature: Mitigating CIs with enhanced verification using the F2F CRI
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
+
+    Scenario: Separate session F2F enhanced verification mitigation - user fails DCMAW (e.g. failed likeness) - mitigate via F2F
+      Given I start a new 'medium-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit an 'appTriage' event
+      Then I get a 'dcmaw' CRI response
+      When I submit 'kenneth-passport-fail-no-ci' details to the CRI stub
+      Then I get a 'pyi-post-office' page response
+      When I submit a 'next' event
+      Then I get a 'claimedIdentity' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get an 'address' CRI response
+      When I submit 'kenneth-current' details to the CRI stub
+      Then I get a 'fraud' CRI response
+      When I submit 'kenneth-score-2' details to the CRI stub
+      Then I get an 'f2f' CRI response
+      When I submit 'kenneth-passport-valid' details with attributes to the async CRI stub that mitigate the 'NEEDS-ENHANCED-VERIFICATION' CI
+        | Attribute          | Values                                      |
+        | evidence_requested | {"scoringPolicy":"gpg45","strengthScore":3} |
+      Then I get a 'page-face-to-face-handoff' page response
+
+      # Return journey
+      When I start a new 'medium-confidence' journey and return to a 'page-ipv-reuse' page response
+      When I submit a 'next' event
+      Then I get an OAuth response
+      When I use the OAuth response to get my identity
+      Then I get a 'P2' identity
