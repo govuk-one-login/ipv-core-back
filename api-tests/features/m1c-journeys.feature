@@ -55,7 +55,7 @@ Feature: M1C Unavailable Journeys
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
-  Rule: Existing M1C identity returns
+  Rule: Returning existing M1C unavailable user goes through details confirmation
 
     Background:
       Given the subject already has the following credentials
@@ -209,77 +209,6 @@ Feature: M1C Unavailable Journeys
       When I submit 'kenneth-changed-family-name-unavailable' details to the CRI stub
       Then I get a 'sorry-could-not-confirm-details' page response with context 'existingIdentityValid'
       When I submit a 'returnToRp' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-  Rule: Returning existing M1C unavailable user goes through details confirmation
-
-    Background:
-      Given the subject already has the following credentials
-        | CRI     | scenario               |
-        | dcmaw   | kenneth-passport-valid |
-        | address | kenneth-current        |
-        | fraud   | kenneth-unavailable    |
-      When I start a new 'medium-confidence' journey
-      Then I get a 'confirm-your-details' page response
-
-    Scenario: No Update
-      # Repeat fraud check with no update
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
-      Then I get a 'page-ipv-success' page response with context 'repeatFraudCheck'
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-    Scenario: Given Name Update
-      # Repeat fraud check with update name
-      When I submit a 'given-names-only' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
-      When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiNoAddress'
-      When I submit a 'next' event
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-    Scenario: Address Update
-      # Repeat fraud check with update address
-      When I submit a 'address-only' event
-      Then I get a 'address' CRI response
-      When I submit 'kenneth-changed' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
-      When I submit a 'next' event
-      Then I get an OAuth response
-      When I use the OAuth response to get my identity
-      Then I get a 'P2' identity
-
-    Scenario: Address and Given Name Update
-      # Repeat fraud check with update address and family name
-      When I submit a 'given-names-and-address' event
-      Then I get a 'page-update-name' page response with context 'repeatFraudCheck'
-      When I submit a 'update-name' event
-      Then I get a 'dcmaw' CRI response
-      When I submit 'kenneth-changed-given-name-passport-valid' details to the CRI stub
-      Then I get a 'page-dcmaw-success' page response with context 'coiAddress'
-      When I submit a 'next' event
-      Then I get a 'address' CRI response
-      When I submit 'kenneth-changed' details to the CRI stub
-      Then I get a 'fraud' CRI response
-      When I submit 'kenneth-unavailable' details to the CRI stub
-      Then I get a 'page-ipv-success' page response with context 'updateIdentity'
-      When I submit a 'next' event
       Then I get an OAuth response
       When I use the OAuth response to get my identity
       Then I get a 'P2' identity
