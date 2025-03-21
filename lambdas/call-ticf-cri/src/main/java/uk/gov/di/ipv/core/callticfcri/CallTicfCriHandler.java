@@ -185,7 +185,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
         if (!clientOAuthSessionItem.isReverification()) {
             var contraIndicatorVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             request.getIpAddress(),

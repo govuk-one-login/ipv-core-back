@@ -813,7 +813,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitService.getContraIndicatorsVc(any(), any(), any(), any()))
+            when(cimitService.fetchContraIndicatorsVc(any(), any(), any(), any()))
                     .thenThrow(new CiRetrievalException("Could not retrieve CIs"));
 
             var request =

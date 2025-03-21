@@ -186,7 +186,7 @@ class CimitServiceTest {
                                 vcs, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
-    private static Stream<Arguments> provideArgumentsForGetContraIndicatorsVc() throws Exception {
+    private static Stream<Arguments> provideArgumentsForFetchContraIndicatorsVc() throws Exception {
         var contraIndicatorVc =
                 VerifiableCredential.fromValidJwt(
                         TEST_USER_ID, null, SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC_1));
@@ -216,7 +216,7 @@ class CimitServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideArgumentsForGetContraIndicatorsVc")
+    @MethodSource("provideArgumentsForFetchContraIndicatorsVc")
     void sendsHttpRequestToCimitApiAndStoresInSession(
             IpvSessionItem ipvSessionItem,
             VerifiableCredential vcFromCimit,
@@ -245,7 +245,7 @@ class CimitServiceTest {
                 .thenReturn(TEST_EC_PUBLIC_JWK);
 
         // Act
-        cimitService.getContraIndicatorsVc(
+        cimitService.fetchContraIndicatorsVc(
                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, ipvSessionItem);
 
         // Assert
@@ -266,7 +266,7 @@ class CimitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVcVCThrowsExceptionIfHttpRequestReturnsFailedResponse()
+    void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestReturnsFailedResponse()
             throws Exception {
         // Arrange
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
@@ -281,7 +281,7 @@ class CimitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        cimitService.getContraIndicatorsVc(
+                        cimitService.fetchContraIndicatorsVc(
                                 TEST_USER_ID,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP,
@@ -289,7 +289,7 @@ class CimitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVcVCThrowsExceptionIfHttpRequestIsInterrupted() throws Exception {
+    void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestIsInterrupted() throws Exception {
         // Arrange
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
@@ -300,7 +300,7 @@ class CimitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        cimitService.getContraIndicatorsVc(
+                        cimitService.fetchContraIndicatorsVc(
                                 TEST_USER_ID,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP,
@@ -308,7 +308,7 @@ class CimitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVcVCThrowsExceptionIfHttpRequestThrowsIOException() throws Exception {
+    void fetchContraIndicatorsVcVCThrowsExceptionIfHttpRequestThrowsIOException() throws Exception {
         // Arrange
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
@@ -319,7 +319,7 @@ class CimitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        cimitService.getContraIndicatorsVc(
+                        cimitService.fetchContraIndicatorsVc(
                                 TEST_USER_ID,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP,
@@ -327,7 +327,7 @@ class CimitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVcVcThrowsErrorForInvalidJWT() throws Exception {
+    void fetchContraIndicatorsVcVcThrowsErrorForInvalidJWT() throws Exception {
         when(configService.getParameter(ConfigurationVariable.CIMIT_API_BASE_URL))
                 .thenReturn(CIMIT_API_BASE_URL);
         when(configService.getSecret(CIMIT_API_KEY)).thenReturn(MOCK_CIMIT_API_KEY);
@@ -344,7 +344,7 @@ class CimitServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        cimitService.getContraIndicatorsVc(
+                        cimitService.fetchContraIndicatorsVc(
                                 TEST_USER_ID,
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP,

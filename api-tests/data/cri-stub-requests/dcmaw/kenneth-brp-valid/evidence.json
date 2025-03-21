@@ -1,0 +1,18 @@
+{
+  "type": "IdentityCheck",
+  "txn": "RB000117420948",
+  "strengthScore": 4,
+  "validityScore": 3,
+  "activityHistoryScore": 1,
+  "checkDetails": [
+    {
+      "checkMethod": "vcrypt",
+      "identityCheckPolicy": "published",
+      "activityFrom": "2019-01-01"
+    },
+    {
+      "checkMethod": "bvr",
+      "biometricVerificationProcessLevel": 3
+    }
+  ]
+}

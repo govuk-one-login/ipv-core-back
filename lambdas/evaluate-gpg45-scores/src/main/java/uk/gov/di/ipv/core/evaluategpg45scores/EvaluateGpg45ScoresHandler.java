@@ -46,7 +46,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.SessionCredentialsService;
 import uk.gov.di.model.ContraIndicator;
 
-import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -184,7 +183,7 @@ public class EvaluateGpg45ScoresHandler
                             HttpStatusCode.INTERNAL_SERVER_ERROR,
                             IPV_SESSION_NOT_FOUND)
                     .toObjectMap();
-        } catch (CiExtractionException | ParseException | CredentialParseException e) {
+        } catch (CiExtractionException | CredentialParseException e) {
             LOGGER.error(
                     LogHelper.buildErrorMessage(
                             ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC.getMessage(), e));

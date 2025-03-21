@@ -262,6 +262,26 @@ Feature:  Mitigating CIs with enhanced verification using the async DCMAW CRI an
       When I use the OAuth response to get my identity
       Then I get a 'P0' identity
 
+    Scenario: Separate session DCMAW enhanced verification mitigation - user fails DCMAW with no ci (e.g. failed likeness) - mitigate via F2F
+      When I start a new 'low-confidence' journey
+      Then I get a 'page-ipv-identity-document-start' page response
+      When I submit a 'appTriage' event
+      Then I get an 'identify-device' page response
+      When I submit an 'appTriage' event
+      Then I get a 'pyi-triage-select-device' page response
+      When I submit a 'smartphone' event
+      Then I get a 'pyi-triage-select-smartphone' page response with context 'mam'
+      When I submit an 'iphone' event
+      Then I get a 'pyi-triage-mobile-download-app' page response with context 'iphone'
+      When the async DCMAW CRI produces a 'kenneth-passport-fail-no-ci' VC
+      # This will probably need to change once the polling is working
+      And I pass on the DCMAW callback
+      Then I get a 'check-mobile-app-result' page response
+      When I poll for async DCMAW credential receipt
+      Then the poll returns a '201'
+      When I submit the returned journey event
+      Then I get a 'pyi-post-office' page response
+
     Scenario: Separate session DCMAW enhanced verification mitigation - breaching CI received from DCMAW
       When I start a new 'low-confidence' journey
       Then I get a 'page-ipv-identity-document-start' page response

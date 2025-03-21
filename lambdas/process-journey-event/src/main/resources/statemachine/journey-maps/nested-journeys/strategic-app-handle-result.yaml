@@ -25,7 +25,10 @@ nestedJourneyStates:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
-      enhanced-verification:
+        checkMitigation:
+          enhanced-verification:
+            exitEventToEmit: anotherWay
+      enhanced-verification: # To delete - checkMobileAppVcReceipt no longer emits this
         exitEventToEmit: anotherWay
       vcs-not-correlated:
         targetJourney: FAILED
@@ -44,8 +47,14 @@ nestedJourneyStates:
         exitEventToEmit: next
       access-denied:
         targetState: REMOVE_DCMAW_FROM_SESSION
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: RESET_SESSION_INVALID_DL
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: RESET_SESSION_INVALID_DL
 
   REMOVE_DCMAW_FROM_SESSION:
     response:

@@ -30,7 +30,7 @@ states:
       invalid-request:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       temporarily-unavailable:
@@ -42,10 +42,10 @@ states:
       vcs-not-correlated:
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
-      alternate-doc-invalid-passport:
+      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       dl-auth-source-check:
@@ -217,7 +217,7 @@ states:
         checkFeatureFlag:
           processCandidateIdentity:
             targetState: PROCESS_UPDATE_IDENTITY
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         targetJourney: FAILED
         targetState: FAILED_CONFIRM_DETAILS
       fail-with-no-ci:
