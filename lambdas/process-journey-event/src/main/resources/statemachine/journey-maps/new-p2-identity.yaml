@@ -327,15 +327,11 @@ states:
       next-passport:
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-      alternate-doc-next-dl:
-        targetState: MITIGATION_CHECK_FRAUD_AFTER_DL
-      alternate-doc-next-passport:
+      alternate-doc-next-dl: # To delete - can be combined with next-dl exitEvent
+        targetState: CHECK_FRAUD_AFTER_DL
+      alternate-doc-next-passport: # To delete - can be combined with next-passport exitEvent
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-        checkMitigation:
-          alternate-doc-invalid-passport:
-            targetState: KBV_PHOTO_ID
-            targetEntryEvent: next
       end:
         targetState: F2F_PYI_POST_OFFICE
         checkIfDisabled:
@@ -363,7 +359,7 @@ states:
         targetJourney: FAILED
         targetState: FAILED
 
-  MITIGATION_CHECK_FRAUD_AFTER_DL:
+  MITIGATION_CHECK_FRAUD_AFTER_DL: # To delete - identical to CHECK_FRAUD_AFTER_DL (above)
     response:
       type: process
       lambda: check-gpg45-score
