@@ -45,7 +45,7 @@ states:
         targetState: WEB_DL_OR_PASSPORT
         targetEntryEvent: alternate-doc-invalid-passport
 
-  ENHANCED_VERIFICATION_F2F_FAIL:
+  ENHANCED_VERIFICATION_F2F_FAIL: # To delete - have removed from initial-journey-selection journey map
     events:
       next:
         targetState: F2F_FAILED_MITIGATION_PAGE
@@ -954,7 +954,7 @@ states:
             targetJourney: FAILED
             targetState: FAILED
 
-  F2F_FAILED_MITIGATION_PAGE:
+  F2F_FAILED_MITIGATION_PAGE: # To delete - no longer needed as we're handling f2f fail w/ enhanced-verification with F2F_FAILED journey
     response:
       type: page
       pageId: pyi-f2f-technical
