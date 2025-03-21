@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - '.github/workflows/secure-post-merge.yml'
       - '.github/workflows/secure-post-merge-notags.yml'
+  workflow_dispatch:
 
 jobs:
   check-if-api-tests-changed:
@@ -52,7 +53,10 @@ jobs:
     timeout-minutes: 15
     env:
       AWS_REGION: eu-west-2
-      ENVIRONMENT: build
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch'
+        ? 'dev'
+        : 'build'
+      }}
     permissions:
       id-token: write
       contents: read
@@ -104,7 +108,10 @@ jobs:
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
-            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
-            working-directory: ./deploy
-            template-file: .aws-sam/build/template.yaml
+          artifact-bucket-name: ${{ env.ENVIRONMENT == 'dev'
+            ? secrets.ARTIFACT_BUCKET_NAME_DEV
+            : secrets.ARTIFACT_BUCKET_NAME
+          }}
+          signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+          working-directory: ./deploy
+          template-file: .aws-sam/build/template.yaml
