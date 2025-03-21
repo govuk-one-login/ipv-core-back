@@ -84,6 +84,7 @@ import static uk.gov.di.ipv.core.library.enums.CandidateIdentityType.UPDATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CHECK_TYPE;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_COI_CHECK_FAILED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_PROFILE_UNMET_PATH;
 
@@ -97,6 +98,8 @@ public class ProcessCandidateIdentityHandler
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final Map<String, Object> JOURNEY_COI_CHECK_FAILED =
             new JourneyResponse(JOURNEY_COI_CHECK_FAILED_PATH).toObjectMap();
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -453,28 +456,36 @@ public class ProcessCandidateIdentityHandler
                     auditEventUser);
 
             if (!clientOAuthSessionItem.isReverification()) {
+                // Get mitigations from old CIMIT VC to compare against the mitigations on the new
+                // CIs
+                var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+                var oldMitigations =
+                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                ipvSessionItem.getSecurityCheckCredential(),
+                                clientOAuthSessionItem.getUserId(),
+                                targetVot);
+
                 var contraIndicatorsVc =
                         cimitService.fetchContraIndicatorsVc(
                                 clientOAuthSessionItem.getUserId(),
                                 clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress,
                                 ipvSessionItem);
+                var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+                var newMitigations =
+                        cimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                newCis, targetVot);
 
-                var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
-
-                var thresholdVot =
-                        VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
-
-                var journeyResponse =
-                        cimitUtilityService.getMitigationJourneyIfBreaching(cis, thresholdVot);
-                if (journeyResponse.isPresent()) {
+                // If breaching and no available mitigations or a new mitigation is required, we
+                // return fail-with-ci
+                if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
+                        && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
                     LOGGER.info(
                             LogHelper.buildLogMessage(
                                     "CI score is breaching threshold - setting VOT to P0"));
                     ipvSessionItem.setVot(Vot.P0);
                     ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                    return journeyResponse.get();
+                    return JOURNEY_FAIL_WITH_CI;
                 }
 
                 LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
@@ -488,7 +499,8 @@ public class ProcessCandidateIdentityHandler
                 | CiRetrievalException
                 | CiExtractionException
                 | ConfigException
-                | UnrecognisedVotException e) {
+                | UnrecognisedVotException
+                | CredentialParseException e) {
             LOGGER.error(LogHelper.buildErrorMessage("Error processing response from TICF CRI", e));
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,
