@@ -159,7 +159,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
     private List<PostalAddress> getProvenIdentityAddresses(List<VerifiableCredential> vcs)
             throws HttpResponseExceptionWithErrorBody, ProvenUserIdentityDetailsException {
-        var addressClaim = userIdentityService.generateAddressClaim(vcs);
+        var addressClaim = userIdentityService.getAddressClaim(vcs);
 
         if (addressClaim.isEmpty()) {
             LOGGER.error(
