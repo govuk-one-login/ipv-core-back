@@ -79,15 +79,16 @@ states:
     events:
       next:
         targetState: ANOTHER_WAY_PAGE
-      enhanced-verification:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-dl:
-        targetState: ANOTHER_WAY_PAGE
-      alternate-doc-invalid-passport:
-        targetState: ANOTHER_WAY_PAGE
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+        checkMitigation:
+          enhanced-verification:
+            targetState: ANOTHER_WAY_PAGE
+          alternate-doc-invalid-dl:
+            targetState: ANOTHER_WAY_PAGE
+          alternate-doc-invalid-passport:
+            targetState: ANOTHER_WAY_PAGE
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -110,15 +111,16 @@ states:
     events:
       next:
         targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
-        targetState: RETURN_TO_RP
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
+        checkMitigation:
+          enhanced-verification:
+            targetState: RETURN_TO_RP
+          alternate-doc-invalid-dl:
+            targetState: RETURN_TO_RP
+          alternate-doc-invalid-passport:
+            targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

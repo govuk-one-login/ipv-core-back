@@ -119,14 +119,9 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetState: CRI_F2F
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
+        checkMitigation:
+          enhanced-verification:
+            targetState: CRI_F2F
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

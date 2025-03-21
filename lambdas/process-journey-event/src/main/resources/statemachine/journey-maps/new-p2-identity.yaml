@@ -1122,15 +1122,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR
@@ -1153,12 +1144,6 @@ states:
       next:
         targetState: RETURN_TO_RP
       fail-with-ci:
-        targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
         targetState: RETURN_TO_RP
       coi-check-failed:
         targetJourney: TECHNICAL_ERROR
