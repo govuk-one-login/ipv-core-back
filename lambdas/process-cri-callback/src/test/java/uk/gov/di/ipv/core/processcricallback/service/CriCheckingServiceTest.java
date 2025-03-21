@@ -61,7 +61,6 @@ import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitMiss
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermitNonDcmaw;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
@@ -474,10 +473,10 @@ class CriCheckingServiceTest {
         var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
+
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.empty());
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
@@ -503,10 +502,10 @@ class CriCheckingServiceTest {
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         clientOAuthSessionItem.setVtr(List.of("P1", "P2"));
         var ipvSessionItem = buildValidIpvSessionItem();
+
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), eq(Vot.P1)))
-                .thenReturn(Optional.empty());
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), eq(Vot.P1))).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
 
@@ -524,15 +523,25 @@ class CriCheckingServiceTest {
     }
 
     @Test
-    void checkVcResponseShouldReturnFailWithCiWhenUserBreachesCiThreshold() throws Exception {
+    void
+            checkVcResponseShouldReturnFailWithCiWhenUserBreachesCiThresholdAndNoAvailableMitigationsForNewCi()
+                    throws Exception {
         // Arrange for CI threshold breach
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
+
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
+
+        // The first time we call this, we get the mitigations for the old CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenReturn(Optional.empty());
+        // The second time we call this, we get the mitigations for the new CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.empty());
+
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
 
         // Act
         JourneyResponse result =
@@ -545,6 +554,70 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
+    }
+
+    @Test
+    void checkVcResponseShouldReturnFailWithCiWhenUserBreachesCiThresholdAndWeHaveNewMitigations()
+            throws Exception {
+        // Arrange for CI threshold breach
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
+                .thenReturn(List.of(new ContraIndicator()));
+
+        // The first time we call this, we get the mitigations for the old CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenReturn(Optional.empty());
+        // The second time we call this, we get the mitigations for the new CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.of("a-new-mitigation"));
+
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        List.of());
+
+        // Assert
+        assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH), result);
+    }
+
+    @Test
+    void checkVcResponseShouldContinueToNextChecksWhenBreachingCisButNoNewMitigations()
+            throws Exception {
+        // Arrange for CI mitigation possibility
+        var callbackRequest = buildValidCallbackRequest();
+        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
+        var ipvSessionItem = buildValidIpvSessionItem();
+        when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
+                .thenReturn(TEST_CONTRA_INDICATORS);
+
+        // The first time we call this, we get the mitigations for the old CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                .thenReturn(Optional.of("the-same-mitigation"));
+        // The second time we call this, we get the mitigations for the new CIs
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.of("the-same-mitigation"));
+
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+
+        // Act
+        JourneyResponse result =
+                criCheckingService.checkVcResponse(
+                        List.of(),
+                        callbackRequest.getIpAddress(),
+                        clientOAuthSessionItem,
+                        ipvSessionItem,
+                        List.of());
+
+        // Assert
+        assertEquals(JOURNEY_VCS_NOT_CORRELATED, result.getJourney());
     }
 
     @Test
@@ -567,33 +640,9 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_VCS_NOT_CORRELATED), result);
-        verify(mockCimitService, never()).getContraIndicatorsVc(any(), any(), any(), any());
+        verify(mockCimitService, never()).fetchContraIndicatorsVc(any(), any(), any(), any());
         verify(mockCimitUtilityService, never()).getMitigationJourneyIfBreaching(any(), any());
         verify(mockIpvSessionService, times(1)).updateIpvSession(ipvSessionItem);
-    }
-
-    @Test
-    void checkVcResponseShouldReturnMitigatedJourneyWhenCiMitigationIsPossible() throws Exception {
-        // Arrange for CI mitigation possibility
-        var callbackRequest = buildValidCallbackRequest();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        var ipvSessionItem = buildValidIpvSessionItem();
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
-                .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.of(new JourneyResponse("/journey/mitigation-journey")));
-
-        // Act
-        JourneyResponse result =
-                criCheckingService.checkVcResponse(
-                        List.of(),
-                        callbackRequest.getIpAddress(),
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        List.of());
-
-        // Assert
-        assertEquals(new JourneyResponse("/journey/mitigation-journey"), result);
     }
 
     @Test
@@ -602,10 +651,14 @@ class CriCheckingServiceTest {
         var callbackRequest = buildValidCallbackRequest();
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
+
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
                 .thenReturn(Optional.empty());
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.empty());
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
         when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(false);
 
         // Act
@@ -629,11 +682,14 @@ class CriCheckingServiceTest {
         var sessionVcs = List.of(M1B_DCMAW_VC);
         var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
         var ipvSessionItem = buildValidIpvSessionItem();
+
         when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
                 .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
                 .thenReturn(Optional.empty());
-        when(mockUserIdentityService.areVcsCorrelated(any())).thenReturn(true);
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.empty());
+        when(mockCimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
         mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(false);
 
         // Act
@@ -647,31 +703,6 @@ class CriCheckingServiceTest {
 
         // Assert
         assertEquals(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH), result);
-    }
-
-    @Test
-    void checkVcResponseShouldReturnDlIfDrivingPermitIdentifiersDifferAndNotMitigated()
-            throws Exception {
-        var callbackRequest = buildValidCallbackRequest();
-        var clientOAuthSessionItem = buildValidClientOAuthSessionItem();
-        var ipvSessionItem = buildValidIpvSessionItem();
-
-        when(mockConfigService.enabled(DL_AUTH_SOURCE_CHECK)).thenReturn(true);
-        mockedVcHelper.when(() -> VcHelper.isSuccessfulVc(any())).thenReturn(true);
-        when(mockCimitUtilityService.getContraIndicatorsFromVc(any()))
-                .thenReturn(TEST_CONTRA_INDICATORS);
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_PATH)));
-
-        JourneyResponse result =
-                criCheckingService.checkVcResponse(
-                        List.of(M1B_DCMAW_VC),
-                        callbackRequest.getIpAddress(),
-                        clientOAuthSessionItem,
-                        ipvSessionItem,
-                        List.of(vcDrivingPermitNonDcmaw()));
-
-        assertEquals(new JourneyResponse(JOURNEY_DL_AUTH_SOURCE_CHECK_PATH), result);
     }
 
     @Nested

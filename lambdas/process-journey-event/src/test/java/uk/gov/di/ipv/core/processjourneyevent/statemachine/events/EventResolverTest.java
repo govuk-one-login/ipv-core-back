@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.processjourneyevent.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.TransitionResult;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
-import uk.gov.di.model.ContraIndicator;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +26,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -152,13 +150,10 @@ public class EventResolverTest {
 
         @Nested
         class CheckMitigationConfigured {
-            private List<ContraIndicator> testCis;
             private IpvSessionItem ipvSessionItem;
 
             @BeforeEach
             void setUp() {
-                testCis = List.of(new ContraIndicator());
-
                 ipvSessionItem = new IpvSessionItem();
                 ipvSessionItem.setSecurityCheckCredential(SIGNED_CONTRA_INDICATOR_VC_1);
             }
@@ -179,10 +174,8 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(testCis);
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                any(), any(), any()))
                         .thenReturn(Optional.of("first-mitigation"));
 
                 // Act
@@ -209,10 +202,8 @@ public class EventResolverTest {
                 checkMitigation.put("first-mitigation", new BasicEvent());
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(testCis);
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(testCis), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                any(), any(), any()))
                         .thenReturn(Optional.of("mitigation-not-in-check-mitigation"));
 
                 // Act
@@ -240,10 +231,8 @@ public class EventResolverTest {
 
                 basicEventWithCheckMitigationConfigured.setCheckMitigation(checkMitigation);
 
-                when(mockCimitUtilityService.getContraIndicatorsFromVc(
-                                SIGNED_CONTRA_INDICATOR_VC_1, clientOAuthSessionItem.getUserId()))
-                        .thenReturn(List.of());
-                when(mockCimitUtilityService.getMitigationJourneyEvent(eq(List.of()), any()))
+                when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(
+                                any(), any(), any()))
                         .thenReturn(Optional.empty());
 
                 // Act

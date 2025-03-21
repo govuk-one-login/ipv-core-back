@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -55,8 +56,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DL_AUTH_SOURCE_CHECK_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
@@ -68,6 +69,8 @@ public class CriCheckingService {
             new JourneyResponse(JourneyUris.JOURNEY_VCS_NOT_CORRELATED);
     private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
             new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private static final JourneyResponse JOURNEY_ACCESS_DENIED =
             new JourneyResponse(JOURNEY_ACCESS_DENIED_PATH);
     private static final JourneyResponse JOURNEY_TEMPORARILY_UNAVAILABLE =
@@ -241,40 +244,35 @@ public class CriCheckingService {
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem,
             List<VerifiableCredential> sessionVcs)
-            throws CiRetrievalException, ConfigException, HttpResponseExceptionWithErrorBody,
-                    CiExtractionException {
+            throws CiRetrievalException, HttpResponseExceptionWithErrorBody, CiExtractionException,
+                    CredentialParseException, ConfigException {
         var scopeClaims = clientOAuthSessionItem.getScopeClaims();
         var isReverification = scopeClaims.contains(ScopeConstants.REVERIFICATION);
         if (!isReverification) {
+            // Get mitigations from old CIMIT VC to compare against the mitigations on the new CIs
+            var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
+            var oldMitigations =
+                    cimitUtilityService.getMitigationEventIfBreachingOrActive(
+                            ipvSessionItem.getSecurityCheckCredential(),
+                            clientOAuthSessionItem.getUserId(),
+                            targetVot);
+
             var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress,
                             ipvSessionItem);
-            var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var newCis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorsVc);
+            var newMitigations =
+                    cimitUtilityService.getMitigationEventIfBreachingOrActive(newCis, targetVot);
 
-            // Check CIs only against the target Vot so we don't send the user on an unnecessary
-            // mitigation journey.
-            var journeyResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(
-                            cis, VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
-            if (journeyResponse.isPresent()) {
-                var jr = journeyResponse.get();
-                if (jr.toString().equals(JOURNEY_ENHANCED_VERIFICATION_PATH)
-                        && configService.enabled(DL_AUTH_SOURCE_CHECK)
-                        && requiresAuthoritativeSourceCheck(newVcs, sessionVcs)) {
-                    return JOURNEY_DL_AUTH_SOURCE_CHECK;
-                }
-                return jr;
+            // If breaching and no available mitigations or a new mitigation is required, we
+            // return fail-with-ci
+            if (cimitUtilityService.isBreachingCiThreshold(newCis, targetVot)
+                    && (newMitigations.isEmpty() || !newMitigations.equals(oldMitigations))) {
+                return JOURNEY_FAIL_WITH_CI;
             }
-        }
-
-        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
-            if (isReverification) {
-                setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
-            }
-            return JOURNEY_VCS_NOT_CORRELATED;
         }
 
         for (var vc : newVcs) {
@@ -284,6 +282,13 @@ public class CriCheckingService {
                 }
                 return JOURNEY_FAIL_WITH_NO_CI;
             }
+        }
+
+        if (!userIdentityService.areVcsCorrelated(sessionVcs)) {
+            if (isReverification) {
+                setFailedIdentityCheckOnIpvSessionItem(ipvSessionItem);
+            }
+            return JOURNEY_VCS_NOT_CORRELATED;
         }
 
         if (configService.enabled(DL_AUTH_SOURCE_CHECK)

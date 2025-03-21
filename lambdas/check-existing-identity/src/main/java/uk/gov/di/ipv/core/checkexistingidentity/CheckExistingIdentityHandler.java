@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.http.HttpStatusCode;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.metrics.Metrics;
-import uk.gov.di.ipv.core.checkexistingidentity.exceptions.MitigationRouteException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -80,10 +79,9 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_F2F_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IN_MIGRATION_REUSE_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_LOW_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_IPV_GPG45_MEDIUM_PATH;
@@ -113,8 +111,6 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_IPV_GPG45_MEDIUM_PATH);
     private static final JourneyResponse JOURNEY_F2F_FAIL =
             new JourneyResponse(JOURNEY_F2F_FAIL_PATH);
-    private static final JourneyResponse JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL =
-            new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL_PATH);
     private static final JourneyResponse JOURNEY_REPEAT_FRAUD_CHECK =
             new JourneyResponse(JOURNEY_REPEAT_FRAUD_CHECK_PATH);
     private static final JourneyResponse JOURNEY_REPROVE_IDENTITY_GPG45_MEDIUM =
@@ -125,6 +121,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_LOW_PATH);
     private static final JourneyResponse JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM =
             new JourneyResponse(JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -264,7 +262,7 @@ public class CheckExistingIdentityHandler
             var targetVot = VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem);
 
             var contraIndicatorsVc =
-                    cimitService.getContraIndicatorsVc(
+                    cimitService.fetchContraIndicatorsVc(
                             clientOAuthSessionItem.getUserId(),
                             govukSigninJourneyId,
                             ipAddress,
@@ -291,14 +289,11 @@ public class CheckExistingIdentityHandler
             // That might cause an issue if a user needs to mitigate a P2 journey but comes back to
             // us with a P1 request that doesn't need mitigation. This is out of scope for the MVP
             // though.
-            var ciScoringCheckResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(
-                            contraIndicators, targetVot);
-            if (ciScoringCheckResponse.isPresent()) {
-                if (asyncCriStatus.isAwaitingVc()) {
-                    return asyncCriStatus.getJourneyForAwaitingVc(false);
-                }
-                return ciScoringCheckResponse.get();
+            if (cimitUtilityService.isBreachingCiThreshold(contraIndicators, targetVot)
+                    && cimitUtilityService
+                            .getCiMitigationJourneyResponse(contraIndicators, targetVot)
+                            .isEmpty()) {
+                return JOURNEY_FAIL_WITH_CI;
             }
 
             // No breaching CIs.
@@ -333,10 +328,7 @@ public class CheckExistingIdentityHandler
                     // Returned with F2F async VC. Should have matched a profile.
 
                     return buildF2FNoMatchResponse(
-                            areGpg45VcsCorrelated,
-                            auditEventUser,
-                            deviceInformation,
-                            contraIndicators);
+                            areGpg45VcsCorrelated, auditEventUser, deviceInformation);
                 }
                 if (asyncCriStatus.cri() == DCMAW_ASYNC) {
 
@@ -358,7 +350,7 @@ public class CheckExistingIdentityHandler
 
             // No relevant async CRI
 
-            return buildNoMatchResponse(contraIndicators, targetVot);
+            return getNewIdentityJourney(targetVot);
         } catch (HttpResponseExceptionWithErrorBody
                 | VerifiableCredentialException
                 | EvcsServiceException e) {
@@ -376,8 +368,6 @@ public class CheckExistingIdentityHandler
             return buildErrorResponse(ErrorResponse.FAILED_TO_PARSE_CONFIG, e);
         } catch (UnrecognisedCiException e) {
             return buildErrorResponse(ErrorResponse.UNRECOGNISED_CI_CODE, e);
-        } catch (MitigationRouteException e) {
-            return buildErrorResponse(ErrorResponse.FAILED_TO_FIND_MITIGATION_ROUTE, e);
         } catch (IpvSessionNotFoundException e) {
             return buildErrorResponse(ErrorResponse.IPV_SESSION_NOT_FOUND, e);
         } catch (CiExtractionException e) {
@@ -455,9 +445,7 @@ public class CheckExistingIdentityHandler
     private JourneyResponse buildF2FNoMatchResponse(
             boolean areGpg45VcsCorrelated,
             AuditEventUser auditEventUser,
-            String deviceInformation,
-            List<ContraIndicator> contraIndicators)
-            throws ConfigException, MitigationRouteException {
+            String deviceInformation) {
         LOGGER.info(LogHelper.buildLogMessage("F2F return - failed to match a profile."));
         sendAuditEvent(
                 !areGpg45VcsCorrelated
@@ -466,26 +454,6 @@ public class CheckExistingIdentityHandler
                 auditEventUser,
                 deviceInformation);
 
-        // If someone's ever picked up a CI, they can only try mitigation routes, even if it has
-        // been mitigated.
-        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
-        if (mitigatedCI.isPresent()) {
-            var mitigationJourney =
-                    cimitUtilityService
-                            .getMitigatedCiJourneyResponse(mitigatedCI.get())
-                            .map(JourneyResponse::getJourney)
-                            .orElseThrow(
-                                    () ->
-                                            new MitigationRouteException(
-                                                    String.format(
-                                                            "Empty mitigation route for mitigated CI: %s",
-                                                            mitigatedCI.get())));
-            if (!JOURNEY_ENHANCED_VERIFICATION_PATH.equals(mitigationJourney)) {
-                throw new MitigationRouteException(
-                        String.format("Unsupported mitigation route: %s", mitigationJourney));
-            }
-            return JOURNEY_ENHANCED_VERIFICATION_F2F_FAIL;
-        }
         return JOURNEY_F2F_FAIL;
     }
 
@@ -525,25 +493,6 @@ public class CheckExistingIdentityHandler
             case P2 -> JOURNEY_DCMAW_ASYNC_VC_RECEIVED_MEDIUM;
             default -> buildErrorResponse(ErrorResponse.INVALID_VTR_CLAIM);
         };
-    }
-
-    private JourneyResponse buildNoMatchResponse(
-            List<ContraIndicator> contraIndicators, Vot preferredNewIdentityLevel)
-            throws ConfigException, MitigationRouteException, HttpResponseExceptionWithErrorBody {
-
-        var mitigatedCI = cimitUtilityService.hasMitigatedContraIndicator(contraIndicators);
-        if (mitigatedCI.isPresent()) {
-            return cimitUtilityService
-                    .getMitigatedCiJourneyResponse(mitigatedCI.get())
-                    .orElseThrow(
-                            () ->
-                                    new MitigationRouteException(
-                                            String.format(
-                                                    "Empty mitigation route for mitigated CI: %s",
-                                                    mitigatedCI.get())));
-        }
-
-        return getNewIdentityJourney(preferredNewIdentityLevel);
     }
 
     private JourneyResponse buildReuseResponse(

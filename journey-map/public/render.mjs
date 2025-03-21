@@ -178,13 +178,13 @@ const renderTransitions = (journeyStates, formData) => {
           errorJourneys.includes(targetJourney) &&
           !formData.getAll("otherOption").includes("includeErrors")
         ) {
-          return;
+          continue;
         }
         if (
           failureJourneys.includes(targetJourney) &&
           !formData.getAll("otherOption").includes("includeFailures")
         ) {
-          return;
+          continue;
         }
 
         if (!states.includes(target)) {

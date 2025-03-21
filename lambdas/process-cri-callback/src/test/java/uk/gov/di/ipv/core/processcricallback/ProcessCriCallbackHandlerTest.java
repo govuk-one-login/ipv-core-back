@@ -14,6 +14,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.criapiservice.CriApiService;
 import uk.gov.di.ipv.core.library.criapiservice.exception.CriApiException;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
@@ -22,7 +23,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.dto.OauthCriConfig;
-import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -56,7 +56,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_CONFIG;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_GET_STORED_CIS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_TOKEN_REQUEST;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
@@ -271,7 +271,7 @@ class ProcessCriCallbackHandlerTest {
                         eq(clientOAuthSessionItem),
                         eq(ipvSessionItem),
                         any()))
-                .thenThrow(new ConfigException("bad config"));
+                .thenThrow(new CiRetrievalException("failed to get CI"));
 
         // Act
         var lambdaResponse = processCriCallbackHandler.handleRequest(requestEvent, mockContext);
@@ -279,7 +279,7 @@ class ProcessCriCallbackHandlerTest {
         // Assert
         var journeyErrorResponse =
                 OBJECT_MAPPER.readValue(lambdaResponse.getBody(), JourneyErrorResponse.class);
-        assertEquals(FAILED_TO_PARSE_CONFIG.getCode(), journeyErrorResponse.getCode());
+        assertEquals(FAILED_TO_GET_STORED_CIS.getCode(), journeyErrorResponse.getCode());
         assertEquals(500, journeyErrorResponse.getStatusCode());
     }
 

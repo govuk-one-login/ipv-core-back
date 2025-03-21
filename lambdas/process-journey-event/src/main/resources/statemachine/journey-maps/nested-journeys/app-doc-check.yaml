@@ -23,7 +23,7 @@ nestedJourneyStates:
         exitEventToEmit: incomplete
       fail-with-no-ci:
         exitEventToEmit: incomplete
-      enhanced-verification:
+      enhanced-verification: # To delete - processCriCallback no longer emits this
         exitEventToEmit: incomplete
 
   CRI_DRIVING_LICENCE_AUTH_SOURCE_CHECK:
@@ -37,12 +37,22 @@ nestedJourneyStates:
         exitEventToEmit: next
       access-denied:
         targetState: REMOVE_DCMAW_FROM_SESSION
-      alternate-doc-invalid-dl:
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: RESET_SESSION_INVALID_DL
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: RESET_SESSION_INVALID_DL
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
 
   REMOVE_DCMAW_FROM_SESSION:
     response:

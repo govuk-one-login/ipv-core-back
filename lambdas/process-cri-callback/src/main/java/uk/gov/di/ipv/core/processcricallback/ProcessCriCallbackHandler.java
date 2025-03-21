@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.dto.CriCallbackRequest;
 import uk.gov.di.ipv.core.library.exceptions.CiExtractionException;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.IpvSessionNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedVotException;
@@ -211,7 +212,7 @@ public class ProcessCriCallbackHandler
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
                     Level.ERROR);
-        } catch (UnrecognisedVotException e) {
+        } catch (UnrecognisedVotException | CredentialParseException e) {
             return buildErrorResponse(
                     e,
                     HttpStatusCode.INTERNAL_SERVER_ERROR,
@@ -284,7 +285,8 @@ public class ProcessCriCallbackHandler
             throws JsonProcessingException, HttpResponseExceptionWithErrorBody, ConfigException,
                     CiRetrievalException, CriApiException, VerifiableCredentialException,
                     CiPostMitigationsException, CiPutException, InvalidCriCallbackRequestException,
-                    UnrecognisedVotException, IpvSessionNotFoundException, CiExtractionException {
+                    UnrecognisedVotException, IpvSessionNotFoundException, CiExtractionException,
+                    CredentialParseException {
         // Validate callback sessions
         criCheckingService.validateSessionIds(callbackRequest);
 

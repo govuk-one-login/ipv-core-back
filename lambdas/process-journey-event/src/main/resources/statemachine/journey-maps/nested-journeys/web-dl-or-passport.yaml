@@ -23,14 +23,30 @@ nestedJourneyStates:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_AFTER_PASSPORT
+#        checkMitigation:
+#          alternate-doc-invalid-dl:
+#            targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
       access-denied:
         targetState: PROVE_ANOTHER_WAY_AFTER_PASSPORT
-      alternate-doc-invalid-passport:
+#        checkMitigation:
+#          alternate-doc-invalid-dl:
+#            targetState: PP_NO_OTHER_PHOTO_ID
+      alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-passport
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-passport
   ADDRESS_AND_FRAUD_AFTER_PASSPORT:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -61,14 +77,30 @@ nestedJourneyStates:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_AFTER_DL
+#        checkMitigation:
+#          alternate-doc-invalid-passport:
+#            targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
       access-denied:
         targetState: PROVE_ANOTHER_WAY_AFTER_DL
-      alternate-doc-invalid-dl:
+#        checkMitigation:
+#          alternate-doc-invalid-passport:
+#            targetState: DL_NO_OTHER_PHOTO_ID
+      alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
         auditEvents:
           - IPV_MITIGATION_START
         auditContext:
           mitigationType: invalid-dl
+      fail-with-ci:
+        targetJourney: FAILED
+        targetState: FAILED
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
   ADDRESS_AND_FRAUD_AFTER_DL:
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
@@ -120,6 +152,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+#        checkMitigation:
+#          alternate-doc-invalid-passport:
+#            targetState: CRI_DRIVING_LICENCE
       end:
         exitEventToEmit: return-to-rp
   MITIGATION_DL_CRI_DRIVING_LICENCE:
@@ -132,6 +167,16 @@ nestedJourneyStates:
         targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
       access-denied:
         targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
+#  DL_NO_OTHER_PHOTO_ID:
+#    response:
+#      type: page
+#      pageId: prove-identity-no-other-photo-id
+#      context: drivingLicence
+#    events:
+#      back:
+#        targetState: CRI_DRIVING_LICENCE
+#      returnToRp:
+#        exitEventToEmit: return-to-rp
   MITIGATION_DL_PROVE_ANOTHER_WAY:
     response:
       type: page
@@ -172,6 +217,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: MITIGATION_PP_CRI_UK_PASSPORT
+#        checkMitigation:
+#          alternate-doc-invalid-dl:
+#            targetState: CRI_UK_PASSPORT
       end:
         exitEventToEmit: return-to-rp
   MITIGATION_DL_NO_MATCH_ANOTHER_WAY:
@@ -181,6 +229,9 @@ nestedJourneyStates:
     events:
       next:
         targetState: MITIGATION_PP_CRI_UK_PASSPORT
+#        checkMitigation:
+#          alternate-doc-invalid-dl:
+#            targetState: CRI_UK_PASSPORT
       end:
         exitEventToEmit: return-to-rp
   MITIGATION_PP_CRI_UK_PASSPORT:
@@ -203,6 +254,16 @@ nestedJourneyStates:
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
+#  PP_NO_OTHER_PHOTO_ID:
+#    response:
+#      type: page
+#      pageId: prove-identity-no-other-photo-id
+#      context: passport
+#    events:
+#      back:
+#        targetState: CRI_UK_PASSPORT
+#      returnToRp:
+#        exitEventToEmit: return-to-rp
   MITIGATION_PP_PROVE_ANOTHER_WAY:
     response:
       type: page
