@@ -166,8 +166,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
 
             var request =
                     requestBuilder
@@ -202,7 +201,9 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldHandleCandidateIdentityTypePendingAndReturnJourneyNext() throws Exception {
+        void
+                shouldHandleCandidateIdentityTypePendingAndReturnFailWithCiIfBreachingCimitVcWithNoAvailableMitigations()
+                        throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
@@ -217,9 +218,16 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
+            // The first time we call this, we get the mitigations for the old CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
                     .thenReturn(Optional.empty());
-            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
+            // The second time we call this, we get the mitigations for the new CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
+                    .thenReturn(List.of())
+                    .thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -233,7 +241,7 @@ class ProcessCandidateIdentityHandlerTest {
             var response = processCandidateIdentityHandler.handleRequest(request, context);
 
             // Assert
-            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
+            assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
@@ -257,9 +265,8 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldHandleCandidateIdentityTypePendingAndReturnCimitResponse() throws Exception {
+        void shouldHandleCandidateIdentityTypePendingAndReturnJourneyNext() throws Exception {
             // Arrange
-            var cimitResponse = new JourneyResponse("dummy-response");
             var ticfVcs = List.of(vcTicf());
             when(checkCoiService.isCoiCheckSuccessful(
                             eq(ipvSessionItem),
@@ -273,11 +280,8 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.of(cimitResponse));
-            when(cimitUtilityService.getContraIndicatorsFromVc(any()))
-                    .thenReturn(List.of())
-                    .thenReturn(List.of());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
                     requestBuilder
@@ -291,7 +295,7 @@ class ProcessCandidateIdentityHandlerTest {
             var response = processCandidateIdentityHandler.handleRequest(request, context);
 
             // Assert
-            assertEquals(cimitResponse.getJourney(), response.get("journey"));
+            assertEquals(JOURNEY_NEXT.getJourney(), response.get("journey"));
 
             verify(votMatcher, times(0)).matchFirstVot(any(), any(), any(), anyBoolean());
             verify(storeIdentityService, times(1))
@@ -373,8 +377,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             when(userIdentityService.areVcsCorrelated(any())).thenReturn(true);
             when(votMatcher.matchFirstVot(List.of(P2), List.of(), List.of(), true))
                     .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
@@ -407,8 +410,7 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(true);
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(List.of());
 
             var request =
@@ -452,8 +454,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
 
             var request =
                     requestBuilder
@@ -606,7 +607,7 @@ class ProcessCandidateIdentityHandlerTest {
         }
 
         @Test
-        void shouldHandleTicfBreachingContraindicator() throws Exception {
+        void shouldHandleTicfBreachingContraindicatorWithNoAvailableMitigations() throws Exception {
             // Arrange
             var ticfVcs = List.of(vcTicfWithCi());
             var ticfCis = List.of(new ContraIndicator());
@@ -627,8 +628,58 @@ class ProcessCandidateIdentityHandlerTest {
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
             when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(ticfCis, P2))
-                    .thenReturn(Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH)));
+            // The first time we call this, we get the mitigations for the old CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                    .thenReturn(Optional.empty());
+            // The second time we call this, we get the mitigations for the new CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
+            var request =
+                    requestBuilder
+                            .lambdaInput(
+                                    Map.of(PROCESS_IDENTITY_TYPE, CandidateIdentityType.NEW.name()))
+                            .build();
+
+            // Act
+            var response = processCandidateIdentityHandler.handleRequest(request, context);
+
+            // Assert
+            assertEquals(JOURNEY_FAIL_WITH_CI_PATH, response.get("journey"));
+
+            verify(storeIdentityService, times(0))
+                    .storeIdentity(any(), any(), any(), any(), anyList(), any());
+        }
+
+        @Test
+        void shouldHandleTicfBreachingContraindicatorWithNewMitigation() throws Exception {
+            // Arrange
+            var ticfVcs = List.of(vcTicfWithCi());
+            var ticfCis = List.of(new ContraIndicator());
+            when(checkCoiService.isCoiCheckSuccessful(
+                            eq(ipvSessionItem),
+                            eq(clientOAuthSessionItem),
+                            eq(STANDARD),
+                            eq(DEVICE_INFORMATION),
+                            eq(List.of()),
+                            any(AuditEventUser.class)))
+                    .thenReturn(true);
+            when(votMatcher.matchFirstVot(anyList(), eq(List.of()), eq(ticfCis), eq(true)))
+                    .thenReturn(Optional.of(new VotMatchingResult(P2, M1A, M1A.getScores())));
+            when(userIdentityService.areVcsCorrelated(List.of())).thenReturn(true);
+            when(configService.getBooleanParameter(CREDENTIAL_ISSUER_ENABLED, Cri.TICF.getId()))
+                    .thenReturn(true);
+            when(ticfCriService.getTicfVc(clientOAuthSessionItem, ipvSessionItem))
+                    .thenReturn(ticfVcs);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(ticfCis);
+            when(cimitUtilityService.getContraIndicatorsFromVc(any())).thenReturn(ticfCis);
+            // The first time we call this, we get the mitigations for the old CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any(), any()))
+                    .thenReturn(Optional.empty());
+            // The second time we call this, we get the mitigations for the new CIs
+            when(cimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                    .thenReturn(Optional.of("a-new-mitigation"));
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(true);
             var request =
                     requestBuilder
                             .lambdaInput(
@@ -670,8 +721,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(ticfCriService.getTicfVc(reproveIdentityClientOAuthSessionItem, ipvSessionItem))
                     .thenReturn(ticfVcs);
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any())).thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
 
             var request =
                     requestBuilder
@@ -856,8 +906,7 @@ class ProcessCandidateIdentityHandlerTest {
             when(cimitUtilityService.getContraIndicatorsFromVc(any(), any()))
                     .thenReturn(List.of())
                     .thenReturn(List.of());
-            when(cimitUtilityService.getMitigationJourneyIfBreaching(List.of(), P2))
-                    .thenReturn(Optional.empty());
+            when(cimitUtilityService.isBreachingCiThreshold(any(), any())).thenReturn(false);
             doThrow(
                             new EvcsServiceException(
                                     SC_SERVER_ERROR, RECEIVED_NON_200_RESPONSE_STATUS_CODE))
