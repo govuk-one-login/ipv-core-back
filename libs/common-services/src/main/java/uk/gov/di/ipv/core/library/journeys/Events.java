@@ -10,4 +10,10 @@ public class Events {
 
     // This event is a special value that is caught explicitly by the journey event handler
     public static final String BUILD_CLIENT_OAUTH_RESPONSE_EVENT = "build-client-oauth-response";
+
+    public static final String ENHANCED_VERIFICATION_EVENT = "enhanced-verification";
+    public static final String ALTERNATE_DOC_INVALID_DL_EVENT = "alternate-doc-invalid-dl";
+    public static final String ALTERNATE_DOC_INVALID_PASSPORT_EVENT =
+            "alternate-doc-invalid-passport";
+    public static final String FAIL_WITH_CI_EVENT = "fail-with-ci";
 }

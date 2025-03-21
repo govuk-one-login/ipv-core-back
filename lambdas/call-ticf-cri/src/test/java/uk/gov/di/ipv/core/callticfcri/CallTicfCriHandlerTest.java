@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.cimit.service.CimitService;
 import uk.gov.di.ipv.core.library.cristoringservice.CriStoringService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -55,6 +54,7 @@ import static uk.gov.di.ipv.core.library.domain.ScopeConstants.OPENID;
 import static uk.gov.di.ipv.core.library.domain.ScopeConstants.REVERIFICATION;
 import static uk.gov.di.ipv.core.library.enums.Vot.P0;
 import static uk.gov.di.ipv.core.library.enums.Vot.P2;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ENHANCED_VERIFICATION_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,9 +75,6 @@ class CallTicfCriHandlerTest {
                     .journey("a-journey")
                     .lambdaInput(Map.of("journeyType", "ipv"))
                     .build();
-    private static final String JOURNEY_ENHANCED_VERIFICATION = "/journey/enhanced-verification";
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
 
     @Spy private IpvSessionItem ipvSessionItem;
     @Mock private Context mockContext;
@@ -165,8 +162,8 @@ class CallTicfCriHandlerTest {
                 .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
         when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI));
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.of(JOURNEY_FAIL_WITH_CI_PATH));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
@@ -185,8 +182,8 @@ class CallTicfCriHandlerTest {
                 .thenReturn(CLIENT_OAUTH_SESSION_ITEM);
         when(mockTicfCriService.getTicfVc(CLIENT_OAUTH_SESSION_ITEM, ipvSessionItem))
                 .thenReturn(List.of(mockVerifiableCredential));
-        when(mockCimitUtilityService.getMitigationJourneyIfBreaching(any(), any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_ENHANCED_VERIFICATION)));
+        when(mockCimitUtilityService.getMitigationEventIfBreachingOrActive(any(), any()))
+                .thenReturn(Optional.of(JOURNEY_ENHANCED_VERIFICATION_PATH));
 
         Map<String, Object> lambdaResult = callTicfCriHandler.handleRequest(INPUT, mockContext);
 
@@ -195,7 +192,7 @@ class CallTicfCriHandlerTest {
         inOrder.verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         inOrder.verifyNoMoreInteractions();
 
-        assertEquals(JOURNEY_ENHANCED_VERIFICATION, lambdaResult.get("journey"));
+        assertEquals(JOURNEY_FAIL_WITH_CI_PATH, lambdaResult.get("journey"));
     }
 
     @Test
