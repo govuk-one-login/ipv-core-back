@@ -31,13 +31,13 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERM
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.DCMAW_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1A_EXPERIAN_FRAUD_VC;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.M1B_DCMAW_DL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.PASSPORT_NON_DCMAW_SUCCESSFUL_VC;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcAddressTwo;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcDrivingPermit;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudEvidenceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcExperianFraudScoreOne;
-import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fM1a;
+import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcF2fPassportM1a;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudApplicableAuthoritativeSourceFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudAvailableAuthoritativeFailed;
 import static uk.gov.di.ipv.core.library.fixtures.VcFixtures.vcFraudExpired;
@@ -68,8 +68,8 @@ class VcHelperTest {
                 Arguments.of("Evidence VC with CI", vcPassportM1aWithCI()),
                 Arguments.of("Fraud and activity VC", M1A_EXPERIAN_FRAUD_VC),
                 Arguments.of("Verification VC", vcVerificationM1a()),
-                Arguments.of("Verification DCMAW VC", M1B_DCMAW_VC),
-                Arguments.of("Verification F2F VC", vcF2fM1a()),
+                Arguments.of("Verification DCMAW VC", M1B_DCMAW_DL_VC),
+                Arguments.of("Verification F2F VC", vcF2fPassportM1a()),
                 Arguments.of("Verification Nino VC", vcNinoSuccessful()),
                 Arguments.of("PCL250 no evidence VC", vcHmrcMigrationPCL250NoEvidence()),
                 Arguments.of("PCL200 no evidence VC", vcHmrcMigrationPCL200NoEvidence()));

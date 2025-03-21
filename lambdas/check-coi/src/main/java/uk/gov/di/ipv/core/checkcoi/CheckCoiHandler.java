@@ -271,10 +271,9 @@ public class CheckCoiHandler implements RequestHandler<ProcessRequest, Map<Strin
         var oldIdentityClaim = userIdentityService.findIdentityClaim(oldVcs);
         var sessionIdentityClaim = userIdentityService.findIdentityClaim(sessionVcs);
 
-        Optional<List<PostalAddress>> oldAddressClaim =
-                userIdentityService.generateAddressClaim(oldVcs);
+        Optional<List<PostalAddress>> oldAddressClaim = userIdentityService.getAddressClaim(oldVcs);
         Optional<List<PostalAddress>> sessionAddressClaim =
-                userIdentityService.generateAddressClaim(sessionVcs);
+                userIdentityService.getAddressClaim(sessionVcs);
 
         return new AuditRestrictedCheckCoi(
                 oldIdentityClaim.map(IdentityClaim::getName).orElse(null),

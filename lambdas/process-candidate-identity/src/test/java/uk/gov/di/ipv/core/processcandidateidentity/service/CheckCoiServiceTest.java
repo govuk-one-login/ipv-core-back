@@ -82,7 +82,7 @@ class CheckCoiServiceTest {
         address.setAddressCountry("AnyCountry");
         address.setAddressLocality("AnyTown");
         address.setAddressRegion("AnyRegion");
-        when(mockUserIdentityService.generateAddressClaim(any()))
+        when(mockUserIdentityService.getAddressClaim(any()))
                 .thenReturn(Optional.of(List.of(address)));
     }
 
