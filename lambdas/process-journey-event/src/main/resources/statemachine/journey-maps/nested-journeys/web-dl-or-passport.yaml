@@ -23,14 +23,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_AFTER_PASSPORT
-#        checkMitigation:
-#          alternate-doc-invalid-dl:
-#            targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
       access-denied:
         targetState: PROVE_ANOTHER_WAY_AFTER_PASSPORT
-#        checkMitigation:
-#          alternate-doc-invalid-dl:
-#            targetState: PP_NO_OTHER_PHOTO_ID
+        checkMitigation:
+          alternate-doc-invalid-dl:
+            targetState: PP_NO_OTHER_PHOTO_ID
       alternate-doc-invalid-passport: # To delete - processCriCallback no longer emits this
         targetState: MITIGATION_PP_NO_MATCH_ANOTHER_WAY
         auditEvents:
@@ -52,7 +49,7 @@ nestedJourneyStates:
     exitEvents:
       next:
         exitEventToEmit: next-passport
-      enhanced-verification:
+      enhanced-verification: # To delete in clean up PR as address+fraud nested journey will no longer emit this
         exitEventToEmit: next-passport
       fraud-fail-with-no-ci:
         targetJourney: FAILED
@@ -77,14 +74,11 @@ nestedJourneyStates:
     events:
       next:
         targetState: ADDRESS_AND_FRAUD_AFTER_DL
-#        checkMitigation:
-#          alternate-doc-invalid-passport:
-#            targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
       access-denied:
         targetState: PROVE_ANOTHER_WAY_AFTER_DL
-#        checkMitigation:
-#          alternate-doc-invalid-passport:
-#            targetState: DL_NO_OTHER_PHOTO_ID
+        checkMitigation:
+          alternate-doc-invalid-passport:
+            targetState: DL_NO_OTHER_PHOTO_ID
       alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: MITIGATION_DL_NO_MATCH_ANOTHER_WAY
         auditEvents:
@@ -106,7 +100,7 @@ nestedJourneyStates:
     exitEvents:
       next:
         exitEventToEmit: next-dl
-      enhanced-verification:
+      enhanced-verification: # To delete in clean up PR as address+fraud nested journey will no longer emit this
         exitEventToEmit: next-dl
       fraud-fail-with-no-ci:
         targetJourney: FAILED
@@ -142,7 +136,7 @@ nestedJourneyStates:
       pageId: pyi-continue-with-driving-licence
     events:
       next:
-        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
+        targetState: CRI_DRIVING_LICENCE
       end:
         exitEventToEmit: return-to-rp
   MITIGATION_PP_NO_MATCH_ANOTHER_WAY:
@@ -151,13 +145,10 @@ nestedJourneyStates:
       pageId: pyi-passport-no-match-another-way
     events:
       next:
-        targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
-#        checkMitigation:
-#          alternate-doc-invalid-passport:
-#            targetState: CRI_DRIVING_LICENCE
+        targetState: CRI_DRIVING_LICENCE
       end:
         exitEventToEmit: return-to-rp
-  MITIGATION_DL_CRI_DRIVING_LICENCE:
+  MITIGATION_DL_CRI_DRIVING_LICENCE: # To delete - now matches CRI_DRIVING_LICENCE
     response:
       type: cri
       criId: drivingLicence
@@ -167,17 +158,17 @@ nestedJourneyStates:
         targetState: MITIGATION_DL_ADDRESS_AND_FRAUD
       access-denied:
         targetState: MITIGATION_DL_PROVE_ANOTHER_WAY
-#  DL_NO_OTHER_PHOTO_ID:
-#    response:
-#      type: page
-#      pageId: prove-identity-no-other-photo-id
-#      context: drivingLicence
-#    events:
-#      back:
-#        targetState: CRI_DRIVING_LICENCE
-#      returnToRp:
-#        exitEventToEmit: return-to-rp
-  MITIGATION_DL_PROVE_ANOTHER_WAY:
+  DL_NO_OTHER_PHOTO_ID:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: drivingLicence
+    events:
+      back:
+        targetState: CRI_DRIVING_LICENCE
+      returnToRp:
+        exitEventToEmit: return-to-rp
+  MITIGATION_DL_PROVE_ANOTHER_WAY: # To delete - renamed this to DL_NO_OTHER_PHOTO_ID (above)
     response:
       type: page
       pageId: prove-identity-no-other-photo-id
@@ -187,12 +178,12 @@ nestedJourneyStates:
         targetState: MITIGATION_DL_CRI_DRIVING_LICENCE
       returnToRp:
         exitEventToEmit: return-to-rp
-  MITIGATION_DL_ADDRESS_AND_FRAUD:
+  MITIGATION_DL_ADDRESS_AND_FRAUD: # To delete - now that ADDRESS_AND_FRAUD no longers emits enhanced-verification, this is identical to ADDRESS_AND_FRAUD_AFTER_DL and can combine the exitEvents
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
         exitEventToEmit: alternate-doc-next-dl
-      enhanced-verification:
+      enhanced-verification: # To delete in clean up PR as address+fraud nested journey will no longer emit this
         exitEventToEmit: failed
       fraud-fail-with-no-ci:
         targetJourney: FAILED
@@ -216,10 +207,7 @@ nestedJourneyStates:
       pageId: pyi-continue-with-passport
     events:
       next:
-        targetState: MITIGATION_PP_CRI_UK_PASSPORT
-#        checkMitigation:
-#          alternate-doc-invalid-dl:
-#            targetState: CRI_UK_PASSPORT
+        targetState: CRI_UK_PASSPORT
       end:
         exitEventToEmit: return-to-rp
   MITIGATION_DL_NO_MATCH_ANOTHER_WAY:
@@ -228,13 +216,10 @@ nestedJourneyStates:
       pageId: pyi-driving-licence-no-match-another-way
     events:
       next:
-        targetState: MITIGATION_PP_CRI_UK_PASSPORT
-#        checkMitigation:
-#          alternate-doc-invalid-dl:
-#            targetState: CRI_UK_PASSPORT
+        targetState: CRI_UK_PASSPORT
       end:
         exitEventToEmit: return-to-rp
-  MITIGATION_PP_CRI_UK_PASSPORT:
+  MITIGATION_PP_CRI_UK_PASSPORT: # To delete - now matches CRI_UK_PASSPORT
     response:
       type: cri
       criId: ukPassport
@@ -244,27 +229,27 @@ nestedJourneyStates:
         targetState: MITIGATION_PP_ADDRESS_AND_FRAUD
       access-denied:
         targetState: MITIGATION_PP_PROVE_ANOTHER_WAY
-  MITIGATION_PP_ADDRESS_AND_FRAUD:
+  MITIGATION_PP_ADDRESS_AND_FRAUD: # To delete - now that ADDRESS_AND_FRAUD no lonegr emits enhanced-verification, this is identical to ADDRESS_AND_FRAUD_AFTER_PASSPORT and can combine the exitEvents
     nestedJourney: ADDRESS_AND_FRAUD
     exitEvents:
       next:
         exitEventToEmit: alternate-doc-next-passport
-      enhanced-verification:
+      enhanced-verification: # To delete in clean up PR as address+fraud nested journey will no longer emit this
         exitEventToEmit: failed
       fraud-fail-with-no-ci:
         targetJourney: FAILED
         targetState: FAILED
-#  PP_NO_OTHER_PHOTO_ID:
-#    response:
-#      type: page
-#      pageId: prove-identity-no-other-photo-id
-#      context: passport
-#    events:
-#      back:
-#        targetState: CRI_UK_PASSPORT
-#      returnToRp:
-#        exitEventToEmit: return-to-rp
-  MITIGATION_PP_PROVE_ANOTHER_WAY:
+  PP_NO_OTHER_PHOTO_ID:
+    response:
+      type: page
+      pageId: prove-identity-no-other-photo-id
+      context: passport
+    events:
+      back:
+        targetState: CRI_UK_PASSPORT
+      returnToRp:
+        exitEventToEmit: return-to-rp
+  MITIGATION_PP_PROVE_ANOTHER_WAY: # To delete - renamed to PP_NO_OTHER_PHOTO_ID (above)
     response:
       type: page
       pageId: prove-identity-no-other-photo-id
