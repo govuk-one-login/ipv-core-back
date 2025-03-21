@@ -53,10 +53,7 @@ jobs:
     timeout-minutes: 15
     env:
       AWS_REGION: eu-west-2
-      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch'
-        ? 'dev'
-        : 'build'
-      }}
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && 'dev' || 'build' }}
     permissions:
       id-token: write
       contents: read
@@ -108,10 +105,7 @@ jobs:
       - name: Deploy SAM app
         uses: govuk-one-login/devplatform-upload-action@v3.9
         with:
-          artifact-bucket-name: ${{ env.ENVIRONMENT == 'dev'
-            ? secrets.ARTIFACT_BUCKET_NAME_DEV
-            : secrets.ARTIFACT_BUCKET_NAME
-          }}
+          artifact-bucket-name: ${{ env.ENVIRONMENT == 'dev' && secrets.ARTIFACT_BUCKET_NAME_DEV || secrets.ARTIFACT_BUCKET_NAME }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
           working-directory: ./deploy
           template-file: .aws-sam/build/template.yaml
