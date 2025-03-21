@@ -182,6 +182,10 @@ states:
           alternate-doc-invalid-dl:
             targetState: WEB_DL_OR_PASSPORT
             targetEntryEvent: alternate-doc-invalid-dl-another-way
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
@@ -233,6 +237,10 @@ states:
           enhanced-verification:
             targetJourney: FAILED
             targetState: FAILED
+            auditEvents:
+              - IPV_MITIGATION_START
+            auditContext:
+              mitigationType: invalid-dl
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -832,6 +840,10 @@ states:
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -878,6 +890,10 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
     response:

@@ -189,6 +189,10 @@ states:
           enhanced-verification:
             targetJourney: FAILED
             targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -281,6 +285,10 @@ states:
           enhanced-verification:
             targetJourney: FAILED
             targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK:
     response:
@@ -783,6 +791,10 @@ states:
       failedDlAuthCheckInvalidDl:
         targetJourney: FAILED
         targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
       returnToRp:
         targetState: RETURN_TO_RP
         checkFeatureFlag:
@@ -829,6 +841,10 @@ states:
       alternate-doc-invalid-dl:
         targetJourney: FAILED
         targetState: FAILED
+        auditEvents:
+          - IPV_MITIGATION_START
+        auditContext:
+          mitigationType: invalid-dl
 
   PROVE_IDENTITY_ANOTHER_WAY_AFTER_APP_DOC_CHECK_PYI_ESCAPE:
     response:
