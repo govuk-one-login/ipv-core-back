@@ -345,10 +345,10 @@ states:
       next-passport:
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-      alternate-doc-next-dl:
+      alternate-doc-next-dl: # To delete - can be combined with next-dl exitEvent
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
-      alternate-doc-next-passport:
+      alternate-doc-next-passport: # To delete - can be combined with next-passport exitEvent
         targetState: KBV_PHOTO_ID
         targetEntryEvent: next
       end:
