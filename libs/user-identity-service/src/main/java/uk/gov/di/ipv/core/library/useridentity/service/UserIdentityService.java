@@ -269,7 +269,15 @@ public class UserIdentityService {
 
             Optional<List<DrivingPermitDetails>> drivingPermitClaim =
                     getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+            drivingPermitClaim.ifPresent(
+                    drivingPermit -> {
+                        drivingPermit.forEach(
+                                permit -> {
+                                    permit.setFullAddress(null);
+                                    permit.setIssueDate(null);
+                                });
+                        userIdentityBuilder.drivingPermitClaim(drivingPermit);
+                    });
         }
 
         Optional<List<SocialSecurityRecordDetails>> ninoClaim =
@@ -487,11 +495,14 @@ public class UserIdentityService {
         }
     }
 
-    public <T> Optional<List<T>> getFirstClaim(
+    private <T> Optional<List<T>> getFirstClaim(
             List<VerifiableCredential> vcs, Function<IdentityCheckSubject, List<T>> getClaim) {
         for (var vc : vcs) {
             if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
                 var credentialSubject = identityCheckCredential.getCredentialSubject();
+                if (credentialSubject == null) {
+                    continue;
+                }
 
                 var claim = getClaim.apply(credentialSubject);
                 if (!isNullOrEmpty(claim)) {
