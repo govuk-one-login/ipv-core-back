@@ -42,7 +42,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.VC_RESIDENCE_PERMIT_DCMAW;
-import static uk.gov.di.ipv.core.library.journeys.Events.FAIL_WITH_CI_EVENT;
 
 @ExtendWith(MockitoExtension.class)
 class CimitUtilityServiceTest {
@@ -358,7 +357,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnFailWithCi_IfCiIsMitigatableButDocTypeIsNotConfigured()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_IfCiIsMitigatableButDocTypeIsNotConfigured()
                     throws Exception {
         // Arrange
         var code = "ci_code";
@@ -386,12 +385,12 @@ class CimitUtilityServiceTest {
                 cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // Assert
-        assertEquals(Optional.of(FAIL_WITH_CI_EVENT), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnFailWithCi_WhenBreachingAndCiIsNotMitigatable()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenBreachingAndCiIsNotMitigatable()
                     throws Exception {
         // arrange
         var code = "ci_code";
@@ -408,7 +407,7 @@ class CimitUtilityServiceTest {
         var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(FAIL_WITH_CI_EVENT), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
@@ -437,7 +436,7 @@ class CimitUtilityServiceTest {
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnFailWithCi_WhenMitigationDoesNotResolveBreach()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenMitigationDoesNotResolveBreach()
                     throws Exception {
         // arrange
         var code = "ci_code";
@@ -455,11 +454,11 @@ class CimitUtilityServiceTest {
         var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(FAIL_WITH_CI_EVENT), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
-    void getCiMitigationEvent_ShouldReturnFailWithCi_WhenCiMitigationConfigNotFoundForDocType()
+    void getCiMitigationEvent_ShouldReturnEmpty_WhenCiMitigationConfigNotFoundForDocType()
             throws Exception {
         // Arrange
         var code = "ci_code";
@@ -478,12 +477,12 @@ class CimitUtilityServiceTest {
         var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // Assert
-        assertEquals(Optional.of(FAIL_WITH_CI_EVENT), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test
     void
-            getMitigationEventIfBreachingOrActive_ShouldReturnFailWithCi_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
+            getMitigationEventIfBreachingOrActive_ShouldReturnEmpty_WhenCiCanBeMitigatedButHasAlreadyMitigatedContraIndicator()
                     throws Exception {
         // arrange
         var code = "ci_code";
@@ -512,7 +511,7 @@ class CimitUtilityServiceTest {
         var result = cimitUtilityService.getMitigationEventIfBreachingOrActive(cis, TEST_VOT);
 
         // assert
-        assertEquals(Optional.of(FAIL_WITH_CI_EVENT), result);
+        assertEquals(Optional.empty(), result);
     }
 
     @Test

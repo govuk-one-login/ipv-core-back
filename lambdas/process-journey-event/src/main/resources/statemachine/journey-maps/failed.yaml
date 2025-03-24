@@ -202,13 +202,6 @@ states:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-        checkMitigation:
-          enhanced-verification:
-            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-          alternate-doc-invalid-dl:
-            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-          alternate-doc-invalid-passport:
-            targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF
@@ -277,13 +270,6 @@ states:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
       fail-with-ci:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-        checkMitigation:
-          enhanced-verification:
-            targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-          alternate-doc-invalid-dl:
-            targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-          alternate-doc-invalid-passport:
-            targetState: COULD_NOT_UPDATE_DETAILS_PAGE
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR_NO_TICF

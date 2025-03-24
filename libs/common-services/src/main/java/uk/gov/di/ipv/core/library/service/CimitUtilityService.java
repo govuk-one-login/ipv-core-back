@@ -24,7 +24,6 @@ import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.journeys.Events.FAIL_WITH_CI_EVENT;
 
 public class CimitUtilityService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -113,8 +112,7 @@ public class CimitUtilityService {
     public Optional<String> getMitigationEventIfBreachingOrActive(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
-            return Optional.of(
-                    getCiMitigationEvent(cis, confidenceRequested).orElse(FAIL_WITH_CI_EVENT));
+            return getCiMitigationEvent(cis, confidenceRequested);
         } else {
             // If the user has a mitigated CI, return the mitigation to prevent
             // them from going down routes to access CRIs they gained the CI from
