@@ -54,6 +54,9 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
+import static uk.gov.di.ipv.core.library.domain.Cri.NINO;
+import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
@@ -264,11 +267,11 @@ public class UserIdentityService {
             addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
             Optional<List<PassportDetails>> passportClaim =
-                    getFirstClaim(vcs, IdentityCheckSubject::getPassport);
+                    getFirstClaim(vcs, IdentityCheckSubject::getPassport, PASSPORT);
             passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
             Optional<List<DrivingPermitDetails>> drivingPermitClaim =
-                    getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit);
+                    getFirstClaim(vcs, IdentityCheckSubject::getDrivingPermit, DRIVING_LICENCE);
             drivingPermitClaim.ifPresent(
                     drivingPermit -> {
                         drivingPermit.forEach(
@@ -281,7 +284,7 @@ public class UserIdentityService {
         }
 
         Optional<List<SocialSecurityRecordDetails>> ninoClaim =
-                getFirstClaim(vcs, IdentityCheckSubject::getSocialSecurityRecord);
+                getFirstClaim(vcs, IdentityCheckSubject::getSocialSecurityRecord, NINO);
         ninoClaim.ifPresent(userIdentityBuilder::ninoClaim);
     }
 
@@ -496,15 +499,27 @@ public class UserIdentityService {
     }
 
     private <T> Optional<List<T>> getFirstClaim(
-            List<VerifiableCredential> vcs, Function<IdentityCheckSubject, List<T>> getClaim) {
+            List<VerifiableCredential> vcs,
+            Function<IdentityCheckSubject, List<T>> getClaim,
+            Cri criWhichShouldHaveCredentialSubject)
+            throws HttpResponseExceptionWithErrorBody {
         for (var vc : vcs) {
             if (vc.getCredential() instanceof IdentityCheckCredential identityCheckCredential) {
                 var credentialSubject = identityCheckCredential.getCredentialSubject();
+
                 if (credentialSubject == null) {
+                    if (criWhichShouldHaveCredentialSubject.equals(vc.getCri())) {
+                        LOGGER.error(
+                                LogHelper.buildErrorMessage(
+                                        ErrorResponse.CREDENTIAL_SUBJECT_MISSING));
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+                    }
                     continue;
                 }
 
                 var claim = getClaim.apply(credentialSubject);
+
                 if (!isNullOrEmpty(claim)) {
                     return Optional.of(claim);
                 }
