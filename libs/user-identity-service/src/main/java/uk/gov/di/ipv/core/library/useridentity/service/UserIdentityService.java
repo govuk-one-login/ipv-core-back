@@ -54,10 +54,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_C
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_ALWAYS_REQUIRED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.RETURN_CODES_NON_CI_BREACHING_P0;
 import static uk.gov.di.ipv.core.library.domain.Cri.ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.Cri.DCMAW;
-import static uk.gov.di.ipv.core.library.domain.Cri.DRIVING_LICENCE;
-import static uk.gov.di.ipv.core.library.domain.Cri.F2F;
-import static uk.gov.di.ipv.core.library.domain.Cri.PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.VocabConstants.VOT_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
@@ -66,19 +62,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_GIVEN_NA
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
-    private static final List<Cri> PASSPORT_CRI_TYPES = List.of(PASSPORT, DCMAW, F2F);
-    private static final List<Cri> DRIVING_PERMIT_CRI_TYPES = List.of(DRIVING_LICENCE, DCMAW, F2F);
-
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_NAME_CORRELATION = List.of(ADDRESS);
     private static final List<Cri> CRI_TYPES_EXCLUDED_FOR_DOB_CORRELATION = List.of(ADDRESS);
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String NINO_PROPERTY_NAME = "socialSecurityRecord";
     private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
     private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
-
-    private static final String MUST_BE_IDENTITYCHECK_MESSAGE =
-            "Credential must be an IdentityCheck credential.";
 
     private final ConfigService configService;
     private final CimitUtilityService cimitUtilityService;
