@@ -1,4 +1,5 @@
 {
   "typ": "JWT",
-  "alg": "ES256"
+  "alg": "ES256",
+  "kid": "hashed_key"
 }
