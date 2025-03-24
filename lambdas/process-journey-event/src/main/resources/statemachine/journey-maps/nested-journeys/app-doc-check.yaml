@@ -39,10 +39,6 @@ nestedJourneyStates:
         targetState: REMOVE_DCMAW_FROM_SESSION
       alternate-doc-invalid-dl: # To delete - processCriCallback no longer emits this
         targetState: RESET_SESSION_INVALID_DL
-        auditEvents:
-          - IPV_MITIGATION_START
-        auditContext:
-          mitigationType: invalid-dl
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED
