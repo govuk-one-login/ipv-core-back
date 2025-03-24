@@ -433,15 +433,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-dl:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
-      alternate-doc-invalid-passport:
-        targetJourney: FAILED
-        targetState: FAILED_NO_TICF
       error:
         targetJourney: TECHNICAL_ERROR
         targetState: ERROR

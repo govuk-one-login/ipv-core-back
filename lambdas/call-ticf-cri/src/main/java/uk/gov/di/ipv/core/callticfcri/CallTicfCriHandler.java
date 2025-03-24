@@ -43,6 +43,7 @@ import static uk.gov.di.ipv.core.library.domain.Cri.TICF;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.ERROR_PROCESSING_TICF_CRI_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_EXTRACT_CIS_FROM_VC;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<String, Object>> {
@@ -193,8 +194,9 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
 
             var cis = cimitUtilityService.getContraIndicatorsFromVc(contraIndicatorVc);
 
+            // This lambda is unused and will be deleted so doesn't really matter what this is
             var journeyResponse =
-                    cimitUtilityService.getMitigationJourneyIfBreaching(
+                    cimitUtilityService.getMitigationEventIfBreachingOrActive(
                             cis, VotHelper.getThresholdVot(ipvSessionItem, clientOAuthSessionItem));
             if (journeyResponse.isPresent()) {
                 LOGGER.info(
@@ -202,7 +204,7 @@ public class CallTicfCriHandler implements RequestHandler<ProcessRequest, Map<St
                                 "CI score is breaching threshold - setting VOT to P0"));
                 ipvSessionItem.setVot(Vot.P0);
 
-                return journeyResponse.get().toObjectMap();
+                return new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH).toObjectMap();
             }
             LOGGER.info(LogHelper.buildLogMessage("CI score not breaching threshold"));
         }

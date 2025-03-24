@@ -132,12 +132,6 @@ states:
     events:
       next:
         targetState: NO_MATCH_PAGE
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE
       fail-with-ci:
         targetState: NO_MATCH_PAGE
       error:
@@ -171,12 +165,6 @@ states:
         identityType: INCOMPLETE
     events:
       next:
-        targetState: RETURN_TO_RP
-      enhanced-verification:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-dl:
-        targetState: RETURN_TO_RP
-      alternate-doc-invalid-passport:
         targetState: RETURN_TO_RP
       fail-with-ci:
         targetState: RETURN_TO_RP
@@ -212,12 +200,6 @@ states:
     events:
       next:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_VALID_ID
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
       error:
@@ -251,12 +233,6 @@ states:
         identityType: INCOMPLETE
     events:
       next:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      enhanced-verification:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
-      alternate-doc-invalid-passport:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
       fail-with-ci:
         targetState: COULD_NOT_CONFIRM_DETAILS_PAGE_INVALID_ID
@@ -292,12 +268,6 @@ states:
     events:
       next:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      enhanced-verification:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
-      alternate-doc-invalid-passport:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE
       fail-with-ci:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       error:
@@ -331,12 +301,6 @@ states:
         identityType: INCOMPLETE
     events:
       next:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      enhanced-verification:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      alternate-doc-invalid-dl:
-        targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
-      alternate-doc-invalid-passport:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
       fail-with-ci:
         targetState: COULD_NOT_UPDATE_DETAILS_PAGE_INVALID_IDENTITY
@@ -372,12 +336,6 @@ states:
     events:
       next:
         targetState: NO_MATCH_PAGE_BAV
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE_BAV
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE_BAV
-      alternate-doc-invalid-passport:
-        targetState: NO_MATCH_PAGE_BAV
       fail-with-ci:
         targetState: NO_MATCH_PAGE_BAV
       error:
@@ -411,12 +369,6 @@ states:
         identityType: INCOMPLETE
     events:
       next:
-        targetState: NO_MATCH_PAGE_NINO
-      enhanced-verification:
-        targetState: NO_MATCH_PAGE_NINO
-      alternate-doc-invalid-dl:
-        targetState: NO_MATCH_PAGE_NINO
-      alternate-doc-invalid-passport:
         targetState: NO_MATCH_PAGE_NINO
       fail-with-ci:
         targetState: NO_MATCH_PAGE_NINO

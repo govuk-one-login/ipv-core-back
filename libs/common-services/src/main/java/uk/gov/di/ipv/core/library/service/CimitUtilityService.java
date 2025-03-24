@@ -5,7 +5,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorConfig;
 import uk.gov.di.ipv.core.library.domain.Cri;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.MitigationRoute;
 import uk.gov.di.ipv.core.library.domain.VerifiableCredential;
 import uk.gov.di.ipv.core.library.enums.Vot;
@@ -25,12 +24,9 @@ import java.util.Set;
 
 import static java.util.Objects.requireNonNullElse;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.journeys.JourneyUris.JOURNEY_FAIL_WITH_CI_PATH;
 
 public class CimitUtilityService {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_FAIL_WITH_CI =
-            new JourneyResponse(JOURNEY_FAIL_WITH_CI_PATH);
     private final ConfigService configService;
 
     public CimitUtilityService(ConfigService configService) {
@@ -115,46 +111,25 @@ public class CimitUtilityService {
 
     public Optional<String> getMitigationEventIfBreachingOrActive(
             List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        var journeyResponse = getMitigationJourneyIfBreachingOrActive(cis, confidenceRequested);
-        if (journeyResponse.isPresent()) {
-            var journey = journeyResponse.get().getJourney();
-            return Optional.of(journey.substring(journey.lastIndexOf("/") + 1));
-        }
-        return Optional.empty();
-    }
-
-    private Optional<JourneyResponse> getMitigationJourneyIfBreachingOrActive(
-            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
-        var breachingMitigationJourney = getMitigationJourneyIfBreaching(cis, confidenceRequested);
-
-        if (breachingMitigationJourney.isPresent()) {
-            return breachingMitigationJourney;
-        }
-
-        // If the user has a mitigated CI, return the mitigation to prevent
-        // them from going down routes to access CRIs they gained the CI from
-        var mitigatedCi = hasMitigatedContraIndicator(cis);
-        if (mitigatedCi.isPresent()) {
-            var cimitConfig = configService.getCimitConfig();
-
-            return getMitigationJourneyResponse(
-                    cimitConfig.get(mitigatedCi.get().getCode()), mitigatedCi.get().getDocument());
-        }
-
-        return Optional.empty();
-    }
-
-    public Optional<JourneyResponse> getMitigationJourneyIfBreaching(
-            List<ContraIndicator> cis, Vot confidenceRequested) throws ConfigException {
         if (isBreachingCiThreshold(cis, confidenceRequested)) {
-            return Optional.of(
-                    getCiMitigationJourneyResponse(cis, confidenceRequested)
-                            .orElse(JOURNEY_FAIL_WITH_CI));
+            return getCiMitigationEvent(cis, confidenceRequested);
+        } else {
+            // If the user has a mitigated CI, return the mitigation to prevent
+            // them from going down routes to access CRIs they gained the CI from
+            var mitigatedCi = hasMitigatedContraIndicator(cis);
+            if (mitigatedCi.isPresent()) {
+                var cimitConfig = configService.getCimitConfig();
+
+                return getMitigationEvent(
+                        cimitConfig.get(mitigatedCi.get().getCode()),
+                        mitigatedCi.get().getDocument());
+            }
         }
+
         return Optional.empty();
     }
 
-    public Optional<JourneyResponse> getCiMitigationJourneyResponse(
+    public Optional<String> getCiMitigationEvent(
             List<ContraIndicator> contraIndicators, Vot confidenceRequested)
             throws ConfigException {
         // Try to mitigate an unmitigated ci to resolve the threshold breach
@@ -168,8 +143,7 @@ public class CimitUtilityService {
                 if (hasMitigatedContraIndicator(contraIndicators).isPresent()) {
                     return Optional.empty();
                 }
-                return getMitigationJourneyResponse(
-                        cimitConfig.get(ci.getCode()), ci.getDocument());
+                return getMitigationEvent(cimitConfig.get(ci.getCode()), ci.getDocument());
             }
         }
         return Optional.empty();
@@ -180,14 +154,14 @@ public class CimitUtilityService {
         return contraIndicators.stream().filter(this::isMitigated).findFirst();
     }
 
-    private Optional<JourneyResponse> getMitigationJourneyResponse(
+    private Optional<String> getMitigationEvent(
             List<MitigationRoute> mitigationRoute, String document) {
         String documentType = document != null ? document.split("/")[0] : null;
         return mitigationRoute.stream()
                 .filter(mr -> (mr.document() == null || mr.document().equals(documentType)))
                 .findFirst()
                 .map(MitigationRoute::event)
-                .map(JourneyResponse::new);
+                .map(event -> event.substring(event.lastIndexOf("/") + 1));
     }
 
     private boolean isMitigated(ContraIndicator ci) {

@@ -59,12 +59,6 @@ states:
       fail-with-ci:
         targetJourney: FAILED
         targetState: FAILED_NO_TICF
-      enhanced-verification:
-        targetState: ERROR_PAGE
-      alternate-doc-invalid-dl:
-        targetState: ERROR_PAGE
-      alternate-doc-invalid-passport:
-        targetState: ERROR_PAGE
       error:
         targetState: ERROR_PAGE
 
